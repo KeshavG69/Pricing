@@ -1,0 +1,1151 @@
+[
+    {
+        "label": "runpy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "runpy",
+        "description": "runpy",
+        "detail": "runpy",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "print_function",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "os",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os",
+        "description": "os",
+        "detail": "os",
+        "documentation": {}
+    },
+    {
+        "label": "site",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "site",
+        "description": "site",
+        "detail": "site",
+        "documentation": {}
+    },
+    {
+        "label": "sys",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sys",
+        "description": "sys",
+        "detail": "sys",
+        "documentation": {}
+    },
+    {
+        "label": "logging",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "logging",
+        "description": "logging",
+        "detail": "logging",
+        "documentation": {}
+    },
+    {
+        "label": "os.path",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os.path",
+        "description": "os.path",
+        "detail": "os.path",
+        "documentation": {}
+    },
+    {
+        "label": "re",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "re",
+        "description": "re",
+        "detail": "re",
+        "documentation": {}
+    },
+    {
+        "label": "argparse",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "argparse",
+        "description": "argparse",
+        "detail": "argparse",
+        "documentation": {}
+    },
+    {
+        "label": "ArgumentParser",
+        "importPath": "argparse",
+        "description": "argparse",
+        "isExtraImport": true,
+        "detail": "argparse",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Container",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Iterable",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "TextIO",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Union",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "cast",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Container",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Iterable",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "pdfminer",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pdfminer",
+        "description": "pdfminer",
+        "detail": "pdfminer",
+        "documentation": {}
+    },
+    {
+        "label": "PDFDocument",
+        "importPath": "pdfminer.pdfdocument",
+        "description": "pdfminer.pdfdocument",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdfdocument",
+        "documentation": {}
+    },
+    {
+        "label": "PDFNoOutlines",
+        "importPath": "pdfminer.pdfdocument",
+        "description": "pdfminer.pdfdocument",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdfdocument",
+        "documentation": {}
+    },
+    {
+        "label": "PDFXRefFallback",
+        "importPath": "pdfminer.pdfdocument",
+        "description": "pdfminer.pdfdocument",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdfdocument",
+        "documentation": {}
+    },
+    {
+        "label": "PDFIOError",
+        "importPath": "pdfminer.pdfexceptions",
+        "description": "pdfminer.pdfexceptions",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdfexceptions",
+        "documentation": {}
+    },
+    {
+        "label": "PDFObjectNotFound",
+        "importPath": "pdfminer.pdfexceptions",
+        "description": "pdfminer.pdfexceptions",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdfexceptions",
+        "documentation": {}
+    },
+    {
+        "label": "PDFTypeError",
+        "importPath": "pdfminer.pdfexceptions",
+        "description": "pdfminer.pdfexceptions",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdfexceptions",
+        "documentation": {}
+    },
+    {
+        "label": "PDFValueError",
+        "importPath": "pdfminer.pdfexceptions",
+        "description": "pdfminer.pdfexceptions",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdfexceptions",
+        "documentation": {}
+    },
+    {
+        "label": "PDFValueError",
+        "importPath": "pdfminer.pdfexceptions",
+        "description": "pdfminer.pdfexceptions",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdfexceptions",
+        "documentation": {}
+    },
+    {
+        "label": "PDFPage",
+        "importPath": "pdfminer.pdfpage",
+        "description": "pdfminer.pdfpage",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdfpage",
+        "documentation": {}
+    },
+    {
+        "label": "PDFParser",
+        "importPath": "pdfminer.pdfparser",
+        "description": "pdfminer.pdfparser",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdfparser",
+        "documentation": {}
+    },
+    {
+        "label": "PDFObjRef",
+        "importPath": "pdfminer.pdftypes",
+        "description": "pdfminer.pdftypes",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdftypes",
+        "documentation": {}
+    },
+    {
+        "label": "PDFStream",
+        "importPath": "pdfminer.pdftypes",
+        "description": "pdfminer.pdftypes",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdftypes",
+        "documentation": {}
+    },
+    {
+        "label": "resolve1",
+        "importPath": "pdfminer.pdftypes",
+        "description": "pdfminer.pdftypes",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdftypes",
+        "documentation": {}
+    },
+    {
+        "label": "stream_value",
+        "importPath": "pdfminer.pdftypes",
+        "description": "pdfminer.pdftypes",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdftypes",
+        "documentation": {}
+    },
+    {
+        "label": "LIT",
+        "importPath": "pdfminer.psparser",
+        "description": "pdfminer.psparser",
+        "isExtraImport": true,
+        "detail": "pdfminer.psparser",
+        "documentation": {}
+    },
+    {
+        "label": "PSKeyword",
+        "importPath": "pdfminer.psparser",
+        "description": "pdfminer.psparser",
+        "isExtraImport": true,
+        "detail": "pdfminer.psparser",
+        "documentation": {}
+    },
+    {
+        "label": "PSLiteral",
+        "importPath": "pdfminer.psparser",
+        "description": "pdfminer.psparser",
+        "isExtraImport": true,
+        "detail": "pdfminer.psparser",
+        "documentation": {}
+    },
+    {
+        "label": "isnumber",
+        "importPath": "pdfminer.utils",
+        "description": "pdfminer.utils",
+        "isExtraImport": true,
+        "detail": "pdfminer.utils",
+        "documentation": {}
+    },
+    {
+        "label": "AnyIO",
+        "importPath": "pdfminer.utils",
+        "description": "pdfminer.utils",
+        "isExtraImport": true,
+        "detail": "pdfminer.utils",
+        "documentation": {}
+    },
+    {
+        "label": "pdfminer.high_level",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pdfminer.high_level",
+        "description": "pdfminer.high_level",
+        "detail": "pdfminer.high_level",
+        "documentation": {}
+    },
+    {
+        "label": "LAParams",
+        "importPath": "pdfminer.layout",
+        "description": "pdfminer.layout",
+        "isExtraImport": true,
+        "detail": "pdfminer.layout",
+        "documentation": {}
+    },
+    {
+        "label": "BadZipFile",
+        "importPath": "zipfile",
+        "description": "zipfile",
+        "isExtraImport": true,
+        "detail": "zipfile",
+        "documentation": {}
+    },
+    {
+        "label": "ZipFile",
+        "importPath": "zipfile",
+        "description": "zipfile",
+        "isExtraImport": true,
+        "detail": "zipfile",
+        "documentation": {}
+    },
+    {
+        "label": "BaseSettings",
+        "importPath": "pydantic_settings",
+        "description": "pydantic_settings",
+        "isExtraImport": true,
+        "detail": "pydantic_settings",
+        "documentation": {}
+    },
+    {
+        "label": "ChatOpenAI",
+        "importPath": "langchain_openai",
+        "description": "langchain_openai",
+        "isExtraImport": true,
+        "detail": "langchain_openai",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "JobDescriptionList",
+        "importPath": "models.job_description",
+        "description": "models.job_description",
+        "isExtraImport": true,
+        "detail": "models.job_description",
+        "documentation": {}
+    },
+    {
+        "label": "defaultdict",
+        "importPath": "collections",
+        "description": "collections",
+        "isExtraImport": true,
+        "detail": "collections",
+        "documentation": {}
+    },
+    {
+        "label": "partition",
+        "importPath": "unstructured.partition.auto",
+        "description": "unstructured.partition.auto",
+        "isExtraImport": true,
+        "detail": "unstructured.partition.auto",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "requests",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "requests",
+        "description": "requests",
+        "detail": "requests",
+        "documentation": {}
+    },
+    {
+        "label": "json",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "json",
+        "description": "json",
+        "detail": "json",
+        "documentation": {}
+    },
+    {
+        "label": "base64",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "base64",
+        "description": "base64",
+        "detail": "base64",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "boto3",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "boto3",
+        "description": "boto3",
+        "detail": "boto3",
+        "documentation": {}
+    },
+    {
+        "label": "asyncio",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "asyncio",
+        "description": "asyncio",
+        "detail": "asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "unstructuredApp",
+        "importPath": "client.unstructuredapp",
+        "description": "client.unstructuredapp",
+        "isExtraImport": true,
+        "detail": "client.unstructuredapp",
+        "documentation": {}
+    },
+    {
+        "label": "ChatPromptTemplate",
+        "importPath": "langchain_core.prompts",
+        "description": "langchain_core.prompts",
+        "isExtraImport": true,
+        "detail": "langchain_core.prompts",
+        "documentation": {}
+    },
+    {
+        "label": "get_llm",
+        "importPath": "client.ultimate_llm",
+        "description": "client.ultimate_llm",
+        "isExtraImport": true,
+        "detail": "client.ultimate_llm",
+        "documentation": {}
+    },
+    {
+        "label": "ThreadPoolExecutor",
+        "importPath": "concurrent.futures",
+        "description": "concurrent.futures",
+        "isExtraImport": true,
+        "detail": "concurrent.futures",
+        "documentation": {}
+    },
+    {
+        "label": "pandas",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pandas",
+        "description": "pandas",
+        "detail": "pandas",
+        "documentation": {}
+    },
+    {
+        "label": "extract_document_by_page",
+        "importPath": "client.unstructured",
+        "description": "client.unstructured",
+        "isExtraImport": true,
+        "detail": "client.unstructured",
+        "documentation": {}
+    },
+    {
+        "label": "parse_page_for_jds",
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "isExtraImport": true,
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "bin_dir",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "bin_dir = os.path.dirname(abs_file)\nbase = bin_dir[: -len(\"bin\") - 1]  # strip away the bin part from the __file__, plus the path separator\n# prepend bin to PATH (this file is inside the bin directory)\nos.environ[\"PATH\"] = os.pathsep.join([bin_dir, *os.environ.get(\"PATH\", \"\").split(os.pathsep)])\nos.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"pricing\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.13/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "base",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "base = bin_dir[: -len(\"bin\") - 1]  # strip away the bin part from the __file__, plus the path separator\n# prepend bin to PATH (this file is inside the bin directory)\nos.environ[\"PATH\"] = os.pathsep.join([bin_dir, *os.environ.get(\"PATH\", \"\").split(os.pathsep)])\nos.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"pricing\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.13/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "os.environ[\"PATH\"]",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "os.environ[\"PATH\"] = os.pathsep.join([bin_dir, *os.environ.get(\"PATH\", \"\").split(os.pathsep)])\nos.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"pricing\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.13/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "os.environ[\"VIRTUAL_ENV\"]",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "os.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"pricing\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.13/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "os.environ[\"VIRTUAL_ENV_PROMPT\"]",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "os.environ[\"VIRTUAL_ENV_PROMPT\"] = \"pricing\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.13/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "prev_length",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "prev_length = len(sys.path)\nfor lib in \"../lib/python3.13/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "sys.path[:]",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "sys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "sys.real_prefix",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "sys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "sys.prefix",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "sys.prefix = base",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "escape",
+        "kind": 2,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "def escape(s: Union[str, bytes]) -> str:\n    if isinstance(s, bytes):\n        us = str(s, \"latin-1\")\n    else:\n        us = s\n    return ESC_PAT.sub(lambda m: \"&#%d;\" % ord(m.group(0)), us)\ndef dumpxml(out: TextIO, obj: object, codec: Optional[str] = None) -> None:\n    if obj is None:\n        out.write(\"<null />\")\n        return",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "dumpxml",
+        "kind": 2,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "def dumpxml(out: TextIO, obj: object, codec: Optional[str] = None) -> None:\n    if obj is None:\n        out.write(\"<null />\")\n        return\n    if isinstance(obj, dict):\n        out.write('<dict size=\"%d\">\\n' % len(obj))\n        for k, v in obj.items():\n            out.write(\"<key>%s</key>\\n\" % k)\n            out.write(\"<value>\")\n            dumpxml(out, v)",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "dumptrailers",
+        "kind": 2,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "def dumptrailers(\n    out: TextIO,\n    doc: PDFDocument,\n    show_fallback_xref: bool = False,\n) -> None:\n    for xref in doc.xrefs:\n        if not isinstance(xref, PDFXRefFallback) or show_fallback_xref:\n            out.write(\"<trailer>\\n\")\n            dumpxml(out, xref.get_trailer())\n            out.write(\"\\n</trailer>\\n\\n\")",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "dumpallobjs",
+        "kind": 2,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "def dumpallobjs(\n    out: TextIO,\n    doc: PDFDocument,\n    codec: Optional[str] = None,\n    show_fallback_xref: bool = False,\n) -> None:\n    visited = set()\n    out.write(\"<pdf>\")\n    for xref in doc.xrefs:\n        for objid in xref.get_objids():",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "dumpoutline",
+        "kind": 2,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "def dumpoutline(\n    outfp: TextIO,\n    fname: str,\n    objids: Any,\n    pagenos: Container[int],\n    password: str = \"\",\n    dumpall: bool = False,\n    codec: Optional[str] = None,\n    extractdir: Optional[str] = None,\n) -> None:",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "extractembedded",
+        "kind": 2,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "def extractembedded(fname: str, password: str, extractdir: str) -> None:\n    def extract1(objid: int, obj: Dict[str, Any]) -> None:\n        filename = os.path.basename(obj.get(\"UF\") or cast(bytes, obj.get(\"F\")).decode())\n        fileref = obj[\"EF\"].get(\"UF\") or obj[\"EF\"].get(\"F\")\n        fileobj = doc.getobj(fileref.objid)\n        if not isinstance(fileobj, PDFStream):\n            error_msg = (\n                \"unable to process PDF: reference for %r is not a \"\n                \"PDFStream\" % filename\n            )",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "dumppdf",
+        "kind": 2,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "def dumppdf(\n    outfp: TextIO,\n    fname: str,\n    objids: Iterable[int],\n    pagenos: Container[int],\n    password: str = \"\",\n    dumpall: bool = False,\n    codec: Optional[str] = None,\n    extractdir: Optional[str] = None,\n    show_fallback_xref: bool = False,",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "create_parser",
+        "kind": 2,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "def create_parser() -> ArgumentParser:\n    parser = ArgumentParser(description=__doc__, add_help=True)\n    parser.add_argument(\n        \"files\",\n        type=str,\n        default=None,\n        nargs=\"+\",\n        help=\"One or more paths to PDF files.\",\n    )\n    parser.add_argument(",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "def main(argv: Optional[List[str]] = None) -> None:\n    parser = create_parser()\n    args = parser.parse_args(args=argv)\n    if args.debug:\n        logging.getLogger().setLevel(logging.DEBUG)\n    if args.outfile == \"-\":\n        outfp = sys.stdout\n    else:\n        outfp = open(args.outfile, \"w\")\n    if args.objects:",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nESC_PAT = re.compile(r'[\\000-\\037&<>()\"\\042\\047\\134\\177-\\377]')\ndef escape(s: Union[str, bytes]) -> str:\n    if isinstance(s, bytes):\n        us = str(s, \"latin-1\")\n    else:\n        us = s\n    return ESC_PAT.sub(lambda m: \"&#%d;\" % ord(m.group(0)), us)\ndef dumpxml(out: TextIO, obj: object, codec: Optional[str] = None) -> None:\n    if obj is None:",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "ESC_PAT",
+        "kind": 5,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "ESC_PAT = re.compile(r'[\\000-\\037&<>()\"\\042\\047\\134\\177-\\377]')\ndef escape(s: Union[str, bytes]) -> str:\n    if isinstance(s, bytes):\n        us = str(s, \"latin-1\")\n    else:\n        us = s\n    return ESC_PAT.sub(lambda m: \"&#%d;\" % ord(m.group(0)), us)\ndef dumpxml(out: TextIO, obj: object, codec: Optional[str] = None) -> None:\n    if obj is None:\n        out.write(\"<null />\")",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "LITERAL_FILESPEC",
+        "kind": 5,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "LITERAL_FILESPEC = LIT(\"Filespec\")\nLITERAL_EMBEDDEDFILE = LIT(\"EmbeddedFile\")\ndef extractembedded(fname: str, password: str, extractdir: str) -> None:\n    def extract1(objid: int, obj: Dict[str, Any]) -> None:\n        filename = os.path.basename(obj.get(\"UF\") or cast(bytes, obj.get(\"F\")).decode())\n        fileref = obj[\"EF\"].get(\"UF\") or obj[\"EF\"].get(\"F\")\n        fileobj = doc.getobj(fileref.objid)\n        if not isinstance(fileobj, PDFStream):\n            error_msg = (\n                \"unable to process PDF: reference for %r is not a \"",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "LITERAL_EMBEDDEDFILE",
+        "kind": 5,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "LITERAL_EMBEDDEDFILE = LIT(\"EmbeddedFile\")\ndef extractembedded(fname: str, password: str, extractdir: str) -> None:\n    def extract1(objid: int, obj: Dict[str, Any]) -> None:\n        filename = os.path.basename(obj.get(\"UF\") or cast(bytes, obj.get(\"F\")).decode())\n        fileref = obj[\"EF\"].get(\"UF\") or obj[\"EF\"].get(\"F\")\n        fileobj = doc.getobj(fileref.objid)\n        if not isinstance(fileobj, PDFStream):\n            error_msg = (\n                \"unable to process PDF: reference for %r is not a \"\n                \"PDFStream\" % filename",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "float_or_disabled",
+        "kind": 2,
+        "importPath": ".venv.bin.pdf2txt",
+        "description": ".venv.bin.pdf2txt",
+        "peekOfCode": "def float_or_disabled(x: str) -> Optional[float]:\n    if x.lower().strip() == \"disabled\":\n        return None\n    try:\n        return float(x)\n    except ValueError:\n        raise argparse.ArgumentTypeError(f\"invalid float value: {x}\")\ndef extract_text(\n    files: Iterable[str] = [],\n    outfile: str = \"-\",",
+        "detail": ".venv.bin.pdf2txt",
+        "documentation": {}
+    },
+    {
+        "label": "extract_text",
+        "kind": 2,
+        "importPath": ".venv.bin.pdf2txt",
+        "description": ".venv.bin.pdf2txt",
+        "peekOfCode": "def extract_text(\n    files: Iterable[str] = [],\n    outfile: str = \"-\",\n    laparams: Optional[LAParams] = None,\n    output_type: str = \"text\",\n    codec: str = \"utf-8\",\n    strip_control: bool = False,\n    maxpages: int = 0,\n    page_numbers: Optional[Container[int]] = None,\n    password: str = \"\",",
+        "detail": ".venv.bin.pdf2txt",
+        "documentation": {}
+    },
+    {
+        "label": "create_parser",
+        "kind": 2,
+        "importPath": ".venv.bin.pdf2txt",
+        "description": ".venv.bin.pdf2txt",
+        "peekOfCode": "def create_parser() -> argparse.ArgumentParser:\n    parser = argparse.ArgumentParser(description=__doc__, add_help=True)\n    parser.add_argument(\n        \"files\",\n        type=str,\n        default=None,\n        nargs=\"+\",\n        help=\"One or more paths to PDF files.\",\n    )\n    parser.add_argument(",
+        "detail": ".venv.bin.pdf2txt",
+        "documentation": {}
+    },
+    {
+        "label": "parse_args",
+        "kind": 2,
+        "importPath": ".venv.bin.pdf2txt",
+        "description": ".venv.bin.pdf2txt",
+        "peekOfCode": "def parse_args(args: Optional[List[str]]) -> argparse.Namespace:\n    parsed_args = create_parser().parse_args(args=args)\n    # Propagate parsed layout parameters to LAParams object\n    if parsed_args.no_laparams:\n        parsed_args.laparams = None\n    else:\n        parsed_args.laparams = LAParams(\n            line_overlap=parsed_args.line_overlap,\n            char_margin=parsed_args.char_margin,\n            line_margin=parsed_args.line_margin,",
+        "detail": ".venv.bin.pdf2txt",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": ".venv.bin.pdf2txt",
+        "description": ".venv.bin.pdf2txt",
+        "peekOfCode": "def main(args: Optional[List[str]] = None) -> int:\n    parsed_args = parse_args(args)\n    outfp = extract_text(**vars(parsed_args))\n    outfp.close()\n    return 0\nif __name__ == \"__main__\":\n    sys.exit(main())",
+        "detail": ".venv.bin.pdf2txt",
+        "documentation": {}
+    },
+    {
+        "label": "OUTPUT_TYPES",
+        "kind": 5,
+        "importPath": ".venv.bin.pdf2txt",
+        "description": ".venv.bin.pdf2txt",
+        "peekOfCode": "OUTPUT_TYPES = ((\".htm\", \"html\"), (\".html\", \"html\"), (\".xml\", \"xml\"), (\".tag\", \"tag\"))\ndef float_or_disabled(x: str) -> Optional[float]:\n    if x.lower().strip() == \"disabled\":\n        return None\n    try:\n        return float(x)\n    except ValueError:\n        raise argparse.ArgumentTypeError(f\"invalid float value: {x}\")\ndef extract_text(\n    files: Iterable[str] = [],",
+        "detail": ".venv.bin.pdf2txt",
+        "documentation": {}
+    },
+    {
+        "label": "cmd_doc",
+        "kind": 5,
+        "importPath": ".venv.bin.runxlrd",
+        "description": ".venv.bin.runxlrd",
+        "peekOfCode": "cmd_doc = \"\"\"\nCommands:\n2rows           Print the contents of first and last row in each sheet\n3rows           Print the contents of first, second and last row in each sheet\nbench           Same as \"show\", but doesn't print -- for profiling\nbiff_count[1]   Print a count of each type of BIFF record in the file\nbiff_dump[1]    Print a dump (char and hex) of the BIFF records in the file\nfonts           hdr + print a dump of all font objects\nhdr             Mini-overview of file (no per-sheet information)\nhotshot         Do a hotshot profile run e.g. ... -f1 hotshot bench bigfile*.xls",
+        "detail": ".venv.bin.runxlrd",
+        "documentation": {}
+    },
+    {
+        "label": "options",
+        "kind": 5,
+        "importPath": ".venv.bin.runxlrd",
+        "description": ".venv.bin.runxlrd",
+        "peekOfCode": "options = None\nif __name__ == \"__main__\":\n    import xlrd\n    import sys\n    import time\n    import glob\n    import traceback\n    import gc\n    from xlrd.timemachine import xrange, REPR\n    class LogHandler(object):",
+        "detail": ".venv.bin.runxlrd",
+        "documentation": {}
+    },
+    {
+        "label": "extract_file",
+        "kind": 2,
+        "importPath": ".venv.bin.vba_extract",
+        "description": ".venv.bin.vba_extract",
+        "peekOfCode": "def extract_file(xlsm_zip, filename):\n    # Extract a single file from an Excel xlsm macro file.\n    data = xlsm_zip.read(\"xl/\" + filename)\n    # Write the data to a local file.\n    file = open(filename, \"wb\")\n    file.write(data)\n    file.close()\n# The VBA project file and project signature file we want to extract.\nvba_filename = \"vbaProject.bin\"\nvba_signature_filename = \"vbaProjectSignature.bin\"",
+        "detail": ".venv.bin.vba_extract",
+        "documentation": {}
+    },
+    {
+        "label": "vba_filename",
+        "kind": 5,
+        "importPath": ".venv.bin.vba_extract",
+        "description": ".venv.bin.vba_extract",
+        "peekOfCode": "vba_filename = \"vbaProject.bin\"\nvba_signature_filename = \"vbaProjectSignature.bin\"\n# Get the xlsm file name from the commandline.\nif len(sys.argv) > 1:\n    xlsm_file = sys.argv[1]\nelse:\n    print(\n        \"\\nUtility to extract a vbaProject.bin binary from an Excel 2007+ \"\n        \"xlsm macro file for insertion into an XlsxWriter file.\\n\"\n        \"If the macros are digitally signed, extracts also a vbaProjectSignature.bin \"",
+        "detail": ".venv.bin.vba_extract",
+        "documentation": {}
+    },
+    {
+        "label": "vba_signature_filename",
+        "kind": 5,
+        "importPath": ".venv.bin.vba_extract",
+        "description": ".venv.bin.vba_extract",
+        "peekOfCode": "vba_signature_filename = \"vbaProjectSignature.bin\"\n# Get the xlsm file name from the commandline.\nif len(sys.argv) > 1:\n    xlsm_file = sys.argv[1]\nelse:\n    print(\n        \"\\nUtility to extract a vbaProject.bin binary from an Excel 2007+ \"\n        \"xlsm macro file for insertion into an XlsxWriter file.\\n\"\n        \"If the macros are digitally signed, extracts also a vbaProjectSignature.bin \"\n        \"file.\\n\"",
+        "detail": ".venv.bin.vba_extract",
+        "documentation": {}
+    },
+    {
+        "label": "Settings",
+        "kind": 6,
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "peekOfCode": "class Settings(BaseSettings):\n    \"\"\"Application configuration from environment variables.\"\"\"\n    OPENROUTER_API_KEY: str\n    OPENROUTER_MODEL: str = \"openai/gpt-4o\"\n    class Config:\n        env_file = \".env\"\n        env_file_encoding = \"utf-8\"\nsettings = Settings()",
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "kind": 5,
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "peekOfCode": "settings = Settings()",
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "parse_page_for_jds",
+        "kind": 2,
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "peekOfCode": "def parse_page_for_jds(page_text: str) -> JobDescriptionList:\n    \"\"\"\n    Extract job descriptions from page text using LLM with structured output.\n    Args:\n        page_text: Extracted text from a single page\n    Returns:\n        JobDescriptionList containing all JDs found on the page\n    \"\"\"\n    llm = ChatOpenAI(\n        model=settings.OPENROUTER_MODEL,",
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "extract_document_by_page",
+        "kind": 2,
+        "importPath": "client.unstructured",
+        "description": "client.unstructured",
+        "peekOfCode": "def extract_document_by_page(file_path: str) -> dict[int, str]:\n    \"\"\"\n    Extract text from any document (PDF, DOCX, Excel) grouped by page number.\n    Args:\n        file_path: Path to the document file\n    Returns:\n        Dictionary mapping page number to extracted text\n    \"\"\"\n    elements = partition(filename=file_path)\n    pages = defaultdict(list)",
+        "detail": "client.unstructured",
+        "documentation": {}
+    },
+    {
+        "label": "JobDescription",
+        "kind": 6,
+        "importPath": "models.job_description",
+        "description": "models.job_description",
+        "peekOfCode": "class JobDescription(BaseModel):\n    \"\"\"Model for extracted job description fields.\"\"\"\n    labor_category: str = Field(\n        description=\"Job title or labor category\"\n    )\n    experience: Optional[int] = Field(\n        None,\n        description=\"Years of experience required (integer). None if not specified.\"\n    )\n    location: Optional[str] = Field(",
+        "detail": "models.job_description",
+        "documentation": {}
+    },
+    {
+        "label": "JobDescriptionList",
+        "kind": 6,
+        "importPath": "models.job_description",
+        "description": "models.job_description",
+        "peekOfCode": "class JobDescriptionList(BaseModel):\n    \"\"\"List of job descriptions extracted from a document.\"\"\"\n    job_descriptions: list[JobDescription] = Field(\n        default_factory=list,\n        description=\"All job descriptions found in the page/document\"\n    )",
+        "detail": "models.job_description",
+        "documentation": {}
+    },
+    {
+        "label": "test_series",
+        "kind": 2,
+        "importPath": "find_oews_format",
+        "description": "find_oews_format",
+        "peekOfCode": "def test_series(series_id, description):\n    headers = {'Content-type': 'application/json'}\n    data = json.dumps({\n        \"seriesid\": [series_id],\n        \"startyear\": \"2020\",\n        \"endyear\": \"2023\",\n        \"registrationkey\": API_KEY\n    })\n    p = requests.post('https://api.bls.gov/publicAPI/v2/timeseries/data/', data=data, headers=headers)\n    json_data = json.loads(p.text)",
+        "detail": "find_oews_format",
+        "documentation": {}
+    },
+    {
+        "label": "API_KEY",
+        "kind": 5,
+        "importPath": "find_oews_format",
+        "description": "find_oews_format",
+        "peekOfCode": "API_KEY = \"73847c2940aa4d59ac8f5f3e77154520\"\ndef test_series(series_id, description):\n    headers = {'Content-type': 'application/json'}\n    data = json.dumps({\n        \"seriesid\": [series_id],\n        \"startyear\": \"2020\",\n        \"endyear\": \"2023\",\n        \"registrationkey\": API_KEY\n    })\n    p = requests.post('https://api.bls.gov/publicAPI/v2/timeseries/data/', data=data, headers=headers)",
+        "detail": "find_oews_format",
+        "documentation": {}
+    },
+    {
+        "label": "test_patterns",
+        "kind": 5,
+        "importPath": "find_oews_format",
+        "description": "find_oews_format",
+        "peekOfCode": "test_patterns = [\n    # Pattern 1: National, all industries, all occupations, mean hourly\n    (\"OEUM004914000000000003\", \"National all occupations mean hourly (example from BLS)\"),\n    # Pattern 2: Try Software Developers with state code\n    (\"OEUS000000000000151252003\", \"Software Dev - National - Mean Hourly\"),\n    (\"OEUS000000000000151252004\", \"Software Dev - National - Mean Annual\"),\n    # Pattern 3: Different area code format\n    (\"OEUSN0000015125204\", \"Software Dev - National (short) - Mean Annual\"),\n    # Pattern 4: All workers national as baseline test\n    (\"OEUM00491400000000000004\", \"All occupations - Mean Annual\"),",
+        "detail": "find_oews_format",
+        "documentation": {}
+    },
+    {
+        "label": "ImageAnalysis",
+        "kind": 6,
+        "importPath": "image_analysis",
+        "description": "image_analysis",
+        "peekOfCode": "class ImageAnalysis:\n    def __init__(self):\n        pass  # No longer need to initialize PortKeyClient\n    def handle_file_upload(self, file_path):\n        _, file_extension = os.path.splitext(file_path)\n        if file_extension.lower() in [\".jpg\", \".jpeg\", \".png\", \".gif\", \".webp\"]:\n            return self.analyze_image(file_path), \"Image\"\n        else:\n            return unstructuredApp().document_loader(file_path), \"Document\"\n    def analyze_image(self, file_path):",
+        "detail": "image_analysis",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "main",
+        "description": "main",
+        "peekOfCode": "def main():\n    print(\"Hello from pricing!\")\nif __name__ == \"__main__\":\n    main()",
+        "detail": "main",
+        "documentation": {}
+    },
+    {
+        "label": "API_KEY",
+        "kind": 5,
+        "importPath": "test_bls_simple",
+        "description": "test_bls_simple",
+        "peekOfCode": "API_KEY = \"73847c2940aa4d59ac8f5f3e77154520\"\nprint(\"=\"*60)\nprint(\"Testing BLS API with CPI Data (Known Working Series)\")\nprint(\"=\"*60)\n# Test with CPI data first (known to work)\nheaders = {'Content-type': 'application/json'}\ndata = json.dumps({\n    \"seriesid\": ['CUUR0000SA0', 'SUUR0000SA0'],\n    \"startyear\": \"2020\",\n    \"endyear\": \"2023\",",
+        "detail": "test_bls_simple",
+        "documentation": {}
+    },
+    {
+        "label": "headers",
+        "kind": 5,
+        "importPath": "test_bls_simple",
+        "description": "test_bls_simple",
+        "peekOfCode": "headers = {'Content-type': 'application/json'}\ndata = json.dumps({\n    \"seriesid\": ['CUUR0000SA0', 'SUUR0000SA0'],\n    \"startyear\": \"2020\",\n    \"endyear\": \"2023\",\n    \"registrationkey\": API_KEY\n})\nprint(\"\\nTest 1: CPI Data (Consumer Price Index)\")\nprint(\"Series IDs: CUUR0000SA0, SUUR0000SA0\")\nprint(\"Making request...\")",
+        "detail": "test_bls_simple",
+        "documentation": {}
+    },
+    {
+        "label": "data",
+        "kind": 5,
+        "importPath": "test_bls_simple",
+        "description": "test_bls_simple",
+        "peekOfCode": "data = json.dumps({\n    \"seriesid\": ['CUUR0000SA0', 'SUUR0000SA0'],\n    \"startyear\": \"2020\",\n    \"endyear\": \"2023\",\n    \"registrationkey\": API_KEY\n})\nprint(\"\\nTest 1: CPI Data (Consumer Price Index)\")\nprint(\"Series IDs: CUUR0000SA0, SUUR0000SA0\")\nprint(\"Making request...\")\np = requests.post('https://api.bls.gov/publicAPI/v2/timeseries/data/', data=data, headers=headers)",
+        "detail": "test_bls_simple",
+        "documentation": {}
+    },
+    {
+        "label": "p",
+        "kind": 5,
+        "importPath": "test_bls_simple",
+        "description": "test_bls_simple",
+        "peekOfCode": "p = requests.post('https://api.bls.gov/publicAPI/v2/timeseries/data/', data=data, headers=headers)\njson_data = json.loads(p.text)\nprint(f\"Status: {json_data.get('status')}\")\nif json_data.get('status') == 'REQUEST_SUCCEEDED':\n    print(\"✅ API Key is working!\")\n    print(\"\\nSample data:\")\n    for series in json_data['Results']['series']:\n        seriesId = series['seriesID']\n        print(f\"\\n  Series: {seriesId}\")\n        for item in series['data'][:3]:  # Show first 3 data points",
+        "detail": "test_bls_simple",
+        "documentation": {}
+    },
+    {
+        "label": "json_data",
+        "kind": 5,
+        "importPath": "test_bls_simple",
+        "description": "test_bls_simple",
+        "peekOfCode": "json_data = json.loads(p.text)\nprint(f\"Status: {json_data.get('status')}\")\nif json_data.get('status') == 'REQUEST_SUCCEEDED':\n    print(\"✅ API Key is working!\")\n    print(\"\\nSample data:\")\n    for series in json_data['Results']['series']:\n        seriesId = series['seriesID']\n        print(f\"\\n  Series: {seriesId}\")\n        for item in series['data'][:3]:  # Show first 3 data points\n            print(f\"    {item['year']}-{item['period']}: {item['value']}\")",
+        "detail": "test_bls_simple",
+        "documentation": {}
+    },
+    {
+        "label": "oews_series_formats",
+        "kind": 5,
+        "importPath": "test_bls_simple",
+        "description": "test_bls_simple",
+        "peekOfCode": "oews_series_formats = [\n    (\"OEUN000000000000151252004\", \"Format 1: OEUN + national + all industries + SOC 151252 + mean annual\"),\n    (\"OEUM000000000000151252004\", \"Format 2: OEUM + national + all industries + SOC 151252 + mean annual\"),\n    (\"OEUS000000151252004\", \"Format 3: OEUS + national + SOC 151252 + mean annual\"),\n]\nfor series_id, description in oews_series_formats:\n    print(f\"\\n{description}\")\n    print(f\"Series ID: {series_id}\")\n    data = json.dumps({\n        \"seriesid\": [series_id],",
+        "detail": "test_bls_simple",
+        "documentation": {}
+    },
+    {
+        "label": "extract_all_jds",
+        "kind": 2,
+        "importPath": "test_extraction",
+        "description": "test_extraction",
+        "peekOfCode": "def extract_all_jds(file_path: str) -> list[dict]:\n    \"\"\"\n    Extract all job descriptions from a document.\n    Args:\n        file_path: Path to the document\n    Returns:\n        List of job description dictionaries\n    \"\"\"\n    print(f\"Extracting text from: {file_path}\")\n    pages = extract_document_by_page(file_path)",
+        "detail": "test_extraction",
+        "documentation": {}
+    },
+    {
+        "label": "export_to_excel",
+        "kind": 2,
+        "importPath": "test_extraction",
+        "description": "test_extraction",
+        "peekOfCode": "def export_to_excel(jds: list[dict], output_file: str):\n    \"\"\"\n    Export job descriptions to Excel file.\n    Args:\n        jds: List of job description dictionaries\n        output_file: Path to output Excel file\n    \"\"\"\n    df = pd.DataFrame(jds)\n    # Rename columns to match expected format\n    df.rename(columns={",
+        "detail": "test_extraction",
+        "documentation": {}
+    },
+    {
+        "label": "API_KEY",
+        "kind": 5,
+        "importPath": "test_oews_correct_format",
+        "description": "test_oews_correct_format",
+        "peekOfCode": "API_KEY = \"73847c2940aa4d59ac8f5f3e77154520\"\n# First, let's test the exact example from BLS docs\ntest_series_id = \"OEUN000000056--5747213213\"\nprint(\"=\"*70)\nprint(\"Testing OEWS Series ID from BLS Documentation\")\nprint(\"=\"*70)\nprint(f\"\\nSeries ID: {test_series_id}\")\nprint(\"Making request...\")\nheaders = {'Content-type': 'application/json'}\ndata = json.dumps({",
+        "detail": "test_oews_correct_format",
+        "documentation": {}
+    },
+    {
+        "label": "test_series_id",
+        "kind": 5,
+        "importPath": "test_oews_correct_format",
+        "description": "test_oews_correct_format",
+        "peekOfCode": "test_series_id = \"OEUN000000056--5747213213\"\nprint(\"=\"*70)\nprint(\"Testing OEWS Series ID from BLS Documentation\")\nprint(\"=\"*70)\nprint(f\"\\nSeries ID: {test_series_id}\")\nprint(\"Making request...\")\nheaders = {'Content-type': 'application/json'}\ndata = json.dumps({\n    \"seriesid\": [test_series_id],\n    \"startyear\": \"2020\",",
+        "detail": "test_oews_correct_format",
+        "documentation": {}
+    },
+    {
+        "label": "headers",
+        "kind": 5,
+        "importPath": "test_oews_correct_format",
+        "description": "test_oews_correct_format",
+        "peekOfCode": "headers = {'Content-type': 'application/json'}\ndata = json.dumps({\n    \"seriesid\": [test_series_id],\n    \"startyear\": \"2020\",\n    \"endyear\": \"2023\",\n    \"registrationkey\": API_KEY\n})\nresponse = requests.post(\n    'https://api.bls.gov/publicAPI/v2/timeseries/data/',\n    data=data,",
+        "detail": "test_oews_correct_format",
+        "documentation": {}
+    },
+    {
+        "label": "data",
+        "kind": 5,
+        "importPath": "test_oews_correct_format",
+        "description": "test_oews_correct_format",
+        "peekOfCode": "data = json.dumps({\n    \"seriesid\": [test_series_id],\n    \"startyear\": \"2020\",\n    \"endyear\": \"2023\",\n    \"registrationkey\": API_KEY\n})\nresponse = requests.post(\n    'https://api.bls.gov/publicAPI/v2/timeseries/data/',\n    data=data,\n    headers=headers,",
+        "detail": "test_oews_correct_format",
+        "documentation": {}
+    },
+    {
+        "label": "response",
+        "kind": 5,
+        "importPath": "test_oews_correct_format",
+        "description": "test_oews_correct_format",
+        "peekOfCode": "response = requests.post(\n    'https://api.bls.gov/publicAPI/v2/timeseries/data/',\n    data=data,\n    headers=headers,\n    timeout=10\n)\njson_data = json.loads(response.text)\nprint(f\"Status: {json_data.get('status')}\")\nif json_data.get('status') == 'REQUEST_SUCCEEDED':\n    series = json_data['Results']['series']",
+        "detail": "test_oews_correct_format",
+        "documentation": {}
+    },
+    {
+        "label": "json_data",
+        "kind": 5,
+        "importPath": "test_oews_correct_format",
+        "description": "test_oews_correct_format",
+        "peekOfCode": "json_data = json.loads(response.text)\nprint(f\"Status: {json_data.get('status')}\")\nif json_data.get('status') == 'REQUEST_SUCCEEDED':\n    series = json_data['Results']['series']\n    if series and series[0].get('data'):\n        print(\"✅ SUCCESS! OEWS data is available through API!\")\n        print(\"\\nSample data:\")\n        for item in series[0]['data'][:5]:\n            print(f\"  {item['year']}-{item.get('period', 'Annual')}: ${item['value']}\")\n        print(\"\\n🎯 Now we need to figure out the format for other SOC codes\")",
+        "detail": "test_oews_correct_format",
+        "documentation": {}
+    },
+    {
+        "label": "test_onet_occupation",
+        "kind": 2,
+        "importPath": "test_onet_api",
+        "description": "test_onet_api",
+        "peekOfCode": "def test_onet_occupation(soc_code):\n    \"\"\"\n    Get occupation data from O*NET by SOC code.\n    Args:\n        soc_code: SOC code like \"15-1252.00\"\n    \"\"\"\n    # O*NET Web Services endpoint\n    base_url = \"https://services.onetcenter.org/ws/online/occupations\"\n    # Full SOC code format (with .00 suffix)\n    if not soc_code.endswith(\".00\"):",
+        "detail": "test_onet_api",
+        "documentation": {}
+    },
+    {
+        "label": "test_onet_wages",
+        "kind": 2,
+        "importPath": "test_onet_api",
+        "description": "test_onet_api",
+        "peekOfCode": "def test_onet_wages(soc_code):\n    \"\"\"\n    Get wage data from O*NET.\n    \"\"\"\n    if not soc_code.endswith(\".00\"):\n        soc_code = soc_code + \".00\"\n    # Wage data endpoint\n    url = f\"https://services.onetcenter.org/ws/online/occupations/{soc_code}/summary/wages\"\n    print(f\"\\n{'='*60}\")\n    print(f\"Testing O*NET Wage Data\")",
+        "detail": "test_onet_api",
+        "documentation": {}
+    },
+    {
+        "label": "verify_bls_api",
+        "kind": 2,
+        "importPath": "verify_bls_api",
+        "description": "verify_bls_api",
+        "peekOfCode": "def verify_bls_api(api_key: str):\n    \"\"\"\n    Verify BLS API is working with the provided API key.\n    Args:\n        api_key: Your BLS API registration key\n    \"\"\"\n    print(\"=\"*60)\n    print(\"BLS API Verification Test\")\n    print(\"=\"*60)\n    # Test with a known SOC code: Software Developers (15-1252)",
+        "detail": "verify_bls_api",
+        "documentation": {}
+    }
+]
