@@ -8,6 +8,17 @@ class Settings(BaseSettings):
 
     OPENROUTER_API_KEY: str
     OPENROUTER_MODEL: str = "openai/gpt-4o"
+    OPENAI_API_KEY: str
+
+    # MongoDB configuration
+    MONGODB_URL: str = "mongodb://localhost:27017"
+    MONGODB_DATABASE: str = "testing"
+
+    # CareerOneStop API (free gov API for wage data by SOC code)
+    CAREERONESTOP_API_KEY: str = ""  # Register at careeronestop.org
+
+    # BLS API (optional - CareerOneStop is easier)
+    BLS_API_KEY: str = "73847c2940aa4d59ac8f5f3e77154520"
 
     class Config:
         env_file = ".env"

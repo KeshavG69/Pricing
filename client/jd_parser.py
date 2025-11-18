@@ -1,8 +1,8 @@
 """Job description parsing using LangChain and LLM."""
 
-from langchain_openai import ChatOpenAI
-from app.settings import settings
+from client.llm_client import get_chat_llm
 from models.job_description import JobDescriptionList
+from app.settings import settings
 
 
 def parse_page_for_jds(page_text: str) -> JobDescriptionList:
@@ -15,12 +15,7 @@ def parse_page_for_jds(page_text: str) -> JobDescriptionList:
     Returns:
         JobDescriptionList containing all JDs found on the page
     """
-    llm = ChatOpenAI(
-        model=settings.OPENROUTER_MODEL,
-        openai_api_key=settings.OPENROUTER_API_KEY,
-        openai_api_base="https://openrouter.ai/api/v1",
-    )
-
+    llm = get_chat_llm(model=settings.OPENROUTER_MODEL, api_key=settings.OPENROUTER_API_KEY, base_url="https://openrouter.ai/api/v1")
     structured_llm = llm.with_structured_output(JobDescriptionList)
 
     prompt = f"""Extract all job descriptions from the following text.

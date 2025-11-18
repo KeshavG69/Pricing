@@ -216,6 +216,102 @@
         "documentation": {}
     },
     {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Tuple",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Tuple",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "pdfminer",
         "kind": 6,
         "isExtraImport": true,
@@ -418,27 +514,19 @@
         "documentation": {}
     },
     {
-        "label": "ChatOpenAI",
-        "importPath": "langchain_openai",
-        "description": "langchain_openai",
+        "label": "get_chat_llm",
+        "importPath": "client.llm_client",
+        "description": "client.llm_client",
         "isExtraImport": true,
-        "detail": "langchain_openai",
+        "detail": "client.llm_client",
         "documentation": {}
     },
     {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
+        "label": "get_embeddings",
+        "importPath": "client.llm_client",
+        "description": "client.llm_client",
         "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
+        "detail": "client.llm_client",
         "documentation": {}
     },
     {
@@ -447,6 +535,112 @@
         "description": "models.job_description",
         "isExtraImport": true,
         "detail": "models.job_description",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "threading",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "threading",
+        "description": "threading",
+        "detail": "threading",
+        "documentation": {}
+    },
+    {
+        "label": "ChatOpenAI",
+        "importPath": "langchain_openai",
+        "description": "langchain_openai",
+        "isExtraImport": true,
+        "detail": "langchain_openai",
+        "documentation": {}
+    },
+    {
+        "label": "OpenAIEmbeddings",
+        "importPath": "langchain_openai",
+        "description": "langchain_openai",
+        "isExtraImport": true,
+        "detail": "langchain_openai",
+        "documentation": {}
+    },
+    {
+        "label": "OpenAIChat",
+        "importPath": "agno.models.openai",
+        "description": "agno.models.openai",
+        "isExtraImport": true,
+        "detail": "agno.models.openai",
+        "documentation": {}
+    },
+    {
+        "label": "pandas",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pandas",
+        "description": "pandas",
+        "detail": "pandas",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "FAISS",
+        "importPath": "langchain_community.vectorstores",
+        "description": "langchain_community.vectorstores",
+        "isExtraImport": true,
+        "detail": "langchain_community.vectorstores",
         "documentation": {}
     },
     {
@@ -482,6 +676,47 @@
         "documentation": {}
     },
     {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "ASCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "TEXT",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "Database",
+        "importPath": "pymongo.database",
+        "description": "pymongo.database",
+        "isExtraImport": true,
+        "detail": "pymongo.database",
+        "documentation": {}
+    },
+    {
+        "label": "time",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "time",
+        "description": "time",
+        "detail": "time",
+        "documentation": {}
+    },
+    {
         "label": "requests",
         "kind": 6,
         "isExtraImport": true,
@@ -500,82 +735,6 @@
         "documentation": {}
     },
     {
-        "label": "base64",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "base64",
-        "description": "base64",
-        "detail": "base64",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "boto3",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "boto3",
-        "description": "boto3",
-        "detail": "boto3",
-        "documentation": {}
-    },
-    {
-        "label": "asyncio",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "asyncio",
-        "description": "asyncio",
-        "detail": "asyncio",
-        "documentation": {}
-    },
-    {
-        "label": "unstructuredApp",
-        "importPath": "client.unstructuredapp",
-        "description": "client.unstructuredapp",
-        "isExtraImport": true,
-        "detail": "client.unstructuredapp",
-        "documentation": {}
-    },
-    {
-        "label": "ChatPromptTemplate",
-        "importPath": "langchain_core.prompts",
-        "description": "langchain_core.prompts",
-        "isExtraImport": true,
-        "detail": "langchain_core.prompts",
-        "documentation": {}
-    },
-    {
-        "label": "get_llm",
-        "importPath": "client.ultimate_llm",
-        "description": "client.ultimate_llm",
-        "isExtraImport": true,
-        "detail": "client.ultimate_llm",
-        "documentation": {}
-    },
-    {
-        "label": "ThreadPoolExecutor",
-        "importPath": "concurrent.futures",
-        "description": "concurrent.futures",
-        "isExtraImport": true,
-        "detail": "concurrent.futures",
-        "documentation": {}
-    },
-    {
-        "label": "pandas",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "pandas",
-        "description": "pandas",
-        "detail": "pandas",
-        "documentation": {}
-    },
-    {
         "label": "extract_document_by_page",
         "importPath": "client.unstructured",
         "description": "client.unstructured",
@@ -589,14 +748,6 @@
         "description": "client.jd_parser",
         "isExtraImport": true,
         "detail": "client.jd_parser",
-        "documentation": {}
-    },
-    {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
         "documentation": {}
     },
     {
@@ -901,7 +1052,7 @@
         "kind": 6,
         "importPath": "app.settings",
         "description": "app.settings",
-        "peekOfCode": "class Settings(BaseSettings):\n    \"\"\"Application configuration from environment variables.\"\"\"\n    OPENROUTER_API_KEY: str\n    OPENROUTER_MODEL: str = \"openai/gpt-4o\"\n    class Config:\n        env_file = \".env\"\n        env_file_encoding = \"utf-8\"\nsettings = Settings()",
+        "peekOfCode": "class Settings(BaseSettings):\n    \"\"\"Application configuration from environment variables.\"\"\"\n    OPENROUTER_API_KEY: str\n    OPENROUTER_MODEL: str = \"openai/gpt-4o\"\n    OPENAI_API_KEY: str\n    # MongoDB configuration\n    MONGODB_URL: str = \"mongodb://localhost:27017\"\n    MONGODB_DATABASE: str = \"testing\"\n    # CareerOneStop API (free gov API for wage data by SOC code)\n    CAREERONESTOP_API_KEY: str = \"\"  # Register at careeronestop.org",
         "detail": "app.settings",
         "documentation": {}
     },
@@ -919,8 +1070,152 @@
         "kind": 2,
         "importPath": "client.jd_parser",
         "description": "client.jd_parser",
-        "peekOfCode": "def parse_page_for_jds(page_text: str) -> JobDescriptionList:\n    \"\"\"\n    Extract job descriptions from page text using LLM with structured output.\n    Args:\n        page_text: Extracted text from a single page\n    Returns:\n        JobDescriptionList containing all JDs found on the page\n    \"\"\"\n    llm = ChatOpenAI(\n        model=settings.OPENROUTER_MODEL,",
+        "peekOfCode": "def parse_page_for_jds(page_text: str) -> JobDescriptionList:\n    \"\"\"\n    Extract job descriptions from page text using LLM with structured output.\n    Args:\n        page_text: Extracted text from a single page\n    Returns:\n        JobDescriptionList containing all JDs found on the page\n    \"\"\"\n    llm = get_chat_llm(model=settings.OPENROUTER_MODEL, api_key=settings.OPENROUTER_API_KEY, base_url=\"https://openrouter.ai/api/v1\")\n    structured_llm = llm.with_structured_output(JobDescriptionList)",
         "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "LLMClient",
+        "kind": 6,
+        "importPath": "client.llm_client",
+        "description": "client.llm_client",
+        "peekOfCode": "class LLMClient:\n    \"\"\"Unified LLM and Embeddings client with thread-safe caching\"\"\"\n    def __init__(self):\n        \"\"\"Initialize LLM client with thread safety\"\"\"\n        self._lock = threading.RLock()\n        self._chat_llm_cache: Dict[str, ChatOpenAI] = {}\n        self._chat_llm_agno_cache: Dict[str, OpenAIChat] = {}\n        self._embeddings_cache: Dict[str, OpenAIEmbeddings] = {}\n    def get_chat_llm(\n        self,",
+        "detail": "client.llm_client",
+        "documentation": {}
+    },
+    {
+        "label": "get_llm_client",
+        "kind": 2,
+        "importPath": "client.llm_client",
+        "description": "client.llm_client",
+        "peekOfCode": "def get_llm_client() -> LLMClient:\n    \"\"\"\n    Get or create LLM client (singleton pattern)\n    Returns:\n        LLMClient instance\n    \"\"\"\n    global _llm_client\n    with _client_lock:\n        if _llm_client is None:\n            _llm_client = LLMClient()",
+        "detail": "client.llm_client",
+        "documentation": {}
+    },
+    {
+        "label": "get_chat_llm",
+        "kind": 2,
+        "importPath": "client.llm_client",
+        "description": "client.llm_client",
+        "peekOfCode": "def get_chat_llm(\n    model: Optional[str] = None,\n    api_key: Optional[str] = None,\n    base_url: Optional[str] = None\n) -> ChatOpenAI:\n    \"\"\"\n    Convenience function to get ChatOpenAI instance directly (LangChain)\n    Args:\n        model: Model name (defaults to settings.OPENROUTER_MODEL)\n        api_key: API key (defaults to settings.OPENROUTER_API_KEY)",
+        "detail": "client.llm_client",
+        "documentation": {}
+    },
+    {
+        "label": "get_chat_llm_agno",
+        "kind": 2,
+        "importPath": "client.llm_client",
+        "description": "client.llm_client",
+        "peekOfCode": "def get_chat_llm_agno(\n    model: Optional[str] = None,\n    api_key: Optional[str] = None,\n    base_url: Optional[str] = None\n) -> OpenAIChat:\n    \"\"\"\n    Convenience function to get OpenAIChat instance directly (Agno)\n    Args:\n        model: Model name (defaults to settings.OPENROUTER_MODEL)\n        api_key: API key (defaults to settings.OPENROUTER_API_KEY)",
+        "detail": "client.llm_client",
+        "documentation": {}
+    },
+    {
+        "label": "get_embeddings",
+        "kind": 2,
+        "importPath": "client.llm_client",
+        "description": "client.llm_client",
+        "peekOfCode": "def get_embeddings(\n    model: Optional[str] = None,\n    api_key: Optional[str] = None\n) -> OpenAIEmbeddings:\n    \"\"\"\n    Convenience function to get OpenAI embeddings instance directly\n    Args:\n        model: Model name (defaults to text-embedding-3-small)\n        api_key: API key (defaults to settings.OPENAI_API_KEY)\n    Returns:",
+        "detail": "client.llm_client",
+        "documentation": {}
+    },
+    {
+        "label": "clear_llm_cache",
+        "kind": 2,
+        "importPath": "client.llm_client",
+        "description": "client.llm_client",
+        "peekOfCode": "def clear_llm_cache() -> None:\n    \"\"\"Convenience function to clear all cached LLM instances\"\"\"\n    client = get_llm_client()\n    client.clear_cache()",
+        "detail": "client.llm_client",
+        "documentation": {}
+    },
+    {
+        "label": "_client_lock",
+        "kind": 5,
+        "importPath": "client.llm_client",
+        "description": "client.llm_client",
+        "peekOfCode": "_client_lock = threading.RLock()\ndef get_llm_client() -> LLMClient:\n    \"\"\"\n    Get or create LLM client (singleton pattern)\n    Returns:\n        LLMClient instance\n    \"\"\"\n    global _llm_client\n    with _client_lock:\n        if _llm_client is None:",
+        "detail": "client.llm_client",
+        "documentation": {}
+    },
+    {
+        "label": "OEWSLocalLookup",
+        "kind": 6,
+        "importPath": "client.oews_local",
+        "description": "client.oews_local",
+        "peekOfCode": "class OEWSLocalLookup:\n    \"\"\"Query OEWS wage data from local files.\"\"\"\n    def __init__(self):\n        \"\"\"Initialize with local data files.\"\"\"\n        self._lock = threading.RLock()\n        self.occupations = self._load_occupations()\n        self.datatypes = self._load_datatypes()\n        self.areas = self._load_areas()\n        self.wage_data = None  # Lazy load when needed\n    def _load_occupations(self) -> pd.DataFrame:",
+        "detail": "client.oews_local",
+        "documentation": {}
+    },
+    {
+        "label": "get_oews_lookup_client",
+        "kind": 2,
+        "importPath": "client.oews_local",
+        "description": "client.oews_local",
+        "peekOfCode": "def get_oews_lookup_client() -> OEWSLocalLookup:\n    \"\"\"\n    Get or create OEWS lookup client (singleton pattern)\n    Returns:\n        OEWSLocalLookup instance\n    \"\"\"\n    global _oews_client\n    with _client_lock:\n        if _oews_client is None:\n            _oews_client = OEWSLocalLookup()",
+        "detail": "client.oews_local",
+        "documentation": {}
+    },
+    {
+        "label": "DATA_DIR",
+        "kind": 5,
+        "importPath": "client.oews_local",
+        "description": "client.oews_local",
+        "peekOfCode": "DATA_DIR = Path(\"data/oews\")\nclass OEWSLocalLookup:\n    \"\"\"Query OEWS wage data from local files.\"\"\"\n    def __init__(self):\n        \"\"\"Initialize with local data files.\"\"\"\n        self._lock = threading.RLock()\n        self.occupations = self._load_occupations()\n        self.datatypes = self._load_datatypes()\n        self.areas = self._load_areas()\n        self.wage_data = None  # Lazy load when needed",
+        "detail": "client.oews_local",
+        "documentation": {}
+    },
+    {
+        "label": "_client_lock",
+        "kind": 5,
+        "importPath": "client.oews_local",
+        "description": "client.oews_local",
+        "peekOfCode": "_client_lock = threading.RLock()\ndef get_oews_lookup_client() -> OEWSLocalLookup:\n    \"\"\"\n    Get or create OEWS lookup client (singleton pattern)\n    Returns:\n        OEWSLocalLookup instance\n    \"\"\"\n    global _oews_client\n    with _client_lock:\n        if _oews_client is None:",
+        "detail": "client.oews_local",
+        "documentation": {}
+    },
+    {
+        "label": "SOCVectorSearch",
+        "kind": 6,
+        "importPath": "client.soc_vector_search",
+        "description": "client.soc_vector_search",
+        "peekOfCode": "class SOCVectorSearch:\n    \"\"\"Map job titles to SOC codes using semantic vector search.\"\"\"\n    def __init__(self):\n        \"\"\"Initialize vector search with OpenAI embeddings.\"\"\"\n        self._lock = threading.RLock()\n        # Use shared embeddings instance\n        self.embeddings = get_embeddings()\n        self.vectorstore = None\n        self.occupations = None\n        # Load occupation data",
+        "detail": "client.soc_vector_search",
+        "documentation": {}
+    },
+    {
+        "label": "get_soc_vector_search_client",
+        "kind": 2,
+        "importPath": "client.soc_vector_search",
+        "description": "client.soc_vector_search",
+        "peekOfCode": "def get_soc_vector_search_client() -> SOCVectorSearch:\n    \"\"\"\n    Get or create SOC vector search client (singleton pattern)\n    Returns:\n        SOCVectorSearch instance\n    \"\"\"\n    global _soc_client\n    with _client_lock:\n        if _soc_client is None:\n            _soc_client = SOCVectorSearch()",
+        "detail": "client.soc_vector_search",
+        "documentation": {}
+    },
+    {
+        "label": "DATA_DIR",
+        "kind": 5,
+        "importPath": "client.soc_vector_search",
+        "description": "client.soc_vector_search",
+        "peekOfCode": "DATA_DIR = Path(\"data/oews\")\nCACHE_DIR = Path(\"data/cache\")\nclass SOCVectorSearch:\n    \"\"\"Map job titles to SOC codes using semantic vector search.\"\"\"\n    def __init__(self):\n        \"\"\"Initialize vector search with OpenAI embeddings.\"\"\"\n        self._lock = threading.RLock()\n        # Use shared embeddings instance\n        self.embeddings = get_embeddings()\n        self.vectorstore = None",
+        "detail": "client.soc_vector_search",
+        "documentation": {}
+    },
+    {
+        "label": "CACHE_DIR",
+        "kind": 5,
+        "importPath": "client.soc_vector_search",
+        "description": "client.soc_vector_search",
+        "peekOfCode": "CACHE_DIR = Path(\"data/cache\")\nclass SOCVectorSearch:\n    \"\"\"Map job titles to SOC codes using semantic vector search.\"\"\"\n    def __init__(self):\n        \"\"\"Initialize vector search with OpenAI embeddings.\"\"\"\n        self._lock = threading.RLock()\n        # Use shared embeddings instance\n        self.embeddings = get_embeddings()\n        self.vectorstore = None\n        self.occupations = None",
+        "detail": "client.soc_vector_search",
+        "documentation": {}
+    },
+    {
+        "label": "_client_lock",
+        "kind": 5,
+        "importPath": "client.soc_vector_search",
+        "description": "client.soc_vector_search",
+        "peekOfCode": "_client_lock = threading.RLock()\ndef get_soc_vector_search_client() -> SOCVectorSearch:\n    \"\"\"\n    Get or create SOC vector search client (singleton pattern)\n    Returns:\n        SOCVectorSearch instance\n    \"\"\"\n    global _soc_client\n    with _client_lock:\n        if _soc_client is None:",
+        "detail": "client.soc_vector_search",
         "documentation": {}
     },
     {
@@ -951,39 +1246,156 @@
         "documentation": {}
     },
     {
-        "label": "test_series",
+        "label": "create_mongo_client",
         "kind": 2,
-        "importPath": "find_oews_format",
-        "description": "find_oews_format",
-        "peekOfCode": "def test_series(series_id, description):\n    headers = {'Content-type': 'application/json'}\n    data = json.dumps({\n        \"seriesid\": [series_id],\n        \"startyear\": \"2020\",\n        \"endyear\": \"2023\",\n        \"registrationkey\": API_KEY\n    })\n    p = requests.post('https://api.bls.gov/publicAPI/v2/timeseries/data/', data=data, headers=headers)\n    json_data = json.loads(p.text)",
-        "detail": "find_oews_format",
+        "importPath": "scripts.import_oews_to_mongo",
+        "description": "scripts.import_oews_to_mongo",
+        "peekOfCode": "def create_mongo_client() -> Tuple[MongoClient, Database]:\n    \"\"\"Create MongoDB client and return client + database.\"\"\"\n    print(f\"Connecting to MongoDB at {settings.MONGODB_URL}...\")\n    client = MongoClient(settings.MONGODB_URL)\n    # Test connection\n    client.server_info()\n    print(\"  ✓ Connected to MongoDB\")\n    db = client[settings.MONGODB_DATABASE]\n    print(f\"  ✓ Using database: {settings.MONGODB_DATABASE}\")\n    return client, db",
+        "detail": "scripts.import_oews_to_mongo",
         "documentation": {}
     },
     {
-        "label": "API_KEY",
+        "label": "import_occupations",
+        "kind": 2,
+        "importPath": "scripts.import_oews_to_mongo",
+        "description": "scripts.import_oews_to_mongo",
+        "peekOfCode": "def import_occupations(db: Database) -> int:\n    \"\"\"Import occupation codes.\"\"\"\n    print(\"\\n1. Importing occupations...\")\n    df = pd.read_csv(\n        DATA_DIR / \"oe.occupation\",\n        sep=\"\\t\",\n        header=0,\n        dtype=str,\n    )\n    df.columns = df.columns.str.strip()",
+        "detail": "scripts.import_oews_to_mongo",
+        "documentation": {}
+    },
+    {
+        "label": "import_datatypes",
+        "kind": 2,
+        "importPath": "scripts.import_oews_to_mongo",
+        "description": "scripts.import_oews_to_mongo",
+        "peekOfCode": "def import_datatypes(db: Database) -> int:\n    \"\"\"Import data type codes.\"\"\"\n    print(\"\\n2. Importing data types...\")\n    df = pd.read_csv(\n        DATA_DIR / \"oe.datatype\",\n        sep=\"\\t\",\n        header=0,\n        dtype=str,\n    )\n    df.columns = df.columns.str.strip()",
+        "detail": "scripts.import_oews_to_mongo",
+        "documentation": {}
+    },
+    {
+        "label": "import_areas",
+        "kind": 2,
+        "importPath": "scripts.import_oews_to_mongo",
+        "description": "scripts.import_oews_to_mongo",
+        "peekOfCode": "def import_areas(db: Database) -> int:\n    \"\"\"Import area codes.\"\"\"\n    print(\"\\n3. Importing geographic areas...\")\n    df = pd.read_csv(\n        DATA_DIR / \"oe.area\",\n        sep=\"\\t\",\n        header=0,\n        dtype=str,\n    )\n    df.columns = df.columns.str.strip()",
+        "detail": "scripts.import_oews_to_mongo",
+        "documentation": {}
+    },
+    {
+        "label": "import_wage_data",
+        "kind": 2,
+        "importPath": "scripts.import_oews_to_mongo",
+        "description": "scripts.import_oews_to_mongo",
+        "peekOfCode": "def import_wage_data(db: Database, batch_size: int = 50000) -> int:\n    \"\"\"Import wage data in batches (large file).\"\"\"\n    print(\"\\n4. Importing wage data (this may take 2-5 minutes)...\")\n    db.wage_data.drop()\n    total_records = 0\n    chunk_iter = pd.read_csv(\n        DATA_DIR / \"oe.data.0.Current\",\n        sep=\"\\t\",\n        header=0,\n        dtype=str,",
+        "detail": "scripts.import_oews_to_mongo",
+        "documentation": {}
+    },
+    {
+        "label": "verify_import",
+        "kind": 2,
+        "importPath": "scripts.import_oews_to_mongo",
+        "description": "scripts.import_oews_to_mongo",
+        "peekOfCode": "def verify_import(db: Database) -> Dict[str, int]:\n    \"\"\"Verify data was imported correctly.\"\"\"\n    print(\"\\n\" + \"=\" * 60)\n    print(\"Verifying Import\")\n    print(\"=\" * 60)\n    counts = {\n        \"occupations\": db.occupations.count_documents({}),\n        \"datatypes\": db.datatypes.count_documents({}),\n        \"areas\": db.areas.count_documents({}),\n        \"wage_data\": db.wage_data.count_documents({}),",
+        "detail": "scripts.import_oews_to_mongo",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "scripts.import_oews_to_mongo",
+        "description": "scripts.import_oews_to_mongo",
+        "peekOfCode": "def main():\n    \"\"\"Main import function.\"\"\"\n    print(\"=\" * 60)\n    print(\"OEWS Data Import to MongoDB\")\n    print(\"=\" * 60)\n    # Check data files exist\n    required_files = [\n        \"oe.occupation\",\n        \"oe.datatype\",\n        \"oe.area\",",
+        "detail": "scripts.import_oews_to_mongo",
+        "documentation": {}
+    },
+    {
+        "label": "DATA_DIR",
         "kind": 5,
-        "importPath": "find_oews_format",
-        "description": "find_oews_format",
-        "peekOfCode": "API_KEY = \"73847c2940aa4d59ac8f5f3e77154520\"\ndef test_series(series_id, description):\n    headers = {'Content-type': 'application/json'}\n    data = json.dumps({\n        \"seriesid\": [series_id],\n        \"startyear\": \"2020\",\n        \"endyear\": \"2023\",\n        \"registrationkey\": API_KEY\n    })\n    p = requests.post('https://api.bls.gov/publicAPI/v2/timeseries/data/', data=data, headers=headers)",
-        "detail": "find_oews_format",
+        "importPath": "scripts.import_oews_to_mongo",
+        "description": "scripts.import_oews_to_mongo",
+        "peekOfCode": "DATA_DIR = Path(\"data/oews\")\ndef create_mongo_client() -> Tuple[MongoClient, Database]:\n    \"\"\"Create MongoDB client and return client + database.\"\"\"\n    print(f\"Connecting to MongoDB at {settings.MONGODB_URL}...\")\n    client = MongoClient(settings.MONGODB_URL)\n    # Test connection\n    client.server_info()\n    print(\"  ✓ Connected to MongoDB\")\n    db = client[settings.MONGODB_DATABASE]\n    print(f\"  ✓ Using database: {settings.MONGODB_DATABASE}\")",
+        "detail": "scripts.import_oews_to_mongo",
         "documentation": {}
     },
     {
-        "label": "test_patterns",
+        "label": "download_file",
+        "kind": 2,
+        "importPath": "scripts.setup_oews_data",
+        "description": "scripts.setup_oews_data",
+        "peekOfCode": "def download_file(filename: str, output_path: Path) -> bool:\n    \"\"\"Download a file from BLS.\"\"\"\n    url = BLS_BASE + filename\n    print(f\"Downloading {filename}...\")\n    headers = {\n        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',\n        'Accept': '*/*',\n    }\n    try:\n        response = requests.get(url, headers=headers, timeout=120)",
+        "detail": "scripts.setup_oews_data",
+        "documentation": {}
+    },
+    {
+        "label": "parse_occupation_file",
+        "kind": 2,
+        "importPath": "scripts.setup_oews_data",
+        "description": "scripts.setup_oews_data",
+        "peekOfCode": "def parse_occupation_file() -> pd.DataFrame:\n    \"\"\"Parse occupation codes file into DataFrame.\"\"\"\n    print(\"\\nParsing occupation codes...\")\n    occ_file = DATA_DIR / \"oe.occupation\"\n    # Tab-delimited: occupation_code, occupation_name\n    df = pd.read_csv(\n        occ_file,\n        sep=\"\\t\",\n        names=[\"occupation_code\", \"occupation_name\"],\n        dtype=str,",
+        "detail": "scripts.setup_oews_data",
+        "documentation": {}
+    },
+    {
+        "label": "parse_datatype_file",
+        "kind": 2,
+        "importPath": "scripts.setup_oews_data",
+        "description": "scripts.setup_oews_data",
+        "peekOfCode": "def parse_datatype_file() -> pd.DataFrame:\n    \"\"\"Parse data type codes.\"\"\"\n    print(\"Parsing data types...\")\n    dt_file = DATA_DIR / \"oe.datatype\"\n    # Tab-delimited: datatype_code, datatype_text\n    df = pd.read_csv(\n        dt_file,\n        sep=\"\\t\",\n        names=[\"datatype_code\", \"datatype_text\"],\n        dtype=str,",
+        "detail": "scripts.setup_oews_data",
+        "documentation": {}
+    },
+    {
+        "label": "parse_area_file",
+        "kind": 2,
+        "importPath": "scripts.setup_oews_data",
+        "description": "scripts.setup_oews_data",
+        "peekOfCode": "def parse_area_file() -> pd.DataFrame:\n    \"\"\"Parse area codes file.\"\"\"\n    print(\"Parsing geographic areas...\")\n    area_file = DATA_DIR / \"oe.area\"\n    # Tab-delimited: area_code, area_name\n    df = pd.read_csv(\n        area_file,\n        sep=\"\\t\",\n        names=[\"area_code\", \"area_name\"],\n        dtype=str,",
+        "detail": "scripts.setup_oews_data",
+        "documentation": {}
+    },
+    {
+        "label": "parse_data_file_sample",
+        "kind": 2,
+        "importPath": "scripts.setup_oews_data",
+        "description": "scripts.setup_oews_data",
+        "peekOfCode": "def parse_data_file_sample(nrows: int = 100000) -> pd.DataFrame:\n    \"\"\"Parse wage data file (sample first N rows due to size).\"\"\"\n    print(f\"Parsing wage data (first {nrows:,} rows)...\")\n    data_file = DATA_DIR / \"oe.data.0.Current\"\n    # Tab-delimited: series_id, year, period, value, footnote_codes\n    df = pd.read_csv(\n        data_file,\n        sep=\"\\t\",\n        header=0,  # Has header row\n        dtype=str,  # Read all as string first",
+        "detail": "scripts.setup_oews_data",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "scripts.setup_oews_data",
+        "description": "scripts.setup_oews_data",
+        "peekOfCode": "def main():\n    \"\"\"Main setup function.\"\"\"\n    print(\"=\" * 60)\n    print(\"OEWS Data Setup - Downloading from BLS\")\n    print(\"=\" * 60)\n    # Create data directory\n    DATA_DIR.mkdir(parents=True, exist_ok=True)\n    # Download essential files (skip the huge series file for now)\n    files_to_download = [\"occupation\", \"datatype\", \"area\", \"data\"]\n    for file_key in files_to_download:",
+        "detail": "scripts.setup_oews_data",
+        "documentation": {}
+    },
+    {
+        "label": "BLS_BASE",
         "kind": 5,
-        "importPath": "find_oews_format",
-        "description": "find_oews_format",
-        "peekOfCode": "test_patterns = [\n    # Pattern 1: National, all industries, all occupations, mean hourly\n    (\"OEUM004914000000000003\", \"National all occupations mean hourly (example from BLS)\"),\n    # Pattern 2: Try Software Developers with state code\n    (\"OEUS000000000000151252003\", \"Software Dev - National - Mean Hourly\"),\n    (\"OEUS000000000000151252004\", \"Software Dev - National - Mean Annual\"),\n    # Pattern 3: Different area code format\n    (\"OEUSN0000015125204\", \"Software Dev - National (short) - Mean Annual\"),\n    # Pattern 4: All workers national as baseline test\n    (\"OEUM00491400000000000004\", \"All occupations - Mean Annual\"),",
-        "detail": "find_oews_format",
+        "importPath": "scripts.setup_oews_data",
+        "description": "scripts.setup_oews_data",
+        "peekOfCode": "BLS_BASE = \"https://download.bls.gov/pub/time.series/oe/\"\nESSENTIAL_FILES = {\n    \"occupation\": \"oe.occupation\",      # ~260 KB - Occupation codes/titles\n    \"datatype\": \"oe.datatype\",          # ~500 bytes - Data type codes\n    \"area\": \"oe.area\",                  # ~20 KB - Geographic areas\n    \"data\": \"oe.data.0.Current\",        # ~328 MB - All current wage data\n    \"series\": \"oe.series\",              # ~1.2 GB - Series definitions\n}\nDATA_DIR = Path(\"data/oews\")\ndef download_file(filename: str, output_path: Path) -> bool:",
+        "detail": "scripts.setup_oews_data",
         "documentation": {}
     },
     {
-        "label": "ImageAnalysis",
-        "kind": 6,
-        "importPath": "image_analysis",
-        "description": "image_analysis",
-        "peekOfCode": "class ImageAnalysis:\n    def __init__(self):\n        pass  # No longer need to initialize PortKeyClient\n    def handle_file_upload(self, file_path):\n        _, file_extension = os.path.splitext(file_path)\n        if file_extension.lower() in [\".jpg\", \".jpeg\", \".png\", \".gif\", \".webp\"]:\n            return self.analyze_image(file_path), \"Image\"\n        else:\n            return unstructuredApp().document_loader(file_path), \"Document\"\n    def analyze_image(self, file_path):",
-        "detail": "image_analysis",
+        "label": "ESSENTIAL_FILES",
+        "kind": 5,
+        "importPath": "scripts.setup_oews_data",
+        "description": "scripts.setup_oews_data",
+        "peekOfCode": "ESSENTIAL_FILES = {\n    \"occupation\": \"oe.occupation\",      # ~260 KB - Occupation codes/titles\n    \"datatype\": \"oe.datatype\",          # ~500 bytes - Data type codes\n    \"area\": \"oe.area\",                  # ~20 KB - Geographic areas\n    \"data\": \"oe.data.0.Current\",        # ~328 MB - All current wage data\n    \"series\": \"oe.series\",              # ~1.2 GB - Series definitions\n}\nDATA_DIR = Path(\"data/oews\")\ndef download_file(filename: str, output_path: Path) -> bool:\n    \"\"\"Download a file from BLS.\"\"\"",
+        "detail": "scripts.setup_oews_data",
+        "documentation": {}
+    },
+    {
+        "label": "DATA_DIR",
+        "kind": 5,
+        "importPath": "scripts.setup_oews_data",
+        "description": "scripts.setup_oews_data",
+        "peekOfCode": "DATA_DIR = Path(\"data/oews\")\ndef download_file(filename: str, output_path: Path) -> bool:\n    \"\"\"Download a file from BLS.\"\"\"\n    url = BLS_BASE + filename\n    print(f\"Downloading {filename}...\")\n    headers = {\n        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',\n        'Accept': '*/*',\n    }\n    try:",
+        "detail": "scripts.setup_oews_data",
         "documentation": {}
     },
     {
@@ -993,60 +1405,6 @@
         "description": "main",
         "peekOfCode": "def main():\n    print(\"Hello from pricing!\")\nif __name__ == \"__main__\":\n    main()",
         "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "API_KEY",
-        "kind": 5,
-        "importPath": "test_bls_simple",
-        "description": "test_bls_simple",
-        "peekOfCode": "API_KEY = \"73847c2940aa4d59ac8f5f3e77154520\"\nprint(\"=\"*60)\nprint(\"Testing BLS API with CPI Data (Known Working Series)\")\nprint(\"=\"*60)\n# Test with CPI data first (known to work)\nheaders = {'Content-type': 'application/json'}\ndata = json.dumps({\n    \"seriesid\": ['CUUR0000SA0', 'SUUR0000SA0'],\n    \"startyear\": \"2020\",\n    \"endyear\": \"2023\",",
-        "detail": "test_bls_simple",
-        "documentation": {}
-    },
-    {
-        "label": "headers",
-        "kind": 5,
-        "importPath": "test_bls_simple",
-        "description": "test_bls_simple",
-        "peekOfCode": "headers = {'Content-type': 'application/json'}\ndata = json.dumps({\n    \"seriesid\": ['CUUR0000SA0', 'SUUR0000SA0'],\n    \"startyear\": \"2020\",\n    \"endyear\": \"2023\",\n    \"registrationkey\": API_KEY\n})\nprint(\"\\nTest 1: CPI Data (Consumer Price Index)\")\nprint(\"Series IDs: CUUR0000SA0, SUUR0000SA0\")\nprint(\"Making request...\")",
-        "detail": "test_bls_simple",
-        "documentation": {}
-    },
-    {
-        "label": "data",
-        "kind": 5,
-        "importPath": "test_bls_simple",
-        "description": "test_bls_simple",
-        "peekOfCode": "data = json.dumps({\n    \"seriesid\": ['CUUR0000SA0', 'SUUR0000SA0'],\n    \"startyear\": \"2020\",\n    \"endyear\": \"2023\",\n    \"registrationkey\": API_KEY\n})\nprint(\"\\nTest 1: CPI Data (Consumer Price Index)\")\nprint(\"Series IDs: CUUR0000SA0, SUUR0000SA0\")\nprint(\"Making request...\")\np = requests.post('https://api.bls.gov/publicAPI/v2/timeseries/data/', data=data, headers=headers)",
-        "detail": "test_bls_simple",
-        "documentation": {}
-    },
-    {
-        "label": "p",
-        "kind": 5,
-        "importPath": "test_bls_simple",
-        "description": "test_bls_simple",
-        "peekOfCode": "p = requests.post('https://api.bls.gov/publicAPI/v2/timeseries/data/', data=data, headers=headers)\njson_data = json.loads(p.text)\nprint(f\"Status: {json_data.get('status')}\")\nif json_data.get('status') == 'REQUEST_SUCCEEDED':\n    print(\"✅ API Key is working!\")\n    print(\"\\nSample data:\")\n    for series in json_data['Results']['series']:\n        seriesId = series['seriesID']\n        print(f\"\\n  Series: {seriesId}\")\n        for item in series['data'][:3]:  # Show first 3 data points",
-        "detail": "test_bls_simple",
-        "documentation": {}
-    },
-    {
-        "label": "json_data",
-        "kind": 5,
-        "importPath": "test_bls_simple",
-        "description": "test_bls_simple",
-        "peekOfCode": "json_data = json.loads(p.text)\nprint(f\"Status: {json_data.get('status')}\")\nif json_data.get('status') == 'REQUEST_SUCCEEDED':\n    print(\"✅ API Key is working!\")\n    print(\"\\nSample data:\")\n    for series in json_data['Results']['series']:\n        seriesId = series['seriesID']\n        print(f\"\\n  Series: {seriesId}\")\n        for item in series['data'][:3]:  # Show first 3 data points\n            print(f\"    {item['year']}-{item['period']}: {item['value']}\")",
-        "detail": "test_bls_simple",
-        "documentation": {}
-    },
-    {
-        "label": "oews_series_formats",
-        "kind": 5,
-        "importPath": "test_bls_simple",
-        "description": "test_bls_simple",
-        "peekOfCode": "oews_series_formats = [\n    (\"OEUN000000000000151252004\", \"Format 1: OEUN + national + all industries + SOC 151252 + mean annual\"),\n    (\"OEUM000000000000151252004\", \"Format 2: OEUM + national + all industries + SOC 151252 + mean annual\"),\n    (\"OEUS000000151252004\", \"Format 3: OEUS + national + SOC 151252 + mean annual\"),\n]\nfor series_id, description in oews_series_formats:\n    print(f\"\\n{description}\")\n    print(f\"Series ID: {series_id}\")\n    data = json.dumps({\n        \"seriesid\": [series_id],",
-        "detail": "test_bls_simple",
         "documentation": {}
     },
     {
@@ -1065,87 +1423,6 @@
         "description": "test_extraction",
         "peekOfCode": "def export_to_excel(jds: list[dict], output_file: str):\n    \"\"\"\n    Export job descriptions to Excel file.\n    Args:\n        jds: List of job description dictionaries\n        output_file: Path to output Excel file\n    \"\"\"\n    df = pd.DataFrame(jds)\n    # Rename columns to match expected format\n    df.rename(columns={",
         "detail": "test_extraction",
-        "documentation": {}
-    },
-    {
-        "label": "API_KEY",
-        "kind": 5,
-        "importPath": "test_oews_correct_format",
-        "description": "test_oews_correct_format",
-        "peekOfCode": "API_KEY = \"73847c2940aa4d59ac8f5f3e77154520\"\n# First, let's test the exact example from BLS docs\ntest_series_id = \"OEUN000000056--5747213213\"\nprint(\"=\"*70)\nprint(\"Testing OEWS Series ID from BLS Documentation\")\nprint(\"=\"*70)\nprint(f\"\\nSeries ID: {test_series_id}\")\nprint(\"Making request...\")\nheaders = {'Content-type': 'application/json'}\ndata = json.dumps({",
-        "detail": "test_oews_correct_format",
-        "documentation": {}
-    },
-    {
-        "label": "test_series_id",
-        "kind": 5,
-        "importPath": "test_oews_correct_format",
-        "description": "test_oews_correct_format",
-        "peekOfCode": "test_series_id = \"OEUN000000056--5747213213\"\nprint(\"=\"*70)\nprint(\"Testing OEWS Series ID from BLS Documentation\")\nprint(\"=\"*70)\nprint(f\"\\nSeries ID: {test_series_id}\")\nprint(\"Making request...\")\nheaders = {'Content-type': 'application/json'}\ndata = json.dumps({\n    \"seriesid\": [test_series_id],\n    \"startyear\": \"2020\",",
-        "detail": "test_oews_correct_format",
-        "documentation": {}
-    },
-    {
-        "label": "headers",
-        "kind": 5,
-        "importPath": "test_oews_correct_format",
-        "description": "test_oews_correct_format",
-        "peekOfCode": "headers = {'Content-type': 'application/json'}\ndata = json.dumps({\n    \"seriesid\": [test_series_id],\n    \"startyear\": \"2020\",\n    \"endyear\": \"2023\",\n    \"registrationkey\": API_KEY\n})\nresponse = requests.post(\n    'https://api.bls.gov/publicAPI/v2/timeseries/data/',\n    data=data,",
-        "detail": "test_oews_correct_format",
-        "documentation": {}
-    },
-    {
-        "label": "data",
-        "kind": 5,
-        "importPath": "test_oews_correct_format",
-        "description": "test_oews_correct_format",
-        "peekOfCode": "data = json.dumps({\n    \"seriesid\": [test_series_id],\n    \"startyear\": \"2020\",\n    \"endyear\": \"2023\",\n    \"registrationkey\": API_KEY\n})\nresponse = requests.post(\n    'https://api.bls.gov/publicAPI/v2/timeseries/data/',\n    data=data,\n    headers=headers,",
-        "detail": "test_oews_correct_format",
-        "documentation": {}
-    },
-    {
-        "label": "response",
-        "kind": 5,
-        "importPath": "test_oews_correct_format",
-        "description": "test_oews_correct_format",
-        "peekOfCode": "response = requests.post(\n    'https://api.bls.gov/publicAPI/v2/timeseries/data/',\n    data=data,\n    headers=headers,\n    timeout=10\n)\njson_data = json.loads(response.text)\nprint(f\"Status: {json_data.get('status')}\")\nif json_data.get('status') == 'REQUEST_SUCCEEDED':\n    series = json_data['Results']['series']",
-        "detail": "test_oews_correct_format",
-        "documentation": {}
-    },
-    {
-        "label": "json_data",
-        "kind": 5,
-        "importPath": "test_oews_correct_format",
-        "description": "test_oews_correct_format",
-        "peekOfCode": "json_data = json.loads(response.text)\nprint(f\"Status: {json_data.get('status')}\")\nif json_data.get('status') == 'REQUEST_SUCCEEDED':\n    series = json_data['Results']['series']\n    if series and series[0].get('data'):\n        print(\"✅ SUCCESS! OEWS data is available through API!\")\n        print(\"\\nSample data:\")\n        for item in series[0]['data'][:5]:\n            print(f\"  {item['year']}-{item.get('period', 'Annual')}: ${item['value']}\")\n        print(\"\\n🎯 Now we need to figure out the format for other SOC codes\")",
-        "detail": "test_oews_correct_format",
-        "documentation": {}
-    },
-    {
-        "label": "test_onet_occupation",
-        "kind": 2,
-        "importPath": "test_onet_api",
-        "description": "test_onet_api",
-        "peekOfCode": "def test_onet_occupation(soc_code):\n    \"\"\"\n    Get occupation data from O*NET by SOC code.\n    Args:\n        soc_code: SOC code like \"15-1252.00\"\n    \"\"\"\n    # O*NET Web Services endpoint\n    base_url = \"https://services.onetcenter.org/ws/online/occupations\"\n    # Full SOC code format (with .00 suffix)\n    if not soc_code.endswith(\".00\"):",
-        "detail": "test_onet_api",
-        "documentation": {}
-    },
-    {
-        "label": "test_onet_wages",
-        "kind": 2,
-        "importPath": "test_onet_api",
-        "description": "test_onet_api",
-        "peekOfCode": "def test_onet_wages(soc_code):\n    \"\"\"\n    Get wage data from O*NET.\n    \"\"\"\n    if not soc_code.endswith(\".00\"):\n        soc_code = soc_code + \".00\"\n    # Wage data endpoint\n    url = f\"https://services.onetcenter.org/ws/online/occupations/{soc_code}/summary/wages\"\n    print(f\"\\n{'='*60}\")\n    print(f\"Testing O*NET Wage Data\")",
-        "detail": "test_onet_api",
-        "documentation": {}
-    },
-    {
-        "label": "verify_bls_api",
-        "kind": 2,
-        "importPath": "verify_bls_api",
-        "description": "verify_bls_api",
-        "peekOfCode": "def verify_bls_api(api_key: str):\n    \"\"\"\n    Verify BLS API is working with the provided API key.\n    Args:\n        api_key: Your BLS API registration key\n    \"\"\"\n    print(\"=\"*60)\n    print(\"BLS API Verification Test\")\n    print(\"=\"*60)\n    # Test with a known SOC code: Software Developers (15-1252)",
-        "detail": "verify_bls_api",
         "documentation": {}
     }
 ]
