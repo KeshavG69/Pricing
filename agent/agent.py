@@ -5,46 +5,55 @@ from utils.agno_tools import create_custom_retreiver, create_wage_tool
 
 async def create_pricing_agent(
     labor_category: str,
+    description: str = None,
     location: str = "National"
 ) -> Agent:
     """
     Create a stateless pricing agent for wage lookup based on job descriptions.
 
     This agent:
-    1. Uses vector search to find the best matching SOC code for the labor category
+    1. Uses vector search to find the best matching SOC code for the labor category (with optional description for better matching)
     2. Retrieves wage data (5 percentiles) for that SOC code in the specified location
     3. Returns structured wage data dictionary
 
     Args:
-        labor_category: Job title or description (e.g., "Software Developer", "Senior Python Engineer")
+        labor_category: Job title (e.g., "Software Developer", "Senior Python Engineer")
+        description: Optional full job description text for better SOC code matching
         location: Geographic area name (default: "National"). Examples: "California", "San Francisco", "Texas"
 
     Returns:
         Agent instance configured for wage lookup
 
     Example:
-        >>> agent = await create_pricing_agent("Software Developer", "California")
+        >>> agent = await create_pricing_agent("Software Developer", "Designs web applications...", "California")
         >>> result = await agent.run(f"Find wage data for {labor_category} in {location}")
         >>> # Returns: {"soc_code": "151252", "occupation_name": "...", "area": "...", "wages": {...}}
     """
     llm = get_chat_llm_agno()
 
     # Create SOC code retriever (searches 1,105 occupations with vector similarity)
-    soc_retriever = create_custom_retreiver()
+    # Pass description to retriever so it can use it for better semantic matching
+    soc_retriever = create_custom_retreiver(description=description)
 
     # Create wage lookup tool (queries MongoDB for 5 wage percentiles)
     # Note: wage_tool has stop_after_tool_call=True, so agent returns tool output directly
     wage_lookup_tool = create_wage_tool()
 
+    # Build search context with job title and description (if available)
+    search_context = labor_category
+    if description:
+        search_context = f"{labor_category}. {description}"
+
     instructions = [
         f"""You are a Pricing Agent specialized in finding U.S. government contractor wage data.
 
 Your task:
-1. Search for the most relevant Standard Occupational Classification (SOC) code that matches "{labor_category}"
+1. Search for the most relevant Standard Occupational Classification (SOC) code that matches "{search_context}"
 2. Use the wage_tool to retrieve wage percentiles for that SOC code in "{location}"
 3. Return the wage data
 
 The labor category to search for is: {labor_category}
+{f"Job description: {description}" if description else ""}
 The location to search in is: {location}""",
 
         """<workflow>

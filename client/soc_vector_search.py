@@ -124,20 +124,28 @@ class SOCVectorSearch:
     def search(
         self,
         query: str,
+        description: Optional[str] = None,
         top_k: int = 5,
     ) -> List[Tuple[str, str, float]]:
         """
         Search for most similar SOC codes using vector similarity.
 
         Args:
-            query: Job title or description (e.g., "Senior Python Developer")
+            query: Job title (e.g., "Senior Python Developer")
+            description: Optional full job description for richer semantic matching
             top_k: Number of results to return
 
         Returns:
             List of (soc_code, occupation_name, score) tuples
         """
+        # Combine job title and description for better matching
+        if description:
+            search_query = f"Job Title: {query}. Description: {description}"
+        else:
+            search_query = query
+
         results_with_scores =  self.vectorstore.similarity_search_with_score(
-            query,
+            search_query,
             k=top_k
         )
 
@@ -151,18 +159,19 @@ class SOCVectorSearch:
 
         return results
 
-    def get_best_match(self, query: str) -> Tuple[str, str, float]:
+    def get_best_match(self, query: str, description: Optional[str] = None) -> Tuple[str, str, float]:
         """
         Get single best matching SOC code.
 
         Args:
-            query: Job title or description
+            query: Job title
+            description: Optional full job description for better matching
 
         Returns:
             (soc_code, occupation_name, score)
             Returns (None, None, 0.0) if no results
         """
-        results = self.search(query, top_k=1)
+        results = self.search(query, description=description, top_k=1)
         return results[0] if results else (None, None, 0.0)
 
 

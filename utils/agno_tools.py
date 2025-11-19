@@ -10,13 +10,16 @@ from client.soc_vector_search import get_soc_vector_search_client
 from client.oews_mongodb import get_oews_mongo_client
 
 
-def create_custom_retreiver():
+def create_custom_retreiver(description: Optional[str] = None):
     """
     Create a custom retriever for SOC code vector search.
 
     This retriever uses FAISS vector search with OpenAI embeddings to find
     the most similar Standard Occupational Classification (SOC) codes for
     a given job title or description.
+
+    Args:
+        description: Optional job description text to enhance semantic matching
 
     Returns:
         Callable retriever function that can be used with agno agents
@@ -47,7 +50,7 @@ def create_custom_retreiver():
             List[Dict[str, str]]: Ordered list of matching SOC codes (most similar first), where each dict contains:
                 - soc_code (str): 6-digit SOC code (e.g., "151252" for Software Developers)
                 - occupation (str): Official BLS occupation title (e.g., "Software Developers")
-               
+
         Example:
             >>> retriever("Python Developer", num_documents=3)
             [
@@ -56,10 +59,10 @@ def create_custom_retreiver():
                 {"soc_code": "151250", "occupation": "Software and Web Developers..."}
             ]
         """
-        # Search using vector similarity
+        # Search using vector similarity with description for better matching
         # Handle None value from agno (use default of 5)
         k = num_documents if num_documents is not None else 15
-        results = vector_client.search(query, top_k=k)
+        results = vector_client.search(query, description=description, top_k=k)
 
         # Format results for agno agent consumption
         # Convert tuple (soc_code, occ_name, score) to dict

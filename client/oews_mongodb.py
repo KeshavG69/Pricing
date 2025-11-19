@@ -156,12 +156,13 @@ class OEWSMongoLookup:
             for i, rec in enumerate(wage_records[:3]):
                 print(f"    {i+1}. {rec['series_id'].strip()} = {rec['value']}")
 
-        # Get occupation name from occupations collection
+        # Get occupation name and description from occupations collection
         occ_doc = self.db.occupations.find_one(
             {"occupation_code": soc_clean},
-            {"_id": 0, "occupation_name": 1}
+            {"_id": 0, "occupation_name": 1, "occupation_description": 1}
         )
         occ_name = occ_doc["occupation_name"] if occ_doc else None
+        occ_description = occ_doc["occupation_description"] if occ_doc and "occupation_description" in occ_doc else None
 
         # Get area name for display
         area_doc = self.db.areas.find_one(
@@ -217,10 +218,11 @@ class OEWSMongoLookup:
         print(f"    Wages: {wages}")
         print(f"{'='*60}\n")
 
-        # Return result
+        # Return result with BLS occupation description
         return {
             "soc_code": soc_code,
             "occupation_name": occ_name,
+            "bls_occupation_description": occ_description,
             "area": area_name,
             "wages": wages
         }

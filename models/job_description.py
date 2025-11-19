@@ -10,6 +10,10 @@ class JobDescription(BaseModel):
     labor_category: str = Field(
         description="Job title or labor category"
     )
+    description: Optional[str] = Field(
+        None,
+        description="Full job description text including responsibilities, requirements, and qualifications. None if not specified."
+    )
     experience: Optional[int] = Field(
         None,
         description="Years of experience required (integer). None if not specified."

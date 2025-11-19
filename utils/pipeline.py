@@ -15,7 +15,7 @@ async def process_single_row(row_dict: Dict[str, Any], row_index: int) -> Dict[s
     Process a single JD row with the pricing agent.
 
     Args:
-        row_dict: Dictionary with keys: labor_category, experience, location, hours
+        row_dict: Dictionary with keys: labor_category, description, experience, location, hours
         row_index: Row number (for logging)
 
     Returns:
@@ -23,14 +23,16 @@ async def process_single_row(row_dict: Dict[str, Any], row_index: int) -> Dict[s
         wage_10th, wage_25th, wage_50th, wage_75th, wage_90th
     """
     labor_category = row_dict.get("labor_category", "")
+    description = row_dict.get("description")
     location = row_dict.get("location")
 
     print(f"  [{row_index}] Processing: {labor_category} in {location}")
 
     try:
-        # Create pricing agent
+        # Create pricing agent with description for better SOC matching
         agent = await create_pricing_agent(
             labor_category=labor_category,
+            description=description,
             location=location
         )
 
@@ -56,9 +58,10 @@ async def process_single_row(row_dict: Dict[str, Any], row_index: int) -> Dict[s
                 print(f"  [{row_index}] ✓ Found: {wage_data.get('soc_code')} - {wage_data.get('occupation_name')}")
 
                 return {
-                    **row_dict,  # Original fields
-                    "soc_code": wage_data.get("soc_code"),
-                    "occupation_name": wage_data.get("occupation_name"),
+                    **row_dict,  # Original fields (includes parsed description from JD)
+                    "BLS Code": wage_data.get("soc_code"),
+                    "BLS Labour Category Mapping": wage_data.get("occupation_name"),
+                    "BLS Occupation Description": wage_data.get("bls_occupation_description"),
                     "area": wage_data.get("area"),
                     "wage_10th": wages.get("10th"),
                     "wage_25th": wages.get("25th"),
@@ -71,8 +74,9 @@ async def process_single_row(row_dict: Dict[str, Any], row_index: int) -> Dict[s
         print(f"  [{row_index}] ⚠️  No wage data found for {labor_category}")
         return {
             **row_dict,
-            "soc_code": None,
-            "occupation_name": None,
+            "BLS Code": None,
+            "BLS Labour Category Mapping": None,
+            "BLS Occupation Description": None,
             "area": None,
             "wage_10th": None,
             "wage_25th": None,
@@ -85,8 +89,9 @@ async def process_single_row(row_dict: Dict[str, Any], row_index: int) -> Dict[s
         print(f"  [{row_index}] ❌ Error processing {labor_category}: {e}")
         return {
             **row_dict,
-            "soc_code": None,
-            "occupation_name": None,
+            "BLS Code": None,
+            "BLS Labour Category Mapping": None,
+            "BLS Occupation Description": None,
             "area": None,
             "wage_10th": None,
             "wage_25th": None,
@@ -104,11 +109,11 @@ async def process_dataframe_with_agents(
     Process DataFrame with pricing agents in parallel and add wage columns.
 
     Args:
-        df: Input DataFrame with JD data (labor_category, experience, location, hours)
+        df: Input DataFrame with JD data (labor_category, description, experience, location, hours)
         max_workers: Number of parallel agents (default: 10)
 
     Returns:
-        DataFrame with added wage columns
+        DataFrame with added wage columns (soc_code, occupation_name, area, wage_10th-90th)
     """
     print(f"\n{'='*60}")
     print(f"Processing {len(df)} job descriptions")

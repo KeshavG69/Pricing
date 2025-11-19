@@ -208,7 +208,71 @@
         "documentation": {}
     },
     {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -658,6 +722,38 @@
         "documentation": {}
     },
     {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "status",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
         "label": "UploadFile",
         "importPath": "fastapi",
         "description": "fastapi",
@@ -703,6 +799,256 @@
         "description": "pydantic_settings",
         "isExtraImport": true,
         "detail": "pydantic_settings",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "ASCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "TEXT",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "requests",
+        "importPath": "google.auth.transport",
+        "description": "google.auth.transport",
+        "isExtraImport": true,
+        "detail": "google.auth.transport",
+        "documentation": {}
+    },
+    {
+        "label": "id_token",
+        "importPath": "google.oauth2",
+        "description": "google.oauth2",
+        "isExtraImport": true,
+        "detail": "google.oauth2",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "EmailStr",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "bcrypt",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "bcrypt",
+        "description": "bcrypt",
+        "detail": "bcrypt",
+        "documentation": {}
+    },
+    {
+        "label": "JWTError",
+        "importPath": "jose",
+        "description": "jose",
+        "isExtraImport": true,
+        "detail": "jose",
+        "documentation": {}
+    },
+    {
+        "label": "jwt",
+        "importPath": "jose",
+        "description": "jose",
+        "isExtraImport": true,
+        "detail": "jose",
+        "documentation": {}
+    },
+    {
+        "label": "uuid",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "uuid",
+        "description": "uuid",
+        "detail": "uuid",
         "documentation": {}
     },
     {
@@ -787,38 +1133,6 @@
         "documentation": {}
     },
     {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
         "label": "threading",
         "kind": 6,
         "isExtraImport": true,
@@ -849,38 +1163,6 @@
         "description": "agno.models.openai",
         "isExtraImport": true,
         "detail": "agno.models.openai",
-        "documentation": {}
-    },
-    {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "ASCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "TEXT",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
         "documentation": {}
     },
     {
@@ -925,19 +1207,115 @@
         "documentation": {}
     },
     {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
+        "label": "HTTPBearer",
+        "importPath": "fastapi.security",
+        "description": "fastapi.security",
         "isExtraImport": true,
-        "detail": "pydantic",
+        "detail": "fastapi.security",
         "documentation": {}
     },
     {
-        "label": "Field",
-        "importPath": "pydantic",
-        "description": "pydantic",
+        "label": "HTTPAuthorizationCredentials",
+        "importPath": "fastapi.security",
+        "description": "fastapi.security",
         "isExtraImport": true,
-        "detail": "pydantic",
+        "detail": "fastapi.security",
+        "documentation": {}
+    },
+    {
+        "label": "UserSignup",
+        "importPath": "auth.models",
+        "description": "auth.models",
+        "isExtraImport": true,
+        "detail": "auth.models",
+        "documentation": {}
+    },
+    {
+        "label": "UserLogin",
+        "importPath": "auth.models",
+        "description": "auth.models",
+        "isExtraImport": true,
+        "detail": "auth.models",
+        "documentation": {}
+    },
+    {
+        "label": "UserResponse",
+        "importPath": "auth.models",
+        "description": "auth.models",
+        "isExtraImport": true,
+        "detail": "auth.models",
+        "documentation": {}
+    },
+    {
+        "label": "Token",
+        "importPath": "auth.models",
+        "description": "auth.models",
+        "isExtraImport": true,
+        "detail": "auth.models",
+        "documentation": {}
+    },
+    {
+        "label": "LogoutResponse",
+        "importPath": "auth.models",
+        "description": "auth.models",
+        "isExtraImport": true,
+        "detail": "auth.models",
+        "documentation": {}
+    },
+    {
+        "label": "GoogleLoginRequest",
+        "importPath": "auth.models",
+        "description": "auth.models",
+        "isExtraImport": true,
+        "detail": "auth.models",
+        "documentation": {}
+    },
+    {
+        "label": "UserCRUD",
+        "importPath": "auth.crud",
+        "description": "auth.crud",
+        "isExtraImport": true,
+        "detail": "auth.crud",
+        "documentation": {}
+    },
+    {
+        "label": "create_access_token",
+        "importPath": "auth.utils",
+        "description": "auth.utils",
+        "isExtraImport": true,
+        "detail": "auth.utils",
+        "documentation": {}
+    },
+    {
+        "label": "verify_token",
+        "importPath": "auth.utils",
+        "description": "auth.utils",
+        "isExtraImport": true,
+        "detail": "auth.utils",
+        "documentation": {}
+    },
+    {
+        "label": "ACCESS_TOKEN_EXPIRE_MINUTES",
+        "importPath": "auth.utils",
+        "description": "auth.utils",
+        "isExtraImport": true,
+        "detail": "auth.utils",
+        "documentation": {}
+    },
+    {
+        "label": "add_token_to_blacklist",
+        "importPath": "auth.blacklist",
+        "description": "auth.blacklist",
+        "isExtraImport": true,
+        "detail": "auth.blacklist",
+        "documentation": {}
+    },
+    {
+        "label": "GoogleAuthService",
+        "importPath": "auth.google_auth",
+        "description": "auth.google_auth",
+        "isExtraImport": true,
+        "detail": "auth.google_auth",
         "documentation": {}
     },
     {
@@ -1399,6 +1777,258 @@
         "documentation": {}
     },
     {
+        "label": "add_token_to_blacklist",
+        "kind": 2,
+        "importPath": "auth.blacklist",
+        "description": "auth.blacklist",
+        "peekOfCode": "def add_token_to_blacklist(user_email: str, token: str) -> bool:\n    \"\"\"\n    Add a token to the user's blacklist in their document\n    Args:\n        user_email: Email of the user whose token should be blacklisted\n        token: JWT token string to blacklist\n    Returns:\n        bool: True if successfully added, False otherwise\n    \"\"\"\n    try:",
+        "detail": "auth.blacklist",
+        "documentation": {}
+    },
+    {
+        "label": "is_token_blacklisted",
+        "kind": 2,
+        "importPath": "auth.blacklist",
+        "description": "auth.blacklist",
+        "peekOfCode": "def is_token_blacklisted(user_email: str, token: str) -> bool:\n    \"\"\"\n    Check if a token is blacklisted for a specific user\n    Args:\n        user_email: Email of the user\n        token: JWT token string to check\n    Returns:\n        bool: True if token is blacklisted, False otherwise\n    \"\"\"\n    try:",
+        "detail": "auth.blacklist",
+        "documentation": {}
+    },
+    {
+        "label": "cleanup_expired_tokens",
+        "kind": 2,
+        "importPath": "auth.blacklist",
+        "description": "auth.blacklist",
+        "peekOfCode": "def cleanup_expired_tokens(user_email: str) -> int:\n    \"\"\"\n    Remove expired tokens from a user's blacklist to keep the array clean\n    Args:\n        user_email: Email of the user whose expired tokens should be cleaned up\n    Returns:\n        int: Number of expired tokens removed\n    \"\"\"\n    try:\n        users_collection = MongoDB.get_users_collection()",
+        "detail": "auth.blacklist",
+        "documentation": {}
+    },
+    {
+        "label": "cleanup_all_expired_tokens",
+        "kind": 2,
+        "importPath": "auth.blacklist",
+        "description": "auth.blacklist",
+        "peekOfCode": "def cleanup_all_expired_tokens() -> int:\n    \"\"\"\n    Clean up expired tokens for all users (can be used for periodic maintenance)\n    Returns:\n        int: Number of users whose expired tokens were cleaned up\n    \"\"\"\n    try:\n        users_collection = MongoDB.get_users_collection()\n        current_time = datetime.utcnow()\n        # Remove expired tokens from all users",
+        "detail": "auth.blacklist",
+        "documentation": {}
+    },
+    {
+        "label": "SECRET_KEY",
+        "kind": 5,
+        "importPath": "auth.config",
+        "description": "auth.config",
+        "peekOfCode": "SECRET_KEY = os.getenv(\"SECRET_KEY\", \"your-secret-key-change-this-in-production\")\nALGORITHM = os.getenv(\"ALGORITHM\", \"HS256\")\nACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv(\"ACCESS_TOKEN_EXPIRE_MINUTES\", \"30\"))\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "detail": "auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "ALGORITHM",
+        "kind": 5,
+        "importPath": "auth.config",
+        "description": "auth.config",
+        "peekOfCode": "ALGORITHM = os.getenv(\"ALGORITHM\", \"HS256\")\nACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv(\"ACCESS_TOKEN_EXPIRE_MINUTES\", \"30\"))\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "detail": "auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "ACCESS_TOKEN_EXPIRE_MINUTES",
+        "kind": 5,
+        "importPath": "auth.config",
+        "description": "auth.config",
+        "peekOfCode": "ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv(\"ACCESS_TOKEN_EXPIRE_MINUTES\", \"30\"))\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "detail": "auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "GOOGLE_CLIENT_ID",
+        "kind": 5,
+        "importPath": "auth.config",
+        "description": "auth.config",
+        "peekOfCode": "GOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "detail": "auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "UserCRUD",
+        "kind": 6,
+        "importPath": "auth.crud",
+        "description": "auth.crud",
+        "peekOfCode": "class UserCRUD:\n    @staticmethod\n    def create_user(user_data: UserSignup) -> UserResponse:\n        \"\"\"Create a new user in the database\"\"\"\n        users_collection = MongoDB.get_users_collection()\n        # Check if user already exists\n        existing_user = users_collection.find_one({\"email\": user_data.email})\n        if existing_user:\n            raise ValueError(\"User with this email already exists\")\n        # Create user document",
+        "detail": "auth.crud",
+        "documentation": {}
+    },
+    {
+        "label": "MongoDB",
+        "kind": 6,
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "peekOfCode": "class MongoDB:\n    client: Optional[MongoClient] = None\n    database = None\n    @classmethod\n    def connect_to_mongo(cls):\n        \"\"\"Create database connection\"\"\"\n        try:\n            cls.client = MongoClient(settings.MONGODB_URL)\n            cls.database = cls.client[settings.MONGODB_DATABASE]\n            print(\"Connected to MongoDB for authentication\")",
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "USERS_COLLECTION",
+        "kind": 5,
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "peekOfCode": "USERS_COLLECTION = \"users\"\nclass MongoDB:\n    client: Optional[MongoClient] = None\n    database = None\n    @classmethod\n    def connect_to_mongo(cls):\n        \"\"\"Create database connection\"\"\"\n        try:\n            cls.client = MongoClient(settings.MONGODB_URL)\n            cls.database = cls.client[settings.MONGODB_DATABASE]",
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "mongo_db",
+        "kind": 5,
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "peekOfCode": "mongo_db = MongoDB()\nmongo_db.connect_to_mongo()",
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "GoogleAuthService",
+        "kind": 6,
+        "importPath": "auth.google_auth",
+        "description": "auth.google_auth",
+        "peekOfCode": "class GoogleAuthService:\n    \"\"\"Google OAuth authentication service\"\"\"\n    def __init__(self):\n        if not GOOGLE_CLIENT_ID:\n            raise ValueError(\"GOOGLE_CLIENT_ID environment variable is required\")\n    def verify_google_token(self, token: str) -> Optional[GoogleUserProfile]:\n        \"\"\"\n        Verify Google JWT token and extract user information\n        Args:\n            token: Google JWT token from frontend",
+        "detail": "auth.google_auth",
+        "documentation": {}
+    },
+    {
+        "label": "UserSignup",
+        "kind": 6,
+        "importPath": "auth.models",
+        "description": "auth.models",
+        "peekOfCode": "class UserSignup(BaseModel):\n    firstName: str\n    lastName: str\n    email: EmailStr\n    password: str\nclass UserLogin(BaseModel):\n    email: EmailStr\n    password: str\nclass UserResponse(BaseModel):\n    id: str",
+        "detail": "auth.models",
+        "documentation": {}
+    },
+    {
+        "label": "UserLogin",
+        "kind": 6,
+        "importPath": "auth.models",
+        "description": "auth.models",
+        "peekOfCode": "class UserLogin(BaseModel):\n    email: EmailStr\n    password: str\nclass UserResponse(BaseModel):\n    id: str\n    firstName: str\n    lastName: str\n    email: str\n    createdAt: datetime\nclass Token(BaseModel):",
+        "detail": "auth.models",
+        "documentation": {}
+    },
+    {
+        "label": "UserResponse",
+        "kind": 6,
+        "importPath": "auth.models",
+        "description": "auth.models",
+        "peekOfCode": "class UserResponse(BaseModel):\n    id: str\n    firstName: str\n    lastName: str\n    email: str\n    createdAt: datetime\nclass Token(BaseModel):\n    access_token: str\n    token_type: str\nclass TokenData(BaseModel):",
+        "detail": "auth.models",
+        "documentation": {}
+    },
+    {
+        "label": "Token",
+        "kind": 6,
+        "importPath": "auth.models",
+        "description": "auth.models",
+        "peekOfCode": "class Token(BaseModel):\n    access_token: str\n    token_type: str\nclass TokenData(BaseModel):\n    email: Optional[str] = None\nclass BlacklistedToken(BaseModel):\n    token: str\n    blacklisted_at: datetime\n    expires_at: datetime\nclass LogoutResponse(BaseModel):",
+        "detail": "auth.models",
+        "documentation": {}
+    },
+    {
+        "label": "TokenData",
+        "kind": 6,
+        "importPath": "auth.models",
+        "description": "auth.models",
+        "peekOfCode": "class TokenData(BaseModel):\n    email: Optional[str] = None\nclass BlacklistedToken(BaseModel):\n    token: str\n    blacklisted_at: datetime\n    expires_at: datetime\nclass LogoutResponse(BaseModel):\n    message: str\n    timestamp: datetime\nclass GoogleLoginRequest(BaseModel):",
+        "detail": "auth.models",
+        "documentation": {}
+    },
+    {
+        "label": "BlacklistedToken",
+        "kind": 6,
+        "importPath": "auth.models",
+        "description": "auth.models",
+        "peekOfCode": "class BlacklistedToken(BaseModel):\n    token: str\n    blacklisted_at: datetime\n    expires_at: datetime\nclass LogoutResponse(BaseModel):\n    message: str\n    timestamp: datetime\nclass GoogleLoginRequest(BaseModel):\n    credential: str\nclass GoogleUserProfile(BaseModel):",
+        "detail": "auth.models",
+        "documentation": {}
+    },
+    {
+        "label": "LogoutResponse",
+        "kind": 6,
+        "importPath": "auth.models",
+        "description": "auth.models",
+        "peekOfCode": "class LogoutResponse(BaseModel):\n    message: str\n    timestamp: datetime\nclass GoogleLoginRequest(BaseModel):\n    credential: str\nclass GoogleUserProfile(BaseModel):\n    sub: str\n    name: str\n    given_name: str\n    family_name: str",
+        "detail": "auth.models",
+        "documentation": {}
+    },
+    {
+        "label": "GoogleLoginRequest",
+        "kind": 6,
+        "importPath": "auth.models",
+        "description": "auth.models",
+        "peekOfCode": "class GoogleLoginRequest(BaseModel):\n    credential: str\nclass GoogleUserProfile(BaseModel):\n    sub: str\n    name: str\n    given_name: str\n    family_name: str\n    picture: str\n    email: str\n    email_verified: bool",
+        "detail": "auth.models",
+        "documentation": {}
+    },
+    {
+        "label": "GoogleUserProfile",
+        "kind": 6,
+        "importPath": "auth.models",
+        "description": "auth.models",
+        "peekOfCode": "class GoogleUserProfile(BaseModel):\n    sub: str\n    name: str\n    given_name: str\n    family_name: str\n    picture: str\n    email: str\n    email_verified: bool",
+        "detail": "auth.models",
+        "documentation": {}
+    },
+    {
+        "label": "hash_password",
+        "kind": 2,
+        "importPath": "auth.utils",
+        "description": "auth.utils",
+        "peekOfCode": "def hash_password(password: str) -> str:\n    \"\"\"Hash a password using bcrypt\"\"\"\n    salt = bcrypt.gensalt()\n    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)\n    return hashed.decode('utf-8')\ndef verify_password(plain_password: str, hashed_password: str) -> bool:\n    \"\"\"Verify a password against its hash\"\"\"\n    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))\ndef create_access_token(data: dict, expires_delta: Optional[timedelta] = None):\n    \"\"\"Create JWT access token\"\"\"",
+        "detail": "auth.utils",
+        "documentation": {}
+    },
+    {
+        "label": "verify_password",
+        "kind": 2,
+        "importPath": "auth.utils",
+        "description": "auth.utils",
+        "peekOfCode": "def verify_password(plain_password: str, hashed_password: str) -> bool:\n    \"\"\"Verify a password against its hash\"\"\"\n    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))\ndef create_access_token(data: dict, expires_delta: Optional[timedelta] = None):\n    \"\"\"Create JWT access token\"\"\"\n    to_encode = data.copy()\n    if expires_delta:\n        expire = datetime.utcnow() + expires_delta\n    else:\n        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)",
+        "detail": "auth.utils",
+        "documentation": {}
+    },
+    {
+        "label": "create_access_token",
+        "kind": 2,
+        "importPath": "auth.utils",
+        "description": "auth.utils",
+        "peekOfCode": "def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):\n    \"\"\"Create JWT access token\"\"\"\n    to_encode = data.copy()\n    if expires_delta:\n        expire = datetime.utcnow() + expires_delta\n    else:\n        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)\n    to_encode.update({\"exp\": expire})\n    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)\n    return encoded_jwt",
+        "detail": "auth.utils",
+        "documentation": {}
+    },
+    {
+        "label": "verify_token",
+        "kind": 2,
+        "importPath": "auth.utils",
+        "description": "auth.utils",
+        "peekOfCode": "def verify_token(token: str) -> Optional[TokenData]:\n    \"\"\"Verify JWT token and return token data\"\"\"\n    try:\n        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])\n        email: str = payload.get(\"sub\")\n        if email is None:\n            return None\n        # Check if token is blacklisted\n        if is_token_blacklisted(email, token):\n            return None  # Token is blacklisted",
+        "detail": "auth.utils",
+        "documentation": {}
+    },
+    {
+        "label": "generate_user_id",
+        "kind": 2,
+        "importPath": "auth.utils",
+        "description": "auth.utils",
+        "peekOfCode": "def generate_user_id() -> str:\n    \"\"\"Generate a unique user ID\"\"\"\n    return str(uuid.uuid4())",
+        "detail": "auth.utils",
+        "documentation": {}
+    },
+    {
+        "label": "DocumentMetadata",
+        "kind": 6,
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "peekOfCode": "class DocumentMetadata(BaseModel):\n    \"\"\"Document-level metadata extracted from the entire document.\"\"\"\n    location: Optional[str] = Field(\n        None,\n        description=\"Primary location, city, state, or region mentioned in the document\"\n    )\n    project_name: Optional[str] = Field(\n        None,\n        description=\"Project or contract name if mentioned\"\n    )",
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
         "label": "LLMClient",
         "kind": 6,
         "importPath": "client.llm_client",
@@ -1556,7 +2186,7 @@
         "kind": 6,
         "importPath": "models.job_description",
         "description": "models.job_description",
-        "peekOfCode": "class JobDescription(BaseModel):\n    \"\"\"Model for extracted job description fields.\"\"\"\n    labor_category: str = Field(\n        description=\"Job title or labor category\"\n    )\n    experience: Optional[int] = Field(\n        None,\n        description=\"Years of experience required (integer). None if not specified.\"\n    )\n    location: Optional[str] = Field(",
+        "peekOfCode": "class JobDescription(BaseModel):\n    \"\"\"Model for extracted job description fields.\"\"\"\n    labor_category: str = Field(\n        description=\"Job title or labor category\"\n    )\n    description: Optional[str] = Field(\n        None,\n        description=\"Full job description text including responsibilities, requirements, and qualifications. None if not specified.\"\n    )\n    experience: Optional[int] = Field(",
         "detail": "models.job_description",
         "documentation": {}
     },
@@ -1567,6 +2197,33 @@
         "description": "models.job_description",
         "peekOfCode": "class JobDescriptionList(BaseModel):\n    \"\"\"List of job descriptions extracted from a document.\"\"\"\n    job_descriptions: list[JobDescription] = Field(\n        default_factory=list,\n        description=\"All job descriptions found in the page/document\"\n    )",
         "detail": "models.job_description",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "kind": 2,
+        "importPath": "routers.auth",
+        "description": "routers.auth",
+        "peekOfCode": "def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):\n    \"\"\"Get current user from JWT token\"\"\"\n    token = credentials.credentials\n    token_data = verify_token(token)\n    if token_data is None:\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=\"Could not validate credentials\",\n            headers={\"WWW-Authenticate\": \"Bearer\"},\n        )",
+        "detail": "routers.auth",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "routers.auth",
+        "description": "routers.auth",
+        "peekOfCode": "router = APIRouter(prefix=\"/auth\", tags=[\"authentication\"])\nsecurity = HTTPBearer()\ndef get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):\n    \"\"\"Get current user from JWT token\"\"\"\n    token = credentials.credentials\n    token_data = verify_token(token)\n    if token_data is None:\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=\"Could not validate credentials\",",
+        "detail": "routers.auth",
+        "documentation": {}
+    },
+    {
+        "label": "security",
+        "kind": 5,
+        "importPath": "routers.auth",
+        "description": "routers.auth",
+        "peekOfCode": "security = HTTPBearer()\ndef get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):\n    \"\"\"Get current user from JWT token\"\"\"\n    token = credentials.credentials\n    token_data = verify_token(token)\n    if token_data is None:\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=\"Could not validate credentials\",\n            headers={\"WWW-Authenticate\": \"Bearer\"},",
+        "detail": "routers.auth",
         "documentation": {}
     },
     {
@@ -1736,7 +2393,7 @@
         "kind": 2,
         "importPath": "utils.agno_tools",
         "description": "utils.agno_tools",
-        "peekOfCode": "def create_custom_retreiver():\n    \"\"\"\n    Create a custom retriever for SOC code vector search.\n    This retriever uses FAISS vector search with OpenAI embeddings to find\n    the most similar Standard Occupational Classification (SOC) codes for\n    a given job title or description.\n    Returns:\n        Callable retriever function that can be used with agno agents\n    \"\"\"\n    # Get singleton FAISS vector search client (thread-safe, shared across agents)",
+        "peekOfCode": "def create_custom_retreiver(description: Optional[str] = None):\n    \"\"\"\n    Create a custom retriever for SOC code vector search.\n    This retriever uses FAISS vector search with OpenAI embeddings to find\n    the most similar Standard Occupational Classification (SOC) codes for\n    a given job title or description.\n    Args:\n        description: Optional job description text to enhance semantic matching\n    Returns:\n        Callable retriever function that can be used with agno agents",
         "detail": "utils.agno_tools",
         "documentation": {}
     },
