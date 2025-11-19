@@ -208,6 +208,14 @@
         "documentation": {}
     },
     {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Optional",
         "importPath": "typing",
         "description": "typing",
@@ -241,6 +249,14 @@
     },
     {
         "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -305,6 +321,62 @@
     },
     {
         "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -506,11 +578,27 @@
         "documentation": {}
     },
     {
-        "label": "BaseSettings",
-        "importPath": "pydantic_settings",
-        "description": "pydantic_settings",
+        "label": "Agent",
+        "importPath": "agno.agent",
+        "description": "agno.agent",
         "isExtraImport": true,
-        "detail": "pydantic_settings",
+        "detail": "agno.agent",
+        "documentation": {}
+    },
+    {
+        "label": "Agent",
+        "importPath": "agno.agent",
+        "description": "agno.agent",
+        "isExtraImport": true,
+        "detail": "agno.agent",
+        "documentation": {}
+    },
+    {
+        "label": "get_chat_llm_agno",
+        "importPath": "client.llm_client",
+        "description": "client.llm_client",
+        "isExtraImport": true,
+        "detail": "client.llm_client",
         "documentation": {}
     },
     {
@@ -530,11 +618,108 @@
         "documentation": {}
     },
     {
+        "label": "create_custom_retreiver",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "isExtraImport": true,
+        "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_wage_tool",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "isExtraImport": true,
+        "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "BaseSettings",
+        "importPath": "pydantic_settings",
+        "description": "pydantic_settings",
+        "isExtraImport": true,
+        "detail": "pydantic_settings",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "pandas",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pandas",
+        "description": "pandas",
+        "detail": "pandas",
+        "documentation": {}
+    },
+    {
+        "label": "partition",
+        "importPath": "unstructured.partition.auto",
+        "description": "unstructured.partition.auto",
+        "isExtraImport": true,
+        "detail": "unstructured.partition.auto",
+        "documentation": {}
+    },
+    {
+        "label": "partition",
+        "importPath": "unstructured.partition.auto",
+        "description": "unstructured.partition.auto",
+        "isExtraImport": true,
+        "detail": "unstructured.partition.auto",
+        "documentation": {}
+    },
+    {
         "label": "JobDescriptionList",
         "importPath": "models.job_description",
         "description": "models.job_description",
         "isExtraImport": true,
         "detail": "models.job_description",
+        "documentation": {}
+    },
+    {
+        "label": "JobDescription",
+        "importPath": "models.job_description",
+        "description": "models.job_description",
+        "isExtraImport": true,
+        "detail": "models.job_description",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
         "documentation": {}
     },
     {
@@ -595,84 +780,11 @@
         "documentation": {}
     },
     {
-        "label": "pandas",
-        "kind": 6,
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
         "isExtraImport": true,
-        "importPath": "pandas",
-        "description": "pandas",
-        "detail": "pandas",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "FAISS",
-        "importPath": "langchain_community.vectorstores",
-        "description": "langchain_community.vectorstores",
-        "isExtraImport": true,
-        "detail": "langchain_community.vectorstores",
-        "documentation": {}
-    },
-    {
-        "label": "defaultdict",
-        "importPath": "collections",
-        "description": "collections",
-        "isExtraImport": true,
-        "detail": "collections",
-        "documentation": {}
-    },
-    {
-        "label": "partition",
-        "importPath": "unstructured.partition.auto",
-        "description": "unstructured.partition.auto",
-        "isExtraImport": true,
-        "detail": "unstructured.partition.auto",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "Field",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
+        "detail": "pymongo",
         "documentation": {}
     },
     {
@@ -708,6 +820,55 @@
         "documentation": {}
     },
     {
+        "label": "Database",
+        "importPath": "pymongo.database",
+        "description": "pymongo.database",
+        "isExtraImport": true,
+        "detail": "pymongo.database",
+        "documentation": {}
+    },
+    {
+        "label": "math",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "math",
+        "description": "math",
+        "detail": "math",
+        "documentation": {}
+    },
+    {
+        "label": "FAISS",
+        "importPath": "langchain_community.vectorstores",
+        "description": "langchain_community.vectorstores",
+        "isExtraImport": true,
+        "detail": "langchain_community.vectorstores",
+        "documentation": {}
+    },
+    {
+        "label": "defaultdict",
+        "importPath": "collections",
+        "description": "collections",
+        "isExtraImport": true,
+        "detail": "collections",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
         "label": "time",
         "kind": 6,
         "isExtraImport": true,
@@ -726,6 +887,39 @@
         "documentation": {}
     },
     {
+        "label": "tool",
+        "importPath": "agno.tools",
+        "description": "agno.tools",
+        "isExtraImport": true,
+        "detail": "agno.tools",
+        "documentation": {}
+    },
+    {
+        "label": "get_soc_vector_search_client",
+        "importPath": "client.soc_vector_search",
+        "description": "client.soc_vector_search",
+        "isExtraImport": true,
+        "detail": "client.soc_vector_search",
+        "documentation": {}
+    },
+    {
+        "label": "get_oews_mongo_client",
+        "importPath": "client.oews_mongodb",
+        "description": "client.oews_mongodb",
+        "isExtraImport": true,
+        "detail": "client.oews_mongodb",
+        "documentation": {}
+    },
+    {
+        "label": "asyncio",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "asyncio",
+        "description": "asyncio",
+        "detail": "asyncio",
+        "documentation": {}
+    },
+    {
         "label": "json",
         "kind": 6,
         "isExtraImport": true,
@@ -735,19 +929,19 @@
         "documentation": {}
     },
     {
-        "label": "extract_document_by_page",
-        "importPath": "client.unstructured",
-        "description": "client.unstructured",
-        "isExtraImport": true,
-        "detail": "client.unstructured",
-        "documentation": {}
-    },
-    {
-        "label": "parse_page_for_jds",
+        "label": "parse_documents_to_dataframe",
         "importPath": "client.jd_parser",
         "description": "client.jd_parser",
         "isExtraImport": true,
         "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "create_pricing_agent",
+        "importPath": "agent.agent",
+        "description": "agent.agent",
+        "isExtraImport": true,
+        "detail": "agent.agent",
         "documentation": {}
     },
     {
@@ -1066,15 +1260,6 @@
         "documentation": {}
     },
     {
-        "label": "parse_page_for_jds",
-        "kind": 2,
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
-        "peekOfCode": "def parse_page_for_jds(page_text: str) -> JobDescriptionList:\n    \"\"\"\n    Extract job descriptions from page text using LLM with structured output.\n    Args:\n        page_text: Extracted text from a single page\n    Returns:\n        JobDescriptionList containing all JDs found on the page\n    \"\"\"\n    llm = get_chat_llm(model=settings.OPENROUTER_MODEL, api_key=settings.OPENROUTER_API_KEY, base_url=\"https://openrouter.ai/api/v1\")\n    structured_llm = llm.with_structured_output(JobDescriptionList)",
-        "detail": "client.jd_parser",
-        "documentation": {}
-    },
-    {
         "label": "LLMClient",
         "kind": 6,
         "importPath": "client.llm_client",
@@ -1115,7 +1300,7 @@
         "kind": 2,
         "importPath": "client.llm_client",
         "description": "client.llm_client",
-        "peekOfCode": "def get_embeddings(\n    model: Optional[str] = None,\n    api_key: Optional[str] = None\n) -> OpenAIEmbeddings:\n    \"\"\"\n    Convenience function to get OpenAI embeddings instance directly\n    Args:\n        model: Model name (defaults to text-embedding-3-small)\n        api_key: API key (defaults to settings.OPENAI_API_KEY)\n    Returns:",
+        "peekOfCode": "def get_embeddings() -> OpenAIEmbeddings:\n    \"\"\"\n    Convenience function to get OpenAI embeddings instance directly\n    Returns:\n        OpenAIEmbeddings instance (text-embedding-3-small)\n    \"\"\"\n    return get_llm_client().get_embeddings()\ndef clear_llm_cache() -> None:\n    \"\"\"Convenience function to clear all cached LLM instances\"\"\"\n    client = get_llm_client()",
         "detail": "client.llm_client",
         "documentation": {}
     },
@@ -1138,39 +1323,30 @@
         "documentation": {}
     },
     {
-        "label": "OEWSLocalLookup",
+        "label": "OEWSMongoLookup",
         "kind": 6,
-        "importPath": "client.oews_local",
-        "description": "client.oews_local",
-        "peekOfCode": "class OEWSLocalLookup:\n    \"\"\"Query OEWS wage data from local files.\"\"\"\n    def __init__(self):\n        \"\"\"Initialize with local data files.\"\"\"\n        self._lock = threading.RLock()\n        self.occupations = self._load_occupations()\n        self.datatypes = self._load_datatypes()\n        self.areas = self._load_areas()\n        self.wage_data = None  # Lazy load when needed\n    def _load_occupations(self) -> pd.DataFrame:",
-        "detail": "client.oews_local",
+        "importPath": "client.oews_mongodb",
+        "description": "client.oews_mongodb",
+        "peekOfCode": "class OEWSMongoLookup:\n    \"\"\"Query OEWS wage data from MongoDB.\"\"\"\n    def __init__(self):\n        \"\"\"Initialize MongoDB connection.\"\"\"\n        # Create MongoDB client with connection pooling\n        # PyMongo client is thread-safe and handles connection pooling automatically\n        self.client = MongoClient(settings.MONGODB_URL)\n        self.db: Database = self.client[settings.MONGODB_DATABASE]\n    def search_areas(self, keyword: str) -> List[Dict[str, str]]:\n        \"\"\"",
+        "detail": "client.oews_mongodb",
         "documentation": {}
     },
     {
-        "label": "get_oews_lookup_client",
+        "label": "get_oews_mongo_client",
         "kind": 2,
-        "importPath": "client.oews_local",
-        "description": "client.oews_local",
-        "peekOfCode": "def get_oews_lookup_client() -> OEWSLocalLookup:\n    \"\"\"\n    Get or create OEWS lookup client (singleton pattern)\n    Returns:\n        OEWSLocalLookup instance\n    \"\"\"\n    global _oews_client\n    with _client_lock:\n        if _oews_client is None:\n            _oews_client = OEWSLocalLookup()",
-        "detail": "client.oews_local",
-        "documentation": {}
-    },
-    {
-        "label": "DATA_DIR",
-        "kind": 5,
-        "importPath": "client.oews_local",
-        "description": "client.oews_local",
-        "peekOfCode": "DATA_DIR = Path(\"data/oews\")\nclass OEWSLocalLookup:\n    \"\"\"Query OEWS wage data from local files.\"\"\"\n    def __init__(self):\n        \"\"\"Initialize with local data files.\"\"\"\n        self._lock = threading.RLock()\n        self.occupations = self._load_occupations()\n        self.datatypes = self._load_datatypes()\n        self.areas = self._load_areas()\n        self.wage_data = None  # Lazy load when needed",
-        "detail": "client.oews_local",
+        "importPath": "client.oews_mongodb",
+        "description": "client.oews_mongodb",
+        "peekOfCode": "def get_oews_mongo_client() -> OEWSMongoLookup:\n    \"\"\"\n    Get or create OEWS MongoDB client (singleton pattern).\n    Returns:\n        OEWSMongoLookup instance\n    \"\"\"\n    global _oews_mongo_client\n    with _client_lock:\n        if _oews_mongo_client is None:\n            _oews_mongo_client = OEWSMongoLookup()",
+        "detail": "client.oews_mongodb",
         "documentation": {}
     },
     {
         "label": "_client_lock",
         "kind": 5,
-        "importPath": "client.oews_local",
-        "description": "client.oews_local",
-        "peekOfCode": "_client_lock = threading.RLock()\ndef get_oews_lookup_client() -> OEWSLocalLookup:\n    \"\"\"\n    Get or create OEWS lookup client (singleton pattern)\n    Returns:\n        OEWSLocalLookup instance\n    \"\"\"\n    global _oews_client\n    with _client_lock:\n        if _oews_client is None:",
-        "detail": "client.oews_local",
+        "importPath": "client.oews_mongodb",
+        "description": "client.oews_mongodb",
+        "peekOfCode": "_client_lock = threading.RLock()\ndef get_oews_mongo_client() -> OEWSMongoLookup:\n    \"\"\"\n    Get or create OEWS MongoDB client (singleton pattern).\n    Returns:\n        OEWSMongoLookup instance\n    \"\"\"\n    global _oews_mongo_client\n    with _client_lock:\n        if _oews_mongo_client is None:",
+        "detail": "client.oews_mongodb",
         "documentation": {}
     },
     {
@@ -1196,7 +1372,7 @@
         "kind": 5,
         "importPath": "client.soc_vector_search",
         "description": "client.soc_vector_search",
-        "peekOfCode": "DATA_DIR = Path(\"data/oews\")\nCACHE_DIR = Path(\"data/cache\")\nclass SOCVectorSearch:\n    \"\"\"Map job titles to SOC codes using semantic vector search.\"\"\"\n    def __init__(self):\n        \"\"\"Initialize vector search with OpenAI embeddings.\"\"\"\n        self._lock = threading.RLock()\n        # Use shared embeddings instance\n        self.embeddings = get_embeddings()\n        self.vectorstore = None",
+        "peekOfCode": "DATA_DIR = Path(\"data/oews\")\nCACHE_DIR = Path(\"data/cache\")\nos.environ[\"KMP_DUPLICATE_LIB_OK\"] = \"TRUE\"\nclass SOCVectorSearch:\n    \"\"\"Map job titles to SOC codes using semantic vector search.\"\"\"\n    def __init__(self):\n        \"\"\"Initialize vector search with OpenAI embeddings.\"\"\"\n        self._lock = threading.RLock()\n        # Use shared embeddings instance\n        self.embeddings = get_embeddings()",
         "detail": "client.soc_vector_search",
         "documentation": {}
     },
@@ -1205,7 +1381,16 @@
         "kind": 5,
         "importPath": "client.soc_vector_search",
         "description": "client.soc_vector_search",
-        "peekOfCode": "CACHE_DIR = Path(\"data/cache\")\nclass SOCVectorSearch:\n    \"\"\"Map job titles to SOC codes using semantic vector search.\"\"\"\n    def __init__(self):\n        \"\"\"Initialize vector search with OpenAI embeddings.\"\"\"\n        self._lock = threading.RLock()\n        # Use shared embeddings instance\n        self.embeddings = get_embeddings()\n        self.vectorstore = None\n        self.occupations = None",
+        "peekOfCode": "CACHE_DIR = Path(\"data/cache\")\nos.environ[\"KMP_DUPLICATE_LIB_OK\"] = \"TRUE\"\nclass SOCVectorSearch:\n    \"\"\"Map job titles to SOC codes using semantic vector search.\"\"\"\n    def __init__(self):\n        \"\"\"Initialize vector search with OpenAI embeddings.\"\"\"\n        self._lock = threading.RLock()\n        # Use shared embeddings instance\n        self.embeddings = get_embeddings()\n        self.vectorstore = None",
+        "detail": "client.soc_vector_search",
+        "documentation": {}
+    },
+    {
+        "label": "os.environ[\"KMP_DUPLICATE_LIB_OK\"]",
+        "kind": 5,
+        "importPath": "client.soc_vector_search",
+        "description": "client.soc_vector_search",
+        "peekOfCode": "os.environ[\"KMP_DUPLICATE_LIB_OK\"] = \"TRUE\"\nclass SOCVectorSearch:\n    \"\"\"Map job titles to SOC codes using semantic vector search.\"\"\"\n    def __init__(self):\n        \"\"\"Initialize vector search with OpenAI embeddings.\"\"\"\n        self._lock = threading.RLock()\n        # Use shared embeddings instance\n        self.embeddings = get_embeddings()\n        self.vectorstore = None\n        self.occupations = None",
         "detail": "client.soc_vector_search",
         "documentation": {}
     },
@@ -1399,30 +1584,21 @@
         "documentation": {}
     },
     {
-        "label": "main",
+        "label": "create_custom_retreiver",
         "kind": 2,
-        "importPath": "main",
-        "description": "main",
-        "peekOfCode": "def main():\n    print(\"Hello from pricing!\")\nif __name__ == \"__main__\":\n    main()",
-        "detail": "main",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "peekOfCode": "def create_custom_retreiver():\n    \"\"\"\n    Create a custom retriever for SOC code vector search.\n    This retriever uses FAISS vector search with OpenAI embeddings to find\n    the most similar Standard Occupational Classification (SOC) codes for\n    a given job title or description.\n    Returns:\n        Callable retriever function that can be used with agno agents\n    \"\"\"\n    # Get singleton FAISS vector search client (thread-safe, shared across agents)",
+        "detail": "utils.agno_tools",
         "documentation": {}
     },
     {
-        "label": "extract_all_jds",
+        "label": "create_wage_tool",
         "kind": 2,
-        "importPath": "test_extraction",
-        "description": "test_extraction",
-        "peekOfCode": "def extract_all_jds(file_path: str) -> list[dict]:\n    \"\"\"\n    Extract all job descriptions from a document.\n    Args:\n        file_path: Path to the document\n    Returns:\n        List of job description dictionaries\n    \"\"\"\n    print(f\"Extracting text from: {file_path}\")\n    pages = extract_document_by_page(file_path)",
-        "detail": "test_extraction",
-        "documentation": {}
-    },
-    {
-        "label": "export_to_excel",
-        "kind": 2,
-        "importPath": "test_extraction",
-        "description": "test_extraction",
-        "peekOfCode": "def export_to_excel(jds: list[dict], output_file: str):\n    \"\"\"\n    Export job descriptions to Excel file.\n    Args:\n        jds: List of job description dictionaries\n        output_file: Path to output Excel file\n    \"\"\"\n    df = pd.DataFrame(jds)\n    # Rename columns to match expected format\n    df.rename(columns={",
-        "detail": "test_extraction",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "peekOfCode": "def create_wage_tool():\n    \"\"\"\n    Create a custom tool for retrieving wage data from BLS OEWS database.\n    This tool queries MongoDB to fetch wage percentiles (10th, 25th, 50th/median, 75th, 90th)\n    for a given SOC code and geographic area. Data is sourced from the Bureau of Labor Statistics\n    Occupational Employment and Wage Statistics (OEWS) program.\n    Returns:\n        Callable tool function that can be used with agno agents to retrieve wage data\n    Example:\n        >>> wage_tool = create_wage_tool()",
+        "detail": "utils.agno_tools",
         "documentation": {}
     }
 ]

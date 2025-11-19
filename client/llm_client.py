@@ -103,8 +103,8 @@ class LLMClient:
         Returns:
             OpenAIEmbeddings instance
         """
-        model =  "text-embedding-3-small"
-        api_key =  settings.OPENAI_API_KEY
+        model =  "openai/text-embedding-3-small"
+        api_key =  settings.OPENROUTER_API_KEY
 
         cache_key = model
 
@@ -112,7 +112,11 @@ class LLMClient:
             if cache_key not in self._embeddings_cache:
                 self._embeddings_cache[cache_key] = OpenAIEmbeddings(
                     openai_api_key=api_key,
-                    model=model
+                    model=model,
+                    dimensions=1536,
+                    request_timeout=60,  # 60 second timeout
+                    base_url="https://openrouter.ai/api/v1",
+                    max_retries=3  # Retry up to 3 times
                 )
             return self._embeddings_cache[cache_key]
 
@@ -181,21 +185,14 @@ def get_chat_llm_agno(
     return get_llm_client().get_chat_llm_agno(model=model, api_key=api_key, base_url=base_url)
 
 
-def get_embeddings(
-    model: Optional[str] = None,
-    api_key: Optional[str] = None
-) -> OpenAIEmbeddings:
+def get_embeddings() -> OpenAIEmbeddings:
     """
     Convenience function to get OpenAI embeddings instance directly
 
-    Args:
-        model: Model name (defaults to text-embedding-3-small)
-        api_key: API key (defaults to settings.OPENAI_API_KEY)
-
     Returns:
-        OpenAIEmbeddings instance
+        OpenAIEmbeddings instance (text-embedding-3-small)
     """
-    return get_llm_client().get_embeddings(model=model, api_key=api_key)
+    return get_llm_client().get_embeddings()
 
 
 def clear_llm_cache() -> None:

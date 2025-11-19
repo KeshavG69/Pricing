@@ -8,13 +8,13 @@ from pathlib import Path
 from typing import List, Tuple, Optional
 import threading
 from langchain_community.vectorstores import FAISS
-
+import os
 from client.llm_client import get_embeddings
 
 DATA_DIR = Path("data/oews")
 CACHE_DIR = Path("data/cache")
 
-
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 class SOCVectorSearch:
     """Map job titles to SOC codes using semantic vector search."""
 
@@ -136,7 +136,7 @@ class SOCVectorSearch:
         Returns:
             List of (soc_code, occupation_name, score) tuples
         """
-        results_with_scores = self.vectorstore.similarity_search_with_score(
+        results_with_scores =  self.vectorstore.similarity_search_with_score(
             query,
             k=top_k
         )
