@@ -24,7 +24,11 @@ class JobDescription(BaseModel):
     )
     hours: Optional[int] = Field(
         None,
-        description="Annual hours (e.g., 1920 for full-time). None if not specified."
+        description="Annual hours (e.g., 1920 for full-time). None if not specified. Legacy field - use hours_per_year for multi-year contracts."
+    )
+    hours_per_year: Optional[dict[str, int]] = Field(
+        None,
+        description='Hours worked per year in multi-year contract. Format: {"1": 1880, "2": 1880, "3": 0, "4": 1880, "5": 1880}. Year keys are strings. If not specified in document, will use hours field for all years. None if not specified.'
     )
 
 

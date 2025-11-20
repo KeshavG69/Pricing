@@ -1223,6 +1223,14 @@
         "documentation": {}
     },
     {
+        "label": "defaultdict",
+        "importPath": "collections",
+        "description": "collections",
+        "isExtraImport": true,
+        "detail": "collections",
+        "documentation": {}
+    },
+    {
         "label": "HTTPBearer",
         "importPath": "fastapi.security",
         "description": "fastapi.security",
@@ -1467,6 +1475,14 @@
         "importPath": "openpyxl",
         "description": "openpyxl",
         "detail": "openpyxl",
+        "documentation": {}
+    },
+    {
+        "label": "get_column_letter",
+        "importPath": "openpyxl.utils",
+        "description": "openpyxl.utils",
+        "isExtraImport": true,
+        "detail": "openpyxl.utils",
         "documentation": {}
     },
     {
@@ -2628,6 +2644,51 @@
         "description": "analyze_excel_detailed",
         "peekOfCode": "insights = \"\"\"\n1. MULTI-YEAR STRUCTURE:\n   - Base Period + 4 Option Years = 5 years total\n   - Each year has: Hours, Amount, Rate columns\n   - Hours can be different per year (some positions start later)\n2. ESCALATION PATTERN:\n   - Rates escalate EVERY year\n   - Different escalation % for each year transition (2.72%, 2.99%, 2.63%, 3.40%)\n   - Escalation is COMPOUND: Year 2 = Year 1 × (1 + escalation%)\n3. RATE CALCULATION:",
         "detail": "analyze_excel_detailed",
+        "documentation": {}
+    },
+    {
+        "label": "analyze_cell",
+        "kind": 2,
+        "importPath": "analyze_excel_formulas",
+        "description": "analyze_excel_formulas",
+        "peekOfCode": "def analyze_cell(cell):\n    \"\"\"Extract information about a cell including its formula and value.\"\"\"\n    info = {\n        'coordinate': cell.coordinate,\n        'value': cell.value,\n        'data_type': cell.data_type,\n        'has_formula': False,\n        'formula': None,\n        'number_format': cell.number_format\n    }",
+        "detail": "analyze_excel_formulas",
+        "documentation": {}
+    },
+    {
+        "label": "find_wrap_rate_patterns",
+        "kind": 2,
+        "importPath": "analyze_excel_formulas",
+        "description": "analyze_excel_formulas",
+        "peekOfCode": "def find_wrap_rate_patterns(sheet):\n    \"\"\"Find patterns in wrap rate calculations.\"\"\"\n    patterns = {\n        'direct_labor': [],\n        'fringe': [],\n        'overhead': [],\n        'g_and_a': [],\n        'odc': [],\n        'fee': [],\n        'escalation': []",
+        "detail": "analyze_excel_formulas",
+        "documentation": {}
+    },
+    {
+        "label": "analyze_sheet",
+        "kind": 2,
+        "importPath": "analyze_excel_formulas",
+        "description": "analyze_excel_formulas",
+        "peekOfCode": "def analyze_sheet(sheet, sheet_name):\n    \"\"\"Comprehensive analysis of a sheet.\"\"\"\n    print(f\"\\n{'='*80}\")\n    print(f\"ANALYZING SHEET: {sheet_name}\")\n    print(f\"{'='*80}\\n\")\n    # Get dimensions\n    print(f\"Dimensions: {sheet.max_row} rows x {sheet.max_column} columns\\n\")\n    # Collect all formulas\n    formula_cells = []\n    value_cells = []",
+        "detail": "analyze_excel_formulas",
+        "documentation": {}
+    },
+    {
+        "label": "trace_calculation_sequence",
+        "kind": 2,
+        "importPath": "analyze_excel_formulas",
+        "description": "analyze_excel_formulas",
+        "peekOfCode": "def trace_calculation_sequence(sheet):\n    \"\"\"Trace the sequence of wrap rate calculations.\"\"\"\n    print(\"\\n\\n\" + \"=\"*80)\n    print(\"TRACING WRAP RATE CALCULATION SEQUENCE\")\n    print(\"=\"*80)\n    # Look for a complete calculation chain in one row\n    print(\"\\nLooking for calculation chains in rows...\")\n    for row_idx in range(2, min(20, sheet.max_row + 1)):\n        row = sheet[row_idx]\n        row_formulas = []",
+        "detail": "analyze_excel_formulas",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "analyze_excel_formulas",
+        "description": "analyze_excel_formulas",
+        "peekOfCode": "def main():\n    file_path = '/Users/keshav/Developer/Others/Pricing/Intprepix Volume III.xlsx'\n    print(\"=\"*80)\n    print(\"EXCEL FORMULA ANALYZER\")\n    print(\"=\"*80)\n    print(f\"\\nFile: {file_path}\\n\")\n    try:\n        # Load workbook with data_only=False to get formulas\n        wb = openpyxl.load_workbook(file_path, data_only=False)\n        print(f\"Sheet names: {wb.sheetnames}\\n\")",
+        "detail": "analyze_excel_formulas",
         "documentation": {}
     }
 ]

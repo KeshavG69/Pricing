@@ -22,6 +22,18 @@ class DocumentMetadata(BaseModel):
         None,
         description="Project or contract name if mentioned"
     )
+    base_years: Optional[int] = Field(
+        None,
+        description="Number of base period years (e.g., 1). None if not specified."
+    )
+    option_years: Optional[int] = Field(
+        None,
+        description="Number of option years (e.g., 4). None if not specified."
+    )
+    total_years: Optional[int] = Field(
+        None,
+        description="Total contract years (base + option). None if not specified."
+    )
 
 
 async def extract_document_metadata(document_path: str) -> DocumentMetadata:
@@ -71,6 +83,30 @@ Look for:
 
 - project_name: The name of the project, contract, or engagement (if mentioned)
 
+- base_years: Number of base period years (integer)
+  Look for phrases like:
+  * "Base Period: 1 year"
+  * "base year"
+  * "1 base year"
+
+- option_years: Number of option years (integer)
+  Look for phrases like:
+  * "Option Year 1", "Option Year 2", etc. (count them)
+  * "4 option years"
+  * "plus four option years"
+
+- total_years: Total contract duration in years (integer)
+  Look for phrases like:
+  * "5-year contract"
+  * "five year period"
+  * "1 base + 4 option years" (calculate: 1 + 4 = 5)
+  * "Period of Performance: 5 years"
+
+Common patterns:
+  * "5-year contract (1 base + 4 option years)"
+  * "Base Period: 1 year, Option Periods: Years 1-4"
+  * "Contract period: Base year plus four option years"
+
 If you cannot find this information, return null for that field.
 
 Document text:
@@ -105,7 +141,21 @@ For each job description, extract:
 - description: Full job description text including responsibilities, requirements, qualifications, and duties (or null if not available)
 - experience: Years of experience required (as integer, or null if not specified)
 - location: Job location (or null if not specified)
-- hours: Annual hours like 1920 for full-time, 960 for part-time (or null if not specified)
+- hours: Annual hours like 1880 for full-time, 940 for part-time (or null if not specified) - LEGACY FIELD
+- hours_per_year: Hours per year for multi-year contracts as a dictionary with string keys
+  Format: {{"1": 1880, "2": 1880, "3": 0, "4": 1880, "5": 1880}}
+  Year keys MUST be strings ("1", "2", "3", etc.), NOT integers
+
+  Look for patterns like:
+  * "Year 1: 1880 hours, Year 2: 1880 hours, Year 3: Not working, Year 4: 1880 hours"
+  * "Full-time (1880 hours/year) for all 5 years"
+  * "Part-time in Year 1 (940 hours), full-time thereafter (1880 hours)"
+  * Tables showing hours per year
+  * "Base year: 1880 hours, Option years 1-4: 1880 hours each"
+
+  If document specifies different hours per year, extract them into the dictionary.
+  If document only mentions total annual hours without year breakdown, use that value for all years mentioned in the document.
+  If not specified at all, return null.
 
 If no job descriptions are found, return an empty list.
 
@@ -125,10 +175,13 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
         document_paths: List of paths to documents (PDF, DOCX, Excel, etc.)
 
     Returns:
-        pandas DataFrame with columns: labor_category, experience, location, hours
+        pandas DataFrame with columns:
+        - labor_category, description, experience, location, hours, hours_per_year (job-level)
+        - base_years, option_years, total_years, project_name (document-level, same for all rows)
         One row per job description found across all documents
     """
     all_jds: List[JobDescription] = []
+    all_metadata: List[DocumentMetadata] = []
 
     print(f"\n{'='*60}")
     print(f"Parsing {len(document_paths)} document(s)")
@@ -137,7 +190,7 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
     for doc_path in document_paths:
         print(f"\nProcessing: {Path(doc_path).name}")
 
-        # Step 1: Extract document-level metadata (location, project name)
+        # Step 1: Extract document-level metadata (location, project name, contract years)
         print(f"  Extracting document metadata...", end=" ")
         doc_metadata = await extract_document_metadata(doc_path)
         doc_location = doc_metadata.location
@@ -145,6 +198,9 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
             print(f"Found location: {doc_location}")
         else:
             print("No document-level location found")
+
+        if doc_metadata.base_years or doc_metadata.option_years or doc_metadata.total_years:
+            print(f"  Contract years: base={doc_metadata.base_years}, option={doc_metadata.option_years}, total={doc_metadata.total_years}")
 
         # Step 2: Extract text from document using unstructured
         try:
@@ -186,9 +242,12 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
                 print(f"Found {page_jd_count} JD(s)")
 
                 # Apply document-level location to jobs that don't have one
+                # and store metadata for each job
                 for jd in jd_list.job_descriptions:
                     if not jd.location and doc_location:
                         jd.location = doc_location
+                    # Store metadata for this job
+                    all_metadata.append(doc_metadata)
 
                 all_jds.extend(jd_list.job_descriptions)
 
@@ -203,7 +262,10 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
     # Convert to DataFrame
     if not all_jds:
         # Create empty DataFrame with correct columns
-        df = pd.DataFrame(columns=["labor_category", "description", "experience", "location", "hours"])
+        df = pd.DataFrame(columns=[
+            "labor_category", "description", "experience", "location", "hours", "hours_per_year",
+            "base_years", "option_years", "total_years", "project_name"
+        ])
     else:
         df = pd.DataFrame([
             {
@@ -211,9 +273,15 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
                 "description": jd.description,
                 "experience": jd.experience,
                 "location": jd.location,
-                "hours": jd.hours
+                "hours": jd.hours,
+                "hours_per_year": jd.hours_per_year,
+                # Document-level metadata (same for all jobs from same document)
+                "base_years": metadata.base_years,
+                "option_years": metadata.option_years,
+                "total_years": metadata.total_years,
+                "project_name": metadata.project_name
             }
-            for jd in all_jds
+            for jd, metadata in zip(all_jds, all_metadata)
         ])
 
     print(f"✓ Extracted {len(df)} job descriptions\n")
