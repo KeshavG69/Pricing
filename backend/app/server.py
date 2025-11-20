@@ -5,7 +5,7 @@ FastAPI server for government contractor pricing system.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from routers import pricing
+from routers import pricing, auth
 
 # Create FastAPI app
 app = FastAPI(
@@ -24,6 +24,7 @@ app.add_middleware(
 )
 
 # Include routers
+app.include_router(auth.router, prefix="/api", tags=["authentication"])
 app.include_router(pricing.router, prefix="/api/pricing", tags=["pricing"])
 
 

@@ -57,6 +57,28 @@ async def process_single_row(row_dict: Dict[str, Any], row_index: int) -> Dict[s
                 wages = wage_data.get("wages", {})
                 print(f"  [{row_index}] ✓ Found: {wage_data.get('soc_code')} - {wage_data.get('occupation_name')}")
 
+                # Determine selected wage based on experience
+                experience = row_dict.get("experience")
+                selected_wage = None
+                selected_percentile = None
+
+                if experience is not None and isinstance(experience, (int, float)):
+                    if experience < 3:
+                        selected_wage = wages.get("25th")
+                        selected_percentile = "25th"
+                    elif 3 <= experience < 6:
+                        selected_wage = wages.get("50th")
+                        selected_percentile = "50th"
+                    else:  # experience >= 6
+                        selected_wage = wages.get("75th")
+                        selected_percentile = "75th"
+                else:
+                    # Default to median (50th percentile) if experience not specified
+                    selected_wage = wages.get("50th")
+                    selected_percentile = "50th (default)"
+
+                print(f"  [{row_index}] 💰 Selected wage: ${selected_wage} ({selected_percentile} percentile for {experience} years exp)")
+
                 return {
                     **row_dict,  # Original fields (includes parsed description from JD)
                     "BLS Code": wage_data.get("soc_code"),
@@ -68,6 +90,8 @@ async def process_single_row(row_dict: Dict[str, Any], row_index: int) -> Dict[s
                     "wage_50th": wages.get("50th"),
                     "wage_75th": wages.get("75th"),
                     "wage_90th": wages.get("90th"),
+                    "selected_wage": selected_wage,
+                    "selected_percentile": selected_percentile,
                 }
 
         # If no valid result, return original data with None values
@@ -83,6 +107,8 @@ async def process_single_row(row_dict: Dict[str, Any], row_index: int) -> Dict[s
             "wage_50th": None,
             "wage_75th": None,
             "wage_90th": None,
+            "selected_wage": None,
+            "selected_percentile": None,
         }
 
     except Exception as e:
@@ -98,6 +124,8 @@ async def process_single_row(row_dict: Dict[str, Any], row_index: int) -> Dict[s
             "wage_50th": None,
             "wage_75th": None,
             "wage_90th": None,
+            "selected_wage": None,
+            "selected_percentile": None,
         }
 
 

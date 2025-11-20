@@ -1,0 +1,1500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Government Contractor Pricing Dashboard</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #1d1d1f;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Upload Section */
+        #upload-section {
+            background: white;
+            border-radius: 20px;
+            padding: 60px 40px;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            margin: 40px auto;
+            max-width: 800px;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        #upload-section h2 {
+            font-size: 36px;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-weight: 700;
+        }
+
+        .file-input-wrapper {
+            margin: 40px 0;
+            position: relative;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-label {
+            display: inline-block;
+            padding: 30px 60px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 18px;
+            font-weight: 500;
+        }
+
+        .file-label:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: #764ba2;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .upload-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 18px 50px;
+            border-radius: 50px;
+            font-size: 18px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .upload-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+
+        .upload-btn:disabled {
+            background: #d2d2d7;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        /* Dashboard Header */
+        .dashboard-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            border-radius: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 15px 50px rgba(102, 126, 234, 0.4);
+            animation: slideDown 0.5s ease-out;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .dashboard-header h1 {
+            font-size: 42px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .dashboard-header p {
+            font-size: 18px;
+            opacity: 0.95;
+        }
+
+        /* Summary Cards */
+        .summary-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .card {
+            background: white;
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(102, 126, 234, 0.3);
+        }
+
+        .card-label {
+            font-size: 14px;
+            color: #86868b;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .card-value {
+            font-size: 42px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Charts Section */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 35px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            min-height: 400px;
+        }
+
+        .chart-container h3 {
+            font-size: 22px;
+            margin-bottom: 25px;
+            color: #1d1d1f;
+            font-weight: 700;
+        }
+
+        .chart {
+            width: 100%;
+            height: 350px;
+        }
+
+        /* Indirect Rates Section with Sliders */
+        .rates-section {
+            background: white;
+            padding: 45px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+        }
+
+        .rates-section h2 {
+            font-size: 28px;
+            margin-bottom: 15px;
+            color: #1d1d1f;
+            font-weight: 700;
+        }
+
+        .rates-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 35px;
+            margin-top: 30px;
+        }
+
+        .rate-input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .rate-input-group label {
+            font-size: 16px;
+            color: #1d1d1f;
+            margin-bottom: 18px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .rate-value {
+            font-size: 28px;
+            color: #667eea;
+            font-weight: 700;
+        }
+
+        /* Custom Slider Styling */
+        input[type="range"] {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background: linear-gradient(to right, #667eea 0%, #764ba2 100%);
+            outline: none;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+
+        input[type="range"]:hover {
+            opacity: 1;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+            transition: all 0.2s ease;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.7);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+            border: none;
+            transition: all 0.2s ease;
+        }
+
+        input[type="range"]::-moz-range-thumb:hover {
+            transform: scale(1.2);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.7);
+        }
+
+        /* Jobs Table */
+        .table-section {
+            background: white;
+            padding: 45px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 40px;
+            overflow-x: auto;
+        }
+
+        .table-section h2 {
+            font-size: 28px;
+            margin-bottom: 25px;
+            color: #1d1d1f;
+            font-weight: 700;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 15px;
+        }
+
+        thead {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        th {
+            padding: 18px 14px;
+            text-align: left;
+            font-weight: 600;
+            white-space: nowrap;
+            font-size: 14px;
+        }
+
+        td {
+            padding: 14px 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        tbody tr {
+            transition: all 0.2s ease;
+        }
+
+        tbody tr:hover {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            transform: scale(1.005);
+        }
+
+        /* Editable cells - BIGGER */
+        .editable-cell input {
+            width: 100%;
+            min-width: 120px;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .editable-cell input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #f8f9ff;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        /* Percentile Selector - BIGGER */
+        .percentile-selector {
+            width: 100%;
+            min-width: 150px;
+            padding: 10px 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+
+        .percentile-selector:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .percentile-selector option {
+            padding: 12px;
+            font-size: 15px;
+        }
+
+        /* Selected percentile badge */
+        .selected-badge {
+            display: inline-block;
+            padding: 5px 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+
+        /* Calculated Columns - BIGGER TEXT */
+        .calc-column {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+            font-weight: 600;
+            text-align: right;
+            color: #667eea;
+            font-size: 16px;
+        }
+
+        /* Action buttons in table */
+        .action-btn {
+            padding: 10px 18px;
+            border: 2px solid #ff3b30;
+            background: white;
+            color: #ff3b30;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .action-btn:hover {
+            background: #ff3b30;
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 59, 48, 0.3);
+        }
+
+        /* Export Section */
+        .export-section {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            padding: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .export-btn {
+            padding: 16px 35px;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            border-radius: 50px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .export-btn:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            text-align: center;
+            color: #667eea;
+            margin-top: 15px;
+            font-weight: 500;
+            font-size: 16px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* Add New Row Button */
+        .add-row-btn {
+            background: linear-gradient(135deg, #34c759 0%, #30d158 100%);
+            color: white;
+            border: none;
+            padding: 14px 30px;
+            border-radius: 50px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            margin-top: 20px;
+            box-shadow: 0 5px 20px rgba(52, 199, 89, 0.3);
+        }
+
+        .add-row-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 30px rgba(52, 199, 89, 0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 10px;
+            }
+
+            .dashboard-header h1 {
+                font-size: 28px;
+            }
+
+            .card-value {
+                font-size: 28px;
+            }
+
+            table {
+                font-size: 13px;
+            }
+
+            th, td {
+                padding: 10px 8px;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Tooltip */
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            cursor: help;
+            margin-left: 5px;
+            color: #667eea;
+        }
+
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 12px;
+            background: #1d1d1f;
+            color: white;
+            border-radius: 8px;
+            white-space: nowrap;
+            font-size: 12px;
+            z-index: 100;
+        }
+
+        /* D3 Chart Styles */
+        .bar {
+            transition: all 0.3s ease;
+        }
+
+        .bar:hover {
+            opacity: 0.8;
+        }
+
+        .axis text {
+            font-size: 12px;
+        }
+
+        .axis path,
+        .axis line {
+            stroke: #d2d2d7;
+        }
+
+        .legend-item {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Upload Section -->
+        <section id="upload-section">
+            <h2>🎯 Government Contractor Pricing Tool</h2>
+            <p style="color: #86868b; margin-bottom: 30px; font-size: 16px;">Upload PDF, DOCX, or Excel files containing job descriptions to generate pricing data</p>
+
+            <div class="file-input-wrapper">
+                <input type="file" id="file-input" multiple accept=".pdf,.docx,.xlsx,.xls">
+                <label for="file-input" class="file-label">
+                    <span id="file-label-text">📁 Choose Files or Drag & Drop</span>
+                </label>
+                <div id="file-names" style="margin-top: 20px; color: #667eea; font-weight: 500;"></div>
+            </div>
+
+            <button class="upload-btn" onclick="uploadFiles()" id="upload-btn" disabled>🚀 Process Documents</button>
+
+            <div id="loading" class="hidden">
+                <div class="spinner"></div>
+                <p class="loading-text">Processing documents... This may take a few moments.</p>
+            </div>
+        </section>
+
+        <!-- Dashboard (hidden until data loaded) -->
+        <section id="dashboard" class="hidden">
+            <!-- Header -->
+            <div class="dashboard-header">
+                <h1>📊 Pricing Dashboard</h1>
+                <p id="dashboard-subtitle">Processed <span id="processed-count"></span> documents</p>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="summary-cards">
+                <div class="card">
+                    <div class="card-label">Total Jobs</div>
+                    <div class="card-value" id="total-jobs">0</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Total Direct Labor</div>
+                    <div class="card-value" id="total-direct-labor">$0</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Total Burdened Cost</div>
+                    <div class="card-value" id="total-burdened-cost">$0</div>
+                </div>
+                <div class="card">
+                    <div class="card-label">Avg Burdened Rate</div>
+                    <div class="card-value" id="avg-burdened-rate">$0</div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3>💰 Wage Distribution by Job</h3>
+                    <div id="wage-chart" class="chart"></div>
+                </div>
+                <div class="chart-container">
+                    <h3>📊 Cost Breakdown</h3>
+                    <div id="cost-breakdown-chart" class="chart"></div>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3>🎯 Burdened Rate Components</h3>
+                    <div id="burden-chart" class="chart"></div>
+                </div>
+                <div class="chart-container">
+                    <h3>📈 Percentile Distribution</h3>
+                    <div id="percentile-chart" class="chart"></div>
+                </div>
+            </div>
+
+            <!-- Indirect Rates with Sliders -->
+            <div class="rates-section">
+                <h2>🎚️ Indirect Rates & Fee</h2>
+                <p style="color: #86868b; margin-bottom: 25px; font-size: 15px;">Adjust sliders to update indirect rates - all calculations update in real-time</p>
+                <div class="rates-grid">
+                    <div class="rate-input-group">
+                        <label>
+                            <span>Fringe %</span>
+                            <span class="rate-value" id="fringe-display">25.10%</span>
+                        </label>
+                        <input type="range" id="fringe-rate" min="0" max="50" step="0.1" value="25.10">
+                    </div>
+                    <div class="rate-input-group">
+                        <label>
+                            <span>Overhead (OH) %</span>
+                            <span class="rate-value" id="oh-display">8.10%</span>
+                        </label>
+                        <input type="range" id="oh-rate" min="0" max="50" step="0.1" value="8.10">
+                    </div>
+                    <div class="rate-input-group">
+                        <label>
+                            <span>General & Administrative (G&A) %</span>
+                            <span class="rate-value" id="ga-display">19.50%</span>
+                        </label>
+                        <input type="range" id="ga-rate" min="0" max="50" step="0.1" value="19.50">
+                    </div>
+                    <div class="rate-input-group">
+                        <label>
+                            <span>Fee (Profit) %</span>
+                            <span class="rate-value" id="fee-display">9.10%</span>
+                        </label>
+                        <input type="range" id="fee-rate" min="0" max="30" step="0.1" value="9.10">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Jobs Table -->
+            <div class="table-section">
+                <h2>📋 Job Details with Pricing</h2>
+                <p style="color: #86868b; margin-bottom: 25px; font-size: 15px;">All fields editable • Switch percentiles based on experience level</p>
+                <table id="jobs-table">
+                    <thead>
+                        <tr>
+                            <th>Labor Category</th>
+                            <th>Experience<span class="tooltip" data-tooltip="Years of experience">ⓘ</span></th>
+                            <th>Location</th>
+                            <th>Hours</th>
+                            <th>BLS Code</th>
+                            <th>BLS Labour Category</th>
+                            <th>Percentile<span class="tooltip" data-tooltip="Auto-selected based on experience">ⓘ</span></th>
+                            <th>Salary ($)</th>
+                            <th class="calc-column">DL Rate ($/hr)</th>
+                            <th class="calc-column">Fringe ($/hr)</th>
+                            <th class="calc-column">OH ($/hr)</th>
+                            <th class="calc-column">G&A ($/hr)</th>
+                            <th class="calc-column">Fee ($/hr)</th>
+                            <th class="calc-column">Full Burdened Rate ($/hr)</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+                <button class="add-row-btn" onclick="addNewRow()">➕ Add New Job</button>
+            </div>
+
+            <!-- Export Buttons -->
+            <div class="export-section">
+                <button class="export-btn" onclick="exportToExcel()">
+                    <span>📊</span> Download Excel
+                </button>
+                <button class="export-btn" onclick="exportToCSV()">
+                    <span>📄</span> Download CSV
+                </button>
+                <button class="export-btn" onclick="saveState()">
+                    <span>💾</span> Save State
+                </button>
+                <button class="export-btn" onclick="resetDashboard()">
+                    <span>🔄</span> Process New Documents
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE = 'http://localhost:8000';
+
+        // Global state
+        let jobsData = [];
+        let rates = {
+            fringe: 0.251,  // 25.1%
+            oh: 0.081,      // 8.1%
+            ga: 0.195,      // 19.5%
+            fee: 0.091      // 9.1%
+        };
+
+        // File input handling
+        const fileInput = document.getElementById('file-input');
+        const uploadBtn = document.getElementById('upload-btn');
+        const fileNames = document.getElementById('file-names');
+
+        fileInput.addEventListener('change', (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length > 0) {
+                uploadBtn.disabled = false;
+                fileNames.innerHTML = files.map(f => `<div>✓ ${f.name}</div>`).join('');
+            } else {
+                uploadBtn.disabled = true;
+                fileNames.innerHTML = '';
+            }
+        });
+
+        // Upload and process files
+        async function uploadFiles() {
+            const formData = new FormData();
+            const files = fileInput.files;
+
+            if (files.length === 0) {
+                alert('Please select at least one file');
+                return;
+            }
+
+            Array.from(files).forEach(file => {
+                formData.append('files', file);
+            });
+
+            // Show loading
+            document.getElementById('loading').classList.remove('hidden');
+            uploadBtn.disabled = true;
+            uploadBtn.textContent = '⏳ Processing...';
+
+            try {
+                const response = await fetch(`${API_BASE}/api/pricing/process`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to process documents');
+                }
+
+                const data = await response.json();
+                initializeDashboard(data);
+            } catch (error) {
+                console.error('Error:', error);
+                alert(`Error processing documents: ${error.message}`);
+                document.getElementById('loading').classList.add('hidden');
+                uploadBtn.disabled = false;
+                uploadBtn.textContent = '🚀 Process Documents';
+            }
+        }
+
+        // Initialize dashboard with API data
+        function initializeDashboard(data) {
+            // Hide upload section
+            document.getElementById('upload-section').classList.add('hidden');
+
+            // Show dashboard
+            document.getElementById('dashboard').classList.remove('hidden');
+
+            // Update metadata
+            document.getElementById('processed-count').textContent = data.metadata.document_names.length;
+            document.getElementById('total-jobs').textContent = data.metadata.total_jobs;
+
+            // Store jobs data with selected wage info
+            jobsData = data.jobs.map(job => ({
+                ...job,
+                // Use selected_wage if available, otherwise default to 50th percentile
+                currentWage: job.selected_wage || job.wage_50th,
+                selectedPercentile: job.selected_percentile || '50th'
+            }));
+
+            // Render table and calculations
+            renderJobsTable();
+            updateAllCalculations();
+
+            // Render charts
+            renderCharts();
+
+            // Add event listeners for rate sliders
+            setupRateSliders();
+        }
+
+        // Setup rate sliders with live updates
+        function setupRateSliders() {
+            const sliders = [
+                { id: 'fringe-rate', key: 'fringe', display: 'fringe-display' },
+                { id: 'oh-rate', key: 'oh', display: 'oh-display' },
+                { id: 'ga-rate', key: 'ga', display: 'ga-display' },
+                { id: 'fee-rate', key: 'fee', display: 'fee-display' }
+            ];
+
+            sliders.forEach(({ id, key, display }) => {
+                const slider = document.getElementById(id);
+                const displayEl = document.getElementById(display);
+
+                slider.addEventListener('input', (e) => {
+                    const value = parseFloat(e.target.value);
+                    rates[key] = value / 100;
+                    displayEl.textContent = value.toFixed(2) + '%';
+                    updateAllCalculations();
+                    renderCharts(); // Update charts when rates change
+                });
+            });
+        }
+
+        // Calculate values for a single job
+        function calculateJobValues(job) {
+            const hours = parseFloat(job.hours) || 0;
+            const salary = parseFloat(job.currentWage) || 0;
+
+            // DL Rate (annual salary / hours)
+            const dlRate = hours > 0 ? salary / hours : 0;
+
+            // Compounding indirect costs per hour (wrap rates)
+            const fringe = dlRate * rates.fringe;
+            const oh = (dlRate + fringe) * rates.oh;
+            const ga = (dlRate + fringe + oh) * rates.ga;
+            const fee = (dlRate + fringe + oh + ga) * rates.fee;
+
+            // Full burdened rate
+            const burdenedRate = dlRate + fringe + oh + ga + fee;
+
+            return {
+                dlRate,
+                fringe,
+                oh,
+                ga,
+                fee,
+                burdenedRate,
+                totalDirectLabor: salary,
+                totalBurdenedCost: burdenedRate * hours
+            };
+        }
+
+        // Update all calculations
+        function updateAllCalculations() {
+            let totalDirectLabor = 0;
+            let totalBurdenedCost = 0;
+            let totalHours = 0;
+
+            // Update each row
+            jobsData.forEach((job, index) => {
+                const calc = calculateJobValues(job);
+                totalDirectLabor += calc.totalDirectLabor;
+                totalBurdenedCost += calc.totalBurdenedCost;
+                totalHours += parseFloat(job.hours) || 0;
+
+                // Update calculated cells
+                updateRowCalculations(index, calc);
+            });
+
+            const avgBurdenedRate = totalHours > 0 ? totalBurdenedCost / totalHours : 0;
+
+            // Update summary cards
+            document.getElementById('total-direct-labor').textContent = formatCurrency(totalDirectLabor);
+            document.getElementById('total-burdened-cost').textContent = formatCurrency(totalBurdenedCost);
+            document.getElementById('avg-burdened-rate').textContent = '$' + avgBurdenedRate.toFixed(2);
+        }
+
+        // Update calculations for a single row
+        function updateRowCalculations(rowIndex, calc) {
+            const row = document.querySelector(`#jobs-table tbody tr[data-index="${rowIndex}"]`);
+            if (!row) return;
+
+            row.querySelector('.calc-dl-rate').textContent = calc.dlRate.toFixed(2);
+            row.querySelector('.calc-fringe').textContent = calc.fringe.toFixed(2);
+            row.querySelector('.calc-oh').textContent = calc.oh.toFixed(2);
+            row.querySelector('.calc-ga').textContent = calc.ga.toFixed(2);
+            row.querySelector('.calc-fee').textContent = calc.fee.toFixed(2);
+            row.querySelector('.calc-burdened').textContent = calc.burdenedRate.toFixed(2);
+        }
+
+        // Render jobs table
+        function renderJobsTable() {
+            const tbody = document.querySelector('#jobs-table tbody');
+            tbody.innerHTML = '';
+
+            jobsData.forEach((job, index) => {
+                const calc = calculateJobValues(job);
+                const row = tbody.insertRow();
+                row.setAttribute('data-index', index);
+
+                // Create percentile dropdown options
+                const percentileOptions = ['10th', '25th', '50th', '75th', '90th'].map(p => {
+                    const wage = job[`wage_${p}`];
+                    const selected = job.selectedPercentile === p ? 'selected' : '';
+                    return `<option value="${p}" ${selected}>${p} ($${wage ? wage.toLocaleString() : 0})</option>`;
+                }).join('');
+
+                row.innerHTML = `
+                    <td class="editable-cell"><input type="text" value="${job.labor_category || ''}" onchange="updateJobField(${index}, 'labor_category', this.value)"></td>
+                    <td class="editable-cell"><input type="number" value="${job.experience !== null ? job.experience : ''}" onchange="updateJobField(${index}, 'experience', this.value)"></td>
+                    <td class="editable-cell"><input type="text" value="${job.location || ''}" onchange="updateJobField(${index}, 'location', this.value)"></td>
+                    <td class="editable-cell"><input type="number" value="${job.hours || ''}" onchange="updateJobField(${index}, 'hours', this.value)"></td>
+                    <td class="editable-cell"><input type="text" value="${job['BLS Code'] || ''}" onchange="updateJobField(${index}, 'BLS Code', this.value)"></td>
+                    <td class="editable-cell"><input type="text" value="${job['BLS Labour Category Mapping'] || ''}" onchange="updateJobField(${index}, 'BLS Labour Category Mapping', this.value)"></td>
+                    <td>
+                        <select class="percentile-selector" onchange="updatePercentile(${index}, this.value)">
+                            ${percentileOptions}
+                        </select>
+                        ${job.selectedPercentile && job.selectedPercentile.includes('default') ? '<span class="selected-badge">Auto</span>' : ''}
+                    </td>
+                    <td class="editable-cell"><input type="number" value="${job.currentWage || ''}" onchange="updateJobField(${index}, 'currentWage', this.value)"></td>
+                    <td class="calc-column calc-dl-rate">${calc.dlRate.toFixed(2)}</td>
+                    <td class="calc-column calc-fringe">${calc.fringe.toFixed(2)}</td>
+                    <td class="calc-column calc-oh">${calc.oh.toFixed(2)}</td>
+                    <td class="calc-column calc-ga">${calc.ga.toFixed(2)}</td>
+                    <td class="calc-column calc-fee">${calc.fee.toFixed(2)}</td>
+                    <td class="calc-column calc-burdened"><strong>${calc.burdenedRate.toFixed(2)}</strong></td>
+                    <td><button class="action-btn" onclick="deleteRow(${index})">🗑️ Delete</button></td>
+                `;
+            });
+        }
+
+        // Render all charts
+        function renderCharts() {
+            renderWageChart();
+            renderCostBreakdownChart();
+            renderBurdenChart();
+            renderPercentileChart();
+        }
+
+        // 1. Wage Distribution by Job (Bar Chart)
+        function renderWageChart() {
+            const container = d3.select('#wage-chart');
+            container.html('');
+
+            const margin = {top: 20, right: 20, bottom: 80, top: 40};
+            const width = container.node().getBoundingClientRect().width - margin.left - margin.right;
+            const height = 300;
+
+            const svg = container.append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            const data = jobsData.map(job => ({
+                name: job.labor_category || 'Unknown',
+                wage: parseFloat(job.currentWage) || 0
+            }));
+
+            const x = d3.scaleBand()
+                .domain(data.map(d => d.name))
+                .range([0, width])
+                .padding(0.2);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.wage)])
+                .range([height, 0]);
+
+            const colorScale = d3.scaleSequential()
+                .domain([0, data.length - 1])
+                .interpolator(d3.interpolateRgb('#667eea', '#764ba2'));
+
+            // Add bars
+            svg.selectAll('.bar')
+                .data(data)
+                .enter()
+                .append('rect')
+                .attr('class', 'bar')
+                .attr('x', d => x(d.name))
+                .attr('y', d => y(d.wage))
+                .attr('width', x.bandwidth())
+                .attr('height', d => height - y(d.wage))
+                .attr('fill', (d, i) => colorScale(i))
+                .attr('rx', 4);
+
+            // Add value labels on bars
+            svg.selectAll('.label')
+                .data(data)
+                .enter()
+                .append('text')
+                .attr('class', 'label')
+                .attr('x', d => x(d.name) + x.bandwidth() / 2)
+                .attr('y', d => y(d.wage) - 5)
+                .attr('text-anchor', 'middle')
+                .attr('font-size', '12px')
+                .attr('font-weight', 'bold')
+                .attr('fill', '#667eea')
+                .text(d => '$' + (d.wage / 1000).toFixed(0) + 'K');
+
+            // Add axes
+            svg.append('g')
+                .attr('class', 'axis')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x))
+                .selectAll('text')
+                .attr('transform', 'rotate(-45)')
+                .style('text-anchor', 'end');
+
+            svg.append('g')
+                .attr('class', 'axis')
+                .call(d3.axisLeft(y).ticks(5).tickFormat(d => '$' + (d / 1000) + 'K'));
+        }
+
+        // 2. Cost Breakdown Pie Chart
+        function renderCostBreakdownChart() {
+            const container = d3.select('#cost-breakdown-chart');
+            container.html('');
+
+            const width = container.node().getBoundingClientRect().width;
+            const height = 300;
+            const radius = Math.min(width, height) / 2 - 20;
+
+            const svg = container.append('svg')
+                .attr('width', width)
+                .attr('height', height)
+                .append('g')
+                .attr('transform', `translate(${width / 2},${height / 2})`);
+
+            // Calculate totals
+            let totalFringe = 0, totalOH = 0, totalGA = 0, totalFee = 0, totalDL = 0;
+            jobsData.forEach(job => {
+                const calc = calculateJobValues(job);
+                const hours = parseFloat(job.hours) || 0;
+                totalDL += calc.dlRate * hours;
+                totalFringe += calc.fringe * hours;
+                totalOH += calc.oh * hours;
+                totalGA += calc.ga * hours;
+                totalFee += calc.fee * hours;
+            });
+
+            const data = [
+                { name: 'Direct Labor', value: totalDL, color: '#667eea' },
+                { name: 'Fringe', value: totalFringe, color: '#7c92f0' },
+                { name: 'Overhead', value: totalOH, color: '#92a6f5' },
+                { name: 'G&A', value: totalGA, color: '#a8bafa' },
+                { name: 'Fee', value: totalFee, color: '#764ba2' }
+            ];
+
+            const pie = d3.pie().value(d => d.value);
+            const arc = d3.arc().innerRadius(radius * 0.5).outerRadius(radius);
+
+            const arcs = svg.selectAll('.arc')
+                .data(pie(data))
+                .enter()
+                .append('g')
+                .attr('class', 'arc');
+
+            arcs.append('path')
+                .attr('d', arc)
+                .attr('fill', d => d.data.color)
+                .attr('stroke', 'white')
+                .attr('stroke-width', 2)
+                .style('opacity', 0.9)
+                .on('mouseover', function() {
+                    d3.select(this).style('opacity', 1);
+                })
+                .on('mouseout', function() {
+                    d3.select(this).style('opacity', 0.9);
+                });
+
+            arcs.append('text')
+                .attr('transform', d => `translate(${arc.centroid(d)})`)
+                .attr('text-anchor', 'middle')
+                .attr('font-size', '12px')
+                .attr('font-weight', 'bold')
+                .attr('fill', 'white')
+                .text(d => {
+                    const percent = (d.data.value / (totalDL + totalFringe + totalOH + totalGA + totalFee)) * 100;
+                    return percent > 5 ? percent.toFixed(0) + '%' : '';
+                });
+
+            // Legend
+            const legend = svg.selectAll('.legend')
+                .data(data)
+                .enter()
+                .append('g')
+                .attr('class', 'legend legend-item')
+                .attr('transform', (d, i) => `translate(${radius + 30}, ${-radius + i * 25})`);
+
+            legend.append('rect')
+                .attr('width', 18)
+                .attr('height', 18)
+                .attr('fill', d => d.color)
+                .attr('rx', 3);
+
+            legend.append('text')
+                .attr('x', 24)
+                .attr('y', 9)
+                .attr('dy', '.35em')
+                .style('font-size', '12px')
+                .text(d => d.name);
+        }
+
+        // 3. Burden Rate Components Stacked Bar Chart
+        function renderBurdenChart() {
+            const container = d3.select('#burden-chart');
+            container.html('');
+
+            const margin = {top: 20, right: 120, bottom: 80, left: 60};
+            const width = container.node().getBoundingClientRect().width - margin.left - margin.right;
+            const height = 300;
+
+            const svg = container.append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            const data = jobsData.map(job => {
+                const calc = calculateJobValues(job);
+                return {
+                    name: job.labor_category || 'Unknown',
+                    dlRate: calc.dlRate,
+                    fringe: calc.fringe,
+                    oh: calc.oh,
+                    ga: calc.ga,
+                    fee: calc.fee
+                };
+            });
+
+            const categories = ['dlRate', 'fringe', 'oh', 'ga', 'fee'];
+            const colors = {
+                dlRate: '#667eea',
+                fringe: '#7c92f0',
+                oh: '#92a6f5',
+                ga: '#a8bafa',
+                fee: '#764ba2'
+            };
+
+            const stackedData = d3.stack().keys(categories)(data);
+
+            const x = d3.scaleBand()
+                .domain(data.map(d => d.name))
+                .range([0, width])
+                .padding(0.2);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(stackedData, layer => d3.max(layer, d => d[1]))])
+                .range([height, 0]);
+
+            svg.selectAll('.layer')
+                .data(stackedData)
+                .enter()
+                .append('g')
+                .attr('class', 'layer')
+                .attr('fill', d => colors[d.key])
+                .selectAll('rect')
+                .data(d => d)
+                .enter()
+                .append('rect')
+                .attr('x', d => x(d.data.name))
+                .attr('y', d => y(d[1]))
+                .attr('height', d => y(d[0]) - y(d[1]))
+                .attr('width', x.bandwidth())
+                .attr('rx', 2);
+
+            // Add axes
+            svg.append('g')
+                .attr('class', 'axis')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x))
+                .selectAll('text')
+                .attr('transform', 'rotate(-45)')
+                .style('text-anchor', 'end');
+
+            svg.append('g')
+                .attr('class', 'axis')
+                .call(d3.axisLeft(y).ticks(5).tickFormat(d => '$' + d.toFixed(0)));
+
+            // Legend
+            const legend = svg.selectAll('.legend')
+                .data(['DL Rate', 'Fringe', 'OH', 'G&A', 'Fee'])
+                .enter()
+                .append('g')
+                .attr('class', 'legend legend-item')
+                .attr('transform', (d, i) => `translate(${width + 10}, ${i * 25})`);
+
+            legend.append('rect')
+                .attr('width', 18)
+                .attr('height', 18)
+                .attr('fill', (d, i) => colors[categories[i]])
+                .attr('rx', 3);
+
+            legend.append('text')
+                .attr('x', 24)
+                .attr('y', 9)
+                .attr('dy', '.35em')
+                .style('font-size', '12px')
+                .text(d => d);
+        }
+
+        // 4. Percentile Distribution Chart
+        function renderPercentileChart() {
+            const container = d3.select('#percentile-chart');
+            container.html('');
+
+            const margin = {top: 20, right: 20, bottom: 40, left: 60};
+            const width = container.node().getBoundingClientRect().width - margin.left - margin.right;
+            const height = 300;
+
+            const svg = container.append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+
+            // Count percentile selections
+            const percentileCounts = {'10th': 0, '25th': 0, '50th': 0, '75th': 0, '90th': 0};
+            jobsData.forEach(job => {
+                const percentile = job.selectedPercentile || '50th';
+                const key = percentile.replace(/\s*\(.*\)/, ''); // Remove "(default)" if present
+                if (percentileCounts[key] !== undefined) {
+                    percentileCounts[key]++;
+                }
+            });
+
+            const data = Object.keys(percentileCounts).map(key => ({
+                percentile: key,
+                count: percentileCounts[key]
+            }));
+
+            const x = d3.scaleBand()
+                .domain(data.map(d => d.percentile))
+                .range([0, width])
+                .padding(0.3);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.count) || 1])
+                .range([height, 0]);
+
+            const colorScale = d3.scaleOrdinal()
+                .domain(['10th', '25th', '50th', '75th', '90th'])
+                .range(['#667eea', '#7c92f0', '#92a6f5', '#a8bafa', '#764ba2']);
+
+            // Add bars
+            svg.selectAll('.bar')
+                .data(data)
+                .enter()
+                .append('rect')
+                .attr('class', 'bar')
+                .attr('x', d => x(d.percentile))
+                .attr('y', d => y(d.count))
+                .attr('width', x.bandwidth())
+                .attr('height', d => height - y(d.count))
+                .attr('fill', d => colorScale(d.percentile))
+                .attr('rx', 4);
+
+            // Add count labels
+            svg.selectAll('.label')
+                .data(data)
+                .enter()
+                .append('text')
+                .attr('class', 'label')
+                .attr('x', d => x(d.percentile) + x.bandwidth() / 2)
+                .attr('y', d => y(d.count) - 5)
+                .attr('text-anchor', 'middle')
+                .attr('font-size', '14px')
+                .attr('font-weight', 'bold')
+                .attr('fill', '#667eea')
+                .text(d => d.count);
+
+            // Add axes
+            svg.append('g')
+                .attr('class', 'axis')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x));
+
+            svg.append('g')
+                .attr('class', 'axis')
+                .call(d3.axisLeft(y).ticks(5));
+
+            // Add label
+            svg.append('text')
+                .attr('x', width / 2)
+                .attr('y', height + 35)
+                .attr('text-anchor', 'middle')
+                .style('font-size', '12px')
+                .text('Wage Percentile');
+        }
+
+        // Update percentile selection
+        function updatePercentile(index, percentile) {
+            const job = jobsData[index];
+            job.selectedPercentile = percentile;
+            job.currentWage = job[`wage_${percentile}`];
+
+            // Update the salary input field
+            const row = document.querySelector(`#jobs-table tbody tr[data-index="${index}"]`);
+            const salaryInput = row.querySelector('td:nth-child(8) input');
+            salaryInput.value = job.currentWage || '';
+
+            updateAllCalculations();
+            renderCharts(); // Update charts when percentile changes
+        }
+
+        // Update job field
+        function updateJobField(index, field, value) {
+            // Convert to appropriate type
+            if (field === 'experience' || field === 'hours' || field === 'currentWage') {
+                jobsData[index][field] = parseFloat(value) || null;
+            } else {
+                jobsData[index][field] = value;
+            }
+            updateAllCalculations();
+            renderCharts(); // Update charts when data changes
+        }
+
+        // Delete row
+        function deleteRow(index) {
+            if (confirm('Are you sure you want to delete this job?')) {
+                jobsData.splice(index, 1);
+                renderJobsTable();
+                updateAllCalculations();
+                renderCharts();
+                document.getElementById('total-jobs').textContent = jobsData.length;
+            }
+        }
+
+        // Add new row
+        function addNewRow() {
+            const newJob = {
+                labor_category: 'New Job',
+                experience: null,
+                location: '',
+                hours: 1920,
+                'BLS Code': '',
+                'BLS Labour Category Mapping': '',
+                wage_10th: 0,
+                wage_25th: 0,
+                wage_50th: 0,
+                wage_75th: 0,
+                wage_90th: 0,
+                currentWage: 0,
+                selectedPercentile: '50th'
+            };
+            jobsData.push(newJob);
+            renderJobsTable();
+            updateAllCalculations();
+            renderCharts();
+            document.getElementById('total-jobs').textContent = jobsData.length;
+        }
+
+        // Format currency
+        function formatCurrency(value) {
+            if (value >= 1000000) {
+                return '$' + (value / 1000000).toFixed(2) + 'M';
+            } else if (value >= 1000) {
+                return '$' + (value / 1000).toFixed(1) + 'K';
+            }
+            return '$' + value.toFixed(2);
+        }
+
+        // Export to Excel (CSV format)
+        function exportToExcel() {
+            const headers = [
+                'Labor Category', 'Experience', 'Location', 'Hours', 'BLS Code',
+                'BLS Labour Category Mapping', 'Selected Percentile', 'Salary', 'DL Rate', 'Fringe',
+                'OH', 'G&A', 'Fee', 'Full Burdened Rate'
+            ];
+
+            // Add rates row
+            let csvContent = `,,,,Indirect Rates:,Fringe,${(rates.fringe * 100).toFixed(2)}%,OH,${(rates.oh * 100).toFixed(2)}%,G&A,${(rates.ga * 100).toFixed(2)}%,Fee,${(rates.fee * 100).toFixed(2)}%\n\n`;
+
+            csvContent += headers.join(',') + '\n';
+
+            jobsData.forEach(job => {
+                const calc = calculateJobValues(job);
+                const row = [
+                    `"${job.labor_category || ''}"`,
+                    job.experience || '',
+                    `"${job.location || ''}"`,
+                    job.hours || '',
+                    job['BLS Code'] || '',
+                    `"${job['BLS Labour Category Mapping'] || ''}"`,
+                    job.selectedPercentile || '',
+                    job.currentWage || '',
+                    calc.dlRate.toFixed(2),
+                    calc.fringe.toFixed(2),
+                    calc.oh.toFixed(2),
+                    calc.ga.toFixed(2),
+                    calc.fee.toFixed(2),
+                    calc.burdenedRate.toFixed(2)
+                ];
+                csvContent += row.join(',') + '\n';
+            });
+
+            // Download
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'pricing_results.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            exportToExcel();
+        }
+
+        // Save state
+        function saveState() {
+            const state = {
+                jobs: jobsData,
+                rates: rates
+            };
+            const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'pricing_state.json';
+            a.click();
+            window.URL.revokeObjectURL(url);
+        }
+
+        // Reset dashboard
+        function resetDashboard() {
+            if (confirm('This will clear all current data. Are you sure?')) {
+                document.getElementById('dashboard').classList.add('hidden');
+                document.getElementById('upload-section').classList.remove('hidden');
+                document.getElementById('file-input').value = '';
+                document.getElementById('file-names').innerHTML = '';
+                document.getElementById('upload-btn').disabled = true;
+                document.getElementById('upload-btn').textContent = '🚀 Process Documents';
+                jobsData = [];
+            }
+        }
+    </script>
+</body>
+</html>
