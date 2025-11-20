@@ -1,5 +1,655 @@
 [
     {
+        "label": "runpy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "runpy",
+        "description": "runpy",
+        "detail": "runpy",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "print_function",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "os",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os",
+        "description": "os",
+        "detail": "os",
+        "documentation": {}
+    },
+    {
+        "label": "site",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "site",
+        "description": "site",
+        "detail": "site",
+        "documentation": {}
+    },
+    {
+        "label": "sys",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "sys",
+        "description": "sys",
+        "detail": "sys",
+        "documentation": {}
+    },
+    {
+        "label": "logging",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "logging",
+        "description": "logging",
+        "detail": "logging",
+        "documentation": {}
+    },
+    {
+        "label": "os.path",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "os.path",
+        "description": "os.path",
+        "detail": "os.path",
+        "documentation": {}
+    },
+    {
+        "label": "re",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "re",
+        "description": "re",
+        "detail": "re",
+        "documentation": {}
+    },
+    {
+        "label": "argparse",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "argparse",
+        "description": "argparse",
+        "detail": "argparse",
+        "documentation": {}
+    },
+    {
+        "label": "ArgumentParser",
+        "importPath": "argparse",
+        "description": "argparse",
+        "isExtraImport": true,
+        "detail": "argparse",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Container",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Iterable",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "TextIO",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Union",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "cast",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Container",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Iterable",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Tuple",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Tuple",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "pdfminer",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pdfminer",
+        "description": "pdfminer",
+        "detail": "pdfminer",
+        "documentation": {}
+    },
+    {
+        "label": "PDFDocument",
+        "importPath": "pdfminer.pdfdocument",
+        "description": "pdfminer.pdfdocument",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdfdocument",
+        "documentation": {}
+    },
+    {
+        "label": "PDFNoOutlines",
+        "importPath": "pdfminer.pdfdocument",
+        "description": "pdfminer.pdfdocument",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdfdocument",
+        "documentation": {}
+    },
+    {
+        "label": "PDFXRefFallback",
+        "importPath": "pdfminer.pdfdocument",
+        "description": "pdfminer.pdfdocument",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdfdocument",
+        "documentation": {}
+    },
+    {
+        "label": "PDFIOError",
+        "importPath": "pdfminer.pdfexceptions",
+        "description": "pdfminer.pdfexceptions",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdfexceptions",
+        "documentation": {}
+    },
+    {
+        "label": "PDFObjectNotFound",
+        "importPath": "pdfminer.pdfexceptions",
+        "description": "pdfminer.pdfexceptions",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdfexceptions",
+        "documentation": {}
+    },
+    {
+        "label": "PDFTypeError",
+        "importPath": "pdfminer.pdfexceptions",
+        "description": "pdfminer.pdfexceptions",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdfexceptions",
+        "documentation": {}
+    },
+    {
+        "label": "PDFValueError",
+        "importPath": "pdfminer.pdfexceptions",
+        "description": "pdfminer.pdfexceptions",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdfexceptions",
+        "documentation": {}
+    },
+    {
+        "label": "PDFValueError",
+        "importPath": "pdfminer.pdfexceptions",
+        "description": "pdfminer.pdfexceptions",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdfexceptions",
+        "documentation": {}
+    },
+    {
+        "label": "PDFPage",
+        "importPath": "pdfminer.pdfpage",
+        "description": "pdfminer.pdfpage",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdfpage",
+        "documentation": {}
+    },
+    {
+        "label": "PDFParser",
+        "importPath": "pdfminer.pdfparser",
+        "description": "pdfminer.pdfparser",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdfparser",
+        "documentation": {}
+    },
+    {
+        "label": "PDFObjRef",
+        "importPath": "pdfminer.pdftypes",
+        "description": "pdfminer.pdftypes",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdftypes",
+        "documentation": {}
+    },
+    {
+        "label": "PDFStream",
+        "importPath": "pdfminer.pdftypes",
+        "description": "pdfminer.pdftypes",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdftypes",
+        "documentation": {}
+    },
+    {
+        "label": "resolve1",
+        "importPath": "pdfminer.pdftypes",
+        "description": "pdfminer.pdftypes",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdftypes",
+        "documentation": {}
+    },
+    {
+        "label": "stream_value",
+        "importPath": "pdfminer.pdftypes",
+        "description": "pdfminer.pdftypes",
+        "isExtraImport": true,
+        "detail": "pdfminer.pdftypes",
+        "documentation": {}
+    },
+    {
+        "label": "LIT",
+        "importPath": "pdfminer.psparser",
+        "description": "pdfminer.psparser",
+        "isExtraImport": true,
+        "detail": "pdfminer.psparser",
+        "documentation": {}
+    },
+    {
+        "label": "PSKeyword",
+        "importPath": "pdfminer.psparser",
+        "description": "pdfminer.psparser",
+        "isExtraImport": true,
+        "detail": "pdfminer.psparser",
+        "documentation": {}
+    },
+    {
+        "label": "PSLiteral",
+        "importPath": "pdfminer.psparser",
+        "description": "pdfminer.psparser",
+        "isExtraImport": true,
+        "detail": "pdfminer.psparser",
+        "documentation": {}
+    },
+    {
+        "label": "isnumber",
+        "importPath": "pdfminer.utils",
+        "description": "pdfminer.utils",
+        "isExtraImport": true,
+        "detail": "pdfminer.utils",
+        "documentation": {}
+    },
+    {
+        "label": "AnyIO",
+        "importPath": "pdfminer.utils",
+        "description": "pdfminer.utils",
+        "isExtraImport": true,
+        "detail": "pdfminer.utils",
+        "documentation": {}
+    },
+    {
+        "label": "pdfminer.high_level",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "pdfminer.high_level",
+        "description": "pdfminer.high_level",
+        "detail": "pdfminer.high_level",
+        "documentation": {}
+    },
+    {
+        "label": "LAParams",
+        "importPath": "pdfminer.layout",
+        "description": "pdfminer.layout",
+        "isExtraImport": true,
+        "detail": "pdfminer.layout",
+        "documentation": {}
+    },
+    {
+        "label": "BadZipFile",
+        "importPath": "zipfile",
+        "description": "zipfile",
+        "isExtraImport": true,
+        "detail": "zipfile",
+        "documentation": {}
+    },
+    {
+        "label": "ZipFile",
+        "importPath": "zipfile",
+        "description": "zipfile",
+        "isExtraImport": true,
+        "detail": "zipfile",
+        "documentation": {}
+    },
+    {
         "label": "Agent",
         "importPath": "agno.agent",
         "description": "agno.agent",
@@ -160,254 +810,6 @@
         "documentation": {}
     },
     {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Tuple",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Tuple",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
         "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
@@ -477,15 +879,6 @@
         "description": "datetime",
         "isExtraImport": true,
         "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "os",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "os",
-        "description": "os",
-        "detail": "os",
         "documentation": {}
     },
     {
@@ -1000,15 +1393,6 @@
         "documentation": {}
     },
     {
-        "label": "sys",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "sys",
-        "description": "sys",
-        "detail": "sys",
-        "documentation": {}
-    },
-    {
         "label": "time",
         "kind": 6,
         "isExtraImport": true,
@@ -1074,6 +1458,312 @@
         "description": "agent.agent",
         "isExtraImport": true,
         "detail": "agent.agent",
+        "documentation": {}
+    },
+    {
+        "label": "openpyxl",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "openpyxl",
+        "description": "openpyxl",
+        "detail": "openpyxl",
+        "documentation": {}
+    },
+    {
+        "label": "bin_dir",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "bin_dir = os.path.dirname(abs_file)\nbase = bin_dir[: -len(\"bin\") - 1]  # strip away the bin part from the __file__, plus the path separator\n# prepend bin to PATH (this file is inside the bin directory)\nos.environ[\"PATH\"] = os.pathsep.join([bin_dir, *os.environ.get(\"PATH\", \"\").split(os.pathsep)])\nos.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"pricing\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.13/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "base",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "base = bin_dir[: -len(\"bin\") - 1]  # strip away the bin part from the __file__, plus the path separator\n# prepend bin to PATH (this file is inside the bin directory)\nos.environ[\"PATH\"] = os.pathsep.join([bin_dir, *os.environ.get(\"PATH\", \"\").split(os.pathsep)])\nos.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"pricing\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.13/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "os.environ[\"PATH\"]",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "os.environ[\"PATH\"] = os.pathsep.join([bin_dir, *os.environ.get(\"PATH\", \"\").split(os.pathsep)])\nos.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"pricing\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.13/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "os.environ[\"VIRTUAL_ENV\"]",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "os.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"pricing\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.13/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "os.environ[\"VIRTUAL_ENV_PROMPT\"]",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "os.environ[\"VIRTUAL_ENV_PROMPT\"] = \"pricing\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.13/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "prev_length",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "prev_length = len(sys.path)\nfor lib in \"../lib/python3.13/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "sys.path[:]",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "sys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "sys.real_prefix",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "sys.real_prefix = sys.prefix\nsys.prefix = base",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "sys.prefix",
+        "kind": 5,
+        "importPath": ".venv.bin.activate_this",
+        "description": ".venv.bin.activate_this",
+        "peekOfCode": "sys.prefix = base",
+        "detail": ".venv.bin.activate_this",
+        "documentation": {}
+    },
+    {
+        "label": "escape",
+        "kind": 2,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "def escape(s: Union[str, bytes]) -> str:\n    if isinstance(s, bytes):\n        us = str(s, \"latin-1\")\n    else:\n        us = s\n    return ESC_PAT.sub(lambda m: \"&#%d;\" % ord(m.group(0)), us)\ndef dumpxml(out: TextIO, obj: object, codec: Optional[str] = None) -> None:\n    if obj is None:\n        out.write(\"<null />\")\n        return",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "dumpxml",
+        "kind": 2,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "def dumpxml(out: TextIO, obj: object, codec: Optional[str] = None) -> None:\n    if obj is None:\n        out.write(\"<null />\")\n        return\n    if isinstance(obj, dict):\n        out.write('<dict size=\"%d\">\\n' % len(obj))\n        for k, v in obj.items():\n            out.write(\"<key>%s</key>\\n\" % k)\n            out.write(\"<value>\")\n            dumpxml(out, v)",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "dumptrailers",
+        "kind": 2,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "def dumptrailers(\n    out: TextIO,\n    doc: PDFDocument,\n    show_fallback_xref: bool = False,\n) -> None:\n    for xref in doc.xrefs:\n        if not isinstance(xref, PDFXRefFallback) or show_fallback_xref:\n            out.write(\"<trailer>\\n\")\n            dumpxml(out, xref.get_trailer())\n            out.write(\"\\n</trailer>\\n\\n\")",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "dumpallobjs",
+        "kind": 2,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "def dumpallobjs(\n    out: TextIO,\n    doc: PDFDocument,\n    codec: Optional[str] = None,\n    show_fallback_xref: bool = False,\n) -> None:\n    visited = set()\n    out.write(\"<pdf>\")\n    for xref in doc.xrefs:\n        for objid in xref.get_objids():",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "dumpoutline",
+        "kind": 2,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "def dumpoutline(\n    outfp: TextIO,\n    fname: str,\n    objids: Any,\n    pagenos: Container[int],\n    password: str = \"\",\n    dumpall: bool = False,\n    codec: Optional[str] = None,\n    extractdir: Optional[str] = None,\n) -> None:",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "extractembedded",
+        "kind": 2,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "def extractembedded(fname: str, password: str, extractdir: str) -> None:\n    def extract1(objid: int, obj: Dict[str, Any]) -> None:\n        filename = os.path.basename(obj.get(\"UF\") or cast(bytes, obj.get(\"F\")).decode())\n        fileref = obj[\"EF\"].get(\"UF\") or obj[\"EF\"].get(\"F\")\n        fileobj = doc.getobj(fileref.objid)\n        if not isinstance(fileobj, PDFStream):\n            error_msg = (\n                \"unable to process PDF: reference for %r is not a \"\n                \"PDFStream\" % filename\n            )",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "dumppdf",
+        "kind": 2,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "def dumppdf(\n    outfp: TextIO,\n    fname: str,\n    objids: Iterable[int],\n    pagenos: Container[int],\n    password: str = \"\",\n    dumpall: bool = False,\n    codec: Optional[str] = None,\n    extractdir: Optional[str] = None,\n    show_fallback_xref: bool = False,",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "create_parser",
+        "kind": 2,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "def create_parser() -> ArgumentParser:\n    parser = ArgumentParser(description=__doc__, add_help=True)\n    parser.add_argument(\n        \"files\",\n        type=str,\n        default=None,\n        nargs=\"+\",\n        help=\"One or more paths to PDF files.\",\n    )\n    parser.add_argument(",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "def main(argv: Optional[List[str]] = None) -> None:\n    parser = create_parser()\n    args = parser.parse_args(args=argv)\n    if args.debug:\n        logging.getLogger().setLevel(logging.DEBUG)\n    if args.outfile == \"-\":\n        outfp = sys.stdout\n    else:\n        outfp = open(args.outfile, \"w\")\n    if args.objects:",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nESC_PAT = re.compile(r'[\\000-\\037&<>()\"\\042\\047\\134\\177-\\377]')\ndef escape(s: Union[str, bytes]) -> str:\n    if isinstance(s, bytes):\n        us = str(s, \"latin-1\")\n    else:\n        us = s\n    return ESC_PAT.sub(lambda m: \"&#%d;\" % ord(m.group(0)), us)\ndef dumpxml(out: TextIO, obj: object, codec: Optional[str] = None) -> None:\n    if obj is None:",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "ESC_PAT",
+        "kind": 5,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "ESC_PAT = re.compile(r'[\\000-\\037&<>()\"\\042\\047\\134\\177-\\377]')\ndef escape(s: Union[str, bytes]) -> str:\n    if isinstance(s, bytes):\n        us = str(s, \"latin-1\")\n    else:\n        us = s\n    return ESC_PAT.sub(lambda m: \"&#%d;\" % ord(m.group(0)), us)\ndef dumpxml(out: TextIO, obj: object, codec: Optional[str] = None) -> None:\n    if obj is None:\n        out.write(\"<null />\")",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "LITERAL_FILESPEC",
+        "kind": 5,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "LITERAL_FILESPEC = LIT(\"Filespec\")\nLITERAL_EMBEDDEDFILE = LIT(\"EmbeddedFile\")\ndef extractembedded(fname: str, password: str, extractdir: str) -> None:\n    def extract1(objid: int, obj: Dict[str, Any]) -> None:\n        filename = os.path.basename(obj.get(\"UF\") or cast(bytes, obj.get(\"F\")).decode())\n        fileref = obj[\"EF\"].get(\"UF\") or obj[\"EF\"].get(\"F\")\n        fileobj = doc.getobj(fileref.objid)\n        if not isinstance(fileobj, PDFStream):\n            error_msg = (\n                \"unable to process PDF: reference for %r is not a \"",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "LITERAL_EMBEDDEDFILE",
+        "kind": 5,
+        "importPath": ".venv.bin.dumppdf",
+        "description": ".venv.bin.dumppdf",
+        "peekOfCode": "LITERAL_EMBEDDEDFILE = LIT(\"EmbeddedFile\")\ndef extractembedded(fname: str, password: str, extractdir: str) -> None:\n    def extract1(objid: int, obj: Dict[str, Any]) -> None:\n        filename = os.path.basename(obj.get(\"UF\") or cast(bytes, obj.get(\"F\")).decode())\n        fileref = obj[\"EF\"].get(\"UF\") or obj[\"EF\"].get(\"F\")\n        fileobj = doc.getobj(fileref.objid)\n        if not isinstance(fileobj, PDFStream):\n            error_msg = (\n                \"unable to process PDF: reference for %r is not a \"\n                \"PDFStream\" % filename",
+        "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "float_or_disabled",
+        "kind": 2,
+        "importPath": ".venv.bin.pdf2txt",
+        "description": ".venv.bin.pdf2txt",
+        "peekOfCode": "def float_or_disabled(x: str) -> Optional[float]:\n    if x.lower().strip() == \"disabled\":\n        return None\n    try:\n        return float(x)\n    except ValueError:\n        raise argparse.ArgumentTypeError(f\"invalid float value: {x}\")\ndef extract_text(\n    files: Iterable[str] = [],\n    outfile: str = \"-\",",
+        "detail": ".venv.bin.pdf2txt",
+        "documentation": {}
+    },
+    {
+        "label": "extract_text",
+        "kind": 2,
+        "importPath": ".venv.bin.pdf2txt",
+        "description": ".venv.bin.pdf2txt",
+        "peekOfCode": "def extract_text(\n    files: Iterable[str] = [],\n    outfile: str = \"-\",\n    laparams: Optional[LAParams] = None,\n    output_type: str = \"text\",\n    codec: str = \"utf-8\",\n    strip_control: bool = False,\n    maxpages: int = 0,\n    page_numbers: Optional[Container[int]] = None,\n    password: str = \"\",",
+        "detail": ".venv.bin.pdf2txt",
+        "documentation": {}
+    },
+    {
+        "label": "create_parser",
+        "kind": 2,
+        "importPath": ".venv.bin.pdf2txt",
+        "description": ".venv.bin.pdf2txt",
+        "peekOfCode": "def create_parser() -> argparse.ArgumentParser:\n    parser = argparse.ArgumentParser(description=__doc__, add_help=True)\n    parser.add_argument(\n        \"files\",\n        type=str,\n        default=None,\n        nargs=\"+\",\n        help=\"One or more paths to PDF files.\",\n    )\n    parser.add_argument(",
+        "detail": ".venv.bin.pdf2txt",
+        "documentation": {}
+    },
+    {
+        "label": "parse_args",
+        "kind": 2,
+        "importPath": ".venv.bin.pdf2txt",
+        "description": ".venv.bin.pdf2txt",
+        "peekOfCode": "def parse_args(args: Optional[List[str]]) -> argparse.Namespace:\n    parsed_args = create_parser().parse_args(args=args)\n    # Propagate parsed layout parameters to LAParams object\n    if parsed_args.no_laparams:\n        parsed_args.laparams = None\n    else:\n        parsed_args.laparams = LAParams(\n            line_overlap=parsed_args.line_overlap,\n            char_margin=parsed_args.char_margin,\n            line_margin=parsed_args.line_margin,",
+        "detail": ".venv.bin.pdf2txt",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": ".venv.bin.pdf2txt",
+        "description": ".venv.bin.pdf2txt",
+        "peekOfCode": "def main(args: Optional[List[str]] = None) -> int:\n    parsed_args = parse_args(args)\n    outfp = extract_text(**vars(parsed_args))\n    outfp.close()\n    return 0\nif __name__ == \"__main__\":\n    sys.exit(main())",
+        "detail": ".venv.bin.pdf2txt",
+        "documentation": {}
+    },
+    {
+        "label": "OUTPUT_TYPES",
+        "kind": 5,
+        "importPath": ".venv.bin.pdf2txt",
+        "description": ".venv.bin.pdf2txt",
+        "peekOfCode": "OUTPUT_TYPES = ((\".htm\", \"html\"), (\".html\", \"html\"), (\".xml\", \"xml\"), (\".tag\", \"tag\"))\ndef float_or_disabled(x: str) -> Optional[float]:\n    if x.lower().strip() == \"disabled\":\n        return None\n    try:\n        return float(x)\n    except ValueError:\n        raise argparse.ArgumentTypeError(f\"invalid float value: {x}\")\ndef extract_text(\n    files: Iterable[str] = [],",
+        "detail": ".venv.bin.pdf2txt",
+        "documentation": {}
+    },
+    {
+        "label": "cmd_doc",
+        "kind": 5,
+        "importPath": ".venv.bin.runxlrd",
+        "description": ".venv.bin.runxlrd",
+        "peekOfCode": "cmd_doc = \"\"\"\nCommands:\n2rows           Print the contents of first and last row in each sheet\n3rows           Print the contents of first, second and last row in each sheet\nbench           Same as \"show\", but doesn't print -- for profiling\nbiff_count[1]   Print a count of each type of BIFF record in the file\nbiff_dump[1]    Print a dump (char and hex) of the BIFF records in the file\nfonts           hdr + print a dump of all font objects\nhdr             Mini-overview of file (no per-sheet information)\nhotshot         Do a hotshot profile run e.g. ... -f1 hotshot bench bigfile*.xls",
+        "detail": ".venv.bin.runxlrd",
+        "documentation": {}
+    },
+    {
+        "label": "options",
+        "kind": 5,
+        "importPath": ".venv.bin.runxlrd",
+        "description": ".venv.bin.runxlrd",
+        "peekOfCode": "options = None\nif __name__ == \"__main__\":\n    import xlrd\n    import sys\n    import time\n    import glob\n    import traceback\n    import gc\n    from xlrd.timemachine import xrange, REPR\n    class LogHandler(object):",
+        "detail": ".venv.bin.runxlrd",
+        "documentation": {}
+    },
+    {
+        "label": "extract_file",
+        "kind": 2,
+        "importPath": ".venv.bin.vba_extract",
+        "description": ".venv.bin.vba_extract",
+        "peekOfCode": "def extract_file(xlsm_zip, filename):\n    # Extract a single file from an Excel xlsm macro file.\n    data = xlsm_zip.read(\"xl/\" + filename)\n    # Write the data to a local file.\n    file = open(filename, \"wb\")\n    file.write(data)\n    file.close()\n# The VBA project file and project signature file we want to extract.\nvba_filename = \"vbaProject.bin\"\nvba_signature_filename = \"vbaProjectSignature.bin\"",
+        "detail": ".venv.bin.vba_extract",
+        "documentation": {}
+    },
+    {
+        "label": "vba_filename",
+        "kind": 5,
+        "importPath": ".venv.bin.vba_extract",
+        "description": ".venv.bin.vba_extract",
+        "peekOfCode": "vba_filename = \"vbaProject.bin\"\nvba_signature_filename = \"vbaProjectSignature.bin\"\n# Get the xlsm file name from the commandline.\nif len(sys.argv) > 1:\n    xlsm_file = sys.argv[1]\nelse:\n    print(\n        \"\\nUtility to extract a vbaProject.bin binary from an Excel 2007+ \"\n        \"xlsm macro file for insertion into an XlsxWriter file.\\n\"\n        \"If the macros are digitally signed, extracts also a vbaProjectSignature.bin \"",
+        "detail": ".venv.bin.vba_extract",
+        "documentation": {}
+    },
+    {
+        "label": "vba_signature_filename",
+        "kind": 5,
+        "importPath": ".venv.bin.vba_extract",
+        "description": ".venv.bin.vba_extract",
+        "peekOfCode": "vba_signature_filename = \"vbaProjectSignature.bin\"\n# Get the xlsm file name from the commandline.\nif len(sys.argv) > 1:\n    xlsm_file = sys.argv[1]\nelse:\n    print(\n        \"\\nUtility to extract a vbaProject.bin binary from an Excel 2007+ \"\n        \"xlsm macro file for insertion into an XlsxWriter file.\\n\"\n        \"If the macros are digitally signed, extracts also a vbaProjectSignature.bin \"\n        \"file.\\n\"",
+        "detail": ".venv.bin.vba_extract",
         "documentation": {}
     },
     {
@@ -1731,6 +2421,213 @@
         "description": "utils.agno_tools",
         "peekOfCode": "def create_wage_tool():\n    \"\"\"\n    Create a custom tool for retrieving wage data from BLS OEWS database.\n    This tool queries MongoDB to fetch wage percentiles (10th, 25th, 50th/median, 75th, 90th)\n    for a given SOC code and geographic area. Data is sourced from the Bureau of Labor Statistics\n    Occupational Employment and Wage Statistics (OEWS) program.\n    Returns:\n        Callable tool function that can be used with agno agents to retrieve wage data\n    Example:\n        >>> wage_tool = create_wage_tool()",
         "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "file_path",
+        "kind": 5,
+        "importPath": "analyze_excel",
+        "description": "analyze_excel",
+        "peekOfCode": "file_path = '/Users/keshav/Developer/Others/Pricing/Intprepix Volume III.xlsx'\nprint('='*120)\nprint('COMPREHENSIVE ANALYSIS OF: Intprepix Volume III.xlsx')\nprint('='*120)\n# Read both sheets\ndf1 = pd.read_excel(file_path, sheet_name='Cost Proposal Spreadsheet')\ndf2 = pd.read_excel(file_path, sheet_name='Subcontractor Fee_MH Rate Table')\nprint(f'\\nSuccessfully loaded both sheets')\nprint(f'  Sheet 1: {len(df1)} rows x {len(df1.columns)} columns')\nprint(f'  Sheet 2: {len(df2)} rows x {len(df2.columns)} columns')",
+        "detail": "analyze_excel",
+        "documentation": {}
+    },
+    {
+        "label": "df1",
+        "kind": 5,
+        "importPath": "analyze_excel",
+        "description": "analyze_excel",
+        "peekOfCode": "df1 = pd.read_excel(file_path, sheet_name='Cost Proposal Spreadsheet')\ndf2 = pd.read_excel(file_path, sheet_name='Subcontractor Fee_MH Rate Table')\nprint(f'\\nSuccessfully loaded both sheets')\nprint(f'  Sheet 1: {len(df1)} rows x {len(df1.columns)} columns')\nprint(f'  Sheet 2: {len(df2)} rows x {len(df2.columns)} columns')\n# ====================================================================================\n# SHEET 1: DETAILED ANALYSIS\n# ====================================================================================\nprint('\\n\\n' + '='*120)\nprint('SHEET 1: FIRST COLUMN - ALL VALUES (Document Structure)')",
+        "detail": "analyze_excel",
+        "documentation": {}
+    },
+    {
+        "label": "df2",
+        "kind": 5,
+        "importPath": "analyze_excel",
+        "description": "analyze_excel",
+        "peekOfCode": "df2 = pd.read_excel(file_path, sheet_name='Subcontractor Fee_MH Rate Table')\nprint(f'\\nSuccessfully loaded both sheets')\nprint(f'  Sheet 1: {len(df1)} rows x {len(df1.columns)} columns')\nprint(f'  Sheet 2: {len(df2)} rows x {len(df2.columns)} columns')\n# ====================================================================================\n# SHEET 1: DETAILED ANALYSIS\n# ====================================================================================\nprint('\\n\\n' + '='*120)\nprint('SHEET 1: FIRST COLUMN - ALL VALUES (Document Structure)')\nprint('='*120)",
+        "detail": "analyze_excel",
+        "documentation": {}
+    },
+    {
+        "label": "file_path",
+        "kind": 5,
+        "importPath": "analyze_excel_detailed",
+        "description": "analyze_excel_detailed",
+        "peekOfCode": "file_path = '/Users/keshav/Developer/Others/Pricing/Intprepix Volume III.xlsx'\nprint('='*120)\nprint('DETAILED ANALYSIS: Formulas, Indirect Rates, and Subcontractor Structure')\nprint('='*120)\n# Load the workbook with formulas\nwb = openpyxl.load_workbook(file_path)\nsheet1 = wb['Cost Proposal Spreadsheet']\n# Read with pandas for easier data analysis\ndf1 = pd.read_excel(file_path, sheet_name='Cost Proposal Spreadsheet', header=None)\ndf2 = pd.read_excel(file_path, sheet_name='Subcontractor Fee_MH Rate Table')",
+        "detail": "analyze_excel_detailed",
+        "documentation": {}
+    },
+    {
+        "label": "wb",
+        "kind": 5,
+        "importPath": "analyze_excel_detailed",
+        "description": "analyze_excel_detailed",
+        "peekOfCode": "wb = openpyxl.load_workbook(file_path)\nsheet1 = wb['Cost Proposal Spreadsheet']\n# Read with pandas for easier data analysis\ndf1 = pd.read_excel(file_path, sheet_name='Cost Proposal Spreadsheet', header=None)\ndf2 = pd.read_excel(file_path, sheet_name='Subcontractor Fee_MH Rate Table')\nprint('\\n' + '='*120)\nprint('KEY SECTIONS - WHERE THINGS ARE')\nprint('='*120)\n# Find key sections\nsections = {",
+        "detail": "analyze_excel_detailed",
+        "documentation": {}
+    },
+    {
+        "label": "sheet1",
+        "kind": 5,
+        "importPath": "analyze_excel_detailed",
+        "description": "analyze_excel_detailed",
+        "peekOfCode": "sheet1 = wb['Cost Proposal Spreadsheet']\n# Read with pandas for easier data analysis\ndf1 = pd.read_excel(file_path, sheet_name='Cost Proposal Spreadsheet', header=None)\ndf2 = pd.read_excel(file_path, sheet_name='Subcontractor Fee_MH Rate Table')\nprint('\\n' + '='*120)\nprint('KEY SECTIONS - WHERE THINGS ARE')\nprint('='*120)\n# Find key sections\nsections = {\n    'Prime Direct Labor Start': 9,",
+        "detail": "analyze_excel_detailed",
+        "documentation": {}
+    },
+    {
+        "label": "df1",
+        "kind": 5,
+        "importPath": "analyze_excel_detailed",
+        "description": "analyze_excel_detailed",
+        "peekOfCode": "df1 = pd.read_excel(file_path, sheet_name='Cost Proposal Spreadsheet', header=None)\ndf2 = pd.read_excel(file_path, sheet_name='Subcontractor Fee_MH Rate Table')\nprint('\\n' + '='*120)\nprint('KEY SECTIONS - WHERE THINGS ARE')\nprint('='*120)\n# Find key sections\nsections = {\n    'Prime Direct Labor Start': 9,\n    'Prime Direct Labor End': 93,\n    'Overhead Row': 95,",
+        "detail": "analyze_excel_detailed",
+        "documentation": {}
+    },
+    {
+        "label": "df2",
+        "kind": 5,
+        "importPath": "analyze_excel_detailed",
+        "description": "analyze_excel_detailed",
+        "peekOfCode": "df2 = pd.read_excel(file_path, sheet_name='Subcontractor Fee_MH Rate Table')\nprint('\\n' + '='*120)\nprint('KEY SECTIONS - WHERE THINGS ARE')\nprint('='*120)\n# Find key sections\nsections = {\n    'Prime Direct Labor Start': 9,\n    'Prime Direct Labor End': 93,\n    'Overhead Row': 95,\n    'Fringe Row': 96,",
+        "detail": "analyze_excel_detailed",
+        "documentation": {}
+    },
+    {
+        "label": "sections",
+        "kind": 5,
+        "importPath": "analyze_excel_detailed",
+        "description": "analyze_excel_detailed",
+        "peekOfCode": "sections = {\n    'Prime Direct Labor Start': 9,\n    'Prime Direct Labor End': 93,\n    'Overhead Row': 95,\n    'Fringe Row': 96,\n    'G&A Row': 97,\n    'Prime Fee Row': 156,\n    'Subcontractor Section Start': 105,\n    'Subcontractor Section End': 142,\n    'Total Subcontractor Cost': 145,",
+        "detail": "analyze_excel_detailed",
+        "documentation": {}
+    },
+    {
+        "label": "escalation_row",
+        "kind": 5,
+        "importPath": "analyze_excel_detailed",
+        "description": "analyze_excel_detailed",
+        "peekOfCode": "escalation_row = df1.iloc[0]\n# The escalation values are in row 0, but need to check which columns actually have the numbers\nprint(f\"Row 0 values: {list(escalation_row)}\")\n# Based on earlier analysis, escalation rates were: 0.0272, 0.0299, 0.0263, 0.034\nesc1 = escalation_row[8] if isinstance(escalation_row[8], (int, float)) else 0.0272\nesc2 = escalation_row[11] if isinstance(escalation_row[11], (int, float)) else 0.0299\nesc3 = escalation_row[14] if isinstance(escalation_row[14], (int, float)) else 0.0263\nesc4 = escalation_row[17] if isinstance(escalation_row[17], (int, float)) else 0.0340\nprint(f\"Base → Option Year 1: {esc1:.2%}\")\nprint(f\"Option Year 1 → Option Year 2: {esc2:.2%}\")",
+        "detail": "analyze_excel_detailed",
+        "documentation": {}
+    },
+    {
+        "label": "esc1",
+        "kind": 5,
+        "importPath": "analyze_excel_detailed",
+        "description": "analyze_excel_detailed",
+        "peekOfCode": "esc1 = escalation_row[8] if isinstance(escalation_row[8], (int, float)) else 0.0272\nesc2 = escalation_row[11] if isinstance(escalation_row[11], (int, float)) else 0.0299\nesc3 = escalation_row[14] if isinstance(escalation_row[14], (int, float)) else 0.0263\nesc4 = escalation_row[17] if isinstance(escalation_row[17], (int, float)) else 0.0340\nprint(f\"Base → Option Year 1: {esc1:.2%}\")\nprint(f\"Option Year 1 → Option Year 2: {esc2:.2%}\")\nprint(f\"Option Year 2 → Option Year 3: {esc3:.2%}\")\nprint(f\"Option Year 3 → Option Year 4: {esc4:.2%}\")\nprint('\\n' + '='*120)\nprint('COLUMN STRUCTURE FOR EACH YEAR')",
+        "detail": "analyze_excel_detailed",
+        "documentation": {}
+    },
+    {
+        "label": "esc2",
+        "kind": 5,
+        "importPath": "analyze_excel_detailed",
+        "description": "analyze_excel_detailed",
+        "peekOfCode": "esc2 = escalation_row[11] if isinstance(escalation_row[11], (int, float)) else 0.0299\nesc3 = escalation_row[14] if isinstance(escalation_row[14], (int, float)) else 0.0263\nesc4 = escalation_row[17] if isinstance(escalation_row[17], (int, float)) else 0.0340\nprint(f\"Base → Option Year 1: {esc1:.2%}\")\nprint(f\"Option Year 1 → Option Year 2: {esc2:.2%}\")\nprint(f\"Option Year 2 → Option Year 3: {esc3:.2%}\")\nprint(f\"Option Year 3 → Option Year 4: {esc4:.2%}\")\nprint('\\n' + '='*120)\nprint('COLUMN STRUCTURE FOR EACH YEAR')\nprint('='*120)",
+        "detail": "analyze_excel_detailed",
+        "documentation": {}
+    },
+    {
+        "label": "esc3",
+        "kind": 5,
+        "importPath": "analyze_excel_detailed",
+        "description": "analyze_excel_detailed",
+        "peekOfCode": "esc3 = escalation_row[14] if isinstance(escalation_row[14], (int, float)) else 0.0263\nesc4 = escalation_row[17] if isinstance(escalation_row[17], (int, float)) else 0.0340\nprint(f\"Base → Option Year 1: {esc1:.2%}\")\nprint(f\"Option Year 1 → Option Year 2: {esc2:.2%}\")\nprint(f\"Option Year 2 → Option Year 3: {esc3:.2%}\")\nprint(f\"Option Year 3 → Option Year 4: {esc4:.2%}\")\nprint('\\n' + '='*120)\nprint('COLUMN STRUCTURE FOR EACH YEAR')\nprint('='*120)\nyear_columns = {",
+        "detail": "analyze_excel_detailed",
+        "documentation": {}
+    },
+    {
+        "label": "esc4",
+        "kind": 5,
+        "importPath": "analyze_excel_detailed",
+        "description": "analyze_excel_detailed",
+        "peekOfCode": "esc4 = escalation_row[17] if isinstance(escalation_row[17], (int, float)) else 0.0340\nprint(f\"Base → Option Year 1: {esc1:.2%}\")\nprint(f\"Option Year 1 → Option Year 2: {esc2:.2%}\")\nprint(f\"Option Year 2 → Option Year 3: {esc3:.2%}\")\nprint(f\"Option Year 3 → Option Year 4: {esc4:.2%}\")\nprint('\\n' + '='*120)\nprint('COLUMN STRUCTURE FOR EACH YEAR')\nprint('='*120)\nyear_columns = {\n    'Total for All Years': {'Hours': 3, 'Amount': 4, 'Rate': 5},",
+        "detail": "analyze_excel_detailed",
+        "documentation": {}
+    },
+    {
+        "label": "year_columns",
+        "kind": 5,
+        "importPath": "analyze_excel_detailed",
+        "description": "analyze_excel_detailed",
+        "peekOfCode": "year_columns = {\n    'Total for All Years': {'Hours': 3, 'Amount': 4, 'Rate': 5},\n    'Base Period': {'Hours': 6, 'Amount': 7, 'Rate': None},  # Rate is calculated\n    'Option Year 1': {'Hours': 9, 'Amount': 10, 'Rate': 8},  # Column 8 has escalation label\n    'Option Year 2': {'Hours': 12, 'Amount': 13, 'Rate': 11},\n    'Option Year 3': {'Hours': 15, 'Amount': 16, 'Rate': 14},\n    'Option Year 4': {'Hours': 18, 'Amount': 19, 'Rate': 17},\n}\nfor year, cols in year_columns.items():\n    print(f\"\\n{year}:\")",
+        "detail": "analyze_excel_detailed",
+        "documentation": {}
+    },
+    {
+        "label": "row_9",
+        "kind": 5,
+        "importPath": "analyze_excel_detailed",
+        "description": "analyze_excel_detailed",
+        "peekOfCode": "row_9 = df1.iloc[9]\nprint(f\"Position: {row_9[0]}\")\nprint(f\"Company Title: {row_9[1]}\")\nprint(f\"eCRAFT Title: {row_9[2]}\")\nprint(f\"\\nTotal Hours: {row_9[3]:,.0f}\")\nprint(f\"Total Amount: ${row_9[4]:,.2f}\")\nprint(f\"Avg Rate: ${row_9[5]:.2f}/hr\")\nprint(f\"\\nYear-by-Year Breakdown:\")\nprint(f\"  Base Period:     {row_9[6]:6.0f} hrs × ${row_9[8]:.2f}/hr = ${row_9[7]:,.2f}\")\nprint(f\"  Option Year 1:   {row_9[9]:6.0f} hrs × ${row_9[11]:.2f}/hr = ${row_9[10]:,.2f}\")",
+        "detail": "analyze_excel_detailed",
+        "documentation": {}
+    },
+    {
+        "label": "base_rate",
+        "kind": 5,
+        "importPath": "analyze_excel_detailed",
+        "description": "analyze_excel_detailed",
+        "peekOfCode": "base_rate = row_9[8]\nprint(f\"  Base:            ${base_rate:.2f}\")\nprint(f\"  +2.72% Year 1:   ${row_9[11]:.2f} (calculated: ${base_rate * 1.0272:.2f})\")\nprint(f\"  +2.99% Year 2:   ${row_9[14]:.2f} (calculated: ${row_9[11] * 1.0299:.2f})\")\nprint(f\"  +2.63% Year 3:   ${row_9[17]:.2f} (calculated: ${row_9[14] * 1.0263:.2f})\")\nprint(f\"  +3.40% Year 4:   ${row_9[19]:.2f} (calculated: ${row_9[17] * 1.0340:.2f})\")\nprint('\\n' + '='*120)\nprint('INDIRECT COST ROWS')\nprint('='*120)\nindirect_rows = [95, 96, 97, 98, 99]",
+        "detail": "analyze_excel_detailed",
+        "documentation": {}
+    },
+    {
+        "label": "indirect_rows",
+        "kind": 5,
+        "importPath": "analyze_excel_detailed",
+        "description": "analyze_excel_detailed",
+        "peekOfCode": "indirect_rows = [95, 96, 97, 98, 99]\nfor row_idx in indirect_rows:\n    row = df1.iloc[row_idx]\n    print(f\"\\nRow {row_idx}: {row[0]}\")\n    print(f\"  Total: ${row[4]:,.2f}\" if pd.notna(row[4]) else \"  Total: N/A\")\n    print(f\"  Base Period: ${row[7]:,.2f}\" if pd.notna(row[7]) else \"  Base: N/A\")\n    print(f\"  Option Year 1: ${row[10]:,.2f}\" if pd.notna(row[10]) else \"  Opt 1: N/A\")\nprint('\\n' + '='*120)\nprint('SUBCONTRACTOR SECTION STRUCTURE')\nprint('='*120)",
+        "detail": "analyze_excel_detailed",
+        "documentation": {}
+    },
+    {
+        "label": "subcontractor_rows",
+        "kind": 5,
+        "importPath": "analyze_excel_detailed",
+        "description": "analyze_excel_detailed",
+        "peekOfCode": "subcontractor_rows = [105, 106, 107, 120, 121, 124, 125, 131, 132]\nfor row_idx in subcontractor_rows:\n    if row_idx < len(df1):\n        row = df1.iloc[row_idx]\n        print(f\"\\nRow {row_idx}: {row[0]}\")\n        if pd.notna(row[3]):  # Has hours\n            print(f\"  Total Hours: {row[3]:,.0f}\")\n            if pd.notna(row[4]):\n                print(f\"  Total Amount: ${row[4]:,.2f}\")\n            if pd.notna(row[5]):",
+        "detail": "analyze_excel_detailed",
+        "documentation": {}
+    },
+    {
+        "label": "formula_cells",
+        "kind": 5,
+        "importPath": "analyze_excel_detailed",
+        "description": "analyze_excel_detailed",
+        "peekOfCode": "formula_cells = [\n    ('J10', 'Base Period Amount (Key Individual 1)'),\n    ('K10', 'Base Period Rate (Key Individual 1)'),\n    ('M10', 'Option Year 1 Amount'),\n    ('N10', 'Option Year 1 Rate'),\n]\nfor cell_ref, description in formula_cells:\n    cell = sheet1[cell_ref]\n    print(f\"\\n{cell_ref} ({description}):\")\n    print(f\"  Value: {cell.value}\")",
+        "detail": "analyze_excel_detailed",
+        "documentation": {}
+    },
+    {
+        "label": "row_18",
+        "kind": 5,
+        "importPath": "analyze_excel_detailed",
+        "description": "analyze_excel_detailed",
+        "peekOfCode": "row_18 = df1.iloc[18]\nprint(f\"\\nRow 18: {row_18[0]}\")\nprint(f\"  Base: {row_18[6]:.0f} hrs, Opt1: {row_18[9]:.0f} hrs, Opt2: {row_18[12]:.0f} hrs, Opt3: {row_18[15]:.0f} hrs, Opt4: {row_18[18]:.0f} hrs\")\n# Row 28 - Systems Analyst with 0 hours in first 2 years\nrow_28 = df1.iloc[28]\nprint(f\"\\nRow 28: {row_28[0]}\")\nprint(f\"  Base: {row_28[6]:.0f} hrs, Opt1: {row_28[9]:.0f} hrs, Opt2: {row_28[12]:.0f} hrs, Opt3: {row_28[15]:.0f} hrs, Opt4: {row_28[18]:.0f} hrs\")\nprint('\\n' + '='*120)\nprint('KEY INSIGHTS')\nprint('='*120)",
+        "detail": "analyze_excel_detailed",
+        "documentation": {}
+    },
+    {
+        "label": "row_28",
+        "kind": 5,
+        "importPath": "analyze_excel_detailed",
+        "description": "analyze_excel_detailed",
+        "peekOfCode": "row_28 = df1.iloc[28]\nprint(f\"\\nRow 28: {row_28[0]}\")\nprint(f\"  Base: {row_28[6]:.0f} hrs, Opt1: {row_28[9]:.0f} hrs, Opt2: {row_28[12]:.0f} hrs, Opt3: {row_28[15]:.0f} hrs, Opt4: {row_28[18]:.0f} hrs\")\nprint('\\n' + '='*120)\nprint('KEY INSIGHTS')\nprint('='*120)\ninsights = \"\"\"\n1. MULTI-YEAR STRUCTURE:\n   - Base Period + 4 Option Years = 5 years total\n   - Each year has: Hours, Amount, Rate columns",
+        "detail": "analyze_excel_detailed",
+        "documentation": {}
+    },
+    {
+        "label": "insights",
+        "kind": 5,
+        "importPath": "analyze_excel_detailed",
+        "description": "analyze_excel_detailed",
+        "peekOfCode": "insights = \"\"\"\n1. MULTI-YEAR STRUCTURE:\n   - Base Period + 4 Option Years = 5 years total\n   - Each year has: Hours, Amount, Rate columns\n   - Hours can be different per year (some positions start later)\n2. ESCALATION PATTERN:\n   - Rates escalate EVERY year\n   - Different escalation % for each year transition (2.72%, 2.99%, 2.63%, 3.40%)\n   - Escalation is COMPOUND: Year 2 = Year 1 × (1 + escalation%)\n3. RATE CALCULATION:",
+        "detail": "analyze_excel_detailed",
         "documentation": {}
     }
 ]
