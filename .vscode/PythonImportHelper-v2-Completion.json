@@ -272,6 +272,30 @@
         "documentation": {}
     },
     {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "List",
         "importPath": "typing",
         "description": "typing",
@@ -392,6 +416,30 @@
         "documentation": {}
     },
     {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Tuple",
         "importPath": "typing",
         "description": "typing",
@@ -465,6 +513,22 @@
     },
     {
         "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -786,6 +850,38 @@
         "documentation": {}
     },
     {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "UploadFile",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "File",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
         "label": "CORSMiddleware",
         "importPath": "fastapi.middleware.cors",
         "description": "fastapi.middleware.cors",
@@ -803,6 +899,14 @@
     },
     {
         "label": "auth",
+        "importPath": "routers",
+        "description": "routers",
+        "isExtraImport": true,
+        "detail": "routers",
+        "documentation": {}
+    },
+    {
+        "label": "excel_export",
         "importPath": "routers",
         "description": "routers",
         "isExtraImport": true,
@@ -867,6 +971,14 @@
     },
     {
         "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
         "isExtraImport": true,
@@ -1042,6 +1154,22 @@
         "documentation": {}
     },
     {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
         "label": "bcrypt",
         "kind": 6,
         "isExtraImport": true,
@@ -1073,6 +1201,87 @@
         "importPath": "uuid",
         "description": "uuid",
         "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "openpyxl",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "openpyxl",
+        "description": "openpyxl",
+        "detail": "openpyxl",
+        "documentation": {}
+    },
+    {
+        "label": "Workbook",
+        "importPath": "openpyxl",
+        "description": "openpyxl",
+        "isExtraImport": true,
+        "detail": "openpyxl",
+        "documentation": {}
+    },
+    {
+        "label": "Font",
+        "importPath": "openpyxl.styles",
+        "description": "openpyxl.styles",
+        "isExtraImport": true,
+        "detail": "openpyxl.styles",
+        "documentation": {}
+    },
+    {
+        "label": "Alignment",
+        "importPath": "openpyxl.styles",
+        "description": "openpyxl.styles",
+        "isExtraImport": true,
+        "detail": "openpyxl.styles",
+        "documentation": {}
+    },
+    {
+        "label": "Border",
+        "importPath": "openpyxl.styles",
+        "description": "openpyxl.styles",
+        "isExtraImport": true,
+        "detail": "openpyxl.styles",
+        "documentation": {}
+    },
+    {
+        "label": "Side",
+        "importPath": "openpyxl.styles",
+        "description": "openpyxl.styles",
+        "isExtraImport": true,
+        "detail": "openpyxl.styles",
+        "documentation": {}
+    },
+    {
+        "label": "PatternFill",
+        "importPath": "openpyxl.styles",
+        "description": "openpyxl.styles",
+        "isExtraImport": true,
+        "detail": "openpyxl.styles",
+        "documentation": {}
+    },
+    {
+        "label": "get_column_letter",
+        "importPath": "openpyxl.utils",
+        "description": "openpyxl.utils",
+        "isExtraImport": true,
+        "detail": "openpyxl.utils",
+        "documentation": {}
+    },
+    {
+        "label": "get_column_letter",
+        "importPath": "openpyxl.utils",
+        "description": "openpyxl.utils",
+        "isExtraImport": true,
+        "detail": "openpyxl.utils",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
         "documentation": {}
     },
     {
@@ -1335,6 +1544,14 @@
         "documentation": {}
     },
     {
+        "label": "StreamingResponse",
+        "importPath": "fastapi.responses",
+        "description": "fastapi.responses",
+        "isExtraImport": true,
+        "detail": "fastapi.responses",
+        "documentation": {}
+    },
+    {
         "label": "JSONResponse",
         "importPath": "fastapi.responses",
         "description": "fastapi.responses",
@@ -1361,6 +1578,22 @@
         "documentation": {}
     },
     {
+        "label": "BytesIO",
+        "importPath": "io",
+        "description": "io",
+        "isExtraImport": true,
+        "detail": "io",
+        "documentation": {}
+    },
+    {
+        "label": "parse_documents_to_dataframe",
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "isExtraImport": true,
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
         "label": "parse_documents_to_dataframe",
         "importPath": "client.jd_parser",
         "description": "client.jd_parser",
@@ -1390,6 +1623,54 @@
         "description": "utils.pipeline",
         "isExtraImport": true,
         "detail": "utils.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "process_dataframe_with_agents",
+        "importPath": "utils.pipeline",
+        "description": "utils.pipeline",
+        "isExtraImport": true,
+        "detail": "utils.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "ExcelGenerator",
+        "importPath": "client.excel_generator",
+        "description": "client.excel_generator",
+        "isExtraImport": true,
+        "detail": "client.excel_generator",
+        "documentation": {}
+    },
+    {
+        "label": "ExcelGenerator",
+        "importPath": "client.excel_generator",
+        "description": "client.excel_generator",
+        "isExtraImport": true,
+        "detail": "client.excel_generator",
+        "documentation": {}
+    },
+    {
+        "label": "ExcelGenerator",
+        "importPath": "client.excel_generator",
+        "description": "client.excel_generator",
+        "isExtraImport": true,
+        "detail": "client.excel_generator",
+        "documentation": {}
+    },
+    {
+        "label": "build_project_data_from_dataframe",
+        "importPath": "main",
+        "description": "main",
+        "isExtraImport": true,
+        "detail": "main",
+        "documentation": {}
+    },
+    {
+        "label": "run_full_pipeline",
+        "importPath": "main",
+        "description": "main",
+        "isExtraImport": true,
+        "detail": "main",
         "documentation": {}
     },
     {
@@ -1461,20 +1742,11 @@
         "documentation": {}
     },
     {
-        "label": "openpyxl",
-        "kind": 6,
+        "label": "AsyncClient",
+        "importPath": "httpx",
+        "description": "httpx",
         "isExtraImport": true,
-        "importPath": "openpyxl",
-        "description": "openpyxl",
-        "detail": "openpyxl",
-        "documentation": {}
-    },
-    {
-        "label": "get_column_letter",
-        "importPath": "openpyxl.utils",
-        "description": "openpyxl.utils",
-        "isExtraImport": true,
-        "detail": "openpyxl.utils",
+        "detail": "httpx",
         "documentation": {}
     },
     {
@@ -2054,6 +2326,15 @@
         "documentation": {}
     },
     {
+        "label": "ExcelGenerator",
+        "kind": 6,
+        "importPath": "client.excel_generator",
+        "description": "client.excel_generator",
+        "peekOfCode": "class ExcelGenerator:\n    \"\"\"\n    Generates government contract cost proposal Excel files.\n    Creates professional, formatted Excel workbooks with:\n    - Dynamic year columns based on contract structure\n    - Prime contractor labor calculations\n    - Subcontractor rate tables (no calculation details)\n    - Pass-through and fee sections\n    - ODC sections\n    \"\"\"",
+        "detail": "client.excel_generator",
+        "documentation": {}
+    },
+    {
         "label": "DocumentMetadata",
         "kind": 6,
         "importPath": "client.jd_parser",
@@ -2303,6 +2584,33 @@
         "description": "routers.auth",
         "peekOfCode": "security = HTTPBearer()\ndef get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):\n    \"\"\"Get current user from JWT token\"\"\"\n    token = credentials.credentials\n    token_data = verify_token(token)\n    if token_data is None:\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=\"Could not validate credentials\",\n            headers={\"WWW-Authenticate\": \"Bearer\"},",
         "detail": "routers.auth",
+        "documentation": {}
+    },
+    {
+        "label": "ProjectConfig",
+        "kind": 6,
+        "importPath": "routers.excel_export",
+        "description": "routers.excel_export",
+        "peekOfCode": "class ProjectConfig(BaseModel):\n    \"\"\"Project configuration for cost proposal generation.\"\"\"\n    solicitation_number: str = Field(..., description=\"Solicitation number (e.g., N0017825R3013)\")\n    prime_contractor_name: str = Field(..., description=\"Prime contractor company name\")\n    subcontractor_names: List[str] = Field(default_factory=list, description=\"List of subcontractor names\")\n    dcaa_contact: str = Field(default=\"\", description=\"DCAA point of contact information\")\n    total_years: int = Field(..., ge=1, le=10, description=\"Total contract years (1-10)\")\n    base_years: int = Field(..., ge=1, description=\"Number of base years\")\n    # Escalation rates (year-over-year wage increases)\n    escalation_rates: Dict[str, float] = Field(",
+        "detail": "routers.excel_export",
+        "documentation": {}
+    },
+    {
+        "label": "ExcelGenerationRequest",
+        "kind": 6,
+        "importPath": "routers.excel_export",
+        "description": "routers.excel_export",
+        "peekOfCode": "class ExcelGenerationRequest(BaseModel):\n    \"\"\"Request body for generating Excel from job data.\"\"\"\n    jobs: List[Dict[str, Any]] = Field(..., description=\"List of job records with wage data\")\n    project_config: ProjectConfig = Field(..., description=\"Project configuration\")\n@router.post(\"/generate-from-data\")\nasync def generate_excel_from_data(request: ExcelGenerationRequest):\n    \"\"\"\n    Generate Excel cost proposal from pre-processed job data.\n    Use this endpoint when you already have job data with wage information\n    (e.g., from the /api/pricing/process endpoint).",
+        "detail": "routers.excel_export",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "routers.excel_export",
+        "description": "routers.excel_export",
+        "peekOfCode": "router = APIRouter()\nclass ProjectConfig(BaseModel):\n    \"\"\"Project configuration for cost proposal generation.\"\"\"\n    solicitation_number: str = Field(..., description=\"Solicitation number (e.g., N0017825R3013)\")\n    prime_contractor_name: str = Field(..., description=\"Prime contractor company name\")\n    subcontractor_names: List[str] = Field(default_factory=list, description=\"List of subcontractor names\")\n    dcaa_contact: str = Field(default=\"\", description=\"DCAA point of contact information\")\n    total_years: int = Field(..., ge=1, le=10, description=\"Total contract years (1-10)\")\n    base_years: int = Field(..., ge=1, description=\"Number of base years\")\n    # Escalation rates (year-over-year wage increases)",
+        "detail": "routers.excel_export",
         "documentation": {}
     },
     {
@@ -2735,6 +3043,24 @@
         "description": "analyze_excel_formulas",
         "peekOfCode": "def main():\n    file_path = '/Users/keshav/Developer/Others/Pricing/Intprepix Volume III.xlsx'\n    print(\"=\"*80)\n    print(\"EXCEL FORMULA ANALYZER\")\n    print(\"=\"*80)\n    print(f\"\\nFile: {file_path}\\n\")\n    try:\n        # Load workbook with data_only=False to get formulas\n        wb = openpyxl.load_workbook(file_path, data_only=False)\n        print(f\"Sheet names: {wb.sheetnames}\\n\")",
         "detail": "analyze_excel_formulas",
+        "documentation": {}
+    },
+    {
+        "label": "build_project_data_from_dataframe",
+        "kind": 2,
+        "importPath": "main",
+        "description": "main",
+        "peekOfCode": "def build_project_data_from_dataframe(\n    df: pd.DataFrame,\n    project_config: Dict[str, Any]\n) -> Dict[str, Any]:\n    \"\"\"\n    Build project data structure from DataFrame for Excel generation.\n    Args:\n        df: DataFrame with positions and wage data\n        project_config: Configuration with solicitation info, rates, etc.\n    Returns:",
+        "detail": "main",
+        "documentation": {}
+    },
+    {
+        "label": "test_excel_generation",
+        "kind": 2,
+        "importPath": "test_excel_only",
+        "description": "test_excel_only",
+        "peekOfCode": "def test_excel_generation():\n    \"\"\"Test Excel generation with sample data.\"\"\"\n    print(\"\\n\" + \"=\"*70)\n    print(\"  TESTING EXCEL GENERATOR\")\n    print(\"=\"*70 + \"\\n\")\n    # Sample project data\n    project_data = {\n        'solicitation_number': 'N0017825R3013',\n        'prime_contractor_name': 'Test Company Inc.',\n        'subcontractor_names': ['Astrion Group LLC', 'Deloitte Consulting LLP'],",
+        "detail": "test_excel_only",
         "documentation": {}
     }
 ]
