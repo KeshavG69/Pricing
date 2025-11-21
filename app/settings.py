@@ -10,6 +10,9 @@ class Settings(BaseSettings):
     OPENROUTER_MODEL: str = "openai/gpt-4o"
     OPENAI_API_KEY: str
 
+    # LlamaCloud API for document extraction
+    LLAMA_CLOUD_API_KEY: str
+
     # MongoDB configuration
     MONGODB_URL: str = "mongodb://localhost:27017"
     MONGODB_DATABASE: str = "testing"

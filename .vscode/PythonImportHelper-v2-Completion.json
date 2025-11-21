@@ -256,6 +256,22 @@
         "documentation": {}
     },
     {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "List",
         "importPath": "typing",
         "description": "typing",
@@ -667,14 +683,6 @@
     },
     {
         "label": "get_chat_llm_agno",
-        "importPath": "client.llm_client",
-        "description": "client.llm_client",
-        "isExtraImport": true,
-        "detail": "client.llm_client",
-        "documentation": {}
-    },
-    {
-        "label": "get_chat_llm",
         "importPath": "client.llm_client",
         "description": "client.llm_client",
         "isExtraImport": true,
@@ -1117,30 +1125,6 @@
         "documentation": {}
     },
     {
-        "label": "partition",
-        "importPath": "unstructured.partition.auto",
-        "description": "unstructured.partition.auto",
-        "isExtraImport": true,
-        "detail": "unstructured.partition.auto",
-        "documentation": {}
-    },
-    {
-        "label": "partition",
-        "importPath": "unstructured.partition.auto",
-        "description": "unstructured.partition.auto",
-        "isExtraImport": true,
-        "detail": "unstructured.partition.auto",
-        "documentation": {}
-    },
-    {
-        "label": "JobDescriptionList",
-        "importPath": "models.job_description",
-        "description": "models.job_description",
-        "isExtraImport": true,
-        "detail": "models.job_description",
-        "documentation": {}
-    },
-    {
         "label": "JobDescription",
         "importPath": "models.job_description",
         "description": "models.job_description",
@@ -1228,6 +1212,14 @@
         "description": "collections",
         "isExtraImport": true,
         "detail": "collections",
+        "documentation": {}
+    },
+    {
+        "label": "partition",
+        "importPath": "unstructured.partition.auto",
+        "description": "unstructured.partition.auto",
+        "isExtraImport": true,
+        "detail": "unstructured.partition.auto",
         "documentation": {}
     },
     {
@@ -1796,7 +1788,7 @@
         "kind": 6,
         "importPath": "app.settings",
         "description": "app.settings",
-        "peekOfCode": "class Settings(BaseSettings):\n    \"\"\"Application configuration from environment variables.\"\"\"\n    OPENROUTER_API_KEY: str\n    OPENROUTER_MODEL: str = \"openai/gpt-4o\"\n    OPENAI_API_KEY: str\n    # MongoDB configuration\n    MONGODB_URL: str = \"mongodb://localhost:27017\"\n    MONGODB_DATABASE: str = \"testing\"\n    # CareerOneStop API (free gov API for wage data by SOC code)\n    CAREERONESTOP_API_KEY: str = \"\"  # Register at careeronestop.org",
+        "peekOfCode": "class Settings(BaseSettings):\n    \"\"\"Application configuration from environment variables.\"\"\"\n    OPENROUTER_API_KEY: str\n    OPENROUTER_MODEL: str = \"openai/gpt-4o\"\n    OPENAI_API_KEY: str\n    # LlamaCloud API for document extraction\n    LLAMA_CLOUD_API_KEY: str\n    # MongoDB configuration\n    MONGODB_URL: str = \"mongodb://localhost:27017\"\n    MONGODB_DATABASE: str = \"testing\"",
         "detail": "app.settings",
         "documentation": {}
     },
@@ -2053,11 +2045,65 @@
         "documentation": {}
     },
     {
+        "label": "Calculator",
+        "kind": 6,
+        "importPath": "client.calculation_service",
+        "description": "client.calculation_service",
+        "peekOfCode": "class Calculator:\n    \"\"\"\n    Pure calculation methods for multi-year pricing.\n    All methods are static - no state maintained.\n    \"\"\"\n    @staticmethod\n    def calculate_fblr(\n        annual_wage: float,\n        hours: int,\n        fringe_rate: float,",
+        "detail": "client.calculation_service",
+        "documentation": {}
+    },
+    {
         "label": "DocumentMetadata",
         "kind": 6,
         "importPath": "client.jd_parser",
         "description": "client.jd_parser",
         "peekOfCode": "class DocumentMetadata(BaseModel):\n    \"\"\"Document-level metadata extracted from the entire document.\"\"\"\n    location: Optional[str] = Field(\n        None,\n        description=\"Primary location, city, state, or region mentioned in the document\"\n    )\n    project_name: Optional[str] = Field(\n        None,\n        description=\"Project or contract name if mentioned\"\n    )",
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "YearHours",
+        "kind": 6,
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "peekOfCode": "class YearHours(BaseModel):\n    \"\"\"Hours for a specific year - used internally for LlamaExtract.\"\"\"\n    year: str = Field(\n        description=\"Year number as string: '1' for Base Period, '2' for Option Year 1, etc.\"\n    )\n    hours: int = Field(\n        description=\"Hours worked in this year (e.g., 1880 for full-time, 0 for not working)\"\n    )\nclass PositionExtract(BaseModel):\n    \"\"\"Position model for LlamaExtract - includes List[YearHours].\"\"\"",
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "PositionExtract",
+        "kind": 6,
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "peekOfCode": "class PositionExtract(BaseModel):\n    \"\"\"Position model for LlamaExtract - includes List[YearHours].\"\"\"\n    labor_category: str = Field(\n        description=\"Job title or role name (e.g., 'Senior Software Engineer', 'Project Manager III')\"\n    )\n    description: Optional[str] = Field(\n        None,\n        description=\"Full job description including responsibilities, requirements, qualifications, and duties. Extract complete text, not summary.\"\n    )\n    experience: Optional[int] = Field(",
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "DocumentMetadataExtract",
+        "kind": 6,
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "peekOfCode": "class DocumentMetadataExtract(BaseModel):\n    \"\"\"Document metadata for LlamaExtract.\"\"\"\n    project_name: Optional[str] = Field(\n        None,\n        description=\"Project or contract name\"\n    )\n    location: Optional[str] = Field(\n        None,\n        description=\"Primary work location, city, state, or region\"\n    )",
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "GovernmentProposalExtraction",
+        "kind": 6,
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "peekOfCode": "class GovernmentProposalExtraction(BaseModel):\n    \"\"\"Complete extraction schema for LlamaExtract.\"\"\"\n    metadata: DocumentMetadataExtract = Field(\n        description=\"Document-level information extracted from headers, cover page, and overview sections\"\n    )\n    positions: List[PositionExtract] = Field(\n        description=\"All job positions/labor categories found in the document\"\n    )\ndef _convert_to_job_description(position: PositionExtract, doc_location: Optional[str] = None) -> JobDescription:\n    \"\"\"",
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "extract_with_llamaextract",
+        "kind": 2,
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "peekOfCode": "def extract_with_llamaextract(pdf_path: str, mode: str = \"fast\") -> GovernmentProposalExtraction:\n    \"\"\"\n    Extract structured data from PDF using LlamaExtract API.\n    Args:\n        pdf_path: Path to the PDF file\n        mode: Extraction mode - \"fast\" or \"thorough\"\n    Returns:\n        GovernmentProposalExtraction object with all data\n    Raises:\n        ValueError: If LLAMA_CLOUD_API_KEY not found or extraction fails",
         "detail": "client.jd_parser",
         "documentation": {}
     },
