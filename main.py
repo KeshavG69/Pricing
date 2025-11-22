@@ -145,7 +145,8 @@ def build_project_data_from_dataframe(
         position = {
             'name': row.get('name', 'TBD'),
             'labor_category': row['labor_category'],
-            'ecraft_code': row.get('ecraft_code', 'TBD'),
+            'ecraft_code': row.get('BLS Labour Category Mapping', row.get('ecraft_code', 'TBD')),  # Use BLS labor category
+            'bls_code': row.get('BLS Code', ''),  # Add BLS Code
             'base_annual_wage': row.get('selected_wage', row.get('wage_50th', 100000)),  # Use selected wage or 50th percentile
             'hours_per_year': hours_per_year
         }

@@ -87,23 +87,27 @@ class ExcelGenerator:
         )
         self.row_trackers['prime_labor_end'] = current_row - 1
 
-        # Subcontractor section
-        sub_start_row = current_row
-        current_row = self._write_subcontractor_section(
-            self.ws,
-            project_data['subcontractors'],
-            current_row,
-            total_years
-        )
-        self.row_trackers['sub_labor_end'] = current_row - 1
+        # Subcontractor section (only if subcontractors exist)
+        if project_data['subcontractors'] and len(project_data['subcontractors']) > 0:
+            sub_start_row = current_row
+            current_row = self._write_subcontractor_section(
+                self.ws,
+                project_data['subcontractors'],
+                current_row,
+                total_years
+            )
+            self.row_trackers['sub_labor_end'] = current_row - 1
+        else:
+            self.row_trackers['sub_labor_end'] = current_row - 1
 
-        # Pass-through section
-        current_row = self._write_passthrough_section(
-            self.ws,
-            project_data['passthrough_rates'],
-            current_row,
-            total_years
-        )
+        # Pass-through section (only if subcontractors exist)
+        if project_data['subcontractors'] and len(project_data['subcontractors']) > 0:
+            current_row = self._write_passthrough_section(
+                self.ws,
+                project_data['passthrough_rates'],
+                current_row,
+                total_years
+            )
 
         # Fee section
         current_row = self._write_fee_section(
@@ -126,8 +130,9 @@ class ExcelGenerator:
         # Apply formatting
         self._apply_formatting(self.ws, total_years)
 
-        # Add Sheet 2: Subcontractor Fee/MH Rate Table (optional)
-        if project_data.get('include_rate_table', True):
+        # Add Sheet 2: Subcontractor Fee/MH Rate Table (only if subcontractors exist)
+        has_subcontractors = project_data.get('subcontractors') and len(project_data['subcontractors']) > 0
+        if has_subcontractors and project_data.get('include_rate_table', True):
             self._create_rate_table_sheet(project_data)
 
         return self.wb
@@ -184,8 +189,8 @@ class ExcelGenerator:
         # Row 7: Year column headers (DYNAMIC)
         ws.cell(7, 4, "Total for All Years")  # Column D
 
-        # Base Period
-        col_offset = 6  # Column F
+        # Base Period - starts at column 7 (G) to align with Rate column
+        col_offset = 7  # Column G
         ws.cell(7, col_offset, "Base Period")
 
         # Option Years
@@ -197,12 +202,13 @@ class ExcelGenerator:
         # Row 8: Sub-headers (also dynamic)
         ws.cell(8, 1, "Cost Elements")
         ws.cell(8, 2, "Company Labor Category")
-        ws.cell(8, 3, "eCRAFT Labor Category")
-        ws.cell(8, 4, "Hours")
-        ws.cell(8, 5, "Amount")
+        ws.cell(8, 3, "BLS Labor Category")
+        ws.cell(8, 4, "BLS Code")
+        ws.cell(8, 5, "Hours")
+        ws.cell(8, 6, "Amount")
 
         # For each year: Rate, Hours, Amount
-        col_offset = 6
+        col_offset = 7
         for year in range(1, total_years + 1):
             ws.cell(8, col_offset, "Rate")
             ws.cell(8, col_offset + 1, "Hours")
@@ -262,8 +268,11 @@ class ExcelGenerator:
             # Column B: Labor Category
             ws.cell(current_row, 2, position['labor_category'])
 
-            # Column C: eCRAFT Code
+            # Column C: BLS Labor Category
             ws.cell(current_row, 3, position['ecraft_code'])
+
+            # Column D: BLS Code
+            ws.cell(current_row, 4, position.get('bls_code', ''))
 
             # Build year column cell references for SUM formulas
             year_hour_cells = []
@@ -276,11 +285,11 @@ class ExcelGenerator:
                 year_hour_cells.append(f"{hour_col}{current_row}")
                 year_amount_cells.append(f"{amount_col}{current_row}")
 
-            # Column D: Total Hours (SUM formula)
-            ws.cell(current_row, 4, f"={'+'.join(year_hour_cells)}")
+            # Column E: Total Hours (SUM formula)
+            ws.cell(current_row, 5, f"={'+'.join(year_hour_cells)}")
 
-            # Column E: Total Amount (SUM formula)
-            ws.cell(current_row, 5, f"={'+'.join(year_amount_cells)}")
+            # Column F: Total Amount (SUM formula)
+            ws.cell(current_row, 6, f"={'+'.join(year_amount_cells)}")
 
             # Year-by-year data
             for year in range(1, total_years + 1):
@@ -301,17 +310,77 @@ class ExcelGenerator:
             current_row += 1
 
         # Total Direct Labor row
+        total_dl_row = current_row
         ws.cell(current_row, 1, "Total Direct Labor")
-        ws.cell(current_row, 5, f"=SUM(E{start_row}:E{current_row-1})")
+
+        # Add formulas for each year column
+        for year in range(1, total_years + 1):
+            col_offset = self._calculate_column_offset(year)
+            amount_col = get_column_letter(col_offset + 2)
+            ws.cell(current_row, col_offset + 2, f"=SUM({amount_col}{start_row}:{amount_col}{current_row-1})")
+
+        # Total column (column F)
+        ws.cell(current_row, 6, f"=SUM(F{start_row}:F{current_row-1})")
         current_row += 1
 
-        # Indirect costs summary (Overhead, Fringe, G&A) - placeholder
-        # These are typically calculated as summary rows
-        ws.cell(current_row, 1, "Overhead")
+        # Indirect costs breakdown with formulas
+        # Fringe row
+        fringe_row = current_row
+        ws.cell(current_row, 1, f"Fringe ({indirect_rates['fringe']*100:.2f}%)")
+        for year in range(1, total_years + 1):
+            col_offset = self._calculate_column_offset(year)
+            amount_col = get_column_letter(col_offset + 2)
+            ws.cell(current_row, col_offset + 2, f"={amount_col}{total_dl_row}*{indirect_rates['fringe']}")
+        ws.cell(current_row, 6, f"=F{total_dl_row}*{indirect_rates['fringe']}")
         current_row += 1
-        ws.cell(current_row, 1, "Fringe")
+
+        # Subtotal after Fringe
+        subtotal_1_row = current_row
+        ws.cell(current_row, 1, "Subtotal (DL + Fringe)")
+        for year in range(1, total_years + 1):
+            col_offset = self._calculate_column_offset(year)
+            amount_col = get_column_letter(col_offset + 2)
+            ws.cell(current_row, col_offset + 2, f"={amount_col}{total_dl_row}+{amount_col}{fringe_row}")
+        ws.cell(current_row, 6, f"=F{total_dl_row}+F{fringe_row}")
         current_row += 1
-        ws.cell(current_row, 1, "G&A")
+
+        # Overhead row
+        oh_row = current_row
+        ws.cell(current_row, 1, f"Overhead ({indirect_rates['oh']*100:.2f}%)")
+        for year in range(1, total_years + 1):
+            col_offset = self._calculate_column_offset(year)
+            amount_col = get_column_letter(col_offset + 2)
+            ws.cell(current_row, col_offset + 2, f"={amount_col}{subtotal_1_row}*{indirect_rates['oh']}")
+        ws.cell(current_row, 6, f"=F{subtotal_1_row}*{indirect_rates['oh']}")
+        current_row += 1
+
+        # Subtotal after OH
+        subtotal_2_row = current_row
+        ws.cell(current_row, 1, "Subtotal (DL + Fringe + OH)")
+        for year in range(1, total_years + 1):
+            col_offset = self._calculate_column_offset(year)
+            amount_col = get_column_letter(col_offset + 2)
+            ws.cell(current_row, col_offset + 2, f"={amount_col}{subtotal_1_row}+{amount_col}{oh_row}")
+        ws.cell(current_row, 6, f"=F{subtotal_1_row}+F{oh_row}")
+        current_row += 1
+
+        # G&A row
+        ga_row = current_row
+        ws.cell(current_row, 1, f"G&A ({indirect_rates['ga']*100:.2f}%)")
+        for year in range(1, total_years + 1):
+            col_offset = self._calculate_column_offset(year)
+            amount_col = get_column_letter(col_offset + 2)
+            ws.cell(current_row, col_offset + 2, f"={amount_col}{subtotal_2_row}*{indirect_rates['ga']}")
+        ws.cell(current_row, 6, f"=F{subtotal_2_row}*{indirect_rates['ga']}")
+        current_row += 1
+
+        # Total Prime Labor (DL + Fringe + OH + G&A)
+        ws.cell(current_row, 1, "Total Prime Labor Cost (FBLR)")
+        for year in range(1, total_years + 1):
+            col_offset = self._calculate_column_offset(year)
+            amount_col = get_column_letter(col_offset + 2)
+            ws.cell(current_row, col_offset + 2, f"={amount_col}{subtotal_2_row}+{amount_col}{ga_row}")
+        ws.cell(current_row, 6, f"=F{subtotal_2_row}+F{ga_row}")
         current_row += 2
 
         return current_row
@@ -390,9 +459,9 @@ class ExcelGenerator:
                 for year in range(1, total_years + 1):
                     col_offset = self._calculate_column_offset(year)
 
-                    # Get rate and hours from subcontractor data
-                    year_rate = labor_cat_data.get(f'year_{year}_rate', 0)
-                    year_hours = labor_cat_data.get(f'year_{year}_hours', 0)
+                    # Get rate and hours from subcontractor data (required, no defaults)
+                    year_rate = labor_cat_data[f'year_{year}_rate']
+                    year_hours = labor_cat_data[f'year_{year}_hours']
 
                     # Write rate
                     ws.cell(current_row, col_offset, year_rate)
@@ -456,7 +525,7 @@ class ExcelGenerator:
         # S&MH (Handling) row
         ws.cell(current_row, 1, "Handling")
 
-        smh_rate = passthrough_rates.get('smh', 0)
+        smh_rate = passthrough_rates['smh']  # Required, no default
         ws.cell(current_row, 6, smh_rate)  # Show rate in Base Period column
 
         # Calculate S&MH for each year
@@ -534,14 +603,14 @@ class ExcelGenerator:
         # Prime contractor fee for prime labor
         ws.cell(current_row, 1, "Prime Contractor Fee for Prime Contractor Labor")
 
-        prime_fee_rate = fee_rates.get('prime_labor', 0)
+        prime_fee_rate = fee_rates['prime_labor']  # Required, no default
         ws.cell(current_row, 6, prime_fee_rate)  # Show rate
         current_row += 1
 
         # Prime contractor fee for subcontractor labor
         ws.cell(current_row, 1, "Prime Contractor Fee for Subcontractor Labor *")
 
-        sub_fee_rate = fee_rates.get('sub_labor', 0)
+        sub_fee_rate = fee_rates['sub_labor']  # Required, no default
         ws.cell(current_row, 6, sub_fee_rate)  # Show rate
         current_row += 1
 
@@ -641,7 +710,7 @@ class ExcelGenerator:
         """
         Calculate Excel column number for a given year.
 
-        Base Period (Year 1) starts at column 6 (F).
+        Base Period (Year 1) starts at column 7 (G).
         Each year takes 3 columns (Rate, Hours, Amount).
 
         Args:
@@ -650,7 +719,7 @@ class ExcelGenerator:
         Returns:
             Column number (1-indexed)
         """
-        return 6 + ((year_num - 1) * 3)
+        return 7 + ((year_num - 1) * 3)
 
     def _apply_formatting(self, ws, total_years: int):
         """
@@ -671,13 +740,14 @@ class ExcelGenerator:
         # Column widths
         ws.column_dimensions['A'].width = 35  # Cost Elements
         ws.column_dimensions['B'].width = 30  # Labor Category
-        ws.column_dimensions['C'].width = 25  # eCRAFT
-        ws.column_dimensions['D'].width = 12  # Total Hours
-        ws.column_dimensions['E'].width = 15  # Total Amount
+        ws.column_dimensions['C'].width = 25  # BLS Labor Category
+        ws.column_dimensions['D'].width = 12  # BLS Code
+        ws.column_dimensions['E'].width = 15  # Total Hours
+        ws.column_dimensions['F'].width = 15  # Total Amount
 
-        # Year columns
+        # Year columns (start at G/column 7)
         for year in range(total_years):
-            col_offset = 6 + (year * 3)
+            col_offset = 7 + (year * 3)
             ws.column_dimensions[get_column_letter(col_offset)].width = 12      # Rate
             ws.column_dimensions[get_column_letter(col_offset + 1)].width = 10  # Hours
             ws.column_dimensions[get_column_letter(col_offset + 2)].width = 15  # Amount
@@ -685,7 +755,7 @@ class ExcelGenerator:
         # Header formatting (rows 1-10)
         header_font = Font(bold=True, size=11)
         for row in range(1, 11):
-            for col in range(1, 6 + (total_years * 3)):
+            for col in range(1, 7 + (total_years * 3)):
                 cell = ws.cell(row, col)
                 if cell.value:
                     cell.font = header_font
@@ -695,36 +765,41 @@ class ExcelGenerator:
 
         # Year headers (row 7) - filled and centered
         year_fill = PatternFill(start_color="D3D3D3", end_color="D3D3D3", fill_type="solid")
-        ws.cell(7, 4).fill = year_fill  # Total column
+        ws.cell(7, 4).fill = year_fill  # Total for All Years column
 
         for year in range(total_years):
-            col_offset = 6 + (year * 3)
+            col_offset = 7 + (year * 3)  # Start at column G
             cell = ws.cell(7, col_offset)
             cell.fill = year_fill
             cell.alignment = Alignment(horizontal='center', vertical='center')
 
         # Sub-headers (row 8) - centered
-        for col in range(1, 6 + (total_years * 3)):
+        for col in range(1, 7 + (total_years * 3)):
             cell = ws.cell(8, col)
             if cell.value:
                 cell.alignment = Alignment(horizontal='center', vertical='center')
                 cell.font = Font(bold=True, size=10)
 
-        # Number formatting - currency for amounts
+        # Number formatting
         for row in range(11, ws.max_row + 1):
-            # Total Amount column (E)
-            ws.cell(row, 5).number_format = '$#,##0.00'
+            # Total Hours column (E) - plain number, no currency
+            ws.cell(row, 5).number_format = '#,##0'
 
-            # Year amount columns
-            for year in range(total_years):
-                col_offset = 8 + (year * 3)  # Amount column
-                ws.cell(row, col_offset).number_format = '$#,##0.00'
+            # Total Amount column (F) - currency
+            ws.cell(row, 6).number_format = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)'
 
-        # Rate columns - currency
-        for row in range(11, ws.max_row + 1):
+            # Year columns
             for year in range(total_years):
-                col_offset = 6 + (year * 3)  # Rate column
-                ws.cell(row, col_offset).number_format = '$#,##0.00'
+                col_offset = 7 + (year * 3)  # Start at column G
+
+                # Rate column - currency
+                ws.cell(row, col_offset).number_format = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)'
+
+                # Hours column - plain number, no currency
+                ws.cell(row, col_offset + 1).number_format = '#,##0'
+
+                # Amount column - currency
+                ws.cell(row, col_offset + 2).number_format = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)'
 
         # Freeze panes - freeze top 10 rows and first 3 columns
         ws.freeze_panes = 'D11'
@@ -744,16 +819,24 @@ class ExcelGenerator:
         # Create new sheet
         ws2 = self.wb.create_sheet("Subcontractor Fee_MH Rate Table")
 
-        # Get rates from project data
-        fee_rate = project_data['fee_rates'].get('sub_labor', 0.10)
-        smh_rate = project_data['passthrough_rates'].get('smh', 0.0665)
+        # Get rates from project data (no fallbacks - must be provided)
+        fee_rate = project_data['fee_rates']['sub_labor']
+        smh_rate = project_data['passthrough_rates']['smh']
+        prime_name = project_data['prime_contractor_name']
+
+        # Get first subcontractor rate for example calculation
+        example_rate = 100  # Default if no subcontractors (but Sheet 2 shouldn't exist without subs)
+        if project_data.get('subcontractors') and len(project_data['subcontractors']) > 0:
+            first_sub = project_data['subcontractors'][0]
+            if first_sub.get('labor_categories') and len(first_sub['labor_categories']) > 0:
+                example_rate = first_sub['labor_categories'][0].get('year_1_rate', 100)
 
         # Example calculation section (Rows 2-4, Columns B-F)
-        ws2.cell(2, 3, "Nexagen FBLR")  # Header
+        ws2.cell(2, 3, f"{prime_name} FBLR")  # Dynamic prime contractor name
 
         # Row 3: FEE calculation example
         ws2.cell(3, 2, "FEE")
-        ws2.cell(3, 3, 140)  # Example base rate
+        ws2.cell(3, 3, example_rate)  # Use actual first subcontractor rate
         ws2.cell(3, 4, fee_rate)  # Fee rate
         ws2.cell(3, 5, "=C3*D3")  # Fee amount
         ws2.cell(3, 6, "=C3+E3")  # Total with fee
@@ -794,7 +877,7 @@ class ExcelGenerator:
 
         # Row 3: Column headers
         ws2.cell(3, 8, "Labor Category")
-        ws2.cell(3, 9, "Nexagen FBLR")
+        ws2.cell(3, 9, f"{prime_name} FBLR")  # Dynamic prime contractor name
         ws2.cell(3, 10, "FEE")
         ws2.cell(3, 11, "S&MH")
         ws2.cell(3, 12, "Target Rate")
@@ -809,18 +892,8 @@ class ExcelGenerator:
                 for cat in sub.get('labor_categories', []):
                     labor_categories.append({
                         'name': cat['labor_category'],
-                        'rate': cat.get('year_1_rate', 100)  # Use Year 1 rate
+                        'rate': cat['year_1_rate']  # Required field, no fallback
                     })
-
-        # If no subcontractors, add example categories
-        if not labor_categories:
-            labor_categories = [
-                {'name': 'Agile Scrum Master', 'rate': 140},
-                {'name': 'Budget Analyst', 'rate': 89},
-                {'name': 'Cloud SME (Azure/AWS)', 'rate': 193},
-                {'name': 'Systems Administrator', 'rate': 112},
-                {'name': 'Network Engineer', 'rate': 148},
-            ]
 
         # Write labor categories with formulas (starting row 4)
         current_row = 4

@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 from typing import List
 from pathlib import Path
 import tempfile
+import numpy as np
 import shutil
 from datetime import datetime
 
@@ -48,10 +49,28 @@ async def process_documents(files: List[UploadFile] = File(...)):
         final_df = await process_dataframe_with_agents(df, max_workers=10)
 
         # Step 3: Convert DataFrame to JSON
-        # Replace NaN values with None for proper JSON serialization
+        # Replace NaN/inf values with None for proper JSON serialization
+
+        # Replace inf and -inf with None
+        final_df = final_df.replace([np.inf, -np.inf], None)
+
+        # Replace NaN with None using where
         final_df = final_df.where(final_df.notna(), None)
 
+        # Convert to dict
         jobs_data = final_df.to_dict('records')
+
+        # Additional cleanup: ensure no NaN values in nested structures
+        def clean_value(val):
+            if isinstance(val, float):
+                if np.isnan(val) or np.isinf(val):
+                    return None
+            return val
+
+        jobs_data = [
+            {k: clean_value(v) for k, v in job.items()}
+            for job in jobs_data
+        ]
 
         # Build response with metadata
         response_data = {

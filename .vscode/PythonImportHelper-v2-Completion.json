@@ -890,6 +890,94 @@
         "documentation": {}
     },
     {
+        "label": "StaticFiles",
+        "importPath": "fastapi.staticfiles",
+        "description": "fastapi.staticfiles",
+        "isExtraImport": true,
+        "detail": "fastapi.staticfiles",
+        "documentation": {}
+    },
+    {
+        "label": "FileResponse",
+        "importPath": "fastapi.responses",
+        "description": "fastapi.responses",
+        "isExtraImport": true,
+        "detail": "fastapi.responses",
+        "documentation": {}
+    },
+    {
+        "label": "StreamingResponse",
+        "importPath": "fastapi.responses",
+        "description": "fastapi.responses",
+        "isExtraImport": true,
+        "detail": "fastapi.responses",
+        "documentation": {}
+    },
+    {
+        "label": "JSONResponse",
+        "importPath": "fastapi.responses",
+        "description": "fastapi.responses",
+        "isExtraImport": true,
+        "detail": "fastapi.responses",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
         "label": "pricing",
         "importPath": "routers",
         "description": "routers",
@@ -1204,15 +1292,6 @@
         "documentation": {}
     },
     {
-        "label": "openpyxl",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "openpyxl",
-        "description": "openpyxl",
-        "detail": "openpyxl",
-        "documentation": {}
-    },
-    {
         "label": "Workbook",
         "importPath": "openpyxl",
         "description": "openpyxl",
@@ -1266,62 +1345,6 @@
         "description": "openpyxl.utils",
         "isExtraImport": true,
         "detail": "openpyxl.utils",
-        "documentation": {}
-    },
-    {
-        "label": "get_column_letter",
-        "importPath": "openpyxl.utils",
-        "description": "openpyxl.utils",
-        "isExtraImport": true,
-        "detail": "openpyxl.utils",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
         "documentation": {}
     },
     {
@@ -1405,14 +1428,6 @@
         "description": "langchain_community.vectorstores",
         "isExtraImport": true,
         "detail": "langchain_community.vectorstores",
-        "documentation": {}
-    },
-    {
-        "label": "defaultdict",
-        "importPath": "collections",
-        "description": "collections",
-        "isExtraImport": true,
-        "detail": "collections",
         "documentation": {}
     },
     {
@@ -1544,22 +1559,6 @@
         "documentation": {}
     },
     {
-        "label": "StreamingResponse",
-        "importPath": "fastapi.responses",
-        "description": "fastapi.responses",
-        "isExtraImport": true,
-        "detail": "fastapi.responses",
-        "documentation": {}
-    },
-    {
-        "label": "JSONResponse",
-        "importPath": "fastapi.responses",
-        "description": "fastapi.responses",
-        "isExtraImport": true,
-        "detail": "fastapi.responses",
-        "documentation": {}
-    },
-    {
         "label": "tempfile",
         "kind": 6,
         "isExtraImport": true,
@@ -1650,14 +1649,6 @@
         "documentation": {}
     },
     {
-        "label": "ExcelGenerator",
-        "importPath": "client.excel_generator",
-        "description": "client.excel_generator",
-        "isExtraImport": true,
-        "detail": "client.excel_generator",
-        "documentation": {}
-    },
-    {
         "label": "build_project_data_from_dataframe",
         "importPath": "main",
         "description": "main",
@@ -1666,11 +1657,12 @@
         "documentation": {}
     },
     {
-        "label": "run_full_pipeline",
-        "importPath": "main",
-        "description": "main",
+        "label": "numpy",
+        "kind": 6,
         "isExtraImport": true,
-        "detail": "main",
+        "importPath": "numpy",
+        "description": "numpy",
+        "detail": "numpy",
         "documentation": {}
     },
     {
@@ -1739,14 +1731,6 @@
         "description": "agent.agent",
         "isExtraImport": true,
         "detail": "agent.agent",
-        "documentation": {}
-    },
-    {
-        "label": "AsyncClient",
-        "importPath": "httpx",
-        "description": "httpx",
-        "isExtraImport": true,
-        "detail": "httpx",
         "documentation": {}
     },
     {
@@ -2051,7 +2035,16 @@
         "kind": 5,
         "importPath": "app.server",
         "description": "app.server",
-        "peekOfCode": "app = FastAPI(\n    title=\"Government Contractor Pricing API\",\n    description=\"API for pricing government contractor labor categories using BLS OEWS wage data\",\n    version=\"1.0.0\"\n)\n# Configure CORS\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=[\"*\"],  # Configure appropriately for production\n    allow_credentials=True,",
+        "peekOfCode": "app = FastAPI(\n    title=\"Government Contractor Pricing API\",\n    description=\"API for pricing government contractor labor categories using BLS OEWS wage data\",\n    version=\"1.0.0\"\n)\n# Mount static files\nstatic_path = Path(__file__).parent.parent / \"static\"\nif static_path.exists():\n    app.mount(\"/static\", StaticFiles(directory=str(static_path)), name=\"static\")\n# Configure CORS",
+        "detail": "app.server",
+        "documentation": {}
+    },
+    {
+        "label": "static_path",
+        "kind": 5,
+        "importPath": "app.server",
+        "description": "app.server",
+        "peekOfCode": "static_path = Path(__file__).parent.parent / \"static\"\nif static_path.exists():\n    app.mount(\"/static\", StaticFiles(directory=str(static_path)), name=\"static\")\n# Configure CORS\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=[\"*\"],  # Configure appropriately for production\n    allow_credentials=True,\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],",
         "detail": "app.server",
         "documentation": {}
     },
@@ -2794,273 +2787,12 @@
         "documentation": {}
     },
     {
-        "label": "file_path",
-        "kind": 5,
-        "importPath": "analyze_excel",
-        "description": "analyze_excel",
-        "peekOfCode": "file_path = '/Users/keshav/Developer/Others/Pricing/Intprepix Volume III.xlsx'\nprint('='*120)\nprint('COMPREHENSIVE ANALYSIS OF: Intprepix Volume III.xlsx')\nprint('='*120)\n# Read both sheets\ndf1 = pd.read_excel(file_path, sheet_name='Cost Proposal Spreadsheet')\ndf2 = pd.read_excel(file_path, sheet_name='Subcontractor Fee_MH Rate Table')\nprint(f'\\nSuccessfully loaded both sheets')\nprint(f'  Sheet 1: {len(df1)} rows x {len(df1.columns)} columns')\nprint(f'  Sheet 2: {len(df2)} rows x {len(df2.columns)} columns')",
-        "detail": "analyze_excel",
-        "documentation": {}
-    },
-    {
-        "label": "df1",
-        "kind": 5,
-        "importPath": "analyze_excel",
-        "description": "analyze_excel",
-        "peekOfCode": "df1 = pd.read_excel(file_path, sheet_name='Cost Proposal Spreadsheet')\ndf2 = pd.read_excel(file_path, sheet_name='Subcontractor Fee_MH Rate Table')\nprint(f'\\nSuccessfully loaded both sheets')\nprint(f'  Sheet 1: {len(df1)} rows x {len(df1.columns)} columns')\nprint(f'  Sheet 2: {len(df2)} rows x {len(df2.columns)} columns')\n# ====================================================================================\n# SHEET 1: DETAILED ANALYSIS\n# ====================================================================================\nprint('\\n\\n' + '='*120)\nprint('SHEET 1: FIRST COLUMN - ALL VALUES (Document Structure)')",
-        "detail": "analyze_excel",
-        "documentation": {}
-    },
-    {
-        "label": "df2",
-        "kind": 5,
-        "importPath": "analyze_excel",
-        "description": "analyze_excel",
-        "peekOfCode": "df2 = pd.read_excel(file_path, sheet_name='Subcontractor Fee_MH Rate Table')\nprint(f'\\nSuccessfully loaded both sheets')\nprint(f'  Sheet 1: {len(df1)} rows x {len(df1.columns)} columns')\nprint(f'  Sheet 2: {len(df2)} rows x {len(df2.columns)} columns')\n# ====================================================================================\n# SHEET 1: DETAILED ANALYSIS\n# ====================================================================================\nprint('\\n\\n' + '='*120)\nprint('SHEET 1: FIRST COLUMN - ALL VALUES (Document Structure)')\nprint('='*120)",
-        "detail": "analyze_excel",
-        "documentation": {}
-    },
-    {
-        "label": "file_path",
-        "kind": 5,
-        "importPath": "analyze_excel_detailed",
-        "description": "analyze_excel_detailed",
-        "peekOfCode": "file_path = '/Users/keshav/Developer/Others/Pricing/Intprepix Volume III.xlsx'\nprint('='*120)\nprint('DETAILED ANALYSIS: Formulas, Indirect Rates, and Subcontractor Structure')\nprint('='*120)\n# Load the workbook with formulas\nwb = openpyxl.load_workbook(file_path)\nsheet1 = wb['Cost Proposal Spreadsheet']\n# Read with pandas for easier data analysis\ndf1 = pd.read_excel(file_path, sheet_name='Cost Proposal Spreadsheet', header=None)\ndf2 = pd.read_excel(file_path, sheet_name='Subcontractor Fee_MH Rate Table')",
-        "detail": "analyze_excel_detailed",
-        "documentation": {}
-    },
-    {
-        "label": "wb",
-        "kind": 5,
-        "importPath": "analyze_excel_detailed",
-        "description": "analyze_excel_detailed",
-        "peekOfCode": "wb = openpyxl.load_workbook(file_path)\nsheet1 = wb['Cost Proposal Spreadsheet']\n# Read with pandas for easier data analysis\ndf1 = pd.read_excel(file_path, sheet_name='Cost Proposal Spreadsheet', header=None)\ndf2 = pd.read_excel(file_path, sheet_name='Subcontractor Fee_MH Rate Table')\nprint('\\n' + '='*120)\nprint('KEY SECTIONS - WHERE THINGS ARE')\nprint('='*120)\n# Find key sections\nsections = {",
-        "detail": "analyze_excel_detailed",
-        "documentation": {}
-    },
-    {
-        "label": "sheet1",
-        "kind": 5,
-        "importPath": "analyze_excel_detailed",
-        "description": "analyze_excel_detailed",
-        "peekOfCode": "sheet1 = wb['Cost Proposal Spreadsheet']\n# Read with pandas for easier data analysis\ndf1 = pd.read_excel(file_path, sheet_name='Cost Proposal Spreadsheet', header=None)\ndf2 = pd.read_excel(file_path, sheet_name='Subcontractor Fee_MH Rate Table')\nprint('\\n' + '='*120)\nprint('KEY SECTIONS - WHERE THINGS ARE')\nprint('='*120)\n# Find key sections\nsections = {\n    'Prime Direct Labor Start': 9,",
-        "detail": "analyze_excel_detailed",
-        "documentation": {}
-    },
-    {
-        "label": "df1",
-        "kind": 5,
-        "importPath": "analyze_excel_detailed",
-        "description": "analyze_excel_detailed",
-        "peekOfCode": "df1 = pd.read_excel(file_path, sheet_name='Cost Proposal Spreadsheet', header=None)\ndf2 = pd.read_excel(file_path, sheet_name='Subcontractor Fee_MH Rate Table')\nprint('\\n' + '='*120)\nprint('KEY SECTIONS - WHERE THINGS ARE')\nprint('='*120)\n# Find key sections\nsections = {\n    'Prime Direct Labor Start': 9,\n    'Prime Direct Labor End': 93,\n    'Overhead Row': 95,",
-        "detail": "analyze_excel_detailed",
-        "documentation": {}
-    },
-    {
-        "label": "df2",
-        "kind": 5,
-        "importPath": "analyze_excel_detailed",
-        "description": "analyze_excel_detailed",
-        "peekOfCode": "df2 = pd.read_excel(file_path, sheet_name='Subcontractor Fee_MH Rate Table')\nprint('\\n' + '='*120)\nprint('KEY SECTIONS - WHERE THINGS ARE')\nprint('='*120)\n# Find key sections\nsections = {\n    'Prime Direct Labor Start': 9,\n    'Prime Direct Labor End': 93,\n    'Overhead Row': 95,\n    'Fringe Row': 96,",
-        "detail": "analyze_excel_detailed",
-        "documentation": {}
-    },
-    {
-        "label": "sections",
-        "kind": 5,
-        "importPath": "analyze_excel_detailed",
-        "description": "analyze_excel_detailed",
-        "peekOfCode": "sections = {\n    'Prime Direct Labor Start': 9,\n    'Prime Direct Labor End': 93,\n    'Overhead Row': 95,\n    'Fringe Row': 96,\n    'G&A Row': 97,\n    'Prime Fee Row': 156,\n    'Subcontractor Section Start': 105,\n    'Subcontractor Section End': 142,\n    'Total Subcontractor Cost': 145,",
-        "detail": "analyze_excel_detailed",
-        "documentation": {}
-    },
-    {
-        "label": "escalation_row",
-        "kind": 5,
-        "importPath": "analyze_excel_detailed",
-        "description": "analyze_excel_detailed",
-        "peekOfCode": "escalation_row = df1.iloc[0]\n# The escalation values are in row 0, but need to check which columns actually have the numbers\nprint(f\"Row 0 values: {list(escalation_row)}\")\n# Based on earlier analysis, escalation rates were: 0.0272, 0.0299, 0.0263, 0.034\nesc1 = escalation_row[8] if isinstance(escalation_row[8], (int, float)) else 0.0272\nesc2 = escalation_row[11] if isinstance(escalation_row[11], (int, float)) else 0.0299\nesc3 = escalation_row[14] if isinstance(escalation_row[14], (int, float)) else 0.0263\nesc4 = escalation_row[17] if isinstance(escalation_row[17], (int, float)) else 0.0340\nprint(f\"Base → Option Year 1: {esc1:.2%}\")\nprint(f\"Option Year 1 → Option Year 2: {esc2:.2%}\")",
-        "detail": "analyze_excel_detailed",
-        "documentation": {}
-    },
-    {
-        "label": "esc1",
-        "kind": 5,
-        "importPath": "analyze_excel_detailed",
-        "description": "analyze_excel_detailed",
-        "peekOfCode": "esc1 = escalation_row[8] if isinstance(escalation_row[8], (int, float)) else 0.0272\nesc2 = escalation_row[11] if isinstance(escalation_row[11], (int, float)) else 0.0299\nesc3 = escalation_row[14] if isinstance(escalation_row[14], (int, float)) else 0.0263\nesc4 = escalation_row[17] if isinstance(escalation_row[17], (int, float)) else 0.0340\nprint(f\"Base → Option Year 1: {esc1:.2%}\")\nprint(f\"Option Year 1 → Option Year 2: {esc2:.2%}\")\nprint(f\"Option Year 2 → Option Year 3: {esc3:.2%}\")\nprint(f\"Option Year 3 → Option Year 4: {esc4:.2%}\")\nprint('\\n' + '='*120)\nprint('COLUMN STRUCTURE FOR EACH YEAR')",
-        "detail": "analyze_excel_detailed",
-        "documentation": {}
-    },
-    {
-        "label": "esc2",
-        "kind": 5,
-        "importPath": "analyze_excel_detailed",
-        "description": "analyze_excel_detailed",
-        "peekOfCode": "esc2 = escalation_row[11] if isinstance(escalation_row[11], (int, float)) else 0.0299\nesc3 = escalation_row[14] if isinstance(escalation_row[14], (int, float)) else 0.0263\nesc4 = escalation_row[17] if isinstance(escalation_row[17], (int, float)) else 0.0340\nprint(f\"Base → Option Year 1: {esc1:.2%}\")\nprint(f\"Option Year 1 → Option Year 2: {esc2:.2%}\")\nprint(f\"Option Year 2 → Option Year 3: {esc3:.2%}\")\nprint(f\"Option Year 3 → Option Year 4: {esc4:.2%}\")\nprint('\\n' + '='*120)\nprint('COLUMN STRUCTURE FOR EACH YEAR')\nprint('='*120)",
-        "detail": "analyze_excel_detailed",
-        "documentation": {}
-    },
-    {
-        "label": "esc3",
-        "kind": 5,
-        "importPath": "analyze_excel_detailed",
-        "description": "analyze_excel_detailed",
-        "peekOfCode": "esc3 = escalation_row[14] if isinstance(escalation_row[14], (int, float)) else 0.0263\nesc4 = escalation_row[17] if isinstance(escalation_row[17], (int, float)) else 0.0340\nprint(f\"Base → Option Year 1: {esc1:.2%}\")\nprint(f\"Option Year 1 → Option Year 2: {esc2:.2%}\")\nprint(f\"Option Year 2 → Option Year 3: {esc3:.2%}\")\nprint(f\"Option Year 3 → Option Year 4: {esc4:.2%}\")\nprint('\\n' + '='*120)\nprint('COLUMN STRUCTURE FOR EACH YEAR')\nprint('='*120)\nyear_columns = {",
-        "detail": "analyze_excel_detailed",
-        "documentation": {}
-    },
-    {
-        "label": "esc4",
-        "kind": 5,
-        "importPath": "analyze_excel_detailed",
-        "description": "analyze_excel_detailed",
-        "peekOfCode": "esc4 = escalation_row[17] if isinstance(escalation_row[17], (int, float)) else 0.0340\nprint(f\"Base → Option Year 1: {esc1:.2%}\")\nprint(f\"Option Year 1 → Option Year 2: {esc2:.2%}\")\nprint(f\"Option Year 2 → Option Year 3: {esc3:.2%}\")\nprint(f\"Option Year 3 → Option Year 4: {esc4:.2%}\")\nprint('\\n' + '='*120)\nprint('COLUMN STRUCTURE FOR EACH YEAR')\nprint('='*120)\nyear_columns = {\n    'Total for All Years': {'Hours': 3, 'Amount': 4, 'Rate': 5},",
-        "detail": "analyze_excel_detailed",
-        "documentation": {}
-    },
-    {
-        "label": "year_columns",
-        "kind": 5,
-        "importPath": "analyze_excel_detailed",
-        "description": "analyze_excel_detailed",
-        "peekOfCode": "year_columns = {\n    'Total for All Years': {'Hours': 3, 'Amount': 4, 'Rate': 5},\n    'Base Period': {'Hours': 6, 'Amount': 7, 'Rate': None},  # Rate is calculated\n    'Option Year 1': {'Hours': 9, 'Amount': 10, 'Rate': 8},  # Column 8 has escalation label\n    'Option Year 2': {'Hours': 12, 'Amount': 13, 'Rate': 11},\n    'Option Year 3': {'Hours': 15, 'Amount': 16, 'Rate': 14},\n    'Option Year 4': {'Hours': 18, 'Amount': 19, 'Rate': 17},\n}\nfor year, cols in year_columns.items():\n    print(f\"\\n{year}:\")",
-        "detail": "analyze_excel_detailed",
-        "documentation": {}
-    },
-    {
-        "label": "row_9",
-        "kind": 5,
-        "importPath": "analyze_excel_detailed",
-        "description": "analyze_excel_detailed",
-        "peekOfCode": "row_9 = df1.iloc[9]\nprint(f\"Position: {row_9[0]}\")\nprint(f\"Company Title: {row_9[1]}\")\nprint(f\"eCRAFT Title: {row_9[2]}\")\nprint(f\"\\nTotal Hours: {row_9[3]:,.0f}\")\nprint(f\"Total Amount: ${row_9[4]:,.2f}\")\nprint(f\"Avg Rate: ${row_9[5]:.2f}/hr\")\nprint(f\"\\nYear-by-Year Breakdown:\")\nprint(f\"  Base Period:     {row_9[6]:6.0f} hrs × ${row_9[8]:.2f}/hr = ${row_9[7]:,.2f}\")\nprint(f\"  Option Year 1:   {row_9[9]:6.0f} hrs × ${row_9[11]:.2f}/hr = ${row_9[10]:,.2f}\")",
-        "detail": "analyze_excel_detailed",
-        "documentation": {}
-    },
-    {
-        "label": "base_rate",
-        "kind": 5,
-        "importPath": "analyze_excel_detailed",
-        "description": "analyze_excel_detailed",
-        "peekOfCode": "base_rate = row_9[8]\nprint(f\"  Base:            ${base_rate:.2f}\")\nprint(f\"  +2.72% Year 1:   ${row_9[11]:.2f} (calculated: ${base_rate * 1.0272:.2f})\")\nprint(f\"  +2.99% Year 2:   ${row_9[14]:.2f} (calculated: ${row_9[11] * 1.0299:.2f})\")\nprint(f\"  +2.63% Year 3:   ${row_9[17]:.2f} (calculated: ${row_9[14] * 1.0263:.2f})\")\nprint(f\"  +3.40% Year 4:   ${row_9[19]:.2f} (calculated: ${row_9[17] * 1.0340:.2f})\")\nprint('\\n' + '='*120)\nprint('INDIRECT COST ROWS')\nprint('='*120)\nindirect_rows = [95, 96, 97, 98, 99]",
-        "detail": "analyze_excel_detailed",
-        "documentation": {}
-    },
-    {
-        "label": "indirect_rows",
-        "kind": 5,
-        "importPath": "analyze_excel_detailed",
-        "description": "analyze_excel_detailed",
-        "peekOfCode": "indirect_rows = [95, 96, 97, 98, 99]\nfor row_idx in indirect_rows:\n    row = df1.iloc[row_idx]\n    print(f\"\\nRow {row_idx}: {row[0]}\")\n    print(f\"  Total: ${row[4]:,.2f}\" if pd.notna(row[4]) else \"  Total: N/A\")\n    print(f\"  Base Period: ${row[7]:,.2f}\" if pd.notna(row[7]) else \"  Base: N/A\")\n    print(f\"  Option Year 1: ${row[10]:,.2f}\" if pd.notna(row[10]) else \"  Opt 1: N/A\")\nprint('\\n' + '='*120)\nprint('SUBCONTRACTOR SECTION STRUCTURE')\nprint('='*120)",
-        "detail": "analyze_excel_detailed",
-        "documentation": {}
-    },
-    {
-        "label": "subcontractor_rows",
-        "kind": 5,
-        "importPath": "analyze_excel_detailed",
-        "description": "analyze_excel_detailed",
-        "peekOfCode": "subcontractor_rows = [105, 106, 107, 120, 121, 124, 125, 131, 132]\nfor row_idx in subcontractor_rows:\n    if row_idx < len(df1):\n        row = df1.iloc[row_idx]\n        print(f\"\\nRow {row_idx}: {row[0]}\")\n        if pd.notna(row[3]):  # Has hours\n            print(f\"  Total Hours: {row[3]:,.0f}\")\n            if pd.notna(row[4]):\n                print(f\"  Total Amount: ${row[4]:,.2f}\")\n            if pd.notna(row[5]):",
-        "detail": "analyze_excel_detailed",
-        "documentation": {}
-    },
-    {
-        "label": "formula_cells",
-        "kind": 5,
-        "importPath": "analyze_excel_detailed",
-        "description": "analyze_excel_detailed",
-        "peekOfCode": "formula_cells = [\n    ('J10', 'Base Period Amount (Key Individual 1)'),\n    ('K10', 'Base Period Rate (Key Individual 1)'),\n    ('M10', 'Option Year 1 Amount'),\n    ('N10', 'Option Year 1 Rate'),\n]\nfor cell_ref, description in formula_cells:\n    cell = sheet1[cell_ref]\n    print(f\"\\n{cell_ref} ({description}):\")\n    print(f\"  Value: {cell.value}\")",
-        "detail": "analyze_excel_detailed",
-        "documentation": {}
-    },
-    {
-        "label": "row_18",
-        "kind": 5,
-        "importPath": "analyze_excel_detailed",
-        "description": "analyze_excel_detailed",
-        "peekOfCode": "row_18 = df1.iloc[18]\nprint(f\"\\nRow 18: {row_18[0]}\")\nprint(f\"  Base: {row_18[6]:.0f} hrs, Opt1: {row_18[9]:.0f} hrs, Opt2: {row_18[12]:.0f} hrs, Opt3: {row_18[15]:.0f} hrs, Opt4: {row_18[18]:.0f} hrs\")\n# Row 28 - Systems Analyst with 0 hours in first 2 years\nrow_28 = df1.iloc[28]\nprint(f\"\\nRow 28: {row_28[0]}\")\nprint(f\"  Base: {row_28[6]:.0f} hrs, Opt1: {row_28[9]:.0f} hrs, Opt2: {row_28[12]:.0f} hrs, Opt3: {row_28[15]:.0f} hrs, Opt4: {row_28[18]:.0f} hrs\")\nprint('\\n' + '='*120)\nprint('KEY INSIGHTS')\nprint('='*120)",
-        "detail": "analyze_excel_detailed",
-        "documentation": {}
-    },
-    {
-        "label": "row_28",
-        "kind": 5,
-        "importPath": "analyze_excel_detailed",
-        "description": "analyze_excel_detailed",
-        "peekOfCode": "row_28 = df1.iloc[28]\nprint(f\"\\nRow 28: {row_28[0]}\")\nprint(f\"  Base: {row_28[6]:.0f} hrs, Opt1: {row_28[9]:.0f} hrs, Opt2: {row_28[12]:.0f} hrs, Opt3: {row_28[15]:.0f} hrs, Opt4: {row_28[18]:.0f} hrs\")\nprint('\\n' + '='*120)\nprint('KEY INSIGHTS')\nprint('='*120)\ninsights = \"\"\"\n1. MULTI-YEAR STRUCTURE:\n   - Base Period + 4 Option Years = 5 years total\n   - Each year has: Hours, Amount, Rate columns",
-        "detail": "analyze_excel_detailed",
-        "documentation": {}
-    },
-    {
-        "label": "insights",
-        "kind": 5,
-        "importPath": "analyze_excel_detailed",
-        "description": "analyze_excel_detailed",
-        "peekOfCode": "insights = \"\"\"\n1. MULTI-YEAR STRUCTURE:\n   - Base Period + 4 Option Years = 5 years total\n   - Each year has: Hours, Amount, Rate columns\n   - Hours can be different per year (some positions start later)\n2. ESCALATION PATTERN:\n   - Rates escalate EVERY year\n   - Different escalation % for each year transition (2.72%, 2.99%, 2.63%, 3.40%)\n   - Escalation is COMPOUND: Year 2 = Year 1 × (1 + escalation%)\n3. RATE CALCULATION:",
-        "detail": "analyze_excel_detailed",
-        "documentation": {}
-    },
-    {
-        "label": "analyze_cell",
-        "kind": 2,
-        "importPath": "analyze_excel_formulas",
-        "description": "analyze_excel_formulas",
-        "peekOfCode": "def analyze_cell(cell):\n    \"\"\"Extract information about a cell including its formula and value.\"\"\"\n    info = {\n        'coordinate': cell.coordinate,\n        'value': cell.value,\n        'data_type': cell.data_type,\n        'has_formula': False,\n        'formula': None,\n        'number_format': cell.number_format\n    }",
-        "detail": "analyze_excel_formulas",
-        "documentation": {}
-    },
-    {
-        "label": "find_wrap_rate_patterns",
-        "kind": 2,
-        "importPath": "analyze_excel_formulas",
-        "description": "analyze_excel_formulas",
-        "peekOfCode": "def find_wrap_rate_patterns(sheet):\n    \"\"\"Find patterns in wrap rate calculations.\"\"\"\n    patterns = {\n        'direct_labor': [],\n        'fringe': [],\n        'overhead': [],\n        'g_and_a': [],\n        'odc': [],\n        'fee': [],\n        'escalation': []",
-        "detail": "analyze_excel_formulas",
-        "documentation": {}
-    },
-    {
-        "label": "analyze_sheet",
-        "kind": 2,
-        "importPath": "analyze_excel_formulas",
-        "description": "analyze_excel_formulas",
-        "peekOfCode": "def analyze_sheet(sheet, sheet_name):\n    \"\"\"Comprehensive analysis of a sheet.\"\"\"\n    print(f\"\\n{'='*80}\")\n    print(f\"ANALYZING SHEET: {sheet_name}\")\n    print(f\"{'='*80}\\n\")\n    # Get dimensions\n    print(f\"Dimensions: {sheet.max_row} rows x {sheet.max_column} columns\\n\")\n    # Collect all formulas\n    formula_cells = []\n    value_cells = []",
-        "detail": "analyze_excel_formulas",
-        "documentation": {}
-    },
-    {
-        "label": "trace_calculation_sequence",
-        "kind": 2,
-        "importPath": "analyze_excel_formulas",
-        "description": "analyze_excel_formulas",
-        "peekOfCode": "def trace_calculation_sequence(sheet):\n    \"\"\"Trace the sequence of wrap rate calculations.\"\"\"\n    print(\"\\n\\n\" + \"=\"*80)\n    print(\"TRACING WRAP RATE CALCULATION SEQUENCE\")\n    print(\"=\"*80)\n    # Look for a complete calculation chain in one row\n    print(\"\\nLooking for calculation chains in rows...\")\n    for row_idx in range(2, min(20, sheet.max_row + 1)):\n        row = sheet[row_idx]\n        row_formulas = []",
-        "detail": "analyze_excel_formulas",
-        "documentation": {}
-    },
-    {
-        "label": "main",
-        "kind": 2,
-        "importPath": "analyze_excel_formulas",
-        "description": "analyze_excel_formulas",
-        "peekOfCode": "def main():\n    file_path = '/Users/keshav/Developer/Others/Pricing/Intprepix Volume III.xlsx'\n    print(\"=\"*80)\n    print(\"EXCEL FORMULA ANALYZER\")\n    print(\"=\"*80)\n    print(f\"\\nFile: {file_path}\\n\")\n    try:\n        # Load workbook with data_only=False to get formulas\n        wb = openpyxl.load_workbook(file_path, data_only=False)\n        print(f\"Sheet names: {wb.sheetnames}\\n\")",
-        "detail": "analyze_excel_formulas",
-        "documentation": {}
-    },
-    {
         "label": "build_project_data_from_dataframe",
         "kind": 2,
         "importPath": "main",
         "description": "main",
         "peekOfCode": "def build_project_data_from_dataframe(\n    df: pd.DataFrame,\n    project_config: Dict[str, Any]\n) -> Dict[str, Any]:\n    \"\"\"\n    Build project data structure from DataFrame for Excel generation.\n    Args:\n        df: DataFrame with positions and wage data\n        project_config: Configuration with solicitation info, rates, etc.\n    Returns:",
         "detail": "main",
-        "documentation": {}
-    },
-    {
-        "label": "test_excel_generation",
-        "kind": 2,
-        "importPath": "test_excel_only",
-        "description": "test_excel_only",
-        "peekOfCode": "def test_excel_generation():\n    \"\"\"Test Excel generation with sample data.\"\"\"\n    print(\"\\n\" + \"=\"*70)\n    print(\"  TESTING EXCEL GENERATOR\")\n    print(\"=\"*70 + \"\\n\")\n    # Sample project data\n    project_data = {\n        'solicitation_number': 'N0017825R3013',\n        'prime_contractor_name': 'Test Company Inc.',\n        'subcontractor_names': ['Astrion Group LLC', 'Deloitte Consulting LLP'],",
-        "detail": "test_excel_only",
         "documentation": {}
     }
 ]
