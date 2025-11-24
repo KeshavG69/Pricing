@@ -440,6 +440,22 @@
         "documentation": {}
     },
     {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Tuple",
         "importPath": "typing",
         "description": "typing",
@@ -875,6 +891,14 @@
     },
     {
         "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "BackgroundTasks",
         "importPath": "fastapi",
         "description": "fastapi",
         "isExtraImport": true,
@@ -1666,6 +1690,15 @@
         "documentation": {}
     },
     {
+        "label": "asyncio",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "asyncio",
+        "description": "asyncio",
+        "detail": "asyncio",
+        "documentation": {}
+    },
+    {
         "label": "time",
         "kind": 6,
         "isExtraImport": true,
@@ -1705,15 +1738,6 @@
         "description": "client.oews_mongodb",
         "isExtraImport": true,
         "detail": "client.oews_mongodb",
-        "documentation": {}
-    },
-    {
-        "label": "asyncio",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "asyncio",
-        "description": "asyncio",
-        "detail": "asyncio",
         "documentation": {}
     },
     {
@@ -2611,7 +2635,7 @@
         "kind": 5,
         "importPath": "routers.pricing",
         "description": "routers.pricing",
-        "peekOfCode": "router = APIRouter()\n@router.post(\"/process\")\nasync def process_documents(files: List[UploadFile] = File(...)):\n    \"\"\"\n    Upload documents, process them, and return pricing data as JSON.\n    Accepts PDF, DOCX, Excel files containing job descriptions.\n    Returns JSON with all job data and wage information.\n    \"\"\"\n    temp_dir = None\n    try:",
+        "peekOfCode": "router = APIRouter()\n# In-memory store for job status\n# Structure: {job_id: {\"status\": \"processing\"|\"completed\"|\"failed\", \"progress\": str, \"result\": dict, \"error\": str}}\njobs_store: Dict[str, Dict[str, Any]] = {}\nasync def process_documents_task(\n    job_id: str, \n    file_paths: List[str], \n    file_names: List[str], \n    temp_dir: Path\n):",
         "detail": "routers.pricing",
         "documentation": {}
     },
