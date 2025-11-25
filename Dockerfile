@@ -1,32 +1,6 @@
 # syntax=docker/dockerfile:1
 
-# Build stage - Install dependencies
-FROM python:3.13-slim-bookworm AS builder
-
-# Install uv
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
-
-# Set working directory
-WORKDIR /app
-
-# Enable bytecode compilation for better performance
-ENV UV_COMPILE_BYTECODE=1
-
-# Copy mode instead of link mode for Docker layers
-ENV UV_LINK_MODE=copy
-
-# Copy dependency files
-COPY pyproject.toml ./
-
-# Install dependencies using uv
-# --no-dev excludes development dependencies
-RUN uv sync --no-dev
-
-# Copy application code
-COPY . .
-
-# Runtime stage - Minimal image
-FROM python:3.13-slim-bookworm AS runtime
+FROM python:3.13-slim
 
 # Install system dependencies required by Python packages
 # unstructured requires: libmagic1, poppler-utils, tesseract-ocr, libreoffice, pandoc
@@ -41,20 +15,31 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
 # Create non-root user for security
 RUN useradd -m -u 1000 appuser
 
 # Set working directory
 WORKDIR /app
 
-# Copy application code and virtual environment from builder
-COPY --from=builder --chown=appuser:appuser /app /app
+# Enable bytecode compilation for better performance
+ENV UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
+
+# Copy dependency files
+COPY pyproject.toml ./
+
+# Install dependencies using uv
+# --no-dev excludes development dependencies
+RUN uv sync --no-dev
+
+# Copy application code
+COPY --chown=appuser:appuser . .
 
 # Create empty data directory structure (will be populated at runtime)
-RUN mkdir -p data/cache && chown -R appuser:appuser data
-
-# Switch to non-root user
-USER appuser
+RUN mkdir -p data/cache
 
 # Set environment variables
 ENV PATH="/app/.venv/bin:$PATH" \
