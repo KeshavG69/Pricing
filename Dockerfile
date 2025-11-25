@@ -53,6 +53,13 @@ COPY --from=builder --chown=appuser:appuser /app /app
 # Create empty data directory structure (will be populated at runtime)
 RUN mkdir -p data/cache && chown -R appuser:appuser data
 
+# Switch to non-root user
+USER appuser
+
+# Set environment variables
+ENV PATH="/app/.venv/bin:$PATH" \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
 
 # Expose port
 EXPOSE 8000
