@@ -21,7 +21,7 @@ COPY pyproject.toml uv.lock ./
 # Install dependencies using uv with cache mount
 # --frozen ensures we use the exact versions from uv.lock
 # --no-dev excludes development dependencies
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,id=uv-cache,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
 # Copy application code
