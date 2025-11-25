@@ -1758,6 +1758,14 @@
         "documentation": {}
     },
     {
+        "label": "create_pricing_agent",
+        "importPath": "agent.agent",
+        "description": "agent.agent",
+        "isExtraImport": true,
+        "detail": "agent.agent",
+        "documentation": {}
+    },
+    {
         "label": "bin_dir",
         "kind": 5,
         "importPath": ".venv.bin.activate_this",

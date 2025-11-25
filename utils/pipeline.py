@@ -24,7 +24,7 @@ async def process_single_row(row_dict: Dict[str, Any], row_index: int) -> Dict[s
     """
     labor_category = row_dict.get("labor_category", "")
     description = row_dict.get("description")
-    location = row_dict.get("location")
+    location = row_dict.get("location") or "National"  # Default to National if None
 
     print(f"  [{row_index}] Processing: {labor_category} in {location}")
 
