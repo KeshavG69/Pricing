@@ -47,22 +47,12 @@ RUN useradd -m -u 1000 appuser
 # Set working directory
 WORKDIR /app
 
-# Copy virtual environment from builder
-COPY --from=builder --chown=appuser:appuser /app/.venv /app/.venv
-
-# Copy application code from builder
+# Copy application code and virtual environment from builder
 COPY --from=builder --chown=appuser:appuser /app /app
 
 # Create empty data directory structure (will be populated at runtime)
 RUN mkdir -p data/cache && chown -R appuser:appuser data
 
-# Switch to non-root user
-USER appuser
-
-# Set environment variables
-ENV PATH="/app/.venv/bin:$PATH" \
-    PYTHONUNBUFFERED=1 \
-    PYTHONDONTWRITEBYTECODE=1
 
 # Expose port
 EXPOSE 8000
