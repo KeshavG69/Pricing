@@ -2639,11 +2639,20 @@
         "documentation": {}
     },
     {
+        "label": "split_position_by_hours",
+        "kind": 2,
+        "importPath": "routers.pricing",
+        "description": "routers.pricing",
+        "peekOfCode": "def split_position_by_hours(position: Dict, max_hours: int = 1920) -> List[Dict]:\n    \"\"\"\n    Split a position into multiple FTE rows if hours > max_hours.\n    Args:\n        position: Job position dict with 'hours' field\n        max_hours: Max hours per person (default 1920)\n    Returns:\n        List of position dicts (1 or more)\n    Example:\n        Input: {\"labor_category\": \"Engineer\", \"hours\": 5760, \"wage_75th\": 150000}",
+        "detail": "routers.pricing",
+        "documentation": {}
+    },
+    {
         "label": "router",
         "kind": 5,
         "importPath": "routers.pricing",
         "description": "routers.pricing",
-        "peekOfCode": "router = APIRouter()\n# In-memory store for job status\n# Structure: {job_id: {\"status\": \"processing\"|\"completed\"|\"failed\", \"progress\": str, \"result\": dict, \"error\": str}}\njobs_store: Dict[str, Dict[str, Any]] = {}\nasync def process_documents_task(\n    job_id: str, \n    file_paths: List[str], \n    file_names: List[str], \n    temp_dir: Path\n):",
+        "peekOfCode": "router = APIRouter()\n# In-memory store for job status\n# Structure: {job_id: {\"status\": \"processing\"|\"completed\"|\"failed\", \"progress\": str, \"result\": dict, \"error\": str}}\njobs_store: Dict[str, Dict[str, Any]] = {}\ndef split_position_by_hours(position: Dict, max_hours: int = 1920) -> List[Dict]:\n    \"\"\"\n    Split a position into multiple FTE rows if hours > max_hours.\n    Args:\n        position: Job position dict with 'hours' field\n        max_hours: Max hours per person (default 1920)",
         "detail": "routers.pricing",
         "documentation": {}
     },

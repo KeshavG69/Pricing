@@ -12,6 +12,7 @@ import shutil
 from datetime import datetime
 import uuid
 import asyncio
+import math
 
 from client.jd_parser import parse_documents_to_dataframe
 from utils.pipeline import process_dataframe_with_agents
@@ -21,6 +22,50 @@ router = APIRouter()
 # In-memory store for job status
 # Structure: {job_id: {"status": "processing"|"completed"|"failed", "progress": str, "result": dict, "error": str}}
 jobs_store: Dict[str, Dict[str, Any]] = {}
+
+
+def split_position_by_hours(position: Dict, max_hours: int = 1920) -> List[Dict]:
+    """
+    Split a position into multiple FTE rows if hours > max_hours.
+
+    Args:
+        position: Job position dict with 'hours' field
+        max_hours: Max hours per person (default 1920)
+
+    Returns:
+        List of position dicts (1 or more)
+
+    Example:
+        Input: {"labor_category": "Engineer", "hours": 5760, "wage_75th": 150000}
+        Output: [
+            {"labor_category": "Engineer", "hours": 1920, "wage_75th": 150000},
+            {"labor_category": "Engineer", "hours": 1920, "wage_75th": 150000},
+            {"labor_category": "Engineer", "hours": 1920, "wage_75th": 150000}
+        ]
+    """
+    hours = position.get('hours', 1920)
+
+    if hours <= max_hours:
+        return [position]  # No split needed
+
+    # Calculate number of FTEs needed
+    fte_count = math.ceil(hours / max_hours)
+
+    # Split into multiple positions
+    positions = []
+    for i in range(fte_count):
+        new_position = position.copy()
+        # Keep labor_category unchanged - no FTE labeling
+
+        # Distribute hours: first N-1 get max_hours, last one gets remainder
+        if i < fte_count - 1:
+            new_position['hours'] = max_hours
+        else:
+            new_position['hours'] = hours - (max_hours * (fte_count - 1))
+
+        positions.append(new_position)
+
+    return positions
 
 
 async def process_documents_task(
@@ -69,6 +114,15 @@ async def process_documents_task(
         for job in jobs_data:
             cleaned_job = {k: clean_value(v) for k, v in job.items()}
             cleaned_jobs.append(cleaned_job)
+
+        # Split positions with hours > 1920 into multiple FTE rows
+        expanded_jobs = []
+        for job in cleaned_jobs:
+            split_positions = split_position_by_hours(job, max_hours=1920)
+            expanded_jobs.extend(split_positions)
+
+        # Replace cleaned_jobs with expanded list
+        cleaned_jobs = expanded_jobs
 
         # Extract document-level years from first job (same for all jobs from same doc)
         base_years = None
