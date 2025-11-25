@@ -18,11 +18,10 @@ ENV UV_LINK_MODE=copy
 # Copy dependency files
 COPY pyproject.toml uv.lock ./
 
-# Install dependencies using uv with cache mount
+# Install dependencies using uv
 # --frozen ensures we use the exact versions from uv.lock
 # --no-dev excludes development dependencies
-RUN --mount=type=cache,id=uv-cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev
 
 # Copy application code
 COPY . .
