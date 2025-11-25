@@ -16,12 +16,11 @@ ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
 
 # Copy dependency files
-COPY pyproject.toml uv.lock ./
+COPY pyproject.toml ./
 
 # Install dependencies using uv
-# --frozen ensures we use the exact versions from uv.lock
 # --no-dev excludes development dependencies
-RUN uv sync --frozen --no-dev
+RUN uv sync --no-dev
 
 # Copy application code
 COPY . .
