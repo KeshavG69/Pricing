@@ -215,7 +215,51 @@ class ExcelGenerator:
             ws.cell(8, col_offset + 2, "Amount")
             col_offset += 3
 
-        # Row 9-10: Section headers
+        # Row 9: Add editable rates reference section (far right columns)
+        # These cells will be referenced by all formulas
+        # Place them in columns starting after the year columns (e.g., column AA onwards)
+        rates_col = 27  # Column AA (far right, out of the way)
+
+        ws.cell(1, rates_col, "RATES REFERENCE")
+        ws.cell(2, rates_col, "Edit these values to update all calculations")
+
+        # Indirect rates
+        ws.cell(3, rates_col, "Fringe Rate:")
+        ws.cell(3, rates_col + 1, project_data['indirect_rates']['fringe'])
+        self.row_trackers['fringe_rate_cell'] = f"{get_column_letter(rates_col + 1)}3"
+
+        ws.cell(4, rates_col, "OH Rate:")
+        ws.cell(4, rates_col + 1, project_data['indirect_rates']['oh'])
+        self.row_trackers['oh_rate_cell'] = f"{get_column_letter(rates_col + 1)}4"
+
+        ws.cell(5, rates_col, "G&A Rate:")
+        ws.cell(5, rates_col + 1, project_data['indirect_rates']['ga'])
+        self.row_trackers['ga_rate_cell'] = f"{get_column_letter(rates_col + 1)}5"
+
+        # Fee rates
+        ws.cell(6, rates_col, "Prime Labor Fee:")
+        ws.cell(6, rates_col + 1, project_data['fee_rates']['prime_labor'])
+        self.row_trackers['prime_fee_rate_cell'] = f"{get_column_letter(rates_col + 1)}6"
+
+        ws.cell(7, rates_col, "Sub Labor Fee:")
+        ws.cell(7, rates_col + 1, project_data['fee_rates']['sub_labor'])
+        self.row_trackers['sub_fee_rate_cell'] = f"{get_column_letter(rates_col + 1)}7"
+
+        # Passthrough rates
+        ws.cell(8, rates_col, "S&MH Rate:")
+        ws.cell(8, rates_col + 1, project_data['passthrough_rates']['smh'])
+        self.row_trackers['smh_rate_cell'] = f"{get_column_letter(rates_col + 1)}8"
+
+        ws.cell(9, rates_col, "G&A Passthrough:")
+        ws.cell(9, rates_col + 1, project_data['passthrough_rates']['ga'])
+        self.row_trackers['ga_passthrough_rate_cell'] = f"{get_column_letter(rates_col + 1)}9"
+
+        # ODC rate
+        ws.cell(10, rates_col, "G&A Adder (ODC):")
+        ws.cell(10, rates_col + 1, project_data['ga_adder_rate'])
+        self.row_trackers['ga_adder_rate_cell'] = f"{get_column_letter(rates_col + 1)}10"
+
+        # Row 9-10: Section headers (back to main content area)
         ws.cell(9, 1, "Prime Contractor Labor Cost")
         ws.cell(10, 1, "Prime Contractor Direct Labor")
 
@@ -326,12 +370,13 @@ class ExcelGenerator:
         # Indirect costs breakdown with formulas
         # Fringe row
         fringe_row = current_row
-        ws.cell(current_row, 1, f"Fringe ({indirect_rates['fringe']*100:.2f}%)")
+        fringe_rate_cell = self.row_trackers['fringe_rate_cell']
+        ws.cell(current_row, 1, "Fringe")
         for year in range(1, total_years + 1):
             col_offset = self._calculate_column_offset(year)
             amount_col = get_column_letter(col_offset + 2)
-            ws.cell(current_row, col_offset + 2, f"={amount_col}{total_dl_row}*{indirect_rates['fringe']}")
-        ws.cell(current_row, 6, f"=F{total_dl_row}*{indirect_rates['fringe']}")
+            ws.cell(current_row, col_offset + 2, f"={amount_col}{total_dl_row}*${fringe_rate_cell}")
+        ws.cell(current_row, 6, f"=F{total_dl_row}*${fringe_rate_cell}")
         current_row += 1
 
         # Subtotal after Fringe
@@ -346,12 +391,13 @@ class ExcelGenerator:
 
         # Overhead row
         oh_row = current_row
-        ws.cell(current_row, 1, f"Overhead ({indirect_rates['oh']*100:.2f}%)")
+        oh_rate_cell = self.row_trackers['oh_rate_cell']
+        ws.cell(current_row, 1, "Overhead")
         for year in range(1, total_years + 1):
             col_offset = self._calculate_column_offset(year)
             amount_col = get_column_letter(col_offset + 2)
-            ws.cell(current_row, col_offset + 2, f"={amount_col}{subtotal_1_row}*{indirect_rates['oh']}")
-        ws.cell(current_row, 6, f"=F{subtotal_1_row}*{indirect_rates['oh']}")
+            ws.cell(current_row, col_offset + 2, f"={amount_col}{subtotal_1_row}*${oh_rate_cell}")
+        ws.cell(current_row, 6, f"=F{subtotal_1_row}*${oh_rate_cell}")
         current_row += 1
 
         # Subtotal after OH
@@ -366,12 +412,13 @@ class ExcelGenerator:
 
         # G&A row
         ga_row = current_row
-        ws.cell(current_row, 1, f"G&A ({indirect_rates['ga']*100:.2f}%)")
+        ga_rate_cell = self.row_trackers['ga_rate_cell']
+        ws.cell(current_row, 1, "G&A")
         for year in range(1, total_years + 1):
             col_offset = self._calculate_column_offset(year)
             amount_col = get_column_letter(col_offset + 2)
-            ws.cell(current_row, col_offset + 2, f"={amount_col}{subtotal_2_row}*{indirect_rates['ga']}")
-        ws.cell(current_row, 6, f"=F{subtotal_2_row}*{indirect_rates['ga']}")
+            ws.cell(current_row, col_offset + 2, f"={amount_col}{subtotal_2_row}*${ga_rate_cell}")
+        ws.cell(current_row, 6, f"=F{subtotal_2_row}*${ga_rate_cell}")
         current_row += 1
 
         # Total Prime Labor (DL + Fringe + OH + G&A)
@@ -526,6 +573,7 @@ class ExcelGenerator:
         ws.cell(current_row, 1, "Handling")
 
         smh_rate = passthrough_rates['smh']  # Required, no default
+        smh_rate_cell = self.row_trackers['smh_rate_cell']
         ws.cell(current_row, 6, smh_rate)  # Show rate in Base Period column
 
         # Calculate S&MH for each year
@@ -537,8 +585,8 @@ class ExcelGenerator:
             # Reference subcontractor amount for this year
             sub_amount_cell = f"{amount_col}{sub_total_row}"
 
-            # S&MH = sub_amount × smh_rate
-            ws.cell(current_row, col_offset + 2, f"={sub_amount_cell}*{smh_rate}")
+            # S&MH = sub_amount × smh_rate (reference cell)
+            ws.cell(current_row, col_offset + 2, f"={sub_amount_cell}*${smh_rate_cell}")
             year_smh_cells.append(f"{amount_col}{current_row}")
 
         # Total S&MH
@@ -547,10 +595,19 @@ class ExcelGenerator:
 
         # G&A row (if applicable)
         ga_rate = passthrough_rates.get('ga', 0)
+        ga_passthrough_cell = self.row_trackers['ga_passthrough_rate_cell']
         if ga_rate > 0:
             ws.cell(current_row, 1, "G&A")
             ws.cell(current_row, 6, ga_rate)
-            # Similar calculation
+            # Calculate G&A passthrough for each year
+            year_ga_cells = []
+            for year in range(1, total_years + 1):
+                col_offset = self._calculate_column_offset(year)
+                amount_col = get_column_letter(col_offset + 2)
+                sub_amount_cell = f"{amount_col}{sub_total_row}"
+                ws.cell(current_row, col_offset + 2, f"={sub_amount_cell}*${ga_passthrough_cell}")
+                year_ga_cells.append(f"{amount_col}{current_row}")
+            ws.cell(current_row, 5, f"={'+'.join(year_ga_cells)}")
             current_row += 1
 
         # Other row (placeholder)
@@ -804,6 +861,23 @@ class ExcelGenerator:
         # Freeze panes - freeze top 10 rows and first 3 columns
         ws.freeze_panes = 'D11'
 
+        # Highlight editable rate reference cells (column AB, rows 3-10)
+        # Light yellow fill to indicate these are user-editable
+        rate_fill = PatternFill(start_color="FFFF99", end_color="FFFF99", fill_type="solid")
+        rates_col = 28  # Column AB (where rate values are)
+
+        for row_num in range(3, 11):  # Rows 3-10 contain the rate values
+            cell = ws.cell(row_num, rates_col)
+            cell.fill = rate_fill
+            # Also format as percentage
+            cell.number_format = '0.00%'
+            # Make bold
+            cell.font = Font(bold=True, size=11)
+
+        # Set column widths for rates reference section
+        ws.column_dimensions['AA'].width = 20  # Labels column
+        ws.column_dimensions['AB'].width = 15  # Values column
+
     def _create_rate_table_sheet(self, project_data: Dict[str, Any]):
         """
         Create Sheet 2: Subcontractor Fee_MH Rate Table.
@@ -848,25 +922,22 @@ class ExcelGenerator:
         ws2.cell(4, 5, "=C4*D4")  # S&MH amount
         ws2.cell(4, 6, "=C4+E4")  # Final total
 
-        # Calculate derived rates for forward calculation
-        # These rates are calculated so the forward/reverse calculations balance
-        # Derived S&MH rate = smh_rate / (1 + fee_rate)
-        # Derived FEE rate = fee_rate / (1 + fee_rate)
-        derived_smh_rate = smh_rate / (1 + fee_rate)
-        derived_fee_rate = fee_rate / (1 + fee_rate)
+        # Rows 7-8: BACKWARD/REVERSE calculation (remove S&MH first, then FEE)
+        # This shows how to go from final billable rate back to base rate
 
-        # Store these in rows 7-8 for reference
+        # Row 7: Remove S&MH from final rate
         ws2.cell(7, 2, "S&MH")
-        ws2.cell(7, 3, "=F4")  # Will reference the calculated value
-        ws2.cell(7, 4, derived_smh_rate)
-        ws2.cell(7, 5, "=C7*D7")
-        ws2.cell(7, 6, "=C7-E7")
+        ws2.cell(7, 3, "=F4")  # Start with final rate from row 4
+        ws2.cell(7, 4, smh_rate)  # S&MH rate
+        ws2.cell(7, 5, "=C7*D7/(1+D7)")  # S&MH amount (reverse calc)
+        ws2.cell(7, 6, "=C7-E7")  # Total after removing S&MH
 
+        # Row 8: Remove FEE from subtotal
         ws2.cell(8, 2, "FEE")
-        ws2.cell(8, 3, "=F7")
-        ws2.cell(8, 4, derived_fee_rate)
-        ws2.cell(8, 5, "=C8*D8")
-        ws2.cell(8, 6, "=C8-E8")
+        ws2.cell(8, 3, "=F7")  # Start with subtotal from row 7
+        ws2.cell(8, 4, fee_rate)  # Fee rate
+        ws2.cell(8, 5, "=C8*D8/(1+D8)")  # Fee amount (reverse calc)
+        ws2.cell(8, 6, "=C8-E8")  # Final base rate (should match C3)
 
         # Rate table section (Columns H-O)
         # Row 2: Store reference rates

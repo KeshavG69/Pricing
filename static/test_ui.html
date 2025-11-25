@@ -273,6 +273,7 @@
             font-weight: 700 !important;
             font-size: 14px !important;
             text-align: left !important;
+            padding: 12px 8px !important;
         }
 
         .header-row-large {
@@ -281,6 +282,41 @@
             font-weight: 800 !important;
             font-size: 16px !important;
             text-align: left !important;
+            padding: 14px 8px !important;
+        }
+
+        .subheader-row {
+            background: #f8f9ff !important;
+            color: #667eea !important;
+            font-weight: 700 !important;
+            font-size: 13px !important;
+            border-left: 4px solid #667eea !important;
+        }
+
+        .subtotal-row {
+            background: #e8f4f8 !important;
+            font-weight: 700 !important;
+            border-top: 2px solid #667eea !important;
+            border-bottom: 2px solid #667eea !important;
+        }
+
+        .total-row {
+            background: #d4edda !important;
+            font-weight: 800 !important;
+            font-size: 14px !important;
+            border-top: 3px solid #28a745 !important;
+            border-bottom: 3px solid #28a745 !important;
+        }
+
+        .indirect-row {
+            background: #fff9e6 !important;
+            color: #856404 !important;
+            font-style: italic;
+        }
+
+        .fee-row {
+            background: #e7f3ff !important;
+            color: #004085 !important;
         }
 
         .calc-cell {
@@ -288,9 +324,20 @@
             font-weight: 600 !important;
         }
 
+        .editable-cell {
+            background: #ffffff !important;
+            border: 1px solid #667eea !important;
+        }
+
+        .editable-cell:hover {
+            background: #f0f4ff !important;
+        }
+
         /* Handsontable adjustments */
         .handsontable td {
             font-size: 13px;
+            padding: 8px 6px;
+            line-height: 1.5;
         }
 
         .handsontable th {
@@ -298,12 +345,30 @@
             color: white;
             font-weight: 600;
             font-size: 12px;
+            padding: 10px 6px;
+        }
+
+        .handsontable tr:hover td {
+            background-color: rgba(102, 126, 234, 0.05) !important;
+        }
+
+        /* Row number column styling */
+        .handsontable .ht__rowHeader {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #667eea;
         }
 
         /* Invalid cell styling */
         .handsontable td.htInvalid {
             background-color: #ffe6e6 !important;
-            border: 1px solid #ff4444 !important;
+            border: 2px solid #ff4444 !important;
+        }
+
+        /* Section divider */
+        .section-divider {
+            background: #e9ecef !important;
+            height: 8px !important;
         }
 
         /* Loading overlay */
@@ -378,7 +443,7 @@
 
             <!-- Rate Sliders -->
             <div class="card">
-                <h2>🎚️ Adjust Indirect Rates</h2>
+                <h2>🎚️ Adjust Indirect Rates (Prime Labor)</h2>
                 <div class="rate-sliders">
                     <div class="slider-group">
                         <label>
@@ -407,6 +472,83 @@
                             <span class="value" id="feeDisplay">8.0%</span>
                         </label>
                         <input type="range" id="feeRate" min="0" max="30" step="0.1" value="8.0" oninput="updateRates()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Escalation Rates -->
+            <div class="card">
+                <h2>📈 Escalation Rates (Year-over-Year)</h2>
+                <div class="rate-sliders">
+                    <div class="slider-group">
+                        <label>
+                            <span>Year 1 → Year 2</span>
+                            <span class="value" id="esc1to2Display">2.72%</span>
+                        </label>
+                        <input type="range" id="esc1to2Rate" min="0" max="10" step="0.01" value="2.72" oninput="updateRates()">
+                    </div>
+                    <div class="slider-group">
+                        <label>
+                            <span>Year 2 → Year 3</span>
+                            <span class="value" id="esc2to3Display">2.99%</span>
+                        </label>
+                        <input type="range" id="esc2to3Rate" min="0" max="10" step="0.01" value="2.99" oninput="updateRates()">
+                    </div>
+                    <div class="slider-group">
+                        <label>
+                            <span>Year 3 → Year 4</span>
+                            <span class="value" id="esc3to4Display">2.99%</span>
+                        </label>
+                        <input type="range" id="esc3to4Rate" min="0" max="10" step="0.01" value="2.99" oninput="updateRates()">
+                    </div>
+                    <div class="slider-group">
+                        <label>
+                            <span>Year 4 → Year 5</span>
+                            <span class="value" id="esc4to5Display">2.99%</span>
+                        </label>
+                        <input type="range" id="esc4to5Rate" min="0" max="10" step="0.01" value="2.99" oninput="updateRates()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Subcontractor Rates -->
+            <div class="card">
+                <h2>🏢 Subcontractor Passthrough & Fee Rates</h2>
+                <div class="rate-sliders">
+                    <div class="slider-group">
+                        <label>
+                            <span>S&MH (Handling)</span>
+                            <span class="value" id="smhDisplay">6.65%</span>
+                        </label>
+                        <input type="range" id="smhRate" min="0" max="20" step="0.01" value="6.65" oninput="updateRates()">
+                    </div>
+                    <div class="slider-group">
+                        <label>
+                            <span>G&A Passthrough</span>
+                            <span class="value" id="gaPassthroughDisplay">0.00%</span>
+                        </label>
+                        <input type="range" id="gaPassthroughRate" min="0" max="20" step="0.01" value="0.00" oninput="updateRates()">
+                    </div>
+                    <div class="slider-group">
+                        <label>
+                            <span>Sub Labor Fee</span>
+                            <span class="value" id="subFeeDisplay">1.26%</span>
+                        </label>
+                        <input type="range" id="subFeeRate" min="0" max="10" step="0.01" value="1.26" oninput="updateRates()">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ODC Rates -->
+            <div class="card">
+                <h2>💼 Other Direct Cost (ODC) Rates</h2>
+                <div class="rate-sliders">
+                    <div class="slider-group">
+                        <label>
+                            <span>G&A Adder (ODC)</span>
+                            <span class="value" id="gaAdderDisplay">22.12%</span>
+                        </label>
+                        <input type="range" id="gaAdderRate" min="0" max="50" step="0.01" value="22.12" oninput="updateRates()">
                     </div>
                 </div>
             </div>
@@ -458,11 +600,63 @@
             <div class="card">
                 <h2>🚀 Advanced Analysis - Interactive Spreadsheet</h2>
                 <p style="margin-bottom: 10px; color: #666;">
-                    Your rates from Initial Analysis have been applied. Edit any cell to see real-time calculations.
+                    Edit rates below or any cell in the spreadsheet to see real-time calculations.
                 </p>
-                <p style="margin-bottom: 20px; font-size: 13px; color: #888;">
-                    💡 <strong>Current Rates:</strong> Fringe <span id="advFringe"></span> | OH <span id="advOH"></span> | G&A <span id="advGA"></span> | Fee <span id="advFee"></span>
-                </p>
+
+                <!-- Editable Rates Section -->
+                <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #ffc107;">
+                    <h3 style="margin: 0 0 15px 0; font-size: 16px; color: #856404;">📊 Editable Rates (Changes update all calculations)</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                        <!-- Prime Labor Rates -->
+                        <div>
+                            <label style="font-size: 12px; font-weight: 600; color: #666; display: block; margin-bottom: 5px;">Fringe Rate (%)</label>
+                            <input type="number" id="spreadsheetFringeRate" step="0.01" min="0" max="100" style="width: 100%; padding: 8px; border: 2px solid #667eea; border-radius: 4px; font-size: 14px;" oninput="updateSpreadsheetRates()">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; font-weight: 600; color: #666; display: block; margin-bottom: 5px;">OH Rate (%)</label>
+                            <input type="number" id="spreadsheetOHRate" step="0.01" min="0" max="100" style="width: 100%; padding: 8px; border: 2px solid #667eea; border-radius: 4px; font-size: 14px;" oninput="updateSpreadsheetRates()">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; font-weight: 600; color: #666; display: block; margin-bottom: 5px;">G&A Rate (%)</label>
+                            <input type="number" id="spreadsheetGARate" step="0.01" min="0" max="100" style="width: 100%; padding: 8px; border: 2px solid #667eea; border-radius: 4px; font-size: 14px;" oninput="updateSpreadsheetRates()">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; font-weight: 600; color: #666; display: block; margin-bottom: 5px;">Fee Rate (%)</label>
+                            <input type="number" id="spreadsheetFeeRate" step="0.01" min="0" max="100" style="width: 100%; padding: 8px; border: 2px solid #667eea; border-radius: 4px; font-size: 14px;" oninput="updateSpreadsheetRates()">
+                        </div>
+                        <!-- Subcontractor Rates -->
+                        <div>
+                            <label style="font-size: 12px; font-weight: 600; color: #666; display: block; margin-bottom: 5px;">S&MH Rate (%)</label>
+                            <input type="number" id="spreadsheetSMHRate" step="0.01" min="0" max="100" style="width: 100%; padding: 8px; border: 2px solid #667eea; border-radius: 4px; font-size: 14px;" oninput="updateSpreadsheetRates()">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; font-weight: 600; color: #666; display: block; margin-bottom: 5px;">Sub Fee Rate (%)</label>
+                            <input type="number" id="spreadsheetSubFeeRate" step="0.01" min="0" max="100" style="width: 100%; padding: 8px; border: 2px solid #667eea; border-radius: 4px; font-size: 14px;" oninput="updateSpreadsheetRates()">
+                        </div>
+                        <!-- ODC Rate -->
+                        <div>
+                            <label style="font-size: 12px; font-weight: 600; color: #666; display: block; margin-bottom: 5px;">G&A Adder (ODC) (%)</label>
+                            <input type="number" id="spreadsheetGAAdderRate" step="0.01" min="0" max="100" style="width: 100%; padding: 8px; border: 2px solid #667eea; border-radius: 4px; font-size: 14px;" oninput="updateSpreadsheetRates()">
+                        </div>
+                        <!-- Escalation Rates -->
+                        <div>
+                            <label style="font-size: 12px; font-weight: 600; color: #666; display: block; margin-bottom: 5px;">Escalation 1→2 (%)</label>
+                            <input type="number" id="spreadsheetEsc1to2Rate" step="0.01" min="0" max="100" style="width: 100%; padding: 8px; border: 2px solid #667eea; border-radius: 4px; font-size: 14px;" oninput="updateSpreadsheetRates()">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; font-weight: 600; color: #666; display: block; margin-bottom: 5px;">Escalation 2→3 (%)</label>
+                            <input type="number" id="spreadsheetEsc2to3Rate" step="0.01" min="0" max="100" style="width: 100%; padding: 8px; border: 2px solid #667eea; border-radius: 4px; font-size: 14px;" oninput="updateSpreadsheetRates()">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; font-weight: 600; color: #666; display: block; margin-bottom: 5px;">Escalation 3→4 (%)</label>
+                            <input type="number" id="spreadsheetEsc3to4Rate" step="0.01" min="0" max="100" style="width: 100%; padding: 8px; border: 2px solid #667eea; border-radius: 4px; font-size: 14px;" oninput="updateSpreadsheetRates()">
+                        </div>
+                        <div>
+                            <label style="font-size: 12px; font-weight: 600; color: #666; display: block; margin-bottom: 5px;">Escalation 4→5 (%)</label>
+                            <input type="number" id="spreadsheetEsc4to5Rate" step="0.01" min="0" max="100" style="width: 100%; padding: 8px; border: 2px solid #667eea; border-radius: 4px; font-size: 14px;" oninput="updateSpreadsheetRates()">
+                        </div>
+                    </div>
+                </div>
 
                 <!-- Controls -->
                 <div style="margin-bottom: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
@@ -518,7 +712,13 @@
             fringe: 0.247,
             oh: 0.0711,
             ga: 0.2243,
-            fee: 0.08
+            fee: 0.08,
+            // Subcontractor passthrough rates
+            smh: 0.0665,        // 6.65% S&MH (Subcontractor & Material Handling)
+            sub_fee: 0.0126,    // 1.26% fee on subcontractor labor
+            ga_passthrough: 0.0, // 0% G&A passthrough on subs
+            // ODC rates
+            ga_adder: 0.2212    // 22.12% G&A adder on ODCs
         };
 
         // File input handling
@@ -661,15 +861,45 @@
 
         // Update rates from sliders
         function updateRates() {
+            // Prime labor indirect rates
             rates.fringe = parseFloat(document.getElementById('fringeRate').value) / 100;
             rates.oh = parseFloat(document.getElementById('ohRate').value) / 100;
             rates.ga = parseFloat(document.getElementById('gaRate').value) / 100;
             rates.fee = parseFloat(document.getElementById('feeRate').value) / 100;
 
+            // Escalation rates
+            escalationRates['1_to_2'] = parseFloat(document.getElementById('esc1to2Rate').value) / 100;
+            escalationRates['2_to_3'] = parseFloat(document.getElementById('esc2to3Rate').value) / 100;
+            escalationRates['3_to_4'] = parseFloat(document.getElementById('esc3to4Rate').value) / 100;
+            escalationRates['4_to_5'] = parseFloat(document.getElementById('esc4to5Rate').value) / 100;
+
+            // Subcontractor passthrough & fee rates
+            rates.smh = parseFloat(document.getElementById('smhRate').value) / 100;
+            rates.ga_passthrough = parseFloat(document.getElementById('gaPassthroughRate').value) / 100;
+            rates.sub_fee = parseFloat(document.getElementById('subFeeRate').value) / 100;
+
+            // ODC rates
+            rates.ga_adder = parseFloat(document.getElementById('gaAdderRate').value) / 100;
+
+            // Update displays - Prime labor
             document.getElementById('fringeDisplay').textContent = (rates.fringe * 100).toFixed(2) + '%';
             document.getElementById('ohDisplay').textContent = (rates.oh * 100).toFixed(2) + '%';
             document.getElementById('gaDisplay').textContent = (rates.ga * 100).toFixed(2) + '%';
             document.getElementById('feeDisplay').textContent = (rates.fee * 100).toFixed(2) + '%';
+
+            // Update displays - Escalation
+            document.getElementById('esc1to2Display').textContent = (escalationRates['1_to_2'] * 100).toFixed(2) + '%';
+            document.getElementById('esc2to3Display').textContent = (escalationRates['2_to_3'] * 100).toFixed(2) + '%';
+            document.getElementById('esc3to4Display').textContent = (escalationRates['3_to_4'] * 100).toFixed(2) + '%';
+            document.getElementById('esc4to5Display').textContent = (escalationRates['4_to_5'] * 100).toFixed(2) + '%';
+
+            // Update displays - Subcontractor
+            document.getElementById('smhDisplay').textContent = (rates.smh * 100).toFixed(2) + '%';
+            document.getElementById('gaPassthroughDisplay').textContent = (rates.ga_passthrough * 100).toFixed(2) + '%';
+            document.getElementById('subFeeDisplay').textContent = (rates.sub_fee * 100).toFixed(2) + '%';
+
+            // Update displays - ODC
+            document.getElementById('gaAdderDisplay').textContent = (rates.ga_adder * 100).toFixed(2) + '%';
 
             renderJobsTable();
             updateSummaryStats();
@@ -805,11 +1035,18 @@
                     document.getElementById('dashboardSection').classList.add('hidden');
                     document.getElementById('spreadsheetSection').classList.remove('hidden');
 
-                    // Update rate display in advanced section
-                    document.getElementById('advFringe').textContent = `${(rates.fringe * 100).toFixed(2)}%`;
-                    document.getElementById('advOH').textContent = `${(rates.oh * 100).toFixed(2)}%`;
-                    document.getElementById('advGA').textContent = `${(rates.ga * 100).toFixed(2)}%`;
-                    document.getElementById('advFee').textContent = `${(rates.fee * 100).toFixed(2)}%`;
+                    // Populate editable rate input fields
+                    document.getElementById('spreadsheetFringeRate').value = (rates.fringe * 100).toFixed(2);
+                    document.getElementById('spreadsheetOHRate').value = (rates.oh * 100).toFixed(2);
+                    document.getElementById('spreadsheetGARate').value = (rates.ga * 100).toFixed(2);
+                    document.getElementById('spreadsheetFeeRate').value = (rates.fee * 100).toFixed(2);
+                    document.getElementById('spreadsheetSMHRate').value = (rates.smh * 100).toFixed(2);
+                    document.getElementById('spreadsheetSubFeeRate').value = (rates.sub_fee * 100).toFixed(2);
+                    document.getElementById('spreadsheetGAAdderRate').value = (rates.ga_adder * 100).toFixed(2);
+                    document.getElementById('spreadsheetEsc1to2Rate').value = (escalationRates['1_to_2'] * 100).toFixed(2);
+                    document.getElementById('spreadsheetEsc2to3Rate').value = (escalationRates['2_to_3'] * 100).toFixed(2);
+                    document.getElementById('spreadsheetEsc3to4Rate').value = (escalationRates['3_to_4'] * 100).toFixed(2);
+                    document.getElementById('spreadsheetEsc4to5Rate').value = (escalationRates['4_to_5'] * 100).toFixed(2);
 
                     originalJobsData = JSON.parse(JSON.stringify(jobsData)); // Deep copy
                     loadIntoSpreadsheet();
@@ -819,6 +1056,30 @@
                     document.body.removeChild(loadingOverlay);
                 }
             }, 100);
+        }
+
+        // Update rates from spreadsheet input fields
+        function updateSpreadsheetRates() {
+            // Update global rates object
+            rates.fringe = parseFloat(document.getElementById('spreadsheetFringeRate').value) / 100;
+            rates.oh = parseFloat(document.getElementById('spreadsheetOHRate').value) / 100;
+            rates.ga = parseFloat(document.getElementById('spreadsheetGARate').value) / 100;
+            rates.fee = parseFloat(document.getElementById('spreadsheetFeeRate').value) / 100;
+            rates.smh = parseFloat(document.getElementById('spreadsheetSMHRate').value) / 100;
+            rates.sub_fee = parseFloat(document.getElementById('spreadsheetSubFeeRate').value) / 100;
+            rates.ga_adder = parseFloat(document.getElementById('spreadsheetGAAdderRate').value) / 100;
+
+            // Update escalation rates
+            escalationRates['1_to_2'] = parseFloat(document.getElementById('spreadsheetEsc1to2Rate').value) / 100;
+            escalationRates['2_to_3'] = parseFloat(document.getElementById('spreadsheetEsc2to3Rate').value) / 100;
+            escalationRates['3_to_4'] = parseFloat(document.getElementById('spreadsheetEsc3to4Rate').value) / 100;
+            escalationRates['4_to_5'] = parseFloat(document.getElementById('spreadsheetEsc4to5Rate').value) / 100;
+
+            // Recalculate spreadsheet
+            if (hot) {
+                recalculateAllSections();
+                hot.render();
+            }
         }
 
         // Back to Initial Analysis
@@ -887,17 +1148,6 @@
             const totalYears = metadata.total_years || 5;
             const rows = [];
 
-            // === HEADER ROWS ===
-            rows.push({
-                costElement: `Contract: ${totalYears} Years (${metadata.base_years} Base + ${metadata.option_years} Option)`,
-                _meta: { section: 'header', readOnly: true }
-            });
-            rows.push({
-                costElement: `Escalation Rates: ${Object.entries(escalationRates).map(([k, v]) => `${k}: ${(v*100).toFixed(2)}%`).join(', ')}`,
-                _meta: { section: 'header', readOnly: true }
-            });
-            rows.push({}); // Empty row
-
             // === PRIME LABOR SECTION ===
             rows.push({
                 costElement: 'PRIME LABOR',
@@ -934,15 +1184,15 @@
 
             // Indirect rows (will be calculated)
             rows.push({
-                costElement: `Fringe (${(rates.fringe * 100).toFixed(2)}%)`,
+                costElement: 'Fringe',
                 _meta: { section: 'primeLabor', type: 'indirect', subtype: 'fringe', readOnly: true }
             });
             rows.push({
-                costElement: `Overhead (${(rates.oh * 100).toFixed(2)}%)`,
+                costElement: 'Overhead',
                 _meta: { section: 'primeLabor', type: 'indirect', subtype: 'oh', readOnly: true }
             });
             rows.push({
-                costElement: `G&A (${(rates.ga * 100).toFixed(2)}%)`,
+                costElement: 'G&A',
                 _meta: { section: 'primeLabor', type: 'indirect', subtype: 'ga', readOnly: true }
             });
             rows.push({
@@ -958,11 +1208,11 @@
                 _meta: { section: 'header', readOnly: true, style: 'bold' }
             });
             rows.push({
-                costElement: `Fee on Prime Labor (${(rates.fee * 100).toFixed(2)}%)`,
+                costElement: 'Fee on Prime Labor',
                 _meta: { section: 'fee', type: 'primeFee', readOnly: true }
             });
             rows.push({
-                costElement: `Fee on Subcontractor Labor (1.26%)`,
+                costElement: 'Fee on Subcontractor Labor',
                 _meta: { section: 'fee', type: 'subFee', readOnly: true }
             });
 
@@ -974,35 +1224,39 @@
                 _meta: { section: 'header', readOnly: true, style: 'bold' }
             });
 
-            // Add placeholder rows for subcontractors (can be added dynamically later)
-            // For now, add 2 example subcontractor rows
-            for (let i = 0; i < 2; i++) {
-                const subRow = {
-                    costElement: 'Subcontractor',
-                    laborCategory: `Subcontractor ${i + 1}`,
-                    blsCategory: '',
-                    blsCode: '',
-                    percentile: '',
-                    _meta: {
-                        section: 'subcontractor',
-                        type: 'sub',
-                        id: `sub_${i}`,
-                        subData: { baseRate: 100 } // Example base rate
-                    }
-                };
-
-                // Initialize year columns
-                for (let year = 1; year <= totalYears; year++) {
-                    subRow[`year${year}_rate`] = 100; // Subcontractor base rate
-                    subRow[`year${year}_hours`] = 0; // Default to 0, user can edit
-                }
-
-                rows.push(subRow);
-            }
+            // No pre-added subcontractor rows - user adds them dynamically with the "Add Subcontractor" button
 
             rows.push({
                 costElement: 'Total Subcontractor Labor',
                 _meta: { section: 'subcontractor', type: 'subtotal', readOnly: true, style: 'bold' }
+            });
+
+            rows.push({}); // Empty row
+
+            // === PASSTHROUGH SECTION ===
+            rows.push({
+                costElement: 'PRIME CONTRACTOR PASS THROUGH',
+                _meta: { section: 'header', readOnly: true, style: 'bold' }
+            });
+
+            rows.push({
+                costElement: 'Handling (S&MH)',
+                _meta: { section: 'passthrough', type: 'smh', readOnly: true }
+            });
+
+            rows.push({
+                costElement: 'G&A Passthrough',
+                _meta: { section: 'passthrough', type: 'ga', readOnly: true }
+            });
+
+            rows.push({
+                costElement: 'Total Pass Through',
+                _meta: { section: 'passthrough', type: 'subtotal', readOnly: true, style: 'bold' }
+            });
+
+            rows.push({
+                costElement: 'Total Subcontractor Cost (including pass through)',
+                _meta: { section: 'passthrough', type: 'total', readOnly: true, style: 'bold' }
             });
 
             rows.push({}); // Empty row
@@ -1039,7 +1293,7 @@
             });
 
             rows.push({
-                costElement: `G&A Adder on ODCs (22.12%)`,
+                costElement: 'G&A Adder on ODCs',
                 _meta: { section: 'odc', type: 'gaAdder', readOnly: true }
             });
 
@@ -1124,15 +1378,34 @@
                         cellProperties.readOnly = true;
                     }
 
-                    // Styling for headers
+                    // Styling based on row type
                     if (rowData._meta.style === 'bold') {
                         cellProperties.className = 'header-row';
                     } else if (rowData._meta.style === 'bold-large') {
                         cellProperties.className = 'header-row-large';
+                    } else if (rowData._meta.section === 'header') {
+                        cellProperties.className = 'header-row';
+                    } else if (rowData._meta.section === 'subheader') {
+                        cellProperties.className = 'subheader-row';
+                    } else if (rowData._meta.type === 'indirect') {
+                        cellProperties.className = 'indirect-row';
+                    } else if (rowData._meta.type === 'subtotal') {
+                        cellProperties.className = 'subtotal-row';
+                    } else if (rowData._meta.section === 'grandTotal') {
+                        cellProperties.className = 'total-row';
+                    } else if (rowData._meta.section === 'fee') {
+                        cellProperties.className = 'fee-row';
+                    }
+
+                    // Get column data for validation and styling
+                    const colData = this.instance.getSettings().columns[col];
+
+                    // Highlight editable cells (hours for positions)
+                    if (colData && colData.data && colData.data.includes('hours') && !cellProperties.readOnly) {
+                        cellProperties.className = (cellProperties.className || '') + ' editable-cell';
                     }
 
                     // Add validation for numeric columns (hours, rates, amounts)
-                    const colData = this.instance.getSettings().columns[col];
                     if (colData && colData.type === 'numeric') {
                         cellProperties.validator = function(value, callback) {
                             // Allow empty values
@@ -1402,7 +1675,7 @@
                 feeRow.totalAmount = Math.round(totalFee * 100) / 100;
             }
 
-            // 5. Calculate Subcontractor Section
+            // 5. Calculate Subcontractor Section (NO per-row markup - just base rates)
             const subLaborTotals = {};
             for (let year = 1; year <= totalYears; year++) {
                 subLaborTotals[year] = { hours: 0, amount: 0 };
@@ -1417,20 +1690,9 @@
                         const hours = row[`year${year}_hours`] || 0;
                         const baseRate = row[`year${year}_rate`] || 100;
 
-                        // Apply subcontractor markup (fee + S&MH)
-                        // Using 1.26% fee and 6.65% S&MH
-                        const markup = Calculator.calculateSubcontractorMarkup(
-                            baseRate,
-                            0.0126, // 1.26% fee on subs
-                            0.0665, // 6.65% S&MH
-                            false,
-                            null
-                        );
+                        // Simple calculation: base rate × hours (NO markup applied per-row)
+                        const amount = Math.round(baseRate * hours * 100) / 100;
 
-                        const finalRate = markup.finalRate;
-                        const amount = Math.round(finalRate * hours * 100) / 100;
-
-                        row[`year${year}_rate`] = finalRate;
                         row[`year${year}_amount`] = amount;
 
                         totalHours += hours;
@@ -1462,13 +1724,85 @@
                 subtotalRow.totalHours = totalHours;
             }
 
+            // 6. Calculate Passthrough Section (S&MH on total sub labor)
+            // Use rates from global rates object
+            const smhRate = rates.smh;
+            const gaPassthroughRate = rates.ga_passthrough;
+
+            // S&MH row
+            const smhRowIndex = data.findIndex(r => r._meta?.section === 'passthrough' && r._meta?.type === 'smh');
+            if (smhRowIndex >= 0) {
+                const smhRow = data[smhRowIndex];
+                let totalSmh = 0;
+
+                for (let year = 1; year <= totalYears; year++) {
+                    const smhAmount = Math.round(subLaborTotals[year].amount * smhRate * 100) / 100;
+                    smhRow[`year${year}_amount`] = smhAmount;
+                    totalSmh += smhAmount;
+                }
+
+                smhRow.totalAmount = Math.round(totalSmh * 100) / 100;
+            }
+
+            // G&A row
+            const gaRowIndex = data.findIndex(r => r._meta?.section === 'passthrough' && r._meta?.type === 'ga');
+            if (gaRowIndex >= 0) {
+                const gaRow = data[gaRowIndex];
+                let totalGa = 0;
+
+                for (let year = 1; year <= totalYears; year++) {
+                    const gaAmount = Math.round(subLaborTotals[year].amount * gaPassthroughRate * 100) / 100;
+                    gaRow[`year${year}_amount`] = gaAmount;
+                    totalGa += gaAmount;
+                }
+
+                gaRow.totalAmount = Math.round(totalGa * 100) / 100;
+            }
+
+            // Total Passthrough row
+            const passthroughSubtotalIndex = data.findIndex(r => r._meta?.section === 'passthrough' && r._meta?.type === 'subtotal');
+            if (passthroughSubtotalIndex >= 0) {
+                const subtotalRow = data[passthroughSubtotalIndex];
+                let totalPassthrough = 0;
+
+                for (let year = 1; year <= totalYears; year++) {
+                    const smhAmount = subLaborTotals[year].amount * smhRate;
+                    const gaAmount = subLaborTotals[year].amount * gaPassthroughRate;
+                    const yearPassthrough = Math.round((smhAmount + gaAmount) * 100) / 100;
+
+                    subtotalRow[`year${year}_amount`] = yearPassthrough;
+                    totalPassthrough += yearPassthrough;
+                }
+
+                subtotalRow.totalAmount = Math.round(totalPassthrough * 100) / 100;
+            }
+
+            // Total Sub Cost including passthrough
+            const passthroughTotalIndex = data.findIndex(r => r._meta?.section === 'passthrough' && r._meta?.type === 'total');
+            if (passthroughTotalIndex >= 0) {
+                const totalRow = data[passthroughTotalIndex];
+                let grandSubTotal = 0;
+
+                for (let year = 1; year <= totalYears; year++) {
+                    const subLabor = subLaborTotals[year].amount;
+                    const smh = subLabor * smhRate;
+                    const ga = subLabor * gaPassthroughRate;
+                    const yearTotal = Math.round((subLabor + smh + ga) * 100) / 100;
+
+                    totalRow[`year${year}_amount`] = yearTotal;
+                    grandSubTotal += yearTotal;
+                }
+
+                totalRow.totalAmount = Math.round(grandSubTotal * 100) / 100;
+            }
+
             // 6. Calculate ODC Section
             const odcTotals = {};
             for (let year = 1; year <= totalYears; year++) {
                 odcTotals[year] = { baseAmount: 0, gaAdder: 0, totalAmount: 0 };
             }
 
-            const gaAdderRate = 0.2212; // 22.12% G&A adder
+            const gaAdderRate = rates.ga_adder; // Use global rate (editable by user)
 
             data.forEach((row, rowIndex) => {
                 if (row._meta?.section === 'odc' && row._meta?.type === 'item') {
@@ -1521,22 +1855,28 @@
                 subtotalRow.totalAmount = Math.round(totalAmount * 100) / 100;
             }
 
-            // 7. Update Fee on Subcontractor Labor
+            // 7. Calculate Fee on Subcontractor Labor (applied to sub labor + passthrough)
             const subFeeIndex = data.findIndex(r => r._meta?.section === 'fee' && r._meta?.type === 'subFee');
             if (subFeeIndex >= 0) {
                 const feeRow = data[subFeeIndex];
                 let totalFee = 0;
 
                 for (let year = 1; year <= totalYears; year++) {
-                    // Fee already included in subcontractor markup, so this is $0
-                    // (or could show the fee component separately if desired)
-                    feeRow[`year${year}_amount`] = 0;
+                    // Fee is applied to total subcontractor cost (labor + S&MH + G&A)
+                    const subLabor = subLaborTotals[year].amount;
+                    const smh = subLabor * smhRate;
+                    const ga = subLabor * gaPassthroughRate;
+                    const totalSubCost = subLabor + smh + ga;
+
+                    const fee = Math.round(totalSubCost * rates.sub_fee * 100) / 100;
+                    feeRow[`year${year}_amount`] = fee;
+                    totalFee += fee;
                 }
 
-                feeRow.totalAmount = 0;
+                feeRow.totalAmount = Math.round(totalFee * 100) / 100;
             }
 
-            // 8. Calculate Grand Total (Prime Labor + Subs + ODCs + Fees)
+            // 8. Calculate Grand Total (Prime Labor + Prime Fee + Subs + Passthrough + Sub Fee + ODCs)
             const grandTotalIndex = data.findIndex(r => r._meta?.section === 'grandTotal');
             if (grandTotalIndex >= 0) {
                 const grandTotalRow = data[grandTotalIndex];
@@ -1544,13 +1884,30 @@
                 let grandHours = 0;
 
                 for (let year = 1; year <= totalYears; year++) {
+                    // Prime Labor (DL + Fringe + OH + G&A)
                     const primeLabor = primeLaborTotals[year].dlAmount + primeLaborTotals[year].fringeAmount +
                                       primeLaborTotals[year].ohAmount + primeLaborTotals[year].gaAmount;
+
+                    // Prime Fee
                     const primeFee = Math.round(primeLabor * rates.fee * 100) / 100;
+
+                    // Subcontractor Labor
                     const subLabor = subLaborTotals[year].amount;
+
+                    // Subcontractor Passthrough (S&MH + G&A)
+                    const subSmh = Math.round(subLabor * smhRate * 100) / 100;
+                    const subGa = Math.round(subLabor * gaPassthroughRate * 100) / 100;
+                    const subPassthrough = subSmh + subGa;
+
+                    // Subcontractor Fee (on total sub cost including passthrough)
+                    const totalSubCost = subLabor + subPassthrough;
+                    const subFee = Math.round(totalSubCost * rates.sub_fee * 100) / 100;
+
+                    // ODCs
                     const odcs = odcTotals[year].totalAmount;
 
-                    const yearTotal = primeLabor + primeFee + subLabor + odcs;
+                    // Grand Total = Prime Labor + Prime Fee + Sub Labor + Sub Passthrough + Sub Fee + ODCs
+                    const yearTotal = primeLabor + primeFee + subLabor + subPassthrough + subFee + odcs;
 
                     grandTotalRow[`year${year}_amount`] = Math.round(yearTotal * 100) / 100;
                     grandTotal += yearTotal;
@@ -1569,6 +1926,85 @@
             const data = hot.getSourceData();
             const totalYears = metadata.total_years || 5;
 
+            const dialogHTML = `
+                <div style="padding: 20px;">
+                    <h3 style="margin-top: 0;">Add New Position</h3>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        Labor Category / Position Title:
+                        <input type="text" id="posLaborCategoryInput" placeholder="e.g., Senior Systems Engineer" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px;" />
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        BLS Labor Category:
+                        <input type="text" id="posBlsCategoryInput" placeholder="e.g., Computer Network Architects" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px;" />
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        BLS Code:
+                        <input type="text" id="posBlsCodeInput" placeholder="e.g., 151241" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px;" />
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        Annual Salary ($):
+                        <input type="number" id="posSalaryInput" placeholder="e.g., 75000" step="1000" min="0" value="75000" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px;" />
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        Hours per Year:
+                        <input type="number" id="posHoursInput" placeholder="e.g., 1880" step="40" min="0" value="1880" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px;" />
+                    </label>
+
+                    <div style="margin-top: 20px; text-align: right;">
+                        <button onclick="document.getElementById('posDialog').remove(); delete window.posDialogData;" style="margin-right: 10px; padding: 8px 16px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">Cancel</button>
+                        <button onclick="confirmAddPosition()" style="padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Add</button>
+                    </div>
+                </div>
+            `;
+
+            // Create dialog overlay
+            const dialog = document.createElement('div');
+            dialog.id = 'posDialog';
+            dialog.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+            dialog.innerHTML = `<div style="background: white; border-radius: 8px; max-width: 500px; width: 90%;">${dialogHTML}</div>`;
+            document.body.appendChild(dialog);
+
+            // Store data for confirm function
+            window.posDialogData = { data, totalYears };
+        }
+
+        // Confirm add position (called from dialog button)
+        function confirmAddPosition() {
+            const laborCategoryInput = document.getElementById('posLaborCategoryInput');
+            const blsCategoryInput = document.getElementById('posBlsCategoryInput');
+            const blsCodeInput = document.getElementById('posBlsCodeInput');
+            const salaryInput = document.getElementById('posSalaryInput');
+            const hoursInput = document.getElementById('posHoursInput');
+
+            const laborCategory = laborCategoryInput.value.trim();
+            const blsCategory = blsCategoryInput.value.trim();
+            const blsCode = blsCodeInput.value.trim();
+            const salary = parseFloat(salaryInput.value);
+            const hours = parseFloat(hoursInput.value);
+
+            // Validation
+            if (!laborCategory) {
+                alert('Please enter a labor category / position title');
+                return;
+            }
+
+            if (!salary || salary <= 0) {
+                alert('Please enter a valid salary greater than 0');
+                return;
+            }
+
+            if (!hours || hours <= 0) {
+                alert('Please enter valid hours greater than 0');
+                return;
+            }
+
+            const { data, totalYears } = window.posDialogData;
+
             // Find the index to insert after (last position row)
             let insertIndex = -1;
             for (let i = data.length - 1; i >= 0; i--) {
@@ -1580,34 +2016,38 @@
 
             if (insertIndex === -1) {
                 alert('Could not find position section to insert row');
+                document.getElementById('posDialog').remove();
                 return;
             }
 
-            // Create new position row
+            // Create new position row with user-provided data
             const newPosition = {
                 costElement: 'Position',
-                laborCategory: 'New Position',
-                blsCategory: '',
-                blsCode: '',
+                laborCategory: laborCategory,
+                blsCategory: blsCategory,
+                blsCode: blsCode,
                 percentile: '50th',
                 _meta: {
                     section: 'primeLabor',
                     type: 'position',
                     id: `pos_new_${Date.now()}`,
                     jobData: {
-                        wage_10th: 50000,
-                        wage_25th: 60000,
-                        wage_50th: 75000,
-                        wage_75th: 90000,
-                        wage_90th: 110000,
-                        selected_wage: 75000
+                        wage_10th: Math.round(salary * 0.67),
+                        wage_25th: Math.round(salary * 0.80),
+                        wage_50th: salary,
+                        wage_75th: Math.round(salary * 1.20),
+                        wage_90th: Math.round(salary * 1.47),
+                        selected_wage: salary,
+                        location: 'National',
+                        description: '',
+                        experience: 5
                     }
                 }
             };
 
             // Initialize year columns
             for (let year = 1; year <= totalYears; year++) {
-                newPosition[`year${year}_hours`] = 1880;
+                newPosition[`year${year}_hours`] = hours;
             }
 
             // Insert the row
@@ -1615,6 +2055,10 @@
             hot.loadData(data);
             recalculateAllSections();
             hot.render();
+
+            // Close dialog
+            document.getElementById('posDialog').remove();
+            delete window.posDialogData;
         }
 
         // Add new subcontractor row
@@ -1623,6 +2067,87 @@
 
             const data = hot.getSourceData();
             const totalYears = metadata.total_years || 5;
+
+            // Get all unique position labor categories for dropdown
+            const positionCategories = [...new Set(
+                data
+                    .filter(r => r._meta?.section === 'primeLabor' && r._meta?.type === 'position')
+                    .map(r => r.laborCategory)
+                    .filter(cat => cat) // Remove empty values
+            )];
+
+            if (positionCategories.length === 0) {
+                alert('No positions available to select from. Please add positions first.');
+                return;
+            }
+
+            // Create dropdown HTML
+            const dropdownOptions = positionCategories.map((cat, idx) =>
+                `<option value="${idx}">${cat}</option>`
+            ).join('');
+
+            const dialogHTML = `
+                <div style="padding: 20px;">
+                    <h3 style="margin-top: 0;">Add Subcontractor Position</h3>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        Subcontractor Name:
+                        <input type="text" id="subNameInput" placeholder="e.g., Acme Corp" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px;" />
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        Select Position:
+                        <select id="subPositionSelect" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px;">
+                            ${dropdownOptions}
+                        </select>
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        Hourly Rate ($):
+                        <input type="number" id="subRateInput" placeholder="e.g., 125.50" step="0.01" min="0" value="100" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px;" />
+                    </label>
+
+                    <div style="margin-top: 20px; text-align: right;">
+                        <button onclick="document.getElementById('subDialog').remove(); delete window.subDialogData;" style="margin-right: 10px; padding: 8px 16px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">Cancel</button>
+                        <button onclick="confirmAddSubcontractor()" style="padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Add</button>
+                    </div>
+                </div>
+            `;
+
+            // Create dialog overlay
+            const dialog = document.createElement('div');
+            dialog.id = 'subDialog';
+            dialog.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+            dialog.innerHTML = `<div style="background: white; border-radius: 8px; max-width: 500px; width: 90%;">${dialogHTML}</div>`;
+            document.body.appendChild(dialog);
+
+            // Store data for confirm function
+            window.subDialogData = { positionCategories, data, totalYears };
+        }
+
+        // Confirm add subcontractor (called from dialog button)
+        function confirmAddSubcontractor() {
+            const nameInput = document.getElementById('subNameInput');
+            const select = document.getElementById('subPositionSelect');
+            const rateInput = document.getElementById('subRateInput');
+
+            const subName = nameInput.value.trim();
+            const selectedIndex = parseInt(select.value);
+            const subRate = parseFloat(rateInput.value);
+
+            // Validation
+            if (!subName) {
+                alert('Please enter a subcontractor name');
+                return;
+            }
+
+            if (!subRate || subRate <= 0) {
+                alert('Please enter a valid rate greater than 0');
+                return;
+            }
+
+            const { positionCategories, data, totalYears } = window.subDialogData;
+            const selectedPosition = positionCategories[selectedIndex];
 
             // Find the index to insert before the subcontractor subtotal
             let insertIndex = -1;
@@ -1635,35 +2160,38 @@
 
             if (insertIndex === -1) {
                 alert('Could not find subcontractor section to insert row');
+                document.getElementById('subDialog').remove();
                 return;
             }
 
-            // Count existing subcontractors
-            let subCount = 0;
-            for (let i = 0; i < data.length; i++) {
-                if (data[i]._meta?.section === 'subcontractor' && data[i]._meta?.type === 'sub') {
-                    subCount++;
-                }
-            }
+            // Find the selected position data to get BLS info
+            const positionData = data.find(r =>
+                r._meta?.section === 'primeLabor' &&
+                r._meta?.type === 'position' &&
+                r.laborCategory === selectedPosition
+            );
 
-            // Create new subcontractor row
+            // Create new subcontractor row with user-provided data
             const newSub = {
-                costElement: 'Subcontractor',
-                laborCategory: `Subcontractor ${subCount + 1}`,
-                blsCategory: '',
-                blsCode: '',
+                costElement: `Subcontractor (${subName})`,
+                laborCategory: selectedPosition,
+                blsCategory: positionData?.blsCategory || '',
+                blsCode: positionData?.blsCode || '',
                 percentile: '',
                 _meta: {
                     section: 'subcontractor',
                     type: 'sub',
                     id: `sub_new_${Date.now()}`,
-                    subData: { baseRate: 100 }
+                    subData: {
+                        baseRate: subRate,
+                        name: subName
+                    }
                 }
             };
 
-            // Initialize year columns
+            // Initialize year columns with user-provided rate
             for (let year = 1; year <= totalYears; year++) {
-                newSub[`year${year}_rate`] = 100;
+                newSub[`year${year}_rate`] = subRate;
                 newSub[`year${year}_hours`] = 0;
             }
 
@@ -1672,6 +2200,10 @@
             hot.loadData(data);
             recalculateAllSections();
             hot.render();
+
+            // Close dialog
+            document.getElementById('subDialog').remove();
+            delete window.subDialogData;
         }
 
         // Add new ODC row
@@ -1680,6 +2212,73 @@
 
             const data = hot.getSourceData();
             const totalYears = metadata.total_years || 5;
+
+            const dialogHTML = `
+                <div style="padding: 20px;">
+                    <h3 style="margin-top: 0;">Add Other Direct Cost (ODC)</h3>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        Category / Description:
+                        <input type="text" id="odcCategoryInput" placeholder="e.g., Travel, Equipment, Materials" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px;" />
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        Amount for Year 1 ($):
+                        <input type="number" id="odcAmountInput" placeholder="e.g., 10000" step="100" min="0" value="0" style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ddd; border-radius: 4px;" />
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <input type="checkbox" id="odcEscalateCheckbox" style="margin-right: 8px;" />
+                        Apply escalation to this cost (increase each year)
+                    </label>
+
+                    <label style="display: block; margin-bottom: 15px;">
+                        <input type="checkbox" id="odcAdderCheckbox" checked style="margin-right: 8px;" />
+                        Apply G&A adder (22.12%)
+                    </label>
+
+                    <div style="margin-top: 20px; text-align: right;">
+                        <button onclick="document.getElementById('odcDialog').remove(); delete window.odcDialogData;" style="margin-right: 10px; padding: 8px 16px; border: 1px solid #ddd; background: white; border-radius: 4px; cursor: pointer;">Cancel</button>
+                        <button onclick="confirmAddODC()" style="padding: 8px 16px; background: #667eea; color: white; border: none; border-radius: 4px; cursor: pointer;">Add</button>
+                    </div>
+                </div>
+            `;
+
+            // Create dialog overlay
+            const dialog = document.createElement('div');
+            dialog.id = 'odcDialog';
+            dialog.style.cssText = 'position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 10000;';
+            dialog.innerHTML = `<div style="background: white; border-radius: 8px; max-width: 500px; width: 90%;">${dialogHTML}</div>`;
+            document.body.appendChild(dialog);
+
+            // Store data for confirm function
+            window.odcDialogData = { data, totalYears };
+        }
+
+        // Confirm add ODC (called from dialog button)
+        function confirmAddODC() {
+            const categoryInput = document.getElementById('odcCategoryInput');
+            const amountInput = document.getElementById('odcAmountInput');
+            const escalateCheckbox = document.getElementById('odcEscalateCheckbox');
+            const adderCheckbox = document.getElementById('odcAdderCheckbox');
+
+            const category = categoryInput.value.trim();
+            const amount = parseFloat(amountInput.value);
+            const escalate = escalateCheckbox.checked;
+            const applyAdder = adderCheckbox.checked;
+
+            // Validation
+            if (!category) {
+                alert('Please enter a category / description');
+                return;
+            }
+
+            if (isNaN(amount) || amount < 0) {
+                alert('Please enter a valid amount (0 or greater)');
+                return;
+            }
+
+            const { data, totalYears } = window.odcDialogData;
 
             // Find the index to insert before the G&A Adder row
             let insertIndex = -1;
@@ -1692,20 +2291,13 @@
 
             if (insertIndex === -1) {
                 alert('Could not find ODC section to insert row');
+                document.getElementById('odcDialog').remove();
                 return;
             }
 
-            // Count existing ODC items
-            let odcCount = 0;
-            for (let i = 0; i < data.length; i++) {
-                if (data[i]._meta?.section === 'odc' && data[i]._meta?.type === 'item') {
-                    odcCount++;
-                }
-            }
-
-            // Create new ODC row
+            // Create new ODC row with user-provided data
             const newODC = {
-                costElement: `ODC Item ${odcCount + 1}`,
+                costElement: category,
                 laborCategory: '',
                 blsCategory: '',
                 blsCode: '',
@@ -1714,13 +2306,17 @@
                     section: 'odc',
                     type: 'item',
                     id: `odc_new_${Date.now()}`,
-                    odcData: { escalate: false, applyAdder: true }
+                    odcData: {
+                        escalate: escalate,
+                        applyAdder: applyAdder,
+                        baseAmount: amount
+                    }
                 }
             };
 
             // Initialize year columns
             for (let year = 1; year <= totalYears; year++) {
-                newODC[`year${year}_amount`] = 0;
+                newODC[`year${year}_amount`] = amount; // Will be recalculated with escalation/adder
             }
 
             // Insert the row
@@ -1728,6 +2324,10 @@
             hot.loadData(data);
             recalculateAllSections();
             hot.render();
+
+            // Close dialog
+            document.getElementById('odcDialog').remove();
+            delete window.odcDialogData;
         }
 
         // Download Excel from spreadsheet
@@ -1774,7 +2374,7 @@
                     }
                 });
 
-                // Build subcontractors array
+                // Build subcontractors array - group by subcontractor name
                 const subcontractors = [];
                 const subRows = [];
                 data.forEach(row => {
@@ -1784,24 +2384,37 @@
                 });
 
                 if (subRows.length > 0) {
-                    const laborCategories = subRows.map(row => {
-                        const category = {
-                            labor_category: row.laborCategory || 'Subcontractor',
-                            ecraft_code: ''
-                        };
-
-                        // Add year-specific rates and hours
-                        for (let year = 1; year <= totalYears; year++) {
-                            category[`year_${year}_rate`] = row[`year${year}_rate`] || 0;
-                            category[`year_${year}_hours`] = row[`year${year}_hours`] || 0;
+                    // Group subcontractor rows by name
+                    const subsByName = {};
+                    subRows.forEach(row => {
+                        const subName = row._meta?.subData?.name || 'Subcontractor';
+                        if (!subsByName[subName]) {
+                            subsByName[subName] = [];
                         }
-
-                        return category;
+                        subsByName[subName].push(row);
                     });
 
-                    subcontractors.push({
-                        name: 'Subcontractor',
-                        labor_categories: laborCategories
+                    // Create a subcontractor entry for each unique name
+                    Object.entries(subsByName).forEach(([subName, rows]) => {
+                        const laborCategories = rows.map(row => {
+                            const category = {
+                                labor_category: row.laborCategory || 'Position',
+                                ecraft_code: row.blsCode || ''
+                            };
+
+                            // Add year-specific rates and hours
+                            for (let year = 1; year <= totalYears; year++) {
+                                category[`year_${year}_rate`] = row[`year${year}_rate`] || 0;
+                                category[`year_${year}_hours`] = row[`year${year}_hours`] || 0;
+                            }
+
+                            return category;
+                        });
+
+                        subcontractors.push({
+                            name: subName,
+                            labor_categories: laborCategories
+                        });
                     });
                 }
 
@@ -1825,7 +2438,7 @@
                 const projectConfig = {
                     solicitation_number: metadata.solicitation_number || 'N0000000R0000',
                     prime_contractor_name: 'Prime Contractor',
-                    subcontractor_names: subcontractors.length > 0 ? ['Subcontractor'] : [],
+                    subcontractor_names: subcontractors.map(sub => sub.name),
                     dcaa_contact: '',
                     total_years: totalYears,
                     base_years: metadata.base_years || 1,
@@ -1836,14 +2449,14 @@
                         ga: rates.ga
                     },
                     passthrough_rates: {
-                        smh: 0.0665,
-                        ga: 0.0
+                        smh: rates.smh,
+                        ga: rates.ga_passthrough
                     },
                     fee_rates: {
                         prime_labor: rates.fee,
-                        sub_labor: 0.0126
+                        sub_labor: rates.sub_fee
                     },
-                    ga_adder_rate: 0.2212,
+                    ga_adder_rate: rates.ga_adder,
                     subcontractors: subcontractors,
                     odcs: odcs,
                     include_rate_table: true
