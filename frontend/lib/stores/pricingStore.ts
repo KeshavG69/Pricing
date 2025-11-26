@@ -1,0 +1,394 @@
+import { create } from 'zustand';
+import { debounce } from 'lodash-es';
+import {
+  SpreadsheetPosition,
+  Subcontractor,
+  ODCItem,
+  IndirectRates,
+  EscalationRates,
+  JobPosition,
+} from '@/types';
+import { pricingApi } from '../api/pricing';
+import { proposalsApi } from '../api/proposals';
+import { useToast } from '../hooks/useToast';
+
+interface PricingState {
+  // Data
+  proposalId: string | null;
+  proposalName: string;
+  solicitationNumber?: string;
+  positions: SpreadsheetPosition[];
+  subcontractors: Subcontractor[];
+  odcs: ODCItem[];
+  rates: IndirectRates;
+  escalationRates: EscalationRates;
+
+  // Metadata
+  totalYears: number;
+  baseYears: number;
+  optionYears: number;
+  isDirty: boolean;
+  isRecalculating: boolean;
+  isSaving: boolean;
+  lastSaved: Date | null;
+  error: string | null;
+
+  // Actions
+  loadProposal: (proposalId: string) => Promise<void>;
+  updatePosition: (id: string, updates: Partial<SpreadsheetPosition>) => void;
+  addPosition: (position: Omit<SpreadsheetPosition, 'id'>) => void;
+  deletePosition: (id: string) => void;
+  addSubcontractor: (subcontractor: Omit<Subcontractor, 'id'>) => void;
+  deleteSubcontractor: (id: string) => void;
+  addODC: (odc: Omit<ODCItem, 'id'>) => void;
+  deleteODC: (id: string) => void;
+  updateRates: (rates: Partial<IndirectRates>) => void;
+  updateEscalationRates: (rates: Partial<EscalationRates>) => void;
+  recalculate: () => Promise<void>;
+  exportToExcel: () => Promise<void>;
+  reset: () => void;
+}
+
+// Helper to map JobPosition to SpreadsheetPosition
+const mapJobToPosition = (job: JobPosition, index: number): SpreadsheetPosition => ({
+  id: `pos_${index}_${Date.now()}`,
+  labor_category: job.labor_category,
+  soc_code: job.soc_code,
+  soc_title: job.soc_title,
+  percentile: job.selected_percentile || '50th',
+  wage_10th: job.wage_10th,
+  wage_25th: job.wage_25th,
+  wage_50th: job.wage_50th,
+  wage_75th: job.wage_75th,
+  wage_90th: job.wage_90th,
+  hours_per_year: job.hours_per_year || { '1': job.hours || 1880 },
+  yearly_amounts: [],
+  total_amount: 0,
+});
+
+// Helper to build year hours for recalculation request
+const buildYearHours = (hours_per_year: Record<string, number>) => {
+  const result: Record<string, number> = {};
+  Object.entries(hours_per_year).forEach(([year, hours]) => {
+    result[`year${year}_hours`] = hours;
+  });
+  return result;
+};
+
+export const usePricingStore = create<PricingState>((set, get) => {
+  const toast = useToast();
+
+  // Debounced recalculation (500ms)
+  const debouncedRecalculate = debounce(async () => {
+    const state = get();
+    if (!state.proposalId) return;
+
+    set({ isRecalculating: true });
+    toast.info('Recalculating...', 3000);
+
+    try {
+      const response = await pricingApi.recalculate({
+        positions: state.positions.map((p) => ({
+          id: p.id,
+          percentile: p.percentile,
+          wage_10th: p.wage_10th,
+          wage_25th: p.wage_25th,
+          wage_50th: p.wage_50th,
+          wage_75th: p.wage_75th,
+          wage_90th: p.wage_90th,
+          ...buildYearHours(p.hours_per_year),
+        })),
+        rates: state.rates,
+        escalation_rates: state.escalationRates,
+        total_years: state.totalYears,
+      });
+
+      // Update positions with calculated data
+      const updatedPositions = state.positions.map((pos) => {
+        const result = response.results.find((r) => r.id === pos.id);
+        return {
+          ...pos,
+          yearly_amounts: result?.years,
+          total_amount: result?.total_amount,
+        };
+      });
+
+      set({
+        positions: updatedPositions,
+        isRecalculating: false,
+        isDirty: true,
+      });
+
+      toast.success('Calculations updated');
+
+      // Trigger auto-save
+      debouncedAutoSave();
+    } catch (error: any) {
+      console.error('Recalculation failed:', error);
+      set({ isRecalculating: false });
+      toast.error('Recalculation failed. Please try again.');
+    }
+  }, 500);
+
+  // Debounced auto-save (2000ms)
+  const debouncedAutoSave = debounce(async () => {
+    const state = get();
+    if (!state.proposalId || !state.isDirty) return;
+
+    set({ isSaving: true });
+
+    try {
+      await proposalsApi.update(state.proposalId, {
+        spreadsheet_data: {
+          positions: state.positions,
+          subcontractors: state.subcontractors,
+          odcs: state.odcs,
+          rates: state.rates,
+          escalation_rates: state.escalationRates,
+        },
+      });
+
+      set({
+        isDirty: false,
+        isSaving: false,
+        lastSaved: new Date(),
+      });
+    } catch (error: any) {
+      console.error('Auto-save failed:', error);
+      set({ isSaving: false });
+      // Silently fail - don't show error toast
+    }
+  }, 2000);
+
+  return {
+    // Initial state
+    proposalId: null,
+    proposalName: '',
+    solicitationNumber: '',
+    positions: [],
+    subcontractors: [],
+    odcs: [],
+    rates: {
+      fringe: 0.247,
+      oh: 0.0711,
+      ga: 0.2243,
+      fee: 0.07,
+      smh: 0.065,
+      sub_fee: 0.05,
+      ga_passthrough: 0.025,
+      ga_adder: 0.0243,
+    },
+    escalationRates: {},
+    totalYears: 1,
+    baseYears: 1,
+    optionYears: 0,
+    isDirty: false,
+    isRecalculating: false,
+    isSaving: false,
+    lastSaved: null,
+    error: null,
+
+    loadProposal: async (proposalId) => {
+      try {
+        const proposal = await proposalsApi.get(proposalId);
+
+        // Extract positions from jobs or spreadsheet_data
+        let positions: SpreadsheetPosition[] = [];
+
+        if (proposal.spreadsheet_data?.positions) {
+          positions = proposal.spreadsheet_data.positions;
+        } else if (proposal.jobs && proposal.jobs.length > 0) {
+          positions = proposal.jobs.map((job, index) => mapJobToPosition(job, index));
+        }
+
+        // Setup default escalation rates based on years
+        const totalYears = proposal.metadata?.total_years || 1;
+        const defaultEscalationRates: EscalationRates = {};
+        for (let i = 1; i < totalYears; i++) {
+          defaultEscalationRates[`${i}_to_${i + 1}`] = 0.0272; // Default 2.72%
+        }
+
+        set({
+          proposalId,
+          proposalName: proposal.name,
+          solicitationNumber: proposal.solicitation_number,
+          positions,
+          subcontractors: proposal.spreadsheet_data?.subcontractors || [],
+          odcs: proposal.spreadsheet_data?.odcs || [],
+          rates: proposal.rates || get().rates,
+          escalationRates: proposal.escalation_rates || defaultEscalationRates,
+          totalYears: proposal.metadata?.total_years || 1,
+          baseYears: proposal.metadata?.base_years || 1,
+          optionYears: proposal.metadata?.option_years || 0,
+          isDirty: false,
+          lastSaved: null,
+          error: null,
+        });
+
+        // Trigger initial recalculation if we have positions
+        if (positions.length > 0) {
+          debouncedRecalculate();
+        }
+      } catch (error: any) {
+        set({
+          error: error.response?.data?.detail || 'Failed to load proposal',
+        });
+      }
+    },
+
+    updatePosition: (id, updates) => {
+      set((state) => ({
+        positions: state.positions.map((p) =>
+          p.id === id ? { ...p, ...updates } : p
+        ),
+      }));
+      debouncedRecalculate();
+    },
+
+    addPosition: (position) => {
+      const id = `pos_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      set((state) => ({
+        positions: [...state.positions, { ...position, id }],
+      }));
+      debouncedRecalculate();
+    },
+
+    deletePosition: (id) => {
+      set((state) => ({
+        positions: state.positions.filter((p) => p.id !== id),
+      }));
+      debouncedRecalculate();
+    },
+
+    addSubcontractor: (subcontractor) => {
+      const id = `sub_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      set((state) => ({
+        subcontractors: [...state.subcontractors, { ...subcontractor, id }],
+        isDirty: true,
+      }));
+      debouncedAutoSave();
+    },
+
+    deleteSubcontractor: (id) => {
+      set((state) => ({
+        subcontractors: state.subcontractors.filter((s) => s.id !== id),
+        isDirty: true,
+      }));
+      debouncedAutoSave();
+    },
+
+    addODC: (odc) => {
+      const id = `odc_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      set((state) => ({
+        odcs: [...state.odcs, { ...odc, id }],
+        isDirty: true,
+      }));
+      debouncedAutoSave();
+    },
+
+    deleteODC: (id) => {
+      set((state) => ({
+        odcs: state.odcs.filter((o) => o.id !== id),
+        isDirty: true,
+      }));
+      debouncedAutoSave();
+    },
+
+    updateRates: (rates) => {
+      set((state) => ({
+        rates: { ...state.rates, ...rates },
+      }));
+      debouncedRecalculate();
+    },
+
+    updateEscalationRates: (rates) => {
+      set((state) => ({
+        escalationRates: { ...state.escalationRates, ...rates },
+      }));
+      debouncedRecalculate();
+    },
+
+    recalculate: async () => {
+      // Force immediate recalculation (bypass debounce)
+      debouncedRecalculate.cancel();
+      await debouncedRecalculate();
+    },
+
+    exportToExcel: async () => {
+      const state = get();
+      if (!state.proposalId) return;
+
+      try {
+        toast.info('Generating Excel file...');
+
+        const blob = await pricingApi.exportToExcel({
+          proposal_name: state.proposalName,
+          solicitation_number: state.solicitationNumber,
+          jobs: state.positions.map((p) => ({
+            labor_category: p.labor_category,
+            soc_code: p.soc_code,
+            percentile: p.percentile,
+            hours_per_year: p.hours_per_year,
+            wage_10th: p.wage_10th,
+            wage_25th: p.wage_25th,
+            wage_50th: p.wage_50th,
+            wage_75th: p.wage_75th,
+            wage_90th: p.wage_90th,
+          })),
+          rates: state.rates,
+          escalation_rates: state.escalationRates,
+          subcontractors: state.subcontractors,
+          odcs: state.odcs,
+          total_years: state.totalYears,
+          base_years: state.baseYears,
+          option_years: state.optionYears,
+        });
+
+        // Trigger download
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${state.proposalName}_Pricing.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+
+        toast.success('Excel file downloaded successfully');
+      } catch (error: any) {
+        console.error('Excel export failed:', error);
+        toast.error('Failed to export to Excel. Please try again.');
+      }
+    },
+
+    reset: () => {
+      set({
+        proposalId: null,
+        proposalName: '',
+        solicitationNumber: '',
+        positions: [],
+        subcontractors: [],
+        odcs: [],
+        rates: {
+          fringe: 0.247,
+          oh: 0.0711,
+          ga: 0.2243,
+          fee: 0.07,
+          smh: 0.065,
+          sub_fee: 0.05,
+          ga_passthrough: 0.025,
+          ga_adder: 0.0243,
+        },
+        escalationRates: {},
+        totalYears: 1,
+        baseYears: 1,
+        optionYears: 0,
+        isDirty: false,
+        isRecalculating: false,
+        isSaving: false,
+        lastSaved: null,
+        error: null,
+      });
+    },
+  };
+});

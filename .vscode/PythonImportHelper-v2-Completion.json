@@ -296,6 +296,14 @@
         "documentation": {}
     },
     {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "List",
         "importPath": "typing",
         "description": "typing",
@@ -400,6 +408,30 @@
         "documentation": {}
     },
     {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "List",
         "importPath": "typing",
         "description": "typing",
@@ -417,6 +449,30 @@
     },
     {
         "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -521,6 +577,30 @@
     },
     {
         "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -713,6 +793,40 @@
         "documentation": {}
     },
     {
+        "label": "json",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "json",
+        "description": "json",
+        "detail": "json",
+        "documentation": {}
+    },
+    {
+        "label": "pformat",
+        "importPath": "pprint",
+        "description": "pprint",
+        "isExtraImport": true,
+        "detail": "pprint",
+        "documentation": {}
+    },
+    {
+        "label": "jmespath",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "jmespath",
+        "description": "jmespath",
+        "detail": "jmespath",
+        "documentation": {}
+    },
+    {
+        "label": "exceptions",
+        "importPath": "jmespath",
+        "description": "jmespath",
+        "isExtraImport": true,
+        "detail": "jmespath",
+        "documentation": {}
+    },
+    {
         "label": "pdfminer.high_level",
         "kind": 6,
         "isExtraImport": true,
@@ -874,6 +988,22 @@
         "documentation": {}
     },
     {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
         "label": "UploadFile",
         "importPath": "fastapi",
         "description": "fastapi",
@@ -899,6 +1029,22 @@
     },
     {
         "label": "BackgroundTasks",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "status",
         "importPath": "fastapi",
         "description": "fastapi",
         "isExtraImport": true,
@@ -1026,6 +1172,14 @@
         "documentation": {}
     },
     {
+        "label": "proposals",
+        "importPath": "routers",
+        "description": "routers",
+        "isExtraImport": true,
+        "detail": "routers",
+        "documentation": {}
+    },
+    {
         "label": "BaseSettings",
         "importPath": "pydantic_settings",
         "description": "pydantic_settings",
@@ -1082,7 +1236,23 @@
         "documentation": {}
     },
     {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
         "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
         "isExtraImport": true,
@@ -1202,6 +1372,14 @@
         "documentation": {}
     },
     {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
         "label": "requests",
         "importPath": "google.auth.transport",
         "description": "google.auth.transport",
@@ -1227,6 +1405,22 @@
     },
     {
         "label": "EmailStr",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
         "importPath": "pydantic",
         "description": "pydantic",
         "isExtraImport": true,
@@ -1372,6 +1566,32 @@
         "documentation": {}
     },
     {
+        "label": "boto3",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "boto3",
+        "description": "boto3",
+        "detail": "boto3",
+        "documentation": {}
+    },
+    {
+        "label": "ClientError",
+        "importPath": "botocore.exceptions",
+        "description": "botocore.exceptions",
+        "isExtraImport": true,
+        "detail": "botocore.exceptions",
+        "documentation": {}
+    },
+    {
+        "label": "threading",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "threading",
+        "description": "threading",
+        "detail": "threading",
+        "documentation": {}
+    },
+    {
         "label": "pandas",
         "kind": 6,
         "isExtraImport": true,
@@ -1386,15 +1606,6 @@
         "description": "models.job_description",
         "isExtraImport": true,
         "detail": "models.job_description",
-        "documentation": {}
-    },
-    {
-        "label": "threading",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "threading",
-        "description": "threading",
-        "detail": "threading",
         "documentation": {}
     },
     {
@@ -1528,6 +1739,14 @@
     },
     {
         "label": "GoogleLoginRequest",
+        "importPath": "auth.models",
+        "description": "auth.models",
+        "isExtraImport": true,
+        "detail": "auth.models",
+        "documentation": {}
+    },
+    {
+        "label": "UserResponse",
         "importPath": "auth.models",
         "description": "auth.models",
         "isExtraImport": true,
@@ -1681,21 +1900,84 @@
         "documentation": {}
     },
     {
-        "label": "numpy",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "numpy",
-        "description": "numpy",
-        "detail": "numpy",
-        "documentation": {}
-    },
-    {
         "label": "asyncio",
         "kind": 6,
         "isExtraImport": true,
         "importPath": "asyncio",
         "description": "asyncio",
         "detail": "asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "routers.auth",
+        "description": "routers.auth",
+        "isExtraImport": true,
+        "detail": "routers.auth",
+        "documentation": {}
+    },
+    {
+        "label": "ProposalCreate",
+        "importPath": "models.proposal",
+        "description": "models.proposal",
+        "isExtraImport": true,
+        "detail": "models.proposal",
+        "documentation": {}
+    },
+    {
+        "label": "ProposalUpdate",
+        "importPath": "models.proposal",
+        "description": "models.proposal",
+        "isExtraImport": true,
+        "detail": "models.proposal",
+        "documentation": {}
+    },
+    {
+        "label": "DocumentInfo",
+        "importPath": "models.proposal",
+        "description": "models.proposal",
+        "isExtraImport": true,
+        "detail": "models.proposal",
+        "documentation": {}
+    },
+    {
+        "label": "ProposalCRUD",
+        "importPath": "utils.proposals",
+        "description": "utils.proposals",
+        "isExtraImport": true,
+        "detail": "utils.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "get_idrive_storage",
+        "importPath": "client.idrive_storage",
+        "description": "client.idrive_storage",
+        "isExtraImport": true,
+        "detail": "client.idrive_storage",
+        "documentation": {}
+    },
+    {
+        "label": "MongoDB",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
         "documentation": {}
     },
     {
@@ -1741,15 +2023,6 @@
         "documentation": {}
     },
     {
-        "label": "json",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "json",
-        "description": "json",
-        "detail": "json",
-        "documentation": {}
-    },
-    {
         "label": "create_pricing_agent",
         "importPath": "agent.agent",
         "description": "agent.agent",
@@ -1763,6 +2036,14 @@
         "description": "agent.agent",
         "isExtraImport": true,
         "detail": "agent.agent",
+        "documentation": {}
+    },
+    {
+        "label": "Collection",
+        "importPath": "pymongo.collection",
+        "description": "pymongo.collection",
+        "isExtraImport": true,
+        "detail": "pymongo.collection",
         "documentation": {}
     },
     {
@@ -1961,6 +2242,15 @@
         "description": ".venv.bin.dumppdf",
         "peekOfCode": "LITERAL_EMBEDDEDFILE = LIT(\"EmbeddedFile\")\ndef extractembedded(fname: str, password: str, extractdir: str) -> None:\n    def extract1(objid: int, obj: Dict[str, Any]) -> None:\n        filename = os.path.basename(obj.get(\"UF\") or cast(bytes, obj.get(\"F\")).decode())\n        fileref = obj[\"EF\"].get(\"UF\") or obj[\"EF\"].get(\"F\")\n        fileobj = doc.getobj(fileref.objid)\n        if not isinstance(fileobj, PDFStream):\n            error_msg = (\n                \"unable to process PDF: reference for %r is not a \"\n                \"PDFStream\" % filename",
         "detail": ".venv.bin.dumppdf",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": ".venv.bin.jp",
+        "description": ".venv.bin.jp",
+        "peekOfCode": "def main():\n    parser = argparse.ArgumentParser()\n    parser.add_argument('expression')\n    parser.add_argument('-f', '--filename',\n                        help=('The filename containing the input data.  '\n                              'If a filename is not given then data is '\n                              'read from stdin.'))\n    parser.add_argument('--ast', action='store_true',\n                        help=('Pretty print the AST, do not search the data.'))\n    args = parser.parse_args()",
+        "detail": ".venv.bin.jp",
         "documentation": {}
     },
     {
@@ -2360,6 +2650,33 @@
         "documentation": {}
     },
     {
+        "label": "IDriveStorage",
+        "kind": 6,
+        "importPath": "client.idrive_storage",
+        "description": "client.idrive_storage",
+        "peekOfCode": "class IDriveStorage:\n    \"\"\"\n    S3-compatible storage client for iDrive e2.\n    Manages document uploads and deletions with organized folder structure:\n    user_id/proposal_id/filename.pdf\n    Thread-safe with internal locking for concurrent operations.\n    \"\"\"\n    def __init__(self):\n        \"\"\"Initialize S3 client with iDrive e2 credentials and thread lock.\"\"\"\n        self.s3 = boto3.client(",
+        "detail": "client.idrive_storage",
+        "documentation": {}
+    },
+    {
+        "label": "get_idrive_storage",
+        "kind": 2,
+        "importPath": "client.idrive_storage",
+        "description": "client.idrive_storage",
+        "peekOfCode": "def get_idrive_storage() -> IDriveStorage:\n    \"\"\"\n    Get or create iDrive storage client (singleton pattern).\n    Returns:\n        IDriveStorage instance\n    \"\"\"\n    global _idrive_storage_client\n    with _client_lock:\n        if _idrive_storage_client is None:\n            _idrive_storage_client = IDriveStorage()",
+        "detail": "client.idrive_storage",
+        "documentation": {}
+    },
+    {
+        "label": "_client_lock",
+        "kind": 5,
+        "importPath": "client.idrive_storage",
+        "description": "client.idrive_storage",
+        "peekOfCode": "_client_lock = threading.RLock()\ndef get_idrive_storage() -> IDriveStorage:\n    \"\"\"\n    Get or create iDrive storage client (singleton pattern).\n    Returns:\n        IDriveStorage instance\n    \"\"\"\n    global _idrive_storage_client\n    with _client_lock:\n        if _idrive_storage_client is None:",
+        "detail": "client.idrive_storage",
+        "documentation": {}
+    },
+    {
         "label": "DocumentMetadata",
         "kind": 6,
         "importPath": "client.jd_parser",
@@ -2567,6 +2884,42 @@
         "documentation": {}
     },
     {
+        "label": "_Known",
+        "kind": 6,
+        "importPath": "frontend.node_modules.flatted.python.flatted",
+        "description": "frontend.node_modules.flatted.python.flatted",
+        "peekOfCode": "class _Known:\n    def __init__(self):\n        self.key = []\n        self.value = []\nclass _String:\n    def __init__(self, value):\n        self.value = value\ndef _array_keys(value):\n    keys = []\n    i = 0",
+        "detail": "frontend.node_modules.flatted.python.flatted",
+        "documentation": {}
+    },
+    {
+        "label": "_String",
+        "kind": 6,
+        "importPath": "frontend.node_modules.flatted.python.flatted",
+        "description": "frontend.node_modules.flatted.python.flatted",
+        "peekOfCode": "class _String:\n    def __init__(self, value):\n        self.value = value\ndef _array_keys(value):\n    keys = []\n    i = 0\n    for _ in value:\n        keys.append(i)\n        i += 1\n    return keys",
+        "detail": "frontend.node_modules.flatted.python.flatted",
+        "documentation": {}
+    },
+    {
+        "label": "parse",
+        "kind": 2,
+        "importPath": "frontend.node_modules.flatted.python.flatted",
+        "description": "frontend.node_modules.flatted.python.flatted",
+        "peekOfCode": "def parse(value, *args, **kwargs):\n    json = _json.loads(value, *args, **kwargs)\n    wrapped = []\n    for value in json:\n        wrapped.append(_wrap(value))\n    input = []\n    for value in wrapped:\n        if isinstance(value, _String):\n            input.append(value.value)\n        else:",
+        "detail": "frontend.node_modules.flatted.python.flatted",
+        "documentation": {}
+    },
+    {
+        "label": "stringify",
+        "kind": 2,
+        "importPath": "frontend.node_modules.flatted.python.flatted",
+        "description": "frontend.node_modules.flatted.python.flatted",
+        "peekOfCode": "def stringify(value, *args, **kwargs):\n    known = _Known()\n    input = []\n    output = []\n    i = int(_index(known, input, value))\n    while i < len(input):\n        output.append(_transform(known, input, input[i]))\n        i += 1\n    return _json.dumps(output, *args, **kwargs)",
+        "detail": "frontend.node_modules.flatted.python.flatted",
+        "documentation": {}
+    },
+    {
         "label": "JobDescription",
         "kind": 6,
         "importPath": "models.job_description",
@@ -2582,6 +2935,42 @@
         "description": "models.job_description",
         "peekOfCode": "class JobDescriptionList(BaseModel):\n    \"\"\"List of job descriptions extracted from a document.\"\"\"\n    job_descriptions: list[JobDescription] = Field(\n        default_factory=list,\n        description=\"All job descriptions found in the page/document\"\n    )",
         "detail": "models.job_description",
+        "documentation": {}
+    },
+    {
+        "label": "DocumentInfo",
+        "kind": 6,
+        "importPath": "models.proposal",
+        "description": "models.proposal",
+        "peekOfCode": "class DocumentInfo(BaseModel):\n    \"\"\"Information about an uploaded document.\"\"\"\n    filename: str = Field(description=\"Original filename\")\n    file_size: int = Field(description=\"File size in bytes\")\n    upload_date: datetime = Field(description=\"When the document was uploaded\")\n    idrive_url: str = Field(description=\"Public URL to access document on iDrive e2\")\n    idrive_key: str = Field(description=\"S3 object key for deletion (user_id/proposal_id/filename)\")\n    extracted_content: Optional[str] = Field(\n        None,\n        description=\"Raw text extracted from document by Unstructured\"",
+        "detail": "models.proposal",
+        "documentation": {}
+    },
+    {
+        "label": "ProposalMetadata",
+        "kind": 6,
+        "importPath": "models.proposal",
+        "description": "models.proposal",
+        "peekOfCode": "class ProposalMetadata(BaseModel):\n    \"\"\"Metadata extracted from proposal documents.\"\"\"\n    base_years: Optional[int] = Field(None, description=\"Number of base years in contract\")\n    option_years: Optional[int] = Field(None, description=\"Number of option years in contract\")\n    total_years: Optional[int] = Field(None, description=\"Total years (base + option)\")\n    total_jobs: Optional[int] = Field(None, description=\"Total number of job positions\")\nclass ProposalCreate(BaseModel):\n    \"\"\"Schema for creating a new proposal.\"\"\"\n    name: str = Field(description=\"Proposal name/title\")\n    solicitation_number: Optional[str] = Field(",
+        "detail": "models.proposal",
+        "documentation": {}
+    },
+    {
+        "label": "ProposalCreate",
+        "kind": 6,
+        "importPath": "models.proposal",
+        "description": "models.proposal",
+        "peekOfCode": "class ProposalCreate(BaseModel):\n    \"\"\"Schema for creating a new proposal.\"\"\"\n    name: str = Field(description=\"Proposal name/title\")\n    solicitation_number: Optional[str] = Field(\n        None,\n        description=\"Government solicitation number (e.g., N0000000R0000)\"\n    )\nclass ProposalUpdate(BaseModel):\n    \"\"\"Schema for updating an existing proposal.\"\"\"\n    name: Optional[str] = Field(None, description=\"Updated proposal name\")",
+        "detail": "models.proposal",
+        "documentation": {}
+    },
+    {
+        "label": "ProposalUpdate",
+        "kind": 6,
+        "importPath": "models.proposal",
+        "description": "models.proposal",
+        "peekOfCode": "class ProposalUpdate(BaseModel):\n    \"\"\"Schema for updating an existing proposal.\"\"\"\n    name: Optional[str] = Field(None, description=\"Updated proposal name\")\n    solicitation_number: Optional[str] = Field(None, description=\"Updated solicitation number\")\n    status: Optional[str] = Field(\n        None,\n        description=\"Proposal status (draft, processing, completed, error)\"\n    )\n    rates: Optional[Dict[str, float]] = Field(\n        None,",
+        "detail": "models.proposal",
         "documentation": {}
     },
     {
@@ -2652,8 +3041,26 @@
         "kind": 5,
         "importPath": "routers.pricing",
         "description": "routers.pricing",
-        "peekOfCode": "router = APIRouter()\n# In-memory store for job status\n# Structure: {job_id: {\"status\": \"processing\"|\"completed\"|\"failed\", \"progress\": str, \"result\": dict, \"error\": str}}\njobs_store: Dict[str, Dict[str, Any]] = {}\ndef split_position_by_hours(position: Dict, max_hours: int = 1920) -> List[Dict]:\n    \"\"\"\n    Split a position into multiple FTE rows if hours > max_hours.\n    Args:\n        position: Job position dict with 'hours' field\n        max_hours: Max hours per person (default 1920)",
+        "peekOfCode": "router = APIRouter()\ndef split_position_by_hours(position: Dict, max_hours: int = 1920) -> List[Dict]:\n    \"\"\"\n    Split a position into multiple FTE rows if hours > max_hours.\n    Args:\n        position: Job position dict with 'hours' field\n        max_hours: Max hours per person (default 1920)\n    Returns:\n        List of position dicts (1 or more)\n    Example:",
         "detail": "routers.pricing",
+        "documentation": {}
+    },
+    {
+        "label": "get_proposals_collection",
+        "kind": 2,
+        "importPath": "routers.proposals",
+        "description": "routers.proposals",
+        "peekOfCode": "def get_proposals_collection():\n    \"\"\"Get MongoDB proposals collection.\"\"\"\n    return MongoDB.get_collection(\"proposals\")\n# ============================================================================\n# DOCUMENT UPLOAD & ASYNC PROCESSING\n# ============================================================================\nasync def process_proposal_documents(\n    proposal_id: str,\n    user_id: str,\n    file_paths: List[str],",
+        "detail": "routers.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "routers.proposals",
+        "description": "routers.proposals",
+        "peekOfCode": "router = APIRouter(prefix=\"/proposals\", tags=[\"proposals\"])\n# Get proposals collection\ndef get_proposals_collection():\n    \"\"\"Get MongoDB proposals collection.\"\"\"\n    return MongoDB.get_collection(\"proposals\")\n# ============================================================================\n# DOCUMENT UPLOAD & ASYNC PROCESSING\n# ============================================================================\nasync def process_proposal_documents(\n    proposal_id: str,",
+        "detail": "routers.proposals",
         "documentation": {}
     },
     {
@@ -2825,6 +3232,15 @@
         "description": "utils.agno_tools",
         "peekOfCode": "def create_wage_tool():\n    \"\"\"\n    Create a custom tool for retrieving wage data from BLS OEWS database.\n    This tool queries MongoDB to fetch wage percentiles (10th, 25th, 50th/median, 75th, 90th)\n    for a given SOC code and geographic area. Data is sourced from the Bureau of Labor Statistics\n    Occupational Employment and Wage Statistics (OEWS) program.\n    Returns:\n        Callable tool function that can be used with agno agents to retrieve wage data\n    Example:\n        >>> wage_tool = create_wage_tool()",
         "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "ProposalCRUD",
+        "kind": 6,
+        "importPath": "utils.proposals",
+        "description": "utils.proposals",
+        "peekOfCode": "class ProposalCRUD:\n    \"\"\"\n    Proposal CRUD operations with MongoDB.\n    All methods use user_id (MongoDB ObjectId as string) for ownership verification.\n    Thread-safe through PyMongo's built-in connection pooling.\n    \"\"\"\n    def __init__(self, collection: Collection):\n        \"\"\"\n        Initialize ProposalCRUD with MongoDB collection.\n        Args:",
+        "detail": "utils.proposals",
         "documentation": {}
     },
     {

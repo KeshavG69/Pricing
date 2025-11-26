@@ -1,0 +1,47 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+:root {
+  --background: #020617;
+  --foreground: #f8fafc;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  min-height: 100vh;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* react-data-grid dark theme */
+.rdg {
+  --rdg-background-color: rgb(2 6 23);
+  --rdg-header-background-color: rgb(15 23 42);
+  --rdg-row-hover-background-color: rgb(30 41 59);
+  --rdg-row-selected-background-color: rgb(51 65 85);
+  --rdg-border-color: rgb(51 65 85);
+  --rdg-color: rgb(248 250 252);
+  --rdg-cell-frozen-background-color: rgb(15 23 42);
+  --rdg-selection-color: rgb(56 189 248);
+}
+
+.rdg-cell {
+  padding: 0 8px;
+}
+
+.rdg-header-cell {
+  font-weight: 600;
+  font-size: 0.875rem;
+}

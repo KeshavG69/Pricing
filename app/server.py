@@ -8,7 +8,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
 
-from routers import pricing, auth, excel_export
+from routers import pricing, auth, excel_export, proposals
 
 # Create FastAPI app
 app = FastAPI(
@@ -33,6 +33,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router, prefix="/api", tags=["authentication"])
+app.include_router(proposals.router, prefix="/api", tags=["proposals"])
 app.include_router(pricing.router, prefix="/api/pricing", tags=["pricing"])
 app.include_router(excel_export.router, prefix="/api/excel", tags=["excel-export"])
 
