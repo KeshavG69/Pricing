@@ -10,16 +10,25 @@ interface GrandTotalSectionProps {
     byYear: { [year: string]: number };
     total: number;
   };
+  primeLaborByYear?: Record<string, number>;
+  subLaborByYear?: Record<string, number>;
+  passthroughByYear?: Record<string, number>;
+  feeByYear?: Record<string, number>;
   totalYears: number;
 }
 
 interface GrandTotalRow {
   id: string;
   label: string;
+  type: 'prime' | 'sub' | 'passthrough' | 'fee' | 'total';
 }
 
 export const GrandTotalSection = ({
   grandTotal,
+  primeLaborByYear = {},
+  subLaborByYear = {},
+  passthroughByYear = {},
+  feeByYear = {},
   totalYears,
 }: GrandTotalSectionProps) => {
   // Format currency
@@ -32,9 +41,23 @@ export const GrandTotalSection = ({
     }).format(value);
   };
 
-  // Create single grand total row
+  // Calculate totals for each category
+  const totals = useMemo(() => {
+    const primeTotal = Object.values(primeLaborByYear).reduce((sum, val) => sum + val, 0);
+    const subTotal = Object.values(subLaborByYear).reduce((sum, val) => sum + val, 0);
+    const passthroughTotal = Object.values(passthroughByYear).reduce((sum, val) => sum + val, 0);
+    const feeTotal = Object.values(feeByYear).reduce((sum, val) => sum + val, 0);
+
+    return { primeTotal, subTotal, passthroughTotal, feeTotal };
+  }, [primeLaborByYear, subLaborByYear, passthroughByYear, feeByYear]);
+
+  // Create breakdown rows
   const rows = useMemo<GrandTotalRow[]>(() => [
-    { id: 'grand_total', label: 'Grand Total Contract Value' },
+    { id: 'prime', label: 'Prime Labor (FBLR)', type: 'prime' },
+    { id: 'sub', label: 'Subcontractor Labor', type: 'sub' },
+    { id: 'passthrough', label: 'Passthrough (S&MH + G&A)', type: 'passthrough' },
+    { id: 'fee', label: 'Fee (Profit)', type: 'fee' },
+    { id: 'grand_total', label: 'Grand Total Contract Value', type: 'total' },
   ], []);
 
   // Generate columns dynamically
@@ -44,16 +67,28 @@ export const GrandTotalSection = ({
       {
         key: 'label',
         name: '',
-        width: 250,
+        width: 300,
         resizable: true,
         frozen: true,
-        renderCell: ({ row }) => (
-          <div className="flex items-center h-full px-2">
-            <span className="font-bold text-xl text-emerald-400">
-              {row.label}
-            </span>
-          </div>
-        ),
+        renderCell: ({ row }) => {
+          const colorClass = row.type === 'total'
+            ? 'text-emerald-400 text-xl'
+            : row.type === 'prime'
+            ? 'text-emerald-300'
+            : row.type === 'sub'
+            ? 'text-purple-300'
+            : row.type === 'passthrough'
+            ? 'text-blue-300'
+            : 'text-yellow-300';
+
+          return (
+            <div className="flex items-center h-full px-2">
+              <span className={`font-semibold ${colorClass}`}>
+                {row.label}
+              </span>
+            </div>
+          );
+        },
       },
     ];
 
@@ -67,12 +102,42 @@ export const GrandTotalSection = ({
         name: `${label}`,
         width: 150,
         resizable: true,
-        renderCell: () => {
-          const value = grandTotal.byYear[yearStr] || 0;
+        renderCell: ({ row }) => {
+          let value = 0;
+          let bgClass = '';
+          let textClass = '';
+
+          switch (row.type) {
+            case 'prime':
+              value = primeLaborByYear[yearStr] || 0;
+              bgClass = 'bg-emerald-500/5';
+              textClass = 'text-emerald-300';
+              break;
+            case 'sub':
+              value = subLaborByYear[yearStr] || 0;
+              bgClass = 'bg-purple-500/5';
+              textClass = 'text-purple-300';
+              break;
+            case 'passthrough':
+              value = passthroughByYear[yearStr] || 0;
+              bgClass = 'bg-blue-500/5';
+              textClass = 'text-blue-300';
+              break;
+            case 'fee':
+              value = feeByYear[yearStr] || 0;
+              bgClass = 'bg-yellow-500/5';
+              textClass = 'text-yellow-300';
+              break;
+            case 'total':
+              value = grandTotal.byYear[yearStr] || 0;
+              bgClass = 'bg-emerald-500/20';
+              textClass = 'text-emerald-400 font-bold text-lg';
+              break;
+          }
 
           return (
-            <div className="flex items-center justify-end h-full px-2 bg-emerald-500/20">
-              <span className="text-emerald-400 font-bold text-lg">
+            <div className={`flex items-center justify-end h-full px-2 ${bgClass}`}>
+              <span className={`font-semibold ${textClass}`}>
                 {formatCurrency(value)}
               </span>
             </div>
@@ -84,15 +149,47 @@ export const GrandTotalSection = ({
     // Total column
     cols.push({
       key: 'total',
-      name: 'Total Contract Value',
+      name: 'Total',
       width: 200,
       resizable: true,
       frozen: true,
-      renderCell: () => {
+      renderCell: ({ row }) => {
+        let value = 0;
+        let bgClass = '';
+        let textClass = '';
+
+        switch (row.type) {
+          case 'prime':
+            value = totals.primeTotal;
+            bgClass = 'bg-emerald-500/10';
+            textClass = 'text-emerald-300 font-semibold';
+            break;
+          case 'sub':
+            value = totals.subTotal;
+            bgClass = 'bg-purple-500/10';
+            textClass = 'text-purple-300 font-semibold';
+            break;
+          case 'passthrough':
+            value = totals.passthroughTotal;
+            bgClass = 'bg-blue-500/10';
+            textClass = 'text-blue-300 font-semibold';
+            break;
+          case 'fee':
+            value = totals.feeTotal;
+            bgClass = 'bg-yellow-500/10';
+            textClass = 'text-yellow-300 font-semibold';
+            break;
+          case 'total':
+            value = grandTotal.total;
+            bgClass = 'bg-emerald-500/30';
+            textClass = 'text-emerald-400 font-bold text-2xl';
+            break;
+        }
+
         return (
-          <div className="flex items-center justify-end h-full px-2 bg-emerald-500/30">
-            <span className="text-emerald-400 font-bold text-2xl">
-              {formatCurrency(grandTotal.total)}
+          <div className={`flex items-center justify-end h-full px-2 ${bgClass}`}>
+            <span className={textClass}>
+              {formatCurrency(value)}
             </span>
           </div>
         );
@@ -100,18 +197,24 @@ export const GrandTotalSection = ({
     });
 
     return cols;
-  }, [totalYears, grandTotal]);
+  }, [totalYears, grandTotal, primeLaborByYear, subLaborByYear, passthroughByYear, feeByYear, totals]);
 
   return (
     <div className="space-y-4">
-      <div className="h-[80px] overflow-auto border-2 border-emerald-500/30 rounded-lg shadow-lg shadow-emerald-500/20">
+      <div className="flex items-center justify-between">
+        <h3 className="text-lg font-semibold text-slate-50">Grand Total</h3>
+        <p className="text-sm text-slate-400">
+          Complete contract value breakdown
+        </p>
+      </div>
+      <div className="h-[300px] overflow-auto border-2 border-emerald-500/30 rounded-lg shadow-lg shadow-emerald-500/20">
         <DataGrid
           columns={columns}
           rows={rows}
           rowKeyGetter={(row) => row.id}
           className="rdg-light"
           style={{ height: '100%' }}
-          rowHeight={80}
+          rowHeight={55}
         />
       </div>
     </div>

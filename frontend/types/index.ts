@@ -138,6 +138,7 @@ export interface SpreadsheetPosition {
   wage_75th?: number;
   wage_90th?: number;
   hours_per_year: Record<string, number>; // {"1": 1880, "2": 1880, ...}
+  standard_fte_hours?: number; // Full-time equivalent hours (e.g., 1880, 1920, 2080)
   // Calculated fields (from backend)
   fblr?: number;
   yearly_amounts?: Array<{
@@ -244,6 +245,31 @@ export interface GridRow {
   breakdownType?: BreakdownType;
   data: any; // Actual row data
   isExpanded?: boolean;
+}
+
+// Context Menu types
+export interface ContextMenuItem {
+  label: string;
+  icon?: React.ReactNode;
+  onClick: () => void;
+  danger?: boolean;
+  disabled?: boolean;
+}
+
+export interface ContextMenuProps {
+  x: number;
+  y: number;
+  onClose: () => void;
+  items: ContextMenuItem[];
+}
+
+// Subcontractor Conversion types
+export interface ConversionData {
+  positionId: string;
+  subcontractorId?: string; // Existing subcontractor
+  newSubcontractorName?: string; // Create new
+  hoursAllocation: Record<string, number>; // Per year
+  rate: number; // Hourly rate for subcontractor
 }
 
 // Recalculation API types

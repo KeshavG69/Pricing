@@ -1,15 +1,24 @@
 'use client';
 
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import { DataGrid } from 'react-data-grid';
 import type { Column, RenderEditCellProps } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
 import { usePricingStore } from '@/lib/stores/pricingStore';
 import { SpreadsheetPosition } from '@/types';
-import { Trash2 } from 'lucide-react';
+import { Trash2, MoreVertical } from 'lucide-react';
+import { ContextMenu, ContextMenuItem } from '@/components/ui/ContextMenu';
+import { ConvertToSubcontractorModal } from './ConvertToSubcontractorModal';
 
 export const PositionsGrid = () => {
-  const { positions, totalYears, rates, updatePosition, deletePosition } = usePricingStore();
+  const { positions, totalYears, rates, escalationRates, updatePosition, deletePosition } = usePricingStore();
+
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; position: SpreadsheetPosition } | null>(null);
+
+  // Conversion modal state
+  const [conversionModalOpen, setConversionModalOpen] = useState(false);
+  const [positionToConvert, setPositionToConvert] = useState<SpreadsheetPosition | null>(null);
 
   // Handle row changes (for inline editing)
   const handleRowsChange = useCallback((newRows: SpreadsheetPosition[]) => {
@@ -32,14 +41,51 @@ export const PositionsGrid = () => {
     });
   }, [positions, updatePosition]);
 
-  // Calculate FBLR for a position
+  // Calculate averaged FBLR for a position across all contract years with escalation
   const calculateFBLR = (position: SpreadsheetPosition) => {
-    const selectedWage = position[`wage_${position.percentile}`] || 0;
-    const totalHours = Object.values(position.hours_per_year).reduce((sum, h) => sum + h, 0);
+    const baseWage = position[`wage_${position.percentile}`] || 0;
 
-    if (totalHours === 0) return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
+    if (baseWage === 0 || totalYears === 0) {
+      return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
+    }
 
-    const dlRate = selectedWage / totalHours;
+    // Calculate escalated salary for each year
+    let totalSalary = 0;
+    let totalHours = 0;
+    let currentYearWage = baseWage;
+
+    // Get FTE hours for this position (fallback to 1880)
+    const fteHours = position.standard_fte_hours || 1880;
+
+    for (let year = 1; year <= totalYears; year++) {
+      const yearStr = year.toString();
+      const hoursThisYear = position.hours_per_year[yearStr] || 0;
+
+      // Calculate proportional salary for this year (ONLY if there are hours)
+      if (hoursThisYear > 0) {
+        const hourlyRateThisYear = currentYearWage / fteHours;
+        const salaryEarnedThisYear = hourlyRateThisYear * hoursThisYear;
+
+        totalSalary += salaryEarnedThisYear;
+        totalHours += hoursThisYear;
+      }
+
+      // Apply escalation for next year
+      if (year < totalYears) {
+        const escalationKey = `${year}_to_${year + 1}`;
+        const escalationRate = escalationRates[escalationKey] || 0;
+        currentYearWage = currentYearWage * (1 + escalationRate);
+      }
+    }
+
+    if (totalHours === 0) {
+      return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
+    }
+
+    // Calculate averaged DL rate
+    const dlRate = totalSalary / totalHours;
+
+    // Apply FBLR cascade
     const fringe = dlRate * rates.fringe;
     const oh = (dlRate + fringe) * rates.oh;
     const ga = (dlRate + fringe + oh) * rates.ga;
@@ -48,6 +94,38 @@ export const PositionsGrid = () => {
 
     return { dlRate, fringe, oh, ga, fee, fblr };
   };
+
+  // Handle right-click on grid rows (MOVED BEFORE useMemo)
+  const handleContextMenu = useCallback((e: React.MouseEvent, position: SpreadsheetPosition) => {
+    e.preventDefault();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      position,
+    });
+  }, []);
+
+  // Context menu items
+  const getContextMenuItems = useCallback((position: SpreadsheetPosition): ContextMenuItem[] => [
+    {
+      label: 'Convert to Subcontractor',
+      icon: <MoreVertical className="w-4 h-4" />,
+      onClick: () => {
+        setPositionToConvert(position);
+        setConversionModalOpen(true);
+      },
+    },
+    {
+      label: 'Delete Position',
+      icon: <Trash2 className="w-4 h-4" />,
+      onClick: () => {
+        if (confirm(`Delete position "${position.labor_category}"?`)) {
+          deletePosition(position.id);
+        }
+      },
+      danger: true,
+    },
+  ], [deletePosition]);
 
   // Generate columns dynamically
   const columns = useMemo<Column<SpreadsheetPosition>[]>(() => {
@@ -215,12 +293,12 @@ export const PositionsGrid = () => {
       });
     }
 
-    // Calculated columns (FBLR breakdown)
+    // Calculated columns (FBLR breakdown - averaged across all years)
     cols.push(
       {
         key: 'dl_rate',
-        name: 'DL Rate ($/hr)',
-        width: 120,
+        name: 'Averaged\nDL Rate ($/hr)',
+        width: 130,
         resizable: true,
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
@@ -233,8 +311,8 @@ export const PositionsGrid = () => {
       },
       {
         key: 'fringe',
-        name: 'Fringe ($/hr)',
-        width: 120,
+        name: 'Averaged\nFringe ($/hr)',
+        width: 130,
         resizable: true,
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
@@ -247,8 +325,8 @@ export const PositionsGrid = () => {
       },
       {
         key: 'oh',
-        name: 'OH ($/hr)',
-        width: 110,
+        name: 'Averaged\nOH ($/hr)',
+        width: 120,
         resizable: true,
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
@@ -261,8 +339,8 @@ export const PositionsGrid = () => {
       },
       {
         key: 'ga',
-        name: 'G&A ($/hr)',
-        width: 110,
+        name: 'Averaged\nG&A ($/hr)',
+        width: 120,
         resizable: true,
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
@@ -275,8 +353,8 @@ export const PositionsGrid = () => {
       },
       {
         key: 'fee',
-        name: 'Fee ($/hr)',
-        width: 110,
+        name: 'Averaged\nFee ($/hr)',
+        width: 120,
         resizable: true,
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
@@ -289,7 +367,7 @@ export const PositionsGrid = () => {
       },
       {
         key: 'fblr',
-        name: 'Full Burdened Rate ($/hr)',
+        name: 'Averaged\nFull Burdened Rate ($/hr)',
         width: 180,
         resizable: true,
         renderCell: ({ row }) => {
@@ -342,14 +420,48 @@ export const PositionsGrid = () => {
 
   return (
     <div className="h-full overflow-auto">
-      <DataGrid
-        columns={columns}
-        rows={positions}
-        onRowsChange={handleRowsChange}
-        rowKeyGetter={(row) => row.id}
-        className="rdg-light"
-        style={{ height: '100%' }}
-        rowHeight={45}
+      <div
+        onContextMenu={(e) => {
+          // Find which row was clicked
+          const target = e.target as HTMLElement;
+          const rowElement = target.closest('[role="row"]');
+          if (rowElement) {
+            const rowIndex = Array.from(rowElement.parentElement?.children || []).indexOf(rowElement) - 1; // Subtract 1 for header row
+            if (rowIndex >= 0 && rowIndex < positions.length) {
+              handleContextMenu(e, positions[rowIndex]);
+            }
+          }
+        }}
+      >
+        <DataGrid
+          columns={columns}
+          rows={positions}
+          onRowsChange={handleRowsChange}
+          rowKeyGetter={(row) => row.id}
+          className="rdg-light"
+          style={{ height: '100%' }}
+          rowHeight={45}
+        />
+      </div>
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={getContextMenuItems(contextMenu.position)}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
+
+      {/* Conversion Modal */}
+      <ConvertToSubcontractorModal
+        open={conversionModalOpen}
+        onClose={() => {
+          setConversionModalOpen(false);
+          setPositionToConvert(null);
+        }}
+        position={positionToConvert}
       />
     </div>
   );

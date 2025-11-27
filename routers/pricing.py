@@ -173,16 +173,6 @@ async def recalculate_spreadsheet(request: Dict[str, Any]):
             percentile = pos.get("percentile", "50th")
             base_wage = pos.get(f"wage_{percentile}", pos.get("selected_wage", 0))
 
-            if base_wage <= 0:
-                # Skip positions with invalid wages
-                results.append({
-                    "id": pos.get("id"),
-                    "years": [],
-                    "total_hours": 0,
-                    "total_amount": 0
-                })
-                continue
-
             # Build hours per year (convert to string keys for Calculator)
             hours_per_year = {}
             for year in range(1, total_years + 1):
@@ -190,6 +180,16 @@ async def recalculate_spreadsheet(request: Dict[str, Any]):
 
             # Calculate Year 1 FBLR
             year_1_hours = hours_per_year.get("1", 1880)
+
+            # Skip positions with invalid wages or zero hours (prevents division by zero)
+            if base_wage <= 0 or year_1_hours <= 0:
+                results.append({
+                    "id": pos.get("id"),
+                    "years": [],
+                    "total_hours": 0,
+                    "total_amount": 0
+                })
+                continue
             fblr_breakdown = Calculator.calculate_fblr(
                 annual_wage=base_wage,
                 hours=year_1_hours,

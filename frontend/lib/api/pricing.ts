@@ -11,7 +11,7 @@ export const pricingApi = {
    */
   recalculate: async (data: RecalculateRequest): Promise<RecalculateResponse> => {
     const response = await apiClient.post<RecalculateResponse>(
-      '/api/pricing/recalculate',
+      '/pricing/recalculate',
       data
     );
     return response.data;
@@ -21,7 +21,7 @@ export const pricingApi = {
    * Export proposal to Excel file
    */
   exportToExcel: async (data: ExcelGenerationRequest): Promise<Blob> => {
-    const response = await apiClient.post('/api/excel/generate-from-data', data, {
+    const response = await apiClient.post('/excel/generate-from-data', data, {
       responseType: 'blob',
     });
     return response.data;

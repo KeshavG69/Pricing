@@ -1,11 +1,13 @@
 'use client';
 
-import { useMemo, useCallback } from 'react';
+import { useMemo, useCallback, useState } from 'react';
 import { DataGrid } from 'react-data-grid';
 import type { Column, RenderEditCellProps } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
-import { AdvancedPosition, IndirectRates, GridRow, BreakdownType } from '@/types';
-import { ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
+import { AdvancedPosition, IndirectRates, GridRow, BreakdownType, ContextMenuItem } from '@/types';
+import { ChevronDown, ChevronRight, Trash2, MoreVertical } from 'lucide-react';
+import { ContextMenu } from '@/components/ui/ContextMenu';
+import { ConvertToSubcontractorModal } from '@/components/pricing/ConvertToSubcontractorModal';
 
 interface PrimeLaborSectionProps {
   positions: AdvancedPosition[];
@@ -16,6 +18,7 @@ interface PrimeLaborSectionProps {
   onToggleExpand: (positionId: string) => void;
   onCellChange: (positionId: string, year: string, field: string, value: number) => void;
   onDeletePosition: (positionId: string) => void;
+  onUpdatePosition: (id: string, updates: Partial<AdvancedPosition>) => void;
 }
 
 export const PrimeLaborSection = ({
@@ -27,7 +30,47 @@ export const PrimeLaborSection = ({
   onToggleExpand,
   onCellChange,
   onDeletePosition,
+  onUpdatePosition,
 }: PrimeLaborSectionProps) => {
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; position: AdvancedPosition } | null>(null);
+
+  // Conversion modal state
+  const [conversionModalOpen, setConversionModalOpen] = useState(false);
+  const [positionToConvert, setPositionToConvert] = useState<AdvancedPosition | null>(null);
+
+  // Handle right-click on grid rows (BEFORE useMemo to maintain hook order)
+  const handleContextMenu = useCallback((e: React.MouseEvent, position: AdvancedPosition) => {
+    e.preventDefault();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      position,
+    });
+  }, []);
+
+  // Context menu items
+  const getContextMenuItems = useCallback((position: AdvancedPosition): ContextMenuItem[] => [
+    {
+      label: 'Convert to Subcontractor',
+      icon: <MoreVertical className="w-4 h-4" />,
+      onClick: () => {
+        setPositionToConvert(position);
+        setConversionModalOpen(true);
+      },
+    },
+    {
+      label: 'Delete Position',
+      icon: <Trash2 className="w-4 h-4" />,
+      onClick: () => {
+        if (confirm(`Delete position "${position.labor_category}"?`)) {
+          onDeletePosition(position.id);
+        }
+      },
+      danger: true,
+    },
+  ], [onDeletePosition]);
+
   // Transform positions to grid rows with breakdown rows
   const gridRows = useMemo<GridRow[]>(() => {
     const rows: GridRow[] = [];
@@ -195,18 +238,54 @@ export const PrimeLaborSection = ({
           return <div className="h-full bg-slate-900/30" />;
         },
       },
-      // Percentile
+      // Percentile - Editable dropdown
       {
         key: 'percentile',
         name: 'Percentile',
-        width: 120,
+        width: 180,
         resizable: true,
+        editable: (row) => row.type === 'position',
+        renderEditCell: (props: RenderEditCellProps<GridRow>) => {
+          if (props.row.type !== 'position') return null;
+          const pos = props.row.data as AdvancedPosition;
+
+          return (
+            <select
+              className="w-full h-full px-2 bg-slate-950 text-slate-50 outline-none cursor-pointer font-semibold"
+              value={pos.percentile}
+              onChange={(e) => {
+                const newPercentile = e.target.value as AdvancedPosition['percentile'];
+                // Update through store
+                onUpdatePosition(pos.id, { percentile: newPercentile });
+                // Also update the row for immediate UI feedback
+                props.onRowChange({
+                  ...props.row,
+                  data: {
+                    ...pos,
+                    percentile: newPercentile,
+                  },
+                });
+              }}
+              onBlur={() => props.onClose(true)}
+              autoFocus
+            >
+              <option value="10th">10th (${(pos.wage_10th || 0).toLocaleString()})</option>
+              <option value="25th">25th (${(pos.wage_25th || 0).toLocaleString()})</option>
+              <option value="50th">50th (${(pos.wage_50th || 0).toLocaleString()})</option>
+              <option value="75th">75th (${(pos.wage_75th || 0).toLocaleString()})</option>
+              <option value="90th">90th (${(pos.wage_90th || 0).toLocaleString()})</option>
+            </select>
+          );
+        },
         renderCell: ({ row }) => {
           if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             return (
               <div className="flex items-center h-full px-2">
                 <span className="font-semibold text-slate-50">{pos.percentile}</span>
+                <span className="ml-2 text-xs text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded">
+                  ${(pos[`wage_${pos.percentile}`] || 0).toLocaleString()}
+                </span>
               </div>
             );
           }
@@ -445,7 +524,24 @@ export const PrimeLaborSection = ({
         </p>
       </div>
 
-      <div className="h-[600px] overflow-auto border border-slate-800 rounded-lg">
+      <div
+        className="h-[600px] overflow-auto border border-slate-800 rounded-lg"
+        onContextMenu={(e) => {
+          // Find which row was clicked
+          const target = e.target as HTMLElement;
+          const rowElement = target.closest('[role="row"]');
+          if (rowElement) {
+            const rowIndex = Array.from(rowElement.parentElement?.children || []).indexOf(rowElement) - 1; // Subtract 1 for header row
+            if (rowIndex >= 0 && rowIndex < gridRows.length) {
+              const row = gridRows[rowIndex];
+              // Only show context menu for position rows, not breakdown rows
+              if (row.type === 'position') {
+                handleContextMenu(e, row.data as AdvancedPosition);
+              }
+            }
+          }
+        }}
+      >
         <DataGrid
           columns={columns}
           rows={gridRows}
@@ -455,6 +551,26 @@ export const PrimeLaborSection = ({
           rowHeight={45}
         />
       </div>
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          items={getContextMenuItems(contextMenu.position)}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
+
+      {/* Conversion Modal */}
+      <ConvertToSubcontractorModal
+        open={conversionModalOpen}
+        onClose={() => {
+          setConversionModalOpen(false);
+          setPositionToConvert(null);
+        }}
+        position={positionToConvert}
+      />
     </div>
   );
 };

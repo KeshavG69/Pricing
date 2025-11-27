@@ -1060,6 +1060,14 @@
         "documentation": {}
     },
     {
+        "label": "GZipMiddleware",
+        "importPath": "fastapi.middleware.gzip",
+        "description": "fastapi.middleware.gzip",
+        "isExtraImport": true,
+        "detail": "fastapi.middleware.gzip",
+        "documentation": {}
+    },
+    {
         "label": "StaticFiles",
         "importPath": "fastapi.staticfiles",
         "description": "fastapi.staticfiles",
@@ -1730,6 +1738,22 @@
         "documentation": {}
     },
     {
+        "label": "lru_cache",
+        "importPath": "functools",
+        "description": "functools",
+        "isExtraImport": true,
+        "detail": "functools",
+        "documentation": {}
+    },
+    {
+        "label": "lru_cache",
+        "importPath": "functools",
+        "description": "functools",
+        "isExtraImport": true,
+        "detail": "functools",
+        "documentation": {}
+    },
+    {
         "label": "FAISS",
         "importPath": "langchain_community.vectorstores",
         "description": "langchain_community.vectorstores",
@@ -2029,7 +2053,7 @@
         "documentation": {}
     },
     {
-        "label": "ProposalCRUD",
+        "label": "get_proposal_crud",
         "importPath": "utils.proposals",
         "description": "utils.proposals",
         "isExtraImport": true,
@@ -2445,7 +2469,7 @@
         "kind": 5,
         "importPath": "app.server",
         "description": "app.server",
-        "peekOfCode": "app = FastAPI(\n    title=\"Government Contractor Pricing API\",\n    description=\"API for pricing government contractor labor categories using BLS OEWS wage data\",\n    version=\"1.0.0\"\n)\n# Mount static files\nstatic_path = Path(__file__).parent.parent / \"static\"\nif static_path.exists():\n    app.mount(\"/static\", StaticFiles(directory=str(static_path)), name=\"static\")\n# Configure CORS",
+        "peekOfCode": "app = FastAPI(\n    title=\"Government Contractor Pricing API\",\n    description=\"API for pricing government contractor labor categories using BLS OEWS wage data\",\n    version=\"1.0.0\"\n)\n# Add GZip compression middleware (compress responses > 1KB)\n# This significantly reduces network payload for large JSON responses\napp.add_middleware(GZipMiddleware, minimum_size=1000)\n# Mount static files\nstatic_path = Path(__file__).parent.parent / \"static\"",
         "detail": "app.server",
         "documentation": {}
     },
@@ -3143,11 +3167,11 @@
         "documentation": {}
     },
     {
-        "label": "get_proposals_collection",
+        "label": "get_crud",
         "kind": 2,
         "importPath": "routers.proposals",
         "description": "routers.proposals",
-        "peekOfCode": "def get_proposals_collection():\n    \"\"\"Get MongoDB proposals collection.\"\"\"\n    return MongoDB.get_collection(\"proposals\")\n# ============================================================================\n# DOCUMENT UPLOAD & ASYNC PROCESSING\n# ============================================================================\nasync def process_proposal_documents(\n    proposal_id: str,\n    user_id: str,\n    file_paths: List[str],",
+        "peekOfCode": "def get_crud():\n    \"\"\"Get singleton ProposalCRUD instance (thread-safe).\"\"\"\n    return get_proposal_crud(MongoDB.get_collection(\"proposals\"))\n# ============================================================================\n# DOCUMENT UPLOAD & ASYNC PROCESSING\n# ============================================================================\nasync def process_proposal_documents(\n    proposal_id: str,\n    user_id: str,\n    file_paths: List[str],",
         "detail": "routers.proposals",
         "documentation": {}
     },
@@ -3156,7 +3180,7 @@
         "kind": 5,
         "importPath": "routers.proposals",
         "description": "routers.proposals",
-        "peekOfCode": "router = APIRouter(prefix=\"/proposals\", tags=[\"proposals\"])\n# Get proposals collection\ndef get_proposals_collection():\n    \"\"\"Get MongoDB proposals collection.\"\"\"\n    return MongoDB.get_collection(\"proposals\")\n# ============================================================================\n# DOCUMENT UPLOAD & ASYNC PROCESSING\n# ============================================================================\nasync def process_proposal_documents(\n    proposal_id: str,",
+        "peekOfCode": "router = APIRouter(prefix=\"/proposals\", tags=[\"proposals\"])\n# Get singleton ProposalCRUD instance\ndef get_crud():\n    \"\"\"Get singleton ProposalCRUD instance (thread-safe).\"\"\"\n    return get_proposal_crud(MongoDB.get_collection(\"proposals\"))\n# ============================================================================\n# DOCUMENT UPLOAD & ASYNC PROCESSING\n# ============================================================================\nasync def process_proposal_documents(\n    proposal_id: str,",
         "detail": "routers.proposals",
         "documentation": {}
     },
@@ -3399,7 +3423,34 @@
         "kind": 6,
         "importPath": "utils.proposals",
         "description": "utils.proposals",
-        "peekOfCode": "class ProposalCRUD:\n    \"\"\"\n    Proposal CRUD operations with MongoDB.\n    All methods use user_id (MongoDB ObjectId as string) for ownership verification.\n    Thread-safe through PyMongo's built-in connection pooling.\n    \"\"\"\n    def __init__(self, collection: Collection):\n        \"\"\"\n        Initialize ProposalCRUD with MongoDB collection.\n        Args:",
+        "peekOfCode": "class ProposalCRUD:\n    \"\"\"\n    Proposal CRUD operations with MongoDB (Thread-safe Singleton).\n    All methods use user_id (MongoDB ObjectId as string) for ownership verification.\n    Thread-safe through:\n    - Singleton pattern ensures one instance across all threads\n    - RLock for thread-safe operations\n    - PyMongo's built-in connection pooling\n    \"\"\"\n    _instance = None",
+        "detail": "utils.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "get_proposal_crud",
+        "kind": 2,
+        "importPath": "utils.proposals",
+        "description": "utils.proposals",
+        "peekOfCode": "def get_proposal_crud(collection: Collection = None) -> ProposalCRUD:\n    \"\"\"\n    Get singleton ProposalCRUD instance (thread-safe).\n    Args:\n        collection: MongoDB collection (required on first call only)\n    Returns:\n        Singleton ProposalCRUD instance\n    Usage:\n        from utils.proposals import get_proposal_crud\n        crud = get_proposal_crud(collection)",
+        "detail": "utils.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "_proposal_crud_instance",
+        "kind": 5,
+        "importPath": "utils.proposals",
+        "description": "utils.proposals",
+        "peekOfCode": "_proposal_crud_instance = None\n_instance_lock = threading.RLock()\ndef get_proposal_crud(collection: Collection = None) -> ProposalCRUD:\n    \"\"\"\n    Get singleton ProposalCRUD instance (thread-safe).\n    Args:\n        collection: MongoDB collection (required on first call only)\n    Returns:\n        Singleton ProposalCRUD instance\n    Usage:",
+        "detail": "utils.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "_instance_lock",
+        "kind": 5,
+        "importPath": "utils.proposals",
+        "description": "utils.proposals",
+        "peekOfCode": "_instance_lock = threading.RLock()\ndef get_proposal_crud(collection: Collection = None) -> ProposalCRUD:\n    \"\"\"\n    Get singleton ProposalCRUD instance (thread-safe).\n    Args:\n        collection: MongoDB collection (required on first call only)\n    Returns:\n        Singleton ProposalCRUD instance\n    Usage:\n        from utils.proposals import get_proposal_crud",
         "detail": "utils.proposals",
         "documentation": {}
     },

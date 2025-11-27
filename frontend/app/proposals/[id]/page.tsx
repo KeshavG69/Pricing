@@ -249,7 +249,7 @@ export default function ProposalPage() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className={advancedMode ? 'h-[800px]' : 'h-[600px]'}>
+              <div className={advancedMode ? 'h-[800px] overflow-y-auto' : 'h-[600px]'}>
                 {advancedMode ? (
                   <AdvancedAnalysisGrid />
                 ) : (

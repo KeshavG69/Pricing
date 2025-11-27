@@ -4,6 +4,7 @@ FastAPI server for government contractor pricing system.
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
@@ -16,6 +17,10 @@ app = FastAPI(
     description="API for pricing government contractor labor categories using BLS OEWS wage data",
     version="1.0.0"
 )
+
+# Add GZip compression middleware (compress responses > 1KB)
+# This significantly reduces network payload for large JSON responses
+app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 # Mount static files
 static_path = Path(__file__).parent.parent / "static"

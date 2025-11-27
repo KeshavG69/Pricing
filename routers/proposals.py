@@ -20,7 +20,7 @@ from auth.models import UserResponse
 
 # Proposal models and CRUD
 from models.proposal import ProposalCreate, ProposalUpdate, DocumentInfo
-from utils.proposals import ProposalCRUD
+from utils.proposals import get_proposal_crud
 
 # Document processing
 from client.jd_parser import parse_documents_to_dataframe
@@ -37,10 +37,10 @@ from auth.database import MongoDB
 
 router = APIRouter(prefix="/proposals", tags=["proposals"])
 
-# Get proposals collection
-def get_proposals_collection():
-    """Get MongoDB proposals collection."""
-    return MongoDB.get_collection("proposals")
+# Get singleton ProposalCRUD instance
+def get_crud():
+    """Get singleton ProposalCRUD instance (thread-safe)."""
+    return get_proposal_crud(MongoDB.get_collection("proposals"))
 
 
 # ============================================================================
@@ -52,14 +52,17 @@ async def process_proposal_documents(
     user_id: str,
     file_paths: List[str],
     file_names: List[str],
-    temp_dir: Path,
-    crud: ProposalCRUD
+    temp_dir: Path
 ):
     """
     Background task to process uploaded documents.
 
     Updates proposal status as processing progresses.
+    Uses singleton ProposalCRUD instance for thread safety.
     """
+    # Get singleton CRUD instance
+    crud = get_crud()
+
     try:
         # Update status to processing
         crud.update_proposal(
@@ -231,7 +234,7 @@ async def upload_proposal_documents(
     try:
         # Initialize services
         storage = get_idrive_storage()
-        crud = ProposalCRUD(get_proposals_collection())
+        crud = get_crud()
 
         # Create temp directory for processing
         temp_dir = Path(tempfile.mkdtemp())
@@ -294,8 +297,7 @@ async def upload_proposal_documents(
             str(current_user.id),
             file_paths,
             file_names,
-            temp_dir,
-            crud
+            temp_dir
         )
 
         return {
@@ -328,7 +330,7 @@ async def get_proposal_status(
 
     Returns only status, progress, and message (not full data).
     """
-    crud = ProposalCRUD(get_proposals_collection())
+    crud = get_crud()
     proposal = crud.get_proposal(proposal_id, str(current_user.id))
 
     if not proposal:
@@ -359,7 +361,7 @@ async def list_proposals(
 
     Returns basic info only (no full jobs/rates data).
     """
-    crud = ProposalCRUD(get_proposals_collection())
+    crud = get_crud()
     proposals = crud.get_user_proposals(str(current_user.id), skip, limit)
 
     # Convert ObjectId to string for JSON serialization
@@ -391,7 +393,7 @@ async def get_proposal(
 
     Called after status shows 'completed' or when user opens existing proposal.
     """
-    crud = ProposalCRUD(get_proposals_collection())
+    crud = get_crud()
     proposal = crud.get_proposal(proposal_id, str(current_user.id))
 
     if not proposal:
@@ -416,7 +418,7 @@ async def update_proposal(
     """
     Update proposal (name, rates, jobs, spreadsheet data, etc.).
     """
-    crud = ProposalCRUD(get_proposals_collection())
+    crud = get_crud()
 
     # Convert Pydantic model to dict, excluding None values
     update_dict = updates.dict(exclude_none=True)
@@ -454,7 +456,7 @@ async def delete_proposal(
     """
     Delete proposal and all associated documents from iDrive e2.
     """
-    crud = ProposalCRUD(get_proposals_collection())
+    crud = get_crud()
     storage = get_idrive_storage()
 
     # Get proposal first to access documents
@@ -501,7 +503,7 @@ async def duplicate_proposal(
     """
     Duplicate proposal (copies data, not documents).
     """
-    crud = ProposalCRUD(get_proposals_collection())
+    crud = get_crud()
 
     new_proposal = crud.duplicate_proposal(
         proposal_id,
@@ -534,7 +536,7 @@ async def list_proposal_documents(
     """
     Get list of documents for a proposal with iDrive URLs.
     """
-    crud = ProposalCRUD(get_proposals_collection())
+    crud = get_crud()
     proposal = crud.get_proposal(proposal_id, str(current_user.id))
 
     if not proposal:
@@ -555,7 +557,7 @@ async def delete_proposal_document(
     """
     Delete a specific document from proposal and iDrive e2.
     """
-    crud = ProposalCRUD(get_proposals_collection())
+    crud = get_crud()
     storage = get_idrive_storage()
 
     # Get proposal

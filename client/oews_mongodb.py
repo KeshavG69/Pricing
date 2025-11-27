@@ -8,6 +8,7 @@ from pymongo.database import Database
 from typing import Optional, Dict, Any, List
 import threading
 import math
+from functools import lru_cache
 
 from app.settings import settings
 
@@ -41,9 +42,10 @@ class OEWSMongoLookup:
 
         return list(results)
 
+    @lru_cache(maxsize=512)
     def get_area_code(self, area_name: str) -> Optional[str]:
         """
-        Convert area name to area code.
+        Convert area name to area code (cached for performance).
 
         Args:
             area_name: Area name (e.g., "California", "National")
@@ -77,13 +79,17 @@ class OEWSMongoLookup:
         # No matches found
         return None
 
+    @lru_cache(maxsize=2048)
     def get_wage_by_soc(
         self,
         soc_code: str,
         area: str = "National",
     ) -> Optional[Dict[str, Any]]:
         """
-        Get wage data for a SOC code in a specific area.
+        Get wage data for a SOC code in a specific area (cached for performance).
+
+        Cache stores up to 2048 recent wage lookups, significantly reducing
+        MongoDB queries for repeated SOC/area combinations.
 
         Args:
             soc_code: SOC code (e.g., "15-1252" or "151252")

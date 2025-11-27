@@ -9,6 +9,8 @@ import {
   JobPosition,
   AdvancedPosition,
   Aggregates,
+  ConversionData,
+  SubcontractorPosition,
 } from '@/types';
 import { pricingApi } from '../api/pricing';
 import { proposalsApi } from '../api/proposals';
@@ -40,6 +42,8 @@ interface PricingState {
   expandedPositions: Set<string>;
   manualOverrides: Map<string, Set<string>>;
   aggregates: Aggregates;
+  ratesReferenceExpanded: boolean;
+  activeTab: 'main' | 'rate-table';
 
   // Actions
   loadProposal: (proposalId: string) => Promise<void>;
@@ -48,7 +52,9 @@ interface PricingState {
   deletePosition: (id: string) => void;
   addSubcontractor: (subcontractor: Omit<Subcontractor, 'id'>) => void;
   deleteSubcontractor: (id: string) => void;
+  convertToSubcontractor: (data: ConversionData) => void;
   addODC: (odc: Omit<ODCItem, 'id'>) => void;
+  updateODC: (id: string, updates: Partial<ODCItem>) => void;
   deleteODC: (id: string) => void;
   updateRates: (rates: Partial<IndirectRates>) => void;
   updateEscalationRates: (rates: Partial<EscalationRates>) => void;
@@ -64,6 +70,8 @@ interface PricingState {
   addManualOverride: (positionId: string, field: string) => void;
   clearManualOverrides: (positionId?: string) => void;
   recalculateAdvanced: () => Promise<void>;
+  toggleRatesReference: () => void;
+  setActiveTab: (tab: 'main' | 'rate-table') => void;
 }
 
 // Helper to map JobPosition to SpreadsheetPosition
@@ -91,6 +99,57 @@ const buildYearHours = (hours_per_year: Record<string, number>) => {
   Object.entries(hours_per_year).forEach(([year, hours]) => {
     result[`year${year}_hours`] = hours;
   });
+  return result;
+};
+
+// Helper to calculate passthrough costs (S&MH + G&A on sub labor)
+const calculatePassthrough = (
+  subCostsByYear: Record<string, number>,
+  rates: { smh: number; ga_passthrough: number }
+): Record<string, number> => {
+  const result: Record<string, number> = {};
+  Object.entries(subCostsByYear).forEach(([year, cost]) => {
+    result[year] = cost * (rates.smh + rates.ga_passthrough);
+  });
+  return result;
+};
+
+// Helper to calculate fee costs (separate for prime vs sub labor)
+const calculateFee = (
+  primeLaborByYear: Record<string, number>,
+  subLaborByYear: Record<string, number>,
+  feeRates: { prime_labor: number; sub_labor: number }
+): Record<string, number> => {
+  const result: Record<string, number> = {};
+  const years = new Set([
+    ...Object.keys(primeLaborByYear),
+    ...Object.keys(subLaborByYear),
+  ]);
+
+  years.forEach((year) => {
+    const primeFee = (primeLaborByYear[year] || 0) * feeRates.prime_labor;
+    const subFee = (subLaborByYear[year] || 0) * feeRates.sub_labor;
+    result[year] = primeFee + subFee;
+  });
+
+  return result;
+};
+
+// Helper to calculate subcontractor costs by year
+const calculateSubcontractorCostsByYear = (subcontractors: Subcontractor[]): Record<string, number> => {
+  const result: Record<string, number> = {};
+
+  subcontractors.forEach((sub) => {
+    sub.positions.forEach((pos) => {
+      Object.entries(pos.hours_per_year).forEach(([year, hours]) => {
+        if (!result[year]) {
+          result[year] = 0;
+        }
+        result[year] += hours * pos.rate;
+      });
+    });
+  });
+
   return result;
 };
 
@@ -152,6 +211,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
     if (!state.proposalId || !state.isDirty) return;
 
     set({ isSaving: true });
+    console.log('💾 Attempting auto-save to MongoDB...');
 
     try {
       await proposalsApi.update(state.proposalId, {
@@ -164,13 +224,24 @@ export const usePricingStore = create<PricingState>((set, get) => {
         },
       });
 
+      console.log('✅ Auto-save successful!');
+      console.log('   - Positions saved:', state.positions.length);
+      console.log('   - Subcontractors saved:', state.subcontractors.length);
+      console.log('   - Subcontractor data:', state.subcontractors);
+
       set({
         isDirty: false,
         isSaving: false,
         lastSaved: new Date(),
       });
     } catch (error: any) {
-      console.error('Auto-save failed:', error);
+      console.error('❌ Auto-save failed:', error);
+      console.error('   - Error details:', error.response?.data || error.message);
+      console.error('   - Failed payload:', {
+        positions: state.positions.length,
+        subcontractors: state.subcontractors.length,
+        subcontractorData: state.subcontractors,
+      });
       set({ isSaving: false });
       // Silently fail - don't show error toast
     }
@@ -217,6 +288,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
       totalFBLR: 0,
       byYear: {},
     },
+    ratesReferenceExpanded: false,
+    activeTab: 'main',
 
     loadProposal: async (proposalId) => {
       try {
@@ -306,10 +379,108 @@ export const usePricingStore = create<PricingState>((set, get) => {
       debouncedAutoSave();
     },
 
+    convertToSubcontractor: (data) => {
+      console.log('🔄 Converting to subcontractor:', data);
+      const state = get();
+      const position = state.positions.find((p) => p.id === data.positionId);
+
+      if (!position) {
+        console.error('❌ Position not found:', data.positionId);
+        return;
+      }
+
+      // 1. Create or find subcontractor
+      let subcontractor = state.subcontractors.find((s) => s.id === data.subcontractorId);
+      let isNewSubcontractor = false;
+
+      if (!subcontractor && data.newSubcontractorName) {
+        const newId = `sub_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+        subcontractor = {
+          id: newId,
+          name: data.newSubcontractorName,
+          positions: [],
+        };
+        isNewSubcontractor = true;
+      }
+
+      if (!subcontractor) {
+        console.error('❌ No subcontractor provided');
+        return;
+      }
+
+      // 2. Create subcontractor position (transfer data except rates)
+      const subPosition: SubcontractorPosition = {
+        labor_category: position.labor_category,
+        rate: data.rate,
+        hours_per_year: data.hoursAllocation,
+      };
+
+      // 3. Add position to subcontractor
+      const updatedSubcontractor = {
+        ...subcontractor,
+        positions: [...subcontractor.positions, subPosition],
+      };
+
+      // 4. Calculate remaining hours for prime position
+      const remainingHours: Record<string, number> = {};
+      let hasRemainingHours = false;
+
+      Object.entries(position.hours_per_year).forEach(([year, hours]) => {
+        const allocated = data.hoursAllocation[year] || 0;
+        const remaining = hours - allocated;
+        remainingHours[year] = remaining;
+        if (remaining > 0) hasRemainingHours = true;
+      });
+
+      // 5. Update state
+      set((state) => {
+        const newState: any = {
+          isDirty: true,
+        };
+
+        // Update or add subcontractor
+        if (isNewSubcontractor) {
+          newState.subcontractors = [...state.subcontractors, updatedSubcontractor];
+        } else {
+          newState.subcontractors = state.subcontractors.map((s) =>
+            s.id === updatedSubcontractor.id ? updatedSubcontractor : s
+          );
+        }
+
+        // Update or remove prime position
+        if (hasRemainingHours) {
+          // Partial conversion - update position with remaining hours
+          newState.positions = state.positions.map((p) =>
+            p.id === position.id ? { ...p, hours_per_year: remainingHours } : p
+          );
+        } else {
+          // Full conversion - remove position
+          newState.positions = state.positions.filter((p) => p.id !== position.id);
+        }
+
+        return newState;
+      });
+
+      console.log('✅ Subcontractor added:', updatedSubcontractor);
+      console.log('📊 Updated subcontractors array:', get().subcontractors);
+
+      // 6. Trigger recalculation and auto-save
+      debouncedRecalculate();
+      debouncedAutoSave(); // Explicit auto-save to persist to MongoDB immediately
+    },
+
     addODC: (odc) => {
       const id = `odc_${Date.now()}_${Math.random().toString(36).substring(7)}`;
       set((state) => ({
         odcs: [...state.odcs, { ...odc, id }],
+        isDirty: true,
+      }));
+      debouncedAutoSave();
+    },
+
+    updateODC: (id, updates) => {
+      set((state) => ({
+        odcs: state.odcs.map((o) => (o.id === id ? { ...o, ...updates } : o)),
         isDirty: true,
       }));
       debouncedAutoSave();
@@ -490,11 +661,15 @@ export const usePricingStore = create<PricingState>((set, get) => {
     },
 
     updateAdvancedPosition: (id, updates) => {
+      // Update the underlying positions array first
       set((state) => ({
-        positionsAdvanced: state.positionsAdvanced.map((p) =>
+        positions: state.positions.map((p) =>
           p.id === id ? { ...p, ...updates } : p
         ),
       }));
+
+      // Then retransform to advanced mode to recalculate breakdown
+      get().transformToAdvanced();
     },
 
     togglePositionExpansion: (id) => {
@@ -607,6 +782,16 @@ export const usePricingStore = create<PricingState>((set, get) => {
       }
     },
 
+    toggleRatesReference: () => {
+      set((state) => ({
+        ratesReferenceExpanded: !state.ratesReferenceExpanded,
+      }));
+    },
+
+    setActiveTab: (tab) => {
+      set({ activeTab: tab });
+    },
+
     reset: () => {
       set({
         proposalId: null,
@@ -647,6 +832,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
           totalFBLR: 0,
           byYear: {},
         },
+        ratesReferenceExpanded: false,
+        activeTab: 'main',
       });
     },
   };
