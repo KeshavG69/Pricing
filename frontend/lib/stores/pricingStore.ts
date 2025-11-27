@@ -7,10 +7,11 @@ import {
   IndirectRates,
   EscalationRates,
   JobPosition,
+  AdvancedPosition,
+  Aggregates,
 } from '@/types';
 import { pricingApi } from '../api/pricing';
 import { proposalsApi } from '../api/proposals';
-import { useToast } from '../hooks/useToast';
 
 interface PricingState {
   // Data
@@ -33,6 +34,13 @@ interface PricingState {
   lastSaved: Date | null;
   error: string | null;
 
+  // Advanced mode state
+  advancedMode: boolean;
+  positionsAdvanced: AdvancedPosition[];
+  expandedPositions: Set<string>;
+  manualOverrides: Map<string, Set<string>>;
+  aggregates: Aggregates;
+
   // Actions
   loadProposal: (proposalId: string) => Promise<void>;
   updatePosition: (id: string, updates: Partial<SpreadsheetPosition>) => void;
@@ -47,12 +55,23 @@ interface PricingState {
   recalculate: () => Promise<void>;
   exportToExcel: () => Promise<void>;
   reset: () => void;
+
+  // Advanced mode actions
+  enableAdvancedMode: () => void;
+  transformToAdvanced: () => void;
+  updateAdvancedPosition: (id: string, updates: Partial<AdvancedPosition>) => void;
+  togglePositionExpansion: (id: string) => void;
+  addManualOverride: (positionId: string, field: string) => void;
+  clearManualOverrides: (positionId?: string) => void;
+  recalculateAdvanced: () => Promise<void>;
 }
 
 // Helper to map JobPosition to SpreadsheetPosition
 const mapJobToPosition = (job: JobPosition, index: number): SpreadsheetPosition => ({
   id: `pos_${index}_${Date.now()}`,
   labor_category: job.labor_category,
+  experience: job.experience,
+  location: job.location,
   soc_code: job.soc_code,
   soc_title: job.soc_title,
   percentile: job.selected_percentile || '50th',
@@ -76,15 +95,13 @@ const buildYearHours = (hours_per_year: Record<string, number>) => {
 };
 
 export const usePricingStore = create<PricingState>((set, get) => {
-  const toast = useToast();
-
   // Debounced recalculation (500ms)
   const debouncedRecalculate = debounce(async () => {
     const state = get();
     if (!state.proposalId) return;
 
     set({ isRecalculating: true });
-    toast.info('Recalculating...', 3000);
+    console.log('Recalculating...');
 
     try {
       const response = await pricingApi.recalculate({
@@ -119,14 +136,13 @@ export const usePricingStore = create<PricingState>((set, get) => {
         isDirty: true,
       });
 
-      toast.success('Calculations updated');
+      console.log('Calculations updated');
 
       // Trigger auto-save
       debouncedAutoSave();
     } catch (error: any) {
       console.error('Recalculation failed:', error);
       set({ isRecalculating: false });
-      toast.error('Recalculation failed. Please try again.');
     }
   }, 500);
 
@@ -188,6 +204,20 @@ export const usePricingStore = create<PricingState>((set, get) => {
     lastSaved: null,
     error: null,
 
+    // Advanced mode initial state
+    advancedMode: false,
+    positionsAdvanced: [],
+    expandedPositions: new Set<string>(),
+    manualOverrides: new Map<string, Set<string>>(),
+    aggregates: {
+      totalDL: 0,
+      totalFringe: 0,
+      totalOH: 0,
+      totalGA: 0,
+      totalFBLR: 0,
+      byYear: {},
+    },
+
     loadProposal: async (proposalId) => {
       try {
         const proposal = await proposalsApi.get(proposalId);
@@ -225,10 +255,9 @@ export const usePricingStore = create<PricingState>((set, get) => {
           error: null,
         });
 
-        // Trigger initial recalculation if we have positions
-        if (positions.length > 0) {
-          debouncedRecalculate();
-        }
+        // NOTE: Don't auto-recalculate on initial load
+        // The spreadsheet shows editable data, but FBLR calculations
+        // are only fetched when user explicitly triggers "Advanced Analysis"
       } catch (error: any) {
         set({
           error: error.response?.data?.detail || 'Failed to load proposal',
@@ -319,7 +348,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
       if (!state.proposalId) return;
 
       try {
-        toast.info('Generating Excel file...');
+        console.log('Generating Excel file...');
 
         const blob = await pricingApi.exportToExcel({
           proposal_name: state.proposalName,
@@ -354,10 +383,227 @@ export const usePricingStore = create<PricingState>((set, get) => {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
 
-        toast.success('Excel file downloaded successfully');
+        console.log('Excel file downloaded successfully');
       } catch (error: any) {
         console.error('Excel export failed:', error);
-        toast.error('Failed to export to Excel. Please try again.');
+      }
+    },
+
+    // Advanced mode actions
+    enableAdvancedMode: () => {
+      set({ advancedMode: true });
+    },
+
+    transformToAdvanced: () => {
+      const state = get();
+
+      // Convert each SpreadsheetPosition to AdvancedPosition
+      const advanced = state.positions.map((pos) => {
+        const breakdown: AdvancedPosition['breakdown'] = {};
+
+        // For each year, create detailed breakdown
+        Object.entries(pos.hours_per_year).forEach(([year, hours]) => {
+          const wage = pos[`wage_${pos.percentile}`] || 0;
+          const dlRate = hours > 0 ? wage / hours : 0;
+          const dlAmount = dlRate * hours;
+
+          const fringe = dlRate * state.rates.fringe;
+          const fringeAmount = fringe * hours;
+
+          const oh = (dlRate + fringe) * state.rates.oh;
+          const ohAmount = oh * hours;
+
+          const ga = (dlRate + fringe + oh) * state.rates.ga;
+          const gaAmount = ga * hours;
+
+          const fee = (dlRate + fringe + oh + ga) * state.rates.fee;
+          const feeAmount = fee * hours;
+
+          const fblr = dlRate + fringe + oh + ga + fee;
+          const totalAmount = fblr * hours;
+
+          breakdown[year] = {
+            hours,
+            wage,
+            dlRate,
+            dlAmount,
+            fringe,
+            fringeAmount,
+            oh,
+            ohAmount,
+            ga,
+            gaAmount,
+            fee,
+            feeAmount,
+            fblr,
+            totalAmount,
+          };
+        });
+
+        return {
+          ...pos,
+          breakdown,
+          total_hours: Object.values(pos.hours_per_year).reduce((sum, h) => sum + h, 0),
+          total_amount: Object.values(breakdown).reduce((sum, b) => sum + b.totalAmount, 0),
+        } as AdvancedPosition;
+      });
+
+      // Calculate aggregates
+      const aggregates: Aggregates = {
+        totalDL: 0,
+        totalFringe: 0,
+        totalOH: 0,
+        totalGA: 0,
+        totalFBLR: 0,
+        byYear: {},
+      };
+
+      advanced.forEach((pos) => {
+        Object.entries(pos.breakdown).forEach(([year, breakdown]) => {
+          if (!aggregates.byYear[year]) {
+            aggregates.byYear[year] = {
+              dl: 0,
+              fringe: 0,
+              oh: 0,
+              ga: 0,
+              fblr: 0,
+              totalAmount: 0,
+            };
+          }
+
+          aggregates.byYear[year].dl += breakdown.dlAmount;
+          aggregates.byYear[year].fringe += breakdown.fringeAmount;
+          aggregates.byYear[year].oh += breakdown.ohAmount;
+          aggregates.byYear[year].ga += breakdown.gaAmount;
+          aggregates.byYear[year].fblr += breakdown.totalAmount;
+          aggregates.byYear[year].totalAmount += breakdown.totalAmount;
+
+          aggregates.totalDL += breakdown.dlAmount;
+          aggregates.totalFringe += breakdown.fringeAmount;
+          aggregates.totalOH += breakdown.ohAmount;
+          aggregates.totalGA += breakdown.gaAmount;
+          aggregates.totalFBLR += breakdown.totalAmount;
+        });
+      });
+
+      set({ positionsAdvanced: advanced, aggregates });
+    },
+
+    updateAdvancedPosition: (id, updates) => {
+      set((state) => ({
+        positionsAdvanced: state.positionsAdvanced.map((p) =>
+          p.id === id ? { ...p, ...updates } : p
+        ),
+      }));
+    },
+
+    togglePositionExpansion: (id) => {
+      set((state) => {
+        const expanded = new Set(state.expandedPositions);
+        if (expanded.has(id)) {
+          expanded.delete(id);
+        } else {
+          expanded.add(id);
+        }
+        return { expandedPositions: expanded };
+      });
+    },
+
+    addManualOverride: (positionId, field) => {
+      set((state) => {
+        const overrides = new Map(state.manualOverrides);
+        if (!overrides.has(positionId)) {
+          overrides.set(positionId, new Set());
+        }
+        overrides.get(positionId)!.add(field);
+        return { manualOverrides: overrides };
+      });
+    },
+
+    clearManualOverrides: (positionId) => {
+      set((state) => {
+        const overrides = new Map(state.manualOverrides);
+        if (positionId) {
+          overrides.delete(positionId);
+        } else {
+          overrides.clear();
+        }
+        return { manualOverrides: overrides };
+      });
+    },
+
+    recalculateAdvanced: async () => {
+      const state = get();
+      if (!state.proposalId) return;
+
+      set({ isRecalculating: true });
+      console.log('Recalculating advanced mode...');
+
+      try {
+        // Build request (exclude manual override fields)
+        const positions = state.positionsAdvanced.map((pos) => {
+          const overrides = state.manualOverrides.get(pos.id) || new Set();
+
+          // Build breakdown with manual overrides preserved
+          const breakdown = { ...pos.breakdown };
+
+          // For each year, mark which fields to skip in recalculation
+          Object.keys(breakdown).forEach((year) => {
+            Object.keys(breakdown[year]).forEach((field) => {
+              if (overrides.has(`${year}.${field}`)) {
+                // Mark for backend to preserve
+                (breakdown[year] as any)[`${field}_manual`] = true;
+              }
+            });
+          });
+
+          return {
+            id: pos.id,
+            percentile: pos.percentile,
+            breakdown,
+          };
+        });
+
+        // Call API (for now, we'll use the same recalculate endpoint)
+        // TODO: Create a dedicated recalculateAdvanced endpoint
+        const response = await pricingApi.recalculate({
+          positions: state.positions.map((p) => ({
+            id: p.id,
+            percentile: p.percentile,
+            wage_10th: p.wage_10th,
+            wage_25th: p.wage_25th,
+            wage_50th: p.wage_50th,
+            wage_75th: p.wage_75th,
+            wage_90th: p.wage_90th,
+            ...buildYearHours(p.hours_per_year),
+          })),
+          rates: state.rates,
+          escalation_rates: state.escalationRates,
+          total_years: state.totalYears,
+        });
+
+        // Update positions with calculated data
+        const updatedPositions = state.positions.map((pos) => {
+          const result = response.results.find((r) => r.id === pos.id);
+          return {
+            ...pos,
+            yearly_amounts: result?.years,
+            total_amount: result?.total_amount,
+          };
+        });
+
+        set({
+          positions: updatedPositions,
+          isRecalculating: false,
+        });
+
+        // Re-transform to advanced mode with new calculations
+        get().transformToAdvanced();
+
+        console.log('Advanced mode recalculation complete');
+      } catch (error: any) {
+        console.error('Advanced recalculation failed:', error);
+        set({ isRecalculating: false });
       }
     },
 
@@ -388,6 +634,19 @@ export const usePricingStore = create<PricingState>((set, get) => {
         isSaving: false,
         lastSaved: null,
         error: null,
+        // Reset advanced mode state
+        advancedMode: false,
+        positionsAdvanced: [],
+        expandedPositions: new Set<string>(),
+        manualOverrides: new Map<string, Set<string>>(),
+        aggregates: {
+          totalDL: 0,
+          totalFringe: 0,
+          totalOH: 0,
+          totalGA: 0,
+          totalFBLR: 0,
+          byYear: {},
+        },
       });
     },
   };

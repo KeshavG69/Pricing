@@ -26,6 +26,9 @@ from utils.proposals import ProposalCRUD
 from client.jd_parser import parse_documents_to_dataframe
 from utils.pipeline import process_dataframe_with_agents
 
+# Position splitting
+from routers.pricing import split_position_by_hours, split_multi_year_position
+
 # Storage
 from client.idrive_storage import get_idrive_storage
 
@@ -88,6 +91,14 @@ async def process_proposal_documents(
         final_df = final_df.replace([np.inf, -np.inf], None)
         final_df = final_df.where(final_df.notna(), None)
 
+        # Rename columns to match API schema (snake_case field names)
+        column_mapping = {
+            'BLS Code': 'soc_code',
+            'BLS Labour Category Mapping': 'soc_title',
+            'BLS Occupation Description': 'bls_occupation_description',
+        }
+        final_df = final_df.rename(columns=column_mapping)
+
         jobs_data = final_df.to_dict('records')
 
         # Clean NaN/inf values
@@ -101,6 +112,32 @@ async def process_proposal_documents(
         for job in jobs_data:
             cleaned_job = {k: clean_value(v) for k, v in job.items()}
             cleaned_jobs.append(cleaned_job)
+
+        # Apply position splitting by FTE hours
+        # Extract FTE threshold from document (or use default)
+        fte_threshold = 1920  # Default fallback
+        if cleaned_jobs and len(cleaned_jobs) > 0:
+            first_job_threshold = cleaned_jobs[0].get('standard_fte_hours')
+            if first_job_threshold and 1500 <= first_job_threshold <= 2500:
+                fte_threshold = int(first_job_threshold)
+
+        final_split_jobs = []
+        for job in cleaned_jobs:
+            # Check if job has hours_per_year (multi-year contract)
+            if 'hours_per_year' in job and job['hours_per_year']:
+                # Multi-year position - use split_multi_year_position
+                split_positions = split_multi_year_position(job, max_hours=fte_threshold)
+                final_split_jobs.extend(split_positions)
+            elif 'hours' in job and job['hours'] and job['hours'] > fte_threshold:
+                # Legacy single-year contract with high hours
+                split_positions = split_position_by_hours(job, max_hours=fte_threshold)
+                final_split_jobs.extend(split_positions)
+            else:
+                # No splitting needed
+                final_split_jobs.append(job)
+
+        # Replace cleaned_jobs with split jobs
+        cleaned_jobs = final_split_jobs
 
         # Extract metadata
         base_years = None
@@ -121,6 +158,15 @@ async def process_proposal_documents(
         if option_years is None:
             option_years = total_years - base_years
 
+        # Generate dynamic escalation rates based on total_years
+        escalation_rates = {}
+        for year in range(1, total_years):
+            key = f"{year}_to_{year + 1}"
+            if year == 1:
+                escalation_rates[key] = 0.0272  # 2.72% for Year 1 to 2
+            else:
+                escalation_rates[key] = 0.0299  # 2.99% for all other years
+
         # Update proposal with results
         crud.update_proposal(
             proposal_id,
@@ -134,7 +180,8 @@ async def process_proposal_documents(
                     "total_jobs": len(cleaned_jobs),
                     "base_years": base_years,
                     "option_years": option_years,
-                    "total_years": total_years
+                    "total_years": total_years,
+                    "fte_hours_threshold": fte_threshold
                 },
                 "rates": {
                     "fringe": 0.247,
@@ -146,12 +193,7 @@ async def process_proposal_documents(
                     "ga_passthrough": 0.0,
                     "ga_adder": 0.2212
                 },
-                "escalation_rates": {
-                    "1_to_2": 0.0272,
-                    "2_to_3": 0.0299,
-                    "3_to_4": 0.0299,
-                    "4_to_5": 0.0299
-                }
+                "escalation_rates": escalation_rates
             }
         )
 

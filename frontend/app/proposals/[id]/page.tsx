@@ -4,10 +4,14 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useProposalsStore } from '@/lib/stores/proposalsStore';
+import { usePricingStore } from '@/lib/stores/pricingStore';
 import { proposalsApi } from '@/lib/api/proposals';
 import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import { Loader2, CheckCircle, AlertCircle, ArrowLeft } from 'lucide-react';
+import PricingSidebar from '@/components/pricing/PricingSidebar';
+import PositionsGrid from '@/components/pricing/PositionsGrid';
+import AdvancedAnalysisGrid from '@/components/pricing/AdvancedAnalysisGrid';
+import { Loader2, CheckCircle, AlertCircle, ArrowLeft, Plus } from 'lucide-react';
 
 export default function ProposalPage() {
   const params = useParams();
@@ -15,8 +19,20 @@ export default function ProposalPage() {
   const proposalId = params.id as string;
 
   const { currentProposal, fetchProposal, isLoading } = useProposalsStore();
+  const {
+    loadProposal,
+    proposalName,
+    addPosition,
+    reset,
+    recalculate,
+    isRecalculating,
+    enableAdvancedMode,
+    transformToAdvanced,
+    advancedMode,
+  } = usePricingStore();
   const [pollingStatus, setPollingStatus] = useState<any>(null);
   const [isPolling, setIsPolling] = useState(false);
+  const [pricingLoaded, setPricingLoaded] = useState(false);
 
   useEffect(() => {
     if (proposalId) {
@@ -24,34 +40,65 @@ export default function ProposalPage() {
     }
   }, [proposalId, fetchProposal]);
 
+  // Load pricing data when proposal is completed
+  useEffect(() => {
+    if (currentProposal?.status === 'completed' && proposalId && !pricingLoaded) {
+      loadProposal(proposalId);
+      setPricingLoaded(true);
+    }
+
+    return () => {
+      if (pricingLoaded) {
+        reset();
+        setPricingLoaded(false);
+      }
+    };
+  }, [currentProposal, proposalId, loadProposal, reset, pricingLoaded]);
+
   // Poll status if proposal is processing
   useEffect(() => {
+    // Only start polling if status is 'processing'
     if (!currentProposal || currentProposal.status !== 'processing') {
-      setIsPolling(false);
       return;
     }
 
     setIsPolling(true);
-    const pollInterval = setInterval(async () => {
+    let isActive = true;
+
+    const poll = async () => {
+      if (!isActive) return;
+
       try {
         const status = await proposalsApi.getStatus(proposalId);
         setPollingStatus(status);
 
         // If completed or error, stop polling and refresh proposal
         if (status.status === 'completed' || status.status === 'error') {
-          clearInterval(pollInterval);
           setIsPolling(false);
           await fetchProposal(proposalId);
+          // Don't schedule next poll
+          return;
+        }
+
+        // Schedule next poll only if still processing
+        if (isActive && status.status === 'processing') {
+          setTimeout(poll, 2000);
         }
       } catch (error) {
         console.error('Polling error:', error);
-        clearInterval(pollInterval);
         setIsPolling(false);
       }
-    }, 2000); // Poll every 2 seconds
+    };
 
-    return () => clearInterval(pollInterval);
-  }, [currentProposal, proposalId, fetchProposal]);
+    // Start polling
+    poll();
+
+    // Cleanup function
+    return () => {
+      isActive = false;
+      setIsPolling(false);
+    };
+  }, [currentProposal?.status, proposalId, fetchProposal]);
 
   if (isLoading || !currentProposal) {
     return (
@@ -115,109 +162,115 @@ export default function ProposalPage() {
     </Card>
   );
 
-  const renderCompletedView = () => (
+  const handleAddPosition = () => {
+    addPosition({
+      labor_category: 'New Position',
+      percentile: '50th',
+      hours_per_year: { '1': 1880 },
+      wage_10th: 0,
+      wage_25th: 0,
+      wage_50th: 0,
+      wage_75th: 0,
+      wage_90th: 0,
+    });
+  };
+
+  const handleAdvancedAnalysis = async () => {
+    // Transform basic positions to advanced format
+    transformToAdvanced();
+
+    // Enable advanced mode
+    enableAdvancedMode();
+
+    // Call recalculate API
+    await recalculate();
+  };
+
+  const renderPricingWorkspace = () => (
     <div className="space-y-6">
-      {/* Success message */}
+      {/* Success message with Advanced Analysis button */}
       <Card>
         <CardContent className="pt-6">
-          <div className="flex items-center space-x-4">
-            <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-              <CheckCircle className="w-6 h-6 text-emerald-400" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                <CheckCircle className="w-6 h-6 text-emerald-400" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-slate-50 mb-1">
+                  Processing Complete!
+                </h3>
+                <p className="text-sm text-slate-400">
+                  {currentProposal.metadata?.total_jobs || 0} job positions extracted - view and edit data below
+                </p>
+              </div>
             </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-slate-50 mb-1">
-                Processing Complete!
-              </h3>
-              <p className="text-sm text-slate-400">
-                {currentProposal.metadata?.total_jobs || 0} job positions extracted and analyzed
-              </p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Proposal Details */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Proposal Details</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-slate-400">Name</label>
-              <p className="text-slate-50">{currentProposal.name}</p>
-            </div>
-
-            {currentProposal.solicitation_number && (
-              <div>
-                <label className="text-sm font-medium text-slate-400">Solicitation Number</label>
-                <p className="text-slate-50">{currentProposal.solicitation_number}</p>
+            {!advancedMode && (
+              <Button
+                variant="primary"
+                onClick={handleAdvancedAnalysis}
+                disabled={isRecalculating}
+              >
+                {isRecalculating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Calculating...
+                  </>
+                ) : (
+                  '🚀 Advanced Analysis'
+                )}
+              </Button>
+            )}
+            {advancedMode && (
+              <div className="text-sm text-emerald-400 font-semibold">
+                ✓ Advanced Mode Active
               </div>
             )}
-
-            <div className="grid grid-cols-3 gap-4 pt-4">
-              <div>
-                <label className="text-sm font-medium text-slate-400">Total Years</label>
-                <p className="text-2xl font-semibold text-slate-50">
-                  {currentProposal.metadata?.total_years || 0}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-slate-400">Base Years</label>
-                <p className="text-2xl font-semibold text-slate-50">
-                  {currentProposal.metadata?.base_years || 0}
-                </p>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-slate-400">Option Years</label>
-                <p className="text-2xl font-semibold text-slate-50">
-                  {currentProposal.metadata?.option_years || 0}
-                </p>
-              </div>
-            </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Jobs preview */}
-      {currentProposal.jobs && currentProposal.jobs.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Extracted Jobs ({currentProposal.jobs.length})</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-2 max-h-96 overflow-y-auto">
-              {currentProposal.jobs.slice(0, 10).map((job: any, index: number) => (
-                <div
-                  key={index}
-                  className="p-3 rounded-lg bg-slate-900/30 border border-slate-800"
-                >
-                  <p className="text-sm font-medium text-slate-50">{job.labor_category}</p>
-                  {job.soc_title && (
-                    <p className="text-xs text-slate-400 mt-1">
-                      SOC: {job.soc_code} - {job.soc_title}
-                    </p>
-                  )}
-                </div>
-              ))}
-              {currentProposal.jobs.length > 10 && (
-                <p className="text-sm text-slate-400 text-center pt-2">
-                  + {currentProposal.jobs.length - 10} more positions
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+      {/* Pricing Workspace */}
+      <div className="flex gap-6">
+        {/* Left: Spreadsheet (70%) */}
+        <div className="flex-1">
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle>
+                  {advancedMode ? 'Cost Proposal Spreadsheet' : 'Job Positions & Pricing'}
+                </CardTitle>
+                {!advancedMode && (
+                  <Button variant="outline" size="sm" onClick={handleAddPosition}>
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Position
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className={advancedMode ? 'h-[800px]' : 'h-[600px]'}>
+                {advancedMode ? (
+                  <AdvancedAnalysisGrid />
+                ) : (
+                  <PositionsGrid />
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
 
-      {/* Next steps */}
-      <div className="flex items-center justify-between">
+        {/* Right: Sidebar (30%) */}
+        <div className="w-96">
+          <PricingSidebar />
+        </div>
+      </div>
+
+      {/* Back button */}
+      <div>
         <Button variant="outline" onClick={() => router.push('/dashboard')}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Dashboard
-        </Button>
-        <Button variant="primary" onClick={() => router.push(`/proposals/${proposalId}/pricing`)}>
-          Continue to Pricing →
         </Button>
       </div>
     </div>
@@ -225,7 +278,7 @@ export default function ProposalPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-8 max-w-5xl mx-auto">
+      <div className="p-8 max-w-[1800px] mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-semibold text-slate-50 mb-2">
             {currentProposal.name}
@@ -237,7 +290,7 @@ export default function ProposalPage() {
 
         {currentProposal.status === 'processing' && renderProcessingView()}
         {currentProposal.status === 'error' && renderErrorView()}
-        {currentProposal.status === 'completed' && renderCompletedView()}
+        {currentProposal.status === 'completed' && renderPricingWorkspace()}
       </div>
     </DashboardLayout>
   );

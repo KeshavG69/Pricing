@@ -1292,6 +1292,22 @@
         "documentation": {}
     },
     {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
         "label": "MongoClient",
         "importPath": "pymongo",
         "description": "pymongo",
@@ -1301,6 +1317,62 @@
     },
     {
         "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "ASCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "DESCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "ASCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "DESCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "TEXT",
         "importPath": "pymongo",
         "description": "pymongo",
         "isExtraImport": true,
@@ -1962,6 +2034,22 @@
         "description": "utils.proposals",
         "isExtraImport": true,
         "detail": "utils.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "split_position_by_hours",
+        "importPath": "routers.pricing",
+        "description": "routers.pricing",
+        "isExtraImport": true,
+        "detail": "routers.pricing",
+        "documentation": {}
+    },
+    {
+        "label": "split_multi_year_position",
+        "importPath": "routers.pricing",
+        "description": "routers.pricing",
+        "isExtraImport": true,
+        "detail": "routers.pricing",
         "documentation": {}
     },
     {
@@ -3037,6 +3125,15 @@
         "documentation": {}
     },
     {
+        "label": "split_multi_year_position",
+        "kind": 2,
+        "importPath": "routers.pricing",
+        "description": "routers.pricing",
+        "peekOfCode": "def split_multi_year_position(position: Dict, max_hours: int = 1920) -> List[Dict]:\n    \"\"\"\n    Split a multi-year position into multiple FTE rows if any year has hours > max_hours.\n    Finds the year with maximum hours and creates that many FTE positions.\n    Each position gets up to max_hours per year, unused FTEs get 0 hours.\n    Args:\n        position: Job position dict with 'hours_per_year' field\n        max_hours: Max hours per person per year (default 1920)\n    Returns:\n        List of position dicts (1 or more)",
+        "detail": "routers.pricing",
+        "documentation": {}
+    },
+    {
         "label": "router",
         "kind": 5,
         "importPath": "routers.pricing",
@@ -3061,6 +3158,69 @@
         "description": "routers.proposals",
         "peekOfCode": "router = APIRouter(prefix=\"/proposals\", tags=[\"proposals\"])\n# Get proposals collection\ndef get_proposals_collection():\n    \"\"\"Get MongoDB proposals collection.\"\"\"\n    return MongoDB.get_collection(\"proposals\")\n# ============================================================================\n# DOCUMENT UPLOAD & ASYNC PROCESSING\n# ============================================================================\nasync def process_proposal_documents(\n    proposal_id: str,",
         "detail": "routers.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "create_indexes",
+        "kind": 2,
+        "importPath": "scripts.create_indexes",
+        "description": "scripts.create_indexes",
+        "peekOfCode": "def create_indexes():\n    \"\"\"Create all necessary indexes.\"\"\"\n    print(\"Connecting to MongoDB...\")\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    print(f\"\\nCreating indexes on database: {MONGODB_DATABASE}\")\n    print(\"=\" * 60)\n    # =====================================================================\n    # PROPOSALS COLLECTION\n    # =====================================================================",
+        "detail": "scripts.create_indexes",
+        "documentation": {}
+    },
+    {
+        "label": "MONGODB_URL",
+        "kind": 5,
+        "importPath": "scripts.create_indexes",
+        "description": "scripts.create_indexes",
+        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef create_indexes():\n    \"\"\"Create all necessary indexes.\"\"\"\n    print(\"Connecting to MongoDB...\")\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    print(f\"\\nCreating indexes on database: {MONGODB_DATABASE}\")\n    print(\"=\" * 60)\n    # =====================================================================",
+        "detail": "scripts.create_indexes",
+        "documentation": {}
+    },
+    {
+        "label": "MONGODB_DATABASE",
+        "kind": 5,
+        "importPath": "scripts.create_indexes",
+        "description": "scripts.create_indexes",
+        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef create_indexes():\n    \"\"\"Create all necessary indexes.\"\"\"\n    print(\"Connecting to MongoDB...\")\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    print(f\"\\nCreating indexes on database: {MONGODB_DATABASE}\")\n    print(\"=\" * 60)\n    # =====================================================================\n    # PROPOSALS COLLECTION",
+        "detail": "scripts.create_indexes",
+        "documentation": {}
+    },
+    {
+        "label": "safe_create_index",
+        "kind": 2,
+        "importPath": "scripts.create_indexes_safe",
+        "description": "scripts.create_indexes_safe",
+        "peekOfCode": "def safe_create_index(collection, keys, **kwargs):\n    \"\"\"Safely create index, handling existing indexes.\"\"\"\n    try:\n        collection.create_index(keys, **kwargs)\n        return f\"✓ Created: {kwargs.get('name', str(keys))}\"\n    except Exception as e:\n        if \"already exists\" in str(e).lower():\n            return f\"⚠ Already exists: {kwargs.get('name', str(keys))}\"\n        else:\n            return f\"✗ Error: {str(e)[:100]}\"",
+        "detail": "scripts.create_indexes_safe",
+        "documentation": {}
+    },
+    {
+        "label": "create_indexes",
+        "kind": 2,
+        "importPath": "scripts.create_indexes_safe",
+        "description": "scripts.create_indexes_safe",
+        "peekOfCode": "def create_indexes():\n    \"\"\"Create all necessary indexes.\"\"\"\n    print(\"Connecting to MongoDB...\")\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    print(f\"\\nCreating indexes on database: {MONGODB_DATABASE}\")\n    print(\"=\" * 70)\n    # =====================================================================\n    # PROPOSALS COLLECTION\n    # =====================================================================",
+        "detail": "scripts.create_indexes_safe",
+        "documentation": {}
+    },
+    {
+        "label": "MONGODB_URL",
+        "kind": 5,
+        "importPath": "scripts.create_indexes_safe",
+        "description": "scripts.create_indexes_safe",
+        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef safe_create_index(collection, keys, **kwargs):\n    \"\"\"Safely create index, handling existing indexes.\"\"\"\n    try:\n        collection.create_index(keys, **kwargs)\n        return f\"✓ Created: {kwargs.get('name', str(keys))}\"\n    except Exception as e:\n        if \"already exists\" in str(e).lower():\n            return f\"⚠ Already exists: {kwargs.get('name', str(keys))}\"",
+        "detail": "scripts.create_indexes_safe",
+        "documentation": {}
+    },
+    {
+        "label": "MONGODB_DATABASE",
+        "kind": 5,
+        "importPath": "scripts.create_indexes_safe",
+        "description": "scripts.create_indexes_safe",
+        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef safe_create_index(collection, keys, **kwargs):\n    \"\"\"Safely create index, handling existing indexes.\"\"\"\n    try:\n        collection.create_index(keys, **kwargs)\n        return f\"✓ Created: {kwargs.get('name', str(keys))}\"\n    except Exception as e:\n        if \"already exists\" in str(e).lower():\n            return f\"⚠ Already exists: {kwargs.get('name', str(keys))}\"\n        else:",
+        "detail": "scripts.create_indexes_safe",
         "documentation": {}
     },
     {

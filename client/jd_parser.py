@@ -42,6 +42,15 @@ class DocumentMetadata(BaseModel):
         None,
         description="Total contract years (base + option). None if not specified."
     )
+    standard_fte_hours: Optional[int] = Field(
+        None,
+        description="""Standard full-time hours per year for this contract.
+        Look at the hours table and identify the most common hours value that represents
+        a single full-time position (e.g., 1880, 1920, or 2080). This is typically the
+        smallest non-zero hours value that appears frequently for individual positions.
+        Ignore larger values that are clearly multiples (e.g., 3760, 5640, etc.).
+        Default to None if unclear."""
+    )
 
 
 # =====================================================================
@@ -116,6 +125,15 @@ class DocumentMetadataExtract(BaseModel):
     total_years: Optional[int] = Field(
         None,
         description="Total contract duration in years (base + option)"
+    )
+    standard_fte_hours: Optional[int] = Field(
+        None,
+        description="""Standard full-time hours per year for this contract.
+        Look at the hours table and identify the most common hours value that represents
+        a single full-time position (e.g., 1880, 1920, or 2080). This is typically the
+        smallest non-zero hours value that appears frequently for individual positions.
+        Ignore larger values that are clearly multiples (e.g., 3760, 5640, etc.).
+        Default to None if unclear."""
     )
 
 
@@ -245,7 +263,8 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
                 project_name=extraction.metadata.project_name,
                 base_years=extraction.metadata.base_years,
                 option_years=extraction.metadata.option_years,
-                total_years=extraction.metadata.total_years
+                total_years=extraction.metadata.total_years,
+                standard_fte_hours=extraction.metadata.standard_fte_hours
             )
 
             doc_location = doc_metadata.location
@@ -280,7 +299,7 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
         # Create empty DataFrame with correct columns
         df = pd.DataFrame(columns=[
             "labor_category", "description", "experience", "location", "hours", "hours_per_year",
-            "base_years", "option_years", "total_years", "project_name"
+            "base_years", "option_years", "total_years", "project_name", "standard_fte_hours"
         ])
     else:
         df = pd.DataFrame([
@@ -295,7 +314,8 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
                 "base_years": metadata.base_years,
                 "option_years": metadata.option_years,
                 "total_years": metadata.total_years,
-                "project_name": metadata.project_name
+                "project_name": metadata.project_name,
+                "standard_fte_hours": metadata.standard_fte_hours
             }
             for jd, metadata in zip(all_jds, all_metadata_list)
         ])

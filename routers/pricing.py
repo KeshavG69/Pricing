@@ -55,6 +55,69 @@ def split_position_by_hours(position: Dict, max_hours: int = 1920) -> List[Dict]
     return positions
 
 
+def split_multi_year_position(position: Dict, max_hours: int = 1920) -> List[Dict]:
+    """
+    Split a multi-year position into multiple FTE rows if any year has hours > max_hours.
+
+    Finds the year with maximum hours and creates that many FTE positions.
+    Each position gets up to max_hours per year, unused FTEs get 0 hours.
+
+    Args:
+        position: Job position dict with 'hours_per_year' field
+        max_hours: Max hours per person per year (default 1920)
+
+    Returns:
+        List of position dicts (1 or more)
+
+    Example:
+        Input: {
+            "labor_category": "Engineer",
+            "hours_per_year": {"1": 1920, "2": 5760, "3": 3840},
+            "wage_75th": 150000
+        }
+        Output: [
+            {"labor_category": "Engineer", "hours_per_year": {"1": 1920, "2": 1920, "3": 1920}, ...},
+            {"labor_category": "Engineer", "hours_per_year": {"1": 0, "2": 1920, "3": 1920}, ...},
+            {"labor_category": "Engineer", "hours_per_year": {"1": 0, "2": 1920, "3": 0}, ...}
+        ]
+    """
+    hours_per_year = position.get('hours_per_year', {})
+
+    if not hours_per_year:
+        return [position]  # No hours_per_year, can't split
+
+    # Find maximum hours across all years
+    max_year_hours = max(hours_per_year.values())
+
+    if max_year_hours <= max_hours:
+        return [position]  # No split needed
+
+    # Calculate number of FTEs needed (based on max year)
+    fte_count = math.ceil(max_year_hours / max_hours)
+
+    # Create split positions
+    split_positions = []
+    for i in range(fte_count):
+        new_position = position.copy()
+        new_hours_per_year = {}
+
+        # Distribute hours for each year independently
+        for year, total_hours in hours_per_year.items():
+            remaining_hours = total_hours - (i * max_hours)
+
+            if remaining_hours > 0:
+                # This FTE gets work this year (up to max_hours)
+                new_hours_per_year[year] = min(remaining_hours, max_hours)
+            else:
+                # This FTE is not needed this year
+                new_hours_per_year[year] = 0
+
+        new_position['hours_per_year'] = new_hours_per_year
+        split_positions.append(new_position)
+
+    return split_positions
+
+
 # Removed old process_documents_task, /process, and /status endpoints
 # Replaced by /api/proposals/upload and /api/proposals/{id}/status in proposals router
 

@@ -127,6 +127,8 @@ export interface EscalationRates {
 export interface SpreadsheetPosition {
   id: string; // Frontend-generated ID
   labor_category: string;
+  experience?: number; // Years of experience
+  location?: string; // Job location
   soc_code?: string;
   soc_title?: string;
   percentile: '10th' | '25th' | '50th' | '75th' | '90th';
@@ -142,7 +144,13 @@ export interface SpreadsheetPosition {
     year: number;
     hours: number;
     amount: number;
-    fblr: number;
+    breakdown: {
+      fblr: number;
+      dlRate: number;
+      fringe: number;
+      oh: number;
+      ga: number;
+    };
   }>;
   total_amount?: number;
 }
@@ -166,6 +174,76 @@ export interface ODCItem {
   amount_per_year: Record<string, number>;
   escalate: boolean;
   apply_ga_adder: boolean;
+}
+
+// Advanced Analysis Mode types
+export interface YearBreakdown {
+  hours: number;
+  wage: number;
+  dlRate: number;
+  dlAmount: number;
+  fringe: number;
+  fringeAmount: number;
+  oh: number;
+  ohAmount: number;
+  ga: number;
+  gaAmount: number;
+  fee: number;
+  feeAmount: number;
+  fblr: number;
+  totalAmount: number;
+}
+
+export interface AdvancedPosition {
+  id: string;
+  labor_category: string;
+  experience?: number;
+  location?: string;
+  soc_code?: string;
+  soc_title?: string;
+  percentile: '10th' | '25th' | '50th' | '75th' | '90th';
+  wage_10th?: number;
+  wage_25th?: number;
+  wage_50th?: number;
+  wage_75th?: number;
+  wage_90th?: number;
+
+  // Per-year breakdown
+  breakdown: {
+    [year: string]: YearBreakdown; // "1", "2", "3", etc.
+  };
+
+  total_hours: number;
+  total_amount: number;
+}
+
+export interface Aggregates {
+  totalDL: number;
+  totalFringe: number;
+  totalOH: number;
+  totalGA: number;
+  totalFBLR: number;
+  byYear: {
+    [year: string]: {
+      dl: number;
+      fringe: number;
+      oh: number;
+      ga: number;
+      fblr: number;
+      totalAmount: number;
+    };
+  };
+}
+
+export type GridRowType = 'position' | 'breakdown' | 'subtotal';
+export type BreakdownType = 'dl' | 'fringe' | 'oh' | 'ga' | 'fee';
+
+export interface GridRow {
+  type: GridRowType;
+  positionId: string;
+  breakdownType?: BreakdownType;
+  data: any; // Actual row data
+  isExpanded?: boolean;
 }
 
 // Recalculation API types
