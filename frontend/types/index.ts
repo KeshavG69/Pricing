@@ -216,6 +216,7 @@ export interface AdvancedPosition {
 
   total_hours: number;
   total_amount: number;
+  standard_fte_hours?: number; // Full-time equivalent hours (e.g., 1880, 1920, 2080)
 }
 
 export interface Aggregates {
@@ -310,27 +311,48 @@ export interface RecalculateResponse {
   }>;
 }
 
+export interface ProjectConfig {
+  solicitation_number: string;
+  prime_contractor_name: string;
+  subcontractor_names: string[];
+  dcaa_contact: string;
+  total_years: number;
+  base_years: number;
+  escalation_rates: EscalationRates;
+  indirect_rates: {
+    fringe: number;
+    oh: number;
+    ga: number;
+  };
+  passthrough_rates: {
+    smh: number;
+    ga: number;
+  };
+  fee_rates: {
+    prime_labor: number;
+    sub_labor: number;
+  };
+  ga_adder_rate: number;
+  subcontractors: Subcontractor[];
+  odcs: ODCItem[];
+  include_rate_table?: boolean;
+}
+
 export interface ExcelGenerationRequest {
-  proposal_name: string;
-  solicitation_number?: string;
   jobs: Array<{
     labor_category: string;
     soc_code?: string;
-    percentile: string;
     hours_per_year: Record<string, number>;
+    selected_wage: number;
+    percentile: string;
     wage_10th?: number;
     wage_25th?: number;
     wage_50th?: number;
     wage_75th?: number;
     wage_90th?: number;
+    standard_fte_hours?: number;
   }>;
-  rates: IndirectRates;
-  escalation_rates: EscalationRates;
-  subcontractors?: Subcontractor[];
-  odcs?: ODCItem[];
-  total_years: number;
-  base_years: number;
-  option_years: number;
+  project_config: ProjectConfig;
 }
 
 // API response types

@@ -145,10 +145,17 @@ def build_project_data_from_dataframe(
         position = {
             'name': row.get('name', 'TBD'),
             'labor_category': row['labor_category'],
-            'ecraft_code': row.get('BLS Labour Category Mapping', row.get('ecraft_code', 'TBD')),  # Use BLS labor category
-            'bls_code': row.get('BLS Code', ''),  # Add BLS Code
-            'base_annual_wage': row.get('selected_wage', row.get('wage_50th', 100000)),  # Use selected wage or 50th percentile
-            'hours_per_year': hours_per_year
+            'ecraft_code': row.get('BLS Labour Category Mapping', row.get('ecraft_code', row.get('soc_title', 'TBD'))),  # Use BLS labor category or soc_title
+            'bls_code': row.get('BLS Code', row.get('soc_code', '')),  # Add BLS Code or soc_code
+            'base_annual_wage': row.get('selected_wage', row.get('wage_50th', 100000)),  # Use selected wage
+            'hours_per_year': hours_per_year,
+            'standard_fte_hours': row.get('standard_fte_hours', 1880),
+            'percentile': row.get('percentile', '50th'),
+            'wage_10th': row.get('wage_10th', 0),
+            'wage_25th': row.get('wage_25th', 0),
+            'wage_50th': row.get('wage_50th', 0),
+            'wage_75th': row.get('wage_75th', 0),
+            'wage_90th': row.get('wage_90th', 0),
         }
         prime_positions.append(position)
 

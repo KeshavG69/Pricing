@@ -10,9 +10,6 @@ export const PricingSidebar = () => {
     rates,
     escalationRates,
     totalYears,
-    positions,
-    subcontractors,
-    odcs,
     updateRates,
     updateEscalationRates,
     exportToExcel,
@@ -21,12 +18,6 @@ export const PricingSidebar = () => {
     isRecalculating,
     lastSaved,
   } = usePricingStore();
-
-  // Calculate totals
-  const primeLaborTotal = positions.reduce((sum, p) => sum + (p.total_amount || 0), 0);
-  const subcontractorTotal = 0; // TODO: Calculate from subcontractors
-  const odcTotal = 0; // TODO: Calculate from ODCs
-  const totalContractValue = primeLaborTotal + subcontractorTotal + odcTotal;
 
   // Auto-save indicator
   const renderSaveIndicator = () => {
@@ -156,40 +147,6 @@ export const PricingSidebar = () => {
           </div>
         </div>
       )}
-
-      {/* Totals Summary */}
-      <div className="bg-slate-900/30 border border-slate-800 rounded-lg p-4">
-        <h4 className="text-sm font-semibold text-slate-300 mb-3 uppercase tracking-wide">
-          Contract Totals
-        </h4>
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400">Prime Labor</span>
-            <span className="text-sm text-slate-50 font-semibold">
-              ${primeLaborTotal.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400">Subcontractors</span>
-            <span className="text-sm text-slate-50 font-semibold">
-              ${subcontractorTotal.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-xs text-slate-400">ODCs</span>
-            <span className="text-sm text-slate-50 font-semibold">
-              ${odcTotal.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-            </span>
-          </div>
-          <div className="h-px bg-slate-700 my-2" />
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-slate-50 font-semibold">Total Contract Value</span>
-            <span className="text-lg text-emerald-400 font-bold">
-              ${totalContractValue.toLocaleString('en-US', { maximumFractionDigits: 0 })}
-            </span>
-          </div>
-        </div>
-      </div>
 
       {/* Actions */}
       <div className="space-y-2">

@@ -82,6 +82,7 @@ class ExcelGenerator:
             project_data['prime_positions'],
             project_data['indirect_rates'],
             project_data['escalation_rates'],
+            project_data['fee_rates'],
             current_row,
             total_years
         )
@@ -215,10 +216,30 @@ class ExcelGenerator:
             ws.cell(8, col_offset + 2, "Amount")
             col_offset += 3
 
+        # Averaged FBLR columns (after all year columns)
+        avg_fblr_start_col = 7 + (total_years * 3)
+        ws.cell(7, avg_fblr_start_col, "Averaged FBLR")
+        # Merge cells for averaged FBLR header (spans 6 columns)
+        ws.merge_cells(
+            start_row=7,
+            start_column=avg_fblr_start_col,
+            end_row=7,
+            end_column=avg_fblr_start_col + 5
+        )
+
+        # Sub-headers for averaged FBLR
+        ws.cell(8, avg_fblr_start_col, "DL Rate ($/hr)")
+        ws.cell(8, avg_fblr_start_col + 1, "Fringe ($/hr)")
+        ws.cell(8, avg_fblr_start_col + 2, "OH ($/hr)")
+        ws.cell(8, avg_fblr_start_col + 3, "G&A ($/hr)")
+        ws.cell(8, avg_fblr_start_col + 4, "Fee ($/hr)")
+        ws.cell(8, avg_fblr_start_col + 5, "FBLR ($/hr)")
+
         # Row 9: Add editable rates reference section (far right columns)
         # These cells will be referenced by all formulas
-        # Place them in columns starting after the year columns (e.g., column AA onwards)
-        rates_col = 27  # Column AA (far right, out of the way)
+        # Place them in columns starting AFTER the averaged FBLR columns
+        # Averaged FBLR ends at: avg_fblr_start_col + 5, so start at +7 for safety
+        rates_col = avg_fblr_start_col + 7  # Start after averaged FBLR columns
 
         ws.cell(1, rates_col, "RATES REFERENCE")
         ws.cell(2, rates_col, "Edit these values to update all calculations")
@@ -271,6 +292,7 @@ class ExcelGenerator:
         positions: List[Dict],
         indirect_rates: Dict[str, float],
         escalation_rates: Dict[str, float],
+        fee_rates: Dict[str, float],
         start_row: int,
         total_years: int
     ) -> int:
@@ -289,6 +311,7 @@ class ExcelGenerator:
             positions: List of position data dicts
             indirect_rates: Fringe, OH, G&A rates
             escalation_rates: Year-over-year escalation
+            fee_rates: Fee rates for prime and sub labor
             start_row: Starting row number
             total_years: Total years in contract
 
@@ -350,6 +373,45 @@ class ExcelGenerator:
                 rate_cell = get_column_letter(col_offset) + str(current_row)
                 hours_cell = get_column_letter(col_offset + 1) + str(current_row)
                 ws.cell(current_row, col_offset + 2, f"={rate_cell}*{hours_cell}")
+
+            # Averaged FBLR calculation
+            base_wage = position.get(f"wage_{position['percentile']}", 0)
+            hours_per_year = position.get('hours_per_year', {})
+            standard_fte_hours = position.get('standard_fte_hours', 1880)
+
+            avg_fblr = Calculator.calculate_averaged_fblr(
+                base_wage=base_wage,
+                hours_per_year=hours_per_year,
+                escalation_rates=escalation_rates,
+                fringe_rate=indirect_rates['fringe'],
+                oh_rate=indirect_rates['oh'],
+                ga_rate=indirect_rates['ga'],
+                fee_rate=fee_rates['prime_labor'],
+                standard_fte_hours=standard_fte_hours,
+                total_years=total_years
+            )
+
+            # Write averaged FBLR values with currency formatting
+            avg_fblr_start_col = 7 + (total_years * 3)
+            currency_format = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)'
+
+            ws.cell(current_row, avg_fblr_start_col, avg_fblr['dl_rate'])
+            ws.cell(current_row, avg_fblr_start_col).number_format = currency_format
+
+            ws.cell(current_row, avg_fblr_start_col + 1, avg_fblr['fringe'])
+            ws.cell(current_row, avg_fblr_start_col + 1).number_format = currency_format
+
+            ws.cell(current_row, avg_fblr_start_col + 2, avg_fblr['oh'])
+            ws.cell(current_row, avg_fblr_start_col + 2).number_format = currency_format
+
+            ws.cell(current_row, avg_fblr_start_col + 3, avg_fblr['ga'])
+            ws.cell(current_row, avg_fblr_start_col + 3).number_format = currency_format
+
+            ws.cell(current_row, avg_fblr_start_col + 4, avg_fblr['fee'])
+            ws.cell(current_row, avg_fblr_start_col + 4).number_format = currency_format
+
+            ws.cell(current_row, avg_fblr_start_col + 5, avg_fblr['fblr'])
+            ws.cell(current_row, avg_fblr_start_col + 5).number_format = currency_format
 
             current_row += 1
 
@@ -830,8 +892,14 @@ class ExcelGenerator:
             cell.fill = year_fill
             cell.alignment = Alignment(horizontal='center', vertical='center')
 
-        # Sub-headers (row 8) - centered
-        for col in range(1, 7 + (total_years * 3)):
+        # Format Averaged FBLR header (only write to top-left cell of merged range)
+        avg_fblr_start_col = 7 + (total_years * 3)
+        avg_fblr_cell = ws.cell(7, avg_fblr_start_col)
+        avg_fblr_cell.fill = year_fill
+        avg_fblr_cell.alignment = Alignment(horizontal='center', vertical='center')
+
+        # Sub-headers (row 8) - centered (including averaged FBLR columns)
+        for col in range(1, 7 + (total_years * 3) + 6):  # +6 for averaged FBLR columns
             cell = ws.cell(8, col)
             if cell.value:
                 cell.alignment = Alignment(horizontal='center', vertical='center')
@@ -861,10 +929,12 @@ class ExcelGenerator:
         # Freeze panes - freeze top 10 rows and first 3 columns
         ws.freeze_panes = 'D11'
 
-        # Highlight editable rate reference cells (column AB, rows 3-10)
+        # Highlight editable rate reference cells (rows 3-10)
         # Light yellow fill to indicate these are user-editable
         rate_fill = PatternFill(start_color="FFFF99", end_color="FFFF99", fill_type="solid")
-        rates_col = 28  # Column AB (where rate values are)
+        # Calculate where rates section is (after averaged FBLR columns)
+        avg_fblr_start_col = 7 + (total_years * 3)
+        rates_col = avg_fblr_start_col + 7 + 1  # +1 because values are in the column AFTER labels
 
         for row_num in range(3, 11):  # Rows 3-10 contain the rate values
             cell = ws.cell(row_num, rates_col)
@@ -875,8 +945,12 @@ class ExcelGenerator:
             cell.font = Font(bold=True, size=11)
 
         # Set column widths for rates reference section
-        ws.column_dimensions['AA'].width = 20  # Labels column
-        ws.column_dimensions['AB'].width = 15  # Values column
+        # Calculate where rates section is (after averaged FBLR columns)
+        avg_fblr_start_col = 7 + (total_years * 3)
+        rates_col = avg_fblr_start_col + 7
+
+        ws.column_dimensions[get_column_letter(rates_col)].width = 20  # Labels column
+        ws.column_dimensions[get_column_letter(rates_col + 1)].width = 15  # Values column
 
     def _create_rate_table_sheet(self, project_data: Dict[str, Any]):
         """

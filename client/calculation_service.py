@@ -540,3 +540,113 @@ class Calculator:
                 f"Available percentiles: {list(wages_dict.keys())}"
             )
         return float(wages_dict[percentile])
+
+    @staticmethod
+    def calculate_averaged_fblr(
+        base_wage: float,
+        hours_per_year: Dict[str, float],
+        escalation_rates: Dict[str, float],
+        fringe_rate: float,
+        oh_rate: float,
+        ga_rate: float,
+        fee_rate: float,
+        standard_fte_hours: float = 1880,
+        total_years: int = 1
+    ) -> Dict[str, float]:
+        """
+        Calculate averaged FBLR using proportional hourly rates with FTE hours.
+
+        Formula:
+        - For each year: (escalated_wage / fte_hours) * actual_hours_worked
+        - Sum earned salaries and hours
+        - Average DL Rate = Total Salary / Total Hours
+        - Apply FBLR cascade
+
+        Args:
+            base_wage: Base annual wage (Year 1)
+            hours_per_year: Dict of actual hours worked per year (e.g., {"1": 1880, "2": 50})
+            escalation_rates: Year-over-year escalation rates (e.g., {"1_to_2": 0.0272})
+            fringe_rate: Fringe benefits rate (e.g., 0.247 for 24.7%)
+            oh_rate: Overhead rate (e.g., 0.0711 for 7.11%)
+            ga_rate: G&A rate (e.g., 0.2243 for 22.43%)
+            fee_rate: Fee/profit rate (e.g., 0.07 for 7%)
+            standard_fte_hours: Full-time equivalent hours (default 1880)
+            total_years: Total contract years
+
+        Returns:
+            Dict with keys: dl_rate, fringe, oh, ga, fee, fblr
+
+        Example:
+            >>> Calculator.calculate_averaged_fblr(
+            ...     base_wage=112590,
+            ...     hours_per_year={"1": 1880, "2": 50, "3": 0, "4": 0, "5": 0},
+            ...     escalation_rates={"1_to_2": 0.0272},
+            ...     fringe_rate=0.247,
+            ...     oh_rate=0.0711,
+            ...     ga_rate=0.2243,
+            ...     fee_rate=0.07,
+            ...     standard_fte_hours=1880,
+            ...     total_years=5
+            ... )
+            {'dl_rate': 59.93, 'fringe': 14.80, ...}
+        """
+        if base_wage == 0 or total_years == 0:
+            return {
+                'dl_rate': 0,
+                'fringe': 0,
+                'oh': 0,
+                'ga': 0,
+                'fee': 0,
+                'fblr': 0
+            }
+
+        total_salary = 0
+        total_hours = 0
+        current_year_wage = base_wage
+
+        for year in range(1, total_years + 1):
+            year_str = str(year)
+            hours_this_year = hours_per_year.get(year_str, 0)
+
+            # Calculate proportional salary for this year
+            if hours_this_year > 0:
+                hourly_rate_this_year = current_year_wage / standard_fte_hours
+                salary_earned_this_year = hourly_rate_this_year * hours_this_year
+
+                total_salary += salary_earned_this_year
+                total_hours += hours_this_year
+
+            # Apply escalation for next year
+            if year < total_years:
+                escalation_key = f"{year}_to_{year + 1}"
+                escalation_rate = escalation_rates.get(escalation_key, 0)
+                current_year_wage = current_year_wage * (1 + escalation_rate)
+
+        if total_hours == 0:
+            return {
+                'dl_rate': 0,
+                'fringe': 0,
+                'oh': 0,
+                'ga': 0,
+                'fee': 0,
+                'fblr': 0
+            }
+
+        # Calculate averaged DL rate
+        dl_rate = total_salary / total_hours
+
+        # Apply FBLR cascade
+        fringe = dl_rate * fringe_rate
+        oh = (dl_rate + fringe) * oh_rate
+        ga = (dl_rate + fringe + oh) * ga_rate
+        fee = (dl_rate + fringe + oh + ga) * fee_rate
+        fblr = dl_rate + fringe + oh + ga + fee
+
+        return {
+            'dl_rate': dl_rate,
+            'fringe': fringe,
+            'oh': oh,
+            'ga': ga,
+            'fee': fee,
+            'fblr': fblr
+        }

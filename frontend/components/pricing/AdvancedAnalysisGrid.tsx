@@ -210,6 +210,7 @@ export const AdvancedAnalysisGrid = () => {
       <PrimeLaborSection
         positions={positionsAdvanced}
         rates={rates}
+        escalationRates={escalationRates}
         totalYears={totalYears}
         expandedPositions={expandedPositions}
         manualOverrides={manualOverrides}

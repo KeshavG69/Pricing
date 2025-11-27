@@ -20,6 +20,8 @@ interface PricingState {
   proposalId: string | null;
   proposalName: string;
   solicitationNumber?: string;
+  primeContractorName: string;
+  dcaaContact: string;
   positions: SpreadsheetPosition[];
   subcontractors: Subcontractor[];
   odcs: ODCItem[];
@@ -252,6 +254,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
     proposalId: null,
     proposalName: '',
     solicitationNumber: '',
+    primeContractorName: 'TBD',
+    dcaaContact: '',
     positions: [],
     subcontractors: [],
     odcs: [],
@@ -315,6 +319,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
           proposalId,
           proposalName: proposal.name,
           solicitationNumber: proposal.solicitation_number,
+          primeContractorName: proposal.prime_contractor_name || 'TBD',
+          dcaaContact: proposal.dcaa_contact || '',
           positions,
           subcontractors: proposal.spreadsheet_data?.subcontractors || [],
           odcs: proposal.spreadsheet_data?.odcs || [],
@@ -521,28 +527,50 @@ export const usePricingStore = create<PricingState>((set, get) => {
       try {
         console.log('Generating Excel file...');
 
-        const blob = await pricingApi.exportToExcel({
-          proposal_name: state.proposalName,
-          solicitation_number: state.solicitationNumber,
+        // Split rates object into backend-expected structure
+        const payload = {
           jobs: state.positions.map((p) => ({
             labor_category: p.labor_category,
             soc_code: p.soc_code,
-            percentile: p.percentile,
             hours_per_year: p.hours_per_year,
+            selected_wage: p[`wage_${p.percentile}`] || 0,
+            percentile: p.percentile,
             wage_10th: p.wage_10th,
             wage_25th: p.wage_25th,
             wage_50th: p.wage_50th,
             wage_75th: p.wage_75th,
             wage_90th: p.wage_90th,
+            standard_fte_hours: p.standard_fte_hours || 1880,
           })),
-          rates: state.rates,
-          escalation_rates: state.escalationRates,
-          subcontractors: state.subcontractors,
-          odcs: state.odcs,
-          total_years: state.totalYears,
-          base_years: state.baseYears,
-          option_years: state.optionYears,
-        });
+          project_config: {
+            solicitation_number: state.solicitationNumber || '',
+            prime_contractor_name: state.primeContractorName || 'TBD',
+            subcontractor_names: state.subcontractors.map(s => s.name),
+            dcaa_contact: state.dcaaContact || '',
+            total_years: state.totalYears,
+            base_years: state.baseYears,
+            escalation_rates: state.escalationRates,
+            indirect_rates: {
+              fringe: state.rates.fringe,
+              oh: state.rates.oh,
+              ga: state.rates.ga,
+            },
+            passthrough_rates: {
+              smh: state.rates.smh || 0,
+              ga: state.rates.ga_passthrough || 0,
+            },
+            fee_rates: {
+              prime_labor: state.rates.fee,
+              sub_labor: state.rates.sub_fee || 0,
+            },
+            ga_adder_rate: state.rates.ga_adder || 0,
+            subcontractors: state.subcontractors,
+            odcs: state.odcs,
+            include_rate_table: true,
+          },
+        };
+
+        const blob = await pricingApi.exportToExcel(payload);
 
         // Trigger download
         const url = window.URL.createObjectURL(blob);
@@ -557,6 +585,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         console.log('Excel file downloaded successfully');
       } catch (error: any) {
         console.error('Excel export failed:', error);
+        console.error('Error details:', error.response?.data);
       }
     },
 
@@ -797,6 +826,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
         proposalId: null,
         proposalName: '',
         solicitationNumber: '',
+        primeContractorName: 'TBD',
+        dcaaContact: '',
         positions: [],
         subcontractors: [],
         odcs: [],

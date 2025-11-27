@@ -4,14 +4,75 @@ import { useMemo, useCallback, useState } from 'react';
 import { DataGrid } from 'react-data-grid';
 import type { Column, RenderEditCellProps } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
-import { AdvancedPosition, IndirectRates, GridRow, BreakdownType, ContextMenuItem } from '@/types';
+import { AdvancedPosition, IndirectRates, EscalationRates, GridRow, BreakdownType, ContextMenuItem } from '@/types';
 import { ChevronDown, ChevronRight, Trash2, MoreVertical } from 'lucide-react';
 import { ContextMenu } from '@/components/ui/ContextMenu';
 import { ConvertToSubcontractorModal } from '@/components/pricing/ConvertToSubcontractorModal';
 
+// Calculate averaged FBLR for an advanced position using proportional hourly rates
+const calculateAveragedFBLR = (
+  position: AdvancedPosition,
+  rates: IndirectRates,
+  escalationRates: EscalationRates,
+  totalYears: number
+) => {
+  // Get base wage from selected percentile
+  const baseWage = position[`wage_${position.percentile}`] || 0;
+
+  if (baseWage === 0 || totalYears === 0) {
+    return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
+  }
+
+  let totalSalary = 0;
+  let totalHours = 0;
+  let currentYearWage = baseWage;
+
+  // Get FTE hours (fallback to 1880)
+  const fteHours = position.standard_fte_hours || 1880;
+
+  for (let year = 1; year <= totalYears; year++) {
+    const yearStr = year.toString();
+    const breakdown = position.breakdown[yearStr];
+    const hoursThisYear = breakdown?.hours || 0;
+
+    // Calculate proportional salary for this year
+    if (hoursThisYear > 0) {
+      const hourlyRateThisYear = currentYearWage / fteHours;
+      const salaryEarnedThisYear = hourlyRateThisYear * hoursThisYear;
+
+      totalSalary += salaryEarnedThisYear;
+      totalHours += hoursThisYear;
+    }
+
+    // Apply escalation for next year
+    if (year < totalYears) {
+      const escalationKey = `${year}_to_${year + 1}`;
+      const escalationRate = escalationRates[escalationKey] || 0;
+      currentYearWage = currentYearWage * (1 + escalationRate);
+    }
+  }
+
+  if (totalHours === 0) {
+    return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
+  }
+
+  // Calculate averaged DL rate
+  const dlRate = totalSalary / totalHours;
+
+  // Apply FBLR cascade
+  const fringe = dlRate * rates.fringe;
+  const oh = (dlRate + fringe) * rates.oh;
+  const ga = (dlRate + fringe + oh) * rates.ga;
+  const fee = (dlRate + fringe + oh + ga) * rates.fee;
+  const fblr = dlRate + fringe + oh + ga + fee;
+
+  return { dlRate, fringe, oh, ga, fee, fblr };
+};
+
 interface PrimeLaborSectionProps {
   positions: AdvancedPosition[];
   rates: IndirectRates;
+  escalationRates: EscalationRates;
   totalYears: number;
   expandedPositions: Set<string>;
   manualOverrides: Map<string, Set<string>>;
@@ -24,6 +85,7 @@ interface PrimeLaborSectionProps {
 export const PrimeLaborSection = ({
   positions,
   rates,
+  escalationRates,
   totalYears,
   expandedPositions,
   manualOverrides,
@@ -471,6 +533,125 @@ export const PrimeLaborSection = ({
         },
       });
     }
+
+    // Averaged FBLR columns
+    cols.push(
+      {
+        key: 'avg_dl_rate',
+        name: 'Avg\nDL Rate ($/hr)',
+        width: 130,
+        frozen: false,
+        renderCell: ({ row }) => {
+          if (row.type === 'position') {
+            const pos = row.data as AdvancedPosition;
+            const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
+                <span className="text-purple-400 font-semibold">
+                  ${calc.dlRate.toFixed(2)}
+                </span>
+              </div>
+            );
+          }
+          return <div />;
+        },
+      },
+      {
+        key: 'avg_fringe',
+        name: 'Avg\nFringe ($/hr)',
+        width: 120,
+        renderCell: ({ row }) => {
+          if (row.type === 'position') {
+            const pos = row.data as AdvancedPosition;
+            const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
+                <span className="text-purple-400 font-semibold">
+                  ${calc.fringe.toFixed(2)}
+                </span>
+              </div>
+            );
+          }
+          return <div />;
+        },
+      },
+      {
+        key: 'avg_oh',
+        name: 'Avg\nOH ($/hr)',
+        width: 110,
+        renderCell: ({ row }) => {
+          if (row.type === 'position') {
+            const pos = row.data as AdvancedPosition;
+            const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
+                <span className="text-purple-400 font-semibold">
+                  ${calc.oh.toFixed(2)}
+                </span>
+              </div>
+            );
+          }
+          return <div />;
+        },
+      },
+      {
+        key: 'avg_ga',
+        name: 'Avg\nG&A ($/hr)',
+        width: 110,
+        renderCell: ({ row }) => {
+          if (row.type === 'position') {
+            const pos = row.data as AdvancedPosition;
+            const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
+                <span className="text-purple-400 font-semibold">
+                  ${calc.ga.toFixed(2)}
+                </span>
+              </div>
+            );
+          }
+          return <div />;
+        },
+      },
+      {
+        key: 'avg_fee',
+        name: 'Avg\nFee ($/hr)',
+        width: 110,
+        renderCell: ({ row }) => {
+          if (row.type === 'position') {
+            const pos = row.data as AdvancedPosition;
+            const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
+                <span className="text-purple-400 font-semibold">
+                  ${calc.fee.toFixed(2)}
+                </span>
+              </div>
+            );
+          }
+          return <div />;
+        },
+      },
+      {
+        key: 'avg_fblr',
+        name: 'Avg\nFBLR ($/hr)',
+        width: 130,
+        renderCell: ({ row }) => {
+          if (row.type === 'position') {
+            const pos = row.data as AdvancedPosition;
+            const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-emerald-500/10">
+                <span className="text-emerald-400 font-bold">
+                  ${calc.fblr.toFixed(2)}
+                </span>
+              </div>
+            );
+          }
+          return <div />;
+        },
+      }
+    );
 
     // Actions column
     cols.push({
