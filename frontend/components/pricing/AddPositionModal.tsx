@@ -29,6 +29,7 @@ export const AddPositionModal = ({
   const [laborCategory, setLaborCategory] = useState('');
   const [percentile, setPercentile] = useState<'25th' | '50th' | '75th' | '90th'>('50th');
   const [hoursPerYear, setHoursPerYear] = useState<Record<string, number>>({});
+  const [customHourlyRate, setCustomHourlyRate] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Initialize hours per year with default values
@@ -83,6 +84,20 @@ export const AddPositionModal = ({
       }
     });
 
+    // Custom hourly rate validation (required for new positions)
+    if (mode === 'new') {
+      if (!customHourlyRate.trim()) {
+        newErrors.customRate = 'Hourly rate is required';
+      } else {
+        const rate = parseFloat(customHourlyRate);
+        if (isNaN(rate) || rate <= 0) {
+          newErrors.customRate = 'Rate must be a positive number';
+        } else if (rate < 10 || rate > 1000) {
+          newErrors.customRate = 'Rate should be between $10 and $1000/hr';
+        }
+      }
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -116,7 +131,30 @@ export const AddPositionModal = ({
         wage_90th: selectedPosition.wage_90th,
       };
     } else {
-      // Create new position with default wage data
+      // Create new position with custom rate or default wage data
+      const totalHours = Object.values(hoursPerYear).reduce((sum, h) => sum + h, 0);
+      let wageData = {
+        wage_10th: 0,
+        wage_25th: 0,
+        wage_50th: 0,
+        wage_75th: 0,
+        wage_90th: 0,
+      };
+
+      // If custom hourly rate provided, calculate annual wage
+      if (customHourlyRate.trim()) {
+        const hourlyRate = parseFloat(customHourlyRate);
+        const annualWage = hourlyRate * totalHours;
+        // Set all percentiles to the custom annual wage
+        wageData = {
+          wage_10th: annualWage,
+          wage_25th: annualWage,
+          wage_50th: annualWage,
+          wage_75th: annualWage,
+          wage_90th: annualWage,
+        };
+      }
+
       positionData = {
         labor_category: laborCategory.trim(),
         experience: undefined,
@@ -126,11 +164,7 @@ export const AddPositionModal = ({
         percentile,
         hours_per_year: hoursPerYear,
         standard_fte_hours: 1880,
-        wage_10th: 0,
-        wage_25th: 0,
-        wage_50th: 0,
-        wage_75th: 0,
-        wage_90th: 0,
+        ...wageData,
       };
     }
 
@@ -144,6 +178,7 @@ export const AddPositionModal = ({
     setLaborCategory('');
     setPercentile('50th');
     setHoursPerYear({});
+    setCustomHourlyRate('');
     setErrors({});
     onClose();
   };
@@ -292,25 +327,57 @@ export const AddPositionModal = ({
           )}
         </Card>
 
-        {/* Section 3: Percentile Selection */}
+        {/* Section 3: Wage Configuration */}
         <Card className="p-4">
-          <h3 className="text-sm font-semibold text-foreground mb-3">3. Select Wage Percentile</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            {mode === 'existing'
-              ? 'Choose which wage percentile to use for calculations'
-              : 'This will be used when wage data is available'}
-          </p>
+          {mode === 'existing' ? (
+            <>
+              <h3 className="text-sm font-semibold text-foreground mb-3">3. Select Wage Percentile</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Choose which wage percentile to use for calculations
+              </p>
 
-          <select
-            value={percentile}
-            onChange={(e) => setPercentile(e.target.value as typeof percentile)}
-            className="w-full px-3 py-2 bg-background border border-input rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-          >
-            <option value="25th">25th Percentile (Entry Level - {'<'} 3 years)</option>
-            <option value="50th">50th Percentile (Mid Level - 3-5 years)</option>
-            <option value="75th">75th Percentile (Senior Level - {'>'} 5 years)</option>
-            <option value="90th">90th Percentile (Expert Level)</option>
-          </select>
+              <select
+                value={percentile}
+                onChange={(e) => setPercentile(e.target.value as typeof percentile)}
+                className="w-full px-3 py-2 bg-background border border-input rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="25th">25th Percentile (Entry Level - {'<'} 3 years)</option>
+                <option value="50th">50th Percentile (Mid Level - 3-5 years)</option>
+                <option value="75th">75th Percentile (Senior Level - {'>'} 5 years)</option>
+                <option value="90th">90th Percentile (Expert Level)</option>
+              </select>
+            </>
+          ) : (
+            <>
+              <h3 className="text-sm font-semibold text-foreground mb-3">3. Set Hourly Rate</h3>
+              <p className="text-sm text-muted-foreground mb-4">
+                Enter the hourly rate for this position
+              </p>
+
+              <div className="flex items-center gap-2">
+                <span className="text-muted-foreground">$</span>
+                <Input
+                  type="number"
+                  value={customHourlyRate}
+                  onChange={(e) => {
+                    setCustomHourlyRate(e.target.value);
+                    setErrors({ ...errors, customRate: '' });
+                  }}
+                  placeholder="e.g., 75.00"
+                  className="w-40"
+                  step="0.01"
+                  min="0"
+                />
+                <span className="text-muted-foreground">/ hr</span>
+              </div>
+              {errors.customRate && (
+                <p className="text-sm text-red-600 mt-2 flex items-center gap-1">
+                  <AlertCircle className="w-4 h-4" />
+                  {errors.customRate}
+                </p>
+              )}
+            </>
+          )}
         </Card>
       </div>
     </Dialog>
