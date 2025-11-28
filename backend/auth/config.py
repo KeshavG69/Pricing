@@ -16,7 +16,8 @@ REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv("REFRESH_TOKEN_EXPIRE_DAYS", "7"))
 # Cookie Configuration
 COOKIE_DOMAIN = os.getenv("COOKIE_DOMAIN", None) or None  # None = current domain
 COOKIE_SECURE = os.getenv("ENVIRONMENT", "development") == "production"
-COOKIE_SAMESITE = "lax"  # or "strict" for higher security
+# For cross-origin cookies (different subdomains), use "none" with secure=True
+COOKIE_SAMESITE = os.getenv("COOKIE_SAMESITE", "none" if COOKIE_SECURE else "lax")
 COOKIE_ACCESS_TOKEN_NAME = "access_token"
 COOKIE_REFRESH_TOKEN_NAME = "refresh_token"
 
