@@ -1590,22 +1590,6 @@
         "documentation": {}
     },
     {
-        "label": "defaultdict",
-        "importPath": "collections",
-        "description": "collections",
-        "isExtraImport": true,
-        "detail": "collections",
-        "documentation": {}
-    },
-    {
-        "label": "partition",
-        "importPath": "unstructured.partition.auto",
-        "description": "unstructured.partition.auto",
-        "isExtraImport": true,
-        "detail": "unstructured.partition.auto",
-        "documentation": {}
-    },
-    {
         "label": "UserSignup",
         "importPath": "auth.models",
         "description": "auth.models",
@@ -2841,15 +2825,6 @@
         "description": "backend.client.soc_vector_search",
         "peekOfCode": "_client_lock = threading.RLock()\ndef get_soc_vector_search_client() -> SOCVectorSearch:\n    \"\"\"\n    Get or create SOC vector search client (singleton pattern)\n    Returns:\n        SOCVectorSearch instance\n    \"\"\"\n    global _soc_client\n    with _client_lock:\n        if _soc_client is None:",
         "detail": "backend.client.soc_vector_search",
-        "documentation": {}
-    },
-    {
-        "label": "extract_document_by_page",
-        "kind": 2,
-        "importPath": "backend.client.unstructured",
-        "description": "backend.client.unstructured",
-        "peekOfCode": "def extract_document_by_page(file_path: str) -> dict[int, str]:\n    \"\"\"\n    Extract text from any document (PDF, DOCX, Excel) grouped by page number.\n    Args:\n        file_path: Path to the document file\n    Returns:\n        Dictionary mapping page number to extracted text\n    \"\"\"\n    elements = partition(filename=file_path)\n    pages = defaultdict(list)",
-        "detail": "backend.client.unstructured",
         "documentation": {}
     },
     {

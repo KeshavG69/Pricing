@@ -2,16 +2,11 @@
 
 FROM python:3.13-slim
 
-# Install system dependencies required by Python packages
-# unstructured requires: libmagic1, poppler-utils, tesseract-ocr, libreoffice, pandoc
+# Install minimal system dependencies
 # faiss-cpu requires: libgomp1
+# healthcheck requires: curl
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
-    libmagic1 \
-    poppler-utils \
-    tesseract-ocr \
-    libreoffice \
-    pandoc \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
@@ -49,9 +44,6 @@ ENV PATH="/app/.venv/bin:$PATH" \
 # Expose port
 EXPOSE 8000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8000/health || exit 1
 
 # Run the application with uvicorn
 CMD ["uvicorn", "app.server:app", "--host", "0.0.0.0", "--port", "8000"]
