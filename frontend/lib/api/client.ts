@@ -47,7 +47,8 @@ apiClient.interceptors.response.use(
       // Prevent refresh on public routes
       const isPublicRoute = originalRequest.url?.includes('/auth/login') ||
                            originalRequest.url?.includes('/auth/signup') ||
-                           originalRequest.url?.includes('/auth/google/login');
+                           originalRequest.url?.includes('/auth/google/login') ||
+                           originalRequest.url?.includes('/auth/me');  // Allow /auth/me to fail silently
 
       if (isPublicRoute) {
         return Promise.reject(error);
