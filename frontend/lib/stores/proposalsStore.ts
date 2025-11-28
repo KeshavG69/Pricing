@@ -8,6 +8,12 @@ interface ProposalsState {
   isLoading: boolean;
   error: string | null;
 
+  // Pagination state
+  hasMore: boolean;
+  currentPage: number;
+  sortBy: 'date' | 'name' | 'status';
+  sortOrder: 'asc' | 'desc';
+
   // Actions
   fetchProposals: () => Promise<void>;
   fetchProposal: (id: string) => Promise<void>;
@@ -17,6 +23,14 @@ interface ProposalsState {
   duplicateProposal: (id: string, newName: string) => Promise<void>;
   setCurrentProposal: (proposal: Proposal | null) => void;
   clearError: () => void;
+
+  // Pagination actions
+  fetchProposalsPaginated: (
+    append: boolean,
+    sortBy?: 'date' | 'name' | 'status',
+    sortOrder?: 'asc' | 'desc'
+  ) => Promise<void>;
+  resetPagination: () => void;
 }
 
 export const useProposalsStore = create<ProposalsState>((set, get) => ({
@@ -24,6 +38,12 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
   currentProposal: null,
   isLoading: false,
   error: null,
+
+  // Pagination state
+  hasMore: true,
+  currentPage: 0,
+  sortBy: 'date',
+  sortOrder: 'desc',
 
   fetchProposals: async () => {
     try {
@@ -130,4 +150,68 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
   setCurrentProposal: (proposal) => set({ currentProposal: proposal }),
 
   clearError: () => set({ error: null }),
+
+  fetchProposalsPaginated: async (append, sortBy, sortOrder) => {
+    const state = get();
+
+    // If sort changed, reset pagination
+    const sortChanged =
+      (sortBy && sortBy !== state.sortBy) ||
+      (sortOrder && sortOrder !== state.sortOrder);
+
+    if (sortChanged) {
+      set({
+        currentPage: 0,
+        hasMore: true,
+        proposals: [],
+        sortBy: sortBy || state.sortBy,
+        sortOrder: sortOrder || state.sortOrder,
+      });
+    }
+
+    // Don't fetch if already loading or no more data
+    if (state.isLoading || (!sortChanged && !state.hasMore && append)) {
+      return;
+    }
+
+    try {
+      set({ isLoading: true, error: null });
+
+      const currentState = get();
+      const skip = append && !sortChanged ? currentState.currentPage * 20 : 0;
+      const limit = 20;
+
+      const newProposals = await proposalsApi.list(
+        skip,
+        limit,
+        currentState.sortBy,
+        currentState.sortOrder
+      );
+
+      set((state) => ({
+        proposals:
+          append && !sortChanged
+            ? [...state.proposals, ...newProposals]
+            : newProposals,
+        hasMore: newProposals.length === limit,
+        currentPage: sortChanged ? 1 : state.currentPage + 1,
+        isLoading: false,
+      }));
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.detail || 'Failed to fetch proposals',
+        isLoading: false,
+      });
+    }
+  },
+
+  resetPagination: () => {
+    set({
+      proposals: [],
+      currentPage: 0,
+      hasMore: true,
+      sortBy: 'date',
+      sortOrder: 'desc',
+    });
+  },
 }));

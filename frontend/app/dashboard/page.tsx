@@ -10,7 +10,8 @@ import Button from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Dialog } from '@/components/ui/Dialog';
 import Input from '@/components/ui/Input';
-import { Plus, FileText, Clock, CheckCircle, AlertCircle, Trash2, Copy, Search, Filter, MoreVertical } from 'lucide-react';
+import { ProposalCard } from '@/components/proposals/ProposalCard';
+import { Plus, FileText, Clock, CheckCircle, AlertCircle, Trash2, Copy, Search, Filter, MoreVertical, ChevronRight } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
 
 export default function DashboardPage() {
@@ -202,12 +203,12 @@ export default function DashboardPage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h2 className="text-xl font-semibold text-foreground">Recent Proposals</h2>
-            <div className="flex items-center space-x-2">
+            <Link href="/dashboard/proposals">
               <Button variant="ghost" size="sm">
-                <Filter className="w-4 h-4 mr-2" />
-                Filter
+                View All
+                <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
-            </div>
+            </Link>
           </div>
 
           <Card className="overflow-hidden border border-border bg-card">
@@ -235,60 +236,14 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className="divide-y divide-border">
-                  {proposals.slice(0, 10).map((proposal) => (
-                    <div
+                  {proposals.slice(0, 5).map((proposal) => (
+                    <ProposalCard
                       key={proposal.id}
+                      proposal={proposal}
                       onClick={() => router.push(`/proposals/${proposal.id}`)}
-                      className="group flex items-center justify-between p-4 hover:bg-muted/50 transition-all duration-200 cursor-pointer"
-                    >
-                      <div className="flex items-center space-x-4 flex-1 min-w-0">
-                        <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center group-hover:bg-muted/80 transition-colors">
-                          {getStatusIcon(proposal.status)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
-                            {proposal.name}
-                          </p>
-                          {proposal.solicitation_number && (
-                            <p className="text-xs text-muted-foreground truncate">
-                              {proposal.solicitation_number}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center space-x-6">
-                        <div className="hidden sm:block text-right">
-                          <p className="text-xs text-muted-foreground mb-1">Status</p>
-                          {getStatusBadge(proposal.status)}
-                        </div>
-                        <div className="text-right min-w-[80px]">
-                          <p className="text-xs text-muted-foreground mb-1">Created</p>
-                          <p className="text-sm text-muted-foreground">
-                            {formatDate(proposal.created_at)}
-                          </p>
-                        </div>
-                        <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
-                            onClick={(e) =>
-                              handleDuplicateClick(proposal.id, proposal.name, e)
-                            }
-                            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
-                            title="Duplicate"
-                          >
-                            <Copy className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={(e) => handleDeleteClick(proposal.id, e)}
-                            className="p-2 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                        <MoreVertical className="w-4 h-4 text-muted-foreground sm:hidden" />
-                      </div>
-                    </div>
+                      onDuplicate={handleDuplicateClick}
+                      onDelete={handleDeleteClick}
+                    />
                   ))}
                 </div>
               )}

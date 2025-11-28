@@ -116,7 +116,9 @@ class ProposalCRUD:
         self,
         user_id: str,
         skip: int = 0,
-        limit: int = 20
+        limit: int = 20,
+        sort_by: str = "date",
+        sort_order: str = "desc"
     ) -> List[dict]:
         """
         Get paginated list of user's proposals (summary view, thread-safe, cached).
@@ -127,11 +129,26 @@ class ProposalCRUD:
             user_id: User's MongoDB ObjectId (as string)
             skip: Number of records to skip (for pagination)
             limit: Maximum number of records to return
+            sort_by: Field to sort by ("date", "name", "status")
+            sort_order: Sort order ("asc", "desc")
 
         Returns:
-            List of proposal documents sorted by created_at (newest first)
+            List of proposal documents sorted by specified field and order
         """
         with self.operation_lock:
+            # Map sort field names to MongoDB field names
+            sort_field_map = {
+                "date": "created_at",
+                "name": "name",
+                "status": "status"
+            }
+
+            # Get MongoDB field name, default to created_at if invalid
+            sort_field = sort_field_map.get(sort_by, "created_at")
+
+            # Convert sort order to MongoDB sort direction
+            sort_direction = -1 if sort_order == "desc" else 1
+
             # Exclude large fields only (don't mix with inclusions)
             # MongoDB doesn't allow mixing inclusion and exclusion projections
             projection = {
@@ -145,7 +162,7 @@ class ProposalCRUD:
             cursor = self.collection.find(
                 {"user_id": user_id},
                 projection
-            ).sort("created_at", -1).skip(skip).limit(limit)
+            ).sort(sort_field, sort_direction).skip(skip).limit(limit)
             return list(cursor)
 
     @lru_cache(maxsize=512)

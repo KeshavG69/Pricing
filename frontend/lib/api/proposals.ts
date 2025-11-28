@@ -40,9 +40,14 @@ export const proposalsApi = {
   },
 
   // List user's proposals
-  list: async (skip: number = 0, limit: number = 20): Promise<Proposal[]> => {
+  list: async (
+    skip: number = 0,
+    limit: number = 20,
+    sortBy: 'date' | 'name' | 'status' = 'date',
+    sortOrder: 'asc' | 'desc' = 'desc'
+  ): Promise<Proposal[]> => {
     const response = await apiClient.get<Proposal[]>('/proposals', {
-      params: { skip, limit },
+      params: { skip, limit, sort_by: sortBy, sort_order: sortOrder },
     });
     return response.data;
   },

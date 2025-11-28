@@ -355,15 +355,23 @@ async def get_proposal_status(
 async def list_proposals(
     skip: int = 0,
     limit: int = 20,
+    sort_by: str = "date",
+    sort_order: str = "desc",
     current_user: UserResponse = Depends(get_current_user)
 ):
     """
     Get paginated list of user's proposals (summary view).
 
     Returns basic info only (no full jobs/rates data).
+
+    Args:
+        skip: Number of proposals to skip for pagination
+        limit: Maximum number of proposals to return
+        sort_by: Field to sort by ("date", "name", "status")
+        sort_order: Sort order ("asc", "desc")
     """
     crud = get_crud()
-    proposals = crud.get_user_proposals(str(current_user.id), skip, limit)
+    proposals = crud.get_user_proposals(str(current_user.id), skip, limit, sort_by, sort_order)
 
     # Convert ObjectId to string for JSON serialization
     result = []
