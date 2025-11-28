@@ -11,6 +11,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import PositionsGrid from '@/components/pricing/PositionsGrid';
 import AdvancedAnalysisGrid from '@/components/pricing/AdvancedAnalysisGrid';
+import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { Loader2, CheckCircle, AlertCircle, ArrowLeft, Plus, Download, Pencil, Check, X } from 'lucide-react';
 
 export default function ProposalPage() {
@@ -22,6 +23,8 @@ export default function ProposalPage() {
   const {
     loadProposal,
     proposalName,
+    positions,
+    totalYears,
     addPosition,
     reset,
     recalculate,
@@ -37,6 +40,7 @@ export default function ProposalPage() {
   const [isEditingSolicitation, setIsEditingSolicitation] = useState(false);
   const [editedSolicitation, setEditedSolicitation] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [addPositionModalOpen, setAddPositionModalOpen] = useState(false);
 
   useEffect(() => {
     if (proposalId) {
@@ -194,16 +198,7 @@ export default function ProposalPage() {
   );
 
   const handleAddPosition = () => {
-    addPosition({
-      labor_category: 'New Position',
-      percentile: '50th',
-      hours_per_year: { '1': 1880 },
-      wage_10th: 0,
-      wage_25th: 0,
-      wage_50th: 0,
-      wage_75th: 0,
-      wage_90th: 0,
-    });
+    setAddPositionModalOpen(true);
   };
 
   const handleAdvancedAnalysis = async () => {
@@ -268,12 +263,10 @@ export default function ProposalPage() {
             <CardTitle>
               {advancedMode ? 'Cost Proposal Spreadsheet' : 'Job Positions & Pricing'}
             </CardTitle>
-            {!advancedMode && (
-              <Button variant="outline" size="sm" onClick={handleAddPosition}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Position
-              </Button>
-            )}
+            <Button variant="outline" size="sm" onClick={handleAddPosition}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Position
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="pl-0">
@@ -366,6 +359,18 @@ export default function ProposalPage() {
         {currentProposal.status === 'error' && renderErrorView()}
         {currentProposal.status === 'completed' && renderPricingWorkspace()}
       </div>
+
+      {/* Add Position Modal */}
+      <AddPositionModal
+        open={addPositionModalOpen}
+        onClose={() => setAddPositionModalOpen(false)}
+        positions={positions}
+        totalYears={totalYears}
+        onAdd={(positionData) => {
+          addPosition(positionData);
+          setAddPositionModalOpen(false);
+        }}
+      />
     </DashboardLayout>
   );
 }

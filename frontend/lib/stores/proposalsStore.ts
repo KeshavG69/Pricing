@@ -21,6 +21,7 @@ interface ProposalsState {
   updateProposal: (id: string, updates: ProposalUpdate) => Promise<void>;
   deleteProposal: (id: string) => Promise<void>;
   duplicateProposal: (id: string, newName: string) => Promise<void>;
+  updatePositionSubcontractorHours: (proposalId: string, positionIndex: number, subHours: number) => Promise<void>;
   setCurrentProposal: (proposal: Proposal | null) => void;
   clearError: () => void;
 
@@ -142,6 +143,27 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
       set({
         error: error.response?.data?.detail || 'Failed to duplicate proposal',
         isLoading: false,
+      });
+      throw error;
+    }
+  },
+
+  updatePositionSubcontractorHours: async (proposalId, positionIndex, subHours) => {
+    try {
+      await proposalsApi.updatePositionSubcontractorHours(
+        proposalId,
+        positionIndex,
+        subHours
+      );
+
+      // Refresh current proposal to get updated position data
+      const state = get();
+      if (state.currentProposal?.id === proposalId) {
+        await get().fetchProposal(proposalId);
+      }
+    } catch (error: any) {
+      set({
+        error: error.response?.data?.detail || 'Failed to update subcontractor hours',
       });
       throw error;
     }

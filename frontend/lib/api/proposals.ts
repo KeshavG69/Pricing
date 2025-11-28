@@ -104,4 +104,17 @@ export const proposalsApi = {
       `/proposals/${proposalId}/documents/${documentIndex}`
     );
   },
+
+  // Update position subcontractor hours
+  updatePositionSubcontractorHours: async (
+    proposalId: string,
+    positionIndex: number,
+    subcontractorHours: number
+  ): Promise<{ success: boolean; position: any; message: string }> => {
+    const response = await apiClient.patch(
+      `/proposals/${proposalId}/positions/${positionIndex}`,
+      { subcontractor_hours: subcontractorHours }
+    );
+    return response.data;
+  },
 };

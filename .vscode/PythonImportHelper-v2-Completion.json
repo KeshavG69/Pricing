@@ -2384,6 +2384,14 @@
         "documentation": {}
     },
     {
+        "label": "Calculator",
+        "importPath": "client.calculation_service",
+        "description": "client.calculation_service",
+        "isExtraImport": true,
+        "detail": "client.calculation_service",
+        "documentation": {}
+    },
+    {
         "label": "bin_dir",
         "kind": 5,
         "importPath": ".venv.bin.activate_this",

@@ -17,6 +17,7 @@ import pandas as pd
 from client.jd_parser import parse_documents_to_dataframe
 from utils.pipeline import process_dataframe_with_agents
 from client.excel_generator import ExcelGenerator
+from client.calculation_service import Calculator
 
 
 async def run_full_pipeline(
@@ -102,8 +103,9 @@ def build_project_data_from_dataframe(
     """
     import ast
 
-    # Extract prime positions from DataFrame
+    # Extract prime positions and split subcontractor positions from DataFrame
     prime_positions = []
+    subcontractor_positions = []
 
     for _, row in df.iterrows():
         # Parse hours_per_year from DataFrame
@@ -157,7 +159,104 @@ def build_project_data_from_dataframe(
             'wage_75th': row.get('wage_75th', 0),
             'wage_90th': row.get('wage_90th', 0),
         }
-        prime_positions.append(position)
+
+        # Check if position has subcontractor hours assigned
+        sub_hours = row.get('subcontractor_hours', 0)
+        total_hours = row.get('hours', sum(hours_per_year.values()))
+
+        if sub_hours == 0:
+            # All prime labor
+            prime_positions.append(position)
+        elif sub_hours >= total_hours:
+            # All subcontractor labor
+            subcontractor_positions.append(position)
+        else:
+            # Split between prime and subcontractor
+            # Create prime position with prime hours
+            prime_position = position.copy()
+            if 'prime_hours_per_year' in row and pd.notna(row['prime_hours_per_year']):
+                prime_hours_data = row['prime_hours_per_year']
+                if isinstance(prime_hours_data, str):
+                    try:
+                        prime_position['hours_per_year'] = ast.literal_eval(prime_hours_data)
+                    except (ValueError, SyntaxError):
+                        prime_position['hours_per_year'] = hours_per_year
+                elif isinstance(prime_hours_data, dict):
+                    prime_position['hours_per_year'] = prime_hours_data
+            else:
+                # Calculate prime hours proportionally if not provided
+                ratio = (total_hours - sub_hours) / total_hours if total_hours > 0 else 1.0
+                prime_position['hours_per_year'] = {
+                    year: int(hrs * ratio) for year, hrs in hours_per_year.items()
+                }
+            prime_positions.append(prime_position)
+
+            # Create subcontractor position with subcontractor hours
+            sub_position = position.copy()
+            if 'subcontractor_hours_per_year' in row and pd.notna(row['subcontractor_hours_per_year']):
+                sub_hours_data = row['subcontractor_hours_per_year']
+                if isinstance(sub_hours_data, str):
+                    try:
+                        sub_position['hours_per_year'] = ast.literal_eval(sub_hours_data)
+                    except (ValueError, SyntaxError):
+                        sub_position['hours_per_year'] = {}
+                elif isinstance(sub_hours_data, dict):
+                    sub_position['hours_per_year'] = sub_hours_data
+            else:
+                # Calculate subcontractor hours proportionally if not provided
+                ratio = sub_hours / total_hours if total_hours > 0 else 0.0
+                sub_position['hours_per_year'] = {
+                    year: int(hrs * ratio) for year, hrs in hours_per_year.items()
+                }
+            subcontractor_positions.append(sub_position)
+
+    # Build subcontractor structure from split positions
+    # Combine with any pre-configured subcontractors
+    subcontractors = project_config.get('subcontractors', [])
+
+    # If we have split subcontractor positions, add them to subcontractors list
+    if subcontractor_positions:
+        # Create a default subcontractor entry for split positions
+        # Group all split positions under one "Extracted Positions" subcontractor
+        split_sub_labor_categories = []
+
+        for sub_pos in subcontractor_positions:
+            # Convert position to labor category format for subcontractor
+            labor_cat = {
+                'labor_category': sub_pos['labor_category'],
+                'ecraft_code': sub_pos['ecraft_code'],
+            }
+
+            # Add year rates from hours_per_year
+            for year_num in range(1, project_config['total_years'] + 1):
+                year_str = str(year_num)
+                hours = sub_pos['hours_per_year'].get(year_str, 0)
+
+                # Calculate rate for this year (using base wage with escalation)
+                base_rate = Calculator.calculate_hourly_rate(
+                    sub_pos['base_annual_wage'],
+                    sub_pos.get('standard_fte_hours', 1880)
+                )
+
+                # Apply escalation
+                escalated_rate = Calculator.calculate_year_rate(
+                    base_rate,
+                    project_config['escalation_rates'],
+                    from_year=1,
+                    to_year=year_num
+                )
+
+                labor_cat[f'year_{year_num}_rate'] = round(escalated_rate, 2)
+                labor_cat[f'year_{year_num}_hours'] = hours
+
+            split_sub_labor_categories.append(labor_cat)
+
+        # Add split positions subcontractor
+        if split_sub_labor_categories:
+            subcontractors.append({
+                'name': 'Subcontractor Labor (From Extracted Positions)',
+                'labor_categories': split_sub_labor_categories
+            })
 
     # Build complete project data
     project_data = {
@@ -171,7 +270,7 @@ def build_project_data_from_dataframe(
         'escalation_rates': project_config['escalation_rates'],
         'indirect_rates': project_config['indirect_rates'],
         'prime_positions': prime_positions,
-        'subcontractors': project_config.get('subcontractors', []),
+        'subcontractors': subcontractors,
         'passthrough_rates': project_config['passthrough_rates'],
         'fee_rates': project_config['fee_rates'],
         'odcs': project_config.get('odcs', []),

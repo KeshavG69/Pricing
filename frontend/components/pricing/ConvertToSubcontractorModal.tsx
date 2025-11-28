@@ -142,10 +142,10 @@ export const ConvertToSubcontractorModal = ({
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleConvert = () => {
+  const handleConvert = async () => {
     if (!validate() || !position) return;
 
-    convertToSubcontractor({
+    await convertToSubcontractor({
       positionId: position.id,
       subcontractorId: mode === 'existing' ? selectedSubcontractorId : undefined,
       newSubcontractorName: mode === 'new' ? newSubcontractorName.trim() : undefined,

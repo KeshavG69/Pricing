@@ -54,7 +54,7 @@ interface PricingState {
   deletePosition: (id: string) => void;
   addSubcontractor: (subcontractor: Omit<Subcontractor, 'id'>) => void;
   deleteSubcontractor: (id: string) => void;
-  convertToSubcontractor: (data: ConversionData) => void;
+  convertToSubcontractor: (data: ConversionData) => Promise<void>;
   addODC: (odc: Omit<ODCItem, 'id'>) => void;
   updateODC: (id: string, updates: Partial<ODCItem>) => void;
   deleteODC: (id: string) => void;
@@ -385,12 +385,13 @@ export const usePricingStore = create<PricingState>((set, get) => {
       debouncedAutoSave();
     },
 
-    convertToSubcontractor: (data) => {
+    convertToSubcontractor: async (data) => {
       console.log('🔄 Converting to subcontractor:', data);
       const state = get();
-      const position = state.positions.find((p) => p.id === data.positionId);
+      const positionIndex = state.positions.findIndex((p) => p.id === data.positionId);
+      const position = state.positions[positionIndex];
 
-      if (!position) {
+      if (!position || positionIndex === -1) {
         console.error('❌ Position not found:', data.positionId);
         return;
       }
@@ -470,7 +471,29 @@ export const usePricingStore = create<PricingState>((set, get) => {
       console.log('✅ Subcontractor added:', updatedSubcontractor);
       console.log('📊 Updated subcontractors array:', get().subcontractors);
 
-      // 6. Trigger recalculation and auto-save
+      // 6. Update backend with subcontractor hours
+      if (state.proposalId) {
+        try {
+          // Calculate total allocated subcontractor hours
+          const totalSubHours = Object.values(data.hoursAllocation).reduce(
+            (sum, hours) => sum + hours,
+            0
+          );
+
+          // Call backend API to update position
+          await proposalsApi.updatePositionSubcontractorHours(
+            state.proposalId,
+            positionIndex,
+            totalSubHours
+          );
+
+          console.log(`✅ Backend updated: position ${positionIndex} with ${totalSubHours} subcontractor hours`);
+        } catch (error) {
+          console.error('❌ Failed to update backend:', error);
+        }
+      }
+
+      // 7. Trigger recalculation and auto-save
       debouncedRecalculate();
       debouncedAutoSave(); // Explicit auto-save to persist to MongoDB immediately
     },
