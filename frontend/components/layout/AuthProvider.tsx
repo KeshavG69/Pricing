@@ -5,10 +5,10 @@ import { useAuthStore } from '@/lib/stores/authStore';
 
 export default function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
-    // Initialize auth on app mount ONCE
-    // This will fetch user if valid cookies exist
-    useAuthStore.getState().initializeAuth().catch(console.error);
-  }, []); // Empty array = run only once on mount
+    // TEMPORARILY DISABLED: Auth initialization causing death spiral on Railway
+    // Will re-enable with better error handling once deployment is stable
+    // useAuthStore.getState().initializeAuth().catch(console.error);
+  }, []);
 
   return <>{children}</>;
 }
