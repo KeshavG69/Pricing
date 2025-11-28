@@ -13,7 +13,19 @@ RUN npm install
 # Copy all files
 COPY . .
 
-# Build the Next.js app
+# Accept build args from Railway (CRITICAL for Next.js env vars)
+ARG NEXT_PUBLIC_API_URL
+ARG NEXTAUTH_URL
+ARG NEXTAUTH_SECRET
+ARG GOOGLE_CLIENT_ID
+
+# Set as environment variables for Next.js build
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXTAUTH_URL=$NEXTAUTH_URL
+ENV NEXTAUTH_SECRET=$NEXTAUTH_SECRET
+ENV GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
+
+# Build the Next.js app with env vars
 RUN npm run build
 
 # Expose port 8080
