@@ -14,23 +14,33 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, logout } = useAuthStore();
+  const { user, logout, isInitializing } = useAuthStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
 
-  // Redirect to login if not authenticated
+  // Redirect to login if not authenticated (wait for initialization first)
   useEffect(() => {
-    if (!user) {
+    if (!isInitializing && !user) {
       router.push('/auth/login');
     }
-  }, [user, router]);
+  }, [user, isInitializing, router]);
 
   const handleLogout = async () => {
     await logout();
     router.push('/');
   };
 
+  // Show loading spinner during auth initialization
+  if (isInitializing) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // After initialization, if no user, return null (redirect will happen)
   if (!user) {
-    return null; // or a loading spinner
+    return null;
   }
 
   const navItems = [

@@ -256,6 +256,38 @@
         "documentation": {}
     },
     {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Dict",
         "importPath": "typing",
         "description": "typing",
@@ -425,6 +457,14 @@
     },
     {
         "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -916,6 +956,22 @@
         "documentation": {}
     },
     {
+        "label": "Response",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Request",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
         "label": "APIRouter",
         "importPath": "fastapi",
         "description": "fastapi",
@@ -941,6 +997,30 @@
     },
     {
         "label": "status",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Response",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Request",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Cookie",
         "importPath": "fastapi",
         "description": "fastapi",
         "isExtraImport": true,
@@ -1196,6 +1276,14 @@
         "documentation": {}
     },
     {
+        "label": "FRONTEND_URL",
+        "importPath": "auth.config",
+        "description": "auth.config",
+        "isExtraImport": true,
+        "detail": "auth.config",
+        "documentation": {}
+    },
+    {
         "label": "BaseSettings",
         "importPath": "pydantic_settings",
         "description": "pydantic_settings",
@@ -1276,6 +1364,22 @@
         "documentation": {}
     },
     {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
         "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
@@ -1321,6 +1425,22 @@
         "description": "dotenv",
         "isExtraImport": true,
         "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
         "documentation": {}
     },
     {
@@ -1389,6 +1509,30 @@
     },
     {
         "label": "TEXT",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "ASCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "DESCENDING",
         "importPath": "pymongo",
         "description": "pymongo",
         "isExtraImport": true,
@@ -1564,12 +1708,37 @@
         "documentation": {}
     },
     {
-        "label": "bcrypt",
+        "label": "uuid",
         "kind": 6,
         "isExtraImport": true,
-        "importPath": "bcrypt",
-        "description": "bcrypt",
-        "detail": "bcrypt",
+        "importPath": "uuid",
+        "description": "uuid",
+        "detail": "uuid",
+        "documentation": {}
+    },
+    {
+        "label": "hashlib",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "hashlib",
+        "description": "hashlib",
+        "detail": "hashlib",
+        "documentation": {}
+    },
+    {
+        "label": "jwt",
+        "importPath": "jose",
+        "description": "jose",
+        "isExtraImport": true,
+        "detail": "jose",
+        "documentation": {}
+    },
+    {
+        "label": "JWTError",
+        "importPath": "jose",
+        "description": "jose",
+        "isExtraImport": true,
+        "detail": "jose",
         "documentation": {}
     },
     {
@@ -1589,12 +1758,12 @@
         "documentation": {}
     },
     {
-        "label": "uuid",
+        "label": "bcrypt",
         "kind": 6,
         "isExtraImport": true,
-        "importPath": "uuid",
-        "description": "uuid",
-        "detail": "uuid",
+        "importPath": "bcrypt",
+        "description": "bcrypt",
+        "detail": "bcrypt",
         "documentation": {}
     },
     {
@@ -1786,22 +1955,6 @@
         "documentation": {}
     },
     {
-        "label": "HTTPBearer",
-        "importPath": "fastapi.security",
-        "description": "fastapi.security",
-        "isExtraImport": true,
-        "detail": "fastapi.security",
-        "documentation": {}
-    },
-    {
-        "label": "HTTPAuthorizationCredentials",
-        "importPath": "fastapi.security",
-        "description": "fastapi.security",
-        "isExtraImport": true,
-        "detail": "fastapi.security",
-        "documentation": {}
-    },
-    {
         "label": "UserSignup",
         "importPath": "auth.models",
         "description": "auth.models",
@@ -1826,14 +1979,6 @@
         "documentation": {}
     },
     {
-        "label": "Token",
-        "importPath": "auth.models",
-        "description": "auth.models",
-        "isExtraImport": true,
-        "detail": "auth.models",
-        "documentation": {}
-    },
-    {
         "label": "LogoutResponse",
         "importPath": "auth.models",
         "description": "auth.models",
@@ -1843,6 +1988,14 @@
     },
     {
         "label": "GoogleLoginRequest",
+        "importPath": "auth.models",
+        "description": "auth.models",
+        "isExtraImport": true,
+        "detail": "auth.models",
+        "documentation": {}
+    },
+    {
+        "label": "TokenRefreshResponse",
         "importPath": "auth.models",
         "description": "auth.models",
         "isExtraImport": true,
@@ -1890,11 +2043,75 @@
         "documentation": {}
     },
     {
-        "label": "add_token_to_blacklist",
-        "importPath": "auth.blacklist",
-        "description": "auth.blacklist",
+        "label": "set_access_token_cookie",
+        "importPath": "auth.cookies",
+        "description": "auth.cookies",
         "isExtraImport": true,
-        "detail": "auth.blacklist",
+        "detail": "auth.cookies",
+        "documentation": {}
+    },
+    {
+        "label": "set_refresh_token_cookie",
+        "importPath": "auth.cookies",
+        "description": "auth.cookies",
+        "isExtraImport": true,
+        "detail": "auth.cookies",
+        "documentation": {}
+    },
+    {
+        "label": "clear_auth_cookies",
+        "importPath": "auth.cookies",
+        "description": "auth.cookies",
+        "isExtraImport": true,
+        "detail": "auth.cookies",
+        "documentation": {}
+    },
+    {
+        "label": "COOKIE_ACCESS_TOKEN_NAME",
+        "importPath": "auth.cookies",
+        "description": "auth.cookies",
+        "isExtraImport": true,
+        "detail": "auth.cookies",
+        "documentation": {}
+    },
+    {
+        "label": "COOKIE_REFRESH_TOKEN_NAME",
+        "importPath": "auth.cookies",
+        "description": "auth.cookies",
+        "isExtraImport": true,
+        "detail": "auth.cookies",
+        "documentation": {}
+    },
+    {
+        "label": "create_refresh_token",
+        "importPath": "auth.refresh_token",
+        "description": "auth.refresh_token",
+        "isExtraImport": true,
+        "detail": "auth.refresh_token",
+        "documentation": {}
+    },
+    {
+        "label": "validate_refresh_token",
+        "importPath": "auth.refresh_token",
+        "description": "auth.refresh_token",
+        "isExtraImport": true,
+        "detail": "auth.refresh_token",
+        "documentation": {}
+    },
+    {
+        "label": "rotate_refresh_token",
+        "importPath": "auth.refresh_token",
+        "description": "auth.refresh_token",
+        "isExtraImport": true,
+        "detail": "auth.refresh_token",
+        "documentation": {}
+    },
+    {
+        "label": "revoke_refresh_token",
+        "importPath": "auth.refresh_token",
+        "description": "auth.refresh_token",
+        "isExtraImport": true,
+        "detail": "auth.refresh_token",
         "documentation": {}
     },
     {
@@ -2486,7 +2703,7 @@
         "kind": 5,
         "importPath": "app.server",
         "description": "app.server",
-        "peekOfCode": "static_path = Path(__file__).parent.parent / \"static\"\nif static_path.exists():\n    app.mount(\"/static\", StaticFiles(directory=str(static_path)), name=\"static\")\n# Configure CORS\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=[\"*\"],  # Configure appropriately for production\n    allow_credentials=True,\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],",
+        "peekOfCode": "static_path = Path(__file__).parent.parent / \"static\"\nif static_path.exists():\n    app.mount(\"/static\", StaticFiles(directory=str(static_path)), name=\"static\")\n# Configure CORS - IMPORTANT: Specific origin required for cookies\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=[FRONTEND_URL],  # Specific origin required for allow_credentials=True\n    allow_credentials=True,  # Required for cookies\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],",
         "detail": "app.server",
         "documentation": {}
     },
@@ -2549,7 +2766,7 @@
         "kind": 5,
         "importPath": "auth.config",
         "description": "auth.config",
-        "peekOfCode": "SECRET_KEY = os.getenv(\"SECRET_KEY\", \"your-secret-key-change-this-in-production\")\nALGORITHM = os.getenv(\"ALGORITHM\", \"HS256\")\nACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv(\"ACCESS_TOKEN_EXPIRE_MINUTES\", \"30\"))\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "SECRET_KEY = os.getenv(\"SECRET_KEY\", \"your-secret-key-change-this-in-production\")\nALGORITHM = os.getenv(\"ALGORITHM\", \"HS256\")\nACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv(\"ACCESS_TOKEN_EXPIRE_MINUTES\", \"30\"))\nREFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv(\"REFRESH_TOKEN_EXPIRE_DAYS\", \"7\"))\n# Cookie Configuration\nCOOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\nCOOKIE_SAMESITE = \"lax\"  # or \"strict\" for higher security\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"",
         "detail": "auth.config",
         "documentation": {}
     },
@@ -2558,7 +2775,7 @@
         "kind": 5,
         "importPath": "auth.config",
         "description": "auth.config",
-        "peekOfCode": "ALGORITHM = os.getenv(\"ALGORITHM\", \"HS256\")\nACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv(\"ACCESS_TOKEN_EXPIRE_MINUTES\", \"30\"))\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "ALGORITHM = os.getenv(\"ALGORITHM\", \"HS256\")\nACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv(\"ACCESS_TOKEN_EXPIRE_MINUTES\", \"30\"))\nREFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv(\"REFRESH_TOKEN_EXPIRE_DAYS\", \"7\"))\n# Cookie Configuration\nCOOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\nCOOKIE_SAMESITE = \"lax\"  # or \"strict\" for higher security\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS",
         "detail": "auth.config",
         "documentation": {}
     },
@@ -2567,7 +2784,70 @@
         "kind": 5,
         "importPath": "auth.config",
         "description": "auth.config",
-        "peekOfCode": "ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv(\"ACCESS_TOKEN_EXPIRE_MINUTES\", \"30\"))\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv(\"ACCESS_TOKEN_EXPIRE_MINUTES\", \"30\"))\nREFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv(\"REFRESH_TOKEN_EXPIRE_DAYS\", \"7\"))\n# Cookie Configuration\nCOOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\nCOOKIE_SAMESITE = \"lax\"  # or \"strict\" for higher security\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")",
+        "detail": "auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "REFRESH_TOKEN_EXPIRE_DAYS",
+        "kind": 5,
+        "importPath": "auth.config",
+        "description": "auth.config",
+        "peekOfCode": "REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv(\"REFRESH_TOKEN_EXPIRE_DAYS\", \"7\"))\n# Cookie Configuration\nCOOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\nCOOKIE_SAMESITE = \"lax\"  # or \"strict\" for higher security\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration",
+        "detail": "auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "COOKIE_DOMAIN",
+        "kind": 5,
+        "importPath": "auth.config",
+        "description": "auth.config",
+        "peekOfCode": "COOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\nCOOKIE_SAMESITE = \"lax\"  # or \"strict\" for higher security\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "detail": "auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "COOKIE_SECURE",
+        "kind": 5,
+        "importPath": "auth.config",
+        "description": "auth.config",
+        "peekOfCode": "COOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\nCOOKIE_SAMESITE = \"lax\"  # or \"strict\" for higher security\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "detail": "auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "COOKIE_SAMESITE",
+        "kind": 5,
+        "importPath": "auth.config",
+        "description": "auth.config",
+        "peekOfCode": "COOKIE_SAMESITE = \"lax\"  # or \"strict\" for higher security\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "detail": "auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "COOKIE_ACCESS_TOKEN_NAME",
+        "kind": 5,
+        "importPath": "auth.config",
+        "description": "auth.config",
+        "peekOfCode": "COOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "detail": "auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "COOKIE_REFRESH_TOKEN_NAME",
+        "kind": 5,
+        "importPath": "auth.config",
+        "description": "auth.config",
+        "peekOfCode": "COOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "detail": "auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "FRONTEND_URL",
+        "kind": 5,
+        "importPath": "auth.config",
+        "description": "auth.config",
+        "peekOfCode": "FRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
         "detail": "auth.config",
         "documentation": {}
     },
@@ -2578,6 +2858,42 @@
         "description": "auth.config",
         "peekOfCode": "GOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
         "detail": "auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "set_access_token_cookie",
+        "kind": 2,
+        "importPath": "auth.cookies",
+        "description": "auth.cookies",
+        "peekOfCode": "def set_access_token_cookie(response: Response, token: str) -> None:\n    \"\"\"\n    Set access token as HttpOnly cookie\n    Args:\n        response: FastAPI Response object\n        token: JWT access token string\n    \"\"\"\n    response.set_cookie(\n        key=COOKIE_ACCESS_TOKEN_NAME,\n        value=token,",
+        "detail": "auth.cookies",
+        "documentation": {}
+    },
+    {
+        "label": "set_refresh_token_cookie",
+        "kind": 2,
+        "importPath": "auth.cookies",
+        "description": "auth.cookies",
+        "peekOfCode": "def set_refresh_token_cookie(response: Response, token: str) -> None:\n    \"\"\"\n    Set refresh token as HttpOnly cookie\n    Args:\n        response: FastAPI Response object\n        token: JWT refresh token string\n    \"\"\"\n    response.set_cookie(\n        key=COOKIE_REFRESH_TOKEN_NAME,\n        value=token,",
+        "detail": "auth.cookies",
+        "documentation": {}
+    },
+    {
+        "label": "clear_auth_cookies",
+        "kind": 2,
+        "importPath": "auth.cookies",
+        "description": "auth.cookies",
+        "peekOfCode": "def clear_auth_cookies(response: Response) -> None:\n    \"\"\"\n    Clear both access and refresh token cookies\n    Args:\n        response: FastAPI Response object\n    \"\"\"\n    response.delete_cookie(\n        key=COOKIE_ACCESS_TOKEN_NAME,\n        domain=COOKIE_DOMAIN,\n        path=\"/\"",
+        "detail": "auth.cookies",
+        "documentation": {}
+    },
+    {
+        "label": "get_token_from_cookie",
+        "kind": 2,
+        "importPath": "auth.cookies",
+        "description": "auth.cookies",
+        "peekOfCode": "def get_token_from_cookie(request: Request, cookie_name: str) -> Optional[str]:\n    \"\"\"\n    Extract token from cookie\n    Args:\n        request: FastAPI Request object\n        cookie_name: Name of the cookie to retrieve\n    Returns:\n        Token string if found, None otherwise\n    \"\"\"\n    return request.cookies.get(cookie_name)",
+        "detail": "auth.cookies",
         "documentation": {}
     },
     {
@@ -2702,8 +3018,98 @@
         "kind": 6,
         "importPath": "auth.models",
         "description": "auth.models",
-        "peekOfCode": "class GoogleUserProfile(BaseModel):\n    sub: str\n    name: str\n    given_name: str\n    family_name: str\n    picture: str\n    email: str\n    email_verified: bool",
+        "peekOfCode": "class GoogleUserProfile(BaseModel):\n    sub: str\n    name: str\n    given_name: str\n    family_name: str\n    picture: str\n    email: str\n    email_verified: bool\nclass RefreshToken(BaseModel):\n    \"\"\"",
         "detail": "auth.models",
+        "documentation": {}
+    },
+    {
+        "label": "RefreshToken",
+        "kind": 6,
+        "importPath": "auth.models",
+        "description": "auth.models",
+        "peekOfCode": "class RefreshToken(BaseModel):\n    \"\"\"\n    Refresh token model for MongoDB storage\n    \"\"\"\n    token_id: str  # UUID for the token\n    user_email: str\n    refresh_token_hash: str  # bcrypt hash of actual token\n    token_family_id: str  # Track token rotation chain\n    expires_at: datetime\n    created_at: datetime",
+        "detail": "auth.models",
+        "documentation": {}
+    },
+    {
+        "label": "TokenRefreshResponse",
+        "kind": 6,
+        "importPath": "auth.models",
+        "description": "auth.models",
+        "peekOfCode": "class TokenRefreshResponse(BaseModel):\n    \"\"\"\n    Response model for token refresh endpoint\n    \"\"\"\n    message: str = \"Token refreshed successfully\"\nclass RefreshTokenValidationResult(BaseModel):\n    \"\"\"\n    Internal model for refresh token validation results\n    \"\"\"\n    valid: bool",
+        "detail": "auth.models",
+        "documentation": {}
+    },
+    {
+        "label": "RefreshTokenValidationResult",
+        "kind": 6,
+        "importPath": "auth.models",
+        "description": "auth.models",
+        "peekOfCode": "class RefreshTokenValidationResult(BaseModel):\n    \"\"\"\n    Internal model for refresh token validation results\n    \"\"\"\n    valid: bool\n    user_email: Optional[str] = None\n    token_family_id: Optional[str] = None\n    token_id: Optional[str] = None\n    reason: Optional[str] = None  # Reason for failure if not valid",
+        "detail": "auth.models",
+        "documentation": {}
+    },
+    {
+        "label": "create_refresh_token_jwt",
+        "kind": 2,
+        "importPath": "auth.refresh_token",
+        "description": "auth.refresh_token",
+        "peekOfCode": "def create_refresh_token_jwt(user_email: str, token_id: str) -> str:\n    \"\"\"\n    Create JWT refresh token\n    Args:\n        user_email: User's email address\n        token_id: Unique token identifier\n    Returns:\n        JWT refresh token string\n    \"\"\"\n    expire = datetime.utcnow() + timedelta(days=REFRESH_TOKEN_EXPIRE_DAYS)",
+        "detail": "auth.refresh_token",
+        "documentation": {}
+    },
+    {
+        "label": "verify_refresh_token_jwt",
+        "kind": 2,
+        "importPath": "auth.refresh_token",
+        "description": "auth.refresh_token",
+        "peekOfCode": "def verify_refresh_token_jwt(token: str) -> Optional[Dict[str, Any]]:\n    \"\"\"\n    Verify and decode refresh token JWT\n    Args:\n        token: JWT refresh token string\n    Returns:\n        Token payload if valid, None otherwise\n    \"\"\"\n    try:\n        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])",
+        "detail": "auth.refresh_token",
+        "documentation": {}
+    },
+    {
+        "label": "MONGODB_URL",
+        "kind": 5,
+        "importPath": "auth.refresh_token",
+        "description": "auth.refresh_token",
+        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\nclient = MongoClient(MONGODB_URL)\ndb = client[MONGODB_DATABASE]\nrefresh_tokens_collection = db[\"refresh_tokens\"]\ndef create_refresh_token_jwt(user_email: str, token_id: str) -> str:\n    \"\"\"\n    Create JWT refresh token\n    Args:\n        user_email: User's email address",
+        "detail": "auth.refresh_token",
+        "documentation": {}
+    },
+    {
+        "label": "MONGODB_DATABASE",
+        "kind": 5,
+        "importPath": "auth.refresh_token",
+        "description": "auth.refresh_token",
+        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\nclient = MongoClient(MONGODB_URL)\ndb = client[MONGODB_DATABASE]\nrefresh_tokens_collection = db[\"refresh_tokens\"]\ndef create_refresh_token_jwt(user_email: str, token_id: str) -> str:\n    \"\"\"\n    Create JWT refresh token\n    Args:\n        user_email: User's email address\n        token_id: Unique token identifier",
+        "detail": "auth.refresh_token",
+        "documentation": {}
+    },
+    {
+        "label": "client",
+        "kind": 5,
+        "importPath": "auth.refresh_token",
+        "description": "auth.refresh_token",
+        "peekOfCode": "client = MongoClient(MONGODB_URL)\ndb = client[MONGODB_DATABASE]\nrefresh_tokens_collection = db[\"refresh_tokens\"]\ndef create_refresh_token_jwt(user_email: str, token_id: str) -> str:\n    \"\"\"\n    Create JWT refresh token\n    Args:\n        user_email: User's email address\n        token_id: Unique token identifier\n    Returns:",
+        "detail": "auth.refresh_token",
+        "documentation": {}
+    },
+    {
+        "label": "db",
+        "kind": 5,
+        "importPath": "auth.refresh_token",
+        "description": "auth.refresh_token",
+        "peekOfCode": "db = client[MONGODB_DATABASE]\nrefresh_tokens_collection = db[\"refresh_tokens\"]\ndef create_refresh_token_jwt(user_email: str, token_id: str) -> str:\n    \"\"\"\n    Create JWT refresh token\n    Args:\n        user_email: User's email address\n        token_id: Unique token identifier\n    Returns:\n        JWT refresh token string",
+        "detail": "auth.refresh_token",
+        "documentation": {}
+    },
+    {
+        "label": "refresh_tokens_collection",
+        "kind": 5,
+        "importPath": "auth.refresh_token",
+        "description": "auth.refresh_token",
+        "peekOfCode": "refresh_tokens_collection = db[\"refresh_tokens\"]\ndef create_refresh_token_jwt(user_email: str, token_id: str) -> str:\n    \"\"\"\n    Create JWT refresh token\n    Args:\n        user_email: User's email address\n        token_id: Unique token identifier\n    Returns:\n        JWT refresh token string\n    \"\"\"",
+        "detail": "auth.refresh_token",
         "documentation": {}
     },
     {
@@ -3098,7 +3504,7 @@
         "kind": 2,
         "importPath": "routers.auth",
         "description": "routers.auth",
-        "peekOfCode": "def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):\n    \"\"\"Get current user from JWT token\"\"\"\n    token = credentials.credentials\n    token_data = verify_token(token)\n    if token_data is None:\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=\"Could not validate credentials\",\n            headers={\"WWW-Authenticate\": \"Bearer\"},\n        )",
+        "peekOfCode": "def get_current_user(\n    access_token: Optional[str] = Cookie(None, alias=COOKIE_ACCESS_TOKEN_NAME)\n):\n    \"\"\"Get current user from access token cookie\"\"\"\n    if not access_token:\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=\"Not authenticated\",\n        )\n    token_data = verify_token(access_token)",
         "detail": "routers.auth",
         "documentation": {}
     },
@@ -3107,16 +3513,7 @@
         "kind": 5,
         "importPath": "routers.auth",
         "description": "routers.auth",
-        "peekOfCode": "router = APIRouter(prefix=\"/auth\", tags=[\"authentication\"])\nsecurity = HTTPBearer()\ndef get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):\n    \"\"\"Get current user from JWT token\"\"\"\n    token = credentials.credentials\n    token_data = verify_token(token)\n    if token_data is None:\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=\"Could not validate credentials\",",
-        "detail": "routers.auth",
-        "documentation": {}
-    },
-    {
-        "label": "security",
-        "kind": 5,
-        "importPath": "routers.auth",
-        "description": "routers.auth",
-        "peekOfCode": "security = HTTPBearer()\ndef get_current_user(credentials: HTTPAuthorizationCredentials = Depends(security)):\n    \"\"\"Get current user from JWT token\"\"\"\n    token = credentials.credentials\n    token_data = verify_token(token)\n    if token_data is None:\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=\"Could not validate credentials\",\n            headers={\"WWW-Authenticate\": \"Bearer\"},",
+        "peekOfCode": "router = APIRouter(prefix=\"/auth\", tags=[\"authentication\"])\ndef get_current_user(\n    access_token: Optional[str] = Cookie(None, alias=COOKIE_ACCESS_TOKEN_NAME)\n):\n    \"\"\"Get current user from access token cookie\"\"\"\n    if not access_token:\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=\"Not authenticated\",\n        )",
         "detail": "routers.auth",
         "documentation": {}
     },
@@ -3253,6 +3650,33 @@
         "description": "scripts.create_indexes_safe",
         "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef safe_create_index(collection, keys, **kwargs):\n    \"\"\"Safely create index, handling existing indexes.\"\"\"\n    try:\n        collection.create_index(keys, **kwargs)\n        return f\"✓ Created: {kwargs.get('name', str(keys))}\"\n    except Exception as e:\n        if \"already exists\" in str(e).lower():\n            return f\"⚠ Already exists: {kwargs.get('name', str(keys))}\"\n        else:",
         "detail": "scripts.create_indexes_safe",
+        "documentation": {}
+    },
+    {
+        "label": "create_refresh_token_indexes",
+        "kind": 2,
+        "importPath": "scripts.create_refresh_token_indexes",
+        "description": "scripts.create_refresh_token_indexes",
+        "peekOfCode": "def create_refresh_token_indexes():\n    \"\"\"Create indexes for refresh_tokens collection\"\"\"\n    try:\n        # Connect to MongoDB\n        client = MongoClient(MONGODB_URL)\n        db = client[MONGODB_DATABASE]\n        collection = db[\"refresh_tokens\"]\n        print(\"Creating indexes for refresh_tokens collection...\")\n        # 1. Compound index on user_email + token_family_id (for queries)\n        collection.create_index(",
+        "detail": "scripts.create_refresh_token_indexes",
+        "documentation": {}
+    },
+    {
+        "label": "MONGODB_URL",
+        "kind": 5,
+        "importPath": "scripts.create_refresh_token_indexes",
+        "description": "scripts.create_refresh_token_indexes",
+        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef create_refresh_token_indexes():\n    \"\"\"Create indexes for refresh_tokens collection\"\"\"\n    try:\n        # Connect to MongoDB\n        client = MongoClient(MONGODB_URL)\n        db = client[MONGODB_DATABASE]\n        collection = db[\"refresh_tokens\"]\n        print(\"Creating indexes for refresh_tokens collection...\")",
+        "detail": "scripts.create_refresh_token_indexes",
+        "documentation": {}
+    },
+    {
+        "label": "MONGODB_DATABASE",
+        "kind": 5,
+        "importPath": "scripts.create_refresh_token_indexes",
+        "description": "scripts.create_refresh_token_indexes",
+        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef create_refresh_token_indexes():\n    \"\"\"Create indexes for refresh_tokens collection\"\"\"\n    try:\n        # Connect to MongoDB\n        client = MongoClient(MONGODB_URL)\n        db = client[MONGODB_DATABASE]\n        collection = db[\"refresh_tokens\"]\n        print(\"Creating indexes for refresh_tokens collection...\")\n        # 1. Compound index on user_email + token_family_id (for queries)",
+        "detail": "scripts.create_refresh_token_indexes",
         "documentation": {}
     },
     {

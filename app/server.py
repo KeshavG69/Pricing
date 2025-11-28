@@ -10,6 +10,7 @@ from fastapi.responses import FileResponse
 from pathlib import Path
 
 from routers import pricing, auth, excel_export, proposals
+from auth.config import FRONTEND_URL
 
 # Create FastAPI app
 app = FastAPI(
@@ -27,13 +28,14 @@ static_path = Path(__file__).parent.parent / "static"
 if static_path.exists():
     app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
 
-# Configure CORS
+# Configure CORS - IMPORTANT: Specific origin required for cookies
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Configure appropriately for production
-    allow_credentials=True,
+    allow_origins=[FRONTEND_URL],  # Specific origin required for allow_credentials=True
+    allow_credentials=True,  # Required for cookies
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 # Include routers

@@ -1,5 +1,11 @@
 import apiClient from './client';
-import { AuthResponse, LoginCredentials, SignupData, User } from '@/types';
+import { LoginCredentials, SignupData, User } from '@/types';
+
+// Updated response types (no tokens in response body)
+interface LoginResponse {
+  message: string;
+  user: User;
+}
 
 export const authApi = {
   // Sign up new user
@@ -9,14 +15,14 @@ export const authApi = {
   },
 
   // Login user
-  login: async (credentials: LoginCredentials): Promise<AuthResponse> => {
-    const response = await apiClient.post<AuthResponse>('/auth/login', credentials);
+  login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
+    const response = await apiClient.post<LoginResponse>('/auth/login', credentials);
     return response.data;
   },
 
   // Google login
-  googleLogin: async (credential: string): Promise<AuthResponse> => {
-    const response = await apiClient.post<AuthResponse>('/auth/google/login', {
+  googleLogin: async (credential: string): Promise<LoginResponse> => {
+    const response = await apiClient.post<LoginResponse>('/auth/google/login', {
       credential,
     });
     return response.data;
@@ -31,5 +37,10 @@ export const authApi = {
   // Logout
   logout: async (): Promise<void> => {
     await apiClient.post('/auth/logout');
+  },
+
+  // Refresh token (called automatically by interceptor)
+  refresh: async (): Promise<void> => {
+    await apiClient.post('/auth/refresh');
   },
 };

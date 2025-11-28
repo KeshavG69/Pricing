@@ -4,9 +4,9 @@ import { authApi } from '../api/auth';
 
 interface AuthState {
   user: User | null;
-  token: string | null;
   isLoading: boolean;
   error: string | null;
+  isInitializing: boolean;
 
   // Actions
   login: (credentials: LoginCredentials) => Promise<void>;
@@ -15,28 +15,24 @@ interface AuthState {
   logout: () => Promise<void>;
   fetchUser: () => Promise<void>;
   clearError: () => void;
-  initializeAuth: () => void;
+  initializeAuth: () => Promise<void>;
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-  token: null,
   isLoading: false,
   error: null,
+  isInitializing: true,
 
   login: async (credentials) => {
     try {
       set({ isLoading: true, error: null });
+
+      // Backend sets HttpOnly cookies automatically
       const response = await authApi.login(credentials);
 
-      // Store token
-      localStorage.setItem('access_token', response.access_token);
-      set({ token: response.access_token });
-
-      // Fetch user data
-      await get().fetchUser();
-
-      set({ isLoading: false });
+      // Store user in memory only (NOT localStorage)
+      set({ user: response.user, isLoading: false });
     } catch (error: any) {
       set({
         error: error.response?.data?.detail || 'Login failed',
@@ -49,7 +45,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signup: async (data) => {
     try {
       set({ isLoading: true, error: null });
-      const user = await authApi.signup(data);
+      await authApi.signup(data);
 
       // After signup, login automatically
       await get().login({
@@ -70,16 +66,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   googleLogin: async (credential) => {
     try {
       set({ isLoading: true, error: null });
+
+      // Backend sets HttpOnly cookies automatically
       const response = await authApi.googleLogin(credential);
 
-      // Store token
-      localStorage.setItem('access_token', response.access_token);
-      set({ token: response.access_token });
-
-      // Fetch user data
-      await get().fetchUser();
-
-      set({ isLoading: false });
+      // Store user in memory only (NOT localStorage)
+      set({ user: response.user, isLoading: false });
     } catch (error: any) {
       set({
         error: error.response?.data?.detail || 'Google login failed',
@@ -91,14 +83,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async () => {
     try {
+      // Call logout endpoint (clears cookies on backend)
       await authApi.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Clear local state regardless of API call success
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('user');
-      set({ user: null, token: null });
+      // Clear user from memory
+      set({ user: null });
     }
   },
 
@@ -106,33 +97,26 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const user = await authApi.getCurrentUser();
       set({ user });
-      localStorage.setItem('user', JSON.stringify(user));
     } catch (error) {
       console.error('Failed to fetch user:', error);
-      set({ user: null, token: null });
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('user');
+      set({ user: null });
     }
   },
 
   clearError: () => set({ error: null }),
 
-  initializeAuth: () => {
-    // Check for stored token and user on app load
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('access_token');
-      const userStr = localStorage.getItem('user');
-
-      if (token && userStr) {
-        try {
-          const user = JSON.parse(userStr);
-          set({ token, user });
-        } catch (error) {
-          console.error('Failed to parse stored user:', error);
-          localStorage.removeItem('access_token');
-          localStorage.removeItem('user');
-        }
-      }
+  initializeAuth: async () => {
+    // On app load, try to fetch current user
+    // If cookies exist and are valid, backend will authenticate
+    // No need to check localStorage
+    set({ isInitializing: true });
+    try {
+      await get().fetchUser();
+    } catch (error) {
+      // Silent fail - user not authenticated
+      set({ user: null });
+    } finally {
+      set({ isInitializing: false });
     }
   },
 }));
