@@ -1,0 +1,180 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+@import "tailwindcss";
+
+:root {
+  /* Professional B2B Palette - Slate/Zinc based */
+  --background: #ffffff;
+  --foreground: #0f172a; /* Slate 900 */
+  
+  /* Primary Brand Color - Deep Blue/Indigo */
+  --primary: #2563eb; /* Blue 600 */
+  --primary-foreground: #ffffff;
+  
+  /* Secondary/Muted */
+  --secondary: #f1f5f9; /* Slate 100 */
+  --secondary-foreground: #0f172a; /* Slate 900 */
+  
+  /* Accents */
+  --accent: #f8fafc; /* Slate 50 */
+  --accent-foreground: #0f172a;
+  
+  /* UI Elements */
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
+  
+  --muted: #f1f5f9; /* Slate 100 */
+  --muted-foreground: #64748b; /* Slate 500 */
+  
+  --border: #e2e8f0; /* Slate 200 */
+  --input: #e2e8f0;
+  --ring: #2563eb; /* Blue 600 */
+  
+  /* Status Colors */
+  --success: #10b981; /* Emerald 500 */
+  --warning: #f59e0b; /* Amber 500 */
+  --error: #ef4444; /* Red 500 */
+  --info: #3b82f6; /* Blue 500 */
+
+  /* Radius */
+  --radius: 0.5rem;
+}
+
+
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  
+  --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
+  
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-slide-up: slide-up 0.4s ease-out;
+  
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slide-up {
+    from { transform: translateY(10px); opacity: 0; }
+    to { transform: translateY(0); opacity: 1; }
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  /* Professional Card Hover Effect */
+  .hover-card {
+    transition: all 0.2s ease;
+  }
+  .hover-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  }
+}
+
+/* react-data-grid overrides for professional look */
+/* react-data-grid overrides for professional look */
+.rdg {
+  --rdg-background-color: var(--background);
+  --rdg-header-background-color: var(--background);
+  --rdg-row-hover-background-color: var(--accent);
+  --rdg-row-selected-background-color: var(--accent);
+  --rdg-border-color: transparent;
+  --rdg-color: var(--foreground);
+  --rdg-cell-frozen-background-color: var(--background);
+  --rdg-selection-color: var(--primary);
+  
+  border: none;
+  border-radius: 0;
+  font-size: 0.875rem;
+  font-family: var(--font-sans);
+}
+
+/* Premium Grid Polish */
+.rdg-premium {
+  --rdg-header-background-color: #fafafa; /* Very subtle gray for header */
+  --rdg-row-hover-background-color: #f8fafc; /* Slate 50 */
+}
+
+.rdg-cell {
+  padding: 0 24px; /* More breathing room */
+  border-right: none;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+}
+
+/* Add a subtle separator for frozen columns */
+.rdg-cell-frozen-last {
+  box-shadow: 4px 0 24px -12px rgba(0, 0, 0, 0.1); /* Soft shadow instead of border */
+  border-right: none;
+}
+
+.rdg-header-row {
+  background-color: var(--background);
+  border-bottom: 1px solid var(--border);
+}
+
+.rdg-header-cell {
+  font-weight: 600;
+  font-size: 0.7rem; /* Slightly smaller */
+  text-transform: uppercase;
+  letter-spacing: 0.08em; /* Wider tracking */
+  color: var(--muted-foreground);
+  border-right: none;
+  border-bottom: 1px solid var(--border);
+  background-color: var(--background);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+}
+
+.rdg-row {
+  background-color: var(--background);
+  border-bottom: 1px solid var(--border);
+  transition: background-color 0.15s ease; /* Smooth hover */
+}
+
+.rdg-row:hover {
+  background-color: var(--accent);
+}
+
+/* Monospace font for numbers */
+.rdg-cell[aria-colindex] {
+  font-variant-numeric: tabular-nums;
+}
+
