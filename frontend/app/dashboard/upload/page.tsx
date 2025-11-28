@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDropzone } from 'react-dropzone';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useProposalsStore } from '@/lib/stores/proposalsStore';
+import { useProposalPolling } from '@/lib/hooks/useProposalPolling';
 import Button from '@/components/ui/Button';
 import Card, { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
+import ProcessingLoader from '@/components/ui/ProcessingLoader';
 import { Upload, File, X, AlertCircle } from 'lucide-react';
 
 export default function UploadPage() {
@@ -16,6 +18,10 @@ export default function UploadPage() {
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [solicitationNumber, setSolicitationNumber] = useState('');
+  const [uploadedProposalId, setUploadedProposalId] = useState<string | null>(null);
+
+  // Poll status after upload
+  const { status, isPolling, error: pollingError } = useProposalPolling(uploadedProposalId);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setError(null);
@@ -47,12 +53,26 @@ export default function UploadPage() {
       setError(null);
       const proposalId = await uploadDocuments(files, solicitationNumber.trim() || undefined);
 
-      // Redirect to proposal page to see status
-      router.push(`/proposals/${proposalId}`);
+      // Start polling for status (don't redirect immediately)
+      setUploadedProposalId(proposalId);
     } catch (err: any) {
       setError(err.message || 'Upload failed. Please try again.');
     }
   };
+
+  // Redirect when processing is complete
+  useEffect(() => {
+    if (status?.status === 'completed' && uploadedProposalId) {
+      router.push(`/proposals/${uploadedProposalId}`);
+    }
+  }, [status, uploadedProposalId, router]);
+
+  // Show polling error if it occurs
+  useEffect(() => {
+    if (pollingError) {
+      setError(pollingError);
+    }
+  }, [pollingError]);
 
   const formatFileSize = (bytes: number) => {
     if (bytes === 0) return '0 Bytes';
@@ -61,6 +81,21 @@ export default function UploadPage() {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
+
+  // Show processing loader while uploading or polling
+  if (isLoading || isPolling) {
+    return (
+      <DashboardLayout>
+        <div className="h-[calc(100vh-100px)] flex items-center justify-center">
+          <ProcessingLoader
+            progress={status?.progress || 0}
+            message={status?.message || 'Uploading documents...'}
+            status={status?.status || 'processing'}
+          />
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>

@@ -243,26 +243,29 @@ export default function ProposalsPage() {
       </div>
 
       {/* Delete Confirmation Dialog */}
+      {/* Delete Confirmation Dialog */}
       <ConfirmDialog
-        open={deleteConfirmOpen}
+        isOpen={deleteConfirmOpen}
         onClose={handleDeleteCancel}
         onConfirm={handleDeleteConfirm}
         title="Delete Proposal"
-        description="Are you sure you want to delete this proposal? This action cannot be undone."
+        message="Are you sure you want to delete this proposal? This action cannot be undone."
         confirmText="Delete"
         cancelText="Cancel"
-        variant="danger"
+        confirmVariant="danger"
         isLoading={isDeleting}
       />
 
       {/* Duplicate Dialog */}
       <Dialog
-        open={duplicateDialogOpen}
+        isOpen={duplicateDialogOpen}
         onClose={handleDuplicateCancel}
         title="Duplicate Proposal"
-        description="Enter a name for the duplicated proposal"
       >
         <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Enter a name for the duplicated proposal
+          </p>
           <Input
             type="text"
             placeholder="Proposal name"
