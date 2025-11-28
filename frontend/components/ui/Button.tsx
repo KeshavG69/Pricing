@@ -22,15 +22,15 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
-    const baseStyles = 'inline-flex items-center justify-center font-medium transition-all duration-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-950 focus:ring-sky-500';
+    const baseStyles = 'inline-flex items-center justify-center font-medium transition-colors duration-200 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-ring';
 
     const variantStyles = {
-      primary: 'bg-gradient-to-r from-sky-500 to-blue-600 text-white hover:from-sky-400 hover:to-blue-500 shadow-lg shadow-sky-500/20 border border-transparent',
-      secondary: 'bg-slate-800 text-slate-100 hover:bg-slate-700 border border-slate-700',
-      outline: 'border border-slate-700 bg-transparent text-slate-300 hover:bg-slate-800 hover:text-white hover:border-slate-600',
-      ghost: 'bg-transparent text-slate-400 hover:text-white hover:bg-slate-800/50',
-      danger: 'bg-red-500/10 text-red-400 border border-red-500/20 hover:bg-red-500/20 hover:border-red-500/30',
-      glass: 'glass text-slate-100 hover:bg-slate-800/50 hover:border-slate-600',
+      primary: 'bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm',
+      secondary: 'bg-secondary text-secondary-foreground hover:bg-secondary/80',
+      outline: 'border border-input bg-background hover:bg-accent hover:text-accent-foreground',
+      ghost: 'hover:bg-accent hover:text-accent-foreground',
+      danger: 'bg-red-600 text-white hover:bg-red-700 shadow-sm',
+      glass: 'bg-secondary/50 text-secondary-foreground hover:bg-secondary/80', // Fallback for glass
     };
 
     const sizeStyles = {

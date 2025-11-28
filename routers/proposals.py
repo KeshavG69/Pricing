@@ -4,7 +4,7 @@ Proposals router for managing government contract proposals.
 Handles document upload, storage, processing, and full CRUD operations.
 """
 
-from fastapi import APIRouter, UploadFile, File, HTTPException, BackgroundTasks, Depends, status
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, BackgroundTasks, Depends, status
 from fastapi.responses import JSONResponse
 from typing import List, Dict, Any
 from pathlib import Path
@@ -224,6 +224,7 @@ async def process_proposal_documents(
 async def upload_proposal_documents(
     background_tasks: BackgroundTasks,
     files: List[UploadFile] = File(...),
+    solicitation_number: str = Form(None),
     current_user: UserResponse = Depends(get_current_user)
 ):
     """
@@ -253,7 +254,7 @@ async def upload_proposal_documents(
         # Create proposal in MongoDB (status: processing)
         proposal_data = {
             "name": f"Proposal {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}",
-            "solicitation_number": None,
+            "solicitation_number": solicitation_number,
             "documents": [],
             "progress": 0,
             "message": "Uploading documents..."

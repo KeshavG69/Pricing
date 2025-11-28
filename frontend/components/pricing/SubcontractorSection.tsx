@@ -38,15 +38,14 @@ export const SubcontractorSection = () => {
   if (subcontractors.length === 0) {
     return (
       <div className="mt-6">
-        <h3 className="text-lg font-semibold text-slate-200 mb-4 flex items-center gap-2">
-          <Building2 className="w-5 h-5" />
+        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2 px-6">
           Subcontractor Labor
         </h3>
         <Card className="p-8">
-          <div className="text-center text-slate-400">
-            <Building2 className="w-12 h-12 mx-auto mb-3 text-slate-600" />
+          <div className="text-center text-muted-foreground">
+            <Building2 className="w-12 h-12 mx-auto mb-3 text-muted-foreground" />
             <p className="text-sm">No subcontractor positions yet</p>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Right-click on a position and select "Convert to Subcontractor"
             </p>
           </div>
@@ -57,18 +56,17 @@ export const SubcontractorSection = () => {
 
   return (
     <div className="mt-6 space-y-4">
-      <h3 className="text-lg font-semibold text-slate-200 mb-4 flex items-center gap-2">
-        <Building2 className="w-5 h-5" />
+      <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2 px-6">
         Subcontractor Labor ({subcontractors.length})
       </h3>
 
       {subcontractorTotals.map((sub) => (
         <Card key={sub.id} className="p-4">
           {/* Subcontractor Header */}
-          <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-700">
+          <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
             <div>
-              <h4 className="text-base font-semibold text-slate-200">{sub.name}</h4>
-              <p className="text-sm text-slate-400 mt-1">
+              <h4 className="text-base font-semibold text-foreground">{sub.name}</h4>
+              <p className="text-sm text-muted-foreground mt-1">
                 {sub.positions.length} position{sub.positions.length !== 1 ? 's' : ''}
                 {' • '}
                 Total: ${sub.grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
@@ -86,7 +84,7 @@ export const SubcontractorSection = () => {
                   deleteSubcontractor(sub.id);
                 }
               }}
-              className="text-red-400 hover:text-red-300 hover:border-red-400"
+              className="text-muted-foreground hover:text-red-600 hover:bg-red-50 hover:border-red-200"
             >
               <Trash2 className="w-4 h-4" />
             </Button>
@@ -96,7 +94,7 @@ export const SubcontractorSection = () => {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="text-left text-xs text-slate-400 border-b border-slate-800">
+                <tr className="text-left text-xs text-muted-foreground border-b border-border">
                   <th className="pb-2 pr-4 font-medium">Labor Category</th>
                   <th className="pb-2 pr-4 font-medium text-right">Rate ($/hr)</th>
                   {Array.from({ length: totalYears }, (_, i) => i + 1).map((year) => (
@@ -112,10 +110,10 @@ export const SubcontractorSection = () => {
                 {sub.positionTotals.map((pos, idx) => (
                   <tr
                     key={idx}
-                    className="text-sm text-slate-200 border-b border-slate-800/50 last:border-0"
+                    className="text-sm text-foreground border-b border-border last:border-0"
                   >
                     <td className="py-3 pr-4">{pos.labor_category}</td>
-                    <td className="py-3 pr-4 text-right text-emerald-400 font-semibold">
+                    <td className="py-3 pr-4 text-right text-emerald-600 font-semibold">
                       ${pos.rate.toFixed(2)}
                     </td>
                     {Array.from({ length: totalYears }, (_, i) => (i + 1).toString()).map(
@@ -128,7 +126,7 @@ export const SubcontractorSection = () => {
                     <td className="py-3 pr-4 text-right font-semibold">
                       {pos.totalHours.toLocaleString('en-US')}
                     </td>
-                    <td className="py-3 text-right font-bold text-purple-400">
+                    <td className="py-3 text-right font-bold text-purple-600">
                       ${pos.totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                     </td>
                   </tr>
@@ -136,14 +134,14 @@ export const SubcontractorSection = () => {
               </tbody>
               {/* Subtotal Row */}
               <tfoot>
-                <tr className="text-sm font-bold text-slate-100 border-t-2 border-slate-700">
+                <tr className="text-sm font-bold text-foreground border-t-2 border-border">
                   <td colSpan={totalYears + 2} className="py-3 pr-4 text-right">
                     Subtotal ({sub.name}):
                   </td>
                   <td className="py-3 pr-4 text-right">
                     {sub.positionTotals.reduce((sum, p) => sum + p.totalHours, 0).toLocaleString('en-US')}
                   </td>
-                  <td className="py-3 text-right text-purple-500">
+                  <td className="py-3 text-right text-purple-600">
                     ${sub.grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </td>
                 </tr>
@@ -155,12 +153,12 @@ export const SubcontractorSection = () => {
 
       {/* Grand Total for All Subcontractors */}
       {subcontractorTotals.length > 1 && (
-        <Card className="p-4 bg-purple-500/5 border-purple-500/20">
+        <Card className="p-4 bg-purple-50 border-purple-200">
           <div className="flex items-center justify-between">
-            <span className="text-base font-semibold text-slate-200">
+            <span className="text-base font-semibold text-foreground">
               Total Subcontractor Cost
             </span>
-            <span className="text-xl font-bold text-purple-400">
+            <span className="text-xl font-bold text-purple-600">
               $
               {subcontractorTotals
                 .reduce((sum, sub) => sum + sub.grandTotal, 0)

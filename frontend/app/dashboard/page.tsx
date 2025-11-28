@@ -40,13 +40,13 @@ export default function DashboardPage() {
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'completed':
-        return <CheckCircle className="w-5 h-5 text-emerald-400" />;
+        return <CheckCircle className="w-5 h-5 text-emerald-500" />;
       case 'processing':
-        return <Clock className="w-5 h-5 text-sky-400 animate-pulse" />;
+        return <Clock className="w-5 h-5 text-blue-500 animate-pulse" />;
       case 'error':
-        return <AlertCircle className="w-5 h-5 text-red-400" />;
+        return <AlertCircle className="w-5 h-5 text-red-500" />;
       default:
-        return <FileText className="w-5 h-5 text-slate-400" />;
+        return <FileText className="w-5 h-5 text-muted-foreground" />;
     }
   };
 
@@ -54,25 +54,25 @@ export default function DashboardPage() {
     switch (status) {
       case 'completed':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
             Completed
           </span>
         );
       case 'processing':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-sky-500/10 text-sky-400 border border-sky-500/20">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
             Processing
           </span>
         );
       case 'error':
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-500/10 text-red-400 border border-red-500/20">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
             Error
           </span>
         );
       default:
         return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-500/10 text-slate-400 border border-slate-500/20">
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
             Draft
           </span>
         );
@@ -137,15 +137,15 @@ export default function DashboardPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-8">
+      <div className="space-y-8 max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-slate-50 mb-2">Dashboard</h1>
-            <p className="text-slate-400">Welcome back, here's what's happening with your proposals.</p>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Dashboard</h1>
+            <p className="text-muted-foreground">Welcome back, here's what's happening with your proposals.</p>
           </div>
           <Link href="/dashboard/upload">
-            <Button variant="primary" className="shadow-lg shadow-sky-500/20">
+            <Button variant="primary" className="shadow-md shadow-primary/10">
               <Plus className="w-4 h-4 mr-2" />
               New Proposal
             </Button>
@@ -154,46 +154,46 @@ export default function DashboardPage() {
 
         {/* Stats */}
         <div className="grid md:grid-cols-3 gap-6">
-          <Card className="glass-hover">
+          <Card className="hover-card">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="h-10 w-10 rounded-lg bg-slate-800/50 flex items-center justify-center">
-                  <FileText className="w-5 h-5 text-slate-400" />
+                <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                  <FileText className="w-5 h-5 text-muted-foreground" />
                 </div>
-                <span className="text-xs font-medium text-slate-500 bg-slate-800/30 px-2 py-1 rounded-full">Total</span>
+                <span className="text-xs font-medium text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">Total</span>
               </div>
-              <p className="text-3xl font-bold text-slate-50 mb-1">{proposals.length}</p>
-              <p className="text-sm text-slate-400">Active proposals</p>
+              <p className="text-3xl font-bold text-foreground mb-1">{proposals.length}</p>
+              <p className="text-sm text-muted-foreground">Active proposals</p>
             </CardContent>
           </Card>
 
-          <Card className="glass-hover">
+          <Card className="hover-card">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="h-10 w-10 rounded-lg bg-emerald-500/10 flex items-center justify-center">
-                  <CheckCircle className="w-5 h-5 text-emerald-400" />
+                <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                  <CheckCircle className="w-5 h-5 text-emerald-600" />
                 </div>
-                <span className="text-xs font-medium text-emerald-500/80 bg-emerald-500/10 px-2 py-1 rounded-full">Completed</span>
+                <span className="text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">Completed</span>
               </div>
-              <p className="text-3xl font-bold text-slate-50 mb-1">
+              <p className="text-3xl font-bold text-foreground mb-1">
                 {proposals.filter((p) => p.status === 'completed').length}
               </p>
-              <p className="text-sm text-slate-400">Ready for review</p>
+              <p className="text-sm text-muted-foreground">Ready for review</p>
             </CardContent>
           </Card>
 
-          <Card className="glass-hover">
+          <Card className="hover-card">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-4">
-                <div className="h-10 w-10 rounded-lg bg-sky-500/10 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-sky-400" />
+                <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                  <Clock className="w-5 h-5 text-blue-600" />
                 </div>
-                <span className="text-xs font-medium text-sky-500/80 bg-sky-500/10 px-2 py-1 rounded-full">In Progress</span>
+                <span className="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded-full">In Progress</span>
               </div>
-              <p className="text-3xl font-bold text-slate-50 mb-1">
+              <p className="text-3xl font-bold text-foreground mb-1">
                 {proposals.filter((p) => p.status === 'processing').length}
               </p>
-              <p className="text-sm text-slate-400">Processing now</p>
+              <p className="text-sm text-muted-foreground">Processing now</p>
             </CardContent>
           </Card>
         </div>
@@ -201,7 +201,7 @@ export default function DashboardPage() {
         {/* Recent Proposals */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold text-slate-50">Recent Proposals</h2>
+            <h2 className="text-xl font-semibold text-foreground">Recent Proposals</h2>
             <div className="flex items-center space-x-2">
               <Button variant="ghost" size="sm">
                 <Filter className="w-4 h-4 mr-2" />
@@ -210,20 +210,20 @@ export default function DashboardPage() {
             </div>
           </div>
 
-          <Card className="overflow-hidden border-0 bg-slate-900/40">
+          <Card className="overflow-hidden border border-border bg-card">
             <CardContent className="p-0">
               {isLoading ? (
-                <div className="text-center py-12 text-slate-400">
-                  <Clock className="w-8 h-8 mx-auto mb-4 animate-pulse text-slate-600" />
+                <div className="text-center py-12 text-muted-foreground">
+                  <Clock className="w-8 h-8 mx-auto mb-4 animate-pulse text-muted-foreground/50" />
                   Loading proposals...
                 </div>
               ) : proposals.length === 0 ? (
                 <div className="text-center py-16">
-                  <div className="h-16 w-16 bg-slate-800/50 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <FileText className="w-8 h-8 text-slate-600" />
+                  <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+                    <FileText className="w-8 h-8 text-muted-foreground" />
                   </div>
-                  <h3 className="text-lg font-medium text-slate-50 mb-2">No proposals yet</h3>
-                  <p className="text-slate-400 mb-6 max-w-sm mx-auto">
+                  <h3 className="text-lg font-medium text-foreground mb-2">No proposals yet</h3>
+                  <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
                     Get started by creating your first pricing proposal. It only takes a few minutes.
                   </p>
                   <Link href="/dashboard/upload">
@@ -234,23 +234,23 @@ export default function DashboardPage() {
                   </Link>
                 </div>
               ) : (
-                <div className="divide-y divide-slate-800/50">
+                <div className="divide-y divide-border">
                   {proposals.slice(0, 10).map((proposal) => (
                     <div
                       key={proposal.id}
                       onClick={() => router.push(`/proposals/${proposal.id}`)}
-                      className="group flex items-center justify-between p-4 hover:bg-slate-800/30 transition-all duration-200 cursor-pointer"
+                      className="group flex items-center justify-between p-4 hover:bg-muted/50 transition-all duration-200 cursor-pointer"
                     >
                       <div className="flex items-center space-x-4 flex-1 min-w-0">
-                        <div className="h-10 w-10 rounded-lg bg-slate-800/50 flex items-center justify-center group-hover:bg-slate-800 transition-colors">
+                        <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center group-hover:bg-muted/80 transition-colors">
                           {getStatusIcon(proposal.status)}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-slate-50 truncate group-hover:text-sky-400 transition-colors">
+                          <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
                             {proposal.name}
                           </p>
                           {proposal.solicitation_number && (
-                            <p className="text-xs text-slate-500 truncate">
+                            <p className="text-xs text-muted-foreground truncate">
                               {proposal.solicitation_number}
                             </p>
                           )}
@@ -259,12 +259,12 @@ export default function DashboardPage() {
                       
                       <div className="flex items-center space-x-6">
                         <div className="hidden sm:block text-right">
-                          <p className="text-xs text-slate-500 mb-1">Status</p>
+                          <p className="text-xs text-muted-foreground mb-1">Status</p>
                           {getStatusBadge(proposal.status)}
                         </div>
                         <div className="text-right min-w-[80px]">
-                          <p className="text-xs text-slate-500 mb-1">Created</p>
-                          <p className="text-sm text-slate-400">
+                          <p className="text-xs text-muted-foreground mb-1">Created</p>
+                          <p className="text-sm text-muted-foreground">
                             {formatDate(proposal.created_at)}
                           </p>
                         </div>
@@ -273,20 +273,20 @@ export default function DashboardPage() {
                             onClick={(e) =>
                               handleDuplicateClick(proposal.id, proposal.name, e)
                             }
-                            className="p-2 text-slate-400 hover:text-slate-50 hover:bg-slate-700/50 rounded-lg transition-colors"
+                            className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
                             title="Duplicate"
                           >
                             <Copy className="w-4 h-4" />
                           </button>
                           <button
                             onClick={(e) => handleDeleteClick(proposal.id, e)}
-                            className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+                            className="p-2 text-muted-foreground hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                             title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
-                        <MoreVertical className="w-4 h-4 text-slate-600 sm:hidden" />
+                        <MoreVertical className="w-4 h-4 text-muted-foreground sm:hidden" />
                       </div>
                     </div>
                   ))}
@@ -335,7 +335,7 @@ export default function DashboardPage() {
         }
       >
         <div className="space-y-4">
-          <p className="text-sm text-slate-400">
+          <p className="text-sm text-muted-foreground">
             Create a copy of &ldquo;{proposalToDuplicate?.name}&rdquo;
           </p>
           <Input

@@ -134,7 +134,7 @@ export const PositionsGrid = () => {
       {
         key: 'labor_category',
         name: 'Labor Category',
-        width: 200,
+        width: 280, // Wider for better readability
         resizable: true,
         editable: true,
       },
@@ -172,7 +172,7 @@ export const PositionsGrid = () => {
         resizable: true,
         renderCell: ({ row }) => (
           <div className="flex items-center h-full px-2">
-            <span className="text-slate-400 text-xs">{row.soc_code || '-'}</span>
+            <span className="text-muted-foreground text-xs">{row.soc_code || '-'}</span>
           </div>
         ),
       },
@@ -184,7 +184,7 @@ export const PositionsGrid = () => {
         resizable: true,
         renderCell: ({ row }) => (
           <div className="flex items-center h-full px-2">
-            <span className="text-slate-400 text-xs">{row.soc_title || '-'}</span>
+            <span className="text-muted-foreground text-xs">{row.soc_title || '-'}</span>
           </div>
         ),
       },
@@ -197,7 +197,7 @@ export const PositionsGrid = () => {
         editable: true,
         renderEditCell: (props: RenderEditCellProps<SpreadsheetPosition>) => (
           <select
-            className="w-full h-full px-2 bg-slate-950 text-slate-50 outline-none cursor-pointer font-semibold"
+            className="w-full h-full px-2 bg-transparent text-foreground outline-none cursor-pointer font-medium"
             value={props.row.percentile}
             onChange={(e) => {
               props.onRowChange({
@@ -217,8 +217,8 @@ export const PositionsGrid = () => {
         ),
         renderCell: ({ row }) => (
           <div className="flex items-center h-full px-2">
-            <span className="font-semibold">{row.percentile}</span>
-            <span className="ml-2 text-xs text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded">
+            <span className="font-medium text-sm">{row.percentile}</span>
+            <span className="ml-2 text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded border border-border">
               ${(row[`wage_${row.percentile}`] || 0).toLocaleString()}
             </span>
           </div>
@@ -236,7 +236,7 @@ export const PositionsGrid = () => {
           return (
             <input
               type="number"
-              className="w-full h-full px-2 bg-slate-950 text-slate-50 outline-none"
+              className="w-full h-full px-2 bg-transparent text-foreground outline-none text-right font-mono"
               value={(props.row[wageKey] as number) || 0}
               onChange={(e) => {
                 props.onRowChange({
@@ -251,7 +251,7 @@ export const PositionsGrid = () => {
         },
         renderCell: ({ row }) => (
           <div className="flex items-center justify-end h-full px-2">
-            <span>${(row[`wage_${row.percentile}`] || 0).toLocaleString()}</span>
+            <span className="font-mono">${(row[`wage_${row.percentile}`] || 0).toLocaleString()}</span>
           </div>
         ),
       },
@@ -269,7 +269,7 @@ export const PositionsGrid = () => {
         renderEditCell: (props: RenderEditCellProps<SpreadsheetPosition>) => (
           <input
             type="number"
-            className="w-full h-full px-2 bg-slate-950 text-slate-50 outline-none"
+            className="w-full h-full px-2 bg-transparent text-foreground outline-none text-right font-mono"
             value={props.row.hours_per_year[yearStr] || 0}
             onChange={(e) => {
               const newHours = { ...props.row.hours_per_year };
@@ -285,7 +285,7 @@ export const PositionsGrid = () => {
         ),
         renderCell: ({ row }) => (
           <div className="flex items-center justify-end h-full px-2">
-            <span>
+            <span className="font-mono">
               {(row.hours_per_year[yearStr] || 0).toLocaleString('en-US')}
             </span>
           </div>
@@ -303,8 +303,8 @@ export const PositionsGrid = () => {
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
           return (
-            <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
-              <span className="text-purple-400 font-semibold">${calc.dlRate.toFixed(2)}</span>
+            <div className="flex items-center justify-end h-full px-2">
+              <span className="text-muted-foreground font-mono text-xs">${calc.dlRate.toFixed(2)}</span>
             </div>
           );
         },
@@ -317,8 +317,8 @@ export const PositionsGrid = () => {
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
           return (
-            <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
-              <span className="text-purple-400 font-semibold">${calc.fringe.toFixed(2)}</span>
+            <div className="flex items-center justify-end h-full px-2">
+              <span className="text-muted-foreground font-mono text-xs">${calc.fringe.toFixed(2)}</span>
             </div>
           );
         },
@@ -331,8 +331,8 @@ export const PositionsGrid = () => {
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
           return (
-            <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
-              <span className="text-purple-400 font-semibold">${calc.oh.toFixed(2)}</span>
+            <div className="flex items-center justify-end h-full px-2">
+              <span className="text-muted-foreground font-mono text-xs">${calc.oh.toFixed(2)}</span>
             </div>
           );
         },
@@ -345,8 +345,8 @@ export const PositionsGrid = () => {
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
           return (
-            <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
-              <span className="text-purple-400 font-semibold">${calc.ga.toFixed(2)}</span>
+            <div className="flex items-center justify-end h-full px-2">
+              <span className="text-muted-foreground font-mono text-xs">${calc.ga.toFixed(2)}</span>
             </div>
           );
         },
@@ -359,8 +359,8 @@ export const PositionsGrid = () => {
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
           return (
-            <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
-              <span className="text-purple-400 font-semibold">${calc.fee.toFixed(2)}</span>
+            <div className="flex items-center justify-end h-full px-2">
+              <span className="text-muted-foreground font-mono text-xs">${calc.fee.toFixed(2)}</span>
             </div>
           );
         },
@@ -373,8 +373,8 @@ export const PositionsGrid = () => {
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
           return (
-            <div className="flex items-center justify-end h-full px-2 bg-emerald-500/10">
-              <span className="text-emerald-400 font-bold text-base">${calc.fblr.toFixed(2)}</span>
+            <div className="flex items-center justify-end h-full px-2">
+              <span className="text-emerald-600 font-bold font-mono">${calc.fblr.toFixed(2)}</span>
             </div>
           );
         },
@@ -395,7 +395,7 @@ export const PositionsGrid = () => {
                 deletePosition(row.id);
               }
             }}
-            className="text-slate-400 hover:text-red-400 transition-colors p-1"
+            className="text-muted-foreground hover:text-red-600 transition-colors p-1"
             title="Delete position"
           >
             <Trash2 className="w-4 h-4" />
@@ -409,10 +409,10 @@ export const PositionsGrid = () => {
 
   if (positions.length === 0) {
     return (
-      <div className="flex items-center justify-center h-64 bg-slate-900/30 rounded-lg border border-slate-800">
+      <div className="flex items-center justify-center h-64 bg-muted/30 rounded-lg border border-border">
         <div className="text-center">
-          <p className="text-slate-400 mb-2">No positions yet</p>
-          <p className="text-sm text-slate-500">Click "Add Position" to get started</p>
+          <p className="text-muted-foreground mb-2">No positions yet</p>
+          <p className="text-sm text-muted-foreground">Click "Add Position" to get started</p>
         </div>
       </div>
     );
@@ -438,9 +438,9 @@ export const PositionsGrid = () => {
           rows={positions}
           onRowsChange={handleRowsChange}
           rowKeyGetter={(row) => row.id}
-          className="rdg-light"
+          className="rdg-light rdg-premium"
           style={{ height: '100%' }}
-          rowHeight={45}
+          rowHeight={52}
         />
       </div>
 

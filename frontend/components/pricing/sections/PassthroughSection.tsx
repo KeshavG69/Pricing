@@ -106,7 +106,7 @@ export const PassthroughSection = ({
         frozen: true,
         renderCell: ({ row }) => (
           <div className="flex items-center h-full px-2">
-            <span className={`font-semibold ${row.type === 'total' ? 'text-blue-400' : 'text-slate-50'}`}>
+            <span className={`font-semibold ${row.type === 'total' ? 'text-blue-600' : 'text-foreground'}`}>
               {row.label}
             </span>
           </div>
@@ -120,7 +120,7 @@ export const PassthroughSection = ({
         resizable: true,
         renderCell: ({ row }) => (
           <div className="flex items-center justify-center h-full px-2">
-            <span className={`text-xs ${row.type === 'total' ? 'text-blue-400 font-semibold' : 'text-slate-400'}`}>
+            <span className={`text-xs ${row.type === 'total' ? 'text-blue-600 font-semibold' : 'text-muted-foreground'}`}>
               {formatPercentage(row.rate)}
             </span>
           </div>
@@ -157,7 +157,7 @@ export const PassthroughSection = ({
 
           return (
             <div className={`flex items-center justify-end h-full px-2 ${row.type === 'total' ? 'bg-blue-500/10' : ''}`}>
-              <span className={row.type === 'total' ? 'text-blue-400 font-bold' : 'text-purple-400 font-semibold'}>
+              <span className={row.type === 'total' ? 'text-blue-600 font-bold' : 'text-purple-600 font-semibold'}>
                 {formatCurrency(value)}
               </span>
             </div>
@@ -189,7 +189,7 @@ export const PassthroughSection = ({
 
         return (
           <div className={`flex items-center justify-end h-full px-2 ${row.type === 'total' ? 'bg-blue-500/10' : ''}`}>
-            <span className={row.type === 'total' ? 'text-blue-400 font-bold text-lg' : 'text-purple-400 font-semibold'}>
+            <span className={row.type === 'total' ? 'text-blue-600 font-bold text-lg' : 'text-purple-600 font-semibold'}>
               {formatCurrency(value)}
             </span>
           </div>
@@ -208,14 +208,14 @@ export const PassthroughSection = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-50">Prime Contractor Passthrough</h3>
-        <p className="text-sm text-slate-400">
+      <div className="flex items-center justify-between px-6">
+        <h3 className="text-lg font-semibold text-foreground">Prime Contractor Passthrough</h3>
+        <p className="text-sm text-muted-foreground">
           Management overhead on subcontractor labor (not including fee)
         </p>
       </div>
 
-      <div className="h-[200px] overflow-auto border border-slate-800 rounded-lg">
+      <div className="h-[200px] overflow-auto border border-border rounded-lg">
         <DataGrid
           columns={columns}
           rows={rows}

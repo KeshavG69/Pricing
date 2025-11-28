@@ -8,10 +8,10 @@ import { usePricingStore } from '@/lib/stores/pricingStore';
 import { proposalsApi } from '@/lib/api/proposals';
 import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
-import PricingSidebar from '@/components/pricing/PricingSidebar';
+import Input from '@/components/ui/Input';
 import PositionsGrid from '@/components/pricing/PositionsGrid';
 import AdvancedAnalysisGrid from '@/components/pricing/AdvancedAnalysisGrid';
-import { Loader2, CheckCircle, AlertCircle, ArrowLeft, Plus } from 'lucide-react';
+import { Loader2, CheckCircle, AlertCircle, ArrowLeft, Plus, Download, Pencil, Check, X } from 'lucide-react';
 
 export default function ProposalPage() {
   const params = useParams();
@@ -29,10 +29,14 @@ export default function ProposalPage() {
     enableAdvancedMode,
     transformToAdvanced,
     advancedMode,
+    exportToExcel,
   } = usePricingStore();
   const [pollingStatus, setPollingStatus] = useState<any>(null);
   const [isPolling, setIsPolling] = useState(false);
   const [pricingLoaded, setPricingLoaded] = useState(false);
+  const [isEditingSolicitation, setIsEditingSolicitation] = useState(false);
+  const [editedSolicitation, setEditedSolicitation] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     if (proposalId) {
@@ -100,11 +104,38 @@ export default function ProposalPage() {
     };
   }, [currentProposal?.status, proposalId, fetchProposal]);
 
+  const handleSaveSolicitation = async () => {
+    if (!currentProposal) return;
+
+    setIsSaving(true);
+    try {
+      await proposalsApi.update(currentProposal.id, {
+        solicitation_number: editedSolicitation.trim() || undefined
+      });
+      await fetchProposal(proposalId);
+      setIsEditingSolicitation(false);
+    } catch (error) {
+      console.error('Failed to update solicitation number:', error);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setIsEditingSolicitation(false);
+    setEditedSolicitation(currentProposal?.solicitation_number || '');
+  };
+
+  const handleStartEdit = () => {
+    setEditedSolicitation(currentProposal?.solicitation_number || '');
+    setIsEditingSolicitation(true);
+  };
+
   if (isLoading || !currentProposal) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-screen">
-          <Loader2 className="w-8 h-8 text-slate-400 animate-spin" />
+          <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
         </div>
       </DashboardLayout>
     );
@@ -117,18 +148,18 @@ export default function ProposalPage() {
       </CardHeader>
       <CardContent>
         <div className="text-center py-12">
-          <Loader2 className="w-16 h-16 text-sky-400 animate-spin mx-auto mb-4" />
-          <p className="text-lg text-slate-50 mb-2">
+          <Loader2 className="w-16 h-16 text-primary animate-spin mx-auto mb-4" />
+          <p className="text-lg text-foreground mb-2">
             {pollingStatus?.message || 'Processing your documents...'}
           </p>
           <div className="w-full max-w-md mx-auto mt-6">
-            <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
+            <div className="h-2 bg-muted rounded-full overflow-hidden">
               <div
-                className="h-full bg-sky-500 transition-all duration-500"
+                className="h-full bg-primary transition-all duration-500"
                 style={{ width: `${pollingStatus?.progress || 0}%` }}
               />
             </div>
-            <p className="text-sm text-slate-400 mt-2">
+            <p className="text-sm text-muted-foreground mt-2">
               {pollingStatus?.progress || 0}% complete
             </p>
           </div>
@@ -140,13 +171,13 @@ export default function ProposalPage() {
   const renderErrorView = () => (
     <Card>
       <CardHeader>
-        <CardTitle className="text-red-400">Processing Error</CardTitle>
+        <CardTitle className="text-red-600">Processing Error</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="text-center py-12">
-          <AlertCircle className="w-16 h-16 text-red-400 mx-auto mb-4" />
-          <p className="text-lg text-slate-50 mb-2">Failed to process documents</p>
-          <p className="text-sm text-slate-400 mb-6">
+          <AlertCircle className="w-16 h-16 text-red-600 mx-auto mb-4" />
+          <p className="text-lg text-foreground mb-2">Failed to process documents</p>
+          <p className="text-sm text-muted-foreground mb-6">
             {currentProposal.message || 'An error occurred during processing'}
           </p>
           <div className="flex items-center justify-center space-x-4">
@@ -193,14 +224,14 @@ export default function ProposalPage() {
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className="h-12 w-12 rounded-full bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-                <CheckCircle className="w-6 h-6 text-emerald-400" />
+              <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                <CheckCircle className="w-6 h-6 text-emerald-600" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-slate-50 mb-1">
+                <h3 className="text-lg font-semibold text-foreground mb-1">
                   Processing Complete!
                 </h3>
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-muted-foreground">
                   {currentProposal.metadata?.total_jobs || 0} job positions extracted - view and edit data below
                 </p>
               </div>
@@ -217,12 +248,12 @@ export default function ProposalPage() {
                     Calculating...
                   </>
                 ) : (
-                  '🚀 Advanced Analysis'
+                  'Advanced Analysis'
                 )}
               </Button>
             )}
             {advancedMode && (
-              <div className="text-sm text-emerald-400 font-semibold">
+              <div className="text-sm text-emerald-600 font-semibold">
                 ✓ Advanced Mode Active
               </div>
             )}
@@ -231,40 +262,30 @@ export default function ProposalPage() {
       </Card>
 
       {/* Pricing Workspace */}
-      <div className="flex gap-6">
-        {/* Left: Spreadsheet (70%) */}
-        <div className="flex-1">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>
-                  {advancedMode ? 'Cost Proposal Spreadsheet' : 'Job Positions & Pricing'}
-                </CardTitle>
-                {!advancedMode && (
-                  <Button variant="outline" size="sm" onClick={handleAddPosition}>
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Position
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className={advancedMode ? 'h-[800px] overflow-y-auto' : 'h-[600px]'}>
-                {advancedMode ? (
-                  <AdvancedAnalysisGrid />
-                ) : (
-                  <PositionsGrid />
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Right: Sidebar (30%) */}
-        <div className="w-96">
-          <PricingSidebar />
-        </div>
-      </div>
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <CardTitle>
+              {advancedMode ? 'Cost Proposal Spreadsheet' : 'Job Positions & Pricing'}
+            </CardTitle>
+            {!advancedMode && (
+              <Button variant="outline" size="sm" onClick={handleAddPosition}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Position
+              </Button>
+            )}
+          </div>
+        </CardHeader>
+        <CardContent className="pl-0">
+          <div className={advancedMode ? 'h-[800px] overflow-y-auto' : 'h-[600px]'}>
+            {advancedMode ? (
+              <AdvancedAnalysisGrid />
+            ) : (
+              <PositionsGrid />
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Back button */}
       <div>
@@ -278,14 +299,67 @@ export default function ProposalPage() {
 
   return (
     <DashboardLayout>
-      <div className="p-8 max-w-[1800px] mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-slate-50 mb-2">
-            {currentProposal.name}
-          </h1>
-          <p className="text-slate-400">
-            {currentProposal.solicitation_number || 'No solicitation number'}
-          </p>
+      <div className="max-w-[1800px] mx-auto">
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-semibold text-foreground mb-2">
+              {currentProposal.name}
+            </h1>
+            {/* Solicitation Number with Inline Edit */}
+            <div className="flex items-center gap-2">
+              {!isEditingSolicitation ? (
+                <>
+                  <p className="text-muted-foreground">
+                    {currentProposal.solicitation_number || 'No solicitation number'}
+                  </p>
+                  <button
+                    onClick={handleStartEdit}
+                    className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                    title="Edit solicitation number"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                </>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="text"
+                    value={editedSolicitation}
+                    onChange={(e) => setEditedSolicitation(e.target.value)}
+                    placeholder="Enter solicitation number"
+                    className="w-64"
+                    autoFocus
+                  />
+                  <button
+                    onClick={handleSaveSolicitation}
+                    disabled={isSaving}
+                    className="p-1 text-green-600 hover:text-green-700 disabled:opacity-50"
+                    title="Save"
+                  >
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  </button>
+                  <button
+                    onClick={handleCancelEdit}
+                    disabled={isSaving}
+                    className="p-1 text-red-600 hover:text-red-700 disabled:opacity-50"
+                    title="Cancel"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+          {currentProposal.status === 'completed' && (
+            <Button
+              variant="outline"
+              onClick={exportToExcel}
+              disabled={isRecalculating}
+            >
+              <Download className="w-4 h-4 mr-2" />
+              Export to Excel
+            </Button>
+          )}
         </div>
 
         {currentProposal.status === 'processing' && renderProcessingView()}

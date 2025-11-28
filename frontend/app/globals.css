@@ -2,35 +2,46 @@
 @import "tailwindcss";
 
 :root {
-  /* Core Palette - Deep Space Theme */
-  --background: #020617; /* Slate 950 */
-  --foreground: #f8fafc; /* Slate 50 */
+  /* Professional B2B Palette - Slate/Zinc based */
+  --background: #ffffff;
+  --foreground: #0f172a; /* Slate 900 */
+  
+  /* Primary Brand Color - Deep Blue/Indigo */
+  --primary: #2563eb; /* Blue 600 */
+  --primary-foreground: #ffffff;
+  
+  /* Secondary/Muted */
+  --secondary: #f1f5f9; /* Slate 100 */
+  --secondary-foreground: #0f172a; /* Slate 900 */
   
   /* Accents */
-  --primary: #38bdf8; /* Sky 400 */
-  --primary-foreground: #0f172a; /* Slate 900 */
-  --secondary: #1e293b; /* Slate 800 */
-  --secondary-foreground: #f1f5f9; /* Slate 100 */
-  --accent: #10b981; /* Emerald 500 */
-  --accent-foreground: #ffffff;
+  --accent: #f8fafc; /* Slate 50 */
+  --accent-foreground: #0f172a;
   
   /* UI Elements */
-  --card: rgba(15, 23, 42, 0.6); /* Slate 900 with opacity */
-  --card-foreground: #f8fafc;
-  --popover: #0f172a;
-  --popover-foreground: #f8fafc;
-  --muted: #334155; /* Slate 700 */
-  --muted-foreground: #94a3b8; /* Slate 400 */
-  --border: #1e293b; /* Slate 800 */
-  --input: #1e293b;
-  --ring: #38bdf8;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
   
-  /* Status */
-  --success: #10b981;
-  --warning: #f59e0b;
-  --error: #ef4444;
-  --info: #3b82f6;
+  --muted: #f1f5f9; /* Slate 100 */
+  --muted-foreground: #64748b; /* Slate 500 */
+  
+  --border: #e2e8f0; /* Slate 200 */
+  --input: #e2e8f0;
+  --ring: #2563eb; /* Blue 600 */
+  
+  /* Status Colors */
+  --success: #10b981; /* Emerald 500 */
+  --warning: #f59e0b; /* Amber 500 */
+  --error: #ef4444; /* Red 500 */
+  --info: #3b82f6; /* Blue 500 */
+
+  /* Radius */
+  --radius: 0.5rem;
 }
+
+
 
 @theme inline {
   --color-background: var(--background);
@@ -51,10 +62,14 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
   
+  --radius-sm: calc(var(--radius) - 2px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  
   --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
   
-  --animate-fade-in: fade-in 0.5s ease-out;
-  --animate-slide-up: slide-up 0.5s ease-out;
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-slide-up: slide-up 0.4s ease-out;
   
   @keyframes fade-in {
     from { opacity: 0; }
@@ -62,7 +77,7 @@
   }
   
   @keyframes slide-up {
-    from { transform: translateY(20px); opacity: 0; }
+    from { transform: translateY(10px); opacity: 0; }
     to { transform: translateY(0); opacity: 1; }
   }
 }
@@ -70,12 +85,10 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  font-family: var(--font-sans);
   min-height: 100vh;
-  background-image: 
-    radial-gradient(circle at 50% 0%, rgba(56, 189, 248, 0.1) 0%, transparent 50%),
-    radial-gradient(circle at 100% 0%, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
-  background-attachment: fixed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @layer utilities {
@@ -83,61 +96,85 @@ body {
     text-wrap: balance;
   }
   
-  .glass {
-    background: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border: 1px solid rgba(255, 255, 255, 0.08);
+  /* Professional Card Hover Effect */
+  .hover-card {
+    transition: all 0.2s ease;
   }
-  
-  .glass-hover {
-    transition: all 0.3s ease;
-  }
-  
-  .glass-hover:hover {
-    background: rgba(30, 41, 59, 0.7);
-    border-color: rgba(255, 255, 255, 0.15);
+  .hover-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
-  }
-  
-  .text-gradient {
-    background: linear-gradient(to right, #38bdf8, #818cf8);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
   }
 }
 
-/* react-data-grid dark theme override */
+/* react-data-grid overrides for professional look */
+/* react-data-grid overrides for professional look */
 .rdg {
-  --rdg-background-color: transparent;
-  --rdg-header-background-color: rgba(15, 23, 42, 0.8);
-  --rdg-row-hover-background-color: rgba(56, 189, 248, 0.1);
-  --rdg-row-selected-background-color: rgba(56, 189, 248, 0.15);
-  --rdg-border-color: var(--border);
+  --rdg-background-color: var(--background);
+  --rdg-header-background-color: var(--background);
+  --rdg-row-hover-background-color: var(--accent);
+  --rdg-row-selected-background-color: var(--accent);
+  --rdg-border-color: transparent;
   --rdg-color: var(--foreground);
-  --rdg-cell-frozen-background-color: rgb(15 23 42);
+  --rdg-cell-frozen-background-color: var(--background);
   --rdg-selection-color: var(--primary);
   
   border: none;
+  border-radius: 0;
   font-size: 0.875rem;
+  font-family: var(--font-sans);
+}
+
+/* Premium Grid Polish */
+.rdg-premium {
+  --rdg-header-background-color: #fafafa; /* Very subtle gray for header */
+  --rdg-row-hover-background-color: #f8fafc; /* Slate 50 */
 }
 
 .rdg-cell {
-  padding: 0 12px;
-  border-right: 1px solid var(--border);
+  padding: 0 24px; /* More breathing room */
+  border-right: none;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+}
+
+/* Add a subtle separator for frozen columns */
+.rdg-cell-frozen-last {
+  box-shadow: 4px 0 24px -12px rgba(0, 0, 0, 0.1); /* Soft shadow instead of border */
+  border-right: none;
+}
+
+.rdg-header-row {
+  background-color: var(--background);
+  border-bottom: 1px solid var(--border);
 }
 
 .rdg-header-cell {
   font-weight: 600;
-  font-size: 0.75rem;
+  font-size: 0.7rem; /* Slightly smaller */
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em; /* Wider tracking */
   color: var(--muted-foreground);
+  border-right: none;
   border-bottom: 1px solid var(--border);
+  background-color: var(--background);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
 }
 
 .rdg-row {
+  background-color: var(--background);
   border-bottom: 1px solid var(--border);
+  transition: background-color 0.15s ease; /* Smooth hover */
 }
+
+.rdg-row:hover {
+  background-color: var(--accent);
+}
+
+/* Monospace font for numbers */
+.rdg-cell[aria-colindex] {
+  font-variant-numeric: tabular-nums;
+}
+

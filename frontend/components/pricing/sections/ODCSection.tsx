@@ -105,7 +105,7 @@ export const ODCSection = ({
           <div className="flex items-center h-full px-2">
             <span
               className={`font-semibold ${
-                row.type === 'total' ? 'text-orange-400 text-lg' : 'text-slate-50'
+                row.type === 'total' ? 'text-orange-600 text-lg' : 'text-foreground'
               }`}
             >
               {row.category}
@@ -125,17 +125,17 @@ export const ODCSection = ({
           return (
             <div className="flex items-center h-full px-2">
               <div className="flex flex-col gap-1">
-                <span className="text-sm text-slate-300">
+                <span className="text-sm text-muted-foreground">
                   {row.description || '-'}
                 </span>
-                <div className="flex items-center gap-2 text-xs text-slate-500">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
                   {row.escalate && (
-                    <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded">
+                    <span className="px-2 py-0.5 bg-blue-50 text-blue-600 rounded border border-blue-100">
                       Escalate
                     </span>
                   )}
                   {row.applyGAAdder && (
-                    <span className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded">
+                    <span className="px-2 py-0.5 bg-green-50 text-green-600 rounded border border-green-100">
                       +G&amp;A
                     </span>
                   )}
@@ -163,14 +163,14 @@ export const ODCSection = ({
           return (
             <div
               className={`flex items-center justify-end h-full px-2 ${
-                row.type === 'total' ? 'bg-orange-500/10' : ''
+                row.type === 'total' ? 'bg-orange-50' : ''
               }`}
             >
               <span
                 className={
                   row.type === 'total'
-                    ? 'text-orange-400 font-bold'
-                    : 'text-amber-400 font-semibold'
+                    ? 'text-orange-600 font-bold'
+                    : 'text-amber-600 font-semibold'
                 }
               >
                 {formatCurrency(value)}
@@ -197,14 +197,14 @@ export const ODCSection = ({
         return (
           <div
             className={`flex items-center justify-end h-full px-2 ${
-              row.type === 'total' ? 'bg-orange-500/20' : ''
+              row.type === 'total' ? 'bg-orange-100' : ''
             }`}
           >
             <span
               className={
                 row.type === 'total'
-                  ? 'text-orange-400 font-bold text-lg'
-                  : 'text-amber-400 font-semibold'
+                  ? 'text-orange-600 font-bold text-lg'
+                  : 'text-amber-600 font-semibold'
               }
             >
               {formatCurrency(total)}
@@ -227,7 +227,7 @@ export const ODCSection = ({
           <div className="flex items-center justify-center h-full gap-2">
             <button
               onClick={() => row.originalODC && onEdit(row.originalODC)}
-              className="p-1.5 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 rounded transition-colors"
+              className="p-1.5 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded transition-colors"
               title="Edit ODC"
             >
               <svg
@@ -246,7 +246,7 @@ export const ODCSection = ({
             </button>
             <button
               onClick={() => setConfirmDelete(row.id)}
-              className="p-1.5 text-red-400 hover:text-red-300 hover:bg-red-500/10 rounded transition-colors"
+              className="p-1.5 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors"
               title="Delete ODC"
             >
               <svg
@@ -278,18 +278,18 @@ export const ODCSection = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-6">
         <div>
-          <h3 className="text-lg font-semibold text-slate-50">
+          <h3 className="text-lg font-semibold text-foreground">
             Other Direct Costs (ODCs)
           </h3>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1">
             Travel, materials, equipment, and other costs
           </p>
         </div>
         <button
           onClick={onAdd}
-          className="px-4 py-2 text-sm font-medium text-slate-50 bg-orange-600 hover:bg-orange-700 rounded-md transition-colors flex items-center gap-2"
+          className="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors flex items-center gap-2"
         >
           <svg
             className="w-4 h-4"
@@ -309,9 +309,9 @@ export const ODCSection = ({
       </div>
 
       {odcs.length === 0 ? (
-        <div className="border-2 border-dashed border-slate-700 rounded-lg p-12 text-center">
+        <div className="border-2 border-dashed border-border rounded-lg p-12 text-center">
           <svg
-            className="w-12 h-12 mx-auto text-slate-600 mb-4"
+            className="w-12 h-12 mx-auto text-muted-foreground mb-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -323,13 +323,13 @@ export const ODCSection = ({
               d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
             />
           </svg>
-          <p className="text-slate-400 mb-2">No ODCs added yet</p>
-          <p className="text-sm text-slate-500">
+          <p className="text-muted-foreground mb-2">No ODCs added yet</p>
+          <p className="text-sm text-muted-foreground">
             Click "Add ODC" to add travel, materials, equipment, or other costs
           </p>
         </div>
       ) : (
-        <div className="h-auto min-h-[300px] overflow-auto border border-slate-800 rounded-lg">
+        <div className="h-auto min-h-[300px] overflow-auto border border-border rounded-lg">
           <DataGrid
             columns={columns}
             rows={rows}
@@ -344,24 +344,24 @@ export const ODCSection = ({
       {/* Delete confirmation dialog */}
       {confirmDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-700 rounded-lg shadow-2xl w-full max-w-md p-6">
-            <h3 className="text-lg font-semibold text-slate-50 mb-2">
+          <div className="bg-card border border-border rounded-lg shadow-2xl w-full max-w-md p-6">
+            <h3 className="text-lg font-semibold text-foreground mb-2">
               Delete ODC
             </h3>
-            <p className="text-sm text-slate-400 mb-6">
+            <p className="text-sm text-muted-foreground mb-6">
               Are you sure you want to delete this ODC? This action cannot be
               undone.
             </p>
             <div className="flex items-center justify-end gap-3">
               <button
                 onClick={() => setConfirmDelete(null)}
-                className="px-4 py-2 text-sm font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-md transition-colors"
+                className="px-4 py-2 text-sm font-medium text-muted-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors"
               >
                 Cancel
               </button>
               <button
                 onClick={() => handleConfirmDelete(confirmDelete)}
-                className="px-4 py-2 text-sm font-medium text-slate-50 bg-red-600 hover:bg-red-700 rounded-md transition-colors"
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-md transition-colors"
               >
                 Delete
               </button>

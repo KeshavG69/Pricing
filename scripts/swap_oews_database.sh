@@ -1,11 +1,12 @@
 #!/bin/bash
-# Refresh OEWS data - download and migrate to MongoDB with zero downtime
-# Safe for cron jobs - creates temp DB, verifies, then swaps
+# Swap OEWS database - verify temp DB and swap to production
+# Run this after downloading and importing data to a temp database
+# Usage: TEMP_DB_NAME=priceiq_temp_20251128_152025 bash scripts/swap_oews_database.sh
 
 set -e  # Exit on error
 
 echo "======================================================================"
-echo "OEWS Data Refresh Script"
+echo "OEWS Database Swap Script"
 echo "======================================================================"
 echo "Started: $(date)"
 echo ""
@@ -17,54 +18,35 @@ PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
 cd "$PROJECT_ROOT"
 
 # Load environment variables
- if [ -f .env ]; then
-     set -a  # automatically export all variables
-     source .env
-     set +a
- fi
+if [ -f .env ]; then
+    set -a  # automatically export all variables
+    source .env
+    set +a
+fi
 
 # Use default values if not set in env
 MONGODB_URL=${MONGODB_URL:-"mongodb://localhost:27017"}
 MONGODB_DATABASE=${MONGODB_DATABASE:-"oews_data"}
-TEMP_DATABASE="${MONGODB_DATABASE}_temp_$(date +%Y%m%d_%H%M%S)"
+
+# Check if TEMP_DB_NAME is provided
+if [ -z "$TEMP_DB_NAME" ]; then
+    echo "❌ Error: TEMP_DB_NAME environment variable not set"
+    echo ""
+    echo "Usage:"
+    echo "  TEMP_DB_NAME=your_temp_db_name bash scripts/swap_oews_database.sh"
+    echo ""
+    echo "Or find the temp database name from the import output and set it:"
+    echo "  export TEMP_DB_NAME=priceiq_temp_20251128_152025"
+    echo "  bash scripts/swap_oews_database.sh"
+    exit 1
+fi
+
+TEMP_DATABASE="$TEMP_DB_NAME"
 
 echo "Configuration:"
 echo "  MongoDB URL: $MONGODB_URL"
 echo "  Current DB: $MONGODB_DATABASE"
 echo "  Temp DB: $TEMP_DATABASE"
-echo ""
-
-# Step 1: Download fresh OEWS data
-echo "======================================================================"
-echo "Step 1: Downloading fresh OEWS data from BLS"
-echo "======================================================================"
-uv run python scripts/setup_oews_data.py
-
-if [ $? -ne 0 ]; then
-    echo "❌ Failed to download OEWS data"
-    exit 1
-fi
-
-echo ""
-echo "✓ Download complete"
-echo ""
-
-# Step 2: Import to temporary database
-echo "======================================================================"
-echo "Step 2: Importing data to temporary database"
-echo "======================================================================"
-
-# Temporarily override database name for import
-export MONGODB_DATABASE="$TEMP_DATABASE"
-uv run python scripts/import_oews_to_mongo.py
-
-if [ $? -ne 0 ]; then
-    echo "❌ Failed to import to temporary database"
-    exit 1
-fi
-
-echo ""
-echo "✓ Import to temp database complete"
 echo ""
 
 # Step 3: Verify temporary database
@@ -202,13 +184,11 @@ mongosh "$MONGODB_URL/$MONGODB_DATABASE?authSource=admin" --eval "
 
 echo ""
 echo "======================================================================"
-echo "✓ OEWS Data Refresh Complete!"
+echo "✓ OEWS Database Swap Complete!"
 echo "======================================================================"
 echo "Completed: $(date)"
 echo ""
 echo "Summary:"
-echo "  • Downloaded fresh OEWS data"
-echo "  • Imported to temporary database"
 echo "  • Verified data integrity"
 echo "  • Swapped to production database"
 echo "  • Backup preserved: $BACKUP_DATABASE"

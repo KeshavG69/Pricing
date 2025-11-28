@@ -7,6 +7,7 @@ import { useAuthStore } from '@/lib/stores/authStore';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Card, { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import { BarChart3 } from 'lucide-react';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -45,35 +46,29 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-      {/* Background glow */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 h-96 w-96 rounded-full bg-emerald-500/5 blur-3xl"></div>
-        <div className="absolute bottom-1/4 right-1/4 h-96 w-96 rounded-full bg-sky-500/5 blur-3xl"></div>
-      </div>
-
+    <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
       <div className="relative w-full max-w-md">
         {/* Logo */}
         <Link href="/" className="flex items-center justify-center space-x-2 mb-8">
-          <div className="h-10 w-10 rounded-2xl bg-slate-50 text-slate-900 flex items-center justify-center text-sm tracking-tight font-semibold">
-            PI
+          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground">
+            <BarChart3 className="w-6 h-6" />
           </div>
           <div className="flex flex-col">
-            <span className="text-lg font-semibold tracking-tight text-slate-50">PriceIQ</span>
-            <span className="text-xs text-slate-400">Gov Pricing Intelligence</span>
+            <span className="text-lg font-bold tracking-tight text-foreground">PriceIQ</span>
+            <span className="text-xs text-muted-foreground">Gov Pricing Intelligence</span>
           </div>
         </Link>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Create your account</CardTitle>
+        <Card className="border-border shadow-lg">
+          <CardHeader className="space-y-1">
+            <CardTitle className="text-2xl font-bold">Create your account</CardTitle>
             <CardDescription>Get started with PriceIQ today</CardDescription>
           </CardHeader>
 
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               {(error || validationError) && (
-                <div className="bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 text-sm text-red-400">
+                <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-600">
                   {error || validationError}
                 </div>
               )}
@@ -136,14 +131,15 @@ export default function SignupPage() {
                 variant="primary"
                 fullWidth
                 isLoading={isLoading}
+                className="h-10"
               >
                 Create account
               </Button>
             </form>
 
-            <div className="mt-6 text-center text-sm text-slate-400">
+            <div className="mt-6 text-center text-sm text-muted-foreground">
               Already have an account?{' '}
-              <Link href="/auth/login" className="text-slate-50 hover:underline">
+              <Link href="/auth/login" className="text-primary hover:underline font-medium">
                 Sign in
               </Link>
             </div>
@@ -151,7 +147,7 @@ export default function SignupPage() {
         </Card>
 
         <div className="mt-6 text-center">
-          <Link href="/" className="text-sm text-slate-400 hover:text-slate-300">
+          <Link href="/" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
             ← Back to home
           </Link>
         </div>

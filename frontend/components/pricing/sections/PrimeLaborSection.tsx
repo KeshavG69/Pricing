@@ -239,7 +239,7 @@ export const PrimeLaborSection = ({
               <div className="flex items-center h-full px-2">
                 <button
                   onClick={() => onToggleExpand(row.positionId)}
-                  className="mr-2 text-slate-400 hover:text-slate-200 transition-colors"
+                  className="mr-2 text-muted-foreground hover:text-foreground transition-colors"
                 >
                   {isExpanded ? (
                     <ChevronDown className="w-4 h-4" />
@@ -247,7 +247,7 @@ export const PrimeLaborSection = ({
                     <ChevronRight className="w-4 h-4" />
                   )}
                 </button>
-                <span className="font-semibold text-slate-50">
+                <span className="font-semibold text-foreground">
                   {pos.labor_category}
                 </span>
               </div>
@@ -256,7 +256,7 @@ export const PrimeLaborSection = ({
             // Breakdown row
             return (
               <div className="flex items-center h-full px-2 pl-10">
-                <span className="text-sm text-slate-400">
+                <span className="text-sm text-muted-foreground">
                   {getBreakdownLabel(row.breakdownType!)}
                 </span>
               </div>
@@ -275,11 +275,11 @@ export const PrimeLaborSection = ({
             const pos = row.data as AdvancedPosition;
             return (
               <div className="flex items-center h-full px-2">
-                <span className="text-xs text-slate-400">{pos.soc_title || '-'}</span>
+                <span className="text-xs text-muted-foreground">{pos.soc_title || '-'}</span>
               </div>
             );
           }
-          return <div className="h-full bg-slate-900/30" />;
+          return <div className="h-full bg-muted/30" />;
         },
       },
       // BLS Code
@@ -293,11 +293,11 @@ export const PrimeLaborSection = ({
             const pos = row.data as AdvancedPosition;
             return (
               <div className="flex items-center h-full px-2">
-                <span className="text-xs text-slate-400">{pos.soc_code || '-'}</span>
+                <span className="text-xs text-muted-foreground">{pos.soc_code || '-'}</span>
               </div>
             );
           }
-          return <div className="h-full bg-slate-900/30" />;
+          return <div className="h-full bg-muted/30" />;
         },
       },
       // Percentile - Editable dropdown
@@ -313,7 +313,7 @@ export const PrimeLaborSection = ({
 
           return (
             <select
-              className="w-full h-full px-2 bg-slate-950 text-slate-50 outline-none cursor-pointer font-semibold"
+              className="w-full h-full px-2 bg-background text-foreground outline-none cursor-pointer font-semibold"
               value={pos.percentile}
               onChange={(e) => {
                 const newPercentile = e.target.value as AdvancedPosition['percentile'];
@@ -344,14 +344,14 @@ export const PrimeLaborSection = ({
             const pos = row.data as AdvancedPosition;
             return (
               <div className="flex items-center h-full px-2">
-                <span className="font-semibold text-slate-50">{pos.percentile}</span>
-                <span className="ml-2 text-xs text-purple-400 bg-purple-500/10 px-2 py-0.5 rounded">
+                <span className="font-semibold text-foreground">{pos.percentile}</span>
+                <span className="ml-2 text-xs text-primary bg-primary/10 px-2 py-0.5 rounded">
                   ${(pos[`wage_${pos.percentile}`] || 0).toLocaleString()}
                 </span>
               </div>
             );
           }
-          return <div className="h-full bg-slate-900/30" />;
+          return <div className="h-full bg-muted/30" />;
         },
       },
       // Total Hours
@@ -365,13 +365,13 @@ export const PrimeLaborSection = ({
             const pos = row.data as AdvancedPosition;
             return (
               <div className="flex items-center justify-end h-full px-2">
-                <span className="text-slate-50">
+                <span className="text-foreground">
                   {pos.total_hours.toLocaleString()}
                 </span>
               </div>
             );
           }
-          return <div className="h-full bg-slate-900/30" />;
+          return <div className="h-full bg-muted/30" />;
         },
       },
       // Total Amount
@@ -385,13 +385,13 @@ export const PrimeLaborSection = ({
             const pos = row.data as AdvancedPosition;
             return (
               <div className="flex items-center justify-end h-full px-2 bg-emerald-500/10">
-                <span className="text-emerald-400 font-bold">
+                <span className="text-emerald-600 font-bold">
                   {formatCurrency(pos.total_amount)}
                 </span>
               </div>
             );
           }
-          return <div className="h-full bg-slate-900/30" />;
+          return <div className="h-full bg-muted/30" />;
         },
       },
     ];
@@ -447,7 +447,7 @@ export const PrimeLaborSection = ({
 
           return (
             <div className={`flex items-center justify-end h-full px-2 ${className}`}>
-              <span className={row.type === 'position' ? 'text-emerald-400 font-semibold' : 'text-purple-400'}>
+              <span className={row.type === 'position' ? 'text-emerald-600 font-semibold' : 'text-purple-600'}>
                 {formatCurrency(value)}
               </span>
             </div>
@@ -469,13 +469,13 @@ export const PrimeLaborSection = ({
 
             return (
               <div className="flex items-center justify-end h-full px-2">
-                <span className="text-slate-50">
+                <span className="text-foreground">
                   {breakdown.hours.toLocaleString()}
                 </span>
               </div>
             );
           }
-          return <div className="h-full bg-slate-900/30" />;
+          return <div className="h-full bg-muted/30" />;
         },
       });
 
@@ -525,7 +525,7 @@ export const PrimeLaborSection = ({
 
           return (
             <div className={`flex items-center justify-end h-full px-2 ${className}`}>
-              <span className={row.type === 'position' ? 'text-emerald-400 font-semibold' : 'text-purple-400'}>
+              <span className={row.type === 'position' ? 'text-emerald-600 font-semibold' : 'text-purple-600'}>
                 {formatCurrency(value)}
               </span>
             </div>
@@ -547,7 +547,7 @@ export const PrimeLaborSection = ({
             const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
             return (
               <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
-                <span className="text-purple-400 font-semibold">
+                <span className="text-purple-600 font-semibold">
                   ${calc.dlRate.toFixed(2)}
                 </span>
               </div>
@@ -566,7 +566,7 @@ export const PrimeLaborSection = ({
             const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
             return (
               <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
-                <span className="text-purple-400 font-semibold">
+                <span className="text-purple-600 font-semibold">
                   ${calc.fringe.toFixed(2)}
                 </span>
               </div>
@@ -585,7 +585,7 @@ export const PrimeLaborSection = ({
             const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
             return (
               <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
-                <span className="text-purple-400 font-semibold">
+                <span className="text-purple-600 font-semibold">
                   ${calc.oh.toFixed(2)}
                 </span>
               </div>
@@ -604,7 +604,7 @@ export const PrimeLaborSection = ({
             const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
             return (
               <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
-                <span className="text-purple-400 font-semibold">
+                <span className="text-purple-600 font-semibold">
                   ${calc.ga.toFixed(2)}
                 </span>
               </div>
@@ -623,7 +623,7 @@ export const PrimeLaborSection = ({
             const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
             return (
               <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
-                <span className="text-purple-400 font-semibold">
+                <span className="text-purple-600 font-semibold">
                   ${calc.fee.toFixed(2)}
                 </span>
               </div>
@@ -642,7 +642,7 @@ export const PrimeLaborSection = ({
             const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
             return (
               <div className="flex items-center justify-end h-full px-2 bg-emerald-500/10">
-                <span className="text-emerald-400 font-bold">
+                <span className="text-emerald-600 font-bold">
                   ${calc.fblr.toFixed(2)}
                 </span>
               </div>
@@ -670,7 +670,7 @@ export const PrimeLaborSection = ({
                     onDeletePosition(row.positionId);
                   }
                 }}
-                className="text-slate-400 hover:text-red-400 transition-colors p-1"
+                className="text-muted-foreground hover:text-red-600 transition-colors p-1"
                 title="Delete position"
               >
                 <Trash2 className="w-4 h-4" />
@@ -678,7 +678,7 @@ export const PrimeLaborSection = ({
             </div>
           );
         }
-        return <div className="h-full bg-slate-900/30" />;
+        return <div className="h-full bg-muted/30" />;
       },
     });
 
@@ -687,10 +687,10 @@ export const PrimeLaborSection = ({
 
   if (positions.length === 0) {
     return (
-      <div className="flex items-center justify-center h-32 bg-slate-900/30 rounded-lg border border-slate-800">
+      <div className="flex items-center justify-center h-32 bg-muted/30 rounded-lg border border-border">
         <div className="text-center">
-          <p className="text-slate-400 mb-2">No positions yet</p>
-          <p className="text-sm text-slate-500">Add positions to get started</p>
+          <p className="text-muted-foreground mb-2">No positions yet</p>
+          <p className="text-sm text-muted-foreground">Add positions to get started</p>
         </div>
       </div>
     );
@@ -698,15 +698,16 @@ export const PrimeLaborSection = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-50">Prime Labor</h3>
-        <p className="text-sm text-slate-400">
+      <div className="flex items-center justify-between px-6">
+        <h3 className="text-lg font-semibold text-foreground">Prime Labor</h3>
+        <p className="text-sm text-muted-foreground">
           {positions.length} position{positions.length !== 1 ? 's' : ''}
         </p>
       </div>
 
       <div
-        className="h-[600px] overflow-auto border border-slate-800 rounded-lg"
+        className="overflow-auto border border-border rounded-lg transition-all duration-200"
+        style={{ height: Math.min(Math.max(gridRows.length * 45 + 50, 200), 800) }}
         onContextMenu={(e) => {
           // Find which row was clicked
           const target = e.target as HTMLElement;

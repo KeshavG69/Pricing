@@ -113,15 +113,15 @@ export const ODCFormModal = ({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-slate-900 border border-slate-700 rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-auto">
+      <div className="bg-card border border-border rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-slate-900 border-b border-slate-700 px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-slate-50">
+        <div className="sticky top-0 bg-card border-b border-border px-6 py-4 flex items-center justify-between">
+          <h2 className="text-xl font-semibold text-foreground">
             {existingODC ? 'Edit' : 'Add'} Other Direct Cost
           </h2>
           <button
             onClick={handleClose}
-            className="text-slate-400 hover:text-slate-50 transition-colors"
+            className="text-muted-foreground hover:text-foreground transition-colors"
           >
             <svg
               className="w-6 h-6"
@@ -143,13 +143,13 @@ export const ODCFormModal = ({
         <div className="p-6 space-y-6">
           {/* Category */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
               Category *
             </label>
             <select
               value={category}
               onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-md text-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
+              className="w-full px-3 py-2 bg-background border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
             >
               {ODC_CATEGORIES.map((cat) => (
                 <option key={cat} value={cat}>
@@ -161,7 +161,7 @@ export const ODCFormModal = ({
 
           {/* Description */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
               Description {category === 'Other' && '*'}
             </label>
             <textarea
@@ -169,16 +169,16 @@ export const ODCFormModal = ({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Enter description..."
               rows={3}
-              className="w-full px-3 py-2 bg-slate-800 border border-slate-600 rounded-md text-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-500 resize-none"
+              className="w-full px-3 py-2 bg-background border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
             />
             {errors.description && (
-              <p className="mt-1 text-sm text-red-400">{errors.description}</p>
+              <p className="mt-1 text-sm text-red-600">{errors.description}</p>
             )}
           </div>
 
           {/* Amount per year */}
           <div>
-            <label className="block text-sm font-medium text-slate-300 mb-2">
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
               Amount per Year *
             </label>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
@@ -188,11 +188,11 @@ export const ODCFormModal = ({
 
                 return (
                   <div key={year}>
-                    <label className="block text-xs text-slate-400 mb-1">
+                    <label className="block text-xs text-muted-foreground mb-1">
                       {label}
                     </label>
                     <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                         $
                       </span>
                       <input
@@ -201,7 +201,7 @@ export const ODCFormModal = ({
                         step="0.01"
                         value={amountsByYear[year] || 0}
                         onChange={(e) => handleAmountChange(year, e.target.value)}
-                        className="w-full pl-7 pr-3 py-2 bg-slate-800 border border-slate-600 rounded-md text-slate-50 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                        className="w-full pl-7 pr-3 py-2 bg-background border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                       />
                     </div>
                   </div>
@@ -209,7 +209,7 @@ export const ODCFormModal = ({
               })}
             </div>
             {errors.amounts && (
-              <p className="mt-2 text-sm text-red-400">{errors.amounts}</p>
+              <p className="mt-2 text-sm text-red-600">{errors.amounts}</p>
             )}
           </div>
 
@@ -221,9 +221,9 @@ export const ODCFormModal = ({
                 id="escalate"
                 checked={escalate}
                 onChange={(e) => setEscalate(e.target.checked)}
-                className="w-4 h-4 text-orange-500 bg-slate-800 border-slate-600 rounded focus:ring-2 focus:ring-orange-500"
+                className="w-4 h-4 text-primary bg-background border-input rounded focus:ring-2 focus:ring-ring"
               />
-              <label htmlFor="escalate" className="ml-2 text-sm text-slate-300">
+              <label htmlFor="escalate" className="ml-2 text-sm text-muted-foreground">
                 Apply escalation (year-over-year increase)
               </label>
             </div>
@@ -234,21 +234,21 @@ export const ODCFormModal = ({
                 id="gaAdder"
                 checked={applyGAAdder}
                 onChange={(e) => setApplyGAAdder(e.target.checked)}
-                className="w-4 h-4 text-orange-500 bg-slate-800 border-slate-600 rounded focus:ring-2 focus:ring-orange-500"
+                className="w-4 h-4 text-primary bg-background border-input rounded focus:ring-2 focus:ring-ring"
               />
-              <label htmlFor="gaAdder" className="ml-2 text-sm text-slate-300">
+              <label htmlFor="gaAdder" className="ml-2 text-sm text-muted-foreground">
                 Apply G&amp;A adder (2.43%)
               </label>
             </div>
           </div>
 
           {/* Total cost display */}
-          <div className="bg-orange-500/10 border border-orange-500/30 rounded-lg p-4">
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-slate-300">
+              <span className="text-sm font-medium text-muted-foreground">
                 Base Total (before escalation/G&amp;A):
               </span>
-              <span className="text-lg font-bold text-orange-400">
+              <span className="text-lg font-bold text-orange-600">
                 {new Intl.NumberFormat('en-US', {
                   style: 'currency',
                   currency: 'USD',
@@ -259,16 +259,16 @@ export const ODCFormModal = ({
         </div>
 
         {/* Footer */}
-        <div className="sticky bottom-0 bg-slate-900 border-t border-slate-700 px-6 py-4 flex items-center justify-end gap-3">
+        <div className="sticky bottom-0 bg-card border-t border-border px-6 py-4 flex items-center justify-end gap-3">
           <button
             onClick={handleClose}
-            className="px-4 py-2 text-sm font-medium text-slate-300 bg-slate-800 hover:bg-slate-700 rounded-md transition-colors"
+            className="px-4 py-2 text-sm font-medium text-muted-foreground bg-muted hover:bg-muted/80 rounded-md transition-colors"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            className="px-4 py-2 text-sm font-medium text-slate-50 bg-orange-600 hover:bg-orange-700 rounded-md transition-colors"
+            className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-md transition-colors"
           >
             {existingODC ? 'Save Changes' : 'Add ODC'}
           </button>

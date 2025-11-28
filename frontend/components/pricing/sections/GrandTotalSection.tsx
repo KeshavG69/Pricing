@@ -72,14 +72,14 @@ export const GrandTotalSection = ({
         frozen: true,
         renderCell: ({ row }) => {
           const colorClass = row.type === 'total'
-            ? 'text-emerald-400 text-xl'
+            ? 'text-emerald-600 text-xl'
             : row.type === 'prime'
-            ? 'text-emerald-300'
+            ? 'text-emerald-600'
             : row.type === 'sub'
-            ? 'text-purple-300'
+            ? 'text-purple-600'
             : row.type === 'passthrough'
-            ? 'text-blue-300'
-            : 'text-yellow-300';
+            ? 'text-blue-600'
+            : 'text-amber-600';
 
           return (
             <div className="flex items-center h-full px-2">
@@ -110,28 +110,28 @@ export const GrandTotalSection = ({
           switch (row.type) {
             case 'prime':
               value = primeLaborByYear[yearStr] || 0;
-              bgClass = 'bg-emerald-500/5';
-              textClass = 'text-emerald-300';
+              bgClass = 'bg-emerald-50/50';
+              textClass = 'text-emerald-600';
               break;
             case 'sub':
               value = subLaborByYear[yearStr] || 0;
-              bgClass = 'bg-purple-500/5';
-              textClass = 'text-purple-300';
+              bgClass = 'bg-purple-50/50';
+              textClass = 'text-purple-600';
               break;
             case 'passthrough':
               value = passthroughByYear[yearStr] || 0;
-              bgClass = 'bg-blue-500/5';
-              textClass = 'text-blue-300';
+              bgClass = 'bg-blue-50/50';
+              textClass = 'text-blue-600';
               break;
             case 'fee':
               value = feeByYear[yearStr] || 0;
-              bgClass = 'bg-yellow-500/5';
-              textClass = 'text-yellow-300';
+              bgClass = 'bg-amber-50/50';
+              textClass = 'text-amber-600';
               break;
             case 'total':
               value = grandTotal.byYear[yearStr] || 0;
-              bgClass = 'bg-emerald-500/20';
-              textClass = 'text-emerald-400 font-bold text-lg';
+              bgClass = 'bg-emerald-100/50';
+              textClass = 'text-emerald-600 font-bold text-lg';
               break;
           }
 
@@ -161,28 +161,28 @@ export const GrandTotalSection = ({
         switch (row.type) {
           case 'prime':
             value = totals.primeTotal;
-            bgClass = 'bg-emerald-500/10';
-            textClass = 'text-emerald-300 font-semibold';
+            bgClass = 'bg-emerald-50';
+            textClass = 'text-emerald-600 font-semibold';
             break;
           case 'sub':
             value = totals.subTotal;
-            bgClass = 'bg-purple-500/10';
-            textClass = 'text-purple-300 font-semibold';
+            bgClass = 'bg-purple-50';
+            textClass = 'text-purple-600 font-semibold';
             break;
           case 'passthrough':
             value = totals.passthroughTotal;
-            bgClass = 'bg-blue-500/10';
-            textClass = 'text-blue-300 font-semibold';
+            bgClass = 'bg-blue-50';
+            textClass = 'text-blue-600 font-semibold';
             break;
           case 'fee':
             value = totals.feeTotal;
-            bgClass = 'bg-yellow-500/10';
-            textClass = 'text-yellow-300 font-semibold';
+            bgClass = 'bg-amber-50';
+            textClass = 'text-amber-600 font-semibold';
             break;
           case 'total':
             value = grandTotal.total;
-            bgClass = 'bg-emerald-500/30';
-            textClass = 'text-emerald-400 font-bold text-2xl';
+            bgClass = 'bg-emerald-100';
+            textClass = 'text-emerald-600 font-bold text-2xl';
             break;
         }
 
@@ -201,13 +201,13 @@ export const GrandTotalSection = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-50">Grand Total</h3>
-        <p className="text-sm text-slate-400">
+      <div className="flex items-center justify-between px-6">
+        <h3 className="text-lg font-semibold text-foreground">Grand Total</h3>
+        <p className="text-sm text-muted-foreground">
           Complete contract value breakdown
         </p>
       </div>
-      <div className="h-[300px] overflow-auto border-2 border-emerald-500/30 rounded-lg shadow-lg shadow-emerald-500/20">
+      <div className="h-[300px] overflow-auto border-2 border-emerald-100 rounded-lg shadow-lg shadow-emerald-50">
         <DataGrid
           columns={columns}
           rows={rows}

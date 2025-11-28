@@ -81,7 +81,7 @@ export const ContextMenu = ({ x, y, onClose, items }: ContextMenuProps) => {
   const menu = (
     <div
       ref={menuRef}
-      className="fixed z-[9999] min-w-[200px] rounded-lg border border-slate-700 bg-slate-900 shadow-xl"
+      className="fixed z-[9999] min-w-[200px] rounded-lg border border-border bg-popover shadow-xl text-popover-foreground"
       style={{
         left: `${position.x}px`,
         top: `${position.y}px`,
@@ -102,10 +102,10 @@ export const ContextMenu = ({ x, y, onClose, items }: ContextMenuProps) => {
               w-full px-4 py-2 text-left text-sm flex items-center gap-2
               transition-colors
               ${item.disabled
-                ? 'text-slate-500 cursor-not-allowed'
+                ? 'text-muted-foreground cursor-not-allowed'
                 : item.danger
-                ? 'text-red-400 hover:bg-red-500/10'
-                : 'text-slate-200 hover:bg-slate-800'
+                ? 'text-red-600 hover:bg-red-50'
+                : 'text-foreground hover:bg-muted'
               }
             `}
           >

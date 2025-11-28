@@ -118,7 +118,7 @@ export const FeeSection = ({
         frozen: true,
         renderCell: ({ row }) => (
           <div className="flex items-center h-full px-2">
-            <span className={`font-semibold ${row.type === 'total' ? 'text-emerald-400' : 'text-slate-50'}`}>
+            <span className={`font-semibold ${row.type === 'total' ? 'text-emerald-600' : 'text-foreground'}`}>
               {row.label}
             </span>
           </div>
@@ -133,7 +133,7 @@ export const FeeSection = ({
         renderCell: ({ row }) => (
           <div className="flex items-center justify-center h-full px-2">
             {row.type !== 'total' && (
-              <span className="text-xs text-slate-400">
+              <span className="text-xs text-muted-foreground">
                 {formatPercentage(row.rate)}
               </span>
             )}
@@ -171,7 +171,7 @@ export const FeeSection = ({
 
           return (
             <div className={`flex items-center justify-end h-full px-2 ${row.type === 'total' ? 'bg-emerald-500/10' : ''}`}>
-              <span className={row.type === 'total' ? 'text-emerald-400 font-bold' : 'text-yellow-400 font-semibold'}>
+              <span className={row.type === 'total' ? 'text-emerald-600 font-bold' : 'text-amber-600 font-semibold'}>
                 {formatCurrency(value)}
               </span>
             </div>
@@ -203,7 +203,7 @@ export const FeeSection = ({
 
         return (
           <div className={`flex items-center justify-end h-full px-2 ${row.type === 'total' ? 'bg-emerald-500/10' : ''}`}>
-            <span className={row.type === 'total' ? 'text-emerald-400 font-bold text-lg' : 'text-yellow-400 font-semibold'}>
+            <span className={row.type === 'total' ? 'text-emerald-600 font-bold text-lg' : 'text-amber-600 font-semibold'}>
               {formatCurrency(value)}
             </span>
           </div>
@@ -216,14 +216,14 @@ export const FeeSection = ({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-slate-50">Fixed Fee (Profit)</h3>
-        <p className="text-sm text-slate-400">
+      <div className="flex items-center justify-between px-6">
+        <h3 className="text-lg font-semibold text-foreground">Fixed Fee (Profit)</h3>
+        <p className="text-sm text-muted-foreground">
           Separate fee rates for prime and subcontractor labor
         </p>
       </div>
 
-      <div className="h-[200px] overflow-auto border border-slate-800 rounded-lg">
+      <div className="h-[200px] overflow-auto border border-border rounded-lg">
         <DataGrid
           columns={columns}
           rows={rows}

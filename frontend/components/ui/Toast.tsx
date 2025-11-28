@@ -1,6 +1,5 @@
 'use client';
 
-import { useEffect } from 'react';
 import { useToastStore, Toast as ToastType } from '@/lib/hooks/useToast';
 import { CheckCircle, AlertCircle, Info, AlertTriangle, X } from 'lucide-react';
 
@@ -8,17 +7,17 @@ const Toast = ({ toast }: { toast: ToastType }) => {
   const { removeToast } = useToastStore();
 
   const icons = {
-    success: <CheckCircle className="w-5 h-5 text-emerald-400" />,
-    error: <AlertCircle className="w-5 h-5 text-red-400" />,
-    info: <Info className="w-5 h-5 text-sky-400" />,
-    warning: <AlertTriangle className="w-5 h-5 text-amber-400" />,
+    success: <CheckCircle className="w-5 h-5 text-emerald-600" />,
+    error: <AlertCircle className="w-5 h-5 text-red-600" />,
+    info: <Info className="w-5 h-5 text-blue-600" />,
+    warning: <AlertTriangle className="w-5 h-5 text-amber-500" />,
   };
 
   const styles = {
-    success: 'bg-emerald-500/10 border-emerald-500/20',
-    error: 'bg-red-500/10 border-red-500/20',
-    info: 'bg-sky-500/10 border-sky-500/20',
-    warning: 'bg-amber-500/10 border-amber-500/20',
+    success: 'bg-emerald-50 border-emerald-200 text-emerald-900',
+    error: 'bg-red-50 border-red-200 text-red-900',
+    info: 'bg-blue-50 border-blue-200 text-blue-900',
+    warning: 'bg-amber-50 border-amber-200 text-amber-900',
   };
 
   return (
@@ -31,10 +30,10 @@ const Toast = ({ toast }: { toast: ToastType }) => {
       `}
     >
       <div className="flex-shrink-0 mt-0.5">{icons[toast.type]}</div>
-      <p className="text-sm text-slate-50 flex-1">{toast.message}</p>
+      <p className="text-sm font-medium flex-1">{toast.message}</p>
       <button
         onClick={() => removeToast(toast.id)}
-        className="flex-shrink-0 text-slate-400 hover:text-slate-50 transition-colors"
+        className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
       >
         <X className="w-4 h-4" />
       </button>

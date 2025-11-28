@@ -47,7 +47,7 @@ export const ConfirmDialog = ({
         </>
       }
     >
-      <p className="text-sm text-slate-300">{message}</p>
+      <p className="text-sm text-muted-foreground">{message}</p>
     </Dialog>
   );
 };

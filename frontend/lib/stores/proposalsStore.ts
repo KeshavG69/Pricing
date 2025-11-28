@@ -11,7 +11,7 @@ interface ProposalsState {
   // Actions
   fetchProposals: () => Promise<void>;
   fetchProposal: (id: string) => Promise<void>;
-  uploadDocuments: (files: File[]) => Promise<string>;
+  uploadDocuments: (files: File[], solicitationNumber?: string) => Promise<string>;
   updateProposal: (id: string, updates: ProposalUpdate) => Promise<void>;
   deleteProposal: (id: string) => Promise<void>;
   duplicateProposal: (id: string, newName: string) => Promise<void>;
@@ -51,10 +51,10 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
     }
   },
 
-  uploadDocuments: async (files) => {
+  uploadDocuments: async (files, solicitationNumber) => {
     try {
       set({ isLoading: true, error: null });
-      const response = await proposalsApi.upload(files);
+      const response = await proposalsApi.upload(files, solicitationNumber);
       set({ isLoading: false });
       return response.proposal_id;
     } catch (error: any) {

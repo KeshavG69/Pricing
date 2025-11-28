@@ -97,7 +97,7 @@ export const RateTableView = ({
         frozen: true,
         renderCell: ({ row }) => (
           <div className="flex items-center h-full px-2">
-            <span className="font-semibold text-slate-50">{row.laborCategory}</span>
+            <span className="font-semibold text-foreground">{row.laborCategory}</span>
           </div>
         ),
       },
@@ -108,7 +108,7 @@ export const RateTableView = ({
         resizable: true,
         renderCell: ({ row }) => (
           <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
-            <span className="text-purple-300 font-semibold">
+            <span className="text-purple-600 font-semibold">
               {formatCurrency(row.baseRate)}
             </span>
           </div>
@@ -121,7 +121,7 @@ export const RateTableView = ({
         resizable: true,
         renderCell: ({ row }) => (
           <div className="flex items-center justify-end h-full px-2 bg-yellow-500/5">
-            <span className="text-yellow-300 font-semibold">
+            <span className="text-yellow-600 font-semibold">
               {formatCurrency(row.afterFee)}
             </span>
           </div>
@@ -134,7 +134,7 @@ export const RateTableView = ({
         resizable: true,
         renderCell: ({ row }) => (
           <div className="flex items-center justify-end h-full px-2 bg-blue-500/5">
-            <span className="text-blue-300 font-semibold">
+            <span className="text-blue-600 font-semibold">
               {formatCurrency(row.afterSMH)}
             </span>
           </div>
@@ -148,7 +148,7 @@ export const RateTableView = ({
         frozen: true,
         renderCell: ({ row }) => (
           <div className="flex items-center justify-end h-full px-2 bg-emerald-500/10">
-            <span className="text-emerald-400 font-bold text-lg">
+            <span className="text-emerald-600 font-bold text-lg">
               {formatCurrency(row.finalRate)}
             </span>
           </div>
@@ -162,7 +162,7 @@ export const RateTableView = ({
       <div className="flex items-center justify-center h-96">
         <div className="text-center">
           <svg
-            className="w-16 h-16 mx-auto text-slate-600 mb-4"
+            className="w-16 h-16 mx-auto text-muted-foreground mb-4"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -174,8 +174,8 @@ export const RateTableView = ({
               d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
             />
           </svg>
-          <p className="text-slate-400 text-lg mb-2">No Subcontractors</p>
-          <p className="text-sm text-slate-500">
+          <p className="text-muted-foreground text-lg mb-2">No Subcontractors</p>
+          <p className="text-sm text-muted-foreground">
             Add subcontractor labor to view the rate table
           </p>
         </div>
@@ -187,26 +187,26 @@ export const RateTableView = ({
     <div className="space-y-6">
       {/* Title */}
       <div>
-        <h2 className="text-2xl font-semibold text-slate-50 mb-2">
+        <h2 className="text-2xl font-semibold text-foreground mb-2">
           Subcontractor Fee/MH Rate Table
         </h2>
-        <p className="text-sm text-slate-400">
+        <p className="text-sm text-muted-foreground">
           Shows step-by-step markup calculations for subcontractor labor rates
         </p>
       </div>
 
       {/* Example Calculation */}
       {exampleCalculation && (
-        <div className="bg-slate-800/50 border border-slate-700 rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-slate-50 mb-4">
+        <div className="bg-muted/30 border border-border rounded-lg p-6">
+          <h3 className="text-lg font-semibold text-foreground mb-4">
             Example Calculation
           </h3>
           <div className="flex items-center gap-4 flex-wrap">
             {/* Base Rate */}
             <div className="flex flex-col items-center">
-              <span className="text-xs text-slate-500 mb-1">Base Rate</span>
-              <div className="bg-purple-500/10 border border-purple-500/30 rounded-lg px-4 py-2">
-                <span className="text-purple-300 font-bold text-lg">
+              <span className="text-xs text-muted-foreground mb-1">Base Rate</span>
+              <div className="bg-purple-50 border border-purple-200 rounded-lg px-4 py-2">
+                <span className="text-purple-600 font-bold text-lg">
                   {formatCurrency(exampleCalculation.baseRate)}
                 </span>
               </div>
@@ -214,11 +214,11 @@ export const RateTableView = ({
 
             {/* Arrow */}
             <div className="flex flex-col items-center">
-              <span className="text-xs text-slate-500 mb-1">
+              <span className="text-xs text-muted-foreground mb-1">
                 +Fee ({formatPercentage(feeRate)})
               </span>
               <svg
-                className="w-6 h-6 text-slate-600"
+                className="w-6 h-6 text-muted-foreground"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -234,9 +234,9 @@ export const RateTableView = ({
 
             {/* After Fee */}
             <div className="flex flex-col items-center">
-              <span className="text-xs text-slate-500 mb-1">After Fee</span>
-              <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-lg px-4 py-2">
-                <span className="text-yellow-300 font-bold text-lg">
+              <span className="text-xs text-muted-foreground mb-1">After Fee</span>
+              <div className="bg-yellow-50 border border-yellow-200 rounded-lg px-4 py-2">
+                <span className="text-yellow-600 font-bold text-lg">
                   {formatCurrency(exampleCalculation.afterFee)}
                 </span>
               </div>
@@ -244,11 +244,11 @@ export const RateTableView = ({
 
             {/* Arrow */}
             <div className="flex flex-col items-center">
-              <span className="text-xs text-slate-500 mb-1">
+              <span className="text-xs text-muted-foreground mb-1">
                 +S&amp;MH ({formatPercentage(smhRate)})
               </span>
               <svg
-                className="w-6 h-6 text-slate-600"
+                className="w-6 h-6 text-muted-foreground"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -264,15 +264,15 @@ export const RateTableView = ({
 
             {/* Final Rate */}
             <div className="flex flex-col items-center">
-              <span className="text-xs text-slate-500 mb-1">Final Rate</span>
-              <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg px-4 py-2">
-                <span className="text-emerald-400 font-bold text-xl">
+              <span className="text-xs text-muted-foreground mb-1">Final Rate</span>
+              <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-2">
+                <span className="text-emerald-600 font-bold text-xl">
                   {formatCurrency(exampleCalculation.finalRate)}
                 </span>
               </div>
             </div>
           </div>
-          <p className="text-xs text-slate-500 mt-4">
+          <p className="text-xs text-muted-foreground mt-4">
             Example based on: {exampleCalculation.laborCategory}
           </p>
         </div>
@@ -280,10 +280,10 @@ export const RateTableView = ({
 
       {/* Rate Table */}
       <div>
-        <h3 className="text-lg font-semibold text-slate-50 mb-3">
+        <h3 className="text-lg font-semibold text-foreground mb-3">
           Complete Rate Table
         </h3>
-        <div className="h-[500px] overflow-auto border border-slate-800 rounded-lg">
+        <div className="h-[500px] overflow-auto border border-border rounded-lg">
           <DataGrid
             columns={columns}
             rows={rows}

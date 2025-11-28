@@ -33,7 +33,7 @@ export const Dialog = ({
       <DialogPrimitive.Portal>
         <DialogPrimitive.Overlay
           className="
-            fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm
+            fixed inset-0 z-50 bg-background/80 backdrop-blur-sm
             data-[state=open]:animate-in data-[state=closed]:animate-out
             data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0
           "
@@ -42,7 +42,7 @@ export const Dialog = ({
           className={`
             fixed left-[50%] top-[50%] z-50 w-full ${sizeClasses[size]}
             translate-x-[-50%] translate-y-[-50%]
-            bg-slate-900 border border-slate-800 rounded-lg shadow-xl
+            bg-background border border-border rounded-lg shadow-lg
             data-[state=open]:animate-in data-[state=closed]:animate-out
             data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0
             data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95
@@ -51,12 +51,12 @@ export const Dialog = ({
           `}
         >
           {/* Header */}
-          <div className="flex items-center justify-between p-6 border-b border-slate-800">
-            <DialogPrimitive.Title className="text-lg font-semibold text-slate-50">
+          <div className="flex items-center justify-between p-6 border-b border-border">
+            <DialogPrimitive.Title className="text-lg font-semibold text-foreground">
               {title}
             </DialogPrimitive.Title>
             <DialogPrimitive.Close className="rounded-sm opacity-70 hover:opacity-100 transition-opacity">
-              <X className="h-5 w-5 text-slate-400" />
+              <X className="h-5 w-5 text-muted-foreground" />
               <span className="sr-only">Close</span>
             </DialogPrimitive.Close>
           </div>
@@ -66,7 +66,7 @@ export const Dialog = ({
 
           {/* Footer */}
           {footer && (
-            <div className="flex items-center justify-end space-x-2 p-6 border-t border-slate-800">
+            <div className="flex items-center justify-end space-x-2 p-6 border-t border-border bg-muted/20">
               {footer}
             </div>
           )}

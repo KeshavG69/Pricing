@@ -82,7 +82,7 @@ export const RatesReferencePanel = ({
     onChange: (value: number) => void;
   }) => (
     <div className="flex items-center justify-between">
-      <span className="text-sm text-slate-300">{label}</span>
+      <span className="text-sm text-muted-foreground">{label}</span>
       {isEditing ? (
         <input
           type="number"
@@ -94,10 +94,10 @@ export const RatesReferencePanel = ({
             const percentValue = parseFloat(e.target.value) || 0;
             onChange(percentValue / 100);
           }}
-          className="w-24 px-2 py-1 bg-slate-800 border border-slate-600 rounded text-slate-50 text-sm font-mono text-right focus:border-blue-500 focus:outline-none"
+          className="w-24 px-2 py-1 bg-background border border-input rounded text-foreground text-sm font-mono text-right focus:border-primary focus:outline-none"
         />
       ) : (
-        <span className="text-sm font-mono font-semibold text-yellow-300 bg-yellow-500/10 px-2 py-1 rounded">
+        <span className="text-sm font-mono font-semibold text-amber-600 bg-amber-100 px-2 py-1 rounded">
           {formatPercentage(value)}
         </span>
       )}
@@ -105,7 +105,7 @@ export const RatesReferencePanel = ({
   );
 
   return (
-    <div className="bg-slate-900 border border-slate-700 rounded-lg overflow-hidden">
+    <div className="bg-card border border-border rounded-lg overflow-hidden">
       {/* Header - Always visible */}
       <div className="px-6 py-4 flex items-center justify-between">
         <button
@@ -113,7 +113,7 @@ export const RatesReferencePanel = ({
           className="flex items-center gap-3 hover:opacity-80 transition-opacity"
         >
           <svg
-            className={`w-5 h-5 text-yellow-400 transition-transform ${
+            className={`w-5 h-5 text-amber-500 transition-transform ${
               isExpanded ? 'rotate-90' : ''
             }`}
             fill="none"
@@ -127,8 +127,8 @@ export const RatesReferencePanel = ({
               d="M9 5l7 7-7 7"
             />
           </svg>
-          <h3 className="text-lg font-semibold text-slate-50">Rates Reference</h3>
-          <p className="text-sm text-slate-400">
+          <h3 className="text-lg font-semibold text-foreground">Rates Reference</h3>
+          <p className="text-sm text-muted-foreground">
             {isExpanded ? '(Click to collapse)' : '(Click to expand)'}
           </p>
         </button>
@@ -144,7 +144,7 @@ export const RatesReferencePanel = ({
               </button>
               <button
                 onClick={handleCancel}
-                className="px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white text-sm font-semibold rounded-md transition-colors"
+                className="px-4 py-2 bg-muted hover:bg-muted/80 text-foreground text-sm font-semibold rounded-md transition-colors"
               >
                 Cancel
               </button>
@@ -152,7 +152,7 @@ export const RatesReferencePanel = ({
           ) : (
             <button
               onClick={() => setIsEditing(true)}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-md transition-colors"
+              className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold rounded-md transition-colors"
             >
               Edit Rates
             </button>
@@ -166,8 +166,8 @@ export const RatesReferencePanel = ({
           {/* Two-column grid for rate categories */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Indirect Rates */}
-            <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
-              <h4 className="text-sm font-semibold text-emerald-400 mb-3 uppercase tracking-wide">
+            <div className="bg-muted/30 rounded-lg p-4 border border-border">
+              <h4 className="text-sm font-semibold text-emerald-600 mb-3 uppercase tracking-wide">
                 Indirect Rates
               </h4>
               <div className="space-y-2">
@@ -190,8 +190,8 @@ export const RatesReferencePanel = ({
             </div>
 
             {/* Fee & Passthrough Rates */}
-            <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
-              <h4 className="text-sm font-semibold text-purple-400 mb-3 uppercase tracking-wide">
+            <div className="bg-muted/30 rounded-lg p-4 border border-border">
+              <h4 className="text-sm font-semibold text-purple-600 mb-3 uppercase tracking-wide">
                 Fee &amp; Passthrough Rates
               </h4>
               <div className="space-y-2">
@@ -226,8 +226,8 @@ export const RatesReferencePanel = ({
 
           {/* Escalation Rates */}
           {totalYears > 1 && (
-            <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-700">
-              <h4 className="text-sm font-semibold text-blue-400 mb-3 uppercase tracking-wide">
+            <div className="bg-muted/30 rounded-lg p-4 border border-border">
+              <h4 className="text-sm font-semibold text-blue-600 mb-3 uppercase tracking-wide">
                 Escalation Rates
               </h4>
               <div className="flex flex-wrap gap-3">
@@ -242,9 +242,9 @@ export const RatesReferencePanel = ({
                   return (
                     <div
                       key={key}
-                      className="flex items-center gap-2 bg-blue-500/10 border border-blue-500/20 px-3 py-2 rounded-md"
+                      className="flex items-center gap-2 bg-blue-50 border border-blue-200 px-3 py-2 rounded-md"
                     >
-                      <span className="text-xs text-slate-300">
+                      <span className="text-xs text-muted-foreground">
                         {getEscalationLabel(fromYear, toYear)}:
                       </span>
                       {isEditing ? (
@@ -261,10 +261,10 @@ export const RatesReferencePanel = ({
                               [key]: percentValue / 100
                             });
                           }}
-                          className="w-20 px-2 py-1 bg-slate-800 border border-slate-600 rounded text-slate-50 text-xs font-mono text-right focus:border-blue-500 focus:outline-none"
+                          className="w-20 px-2 py-1 bg-background border border-input rounded text-foreground text-xs font-mono text-right focus:border-primary focus:outline-none"
                         />
                       ) : (
-                        <span className="text-xs font-mono font-semibold text-blue-300">
+                        <span className="text-xs font-mono font-semibold text-blue-600">
                           {formatPercentage(rate)}
                         </span>
                       )}
@@ -276,9 +276,9 @@ export const RatesReferencePanel = ({
           )}
 
           {/* Info note */}
-          <div className="flex items-start gap-3 bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+          <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-lg p-4">
             <svg
-              className="w-5 h-5 text-blue-400 mt-0.5 flex-shrink-0"
+              className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -290,8 +290,8 @@ export const RatesReferencePanel = ({
                 d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
-            <div className="text-xs text-slate-300">
-              <p className="font-semibold mb-1">About These Rates</p>
+            <div className="text-xs text-muted-foreground">
+              <p className="font-semibold mb-1 text-foreground">About These Rates</p>
               <p>
                 These rates are used throughout the cost proposal calculations. Indirect
                 rates apply to prime labor (Fringe → OH → G&amp;A cascade). Fee and

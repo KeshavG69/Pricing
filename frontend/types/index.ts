@@ -47,6 +47,8 @@ export interface Proposal {
   user_id: string;
   name: string;
   solicitation_number?: string;
+  prime_contractor_name?: string;
+  dcaa_contact?: string;
   status: 'processing' | 'completed' | 'error' | 'draft';
   created_at: string;
   updated_at: string;

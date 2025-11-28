@@ -46,7 +46,7 @@ export const PricingTabs = ({
   ];
 
   return (
-    <div className="border-b border-slate-700">
+    <div className="border-b border-border">
       <div className="flex items-center gap-2">
         {tabs.map((tab) => {
           if (tab.hidden) return null;
@@ -61,15 +61,15 @@ export const PricingTabs = ({
                 relative flex items-center gap-2 px-6 py-4 text-sm font-medium transition-all
                 ${
                   isActive
-                    ? 'text-emerald-400 bg-emerald-500/5'
-                    : 'text-slate-400 hover:text-slate-300 hover:bg-slate-800/50'
+                    ? 'text-primary bg-primary/5'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                 }
               `}
             >
               {/* Icon */}
               <span
                 className={`transition-colors ${
-                  isActive ? 'text-emerald-400' : 'text-slate-500'
+                  isActive ? 'text-primary' : 'text-muted-foreground'
                 }`}
               >
                 {tab.icon}
@@ -78,12 +78,12 @@ export const PricingTabs = ({
               {/* Label & Description */}
               <div className="flex flex-col items-start">
                 <span className="font-semibold">{tab.label}</span>
-                <span className="text-xs text-slate-500">{tab.description}</span>
+                <span className="text-xs text-muted-foreground">{tab.description}</span>
               </div>
 
               {/* Active indicator underline */}
               {isActive && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-emerald-400" />
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
               )}
             </button>
           );

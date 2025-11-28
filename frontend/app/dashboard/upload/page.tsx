@@ -7,6 +7,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useProposalsStore } from '@/lib/stores/proposalsStore';
 import Button from '@/components/ui/Button';
 import Card, { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
+import Input from '@/components/ui/Input';
 import { Upload, File, X, AlertCircle } from 'lucide-react';
 
 export default function UploadPage() {
@@ -14,6 +15,7 @@ export default function UploadPage() {
   const { uploadDocuments, isLoading } = useProposalsStore();
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [solicitationNumber, setSolicitationNumber] = useState('');
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setError(null);
@@ -43,7 +45,7 @@ export default function UploadPage() {
 
     try {
       setError(null);
-      const proposalId = await uploadDocuments(files);
+      const proposalId = await uploadDocuments(files, solicitationNumber.trim() || undefined);
 
       // Redirect to proposal page to see status
       router.push(`/proposals/${proposalId}`);
@@ -64,8 +66,8 @@ export default function UploadPage() {
     <DashboardLayout>
       <div className="p-8 max-w-4xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-slate-50 mb-2">Upload Documents</h1>
-          <p className="text-slate-400">
+          <h1 className="text-3xl font-semibold text-foreground mb-2">Upload Documents</h1>
+          <p className="text-muted-foreground">
             Upload RFPs, SOWs, or other documents containing job descriptions
           </p>
         </div>
@@ -80,7 +82,7 @@ export default function UploadPage() {
 
           <CardContent>
             {error && (
-              <div className="mb-6 bg-red-500/10 border border-red-500/20 rounded-lg px-4 py-3 text-sm text-red-400 flex items-start space-x-2">
+              <div className="mb-6 bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-600 flex items-start space-x-2">
                 <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
                 <span>{error}</span>
               </div>
@@ -94,50 +96,63 @@ export default function UploadPage() {
                 transition-colors
                 ${
                   isDragActive
-                    ? 'border-emerald-500 bg-emerald-500/5'
-                    : 'border-slate-700 hover:border-slate-600'
+                    ? 'border-primary bg-primary/5'
+                    : 'border-border hover:border-primary/50 hover:bg-muted/50'
                 }
               `}
             >
               <input {...getInputProps()} />
-              <Upload className="w-12 h-12 text-slate-400 mx-auto mb-4" />
+              <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               {isDragActive ? (
-                <p className="text-emerald-400">Drop files here...</p>
+                <p className="text-primary font-medium">Drop files here...</p>
               ) : (
                 <>
-                  <p className="text-slate-300 mb-2">
+                  <p className="text-foreground font-medium mb-2">
                     Drag and drop files here, or click to browse
                   </p>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-muted-foreground">
                     PDF, DOCX, XLSX files up to 50MB each
                   </p>
                 </>
               )}
             </div>
 
+            {/* Solicitation Number Input */}
+            <div className="mt-6">
+              <label className="block text-sm font-medium text-muted-foreground mb-2">
+                Solicitation Number (Optional)
+              </label>
+              <Input
+                type="text"
+                placeholder="e.g., N0017825R3013"
+                value={solicitationNumber}
+                onChange={(e) => setSolicitationNumber(e.target.value)}
+              />
+            </div>
+
             {/* File List */}
             {files.length > 0 && (
               <div className="mt-6 space-y-2">
-                <p className="text-sm font-medium text-slate-300 mb-3">
+                <p className="text-sm font-medium text-foreground mb-3">
                   Selected files ({files.length})
                 </p>
                 {files.map((file, index) => (
                   <div
                     key={index}
-                    className="flex items-center justify-between p-3 rounded-lg bg-slate-900/30 border border-slate-800"
+                    className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border"
                   >
                     <div className="flex items-center space-x-3 flex-1 min-w-0">
-                      <File className="w-5 h-5 text-slate-400 flex-shrink-0" />
+                      <File className="w-5 h-5 text-muted-foreground flex-shrink-0" />
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-slate-50 truncate">{file.name}</p>
-                        <p className="text-xs text-slate-500">
+                        <p className="text-sm text-foreground truncate">{file.name}</p>
+                        <p className="text-xs text-muted-foreground">
                           {formatFileSize(file.size)}
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={() => removeFile(index)}
-                      className="text-slate-400 hover:text-red-400 transition-colors"
+                      className="text-muted-foreground hover:text-red-600 transition-colors"
                     >
                       <X className="w-5 h-5" />
                     </button>
@@ -167,9 +182,9 @@ export default function UploadPage() {
         </Card>
 
         {/* Info */}
-        <div className="mt-6 text-sm text-slate-400">
-          <p className="mb-2">What happens next:</p>
-          <ul className="list-disc list-inside space-y-1 text-slate-500">
+        <div className="mt-6 text-sm text-muted-foreground">
+          <p className="mb-2 font-medium text-foreground">What happens next:</p>
+          <ul className="list-disc list-inside space-y-1">
             <li>Documents will be analyzed using AI to extract job descriptions</li>
             <li>Each position will be matched to BLS wage data automatically</li>
             <li>You'll be able to review and adjust the pricing in the next step</li>

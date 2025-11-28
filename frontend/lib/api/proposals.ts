@@ -9,11 +9,15 @@ import {
 
 export const proposalsApi = {
   // Upload documents and create proposal
-  upload: async (files: File[]): Promise<UploadResponse> => {
+  upload: async (files: File[], solicitationNumber?: string): Promise<UploadResponse> => {
     const formData = new FormData();
     files.forEach((file) => {
       formData.append('files', file);
     });
+
+    if (solicitationNumber) {
+      formData.append('solicitation_number', solicitationNumber);
+    }
 
     const response = await apiClient.post<UploadResponse>(
       '/proposals/upload',

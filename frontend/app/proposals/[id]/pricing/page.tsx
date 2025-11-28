@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { usePricingStore } from '@/lib/stores/pricingStore';
-import PricingSidebar from '@/components/pricing/PricingSidebar';
+
 import PositionsGrid from '@/components/pricing/PositionsGrid';
 import Button from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -52,19 +52,10 @@ export default function PricingWorkspacePage() {
     return (
       <DashboardLayout>
         <div className="flex h-screen">
-          {/* Left: Spreadsheet area */}
+          {/* Spreadsheet area */}
           <div className="flex-1 p-6 space-y-4">
             <Skeleton className="h-10 w-64" />
             <Skeleton className="h-full w-full" />
-          </div>
-
-          {/* Right: Sidebar */}
-          <div className="w-80 border-l border-slate-800">
-            <div className="p-6 space-y-4">
-              <Skeleton className="h-32 w-full" />
-              <Skeleton className="h-32 w-full" />
-              <Skeleton className="h-32 w-full" />
-            </div>
           </div>
         </div>
       </DashboardLayout>
@@ -114,16 +105,11 @@ export default function PricingWorkspacePage() {
 
         {/* Main Content */}
         <div className="flex flex-1 overflow-hidden">
-          {/* Left: Spreadsheet (70%) */}
+          {/* Spreadsheet (Full Width) */}
           <div className="flex-1 p-6 overflow-auto">
             <div className="h-full">
               <PositionsGrid />
             </div>
-          </div>
-
-          {/* Right: Sidebar (30%) */}
-          <div className="w-96 border-l border-slate-800 overflow-auto">
-            <PricingSidebar />
           </div>
         </div>
       </div>

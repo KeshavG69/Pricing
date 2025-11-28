@@ -1,10 +1,10 @@
 'use client';
 
-import { ReactNode, useEffect } from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/stores/authStore';
-import { FileText, LogOut, Plus, Settings, LayoutGrid, ChevronRight } from 'lucide-react';
+import { FileText, LogOut, Plus, Settings, LayoutGrid, ChevronRight, BarChart3, ChevronLeft, Menu } from 'lucide-react';
 import Button from '../ui/Button';
 
 interface DashboardLayoutProps {
@@ -15,6 +15,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout } = useAuthStore();
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -39,48 +40,70 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   ];
 
   return (
-    <div className="min-h-screen flex bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-black">
+    <div className="min-h-screen flex bg-muted/10">
       {/* Sidebar */}
-      <aside className="w-72 border-r border-slate-800/50 bg-slate-950/30 backdrop-blur-xl flex flex-col fixed inset-y-0 z-50">
-        {/* Logo */}
-        <div className="p-6">
-          <Link href="/dashboard" className="flex items-center space-x-3 group">
-            <div className="flex flex-col">
-              <span className="text-xl font-bold tracking-tight text-slate-50 group-hover:text-sky-400 transition-colors">PriceIQ</span>
-            </div>
-          </Link>
+      <aside className={`border-r border-border bg-card flex flex-col fixed inset-y-0 z-50 transition-all duration-300 ${
+        isCollapsed ? 'w-20' : 'w-72'
+      }`}>
+        {/* Logo and Toggle */}
+        <div className={`p-6 ${isCollapsed ? 'px-4' : ''}`}>
+          <div className="flex items-center justify-between">
+            <Link href="/dashboard" className={`flex items-center group ${isCollapsed ? 'justify-center' : 'space-x-3'}`}>
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-primary-foreground">
+                <BarChart3 className="w-5 h-5" />
+              </div>
+              {!isCollapsed && (
+                <div className="flex flex-col">
+                  <span className="text-xl font-bold tracking-tight text-foreground">PriceIQ</span>
+                </div>
+              )}
+            </Link>
+            <button
+              onClick={() => setIsCollapsed(!isCollapsed)}
+              className="ml-auto p-1.5 rounded-lg hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+              title={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            >
+              {isCollapsed ? <ChevronRight className="w-5 h-5" /> : <ChevronLeft className="w-5 h-5" />}
+            </button>
+          </div>
         </div>
 
         {/* Navigation */}
         <nav className="flex-1 px-4 py-6 space-y-1">
-          <div className="mb-6 px-2">
+          <div className={`mb-6 ${isCollapsed ? 'px-0' : 'px-2'}`}>
             <Link href="/dashboard/upload">
-              <Button variant="primary" fullWidth className="shadow-lg shadow-sky-500/20">
-                <Plus className="w-4 h-4 mr-2" />
-                New Proposal
+              <Button
+                variant="primary"
+                fullWidth
+                className={`shadow-md shadow-primary/10 ${isCollapsed ? 'px-2 justify-center' : ''}`}
+              >
+                <Plus className={`w-4 h-4 ${isCollapsed ? '' : 'mr-2'}`} />
+                {!isCollapsed && 'New Proposal'}
               </Button>
             </Link>
           </div>
 
           <div className="space-y-1">
-            <p className="px-4 text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Menu</p>
+            {!isCollapsed && (
+              <p className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Menu</p>
+            )}
             {navItems.map((item) => {
               const isActive = pathname === item.href;
               const Icon = item.icon;
               return (
-                <Link key={item.href} href={item.href}>
+                <Link key={item.href} href={item.href} title={isCollapsed ? item.label : ''}>
                   <div
-                    className={`flex items-center justify-between px-4 py-3 rounded-xl transition-all duration-200 group ${
+                    className={`flex items-center ${isCollapsed ? 'justify-center px-4' : 'justify-between px-4'} py-3 rounded-lg transition-all duration-200 group ${
                       isActive
-                        ? 'bg-sky-500/10 text-sky-400'
-                        : 'text-slate-400 hover:text-slate-50 hover:bg-slate-800/50'
+                        ? 'bg-primary/10 text-primary font-medium'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                     }`}
                   >
-                    <div className="flex items-center space-x-3">
-                      <Icon className={`w-5 h-5 ${isActive ? 'text-sky-400' : 'text-slate-500 group-hover:text-slate-400'}`} />
-                      <span className="text-sm font-medium">{item.label}</span>
+                    <div className={`flex items-center ${isCollapsed ? '' : 'space-x-3'}`}>
+                      <Icon className={`w-5 h-5 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
+                      {!isCollapsed && <span className="text-sm">{item.label}</span>}
                     </div>
-                    {isActive && <ChevronRight className="w-4 h-4 text-sky-500/50" />}
+                    {isActive && !isCollapsed && <ChevronRight className="w-4 h-4 text-primary/50" />}
                   </div>
                 </Link>
               );
@@ -89,36 +112,48 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         </nav>
 
         {/* User section */}
-        <div className="p-4 border-t border-slate-800/50 bg-slate-900/20">
-          <div className="flex items-center space-x-3 mb-4 px-2">
-            <div className="h-10 w-10 rounded-full bg-gradient-to-tr from-slate-700 to-slate-600 flex items-center justify-center border border-slate-600 shadow-inner">
-              <span className="text-sm font-semibold text-slate-100">
+        <div className="p-4 border-t border-border bg-muted/30">
+          {!isCollapsed && (
+            <div className="flex items-center space-x-3 mb-4 px-2">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border border-border text-primary font-semibold">
                 {user.firstName[0]}{user.lastName[0]}
-              </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-foreground truncate">
+                  {user.firstName} {user.lastName}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-slate-50 truncate">
-                {user.firstName} {user.lastName}
-              </p>
-              <p className="text-xs text-slate-500 truncate">{user.email}</p>
+          )}
+          {isCollapsed && (
+            <div className="flex justify-center mb-4">
+              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border border-border text-primary font-semibold">
+                {user.firstName[0]}{user.lastName[0]}
+              </div>
             </div>
-          </div>
+          )}
           <Button
             variant="ghost"
             size="sm"
             fullWidth
             onClick={handleLogout}
-            className="justify-start text-slate-400 hover:text-red-400 hover:bg-red-500/10"
+            className={`text-muted-foreground hover:text-red-600 hover:bg-red-50 ${
+              isCollapsed ? 'justify-center px-2' : 'justify-start'
+            }`}
+            title={isCollapsed ? 'Logout' : ''}
           >
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
+            <LogOut className={`w-4 h-4 ${isCollapsed ? '' : 'mr-2'}`} />
+            {!isCollapsed && 'Logout'}
           </Button>
         </div>
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 ml-72 p-8 overflow-auto">
-        <div className="max-w-7xl mx-auto animate-fade-in">
+      <main className={`flex-1 p-6 overflow-auto transition-all duration-300 ${
+        isCollapsed ? 'ml-20' : 'ml-72'
+      }`}>
+        <div className="animate-fade-in">
           {children}
         </div>
       </main>

@@ -195,14 +195,14 @@ export const ConvertToSubcontractorModal = ({
         </>
       }
     >
-      <div className="text-sm text-slate-400 mb-4">
-        Converting: <span className="text-slate-200 font-semibold">{position.labor_category}</span>
+      <div className="text-sm text-muted-foreground mb-4">
+        Converting: <span className="text-foreground font-semibold">{position.labor_category}</span>
       </div>
 
       <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
           {/* Section 1: Subcontractor Selection */}
           <Card className="p-4">
-            <h3 className="text-sm font-semibold text-slate-200 mb-3">1. Select Subcontractor</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3">1. Select Subcontractor</h3>
 
             <div className="flex gap-4 mb-4">
               <Button
@@ -223,7 +223,7 @@ export const ConvertToSubcontractorModal = ({
 
             {mode === 'existing' ? (
               <div>
-                <label className="block text-sm text-slate-400 mb-2">Subcontractor</label>
+                <label className="block text-sm text-muted-foreground mb-2">Subcontractor</label>
                 {subcontractors.length > 0 ? (
                   <select
                     value={selectedSubcontractorId}
@@ -231,7 +231,7 @@ export const ConvertToSubcontractorModal = ({
                       setSelectedSubcontractorId(e.target.value);
                       setErrors({ ...errors, subcontractor: '' });
                     }}
-                    className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-lg text-slate-200 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className="w-full px-3 py-2 bg-background border border-input rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                   >
                     <option value="">-- Select a subcontractor --</option>
                     {subcontractors.map((sub) => (
@@ -241,10 +241,10 @@ export const ConvertToSubcontractorModal = ({
                     ))}
                   </select>
                 ) : (
-                  <p className="text-sm text-slate-500 italic">No existing subcontractors. Create a new one below.</p>
+                  <p className="text-sm text-muted-foreground italic">No existing subcontractors. Create a new one below.</p>
                 )}
                 {errors.subcontractor && (
-                  <p className="text-sm text-red-400 mt-1 flex items-center gap-1">
+                  <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
                     <AlertCircle className="w-4 h-4" />
                     {errors.subcontractor}
                   </p>
@@ -252,7 +252,7 @@ export const ConvertToSubcontractorModal = ({
               </div>
             ) : (
               <div>
-                <label className="block text-sm text-slate-400 mb-2">New Subcontractor Name</label>
+                <label className="block text-sm text-muted-foreground mb-2">New Subcontractor Name</label>
                 <Input
                   value={newSubcontractorName}
                   onChange={(e) => {
@@ -263,7 +263,7 @@ export const ConvertToSubcontractorModal = ({
                   className="w-full"
                 />
                 {errors.subcontractorName && (
-                  <p className="text-sm text-red-400 mt-1 flex items-center gap-1">
+                  <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
                     <AlertCircle className="w-4 h-4" />
                     {errors.subcontractorName}
                   </p>
@@ -274,8 +274,8 @@ export const ConvertToSubcontractorModal = ({
 
           {/* Section 2: Hours Allocation */}
           <Card className="p-4">
-            <h3 className="text-sm font-semibold text-slate-200 mb-3">2. Allocate Hours</h3>
-            <p className="text-sm text-slate-400 mb-4">
+            <h3 className="text-sm font-semibold text-foreground mb-3">2. Allocate Hours</h3>
+            <p className="text-sm text-muted-foreground mb-4">
               Specify how many hours to allocate to the subcontractor for each year
             </p>
 
@@ -288,12 +288,12 @@ export const ConvertToSubcontractorModal = ({
 
                 return (
                   <div key={year} className="flex items-center gap-4">
-                    <div className="w-32 text-sm text-slate-400">
+                    <div className="w-32 text-sm text-muted-foreground">
                       {year === 1 ? 'Base Year' : `Option Year ${year - 1}`}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-slate-500" />
+                        <Clock className="w-4 h-4 text-muted-foreground" />
                         <Input
                           type="number"
                           value={allocatedHours}
@@ -306,22 +306,22 @@ export const ConvertToSubcontractorModal = ({
                           min={0}
                           max={originalHours}
                         />
-                        <span className="text-sm text-slate-500">
+                        <span className="text-sm text-muted-foreground">
                           / {originalHours.toLocaleString()} hrs
                         </span>
                       </div>
                       {/* Progress bar */}
-                      <div className="mt-2 h-2 bg-slate-800 rounded-full overflow-hidden">
+                      <div className="mt-2 h-2 bg-muted rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-purple-500 transition-all"
+                          className="h-full bg-primary transition-all"
                           style={{ width: `${Math.min(percentage, 100)}%` }}
                         />
                       </div>
                       {errors[`hours_${yearStr}`] && (
-                        <p className="text-sm text-red-400 mt-1">{errors[`hours_${yearStr}`]}</p>
+                        <p className="text-sm text-red-600 mt-1">{errors[`hours_${yearStr}`]}</p>
                       )}
                     </div>
-                    <div className="w-16 text-right text-sm text-slate-400">
+                    <div className="w-16 text-right text-sm text-muted-foreground">
                       {percentage.toFixed(0)}%
                     </div>
                   </div>
@@ -330,7 +330,7 @@ export const ConvertToSubcontractorModal = ({
             </div>
 
             {errors.hours && (
-              <p className="text-sm text-red-400 mt-3 flex items-center gap-1">
+              <p className="text-sm text-red-600 mt-3 flex items-center gap-1">
                 <AlertCircle className="w-4 h-4" />
                 {errors.hours}
               </p>
@@ -339,25 +339,25 @@ export const ConvertToSubcontractorModal = ({
 
           {/* Section 3: Rate Configuration */}
           <Card className="p-4">
-            <h3 className="text-sm font-semibold text-slate-200 mb-3">3. Set Hourly Rate</h3>
+            <h3 className="text-sm font-semibold text-foreground mb-3">3. Set Hourly Rate</h3>
 
-            <div className="bg-purple-500/10 border border-purple-500/20 rounded-lg p-3 mb-4">
+            <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 mb-4">
               <div className="flex items-center gap-2 text-sm">
-                <DollarSign className="w-4 h-4 text-purple-400" />
-                <span className="text-slate-300">Suggested Rate:</span>
-                <span className="text-purple-400 font-bold text-lg">
+                <DollarSign className="w-4 h-4 text-primary" />
+                <span className="text-muted-foreground">Suggested Rate:</span>
+                <span className="text-primary font-bold text-lg">
                   ${suggestedRate.toFixed(2)}/hr
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-2">
+              <p className="text-xs text-muted-foreground mt-2">
                 Based on FBLR calculation (includes all overhead and fees)
               </p>
             </div>
 
             <div>
-              <label className="block text-sm text-slate-400 mb-2">Custom Hourly Rate ($)</label>
+              <label className="block text-sm text-muted-foreground mb-2">Custom Hourly Rate ($)</label>
               <div className="flex items-center gap-2">
-                <span className="text-slate-500">$</span>
+                <span className="text-muted-foreground">$</span>
                 <Input
                   type="number"
                   value={customRate}
@@ -369,10 +369,10 @@ export const ConvertToSubcontractorModal = ({
                   step="0.01"
                   min="0"
                 />
-                <span className="text-slate-500">/ hr</span>
+                <span className="text-muted-foreground">/ hr</span>
               </div>
               {errors.rate && (
-                <p className="text-sm text-red-400 mt-1 flex items-center gap-1">
+                <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
                   <AlertCircle className="w-4 h-4" />
                   {errors.rate}
                 </p>
@@ -382,8 +382,8 @@ export const ConvertToSubcontractorModal = ({
 
         {/* Error summary */}
         {errors.general && (
-          <div className="bg-red-500/10 border border-red-500/20 rounded-lg p-3">
-            <p className="text-sm text-red-400 flex items-center gap-2">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
+            <p className="text-sm text-red-600 flex items-center gap-2">
               <AlertCircle className="w-4 h-4" />
               {errors.general}
             </p>

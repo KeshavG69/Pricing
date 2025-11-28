@@ -173,14 +173,12 @@ export const AdvancedAnalysisGrid = () => {
   }, [primeLaborByYear, subcontractorCostsByYear, passthroughByYear, feeByYear]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-2">
       {/* Header with mode indicator */}
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-semibold text-slate-50">
-          Cost Proposal Spreadsheet
-        </h2>
-        <div className="text-sm text-emerald-400 font-semibold flex items-center">
-          <div className="w-2 h-2 bg-emerald-400 rounded-full mr-2 animate-pulse" />
+      {/* Header with mode indicator */}
+      <div className="flex justify-end items-center mb-2 px-6">
+        <div className="text-xs font-medium text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 flex items-center">
+          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-2 animate-pulse" />
           Advanced Mode Active
         </div>
       </div>
