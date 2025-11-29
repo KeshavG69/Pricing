@@ -2,13 +2,12 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
-// Create axios instance with cookie support
+// Create axios instance
 export const apiClient = axios.create({
   baseURL: `${API_URL}/api`,
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true,  // CRITICAL: Send cookies with requests
 });
 
 // Track if refresh is in progress to prevent multiple simultaneous refreshes
@@ -24,11 +23,17 @@ function addRefreshSubscriber(callback: (token: string) => void) {
   refreshSubscribers.push(callback);
 }
 
-// Request interceptor - NO LONGER NEEDED (cookies auto-attach)
+// Request interceptor - Add Authorization header from localStorage
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
-    // Cookies are automatically sent due to withCredentials: true
-    // No need to manually add Authorization header
+    // Get access token from localStorage
+    const accessToken = localStorage.getItem('access_token');
+
+    // Add Authorization header if token exists
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
+    }
+
     return config;
   },
   (error) => {
@@ -77,19 +82,36 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
+        // Get refresh token from localStorage
+        const refreshToken = localStorage.getItem('refresh_token');
+
+        if (!refreshToken) {
+          throw new Error('No refresh token available');
+        }
+
         // Attempt to refresh token
-        await apiClient.post('/auth/refresh');
+        const response = await apiClient.post('/auth/refresh', {
+          refresh_token: refreshToken
+        });
 
-        // Refresh successful, cookies auto-updated by backend
+        // Store new tokens
+        localStorage.setItem('access_token', response.data.access_token);
+        localStorage.setItem('refresh_token', response.data.refresh_token);
+
+        // Refresh successful
         isRefreshing = false;
-        onRefreshed('token_refreshed');
+        onRefreshed(response.data.access_token);
 
-        // Retry original request
+        // Retry original request with new token
+        originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`;
         return apiClient(originalRequest);
       } catch (refreshError) {
-        // Refresh failed, redirect to login
+        // Refresh failed, clear tokens and redirect to login
         isRefreshing = false;
         refreshSubscribers = [];
+
+        localStorage.removeItem('access_token');
+        localStorage.removeItem('refresh_token');
 
         if (typeof window !== 'undefined') {
           window.location.href = '/auth/login';

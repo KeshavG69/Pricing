@@ -2193,7 +2193,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "SECRET_KEY = os.getenv(\"SECRET_KEY\", \"your-secret-key-change-this-in-production\")\nALGORITHM = os.getenv(\"ALGORITHM\", \"HS256\")\nACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv(\"ACCESS_TOKEN_EXPIRE_MINUTES\", \"30\"))\nREFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv(\"REFRESH_TOKEN_EXPIRE_DAYS\", \"7\"))\n# Cookie Configuration\nCOOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\nCOOKIE_SAMESITE = \"lax\"  # or \"strict\" for higher security\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"",
+        "peekOfCode": "SECRET_KEY = os.getenv(\"SECRET_KEY\", \"your-secret-key-change-this-in-production\")\nALGORITHM = os.getenv(\"ALGORITHM\", \"HS256\")\nACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv(\"ACCESS_TOKEN_EXPIRE_MINUTES\", \"30\"))\nREFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv(\"REFRESH_TOKEN_EXPIRE_DAYS\", \"7\"))\n# Cookie Configuration\nCOOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -2202,7 +2202,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "ALGORITHM = os.getenv(\"ALGORITHM\", \"HS256\")\nACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv(\"ACCESS_TOKEN_EXPIRE_MINUTES\", \"30\"))\nREFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv(\"REFRESH_TOKEN_EXPIRE_DAYS\", \"7\"))\n# Cookie Configuration\nCOOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\nCOOKIE_SAMESITE = \"lax\"  # or \"strict\" for higher security\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS",
+        "peekOfCode": "ALGORITHM = os.getenv(\"ALGORITHM\", \"HS256\")\nACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv(\"ACCESS_TOKEN_EXPIRE_MINUTES\", \"30\"))\nREFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv(\"REFRESH_TOKEN_EXPIRE_DAYS\", \"7\"))\n# Cookie Configuration\nCOOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -2211,7 +2211,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv(\"ACCESS_TOKEN_EXPIRE_MINUTES\", \"30\"))\nREFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv(\"REFRESH_TOKEN_EXPIRE_DAYS\", \"7\"))\n# Cookie Configuration\nCOOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\nCOOKIE_SAMESITE = \"lax\"  # or \"strict\" for higher security\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")",
+        "peekOfCode": "ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv(\"ACCESS_TOKEN_EXPIRE_MINUTES\", \"30\"))\nREFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv(\"REFRESH_TOKEN_EXPIRE_DAYS\", \"7\"))\n# Cookie Configuration\nCOOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -2220,7 +2220,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv(\"REFRESH_TOKEN_EXPIRE_DAYS\", \"7\"))\n# Cookie Configuration\nCOOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\nCOOKIE_SAMESITE = \"lax\"  # or \"strict\" for higher security\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration",
+        "peekOfCode": "REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv(\"REFRESH_TOKEN_EXPIRE_DAYS\", \"7\"))\n# Cookie Configuration\nCOOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -2229,7 +2229,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\nCOOKIE_SAMESITE = \"lax\"  # or \"strict\" for higher security\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "COOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -2238,7 +2238,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\nCOOKIE_SAMESITE = \"lax\"  # or \"strict\" for higher security\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "COOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -2247,7 +2247,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_SAMESITE = \"lax\"  # or \"strict\" for higher security\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "COOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -2886,7 +2886,7 @@
         "kind": 2,
         "importPath": "backend.routers.auth",
         "description": "backend.routers.auth",
-        "peekOfCode": "def get_current_user(\n    access_token: Optional[str] = Cookie(None, alias=COOKIE_ACCESS_TOKEN_NAME)\n):\n    \"\"\"Get current user from access token cookie\"\"\"\n    if not access_token:\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=\"Not authenticated\",\n        )\n    token_data = verify_token(access_token)",
+        "peekOfCode": "def get_current_user(request: Request):\n    \"\"\"Get current user from Authorization header\"\"\"\n    # Get Authorization header\n    auth_header = request.headers.get(\"Authorization\")\n    if not auth_header:\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=\"Not authenticated\",\n            headers={\"WWW-Authenticate\": \"Bearer\"},\n        )",
         "detail": "backend.routers.auth",
         "documentation": {}
     },
@@ -2895,7 +2895,7 @@
         "kind": 5,
         "importPath": "backend.routers.auth",
         "description": "backend.routers.auth",
-        "peekOfCode": "router = APIRouter(prefix=\"/auth\", tags=[\"authentication\"])\ndef get_current_user(\n    access_token: Optional[str] = Cookie(None, alias=COOKIE_ACCESS_TOKEN_NAME)\n):\n    \"\"\"Get current user from access token cookie\"\"\"\n    if not access_token:\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=\"Not authenticated\",\n        )",
+        "peekOfCode": "router = APIRouter(prefix=\"/auth\", tags=[\"authentication\"])\ndef get_current_user(request: Request):\n    \"\"\"Get current user from Authorization header\"\"\"\n    # Get Authorization header\n    auth_header = request.headers.get(\"Authorization\")\n    if not auth_header:\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=\"Not authenticated\",\n            headers={\"WWW-Authenticate\": \"Bearer\"},",
         "detail": "backend.routers.auth",
         "documentation": {}
     },

@@ -28,10 +28,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      // Backend sets HttpOnly cookies automatically
       const response = await authApi.login(credentials);
 
-      // Store user in memory only (NOT localStorage)
+      // Store tokens in localStorage
+      localStorage.setItem('access_token', response.access_token);
+      localStorage.setItem('refresh_token', response.refresh_token);
+
+      // Store user in state
       set({ user: response.user, isLoading: false });
     } catch (error: any) {
       set({
@@ -67,10 +70,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      // Backend sets HttpOnly cookies automatically
       const response = await authApi.googleLogin(credential);
 
-      // Store user in memory only (NOT localStorage)
+      // Store tokens in localStorage
+      localStorage.setItem('access_token', response.access_token);
+      localStorage.setItem('refresh_token', response.refresh_token);
+
+      // Store user in state
       set({ user: response.user, isLoading: false });
     } catch (error: any) {
       set({
@@ -83,12 +89,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   logout: async () => {
     try {
-      // Call logout endpoint (clears cookies on backend)
+      // Call logout endpoint to revoke refresh token
       await authApi.logout();
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Clear user from memory
+      // Clear tokens from localStorage
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
+
+      // Clear user from state
       set({ user: null });
     }
   },
@@ -106,14 +116,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   clearError: () => set({ error: null }),
 
   initializeAuth: async () => {
-    // On app load, try to fetch current user
-    // If cookies exist and are valid, backend will authenticate
-    // No need to check localStorage
+    // On app load, try to fetch current user if tokens exist
     set({ isInitializing: true });
     try {
-      await get().fetchUser();
+      const accessToken = localStorage.getItem('access_token');
+
+      if (accessToken) {
+        // Try to fetch user with existing token
+        await get().fetchUser();
+      } else {
+        // No token, user not authenticated
+        set({ user: null });
+      }
     } catch (error) {
-      // Silent fail - user not authenticated
+      // Token invalid or expired, clear storage
+      localStorage.removeItem('access_token');
+      localStorage.removeItem('refresh_token');
       set({ user: null });
     } finally {
       set({ isInitializing: false });

@@ -29,28 +29,49 @@ from auth.google_auth import GoogleAuthService
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
 
-def get_current_user(
-    access_token: Optional[str] = Cookie(None, alias=COOKIE_ACCESS_TOKEN_NAME)
-):
-    """Get current user from access token cookie"""
-    if not access_token:
+def get_current_user(request: Request):
+    """Get current user from Authorization header"""
+    # Get Authorization header
+    auth_header = request.headers.get("Authorization")
+    if not auth_header:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
+    # Extract token from "Bearer <token>" format
+    try:
+        scheme, access_token = auth_header.split()
+        if scheme.lower() != "bearer":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid authentication scheme",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+    except ValueError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid authorization header format",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    # Verify token
     token_data = verify_token(access_token)
     if token_data is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
         )
 
+    # Get user
     user = UserCRUD.get_user_by_email(token_data.email)
     if user is None:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found",
+            headers={"WWW-Authenticate": "Bearer"},
         )
     return user
 
@@ -82,17 +103,16 @@ async def signup(user_data: UserSignup):
 
 
 @router.post("/login")
-async def login(user_data: UserLogin, response: Response, request: Request):
+async def login(user_data: UserLogin, request: Request):
     """
-    Authenticate user and set HttpOnly cookies
+    Authenticate user and return JWT tokens in response body
 
     Args:
         user_data: User login data including email and password
-        response: FastAPI Response object to set cookies
         request: FastAPI Request object for device info
 
     Returns:
-        Dict with success message and user info
+        Dict with tokens and user info
     """
     try:
         user = UserCRUD.authenticate_user(user_data.email, user_data.password)
@@ -118,12 +138,11 @@ async def login(user_data: UserLogin, response: Response, request: Request):
             ip_address=ip_address
         )
 
-        # Set cookies
-        set_access_token_cookie(response, access_token)
-        set_refresh_token_cookie(response, refresh_token)
-
+        # Return tokens in response body (not cookies)
         return {
-            "message": "Login successful",
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
             "user": user
         }
     except HTTPException:
@@ -138,19 +157,17 @@ async def login(user_data: UserLogin, response: Response, request: Request):
 @router.post("/google/login")
 async def google_login(
     google_request: GoogleLoginRequest,
-    response: Response,
     request: Request
 ):
     """
-    Authenticate user with Google OAuth token and set HttpOnly cookies
+    Authenticate user with Google OAuth token and return JWT tokens
 
     Args:
         google_request: GoogleLoginRequest containing the Google JWT token
-        response: FastAPI Response object to set cookies
         request: FastAPI Request object for device info
 
     Returns:
-        Dict with success message and user info
+        Dict with tokens and user info
     """
     try:
         # Initialize Google Auth service
@@ -183,12 +200,11 @@ async def google_login(
             ip_address=ip_address
         )
 
-        # Set cookies
-        set_access_token_cookie(response, access_token)
-        set_refresh_token_cookie(response, refresh_token)
-
+        # Return tokens in response body
         return {
-            "message": "Login successful",
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
             "user": user
         }
 
@@ -212,24 +228,25 @@ async def get_current_user_info(current_user: UserResponse = Depends(get_current
     return current_user
 
 
-@router.post("/refresh", response_model=TokenRefreshResponse)
+@router.post("/refresh")
 async def refresh_token_endpoint(
     request: Request,
-    response: Response,
-    refresh_token: Optional[str] = Cookie(None, alias=COOKIE_REFRESH_TOKEN_NAME)
+    response: Response
 ):
     """
-    Refresh access token using refresh token cookie.
+    Refresh access token using refresh token from request body.
     Implements refresh token rotation for security.
 
     Args:
-        request: FastAPI Request object for device info
-        response: FastAPI Response object to set new cookies
-        refresh_token: Refresh token from cookie
+        request: FastAPI Request object for device info and refresh token
 
     Returns:
-        TokenRefreshResponse: Success message
+        Dict with new tokens
     """
+    # Get refresh token from request body
+    body = await request.json()
+    refresh_token = body.get("refresh_token")
+
     if not refresh_token:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -272,11 +289,12 @@ async def refresh_token_endpoint(
             ip_address=ip_address
         )
 
-        # Set new cookies
-        set_access_token_cookie(response, access_token)
-        set_refresh_token_cookie(response, new_refresh_token)
-
-        return TokenRefreshResponse()
+        # Return new tokens in response body
+        return {
+            "access_token": access_token,
+            "refresh_token": new_refresh_token,
+            "token_type": "bearer"
+        }
 
     except HTTPException:
         raise
@@ -289,28 +307,27 @@ async def refresh_token_endpoint(
 
 @router.post("/logout", response_model=LogoutResponse)
 async def logout(
-    response: Response,
-    current_user: UserResponse = Depends(get_current_user),
-    refresh_token: Optional[str] = Cookie(None, alias=COOKIE_REFRESH_TOKEN_NAME)
+    request: Request,
+    current_user: UserResponse = Depends(get_current_user)
 ):
     """
-    Logout user by revoking refresh token and clearing cookies
+    Logout user by revoking refresh token
 
     Args:
-        response: FastAPI Response object to clear cookies
+        request: FastAPI Request object with refresh token in body
         current_user: Current authenticated user (for validation)
-        refresh_token: Refresh token from cookie to revoke
 
     Returns:
         LogoutResponse: Confirmation message with timestamp
     """
     try:
+        # Get refresh token from request body
+        body = await request.json()
+        refresh_token = body.get("refresh_token")
+
         # Revoke refresh token if present
         if refresh_token:
             await revoke_refresh_token(refresh_token)
-
-        # Clear cookies
-        clear_auth_cookies(response)
 
         return LogoutResponse(
             message="Successfully logged out",
@@ -318,8 +335,6 @@ async def logout(
         )
 
     except Exception as e:
-        # Clear cookies anyway
-        clear_auth_cookies(response)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Logout failed: {str(e)}"

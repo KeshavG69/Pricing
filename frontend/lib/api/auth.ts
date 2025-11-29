@@ -1,9 +1,11 @@
 import apiClient from './client';
 import { LoginCredentials, SignupData, User } from '@/types';
 
-// Updated response types (no tokens in response body)
+// Response types with tokens
 interface LoginResponse {
-  message: string;
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
   user: User;
 }
 
@@ -36,11 +38,9 @@ export const authApi = {
 
   // Logout
   logout: async (): Promise<void> => {
-    await apiClient.post('/auth/logout');
-  },
-
-  // Refresh token (called automatically by interceptor)
-  refresh: async (): Promise<void> => {
-    await apiClient.post('/auth/refresh');
+    const refreshToken = localStorage.getItem('refresh_token');
+    await apiClient.post('/auth/logout', {
+      refresh_token: refreshToken
+    });
   },
 };

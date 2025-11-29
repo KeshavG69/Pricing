@@ -10,6 +10,7 @@ wheels/
 .venv
 node_modules/
 # Environment variables
+dump.rdb
 .env
 data/
 .DS_Store
