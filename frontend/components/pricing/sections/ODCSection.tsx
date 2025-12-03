@@ -5,6 +5,7 @@ import { DataGrid } from 'react-data-grid';
 import type { Column } from 'react-data-grid';
 import { ODCItem } from '@/types';
 import 'react-data-grid/lib/styles.css';
+import styles from './PrimeLaborSection.module.css';
 
 interface ODCSectionProps {
   odcs: ODCItem[];
@@ -334,7 +335,7 @@ export const ODCSection = ({
             columns={columns}
             rows={rows}
             rowKeyGetter={(row) => row.id}
-            className="rdg-light"
+            className={styles.excelGrid}
             style={{ height: '100%' }}
             rowHeight={60}
           />

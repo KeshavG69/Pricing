@@ -4,6 +4,7 @@ import { useMemo, useCallback, useState } from 'react';
 import { DataGrid } from 'react-data-grid';
 import type { Column, RenderEditCellProps } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
+import styles from './PrimeLaborSection.module.css';
 import { AdvancedPosition, IndirectRates, EscalationRates, GridRow, BreakdownType, ContextMenuItem } from '@/types';
 import { ChevronDown, ChevronRight, Trash2, MoreVertical } from 'lucide-react';
 import { ContextMenu } from '@/components/ui/ContextMenu';
@@ -728,7 +729,7 @@ export const PrimeLaborSection = ({
           columns={columns}
           rows={gridRows}
           rowKeyGetter={(row) => `${row.positionId}_${row.type}_${row.breakdownType || ''}`}
-          className="rdg-light"
+          className={styles.excelGrid}
           style={{ height: '100%' }}
           rowHeight={45}
         />

@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { DataGrid } from 'react-data-grid';
 import type { Column } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
+import styles from './PrimeLaborSection.module.css';
 import { Aggregates } from '@/types';
 
 interface PrimeLaborAggregatesSectionProps {
@@ -158,7 +159,7 @@ export const PrimeLaborAggregatesSection = ({
           columns={columns}
           rows={rows}
           rowKeyGetter={(row) => row.id}
-          className="rdg-light"
+          className={styles.excelGrid}
           style={{ height: '100%' }}
           rowHeight={50}
         />

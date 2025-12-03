@@ -1,0 +1,88 @@
+/* Excel-like styling for DataGrid */
+
+/* Cell styling - cleaner borders and padding */
+.excelGrid :global(.rdg-cell) {
+  border-right: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  padding: 8px 12px;
+  background-color: white;
+}
+
+/* Header row styling - professional appearance */
+.excelGrid :global(.rdg-header-row) {
+  background-color: #f8fafc;
+  font-weight: 600;
+  font-size: 13px;
+  color: #334155;
+  border-bottom: 2px solid #cbd5e1;
+}
+
+/* Header cell styling */
+.excelGrid :global(.rdg-header-cell) {
+  border-right: 1px solid #cbd5e1;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+}
+
+/* Row styling - clean separation */
+.excelGrid :global(.rdg-row) {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* Hover state for rows */
+.excelGrid :global(.rdg-row:hover) {
+  background-color: #f1f5f9;
+}
+
+/* Grid container - add border */
+.excelGrid :global(.rdg) {
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+/* Remove default focus outline, add custom */
+.excelGrid :global(.rdg-cell:focus) {
+  outline: 2px solid #3b82f6;
+  outline-offset: -2px;
+}
+
+/* Checkbox cell styling */
+.excelGrid :global(.rdg-checkbox-label) {
+  cursor: pointer;
+}
+
+/* Selected row styling */
+.excelGrid :global(.rdg-row[aria-selected='true']) {
+  background-color: #eff6ff;
+}
+
+/* Column resizer */
+.excelGrid :global(.rdg-header-cell .rdg-resizer) {
+  border-right: 2px solid #94a3b8;
+}
+
+/* Scrollbar styling for better appearance */
+.excelGrid :global(.rdg-viewport) {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
+.excelGrid :global(.rdg-viewport::-webkit-scrollbar) {
+  width: 10px;
+  height: 10px;
+}
+
+.excelGrid :global(.rdg-viewport::-webkit-scrollbar-track) {
+  background: #f1f5f9;
+}
+
+.excelGrid :global(.rdg-viewport::-webkit-scrollbar-thumb) {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.excelGrid :global(.rdg-viewport::-webkit-scrollbar-thumb:hover) {
+  background: #94a3b8;
+}

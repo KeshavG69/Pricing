@@ -45,7 +45,7 @@ interface PricingState {
   manualOverrides: Map<string, Set<string>>;
   aggregates: Aggregates;
   ratesReferenceExpanded: boolean;
-  activeTab: 'main' | 'rate-table';
+  activeTab: 'overview' | 'main' | 'rate-table';
 
   // Actions
   loadProposal: (proposalId: string) => Promise<void>;
@@ -73,7 +73,7 @@ interface PricingState {
   clearManualOverrides: (positionId?: string) => void;
   recalculateAdvanced: () => Promise<void>;
   toggleRatesReference: () => void;
-  setActiveTab: (tab: 'main' | 'rate-table') => void;
+  setActiveTab: (tab: 'overview' | 'main' | 'rate-table') => void;
 }
 
 // Helper to map JobPosition to SpreadsheetPosition
@@ -293,7 +293,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
       byYear: {},
     },
     ratesReferenceExpanded: false,
-    activeTab: 'main',
+    activeTab: 'overview',
 
     loadProposal: async (proposalId) => {
       try {
@@ -587,7 +587,24 @@ export const usePricingStore = create<PricingState>((set, get) => {
               sub_labor: state.rates.sub_fee || 0,
             },
             ga_adder_rate: state.rates.ga_adder || 0,
-            subcontractors: state.subcontractors,
+            subcontractors: state.subcontractors.map(sub => ({
+              name: sub.name,
+              labor_categories: sub.positions.map(pos => {
+                const laborCat: any = {
+                  labor_category: pos.labor_category,
+                  ecraft_code: '',
+                };
+
+                // Convert hours_per_year dict to year_N_rate and year_N_hours format
+                Object.entries(pos.hours_per_year).forEach(([year, hours]) => {
+                  const yearNum = parseInt(year);
+                  laborCat[`year_${yearNum}_rate`] = pos.rate;
+                  laborCat[`year_${yearNum}_hours`] = hours;
+                });
+
+                return laborCat;
+              })
+            })),
             odcs: state.odcs,
             include_rate_table: true,
           },
@@ -887,7 +904,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           byYear: {},
         },
         ratesReferenceExpanded: false,
-        activeTab: 'main',
+        activeTab: 'overview',
       });
     },
   };

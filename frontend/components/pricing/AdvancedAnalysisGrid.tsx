@@ -11,8 +11,6 @@ import FeeSection from './sections/FeeSection';
 import ODCSection from './sections/ODCSection';
 import ODCFormModal from './ODCFormModal';
 import RatesReferencePanel from './RatesReferencePanel';
-import PricingTabs from './PricingTabs';
-import RateTableView from './RateTableView';
 import GrandTotalSection from './sections/GrandTotalSection';
 
 export const AdvancedAnalysisGrid = () => {
@@ -27,7 +25,6 @@ export const AdvancedAnalysisGrid = () => {
     manualOverrides,
     aggregates,
     ratesReferenceExpanded,
-    activeTab,
     togglePositionExpansion,
     addManualOverride,
     updateAdvancedPosition,
@@ -36,7 +33,6 @@ export const AdvancedAnalysisGrid = () => {
     updateODC,
     deleteODC,
     toggleRatesReference,
-    setActiveTab,
     updateRates,
     updateEscalationRates,
   } = usePricingStore();
@@ -183,17 +179,7 @@ export const AdvancedAnalysisGrid = () => {
         </div>
       </div>
 
-      {/* Tab Navigation */}
-      <PricingTabs
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-        hasSubcontractors={subcontractors.length > 0}
-      />
-
-      {/* Main View or Rate Table View */}
-      {activeTab === 'main' ? (
-        <>
-          {/* Rates Reference Panel */}
+      {/* Rates Reference Panel */}
       <RatesReferencePanel
         rates={rates}
         escalationRates={escalationRates}
@@ -266,15 +252,6 @@ export const AdvancedAnalysisGrid = () => {
             feeByYear={feeByYear}
             totalYears={totalYears}
           />
-        </>
-      ) : (
-        /* Rate Table View */
-        <RateTableView
-          subcontractors={subcontractors}
-          feeRate={rates.sub_fee || 0}
-          smhRate={rates.smh || 0}
-        />
-      )}
 
       {/* ODC Form Modal */}
       <ODCFormModal

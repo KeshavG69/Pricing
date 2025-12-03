@@ -11,6 +11,9 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import PositionsGrid from '@/components/pricing/PositionsGrid';
 import AdvancedAnalysisGrid from '@/components/pricing/AdvancedAnalysisGrid';
+import OverviewTab from '@/components/pricing/OverviewTab';
+import RateTableView from '@/components/pricing/RateTableView';
+import PricingTabs from '@/components/pricing/PricingTabs';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { Loader2, CheckCircle, AlertCircle, ArrowLeft, Plus, Download, Pencil, Check, X } from 'lucide-react';
 
@@ -24,6 +27,8 @@ export default function ProposalPage() {
     loadProposal,
     proposalName,
     positions,
+    subcontractors,
+    rates,
     totalYears,
     addPosition,
     reset,
@@ -32,6 +37,8 @@ export default function ProposalPage() {
     enableAdvancedMode,
     transformToAdvanced,
     advancedMode,
+    activeTab,
+    setActiveTab,
     exportToExcel,
   } = usePricingStore();
   const [pollingStatus, setPollingStatus] = useState<any>(null);
@@ -257,28 +264,56 @@ export default function ProposalPage() {
       </Card>
 
       {/* Pricing Workspace */}
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>
-              {advancedMode ? 'Cost Proposal Spreadsheet' : 'Job Positions & Pricing'}
-            </CardTitle>
-            <Button variant="outline" size="sm" onClick={handleAddPosition}>
-              <Plus className="w-4 h-4 mr-2" />
-              Add Position
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="pl-0">
-          <div className={advancedMode ? 'h-[800px] overflow-y-auto' : 'h-[600px]'}>
-            {advancedMode ? (
-              <AdvancedAnalysisGrid />
-            ) : (
+      {!advancedMode ? (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle>Job Positions & Pricing</CardTitle>
+              <Button variant="outline" size="sm" onClick={handleAddPosition}>
+                <Plus className="w-4 h-4 mr-2" />
+                Add Position
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent className="pl-0">
+            <div className="h-[600px]">
               <PositionsGrid />
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            </div>
+          </CardContent>
+        </Card>
+      ) : (
+        /* Advanced Mode with Tabs */
+        <Card>
+          <CardHeader>
+            <CardTitle>Advanced Analysis</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {/* Tab Navigation */}
+            <PricingTabs
+              activeTab={activeTab}
+              onTabChange={setActiveTab}
+              hasSubcontractors={subcontractors.length > 0}
+            />
+
+            {/* Tab Content */}
+            <div className="mt-6">
+              {activeTab === 'overview' && <OverviewTab />}
+              {activeTab === 'main' && (
+                <div className="overflow-y-auto" style={{ maxHeight: '800px' }}>
+                  <AdvancedAnalysisGrid />
+                </div>
+              )}
+              {activeTab === 'rate-table' && (
+                <RateTableView
+                  subcontractors={subcontractors}
+                  feeRate={rates.sub_fee || 0.05}
+                  smhRate={rates.smh || 0.065}
+                />
+              )}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Back button */}
       <div>
