@@ -109,7 +109,7 @@ export default function OverviewTab() {
     // ODC costs
     let odcTotal = 0;
     odcs.forEach((odc) => {
-      Object.values(odc.years).forEach((amount) => {
+      Object.values(odc.amount_per_year).forEach((amount) => {
         odcTotal += amount;
       });
     });
@@ -183,7 +183,7 @@ export default function OverviewTab() {
 
     // ODC by year
     odcs.forEach((odc) => {
-      Object.entries(odc.years).forEach(([year, amount]) => {
+      Object.entries(odc.amount_per_year).forEach(([year, amount]) => {
         if (breakdown[year]) {
           breakdown[year].odc += amount;
         }
