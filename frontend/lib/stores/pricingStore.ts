@@ -612,7 +612,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           },
         };
 
-        const blob = await pricingApi.exportToExcel(payload);
+        const blob = await pricingApi.exportToExcel(payload as any);
 
         // Trigger download
         const url = window.URL.createObjectURL(blob);
