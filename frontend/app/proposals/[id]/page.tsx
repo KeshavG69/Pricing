@@ -53,12 +53,13 @@ export default function ProposalPage() {
     if (proposalId) {
       fetchProposal(proposalId);
     }
-  }, [proposalId, fetchProposal]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proposalId]);
 
   // Load pricing data when proposal is completed
   useEffect(() => {
     if (currentProposal?.status === 'completed' && proposalId && !pricingLoaded) {
-      loadProposal(proposalId);
+      loadProposal(proposalId, currentProposal);
       setPricingLoaded(true);
     }
 
@@ -68,7 +69,8 @@ export default function ProposalPage() {
         setPricingLoaded(false);
       }
     };
-  }, [currentProposal, proposalId, loadProposal, reset, pricingLoaded]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentProposal?.status, proposalId, pricingLoaded]);
 
   // Poll status if proposal is processing
   useEffect(() => {
@@ -113,7 +115,8 @@ export default function ProposalPage() {
       isActive = false;
       setIsPolling(false);
     };
-  }, [currentProposal?.status, proposalId, fetchProposal]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentProposal?.status, proposalId]);
 
   const handleSaveSolicitation = async () => {
     if (!currentProposal) return;

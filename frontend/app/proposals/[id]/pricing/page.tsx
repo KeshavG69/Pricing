@@ -32,7 +32,8 @@ export default function PricingWorkspacePage() {
     return () => {
       reset();
     };
-  }, [proposalId, loadProposal, reset]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [proposalId]);
 
   const handleAddPosition = () => {
     // Add a blank position

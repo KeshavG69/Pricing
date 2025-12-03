@@ -11,6 +11,7 @@ import {
   Aggregates,
   ConversionData,
   SubcontractorPosition,
+  Proposal,
 } from '@/types';
 import { pricingApi } from '../api/pricing';
 import { proposalsApi } from '../api/proposals';
@@ -48,7 +49,7 @@ interface PricingState {
   activeTab: 'overview' | 'main' | 'rate-table';
 
   // Actions
-  loadProposal: (proposalId: string) => Promise<void>;
+  loadProposal: (proposalId: string, existingProposal?: Proposal) => Promise<void>;
   updatePosition: (id: string, updates: Partial<SpreadsheetPosition>) => void;
   addPosition: (position: Omit<SpreadsheetPosition, 'id'>) => void;
   deletePosition: (id: string) => void;
@@ -295,9 +296,10 @@ export const usePricingStore = create<PricingState>((set, get) => {
     ratesReferenceExpanded: false,
     activeTab: 'overview',
 
-    loadProposal: async (proposalId) => {
+    loadProposal: async (proposalId, existingProposal) => {
       try {
-        const proposal = await proposalsApi.get(proposalId);
+        // Use existing proposal data if provided, otherwise fetch
+        const proposal = existingProposal || await proposalsApi.get(proposalId);
 
         // Extract positions from jobs or spreadsheet_data
         let positions: SpreadsheetPosition[] = [];
