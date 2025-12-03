@@ -451,16 +451,18 @@ export default function OverviewTab() {
             <div className="mt-6">
               <h3 className="text-sm font-semibold text-foreground mb-3">Escalation Rates</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                {Object.entries(escalationRates).map(([key, rate]) => (
-                  <div key={key} className="flex justify-between items-center py-2 px-3 bg-blue-50 rounded border border-blue-100">
-                    <span className="text-sm text-muted-foreground">
-                      Year {key.replace('_to_', ' → ')}:
-                    </span>
-                    <span className="text-sm font-medium text-foreground">
-                      {formatPercentage(rate)}
-                    </span>
-                  </div>
-                ))}
+                {Object.entries(escalationRates)
+                  .filter(([, rate]) => rate !== undefined)
+                  .map(([key, rate]) => (
+                    <div key={key} className="flex justify-between items-center py-2 px-3 bg-blue-50 rounded border border-blue-100">
+                      <span className="text-sm text-muted-foreground">
+                        Year {key.replace('_to_', ' → ')}:
+                      </span>
+                      <span className="text-sm font-medium text-foreground">
+                        {formatPercentage(rate!)}
+                      </span>
+                    </div>
+                  ))}
               </div>
             </div>
           )}
