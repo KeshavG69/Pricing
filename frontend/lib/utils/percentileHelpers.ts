@@ -19,9 +19,8 @@ export const getAvailablePercentiles = (
 };
 
 /**
- * Get the current wage for a position.
- * Prioritizes the selected percentile wage, then falls back to selected_wage.
+ * Get the current wage for a position based on the selected percentile.
  */
 export const getCurrentWage = (position: SpreadsheetPosition | AdvancedPosition): number => {
-  return position[`wage_${position.percentile}`] || position.selected_wage || 0;
+  return position[`wage_${position.percentile}`] || 0;
 };

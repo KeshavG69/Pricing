@@ -18,8 +18,8 @@ const calculateAveragedFBLR = (
   escalationRates: EscalationRates,
   totalYears: number
 ) => {
-  // Get base wage from selected percentile first, then fallback to selected_wage
-  const baseWage = position[`wage_${position.percentile}`] || position.selected_wage || 0;
+  // Get base wage from selected percentile
+  const baseWage = position[`wage_${position.percentile}`] || 0;
 
   if (baseWage === 0 || totalYears === 0) {
     return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
@@ -345,7 +345,7 @@ export const PrimeLaborSection = ({
         renderCell: ({ row }) => {
           if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
-            const wage = pos[`wage_${pos.percentile}`] || pos.selected_wage || 0;
+            const wage = pos[`wage_${pos.percentile}`] || 0;
             return (
               <div className="flex items-center h-full px-2">
                 <span className="font-semibold text-foreground">{pos.percentile}</span>

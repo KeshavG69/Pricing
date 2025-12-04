@@ -95,6 +95,9 @@ const mapJobToPosition = (job: JobPosition, index: number): SpreadsheetPosition 
     }
   }
 
+  // Calculate selected_wage from the determined percentile
+  const selectedWage = job[`wage_${percentile}` as keyof JobPosition] as number | undefined;
+
   return {
     id: `pos_${index}_${Date.now()}`,
     labor_category: job.labor_category,
@@ -108,7 +111,7 @@ const mapJobToPosition = (job: JobPosition, index: number): SpreadsheetPosition 
     wage_50th: job.wage_50th,
     wage_75th: job.wage_75th,
     wage_90th: job.wage_90th,
-    selected_wage: job.selected_wage, // Use the wage selected by backend based on experience
+    selected_wage: selectedWage, // Use the wage from the determined percentile
     hours_per_year: job.hours_per_year || { '1': job.hours || 1880 },
     yearly_amounts: [],
     total_amount: 0,
