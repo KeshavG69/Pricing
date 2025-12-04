@@ -70,7 +70,7 @@ export const ConvertToSubcontractorModal = ({
     }
 
     // For SpreadsheetPosition, calculate FBLR
-    const selectedWage = position[`wage_${position.percentile}`] || 0;
+    const selectedWage = position[`wage_${position.percentile}`] || position.selected_wage || 0;
     const dlRate = selectedWage / totalHours;
     const fringe = dlRate * rates.fringe;
     const oh = (dlRate + fringe) * rates.oh;

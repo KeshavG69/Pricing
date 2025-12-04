@@ -59,7 +59,8 @@ export default function ProposalPage() {
   // Load pricing data when proposal is completed
   useEffect(() => {
     if (currentProposal?.status === 'completed' && proposalId && !pricingLoaded) {
-      loadProposal(proposalId, currentProposal);
+      // Always fetch fresh data from API (don't use cached currentProposal)
+      loadProposal(proposalId);
       setPricingLoaded(true);
     }
 

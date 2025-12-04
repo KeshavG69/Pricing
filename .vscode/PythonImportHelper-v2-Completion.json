@@ -431,6 +431,22 @@
         "documentation": {}
     },
     {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
         "label": "pricing",
         "importPath": "routers",
         "description": "routers",
@@ -1808,6 +1824,14 @@
         "documentation": {}
     },
     {
+        "label": "parse_documents_to_dataframe",
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "isExtraImport": true,
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
         "label": "process_dataframe_with_agents",
         "importPath": "utils.pipeline",
         "description": "utils.pipeline",
@@ -2661,7 +2685,7 @@
         "kind": 6,
         "importPath": "backend.client.jd_parser",
         "description": "backend.client.jd_parser",
-        "peekOfCode": "class DocumentMetadataExtract(BaseModel):\n    \"\"\"Document metadata for LlamaExtract.\"\"\"\n    project_name: Optional[str] = Field(\n        None,\n        description=\"Project or contract name\"\n    )\n    location: Optional[str] = Field(\n        None,\n        description=\"Primary work location, city, state, or region\"\n    )",
+        "peekOfCode": "class DocumentMetadataExtract(BaseModel):\n    \"\"\"Document metadata for LlamaExtract.\"\"\"\n    project_name: Optional[str] = Field(\n        None,\n        description=\"Project or contract name\"\n    )\n    location: Optional[str] = Field(\n        None,\n        description=\"Primary state name only (e.g., 'Virginia', 'California', 'Texas'). Extract only the state, not city. Use full state name, not abbreviation.\"\n    )",
         "detail": "backend.client.jd_parser",
         "documentation": {}
     },
@@ -2670,7 +2694,7 @@
         "kind": 6,
         "importPath": "backend.client.jd_parser",
         "description": "backend.client.jd_parser",
-        "peekOfCode": "class GovernmentProposalExtraction(BaseModel):\n    \"\"\"Complete extraction schema for LlamaExtract.\"\"\"\n    metadata: DocumentMetadataExtract = Field(\n        description=\"Document-level information extracted from headers, cover page, and overview sections\"\n    )\n    positions: List[PositionExtract] = Field(\n        description=\"All job positions/labor categories found in the document\"\n    )\ndef _convert_to_job_description(position: PositionExtract, doc_location: Optional[str] = None) -> JobDescription:\n    \"\"\"",
+        "peekOfCode": "class GovernmentProposalExtraction(BaseModel):\n    \"\"\"Complete extraction schema for LlamaExtract.\"\"\"\n    metadata: DocumentMetadataExtract = Field(\n        description=\"Document-level information extracted from headers, cover page, and overview sections\"\n    )\n    positions: List[PositionExtract] = Field(\n        description=\"All job positions/labor categories found in the document\"\n    )\ndef _convert_to_job_description(\n    position: PositionExtract,",
         "detail": "backend.client.jd_parser",
         "documentation": {}
     },
@@ -3266,6 +3290,33 @@
         "description": "backend.utils.proposals",
         "peekOfCode": "_instance_lock = threading.RLock()\ndef get_proposal_crud(collection: Collection = None) -> ProposalCRUD:\n    \"\"\"\n    Get singleton ProposalCRUD instance (thread-safe).\n    Args:\n        collection: MongoDB collection (required on first call only)\n    Returns:\n        Singleton ProposalCRUD instance\n    Usage:\n        from utils.proposals import get_proposal_crud",
         "detail": "backend.utils.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "inspect_with_pymupdf",
+        "kind": 2,
+        "importPath": "backend.inspect_pdf",
+        "description": "backend.inspect_pdf",
+        "peekOfCode": "def inspect_with_pymupdf(pdf_path):\n    \"\"\"Extract text using PyMuPDF to see structure.\"\"\"\n    print(\"\\n\" + \"=\"*80)\n    print(\"PYMUPDF EXTRACTION:\")\n    print(\"=\"*80 + \"\\n\")\n    doc = fitz.open(pdf_path)\n    for page_num, page in enumerate(doc):\n        print(f\"\\n--- PAGE {page_num + 1} ---\\n\")\n        text = page.get_text()\n        print(text[:3000])  # First 3000 chars",
+        "detail": "backend.inspect_pdf",
+        "documentation": {}
+    },
+    {
+        "label": "inspect_with_unstructured",
+        "kind": 2,
+        "importPath": "backend.inspect_pdf",
+        "description": "backend.inspect_pdf",
+        "peekOfCode": "def inspect_with_unstructured(pdf_path):\n    \"\"\"Extract using unstructured to see elements.\"\"\"\n    print(\"\\n\" + \"=\"*80)\n    print(\"UNSTRUCTURED EXTRACTION:\")\n    print(\"=\"*80 + \"\\n\")\n    elements = partition_pdf(pdf_path)\n    for i, element in enumerate(elements[:50]):  # First 50 elements\n        print(f\"\\n[{i}] {element.category}: {element.text[:200]}\")\ndef main():\n    pdf_path = \"/Users/keshav/Downloads/SeaPort M6785425R3005 Info (1).pdf\"",
+        "detail": "backend.inspect_pdf",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "backend.inspect_pdf",
+        "description": "backend.inspect_pdf",
+        "peekOfCode": "def main():\n    pdf_path = \"/Users/keshav/Downloads/SeaPort M6785425R3005 Info (1).pdf\"\n    print(f\"\\nInspecting: {pdf_path}\\n\")\n    if HAS_PYMUPDF:\n        inspect_with_pymupdf(pdf_path)\n    else:\n        print(\"PyMuPDF not installed. Install with: pip install pymupdf\")\n    if HAS_UNSTRUCTURED:\n        inspect_with_unstructured(pdf_path)\n    else:",
+        "detail": "backend.inspect_pdf",
         "documentation": {}
     },
     {

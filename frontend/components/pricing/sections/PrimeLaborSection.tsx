@@ -9,6 +9,7 @@ import { AdvancedPosition, IndirectRates, EscalationRates, GridRow, BreakdownTyp
 import { ChevronDown, ChevronRight, Trash2, MoreVertical } from 'lucide-react';
 import { ContextMenu } from '@/components/ui/ContextMenu';
 import { ConvertToSubcontractorModal } from '@/components/pricing/ConvertToSubcontractorModal';
+import { getAvailablePercentiles } from '@/lib/utils/percentileHelpers';
 
 // Calculate averaged FBLR for an advanced position using proportional hourly rates
 const calculateAveragedFBLR = (
@@ -17,8 +18,8 @@ const calculateAveragedFBLR = (
   escalationRates: EscalationRates,
   totalYears: number
 ) => {
-  // Get base wage from selected percentile
-  const baseWage = position[`wage_${position.percentile}`] || 0;
+  // Get base wage from selected percentile first, then fallback to selected_wage
+  const baseWage = position[`wage_${position.percentile}`] || position.selected_wage || 0;
 
   if (baseWage === 0 || totalYears === 0) {
     return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
@@ -311,6 +312,7 @@ export const PrimeLaborSection = ({
         renderEditCell: (props: RenderEditCellProps<GridRow>) => {
           if (props.row.type !== 'position') return null;
           const pos = props.row.data as AdvancedPosition;
+          const availablePercentiles = getAvailablePercentiles(pos);
 
           return (
             <select
@@ -332,22 +334,23 @@ export const PrimeLaborSection = ({
               onBlur={() => props.onClose(true)}
               autoFocus
             >
-              <option value="10th">10th (${(pos.wage_10th || 0).toLocaleString()})</option>
-              <option value="25th">25th (${(pos.wage_25th || 0).toLocaleString()})</option>
-              <option value="50th">50th (${(pos.wage_50th || 0).toLocaleString()})</option>
-              <option value="75th">75th (${(pos.wage_75th || 0).toLocaleString()})</option>
-              <option value="90th">90th (${(pos.wage_90th || 0).toLocaleString()})</option>
+              {availablePercentiles.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.value} (${p.wage.toLocaleString()})
+                </option>
+              ))}
             </select>
           );
         },
         renderCell: ({ row }) => {
           if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
+            const wage = pos[`wage_${pos.percentile}`] || pos.selected_wage || 0;
             return (
               <div className="flex items-center h-full px-2">
                 <span className="font-semibold text-foreground">{pos.percentile}</span>
                 <span className="ml-2 text-xs text-primary bg-primary/10 px-2 py-0.5 rounded">
-                  ${(pos[`wage_${pos.percentile}`] || 0).toLocaleString()}
+                  ${wage.toLocaleString()}
                 </span>
               </div>
             );

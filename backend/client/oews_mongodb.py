@@ -153,6 +153,25 @@ class OEWSMongoLookup:
 
         if not wage_records:
             print(f"  ❌ No wage data found for SOC {soc_code} in area {area}")
+
+            # Try National fallback if this wasn't already a National query
+            if area.lower() != "national" and area_code != "0000000":
+                print(f"  🔄 Attempting fallback to National data...")
+                print(f"{'='*60}\n")
+
+                # Recursively call with National area
+                national_result = self.get_wage_by_soc(soc_code, "National")
+
+                if national_result:
+                    # Add a note that this is fallback data
+                    national_result["area"] = f"{national_result['area']} (fallback for {area})"
+                    print(f"  ✅ Using National data as fallback for {area}")
+                    return national_result
+                else:
+                    print(f"  ❌ No National data available either")
+                    print(f"{'='*60}\n")
+                    return None
+
             print(f"{'='*60}\n")
             return None
 

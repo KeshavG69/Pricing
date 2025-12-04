@@ -78,23 +78,42 @@ interface PricingState {
 }
 
 // Helper to map JobPosition to SpreadsheetPosition
-const mapJobToPosition = (job: JobPosition, index: number): SpreadsheetPosition => ({
-  id: `pos_${index}_${Date.now()}`,
-  labor_category: job.labor_category,
-  experience: job.experience,
-  location: job.location,
-  soc_code: job.soc_code,
-  soc_title: job.soc_title,
-  percentile: job.selected_percentile || '50th',
-  wage_10th: job.wage_10th,
-  wage_25th: job.wage_25th,
-  wage_50th: job.wage_50th,
-  wage_75th: job.wage_75th,
-  wage_90th: job.wage_90th,
-  hours_per_year: job.hours_per_year || { '1': job.hours || 1880 },
-  yearly_amounts: [],
-  total_amount: 0,
-});
+const mapJobToPosition = (job: JobPosition, index: number): SpreadsheetPosition => {
+  // Find first available percentile with a valid wage
+  let percentile = job.selected_percentile || '50th';
+
+  // Validate that the percentile has a wage value
+  const percentileWage = job[`wage_${percentile}` as keyof JobPosition];
+  if (percentileWage == null) {
+    // Fallback: find first non-null percentile
+    const fallbacks = ['50th', '75th', '25th', '90th', '10th'] as const;
+    for (const p of fallbacks) {
+      if (job[`wage_${p}` as keyof JobPosition] != null) {
+        percentile = p;
+        break;
+      }
+    }
+  }
+
+  return {
+    id: `pos_${index}_${Date.now()}`,
+    labor_category: job.labor_category,
+    experience: job.experience,
+    location: job.location,
+    soc_code: job.soc_code,
+    soc_title: job.soc_title,
+    percentile,
+    wage_10th: job.wage_10th,
+    wage_25th: job.wage_25th,
+    wage_50th: job.wage_50th,
+    wage_75th: job.wage_75th,
+    wage_90th: job.wage_90th,
+    selected_wage: job.selected_wage, // Use the wage selected by backend based on experience
+    hours_per_year: job.hours_per_year || { '1': job.hours || 1880 },
+    yearly_amounts: [],
+    total_amount: 0,
+  };
+};
 
 // Helper to build year hours for recalculation request
 const buildYearHours = (hours_per_year: Record<string, number>) => {
@@ -154,6 +173,33 @@ const calculateSubcontractorCostsByYear = (subcontractors: Subcontractor[]): Rec
   });
 
   return result;
+};
+
+// Proposal cache for faster loading
+const proposalCache = new Map<string, {
+  data: any;
+  timestamp: number;
+  ttl: number;
+}>();
+
+const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+
+const getCachedProposal = (proposalId: string) => {
+  const cached = proposalCache.get(proposalId);
+  if (cached && Date.now() - cached.timestamp < cached.ttl) {
+    console.log('✅ Using cached proposal data');
+    return cached.data;
+  }
+  return null;
+};
+
+const setCachedProposal = (proposalId: string, data: any) => {
+  proposalCache.set(proposalId, {
+    data,
+    timestamp: Date.now(),
+    ttl: CACHE_TTL,
+  });
+  console.log('💾 Cached proposal data');
 };
 
 export const usePricingStore = create<PricingState>((set, get) => {
@@ -298,6 +344,13 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
     loadProposal: async (proposalId, existingProposal) => {
       try {
+        // Check cache first
+        const cachedData = getCachedProposal(proposalId);
+        if (cachedData) {
+          set(cachedData);
+          return;
+        }
+
         // Use existing proposal data if provided, otherwise fetch
         const proposal = existingProposal || await proposalsApi.get(proposalId);
 
@@ -318,6 +371,26 @@ export const usePricingStore = create<PricingState>((set, get) => {
         }
 
         set({
+          proposalId,
+          proposalName: proposal.name,
+          solicitationNumber: proposal.solicitation_number,
+          primeContractorName: proposal.prime_contractor_name || 'TBD',
+          dcaaContact: proposal.dcaa_contact || '',
+          positions,
+          subcontractors: proposal.spreadsheet_data?.subcontractors || [],
+          odcs: proposal.spreadsheet_data?.odcs || [],
+          rates: proposal.rates || get().rates,
+          escalationRates: proposal.escalation_rates || defaultEscalationRates,
+          totalYears: proposal.metadata?.total_years || 1,
+          baseYears: proposal.metadata?.base_years || 1,
+          optionYears: proposal.metadata?.option_years || 0,
+          isDirty: false,
+          lastSaved: null,
+          error: null,
+        });
+
+        // Cache the loaded state for faster future access
+        setCachedProposal(proposalId, {
           proposalId,
           proposalName: proposal.name,
           solicitationNumber: proposal.solicitation_number,
@@ -552,13 +625,116 @@ export const usePricingStore = create<PricingState>((set, get) => {
       try {
         console.log('Generating Excel file...');
 
+        // Basic mode: Export simple Excel spreadsheet matching frontend grid
+        if (!state.advancedMode) {
+          console.log('Exporting basic mode spreadsheet...');
+
+          // Import XLSX library dynamically
+          const XLSX = await import('xlsx');
+
+          // Helper to calculate averaged FBLR
+          const calculateAveragedFBLR = (p: SpreadsheetPosition) => {
+            const baseWage = p[`wage_${p.percentile}`] || p.selected_wage || 0;
+            if (baseWage === 0 || state.totalYears === 0) {
+              return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
+            }
+
+            let totalSalary = 0;
+            let totalHours = 0;
+            let currentYearWage = baseWage;
+            const fteHours = p.standard_fte_hours || 1880;
+
+            for (let year = 1; year <= state.totalYears; year++) {
+              const yearStr = year.toString();
+              const hoursThisYear = p.hours_per_year[yearStr] || 0;
+
+              if (hoursThisYear > 0) {
+                const hourlyRateThisYear = currentYearWage / fteHours;
+                const salaryEarnedThisYear = hourlyRateThisYear * hoursThisYear;
+                totalSalary += salaryEarnedThisYear;
+                totalHours += hoursThisYear;
+              }
+
+              // Apply escalation for next year
+              if (year < state.totalYears) {
+                const escalationKey = `${year}_to_${year + 1}`;
+                const escalationRate = state.escalationRates[escalationKey] || 0;
+                currentYearWage = currentYearWage * (1 + escalationRate);
+              }
+            }
+
+            if (totalHours === 0) {
+              return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
+            }
+
+            const dlRate = totalSalary / totalHours;
+            const fringe = dlRate * state.rates.fringe;
+            const oh = (dlRate + fringe) * state.rates.oh;
+            const ga = (dlRate + fringe + oh) * state.rates.ga;
+            const fee = (dlRate + fringe + oh + ga) * state.rates.fee;
+            const fblr = dlRate + fringe + oh + ga + fee;
+
+            return { dlRate, fringe, oh, ga, fee, fblr };
+          };
+
+          // Prepare data for Excel
+          const excelData = state.positions.map(p => {
+            const averaged = calculateAveragedFBLR(p);
+
+            const row: any = {
+              'Labor Category': p.labor_category,
+              'Experience (yrs)': p.experience ?? '-',
+              'Location': p.location ?? '-',
+              'BLS Code': p.soc_code ?? '-',
+              'BLS Category': p.soc_title ?? '-',
+              'Percentile': p.percentile,
+              'Wage 10th': p.wage_10th ?? 0,
+              'Wage 25th': p.wage_25th ?? 0,
+              'Wage 50th': p.wage_50th ?? 0,
+              'Wage 75th': p.wage_75th ?? 0,
+              'Wage 90th': p.wage_90th ?? 0,
+              'Selected Wage': p[`wage_${p.percentile}`] || p.selected_wage || 0,
+            };
+
+            // Add year columns dynamically
+            for (let i = 1; i <= state.totalYears; i++) {
+              const yearLabel = i === 1 ? 'Base Year Hours' : `Option Year ${i - 1} Hours`;
+              row[yearLabel] = p.hours_per_year[i.toString()] ?? 0;
+            }
+
+            // Add averaged rate columns
+            row['Averaged DL Rate ($/hr)'] = averaged.dlRate.toFixed(2);
+            row['Averaged Fringe ($/hr)'] = averaged.fringe.toFixed(2);
+            row['Averaged OH ($/hr)'] = averaged.oh.toFixed(2);
+            row['Averaged G&A ($/hr)'] = averaged.ga.toFixed(2);
+            row['Averaged Fee ($/hr)'] = averaged.fee.toFixed(2);
+            row['Averaged Full Burdened Rate ($/hr)'] = averaged.fblr.toFixed(2);
+
+            return row;
+          });
+
+          // Create workbook and worksheet
+          const worksheet = XLSX.utils.json_to_sheet(excelData);
+          const workbook = XLSX.utils.book_new();
+          XLSX.utils.book_append_sheet(workbook, worksheet, 'Job Positions');
+
+          // Generate Excel file and download
+          XLSX.writeFile(workbook, `${state.proposalName}_Basic.xlsx`);
+
+          console.log('Excel file downloaded successfully');
+          return;
+        }
+
+        // Advanced mode: Export full cost proposal (existing logic)
+        console.log('Exporting advanced cost proposal...');
+
         // Split rates object into backend-expected structure
         const payload = {
           jobs: state.positions.map((p) => ({
             labor_category: p.labor_category,
             soc_code: p.soc_code,
             hours_per_year: p.hours_per_year,
-            selected_wage: p[`wage_${p.percentile}`] || 0,
+            selected_wage: p[`wage_${p.percentile}`] || p.selected_wage || 0,
             percentile: p.percentile,
             wage_10th: p.wage_10th,
             wage_25th: p.wage_25th,
@@ -645,7 +821,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
         // For each year, create detailed breakdown
         Object.entries(pos.hours_per_year).forEach(([year, hours]) => {
-          const wage = pos[`wage_${pos.percentile}`] || 0;
+          // Use percentile-based wage first, fallback to selected_wage
+          const wage = pos[`wage_${pos.percentile}`] || pos.selected_wage || 0;
           const dlRate = hours > 0 ? wage / hours : 0;
           const dlAmount = dlRate * hours;
 

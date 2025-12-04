@@ -9,6 +9,7 @@ import { SpreadsheetPosition } from '@/types';
 import { Trash2, MoreVertical } from 'lucide-react';
 import { ContextMenu, ContextMenuItem } from '@/components/ui/ContextMenu';
 import { ConvertToSubcontractorModal } from './ConvertToSubcontractorModal';
+import { getAvailablePercentiles } from '@/lib/utils/percentileHelpers';
 
 export const PositionsGrid = () => {
   const { positions, totalYears, rates, escalationRates, updatePosition, deletePosition } = usePricingStore();
@@ -43,7 +44,7 @@ export const PositionsGrid = () => {
 
   // Calculate averaged FBLR for a position across all contract years with escalation
   const calculateFBLR = (position: SpreadsheetPosition) => {
-    const baseWage = position[`wage_${position.percentile}`] || 0;
+    const baseWage = position[`wage_${position.percentile}`] || position.selected_wage || 0;
 
     if (baseWage === 0 || totalYears === 0) {
       return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
@@ -195,31 +196,34 @@ export const PositionsGrid = () => {
         width: 180,
         resizable: true,
         editable: true,
-        renderEditCell: (props: RenderEditCellProps<SpreadsheetPosition>) => (
-          <select
-            className="w-full h-full px-2 bg-transparent text-foreground outline-none cursor-pointer font-medium"
-            value={props.row.percentile}
-            onChange={(e) => {
-              props.onRowChange({
-                ...props.row,
-                percentile: e.target.value as SpreadsheetPosition['percentile'],
-              });
-            }}
-            onBlur={() => props.onClose(true)}
-            autoFocus
-          >
-            <option value="10th">10th (${(props.row.wage_10th || 0).toLocaleString()})</option>
-            <option value="25th">25th (${(props.row.wage_25th || 0).toLocaleString()})</option>
-            <option value="50th">50th (${(props.row.wage_50th || 0).toLocaleString()})</option>
-            <option value="75th">75th (${(props.row.wage_75th || 0).toLocaleString()})</option>
-            <option value="90th">90th (${(props.row.wage_90th || 0).toLocaleString()})</option>
-          </select>
-        ),
+        renderEditCell: (props: RenderEditCellProps<SpreadsheetPosition>) => {
+          const availablePercentiles = getAvailablePercentiles(props.row);
+          return (
+            <select
+              className="w-full h-full px-2 bg-transparent text-foreground outline-none cursor-pointer font-medium"
+              value={props.row.percentile}
+              onChange={(e) => {
+                props.onRowChange({
+                  ...props.row,
+                  percentile: e.target.value as SpreadsheetPosition['percentile'],
+                });
+              }}
+              onBlur={() => props.onClose(true)}
+              autoFocus
+            >
+              {availablePercentiles.map((p) => (
+                <option key={p.value} value={p.value}>
+                  {p.value} (${p.wage.toLocaleString()})
+                </option>
+              ))}
+            </select>
+          );
+        },
         renderCell: ({ row }) => (
           <div className="flex items-center h-full px-2">
             <span className="font-medium text-sm">{row.percentile}</span>
             <span className="ml-2 text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded border border-border">
-              ${(row[`wage_${row.percentile}`] || 0).toLocaleString()}
+              ${(row[`wage_${row.percentile}`] || row.selected_wage || 0).toLocaleString()}
             </span>
           </div>
         ),
@@ -251,7 +255,7 @@ export const PositionsGrid = () => {
         },
         renderCell: ({ row }) => (
           <div className="flex items-center justify-end h-full px-2">
-            <span className="font-mono">${(row[`wage_${row.percentile}`] || 0).toLocaleString()}</span>
+            <span className="font-mono">${(row[`wage_${row.percentile}`] || row.selected_wage || 0).toLocaleString()}</span>
           </div>
         ),
       },

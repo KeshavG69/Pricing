@@ -86,7 +86,7 @@ class PositionExtract(BaseModel):
 
     location: Optional[str] = Field(
         None,
-        description="Specific work location for this position"
+        description="State name only for this position (e.g., 'Virginia', 'California', 'Texas'). Extract only the state, not city. Use full state name, not abbreviation."
     )
 
     hours: Optional[int] = Field(
@@ -112,7 +112,7 @@ class DocumentMetadataExtract(BaseModel):
     )
     location: Optional[str] = Field(
         None,
-        description="Primary work location, city, state, or region"
+        description="Primary state name only (e.g., 'Virginia', 'California', 'Texas'). Extract only the state, not city. Use full state name, not abbreviation."
     )
     base_years: Optional[int] = Field(
         None,
@@ -148,27 +148,49 @@ class GovernmentProposalExtraction(BaseModel):
     )
 
 
-def _convert_to_job_description(position: PositionExtract, doc_location: Optional[str] = None) -> JobDescription:
+def _convert_to_job_description(
+    position: PositionExtract,
+    doc_metadata: DocumentMetadata
+) -> JobDescription:
     """
-    Convert PositionExtract (with List[YearHours]) to JobDescription (with dict[str, int]).
+    Convert PositionExtract to JobDescription with intelligent hour distribution.
 
-    This bridges the gap between LlamaExtract schema (List[YearHours])
-    and the existing JobDescription model (dict[str, int]).
+    Handles two scenarios:
+    1. hours_per_year exists (year columns in PDF) → use directly
+    2. hours exists but no hours_per_year (total hours only) → distribute across years
 
     Args:
         position: PositionExtract from LlamaExtract
-        doc_location: Document-level location to use if position has no location
+        doc_metadata: Document metadata (location, years, FTE hours)
 
     Returns:
-        JobDescription object with correct field types
+        JobDescription object with hours_per_year populated
     """
     # Convert hours_per_year from List[YearHours] to dict[str, int]
     hours_per_year_dict = None
+
     if position.hours_per_year:
+        # Case 1: LlamaExtract found year columns (Personnel Qualifications format)
+        # System already works correctly - use directly
         hours_per_year_dict = {yh.year: yh.hours for yh in position.hours_per_year}
 
+    elif position.hours and not position.hours_per_year and doc_metadata.total_years and doc_metadata.total_years > 1:
+        # Case 2: Only total hours + multi-year contract (SeaPort format)
+        # Distribute hours evenly across years
+        # Backend split_multi_year_position() will handle creating multiple people if needed
+        fte_hours = doc_metadata.standard_fte_hours or 1920
+
+        hours_per_year_dict = _distribute_hours_across_years(
+            total_hours=position.hours,
+            total_years=doc_metadata.total_years,
+            fte_hours=fte_hours
+        )
+
+        # Keep original hours field for backward compatibility
+        # Frontend can display total hours if needed
+
     # Use doc-level location if position has no location
-    location = position.location or doc_location
+    location = position.location or doc_metadata.location
 
     return JobDescription(
         labor_category=position.labor_category,
@@ -178,6 +200,71 @@ def _convert_to_job_description(position: PositionExtract, doc_location: Optiona
         hours=position.hours,
         hours_per_year=hours_per_year_dict
     )
+
+
+def _distribute_hours_across_years(
+    total_hours: int,
+    total_years: int,
+    fte_hours: int = 1920
+) -> Dict[str, int]:
+    """
+    Distribute total hours across contract years based on people-per-year calculation.
+
+    Strategy: Calculate how many people work per year, then distribute accordingly.
+
+    Logic:
+    1. total_ftes = total_hours / fte_hours
+    2. people_per_year = ceil(total_ftes / total_years)
+    3. hours_per_year = people_per_year × fte_hours
+    4. Fill each year with hours_per_year until hours run out
+
+    Args:
+        total_hours: Total hours for entire contract
+        total_years: Total contract duration in years
+        fte_hours: Standard FTE hours per year (default 1920)
+
+    Returns:
+        Dict mapping year string to hours
+
+    Examples:
+        # Case 1: Single person across years
+        5120 hours, 3 years, FTE=1920
+        → total_ftes = 5120/1920 = 2.67
+        → people_per_year = ceil(2.67/3) = 1
+        → hours_per_year = 1×1920 = 1920
+        → Result: {"1": 1920, "2": 1920, "3": 1280}
+
+        # Case 2: Multiple people per year
+        10240 hours, 3 years, FTE=1920
+        → total_ftes = 10240/1920 = 5.33
+        → people_per_year = ceil(5.33/3) = 2
+        → hours_per_year = 2×1920 = 3840
+        → Result: {"1": 3840, "2": 3840, "3": 2560}
+        Backend splits: 3840→2 people, 3840→2 people, 2560→2 people
+    """
+    import math
+
+    # Calculate how many people work per year
+    total_ftes = total_hours / fte_hours
+    people_per_year = math.ceil(total_ftes / total_years)
+    hours_per_year = people_per_year * fte_hours
+
+    # Distribute hours year by year
+    hours_dict = {}
+    remaining = total_hours
+
+    for year in range(1, total_years + 1):
+        year_hours = min(remaining, hours_per_year)
+        hours_dict[str(year)] = year_hours
+        remaining -= year_hours
+
+        if remaining <= 0:
+            # Fill remaining years with 0
+            for y in range(year + 1, total_years + 1):
+                hours_dict[str(y)] = 0
+            break
+
+    return hours_dict
 
 
 def extract_with_llamaextract(pdf_path: str, mode: str = "fast") -> GovernmentProposalExtraction:
@@ -280,7 +367,7 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
 
             # Convert positions from PositionExtract to JobDescription
             for position in extraction.positions:
-                jd = _convert_to_job_description(position, doc_location)
+                jd = _convert_to_job_description(position, doc_metadata)
                 all_jds.append(jd)
                 all_metadata_list.append(doc_metadata)
 
