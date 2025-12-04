@@ -83,17 +83,36 @@ export const MonthDurationModal = ({
   // Calculate how many years have partial months (not 12)
   const partialYearsCount = Object.values(localMonths).filter((m) => m !== 12).length;
 
-  return (
-    <Dialog open={open} onClose={handleCancel} maxWidth="md">
-      <div className="p-6">
-        <div className="flex items-center mb-4">
-          <Calendar className="w-6 h-6 mr-3 text-primary" />
-          <h2 className="text-2xl font-semibold">Month Durations</h2>
-        </div>
+  const footer = (
+    <>
+      <Button variant="outline" onClick={handleReset} className="flex items-center gap-2 mr-auto">
+        <RotateCcw className="w-4 h-4" />
+        Reset All to 12
+      </Button>
+      <Button variant="outline" onClick={handleCancel}>
+        Cancel
+      </Button>
+      <Button
+        onClick={handleSave}
+        disabled={Object.keys(errors).length > 0}
+        className="bg-primary text-primary-foreground"
+      >
+        Save Changes
+      </Button>
+    </>
+  );
 
-        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-          <div className="flex items-start">
-            <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3 mt-0.5 flex-shrink-0" />
+  return (
+    <Dialog
+      isOpen={open}
+      onClose={handleCancel}
+      title="Month Durations"
+      size="lg"
+      footer={footer}
+    >
+      <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+        <div className="flex items-start">
+          <AlertCircle className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3 mt-0.5 flex-shrink-0" />
             <div className="text-sm text-blue-800 dark:text-blue-200">
               <p className="font-semibold mb-1">How This Affects Calculations:</p>
               <ul className="list-disc list-inside space-y-1">
@@ -171,34 +190,13 @@ export const MonthDurationModal = ({
         </div>
 
         {partialYearsCount > 0 && (
-          <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-900/20 rounded border border-amber-200 dark:border-amber-800">
+          <div className="p-3 bg-amber-50 dark:bg-amber-900/20 rounded border border-amber-200 dark:border-amber-800">
             <p className="text-sm text-amber-800 dark:text-amber-200">
               <strong>{partialYearsCount}</strong> year{partialYearsCount > 1 ? 's have' : ' has'}{' '}
               partial months (not 12)
             </p>
           </div>
         )}
-
-        <div className="flex items-center justify-between pt-4 border-t">
-          <Button variant="outline" onClick={handleReset} className="flex items-center gap-2">
-            <RotateCcw className="w-4 h-4" />
-            Reset All to 12
-          </Button>
-
-          <div className="flex items-center gap-3">
-            <Button variant="outline" onClick={handleCancel}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={Object.keys(errors).length > 0}
-              className="bg-primary text-primary-foreground"
-            >
-              Save Changes
-            </Button>
-          </div>
-        </div>
-      </div>
     </Dialog>
   );
 };
