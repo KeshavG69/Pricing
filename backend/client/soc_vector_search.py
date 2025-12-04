@@ -42,10 +42,26 @@ class SOCVectorSearch:
             header=0,
             dtype=str,
         )
+
+        # Debug: print columns found
+        print(f"  Columns found: {df.columns.tolist()}")
+
         df.columns = df.columns.str.strip()
+
+        # Check if required columns exist
+        required_cols = ["occupation_code", "occupation_name"]
+        missing_cols = [col for col in required_cols if col not in df.columns]
+        if missing_cols:
+            raise ValueError(f"Missing required columns: {missing_cols}. Found: {df.columns.tolist()}")
+
         df["occupation_code"] = df["occupation_code"].str.strip()
         df["occupation_name"] = df["occupation_name"].str.strip()
-        df["occupation_description"] = df["occupation_description"].str.strip()
+
+        # Handle occupation_description if it exists
+        if "occupation_description" in df.columns:
+            df["occupation_description"] = df["occupation_description"].str.strip()
+        else:
+            df["occupation_description"] = ""
 
         # Filter to detailed occupations only (6-digit SOC codes)
         # These are the most specific and useful for matching job titles
