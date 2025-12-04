@@ -31,7 +31,8 @@ def create_custom_retreiver(description: Optional[str] = None):
     def custom_retriever(
         query: str,
         agent: Optional[Agent] = None,
-        num_documents: int = 5
+        num_documents: int = 5,
+        **kwargs
     ) -> List[Dict[str, str]]:
         """
         Retrieve the most similar Standard Occupational Classification (SOC) codes for a job title.
