@@ -51,6 +51,10 @@ class DocumentMetadata(BaseModel):
         Ignore larger values that are clearly multiples (e.g., 3760, 5640, etc.).
         Default to None if unclear."""
     )
+    months_per_year: Optional[Dict[str, int]] = Field(
+        None,
+        description="Month duration per year (1-12). Key is year number as string. None if not specified."
+    )
 
 
 # =====================================================================
@@ -64,6 +68,16 @@ class YearHours(BaseModel):
     )
     hours: int = Field(
         description="Hours worked in this year (e.g., 1880 for full-time, 0 for not working)"
+    )
+
+
+class YearMonths(BaseModel):
+    """Months for a specific year - used internally for LlamaExtract."""
+    year: str = Field(
+        description="Year number as string: '1' for Base Period, '2' for Option Year 1, etc."
+    )
+    months: int = Field(
+        description="Number of months in this year (1-12). Default to 12 if not specified."
     )
 
 
@@ -134,6 +148,16 @@ class DocumentMetadataExtract(BaseModel):
         smallest non-zero hours value that appears frequently for individual positions.
         Ignore larger values that are clearly multiples (e.g., 3760, 5640, etc.).
         Default to None if unclear."""
+    )
+    months_per_year: Optional[List[YearMonths]] = Field(
+        None,
+        description="""Month duration for each year (1-12 months). Extract from phrases like:
+        - "8-month base period" → [{"year": "1", "months": 8}]
+        - "6 month option year 1" → [{"year": "2", "months": 6}]
+        - "12 month option year 2" → [{"year": "3", "months": 12}]
+        Year "1" = Base Period, "2" = Option Year 1, "3" = Option Year 2, etc.
+        Extract as a list where each item has 'year' and 'months'.
+        Default to None if not specified (will use 12 months)."""
     )
 
 
@@ -344,6 +368,14 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
             print(f"  Extracting with LlamaExtract...", end=" ")
             extraction = extract_with_llamaextract(doc_path, mode="fast")
 
+            # Convert months_per_year from List[YearMonths] to Dict[str, int]
+            months_dict = None
+            if extraction.metadata.months_per_year:
+                months_dict = {
+                    ym.year: ym.months
+                    for ym in extraction.metadata.months_per_year
+                }
+
             # Convert metadata
             doc_metadata = DocumentMetadata(
                 location=extraction.metadata.location,
@@ -351,7 +383,8 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
                 base_years=extraction.metadata.base_years,
                 option_years=extraction.metadata.option_years,
                 total_years=extraction.metadata.total_years,
-                standard_fte_hours=extraction.metadata.standard_fte_hours
+                standard_fte_hours=extraction.metadata.standard_fte_hours,
+                months_per_year=months_dict
             )
 
             doc_location = doc_metadata.location
@@ -386,7 +419,7 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
         # Create empty DataFrame with correct columns
         df = pd.DataFrame(columns=[
             "labor_category", "description", "experience", "location", "hours", "hours_per_year",
-            "base_years", "option_years", "total_years", "project_name", "standard_fte_hours"
+            "base_years", "option_years", "total_years", "project_name", "standard_fte_hours", "months_per_year"
         ])
     else:
         df = pd.DataFrame([
@@ -402,7 +435,8 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
                 "option_years": metadata.option_years,
                 "total_years": metadata.total_years,
                 "project_name": metadata.project_name,
-                "standard_fte_hours": metadata.standard_fte_hours
+                "standard_fte_hours": metadata.standard_fte_hours,
+                "months_per_year": metadata.months_per_year
             }
             for jd, metadata in zip(all_jds, all_metadata_list)
         ])

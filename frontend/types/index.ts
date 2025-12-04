@@ -40,6 +40,7 @@ export interface ProposalMetadata {
   option_years?: number;
   total_years?: number;
   total_jobs?: number;
+  months_per_year?: Record<string, number>;
 }
 
 export interface Proposal {

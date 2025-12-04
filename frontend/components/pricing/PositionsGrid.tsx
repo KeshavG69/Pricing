@@ -12,7 +12,7 @@ import { ConvertToSubcontractorModal } from './ConvertToSubcontractorModal';
 import { getAvailablePercentiles } from '@/lib/utils/percentileHelpers';
 
 export const PositionsGrid = () => {
-  const { positions, totalYears, rates, escalationRates, updatePosition, deletePosition } = usePricingStore();
+  const { positions, totalYears, monthsPerYear, rates, escalationRates, updatePosition, deletePosition } = usePricingStore();
 
   // Context menu state
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; position: SpreadsheetPosition } | null>(null);
@@ -264,9 +264,14 @@ export const PositionsGrid = () => {
     // Add year-based hours columns
     for (let year = 1; year <= totalYears; year++) {
       const yearStr = year.toString();
+
+      // Get months for this year (default to 12)
+      const months = monthsPerYear[yearStr] || 12;
+      const monthLabel = months === 12 ? '' : ` (${months}mo)`;
+
       cols.push({
         key: `year${year}_hours`,
-        name: year === 1 ? `Base Year\nHours` : `Option ${year - 1}\nHours`,
+        name: year === 1 ? `Base Year\nHours${monthLabel}` : `Option ${year - 1}\nHours${monthLabel}`,
         width: 120,
         resizable: true,
         editable: true,

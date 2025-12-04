@@ -117,19 +117,27 @@ async def process_proposal_documents(
             cleaned_jobs.append(cleaned_job)
 
         # Apply position splitting by FTE hours
-        # Extract FTE threshold from document (or use default)
+        # Extract FTE threshold and months_per_year from document (or use defaults)
         fte_threshold = 1920  # Default fallback
+        months_per_year_dict = None
         if cleaned_jobs and len(cleaned_jobs) > 0:
             first_job_threshold = cleaned_jobs[0].get('standard_fte_hours')
             if first_job_threshold and 1500 <= first_job_threshold <= 2500:
                 fte_threshold = int(first_job_threshold)
 
+            # Extract months_per_year from first job (for month-aware splitting)
+            months_per_year_dict = cleaned_jobs[0].get('months_per_year')
+
         final_split_jobs = []
         for job in cleaned_jobs:
             # Check if job has hours_per_year (multi-year contract)
             if 'hours_per_year' in job and job['hours_per_year']:
-                # Multi-year position - use split_multi_year_position
-                split_positions = split_multi_year_position(job, max_hours=fte_threshold)
+                # Multi-year position - use split_multi_year_position with month awareness
+                split_positions = split_multi_year_position(
+                    job,
+                    max_hours=fte_threshold,
+                    months_per_year=months_per_year_dict
+                )
                 final_split_jobs.extend(split_positions)
             elif 'hours' in job and job['hours'] and job['hours'] > fte_threshold:
                 # Legacy single-year contract with high hours

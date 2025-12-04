@@ -431,6 +431,30 @@
         "documentation": {}
     },
     {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
         "label": "pricing",
         "importPath": "routers",
         "description": "routers",
@@ -568,6 +592,14 @@
     },
     {
         "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -784,6 +816,14 @@
     },
     {
         "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -1808,6 +1848,30 @@
         "documentation": {}
     },
     {
+        "label": "parse_documents_to_dataframe",
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "isExtraImport": true,
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "parse_documents_to_dataframe",
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "isExtraImport": true,
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "process_dataframe_with_agents",
+        "importPath": "utils.pipeline",
+        "description": "utils.pipeline",
+        "isExtraImport": true,
+        "detail": "utils.pipeline",
+        "documentation": {}
+    },
+    {
         "label": "process_dataframe_with_agents",
         "importPath": "utils.pipeline",
         "description": "utils.pipeline",
@@ -1937,6 +2001,30 @@
         "documentation": {}
     },
     {
+        "label": "split_multi_year_position",
+        "importPath": "routers.pricing",
+        "description": "routers.pricing",
+        "isExtraImport": true,
+        "detail": "routers.pricing",
+        "documentation": {}
+    },
+    {
+        "label": "split_position_by_hours",
+        "importPath": "routers.pricing",
+        "description": "routers.pricing",
+        "isExtraImport": true,
+        "detail": "routers.pricing",
+        "documentation": {}
+    },
+    {
+        "label": "split_multi_year_position",
+        "importPath": "routers.pricing",
+        "description": "routers.pricing",
+        "isExtraImport": true,
+        "detail": "routers.pricing",
+        "documentation": {}
+    },
+    {
         "label": "get_idrive_storage",
         "importPath": "client.idrive_storage",
         "description": "client.idrive_storage",
@@ -2024,6 +2112,15 @@
         "description": "client.calculation_service",
         "isExtraImport": true,
         "detail": "client.calculation_service",
+        "documentation": {}
+    },
+    {
+        "label": "numpy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "numpy",
+        "description": "numpy",
+        "detail": "numpy",
         "documentation": {}
     },
     {
@@ -2643,7 +2740,16 @@
         "kind": 6,
         "importPath": "backend.client.jd_parser",
         "description": "backend.client.jd_parser",
-        "peekOfCode": "class YearHours(BaseModel):\n    \"\"\"Hours for a specific year - used internally for LlamaExtract.\"\"\"\n    year: str = Field(\n        description=\"Year number as string: '1' for Base Period, '2' for Option Year 1, etc.\"\n    )\n    hours: int = Field(\n        description=\"Hours worked in this year (e.g., 1880 for full-time, 0 for not working)\"\n    )\nclass PositionExtract(BaseModel):\n    \"\"\"Position model for LlamaExtract - includes List[YearHours].\"\"\"",
+        "peekOfCode": "class YearHours(BaseModel):\n    \"\"\"Hours for a specific year - used internally for LlamaExtract.\"\"\"\n    year: str = Field(\n        description=\"Year number as string: '1' for Base Period, '2' for Option Year 1, etc.\"\n    )\n    hours: int = Field(\n        description=\"Hours worked in this year (e.g., 1880 for full-time, 0 for not working)\"\n    )\nclass YearMonths(BaseModel):\n    \"\"\"Months for a specific year - used internally for LlamaExtract.\"\"\"",
+        "detail": "backend.client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "YearMonths",
+        "kind": 6,
+        "importPath": "backend.client.jd_parser",
+        "description": "backend.client.jd_parser",
+        "peekOfCode": "class YearMonths(BaseModel):\n    \"\"\"Months for a specific year - used internally for LlamaExtract.\"\"\"\n    year: str = Field(\n        description=\"Year number as string: '1' for Base Period, '2' for Option Year 1, etc.\"\n    )\n    months: int = Field(\n        description=\"Number of months in this year (1-12). Default to 12 if not specified.\"\n    )\nclass PositionExtract(BaseModel):\n    \"\"\"Position model for LlamaExtract - includes List[YearHours].\"\"\"",
         "detail": "backend.client.jd_parser",
         "documentation": {}
     },
@@ -2859,7 +2965,7 @@
         "kind": 6,
         "importPath": "backend.models.proposal",
         "description": "backend.models.proposal",
-        "peekOfCode": "class ProposalMetadata(BaseModel):\n    \"\"\"Metadata extracted from proposal documents.\"\"\"\n    base_years: Optional[int] = Field(None, description=\"Number of base years in contract\")\n    option_years: Optional[int] = Field(None, description=\"Number of option years in contract\")\n    total_years: Optional[int] = Field(None, description=\"Total years (base + option)\")\n    total_jobs: Optional[int] = Field(None, description=\"Total number of job positions\")\nclass ProposalCreate(BaseModel):\n    \"\"\"Schema for creating a new proposal.\"\"\"\n    name: str = Field(description=\"Proposal name/title\")\n    solicitation_number: Optional[str] = Field(",
+        "peekOfCode": "class ProposalMetadata(BaseModel):\n    \"\"\"Metadata extracted from proposal documents.\"\"\"\n    base_years: Optional[int] = Field(None, description=\"Number of base years in contract\")\n    option_years: Optional[int] = Field(None, description=\"Number of option years in contract\")\n    total_years: Optional[int] = Field(None, description=\"Total years (base + option)\")\n    total_jobs: Optional[int] = Field(None, description=\"Total number of job positions\")\n    months_per_year: Optional[Dict[str, int]] = Field(\n        None,\n        description=\"Month duration per year (1-12). Key is year number as string. Defaults to 12 if not specified.\"\n    )",
         "detail": "backend.models.proposal",
         "documentation": {}
     },
@@ -2940,7 +3046,7 @@
         "kind": 2,
         "importPath": "backend.routers.pricing",
         "description": "backend.routers.pricing",
-        "peekOfCode": "def split_multi_year_position(position: Dict, max_hours: int = 1920) -> List[Dict]:\n    \"\"\"\n    Split a multi-year position into multiple FTE rows if any year has hours > max_hours.\n    Finds the year with maximum hours and creates that many FTE positions.\n    Each position gets up to max_hours per year, unused FTEs get 0 hours.\n    Args:\n        position: Job position dict with 'hours_per_year' field\n        max_hours: Max hours per person per year (default 1920)\n    Returns:\n        List of position dicts (1 or more)",
+        "peekOfCode": "def split_multi_year_position(\n    position: Dict,\n    max_hours: int = 1920,\n    months_per_year: Optional[Dict[str, int]] = None\n) -> List[Dict]:\n    \"\"\"\n    Split a multi-year position into multiple FTE rows if any year has hours > max_hours.\n    Finds the year with maximum hours and creates that many FTE positions.\n    Each position gets up to max_hours per year, unused FTEs get 0 hours.\n    NOW SUPPORTS VARIABLE MONTH DURATIONS:",
         "detail": "backend.routers.pricing",
         "documentation": {}
     },
@@ -3275,6 +3381,33 @@
         "description": "backend.main",
         "peekOfCode": "def build_project_data_from_dataframe(\n    df: pd.DataFrame,\n    project_config: Dict[str, Any]\n) -> Dict[str, Any]:\n    \"\"\"\n    Build project data structure from DataFrame for Excel generation.\n    Args:\n        df: DataFrame with positions and wage data\n        project_config: Configuration with solicitation info, rates, etc.\n    Returns:",
         "detail": "backend.main",
+        "documentation": {}
+    },
+    {
+        "label": "clean_value",
+        "kind": 2,
+        "importPath": "backend.test_full_pipeline",
+        "description": "backend.test_full_pipeline",
+        "peekOfCode": "def clean_value(val):\n    \"\"\"Clean NaN/inf values for JSON serialization.\"\"\"\n    if isinstance(val, float):\n        if np.isnan(val) or np.isinf(val):\n            return None\n    return val\nasync def test_full_pipeline(pdf_path: str):\n    \"\"\"\n    Run complete pipeline test.\n    Args:",
+        "detail": "backend.test_full_pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "test_splitting_with_partial_years",
+        "kind": 2,
+        "importPath": "backend.test_splitting",
+        "description": "backend.test_splitting",
+        "peekOfCode": "def test_splitting_with_partial_years():\n    \"\"\"\n    Test position splitting with 8-month year.\n    Scenario:\n    - Year 1: 12 months, 1920 hours (1 FTE, no split needed)\n    - Year 2: 12 months, 1920 hours (1 FTE, no split needed)\n    - Year 3: 8 months, 2560 hours (exceeds 8-month threshold)\n    Expected FTE threshold for Year 3: (8/12) × 1920 = 1280 hours\n    Expected split: 2560 / 1280 = 2 FTEs needed\n    Expected result: 2 positions with [1280, 1280] hours in Year 3",
+        "detail": "backend.test_splitting",
+        "documentation": {}
+    },
+    {
+        "label": "test_no_split_needed",
+        "kind": 2,
+        "importPath": "backend.test_splitting",
+        "description": "backend.test_splitting",
+        "peekOfCode": "def test_no_split_needed():\n    \"\"\"\n    Test that positions within threshold are NOT split.\n    \"\"\"\n    print(\"Testing No Split Needed (8-month year with 1280 hours)\")\n    print(\"-\"*80)\n    position = {\n        'labor_category': 'Project Manager',\n        'hours_per_year': {\n            '1': 1920,  # 12 months, 1920 hours (OK)",
+        "detail": "backend.test_splitting",
         "documentation": {}
     },
     {

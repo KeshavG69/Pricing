@@ -238,7 +238,7 @@ export default function ProposalPage() {
                   Processing Complete!
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  {currentProposal.metadata?.total_jobs || 0} job positions extracted - view and edit data below
+                  {positions.length} job position{positions.length !== 1 ? 's' : ''} extracted - view and edit data below
                 </p>
               </div>
             </div>

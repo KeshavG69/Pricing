@@ -69,6 +69,12 @@ class ExcelGenerator:
         # Extract key configuration
         total_years = project_data['total_years']
 
+        # Default months if missing (backward compatibility)
+        if 'months_per_year' not in project_data or project_data['months_per_year'] is None:
+            project_data['months_per_year'] = {
+                str(year): 12 for year in range(1, total_years + 1)
+            }
+
         # Build Excel section by section
         current_row = 1
 
@@ -190,15 +196,25 @@ class ExcelGenerator:
         # Row 7: Year column headers (DYNAMIC)
         ws.cell(7, 4, "Total for All Years")  # Column D
 
+        # Get months_per_year
+        months_per_year = project_data.get('months_per_year', {})
+
         # Base Period - starts at column 7 (G) to align with Rate column
         col_offset = 7  # Column G
-        ws.cell(7, col_offset, "Base Period")
+        base_months = months_per_year.get('1', 12)
+        base_label = f"Base Period ({base_months} mo)" if base_months != 12 else "Base Period"
+        ws.cell(7, col_offset, base_label)
 
         # Option Years
         option_years = total_years - project_data['base_years']
         for year_num in range(1, option_years + 1):
             col_offset += 3  # Each year takes 3 columns
-            ws.cell(7, col_offset, f"Option Year {year_num}")
+            year_key = str(year_num + project_data['base_years'])
+            option_months = months_per_year.get(year_key, 12)
+            option_label = f"Option Year {year_num}"
+            if option_months != 12:
+                option_label += f" ({option_months} mo)"
+            ws.cell(7, col_offset, option_label)
 
         # Row 8: Sub-headers (also dynamic)
         ws.cell(8, 1, "Cost Elements")

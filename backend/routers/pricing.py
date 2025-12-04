@@ -5,7 +5,7 @@ Note: Document upload and processing moved to /api/proposals/upload
 """
 
 from fastapi import APIRouter, HTTPException
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 import math
 
 router = APIRouter()
@@ -55,16 +55,25 @@ def split_position_by_hours(position: Dict, max_hours: int = 1920) -> List[Dict]
     return positions
 
 
-def split_multi_year_position(position: Dict, max_hours: int = 1920) -> List[Dict]:
+def split_multi_year_position(
+    position: Dict,
+    max_hours: int = 1920,
+    months_per_year: Optional[Dict[str, int]] = None
+) -> List[Dict]:
     """
     Split a multi-year position into multiple FTE rows if any year has hours > max_hours.
 
     Finds the year with maximum hours and creates that many FTE positions.
     Each position gets up to max_hours per year, unused FTEs get 0 hours.
 
+    NOW SUPPORTS VARIABLE MONTH DURATIONS:
+    - If a year has 8 months, the FTE threshold is prorated: (8/12) × max_hours
+    - Ensures splitting is consistent with partial-year contracts
+
     Args:
         position: Job position dict with 'hours_per_year' field
-        max_hours: Max hours per person per year (default 1920)
+        max_hours: Max hours per person per FULL year (default 1920)
+        months_per_year: Optional dict of months per year (e.g., {"1": 12, "2": 8})
 
     Returns:
         List of position dicts (1 or more)
@@ -72,12 +81,17 @@ def split_multi_year_position(position: Dict, max_hours: int = 1920) -> List[Dic
     Example:
         Input: {
             "labor_category": "Engineer",
-            "hours_per_year": {"1": 1920, "2": 5760, "3": 3840},
+            "hours_per_year": {"1": 1920, "2": 5760, "3": 2560},
             "wage_75th": 150000
         }
+        With months_per_year = {"1": 12, "2": 12, "3": 8}
+
+        Year 3 threshold = (8/12) × 1920 = 1280
+        Year 3 needs 2560/1280 = 2 FTEs
+
         Output: [
-            {"labor_category": "Engineer", "hours_per_year": {"1": 1920, "2": 1920, "3": 1920}, ...},
-            {"labor_category": "Engineer", "hours_per_year": {"1": 0, "2": 1920, "3": 1920}, ...},
+            {"labor_category": "Engineer", "hours_per_year": {"1": 1920, "2": 1920, "3": 1280}, ...},
+            {"labor_category": "Engineer", "hours_per_year": {"1": 0, "2": 1920, "3": 1280}, ...},
             {"labor_category": "Engineer", "hours_per_year": {"1": 0, "2": 1920, "3": 0}, ...}
         ]
     """
@@ -86,14 +100,29 @@ def split_multi_year_position(position: Dict, max_hours: int = 1920) -> List[Dic
     if not hours_per_year:
         return [position]  # No hours_per_year, can't split
 
-    # Find maximum hours across all years
-    max_year_hours = max(hours_per_year.values())
+    # Calculate year-specific FTE thresholds (respecting month durations)
+    year_thresholds = {}
+    max_ftes_needed = 0
 
-    if max_year_hours <= max_hours:
-        return [position]  # No split needed
+    for year, total_hours in hours_per_year.items():
+        # Get months for this year (default to 12)
+        months = months_per_year.get(year, 12) if months_per_year else 12
 
-    # Calculate number of FTEs needed (based on max year)
-    fte_count = math.ceil(max_year_hours / max_hours)
+        # Calculate prorated FTE threshold for this year
+        year_threshold = (months / 12.0) * max_hours
+        year_thresholds[year] = year_threshold
+
+        # Calculate FTEs needed for this year
+        if total_hours > year_threshold:
+            ftes_needed = math.ceil(total_hours / year_threshold)
+            max_ftes_needed = max(max_ftes_needed, ftes_needed)
+
+    # If no year exceeds its threshold, no split needed
+    if max_ftes_needed <= 1:
+        return [position]
+
+    # Calculate number of FTEs needed (based on max across all years)
+    fte_count = max_ftes_needed
 
     # Create split positions
     split_positions = []
@@ -101,13 +130,17 @@ def split_multi_year_position(position: Dict, max_hours: int = 1920) -> List[Dic
         new_position = position.copy()
         new_hours_per_year = {}
 
-        # Distribute hours for each year independently
+        # Distribute hours for each year independently (using year-specific thresholds)
         for year, total_hours in hours_per_year.items():
-            remaining_hours = total_hours - (i * max_hours)
+            # Get this year's threshold (respects month duration)
+            year_threshold = year_thresholds.get(year, max_hours)
+
+            # Calculate remaining hours for this FTE
+            remaining_hours = total_hours - (i * year_threshold)
 
             if remaining_hours > 0:
-                # This FTE gets work this year (up to max_hours)
-                new_hours_per_year[year] = min(remaining_hours, max_hours)
+                # This FTE gets work this year (up to year_threshold)
+                new_hours_per_year[year] = min(remaining_hours, year_threshold)
             else:
                 # This FTE is not needed this year
                 new_hours_per_year[year] = 0

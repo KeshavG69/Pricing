@@ -10,7 +10,7 @@ Provides all calculation methods for:
 - Subcontractor markup
 """
 
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 
 
 class Calculator:
@@ -89,7 +89,8 @@ class Calculator:
         base_rate: float,
         escalation_rates: Dict[str, float],
         from_year: int,
-        to_year: int
+        to_year: int,
+        months_per_year: Optional[Dict[str, int]] = None
     ) -> float:
         """
         Calculate escalated rate for target year using compound escalation.
@@ -99,6 +100,7 @@ class Calculator:
             escalation_rates: Dict like {"1_to_2": 0.0272, "2_to_3": 0.0299, ...}
             from_year: Starting year (e.g., 1)
             to_year: Target year (e.g., 3)
+            months_per_year: Optional dict of months per year for prorated escalation
 
         Returns:
             Escalated rate for target year
@@ -113,7 +115,15 @@ class Calculator:
         # Compound escalation year by year
         for year in range(from_year, to_year):
             key = f"{year}_to_{year+1}"
-            esc_rate = escalation_rates.get(key, 0.0)
+            full_year_esc = escalation_rates.get(key, 0.0)
+
+            # Prorate if months specified
+            if months_per_year:
+                months = months_per_year.get(str(year), 12)
+                esc_rate = full_year_esc * (months / 12.0)
+            else:
+                esc_rate = full_year_esc
+
             current_rate = current_rate * (1 + esc_rate)
 
         return round(current_rate, 2)
@@ -551,7 +561,8 @@ class Calculator:
         ga_rate: float,
         fee_rate: float,
         standard_fte_hours: float = 1880,
-        total_years: int = 1
+        total_years: int = 1,
+        months_per_year: Optional[Dict[str, int]] = None
     ) -> Dict[str, float]:
         """
         Calculate averaged FBLR using proportional hourly rates with FTE hours.
@@ -608,6 +619,10 @@ class Calculator:
             year_str = str(year)
             hours_this_year = hours_per_year.get(year_str, 0)
 
+            # Get months for this year (default to 12)
+            months_this_year = months_per_year.get(year_str, 12) if months_per_year else 12
+            month_fraction = months_this_year / 12.0
+
             # Calculate proportional salary for this year
             if hours_this_year > 0:
                 hourly_rate_this_year = current_year_wage / standard_fte_hours
@@ -616,11 +631,12 @@ class Calculator:
                 total_salary += salary_earned_this_year
                 total_hours += hours_this_year
 
-            # Apply escalation for next year
+            # Apply PRORATED escalation for next year
             if year < total_years:
                 escalation_key = f"{year}_to_{year + 1}"
-                escalation_rate = escalation_rates.get(escalation_key, 0)
-                current_year_wage = current_year_wage * (1 + escalation_rate)
+                full_year_escalation = escalation_rates.get(escalation_key, 0)
+                prorated_escalation = full_year_escalation * month_fraction
+                current_year_wage = current_year_wage * (1 + prorated_escalation)
 
         if total_hours == 0:
             return {

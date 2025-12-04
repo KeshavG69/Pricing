@@ -33,6 +33,7 @@ interface PricingState {
   totalYears: number;
   baseYears: number;
   optionYears: number;
+  monthsPerYear: Record<string, number>;
   isDirty: boolean;
   isRecalculating: boolean;
   isSaving: boolean;
@@ -61,6 +62,8 @@ interface PricingState {
   deleteODC: (id: string) => void;
   updateRates: (rates: Partial<IndirectRates>) => void;
   updateEscalationRates: (rates: Partial<EscalationRates>) => void;
+  updateMonthsForYear: (year: string, months: number) => void;
+  updateAllMonths: (monthsPerYear: Record<string, number>) => void;
   recalculate: () => Promise<void>;
   exportToExcel: () => Promise<void>;
   reset: () => void;
@@ -273,6 +276,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           odcs: state.odcs,
           rates: state.rates,
           escalation_rates: state.escalationRates,
+          months_per_year: state.monthsPerYear,
         },
       });
 
@@ -323,6 +327,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
     totalYears: 1,
     baseYears: 1,
     optionYears: 0,
+    monthsPerYear: { "1": 12 },
     isDirty: false,
     isRecalculating: false,
     isSaving: false,
@@ -373,6 +378,12 @@ export const usePricingStore = create<PricingState>((set, get) => {
           defaultEscalationRates[`${i}_to_${i + 1}`] = 0.0272; // Default 2.72%
         }
 
+        // Generate default months if not provided
+        const defaultMonthsPerYear: Record<string, number> = {};
+        for (let i = 1; i <= totalYears; i++) {
+          defaultMonthsPerYear[i.toString()] = 12;
+        }
+
         set({
           proposalId,
           proposalName: proposal.name,
@@ -387,6 +398,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           totalYears: proposal.metadata?.total_years || 1,
           baseYears: proposal.metadata?.base_years || 1,
           optionYears: proposal.metadata?.option_years || 0,
+          monthsPerYear: proposal.metadata?.months_per_year || defaultMonthsPerYear,
           isDirty: false,
           lastSaved: null,
           error: null,
@@ -407,6 +419,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           totalYears: proposal.metadata?.total_years || 1,
           baseYears: proposal.metadata?.base_years || 1,
           optionYears: proposal.metadata?.option_years || 0,
+          monthsPerYear: proposal.metadata?.months_per_year || defaultMonthsPerYear,
           isDirty: false,
           lastSaved: null,
           error: null,
@@ -615,6 +628,28 @@ export const usePricingStore = create<PricingState>((set, get) => {
       debouncedRecalculate();
     },
 
+    updateMonthsForYear: (year, months) => {
+      set((state) => ({
+        monthsPerYear: {
+          ...state.monthsPerYear,
+          [year]: Math.max(1, Math.min(12, Math.floor(months)))
+        },
+        isDirty: true
+      }));
+      debouncedRecalculate();
+      debouncedAutoSave();
+    },
+
+    updateAllMonths: (monthsPerYear) => {
+      const validated: Record<string, number> = {};
+      Object.entries(monthsPerYear).forEach(([year, months]) => {
+        validated[year] = Math.max(1, Math.min(12, Math.floor(months)));
+      });
+      set({ monthsPerYear: validated, isDirty: true });
+      debouncedRecalculate();
+      debouncedAutoSave();
+    },
+
     recalculate: async () => {
       // Force immediate recalculation (bypass debounce)
       debouncedRecalculate.cancel();
@@ -651,6 +686,10 @@ export const usePricingStore = create<PricingState>((set, get) => {
               const yearStr = year.toString();
               const hoursThisYear = p.hours_per_year[yearStr] || 0;
 
+              // Get months for this year (default to 12)
+              const monthsThisYear = state.monthsPerYear[yearStr] || 12;
+              const monthFraction = monthsThisYear / 12.0;
+
               if (hoursThisYear > 0) {
                 const hourlyRateThisYear = currentYearWage / fteHours;
                 const salaryEarnedThisYear = hourlyRateThisYear * hoursThisYear;
@@ -658,11 +697,12 @@ export const usePricingStore = create<PricingState>((set, get) => {
                 totalHours += hoursThisYear;
               }
 
-              // Apply escalation for next year
+              // Apply PRORATED escalation for next year
               if (year < state.totalYears) {
                 const escalationKey = `${year}_to_${year + 1}`;
-                const escalationRate = state.escalationRates[escalationKey] || 0;
-                currentYearWage = currentYearWage * (1 + escalationRate);
+                const fullYearEscalation = state.escalationRates[escalationKey] || 0;
+                const proratedEscalation = fullYearEscalation * monthFraction;
+                currentYearWage = currentYearWage * (1 + proratedEscalation);
               }
             }
 

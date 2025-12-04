@@ -26,6 +26,10 @@ class ProposalMetadata(BaseModel):
     option_years: Optional[int] = Field(None, description="Number of option years in contract")
     total_years: Optional[int] = Field(None, description="Total years (base + option)")
     total_jobs: Optional[int] = Field(None, description="Total number of job positions")
+    months_per_year: Optional[Dict[str, int]] = Field(
+        None,
+        description="Month duration per year (1-12). Key is year number as string. Defaults to 12 if not specified."
+    )
 
 
 class ProposalCreate(BaseModel):

@@ -6,9 +6,10 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { usePricingStore } from '@/lib/stores/pricingStore';
 
 import PositionsGrid from '@/components/pricing/PositionsGrid';
+import { MonthDurationModal } from '@/components/pricing/MonthDurationModal';
 import Button from '@/components/ui/Button';
 import { Skeleton } from '@/components/ui/Skeleton';
-import { ArrowLeft, Plus } from 'lucide-react';
+import { ArrowLeft, Plus, Calendar } from 'lucide-react';
 
 export default function PricingWorkspacePage() {
   const params = useParams();
@@ -18,6 +19,7 @@ export default function PricingWorkspacePage() {
   const { loadProposal, proposalName, positions, error, reset, addPosition } =
     usePricingStore();
   const [isLoading, setIsLoading] = useState(true);
+  const [monthModalOpen, setMonthModalOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -97,6 +99,10 @@ export default function PricingWorkspacePage() {
             </div>
           </div>
           <div className="flex items-center space-x-2">
+            <Button variant="outline" onClick={() => setMonthModalOpen(true)}>
+              <Calendar className="w-4 h-4 mr-2" />
+              Month Durations
+            </Button>
             <Button variant="outline" onClick={handleAddPosition}>
               <Plus className="w-4 h-4 mr-2" />
               Add Position
@@ -113,6 +119,12 @@ export default function PricingWorkspacePage() {
             </div>
           </div>
         </div>
+
+        {/* Month Duration Modal */}
+        <MonthDurationModal
+          open={monthModalOpen}
+          onClose={() => setMonthModalOpen(false)}
+        />
       </div>
     </DashboardLayout>
   );
