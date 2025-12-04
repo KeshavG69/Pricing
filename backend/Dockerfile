@@ -50,8 +50,9 @@ ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-# Expose port (Railway assigns dynamically via PORT env var)
+# Expose port
 EXPOSE 8000
 
-# Run the application with uvicorn using Railway's PORT
-CMD uvicorn app.server:app --host 0.0.0.0 --port ${PORT:-8000}
+# Run the application with uvicorn
+# Railway proxies this to external port automatically
+CMD ["uvicorn", "app.server:app", "--host", "0.0.0.0", "--port", "8000"]

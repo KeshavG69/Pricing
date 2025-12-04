@@ -28,8 +28,9 @@ ENV GOOGLE_CLIENT_ID=$GOOGLE_CLIENT_ID
 # Build the Next.js app with env vars
 RUN npm run build
 
-# Expose port (Railway assigns dynamically via PORT env var)
+# Expose port
 EXPOSE 3000
 
-# Start the app on Railway's dynamic PORT
-CMD sh -c "npm start -- -p ${PORT:-3000}"
+# Start the app
+# Railway proxies this to external port automatically
+CMD ["npm", "start", "--", "-p", "3000"]
