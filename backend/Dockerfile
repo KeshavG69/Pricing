@@ -33,8 +33,11 @@ RUN uv sync --no-dev
 # Copy application code
 COPY --chown=appuser:appuser . .
 
-# Create empty data directory structure (will be populated at runtime)
-RUN mkdir -p data/cache
+# Create data directory structure
+RUN mkdir -p data/cache data/oews
+
+# Download occupation file for FAISS index (~260KB)
+RUN curl -o data/oews/oe.occupation https://download.bls.gov/pub/time.series/oe/oe.occupation
 
 # Set environment variables
 ENV PATH="/app/.venv/bin:$PATH" \
