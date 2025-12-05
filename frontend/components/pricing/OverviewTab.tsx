@@ -3,21 +3,16 @@
 import { useMemo } from 'react';
 import { usePricingStore } from '@/lib/stores/pricingStore';
 import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-import { DollarSign, Users, Briefcase, TrendingUp } from 'lucide-react';
 
 // Metric Card Component
 function MetricCard({
   title,
   value,
-  subtitle,
-  icon: Icon,
-  iconColor
+  subtitle
 }: {
   title: string;
   value: string;
   subtitle: string;
-  icon: any;
-  iconColor: string;
 }) {
   return (
     <Card>
@@ -27,9 +22,6 @@ function MetricCard({
             <p className="text-sm font-medium text-muted-foreground">{title}</p>
             <h3 className="text-2xl font-bold text-foreground mt-2">{value}</h3>
             <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
-          </div>
-          <div className={`h-12 w-12 rounded-full ${iconColor} flex items-center justify-center`}>
-            <Icon className="w-6 h-6 text-white" />
           </div>
         </div>
       </CardContent>
@@ -225,29 +217,21 @@ export default function OverviewTab() {
           title="Total Contract Value"
           value={formatCurrency(costMetrics.grandTotal)}
           subtitle={`${totalYears} year${totalYears > 1 ? 's' : ''}`}
-          icon={DollarSign}
-          iconColor="bg-blue-500"
         />
         <MetricCard
           title="Prime Labor"
           value={formatCurrency(costMetrics.primeLaborTotal)}
           subtitle={`${((costMetrics.primeLaborTotal / costMetrics.grandTotal) * 100).toFixed(1)}% of total`}
-          icon={Users}
-          iconColor="bg-emerald-500"
         />
         <MetricCard
           title="Subcontractors"
           value={formatCurrency(costMetrics.subcontractorTotal)}
           subtitle={`${subcontractors.length} subcontractor${subcontractors.length !== 1 ? 's' : ''}`}
-          icon={Briefcase}
-          iconColor="bg-orange-500"
         />
         <MetricCard
           title="Fees & Markups"
           value={formatCurrency(costMetrics.feeTotal + costMetrics.passthroughTotal)}
           subtitle={`${((( costMetrics.feeTotal + costMetrics.passthroughTotal) / costMetrics.grandTotal) * 100).toFixed(1)}% of total`}
-          icon={TrendingUp}
-          iconColor="bg-purple-500"
         />
       </div>
 
