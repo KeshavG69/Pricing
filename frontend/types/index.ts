@@ -141,6 +141,7 @@ export interface SpreadsheetPosition {
   wage_75th?: number;
   wage_90th?: number;
   selected_wage?: number; // The actual wage selected based on experience/percentile
+  custom_salary?: number; // Manually entered salary (overrides percentile wages)
   hours_per_year: Record<string, number>; // {"1": 1880, "2": 1880, ...}
   standard_fte_hours?: number; // Full-time equivalent hours (e.g., 1880, 1920, 2080)
   // Calculated fields (from backend)
@@ -212,6 +213,7 @@ export interface AdvancedPosition {
   wage_50th?: number;
   wage_75th?: number;
   wage_90th?: number;
+  custom_salary?: number; // Manually entered salary (overrides percentile wages)
 
   // Per-year breakdown
   breakdown: {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useCallback, useState } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { DataGrid } from 'react-data-grid';
 import type { Column, RenderEditCellProps } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
@@ -9,17 +9,22 @@ import { SpreadsheetPosition } from '@/types';
 import { Trash2, MoreVertical } from 'lucide-react';
 import { ContextMenu, ContextMenuItem } from '@/components/ui/ContextMenu';
 import { ConvertToSubcontractorModal } from './ConvertToSubcontractorModal';
+import { SalarySelectionModal } from './SalarySelectionModal';
 import { getAvailablePercentiles } from '@/lib/utils/percentileHelpers';
 
 export const PositionsGrid = () => {
   const { positions, totalYears, monthsPerYear, rates, escalationRates, updatePosition, deletePosition } = usePricingStore();
 
   // Context menu state
-  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; position: SpreadsheetPosition } | null>(null);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; position: SpreadsheetPosition; columnKey?: string } | null>(null);
 
   // Conversion modal state
   const [conversionModalOpen, setConversionModalOpen] = useState(false);
   const [positionToConvert, setPositionToConvert] = useState<SpreadsheetPosition | null>(null);
+
+  // Salary selection modal state
+  const [salaryModalOpen, setSalaryModalOpen] = useState(false);
+  const [positionToEdit, setPositionToEdit] = useState<SpreadsheetPosition | null>(null);
 
   // Handle row changes (for inline editing)
   const handleRowsChange = useCallback((newRows: SpreadsheetPosition[]) => {
@@ -44,7 +49,8 @@ export const PositionsGrid = () => {
 
   // Calculate averaged FBLR for a position across all contract years with escalation
   const calculateFBLR = (position: SpreadsheetPosition) => {
-    const baseWage = position[`wage_${position.percentile}`] || position.selected_wage || 0;
+    // Prioritize custom_salary, then percentile wage, then selected_wage, then 0
+    const baseWage = position.custom_salary || position[`wage_${position.percentile}`] || position.selected_wage || 0;
 
     if (baseWage === 0 || totalYears === 0) {
       return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
@@ -107,26 +113,61 @@ export const PositionsGrid = () => {
   }, []);
 
   // Context menu items
-  const getContextMenuItems = useCallback((position: SpreadsheetPosition): ContextMenuItem[] => [
-    {
-      label: 'Convert to Subcontractor',
-      icon: <MoreVertical className="w-4 h-4" />,
-      onClick: () => {
-        setPositionToConvert(position);
-        setConversionModalOpen(true);
+  const getContextMenuItems = useCallback((position: SpreadsheetPosition, columnKey?: string): ContextMenuItem[] => {
+    // Salary column context menu
+    if (columnKey === 'salary') {
+      const availablePercentiles = getAvailablePercentiles(position);
+      const items: ContextMenuItem[] = [];
+
+      // Add percentile options
+      availablePercentiles.forEach((p) => {
+        items.push({
+          label: `${p.value} - $${p.wage.toLocaleString()}`,
+          onClick: () => {
+            updatePosition(position.id, {
+              percentile: p.value,
+              custom_salary: undefined,
+            });
+            setContextMenu(null);
+          },
+        });
+      });
+
+      // Add separator and custom option
+      items.push({
+        label: 'Custom Amount...',
+        onClick: () => {
+          setPositionToEdit(position);
+          setSalaryModalOpen(true);
+          setContextMenu(null);
+        },
+      });
+
+      return items;
+    }
+
+    // Default context menu for other columns
+    return [
+      {
+        label: 'Convert to Subcontractor',
+        icon: <MoreVertical className="w-4 h-4" />,
+        onClick: () => {
+          setPositionToConvert(position);
+          setConversionModalOpen(true);
+        },
       },
-    },
-    {
-      label: 'Delete Position',
-      icon: <Trash2 className="w-4 h-4" />,
-      onClick: () => {
-        if (confirm(`Delete position "${position.labor_category}"?`)) {
-          deletePosition(position.id);
-        }
+      {
+        label: 'Delete Position',
+        icon: <Trash2 className="w-4 h-4" />,
+        onClick: () => {
+          if (confirm(`Delete position "${position.labor_category}"?`)) {
+            deletePosition(position.id);
+          }
+        },
+        danger: true,
       },
-      danger: true,
-    },
-  ], [deletePosition]);
+    ];
+  }, [deletePosition, updatePosition]);
 
   // Generate columns dynamically
   const columns = useMemo<Column<SpreadsheetPosition>[]>(() => {
@@ -189,75 +230,46 @@ export const PositionsGrid = () => {
           </div>
         ),
       },
-      // Percentile Dropdown - Shows all 5 wage options
-      {
-        key: 'percentile',
-        name: 'Percentile',
-        width: 180,
-        resizable: true,
-        editable: true,
-        renderEditCell: (props: RenderEditCellProps<SpreadsheetPosition>) => {
-          const availablePercentiles = getAvailablePercentiles(props.row);
-          return (
-            <select
-              className="w-full h-full px-2 bg-transparent text-foreground outline-none cursor-pointer font-medium"
-              value={props.row.percentile}
-              onChange={(e) => {
-                props.onRowChange({
-                  ...props.row,
-                  percentile: e.target.value as SpreadsheetPosition['percentile'],
-                });
-              }}
-              onBlur={() => props.onClose(true)}
-              autoFocus
-            >
-              {availablePercentiles.map((p) => (
-                <option key={p.value} value={p.value}>
-                  {p.value} (${p.wage.toLocaleString()})
-                </option>
-              ))}
-            </select>
-          );
-        },
-        renderCell: ({ row }) => (
-          <div className="flex items-center h-full px-2">
-            <span className="font-medium text-sm">{row.percentile}</span>
-            <span className="ml-2 text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded border border-border">
-              ${(row[`wage_${row.percentile}`] || row.selected_wage || 0).toLocaleString()}
-            </span>
-          </div>
-        ),
-      },
-      // Salary - Editable (custom edit cell to handle dynamic wage field)
+      // Salary - Click to open modal
       {
         key: 'salary',
         name: 'Salary ($)',
-        width: 130,
+        width: 200,
         resizable: true,
-        editable: true,
-        renderEditCell: (props: RenderEditCellProps<SpreadsheetPosition>) => {
-          const wageKey = `wage_${props.row.percentile}` as keyof SpreadsheetPosition;
+        renderCell: ({ row }) => {
+          // Display custom salary if set, otherwise show percentile wage
+          const displaySalary = row.custom_salary || row[`wage_${row.percentile}`] || row.selected_wage || 0;
+          const isCustom = !!row.custom_salary;
+
           return (
-            <input
-              type="number"
-              className="w-full h-full px-2 bg-transparent text-foreground outline-none text-right font-mono"
-              value={(props.row[wageKey] as number) || 0}
-              onChange={(e) => {
-                props.onRowChange({
-                  ...props.row,
-                  [wageKey]: parseFloat(e.target.value) || 0,
+            <div
+              className="flex items-center justify-end h-full px-2 cursor-pointer hover:bg-muted/50 transition-colors"
+              onClick={() => {
+                setPositionToEdit(row);
+                setSalaryModalOpen(true);
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setContextMenu({
+                  x: e.clientX,
+                  y: e.clientY,
+                  position: row,
+                  columnKey: 'salary',
                 });
               }}
-              onBlur={() => props.onClose(true)}
-              autoFocus
-            />
+            >
+              <div className="flex items-center gap-1">
+                <span className={`font-mono text-sm ${isCustom ? 'text-blue-600 dark:text-blue-400 font-semibold' : ''}`}>
+                  ${displaySalary.toLocaleString()}
+                </span>
+                {isCustom && (
+                  <span className="text-[10px] text-blue-600 dark:text-blue-400">✎</span>
+                )}
+              </div>
+            </div>
           );
         },
-        renderCell: ({ row }) => (
-          <div className="flex items-center justify-end h-full px-2">
-            <span className="font-mono">${(row[`wage_${row.percentile}`] || row.selected_wage || 0).toLocaleString()}</span>
-          </div>
-        ),
       },
     ];
 
@@ -458,7 +470,7 @@ export const PositionsGrid = () => {
         <ContextMenu
           x={contextMenu.x}
           y={contextMenu.y}
-          items={getContextMenuItems(contextMenu.position)}
+          items={getContextMenuItems(contextMenu.position, contextMenu.columnKey)}
           onClose={() => setContextMenu(null)}
         />
       )}
@@ -471,6 +483,21 @@ export const PositionsGrid = () => {
           setPositionToConvert(null);
         }}
         position={positionToConvert}
+      />
+
+      {/* Salary Selection Modal */}
+      <SalarySelectionModal
+        open={salaryModalOpen}
+        onClose={() => {
+          setSalaryModalOpen(false);
+          setPositionToEdit(null);
+        }}
+        position={positionToEdit}
+        onUpdate={(updates) => {
+          if (positionToEdit) {
+            updatePosition(positionToEdit.id, updates);
+          }
+        }}
       />
     </div>
   );

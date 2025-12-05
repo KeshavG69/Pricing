@@ -202,9 +202,14 @@ async def recalculate_spreadsheet(request: Dict[str, Any]):
 
         # Calculate each position
         for pos in positions:
-            # Get wage based on percentile
+            # Get wage - prioritize selected_wage (which may contain custom salary)
+            # over percentile wage lookup
             percentile = pos.get("percentile", "50th")
-            base_wage = pos.get(f"wage_{percentile}", pos.get("selected_wage", 0))
+            selected_wage = pos.get("selected_wage")
+            if selected_wage is not None and selected_wage > 0:
+                base_wage = selected_wage
+            else:
+                base_wage = pos.get(f"wage_{percentile}", 0)
 
             # Build hours per year (convert to string keys for Calculator)
             hours_per_year = {}

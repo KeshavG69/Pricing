@@ -263,7 +263,21 @@ export const usePricingStore = create<PricingState>((set, get) => {
   // Debounced auto-save (2000ms)
   const debouncedAutoSave = debounce(async () => {
     const state = get();
-    if (!state.proposalId || !state.isDirty) return;
+
+    console.log('[AUTO-SAVE] Debounce triggered', {
+      proposalId: state.proposalId,
+      isDirty: state.isDirty,
+      positions: state.positions.length,
+    });
+
+    if (!state.proposalId || !state.isDirty) {
+      console.warn('[AUTO-SAVE] SKIPPED - Guard check failed', {
+        hasProposalId: !!state.proposalId,
+        proposalIdValue: state.proposalId,
+        isDirtyValue: state.isDirty,
+      });
+      return;
+    }
 
     set({ isSaving: true });
     console.log('💾 Attempting auto-save to MongoDB...');
@@ -284,6 +298,12 @@ export const usePricingStore = create<PricingState>((set, get) => {
       console.log('   - Positions saved:', state.positions.length);
       console.log('   - Subcontractors saved:', state.subcontractors.length);
       console.log('   - Subcontractor data:', state.subcontractors);
+
+      // Invalidate cache so next load fetches fresh data from MongoDB
+      if (state.proposalId) {
+        proposalCache.delete(state.proposalId);
+        console.log('🗑️  Cache invalidated for proposal:', state.proposalId);
+      }
 
       set({
         isDirty: false,
@@ -672,7 +692,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
           // Helper to calculate averaged FBLR
           const calculateAveragedFBLR = (p: SpreadsheetPosition) => {
-            const baseWage = p[`wage_${p.percentile}`] || p.selected_wage || 0;
+            // Prioritize custom_salary, then percentile wage, then selected_wage
+            const baseWage = p.custom_salary || p[`wage_${p.percentile}`] || p.selected_wage || 0;
             if (baseWage === 0 || state.totalYears === 0) {
               return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
             }
@@ -736,7 +757,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
               'Wage 50th': p.wage_50th ?? 0,
               'Wage 75th': p.wage_75th ?? 0,
               'Wage 90th': p.wage_90th ?? 0,
-              'Selected Wage': p[`wage_${p.percentile}`] || p.selected_wage || 0,
+              'Selected Wage': p.custom_salary || p[`wage_${p.percentile}`] || p.selected_wage || 0,
             };
 
             // Add year columns dynamically
@@ -777,7 +798,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
             labor_category: p.labor_category,
             soc_code: p.soc_code,
             hours_per_year: p.hours_per_year,
-            selected_wage: p[`wage_${p.percentile}`] || p.selected_wage || 0,
+            selected_wage: p.custom_salary || p[`wage_${p.percentile}`] || p.selected_wage || 0,
             percentile: p.percentile,
             wage_10th: p.wage_10th,
             wage_25th: p.wage_25th,
@@ -864,8 +885,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
         // For each year, create detailed breakdown
         Object.entries(pos.hours_per_year).forEach(([year, hours]) => {
-          // Use percentile-based wage first, fallback to selected_wage
-          const wage = pos[`wage_${pos.percentile}`] || pos.selected_wage || 0;
+          // Prioritize custom_salary, then percentile wage, then selected_wage
+          const wage = pos.custom_salary || pos[`wage_${pos.percentile}`] || pos.selected_wage || 0;
           const dlRate = hours > 0 ? wage / hours : 0;
           const dlAmount = dlRate * hours;
 
@@ -952,7 +973,9 @@ export const usePricingStore = create<PricingState>((set, get) => {
     },
 
     updateAdvancedPosition: (id, updates) => {
-      // Update the underlying positions array first
+      console.log('[ADVANCED MODE] Updating position', { id, updates });
+
+      // Update the underlying positions array first (WITHOUT isDirty)
       set((state) => ({
         positions: state.positions.map((p) =>
           p.id === id ? { ...p, ...updates } : p
@@ -960,7 +983,16 @@ export const usePricingStore = create<PricingState>((set, get) => {
       }));
 
       // Then retransform to advanced mode to recalculate breakdown
+      console.log('[ADVANCED MODE] Calling transformToAdvanced');
       get().transformToAdvanced();
+
+      // Set isDirty AFTER transformation to ensure it persists through all state updates
+      console.log('[ADVANCED MODE] Setting isDirty=true, proposalId=', get().proposalId);
+      set({ isDirty: true });
+
+      // Trigger auto-save directly (no need to recalculate via API in advanced mode)
+      console.log('[ADVANCED MODE] Triggering debouncedAutoSave (will run in 2s)');
+      debouncedAutoSave();
     },
 
     togglePositionExpansion: (id) => {
