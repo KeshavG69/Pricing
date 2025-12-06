@@ -1255,6 +1255,15 @@
         "documentation": {}
     },
     {
+        "label": "threading",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "threading",
+        "description": "threading",
+        "detail": "threading",
+        "documentation": {}
+    },
+    {
         "label": "settings",
         "importPath": "app.settings",
         "description": "app.settings",
@@ -1528,15 +1537,6 @@
         "description": "botocore.exceptions",
         "isExtraImport": true,
         "detail": "botocore.exceptions",
-        "documentation": {}
-    },
-    {
-        "label": "threading",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "threading",
-        "description": "threading",
-        "detail": "threading",
         "documentation": {}
     },
     {
@@ -2434,7 +2434,7 @@
         "kind": 6,
         "importPath": "backend.auth.database",
         "description": "backend.auth.database",
-        "peekOfCode": "class MongoDB:\n    client: Optional[MongoClient] = None\n    database = None\n    @classmethod\n    def connect_to_mongo(cls):\n        \"\"\"Create database connection\"\"\"\n        try:\n            cls.client = MongoClient(settings.MONGODB_URL)\n            cls.database = cls.client[settings.MONGODB_DATABASE]\n            print(\"Connected to MongoDB for authentication\")",
+        "peekOfCode": "class MongoDB:\n    client: Optional[MongoClient] = None\n    database = None\n    _lock = threading.RLock()\n    @classmethod\n    def connect_to_mongo(cls):\n        \"\"\"Create database connection (thread-safe)\"\"\"\n        with cls._lock:\n            # Double-check locking pattern to prevent multiple connections\n            if cls.database is not None:",
         "detail": "backend.auth.database",
         "documentation": {}
     },
@@ -2443,7 +2443,7 @@
         "kind": 5,
         "importPath": "backend.auth.database",
         "description": "backend.auth.database",
-        "peekOfCode": "USERS_COLLECTION = \"users\"\nclass MongoDB:\n    client: Optional[MongoClient] = None\n    database = None\n    @classmethod\n    def connect_to_mongo(cls):\n        \"\"\"Create database connection\"\"\"\n        try:\n            cls.client = MongoClient(settings.MONGODB_URL)\n            cls.database = cls.client[settings.MONGODB_DATABASE]",
+        "peekOfCode": "USERS_COLLECTION = \"users\"\nclass MongoDB:\n    client: Optional[MongoClient] = None\n    database = None\n    _lock = threading.RLock()\n    @classmethod\n    def connect_to_mongo(cls):\n        \"\"\"Create database connection (thread-safe)\"\"\"\n        with cls._lock:\n            # Double-check locking pattern to prevent multiple connections",
         "detail": "backend.auth.database",
         "documentation": {}
     },
