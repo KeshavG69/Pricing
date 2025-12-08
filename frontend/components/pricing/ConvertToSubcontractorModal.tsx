@@ -203,7 +203,7 @@ export const ConvertToSubcontractorModal = ({
       <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-2">
           {/* Section 1: Subcontractor Selection */}
           <Card className="p-4">
-            <h3 className="text-sm font-semibold text-foreground mb-3">1. Select Subcontractor</h3>
+            <h3 className="text-sm font-bold text-foreground mb-3">1. Select Subcontractor</h3>
 
             <div className="flex gap-4 mb-4">
               <Button
@@ -275,7 +275,7 @@ export const ConvertToSubcontractorModal = ({
 
           {/* Section 2: Hours Allocation */}
           <Card className="p-4">
-            <h3 className="text-sm font-semibold text-foreground mb-3">2. Allocate Hours</h3>
+            <h3 className="text-sm font-bold text-foreground mb-3">2. Allocate Hours</h3>
             <p className="text-sm text-muted-foreground mb-4">
               Specify how many hours to allocate to the subcontractor for each year
             </p>
@@ -340,7 +340,7 @@ export const ConvertToSubcontractorModal = ({
 
           {/* Section 3: Rate Configuration */}
           <Card className="p-4">
-            <h3 className="text-sm font-semibold text-foreground mb-3">3. Set Hourly Rate</h3>
+            <h3 className="text-sm font-bold text-foreground mb-3">3. Set Hourly Rate</h3>
 
             <div className="bg-primary/10 border border-primary/20 rounded-lg p-3 mb-4">
               <div className="flex items-center gap-2 text-sm">

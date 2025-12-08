@@ -204,7 +204,7 @@ export const FeeSection = ({
 
         return (
           <div className={`flex items-center justify-end h-full px-2 ${row.type === 'total' ? 'bg-emerald-500/10' : ''}`}>
-            <span className={row.type === 'total' ? 'text-emerald-600 font-bold text-lg' : 'text-amber-600 font-semibold'}>
+            <span className={row.type === 'total' ? 'text-emerald-600 font-semibold' : 'text-amber-600 font-medium'}>
               {formatCurrency(value)}
             </span>
           </div>
@@ -218,8 +218,8 @@ export const FeeSection = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between px-6">
-        <h3 className="text-lg font-semibold text-foreground">Fixed Fee (Profit)</h3>
-        <p className="text-sm text-muted-foreground">
+        <h3 className="text-base font-semibold text-foreground">Fixed Fee (Profit)</h3>
+        <p className="text-xs text-muted-foreground">
           Separate fee rates for prime and subcontractor labor
         </p>
       </div>

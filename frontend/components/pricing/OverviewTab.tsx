@@ -20,7 +20,7 @@ function MetricCard({
         <div className="flex items-center justify-between">
           <div className="flex-1">
             <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <h3 className="text-2xl font-bold text-foreground mt-2">{value}</h3>
+            <h3 className="text-3xl font-bold text-foreground mt-2">{value}</h3>
             <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
           </div>
         </div>
@@ -45,7 +45,7 @@ function CostBreakdownBar({
     <div className="mb-4">
       <div className="flex items-center justify-between mb-2">
         <span className="text-sm font-medium text-foreground">{label}</span>
-        <span className="text-sm text-muted-foreground">
+        <span className="text-sm font-semibold text-muted-foreground">
           ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           <span className="ml-2 text-xs">({percentage.toFixed(1)}%)</span>
         </span>
@@ -203,9 +203,9 @@ export default function OverviewTab() {
     <div className="space-y-6">
       {/* Proposal Info */}
       <div className="mb-4">
-        <h2 className="text-xl font-semibold text-foreground">{proposalName}</h2>
+        <h2 className="text-sm font-bold text-foreground">{proposalName}</h2>
         {solicitationNumber && (
-          <p className="text-sm text-muted-foreground mt-1">
+          <p className="text-xs text-muted-foreground mt-1">
             Solicitation: {solicitationNumber}
           </p>
         )}
@@ -362,7 +362,7 @@ export default function OverviewTab() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {/* Indirect Rates */}
             <div>
-              <h3 className="text-sm font-semibold text-foreground mb-3">Indirect Rates</h3>
+              <h3 className="text-sm font-bold text-foreground mb-3">Indirect Rates</h3>
               <div className="space-y-2">
                 <div className="flex justify-between items-center py-2 px-3 bg-muted/30 rounded">
                   <span className="text-sm text-muted-foreground">Fringe:</span>
@@ -387,7 +387,7 @@ export default function OverviewTab() {
 
             {/* Fee Rates */}
             <div>
-              <h3 className="text-sm font-semibold text-foreground mb-3">Fee Rates</h3>
+              <h3 className="text-sm font-bold text-foreground mb-3">Fee Rates</h3>
               <div className="space-y-2">
                 <div className="flex justify-between items-center py-2 px-3 bg-muted/30 rounded">
                   <span className="text-sm text-muted-foreground">Prime Labor Fee:</span>
@@ -406,7 +406,7 @@ export default function OverviewTab() {
 
             {/* Passthrough Rates */}
             <div>
-              <h3 className="text-sm font-semibold text-foreground mb-3">Passthrough Rates</h3>
+              <h3 className="text-sm font-bold text-foreground mb-3">Passthrough Rates</h3>
               <div className="space-y-2">
                 <div className="flex justify-between items-center py-2 px-3 bg-muted/30 rounded">
                   <span className="text-sm text-muted-foreground">S&MH:</span>
@@ -433,7 +433,7 @@ export default function OverviewTab() {
           {/* Escalation Rates */}
           {Object.keys(escalationRates).length > 0 && (
             <div className="mt-6">
-              <h3 className="text-sm font-semibold text-foreground mb-3">Escalation Rates</h3>
+              <h3 className="text-sm font-bold text-foreground mb-3">Escalation Rates</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                 {Object.entries(escalationRates)
                   .filter(([, rate]) => rate !== undefined)

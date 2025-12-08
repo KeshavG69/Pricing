@@ -38,7 +38,7 @@ export const SubcontractorSection = () => {
   if (subcontractors.length === 0) {
     return (
       <div className="mt-6">
-        <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2 px-6">
+        <h3 className="text-base font-semibold text-foreground mb-4 flex items-center gap-2 px-6">
           Subcontractor Labor
         </h3>
         <Card className="p-8">
@@ -56,7 +56,7 @@ export const SubcontractorSection = () => {
 
   return (
     <div className="mt-6 space-y-4">
-      <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2 px-6">
+      <h3 className="text-base font-semibold text-foreground mb-4 flex items-center gap-2 px-6">
         Subcontractor Labor ({subcontractors.length})
       </h3>
 
@@ -65,8 +65,8 @@ export const SubcontractorSection = () => {
           {/* Subcontractor Header */}
           <div className="flex items-center justify-between mb-4 pb-3 border-b border-border">
             <div>
-              <h4 className="text-base font-semibold text-foreground">{sub.name}</h4>
-              <p className="text-sm text-muted-foreground mt-1">
+              <h4 className="text-sm font-semibold text-foreground">{sub.name}</h4>
+              <p className="text-xs text-muted-foreground mt-1">
                 {sub.positions.length} position{sub.positions.length !== 1 ? 's' : ''}
                 {' • '}
                 Total: ${sub.grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}

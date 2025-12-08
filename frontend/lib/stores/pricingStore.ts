@@ -47,7 +47,7 @@ interface PricingState {
   manualOverrides: Map<string, Set<string>>;
   aggregates: Aggregates;
   ratesReferenceExpanded: boolean;
-  activeTab: 'overview' | 'main' | 'rate-table';
+  activeTab: 'overview' | 'main' | 'subcontractors' | 'rate-table';
 
   // Actions
   loadProposal: (proposalId: string, existingProposal?: Proposal) => Promise<void>;
@@ -77,7 +77,7 @@ interface PricingState {
   clearManualOverrides: (positionId?: string) => void;
   recalculateAdvanced: () => Promise<void>;
   toggleRatesReference: () => void;
-  setActiveTab: (tab: 'overview' | 'main' | 'rate-table') => void;
+  setActiveTab: (tab: 'overview' | 'main' | 'subcontractors' | 'rate-table') => void;
 }
 
 // Helper to map JobPosition to SpreadsheetPosition

@@ -127,7 +127,7 @@ export const RatesReferencePanel = ({
               d="M9 5l7 7-7 7"
             />
           </svg>
-          <h3 className="text-lg font-semibold text-foreground">Rates Reference</h3>
+          <h3 className="text-base font-bold text-foreground">Rates Reference</h3>
           <p className="text-sm text-muted-foreground">
             {isExpanded ? '(Click to collapse)' : '(Click to expand)'}
           </p>
@@ -167,7 +167,7 @@ export const RatesReferencePanel = ({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Indirect Rates */}
             <div className="bg-muted/30 rounded-lg p-4 border border-border">
-              <h4 className="text-sm font-semibold text-emerald-600 mb-3 uppercase tracking-wide">
+              <h4 className="text-sm font-bold text-emerald-600 mb-3 uppercase tracking-wide">
                 Indirect Rates
               </h4>
               <div className="space-y-2">
@@ -191,7 +191,7 @@ export const RatesReferencePanel = ({
 
             {/* Fee & Passthrough Rates */}
             <div className="bg-muted/30 rounded-lg p-4 border border-border">
-              <h4 className="text-sm font-semibold text-purple-600 mb-3 uppercase tracking-wide">
+              <h4 className="text-sm font-bold text-purple-600 mb-3 uppercase tracking-wide">
                 Fee &amp; Passthrough Rates
               </h4>
               <div className="space-y-2">
@@ -227,7 +227,7 @@ export const RatesReferencePanel = ({
           {/* Escalation Rates */}
           {totalYears > 1 && (
             <div className="bg-muted/30 rounded-lg p-4 border border-border">
-              <h4 className="text-sm font-semibold text-blue-600 mb-3 uppercase tracking-wide">
+              <h4 className="text-sm font-bold text-blue-600 mb-3 uppercase tracking-wide">
                 Escalation Rates
               </h4>
               <div className="flex flex-wrap gap-3">

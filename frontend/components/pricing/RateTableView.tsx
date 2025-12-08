@@ -198,7 +198,7 @@ export const RateTableView = ({
       {/* Example Calculation */}
       {exampleCalculation && (
         <div className="bg-muted/30 border border-border rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-foreground mb-4">
+          <h3 className="text-base font-bold text-foreground mb-4">
             Example Calculation
           </h3>
           <div className="flex items-center gap-4 flex-wrap">
@@ -280,7 +280,7 @@ export const RateTableView = ({
 
       {/* Rate Table */}
       <div>
-        <h3 className="text-lg font-semibold text-foreground mb-3">
+        <h3 className="text-base font-bold text-foreground mb-3">
           Complete Rate Table
         </h3>
         <div className="h-[500px] overflow-auto border border-border rounded-lg">

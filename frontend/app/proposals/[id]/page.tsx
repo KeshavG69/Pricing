@@ -15,6 +15,7 @@ import OverviewTab from '@/components/pricing/OverviewTab';
 import RateTableView from '@/components/pricing/RateTableView';
 import PricingTabs from '@/components/pricing/PricingTabs';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
+import { SubcontractorSection } from '@/components/pricing/SubcontractorSection';
 import { Loader2, CheckCircle, AlertCircle, ArrowLeft, Plus, Download, Pencil, Check, X } from 'lucide-react';
 
 export default function ProposalPage() {
@@ -234,7 +235,7 @@ export default function ProposalPage() {
                 <CheckCircle className="w-6 h-6 text-emerald-600" />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-semibold text-foreground mb-1">
+                <h3 className="text-base font-bold text-foreground mb-1">
                   Processing Complete!
                 </h3>
                 <p className="text-sm text-muted-foreground">
@@ -307,6 +308,7 @@ export default function ProposalPage() {
                   <AdvancedAnalysisGrid />
                 </div>
               )}
+              {activeTab === 'subcontractors' && <SubcontractorSection />}
               {activeTab === 'rate-table' && (
                 <RateTableView
                   subcontractors={subcontractors}
@@ -334,14 +336,14 @@ export default function ProposalPage() {
       <div className="max-w-[1800px] mx-auto">
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-semibold text-foreground mb-2">
+            <h1 className="text-lg font-bold text-foreground mb-2">
               {currentProposal.name}
             </h1>
             {/* Solicitation Number with Inline Edit */}
             <div className="flex items-center gap-2">
               {!isEditingSolicitation ? (
                 <>
-                  <p className="text-muted-foreground">
+                  <p className="text-sm text-muted-foreground">
                     {currentProposal.solicitation_number || 'No solicitation number'}
                   </p>
                   <button

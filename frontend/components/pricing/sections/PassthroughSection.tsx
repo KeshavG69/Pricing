@@ -190,7 +190,7 @@ export const PassthroughSection = ({
 
         return (
           <div className={`flex items-center justify-end h-full px-2 ${row.type === 'total' ? 'bg-blue-500/10' : ''}`}>
-            <span className={row.type === 'total' ? 'text-blue-600 font-bold text-lg' : 'text-purple-600 font-semibold'}>
+            <span className={row.type === 'total' ? 'text-blue-600 font-semibold' : 'text-purple-600 font-medium'}>
               {formatCurrency(value)}
             </span>
           </div>
@@ -210,7 +210,7 @@ export const PassthroughSection = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between px-6">
-        <h3 className="text-lg font-semibold text-foreground">Prime Contractor Passthrough</h3>
+        <h3 className="text-base font-bold text-foreground">Prime Contractor Passthrough</h3>
         <p className="text-sm text-muted-foreground">
           Management overhead on subcontractor labor (not including fee)
         </p>

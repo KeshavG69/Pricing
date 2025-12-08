@@ -94,8 +94,8 @@ export default function PricingWorkspacePage() {
               Back
             </Button>
             <div>
-              <h1 className="text-2xl font-semibold text-slate-50">{proposalName}</h1>
-              <p className="text-sm text-slate-400">Pricing Workspace</p>
+              <h1 className="text-sm font-bold text-slate-50">{proposalName}</h1>
+              <p className="text-xs text-slate-400">Pricing Workspace</p>
             </div>
           </div>
           <div className="flex items-center space-x-2">

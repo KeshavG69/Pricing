@@ -134,7 +134,7 @@ export const PrimeLaborAggregatesSection = ({
 
         return (
           <div className={`flex items-center justify-end h-full px-2 ${row.type === 'fblr' ? 'bg-emerald-500/10' : ''}`}>
-            <span className={row.type === 'fblr' ? 'text-emerald-600 font-bold text-lg' : 'text-purple-600 font-semibold'}>
+            <span className={row.type === 'fblr' ? 'text-emerald-600 font-semibold' : 'text-purple-600 font-medium'}>
               {formatCurrency(value)}
             </span>
           </div>
@@ -148,8 +148,8 @@ export const PrimeLaborAggregatesSection = ({
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between px-6">
-        <h3 className="text-lg font-semibold text-foreground">Prime Labor Subtotals</h3>
-        <p className="text-sm text-muted-foreground">
+        <h3 className="text-base font-semibold text-foreground">Prime Labor Subtotals</h3>
+        <p className="text-xs text-muted-foreground">
           Aggregated by cost element
         </p>
       </div>

@@ -5,7 +5,6 @@ import { usePricingStore } from '@/lib/stores/pricingStore';
 import { ODCItem } from '@/types';
 import PrimeLaborSection from './sections/PrimeLaborSection';
 import PrimeLaborAggregatesSection from './sections/PrimeLaborAggregatesSection';
-import { SubcontractorSection } from './SubcontractorSection';
 import PassthroughSection from './sections/PassthroughSection';
 import FeeSection from './sections/FeeSection';
 import ODCSection from './sections/ODCSection';
@@ -209,9 +208,6 @@ export const AdvancedAnalysisGrid = () => {
         aggregates={aggregates}
         totalYears={totalYears}
       />
-
-      {/* Subcontractor Section */}
-      <SubcontractorSection />
 
       {/* Passthrough Section */}
       <PassthroughSection

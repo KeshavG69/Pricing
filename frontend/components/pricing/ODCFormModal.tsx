@@ -116,7 +116,7 @@ export const ODCFormModal = ({
       <div className="bg-card border border-border rounded-lg shadow-2xl w-full max-w-3xl max-h-[90vh] overflow-auto">
         {/* Header */}
         <div className="sticky top-0 bg-card border-b border-border px-6 py-4 flex items-center justify-between">
-          <h2 className="text-xl font-semibold text-foreground">
+          <h2 className="text-lg font-bold text-foreground">
             {existingODC ? 'Edit' : 'Add'} Other Direct Cost
           </h2>
           <button
