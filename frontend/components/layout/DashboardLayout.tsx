@@ -4,7 +4,8 @@ import { ReactNode, useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/stores/authStore';
-import { FileText, LogOut, Plus, Settings, LayoutGrid, ChevronRight, BarChart3, ChevronLeft, Menu } from 'lucide-react';
+import { useProposalsStore } from '@/lib/stores/proposalsStore';
+import { FileText, LogOut, Plus, Settings, LayoutGrid, ChevronRight, BarChart3, ChevronLeft, Menu, Clock, ChevronDown } from 'lucide-react';
 import Button from '../ui/Button';
 
 interface DashboardLayoutProps {
@@ -15,7 +16,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { user, logout, isInitializing } = useAuthStore();
+  const { proposals, fetchProposals } = useProposalsStore();
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [isRecentOpen, setIsRecentOpen] = useState(false);
 
   // Redirect to login if not authenticated (wait for initialization first)
   useEffect(() => {
@@ -23,6 +27,34 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       router.push('/auth/login');
     }
   }, [user, isInitializing, router]);
+
+  // Fetch proposals on mount
+  useEffect(() => {
+    if (user && proposals.length === 0) {
+      fetchProposals();
+    }
+  }, [user, proposals.length, fetchProposals]);
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (isProfileMenuOpen && !target.closest('.profile-menu-container')) {
+        setIsProfileMenuOpen(false);
+      }
+      if (isRecentOpen && !target.closest('.recent-menu-container')) {
+        setIsRecentOpen(false);
+      }
+    };
+
+    if (isProfileMenuOpen || isRecentOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isProfileMenuOpen, isRecentOpen]);
 
   const handleLogout = async () => {
     await logout();
@@ -46,8 +78,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutGrid },
     { href: '/dashboard/proposals', label: 'Proposals', icon: FileText },
-    { href: '/dashboard/settings', label: 'Settings', icon: Settings },
   ];
+
+  // Get last 3 proposals sorted by date
+  const recentProposals = proposals
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, 3);
 
   return (
     <div className="min-h-screen flex bg-muted/10">
@@ -119,43 +155,106 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
               );
             })}
           </div>
+
+          {/* Recent Section */}
+          {recentProposals.length > 0 && (
+            <div className="mt-6 relative recent-menu-container">
+              {!isCollapsed && (
+                <p className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Recent</p>
+              )}
+              <button
+                onClick={() => setIsRecentOpen(!isRecentOpen)}
+                className={`w-full flex items-center ${isCollapsed ? 'justify-center px-4' : 'justify-between px-4'} py-3 rounded-lg transition-all duration-200 text-muted-foreground hover:text-foreground hover:bg-muted`}
+                title={isCollapsed ? 'Recent Proposals' : ''}
+              >
+                <div className={`flex items-center ${isCollapsed ? '' : 'space-x-3'}`}>
+                  <Clock className="w-5 h-5" />
+                  {!isCollapsed && <span className="text-sm">Recent Proposals</span>}
+                </div>
+                {!isCollapsed && (
+                  <ChevronDown className={`w-4 h-4 transition-transform ${isRecentOpen ? 'rotate-180' : ''}`} />
+                )}
+              </button>
+
+              {/* Recent dropdown */}
+              {isRecentOpen && !isCollapsed && (
+                <div className="mt-1 ml-4 space-y-1 bg-muted/30 rounded-lg p-2">
+                  {recentProposals.map((proposal) => (
+                    <Link key={proposal.id} href={`/proposals/${proposal.id}`}>
+                      <div
+                        onClick={() => setIsRecentOpen(false)}
+                        className="flex flex-col px-3 py-2 rounded-md hover:bg-muted transition-colors cursor-pointer"
+                      >
+                        <span className="text-sm text-foreground font-medium truncate">
+                          {proposal.name}
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {new Date(proposal.created_at).toLocaleDateString()}
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
         </nav>
 
         {/* User section */}
-        <div className="p-4 border-t border-border bg-muted/30">
-          {!isCollapsed && (
-            <div className="flex items-center space-x-3 mb-4 px-2">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border border-border text-primary font-semibold">
-                {user.firstName[0]}{user.lastName[0]}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground truncate">
-                  {user.firstName} {user.lastName}
-                </p>
-                <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-              </div>
-            </div>
-          )}
-          {isCollapsed && (
-            <div className="flex justify-center mb-4">
-              <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border border-border text-primary font-semibold">
-                {user.firstName[0]}{user.lastName[0]}
-              </div>
-            </div>
-          )}
-          <Button
-            variant="ghost"
-            size="sm"
-            fullWidth
-            onClick={handleLogout}
-            className={`text-muted-foreground hover:text-red-600 hover:bg-red-50 ${
-              isCollapsed ? 'justify-center px-2' : 'justify-start'
-            }`}
-            title={isCollapsed ? 'Logout' : ''}
+        <div className="p-4 border-t border-border bg-muted/30 relative profile-menu-container">
+          {/* Profile button */}
+          <button
+            onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+            className="w-full group"
           >
-            <LogOut className={`w-4 h-4 ${isCollapsed ? '' : 'mr-2'}`} />
-            {!isCollapsed && 'Logout'}
-          </Button>
+            {!isCollapsed && (
+              <div className="flex items-center space-x-3 px-2 py-2 rounded-lg hover:bg-muted transition-colors">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border border-border text-primary font-semibold">
+                  {user.firstName[0]}{user.lastName[0]}
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-medium text-foreground truncate">
+                    {user.firstName} {user.lastName}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                </div>
+                <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${isProfileMenuOpen ? 'rotate-90' : ''}`} />
+              </div>
+            )}
+            {isCollapsed && (
+              <div className="flex justify-center py-2 rounded-lg hover:bg-muted transition-colors">
+                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border border-border text-primary font-semibold">
+                  {user.firstName[0]}{user.lastName[0]}
+                </div>
+              </div>
+            )}
+          </button>
+
+          {/* Dropdown menu */}
+          {isProfileMenuOpen && (
+            <div className={`absolute bottom-full mb-2 ${isCollapsed ? 'left-2 right-2' : 'left-4 right-4'} bg-card border border-border rounded-lg shadow-lg py-1 z-50`}>
+              <Link href="/dashboard/settings">
+                <button
+                  onClick={() => setIsProfileMenuOpen(false)}
+                  className="w-full flex items-center px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                >
+                  <Settings className="w-4 h-4 mr-3" />
+                  {!isCollapsed && <span>Settings</span>}
+                </button>
+              </Link>
+              <div className="border-t border-border my-1" />
+              <button
+                onClick={() => {
+                  setIsProfileMenuOpen(false);
+                  handleLogout();
+                }}
+                className="w-full flex items-center px-4 py-2.5 text-sm text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors"
+              >
+                <LogOut className="w-4 h-4 mr-3" />
+                {!isCollapsed && <span>Logout</span>}
+              </button>
+            </div>
+          )}
         </div>
       </aside>
 
