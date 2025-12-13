@@ -42,7 +42,7 @@ async def signup(user_data: UserSignup):
         UserResponse: Created user information
     """
     try:
-        user = UserCRUD.create_user(user_data)
+        user = await UserCRUD.create_user(user_data)
         return user
     except ValueError as e:
         raise HTTPException(
@@ -69,7 +69,7 @@ async def login(user_data: UserLogin, request: Request):
         Dict with tokens and user info
     """
     try:
-        user = UserCRUD.authenticate_user(user_data.email, user_data.password)
+        user = await UserCRUD.authenticate_user(user_data.email, user_data.password)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -78,9 +78,8 @@ async def login(user_data: UserLogin, request: Request):
 
         # Get full user document to extract organization info
         from auth.database import MongoDB
-        db = MongoDB.get_database()
-        users_collection = db["users"]
-        user_doc = users_collection.find_one({"email": user_data.email})
+        users_collection = await MongoDB.get_users_collection()
+        user_doc = await users_collection.find_one({"email": user_data.email})
 
         # Extract role and organization from organizations array
         current_org_id = user_doc.get("current_organization_id")
@@ -156,13 +155,12 @@ async def google_login(
             )
 
         # Create or update user in database
-        user = UserCRUD.create_or_update_google_user(google_profile)
+        user = await UserCRUD.create_or_update_google_user(google_profile)
 
         # Get full user document to extract organization info
         from auth.database import MongoDB
-        db = MongoDB.get_database()
-        users_collection = db["users"]
-        user_doc = users_collection.find_one({"email": user.email})
+        users_collection = await MongoDB.get_users_collection()
+        user_doc = await users_collection.find_one({"email": user.email})
 
         # Extract role and organization from organizations array
         current_org_id = user_doc.get("current_organization_id")

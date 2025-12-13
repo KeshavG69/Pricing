@@ -110,7 +110,7 @@ export const ProposalCard = React.memo(
           <div className="text-right min-w-[80px]">
             <p className="text-xs text-muted-foreground mb-1">Created</p>
             <p className="text-sm text-muted-foreground">
-              {formatDate(proposal.created_at)}
+              {formatDate(proposal.createdAt)}
             </p>
           </div>
           <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">

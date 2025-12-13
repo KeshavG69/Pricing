@@ -260,7 +260,7 @@ export default function AcceptInvitationPage() {
                 </div>
 
                 <p className="text-xs text-muted-foreground pt-2 border-t border-border">
-                  Expires: {formatDate(invitationData.expires_at)}
+                  Expires: {formatDate(invitationData.expiresAt)}
                 </p>
               </div>
             )}

@@ -1,31 +1,48 @@
 """
-MongoDB-based OEWS wage lookup for scalable web applications.
+MongoDB-based OEWS wage lookup for scalable web applications (Async).
 Queries wage data from MongoDB instead of local files.
+
+Uses Motor (AsyncIOMotorClient) for async MongoDB operations.
 """
 
-from pymongo import MongoClient
-from pymongo.database import Database
+from motor.motor_asyncio import AsyncIOMotorClient
+from motor.motor_asyncio import AsyncIOMotorDatabase
 from typing import Optional, Dict, Any, List
-import threading
+import asyncio
 import math
-from functools import lru_cache
 
 from app.settings import settings
 
 
 class OEWSMongoLookup:
-    """Query OEWS wage data from MongoDB."""
+    """Query OEWS wage data from MongoDB (Async)."""
 
     def __init__(self):
-        """Initialize MongoDB connection."""
-        # Create MongoDB client with connection pooling
-        # PyMongo client is thread-safe and handles connection pooling automatically
-        self.client = MongoClient(settings.MONGODB_URL)
-        self.db: Database = self.client[settings.MONGODB_DATABASE]
+        """Initialize MongoDB connection (lazy initialization)."""
+        self.client: Optional[AsyncIOMotorClient] = None
+        self.db: Optional[AsyncIOMotorDatabase] = None
 
-    def search_areas(self, keyword: str) -> List[Dict[str, str]]:
+    async def _ensure_initialized(self):
+        """Ensure MongoDB connection is initialized (lazy initialization)"""
+        if self.db is None:
+            # Create Motor async client
+            # Increased timeouts for Railway remote MongoDB connection
+            self.client = AsyncIOMotorClient(
+                settings.MONGODB_URL,
+                maxPoolSize=200,
+                minPoolSize=10,
+                maxIdleTimeMS=60000,
+                socketTimeoutMS=30000,
+                connectTimeoutMS=20000,
+                serverSelectionTimeoutMS=20000,
+                retryWrites=True,
+                retryReads=True
+            )
+            self.db = self.client[settings.MONGODB_DATABASE]
+
+    async def search_areas(self, keyword: str) -> List[Dict[str, str]]:
         """
-        Search areas by keyword using MongoDB text search.
+        Search areas by keyword using MongoDB text search (async).
 
         Args:
             keyword: Area name keyword (e.g., "California", "San Francisco")
@@ -33,19 +50,22 @@ class OEWSMongoLookup:
         Returns:
             List of dicts with area_code and area_name
         """
+        await self._ensure_initialized()
+
         # MongoDB text search on area_name field
         # Case-insensitive partial match
-        results = self.db.areas.find(
+        cursor = self.db.areas.find(
             {"area_name": {"$regex": keyword, "$options": "i"}},
             {"_id": 0, "area_code": 1, "area_name": 1}
         ).limit(20)  # Limit to 20 results
 
-        return list(results)
+        return await cursor.to_list(length=None)
 
-    @lru_cache(maxsize=512)
-    def get_area_code(self, area_name: str) -> Optional[str]:
+    async def get_area_code(self, area_name: str) -> Optional[str]:
         """
-        Convert area name to area code (cached for performance).
+        Convert area name to area code (async).
+
+        NOTE: @lru_cache removed - Redis caching will be implemented in next optimization phase.
 
         Args:
             area_name: Area name (e.g., "California", "National")
@@ -53,8 +73,10 @@ class OEWSMongoLookup:
         Returns:
             Area code (7-digit string) or None if not found
         """
+        await self._ensure_initialized()
+
         # Try exact match first (case-insensitive)
-        exact_match = self.db.areas.find_one(
+        exact_match = await self.db.areas.find_one(
             {"area_name": {"$regex": f"^{area_name}$", "$options": "i"}},
             {"_id": 0, "area_code": 1}
         )
@@ -63,10 +85,12 @@ class OEWSMongoLookup:
             return exact_match["area_code"]
 
         # Try partial match
-        partial_matches = list(self.db.areas.find(
+        cursor = self.db.areas.find(
             {"area_name": {"$regex": area_name, "$options": "i"}},
             {"_id": 0, "area_code": 1, "area_name": 1}
-        ).limit(2))
+        ).limit(2)
+
+        partial_matches = await cursor.to_list(length=None)
 
         if len(partial_matches) == 1:
             # Only one match found
@@ -79,17 +103,15 @@ class OEWSMongoLookup:
         # No matches found
         return None
 
-    @lru_cache(maxsize=2048)
-    def get_wage_by_soc(
+    async def get_wage_by_soc(
         self,
         soc_code: str,
         area: str = "National",
     ) -> Optional[Dict[str, Any]]:
         """
-        Get wage data for a SOC code in a specific area (cached for performance).
+        Get wage data for a SOC code in a specific area (async).
 
-        Cache stores up to 2048 recent wage lookups, significantly reducing
-        MongoDB queries for repeated SOC/area combinations.
+        NOTE: @lru_cache removed - Redis caching will be implemented in next optimization phase.
 
         Args:
             soc_code: SOC code (e.g., "15-1252" or "151252")
@@ -98,6 +120,8 @@ class OEWSMongoLookup:
         Returns:
             Dictionary with 5 wage percentiles or None if not found
         """
+        await self._ensure_initialized()
+
         print(f"\n{'='*60}")
         print(f"🔍 get_wage_by_soc called")
         print(f"{'='*60}")
@@ -113,7 +137,7 @@ class OEWSMongoLookup:
         if not (area.isdigit() and len(area) == 7):
             # Not a 7-digit code, treat as name
             print(f"  Converting area name to code...")
-            area_code = self.get_area_code(area)
+            area_code = await self.get_area_code(area)
             if area_code is None:
                 print(f"  ❌ Area '{area}' not found in database")
                 return None
@@ -144,10 +168,12 @@ class OEWSMongoLookup:
         series_pattern = f"^{series_prefix}{area_code}000000{soc_clean}"
         print(f"  MongoDB query pattern: {series_pattern}")
 
-        wage_records = list(self.db.wage_data.find(
+        cursor = self.db.wage_data.find(
             {"series_id": {"$regex": series_pattern}},
             {"_id": 0, "series_id": 1, "value": 1}
-        ))
+        )
+
+        wage_records = await cursor.to_list(length=None)
 
         print(f"  Found {len(wage_records)} wage records")
 
@@ -160,7 +186,7 @@ class OEWSMongoLookup:
                 print(f"{'='*60}\n")
 
                 # Recursively call with National area
-                national_result = self.get_wage_by_soc(soc_code, "National")
+                national_result = await self.get_wage_by_soc(soc_code, "National")
 
                 if national_result:
                     # Add a note that this is fallback data
@@ -182,7 +208,7 @@ class OEWSMongoLookup:
                 print(f"    {i+1}. {rec['series_id'].strip()} = {rec['value']}")
 
         # Get occupation name and description from occupations collection
-        occ_doc = self.db.occupations.find_one(
+        occ_doc = await self.db.occupations.find_one(
             {"occupation_code": soc_clean},
             {"_id": 0, "occupation_name": 1, "occupation_description": 1}
         )
@@ -190,7 +216,7 @@ class OEWSMongoLookup:
         occ_description = occ_doc["occupation_description"] if occ_doc and "occupation_description" in occ_doc else None
 
         # Get area name for display
-        area_doc = self.db.areas.find_one(
+        area_doc = await self.db.areas.find_one(
             {"area_code": area_code},
             {"_id": 0, "area_name": 1}
         )
@@ -252,25 +278,26 @@ class OEWSMongoLookup:
             "wages": wages
         }
 
-    def close(self):
-        """Close MongoDB connection."""
-        self.client.close()
+    async def close(self):
+        """Close MongoDB connection (async)."""
+        if self.client:
+            self.client.close()
 
 
 # Global singleton instance with thread-safe lazy initialization
 _oews_mongo_client: Optional[OEWSMongoLookup] = None
-_client_lock = threading.RLock()
+_client_lock = asyncio.Lock()
 
 
-def get_oews_mongo_client() -> OEWSMongoLookup:
+async def get_oews_mongo_client() -> OEWSMongoLookup:
     """
-    Get or create OEWS MongoDB client (singleton pattern).
+    Get or create OEWS MongoDB client (singleton pattern) - async.
 
     Returns:
         OEWSMongoLookup instance
     """
     global _oews_mongo_client
-    with _client_lock:
+    async with _client_lock:
         if _oews_mongo_client is None:
             _oews_mongo_client = OEWSMongoLookup()
         return _oews_mongo_client

@@ -20,14 +20,31 @@ def serialize_doc(doc: dict) -> dict:
         if isinstance(value, ObjectId):
             doc[key] = str(value)
         elif isinstance(value, list):
-            # Handle arrays of ObjectIds (like shared_with)
-            doc[key] = [str(v) if isinstance(v, ObjectId) else v for v in value]
+            # Handle arrays - recurse into dicts, convert ObjectIds and datetimes
+            result = []
+            for v in value:
+                if isinstance(v, dict):
+                    result.append(serialize_doc(v))
+                elif isinstance(v, ObjectId):
+                    result.append(str(v))
+                elif isinstance(v, datetime):
+                    iso_string = v.isoformat()
+                    if not iso_string.endswith('Z') and v.tzinfo is None:
+                        iso_string += 'Z'
+                    result.append(iso_string)
+                else:
+                    result.append(v)
+            doc[key] = result
         elif isinstance(value, dict):
             # Recursive for nested documents
             doc[key] = serialize_doc(value)
         elif isinstance(value, datetime):
-            # Convert datetime to ISO string
-            doc[key] = value.isoformat()
+            # Convert datetime to ISO string with UTC timezone indicator
+            # Add 'Z' suffix if timezone-naive (assumes UTC)
+            iso_string = value.isoformat()
+            if not iso_string.endswith('Z') and value.tzinfo is None:
+                iso_string += 'Z'
+            doc[key] = iso_string
 
     return doc
 

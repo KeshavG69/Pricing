@@ -1,8 +1,8 @@
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from bson import ObjectId
 import bcrypt
-import threading
+import asyncio
 from .database import MongoDB
 from .models import UserSignup, UserResponse, GoogleUserProfile
 from .utils import hash_password, verify_password, generate_user_id
@@ -10,21 +10,29 @@ from .utils import hash_password, verify_password, generate_user_id
 
 # Global singleton instance
 _user_crud = None
-_lock = threading.RLock()
+_lock = asyncio.Lock()
 
 
 class UserCRUD:
+    """Async UserCRUD with Motor driver"""
+
     def __init__(self):
-        """Initialize UserCRUD with database collections"""
-        self.db = MongoDB.get_database()
-        self.collection = self.db["users"]
+        """Initialize UserCRUD (lazy initialization for database)"""
+        self.db = None
+        self.collection = None
+
+    async def _ensure_initialized(self):
+        """Ensure database connection is initialized"""
+        if self.db is None:
+            self.collection = await MongoDB.get_users_collection()
+            self.db = await MongoDB.get_database()
     @staticmethod
-    def create_user(user_data: UserSignup) -> UserResponse:
-        """Create a new user in the database"""
-        users_collection = MongoDB.get_users_collection()
+    async def create_user(user_data: UserSignup) -> UserResponse:
+        """Create a new user in the database (async)"""
+        users_collection = await MongoDB.get_users_collection()
 
         # Check if user already exists
-        existing_user = users_collection.find_one({"email": user_data.email})
+        existing_user = await users_collection.find_one({"email": user_data.email})
         if existing_user:
             raise ValueError("User with this email already exists")
 
@@ -44,7 +52,7 @@ class UserCRUD:
         }
 
         # Insert user into database
-        result = users_collection.insert_one(user_doc)
+        result = await users_collection.insert_one(user_doc)
 
         if result.inserted_id:
             return UserResponse(
@@ -58,12 +66,12 @@ class UserCRUD:
             raise Exception("Failed to create user")
 
     @staticmethod
-    def authenticate_user(email: str, password: str) -> Optional[UserResponse]:
-        """Authenticate user with email and password"""
-        users_collection = MongoDB.get_users_collection()
+    async def authenticate_user(email: str, password: str) -> Optional[UserResponse]:
+        """Authenticate user with email and password (async)"""
+        users_collection = await MongoDB.get_users_collection()
 
         # Find user by email
-        user_doc = users_collection.find_one({"email": email})
+        user_doc = await users_collection.find_one({"email": email})
         if not user_doc:
             return None
 
@@ -87,11 +95,11 @@ class UserCRUD:
         )
 
     @staticmethod
-    def get_user_by_email(email: str) -> Optional[UserResponse]:
-        """Get user by email"""
-        users_collection = MongoDB.get_users_collection()
+    async def get_user_by_email(email: str) -> Optional[UserResponse]:
+        """Get user by email (async)"""
+        users_collection = await MongoDB.get_users_collection()
 
-        user_doc = users_collection.find_one({"email": email})
+        user_doc = await users_collection.find_one({"email": email})
         if not user_doc:
             return None
 
@@ -107,11 +115,11 @@ class UserCRUD:
         )
 
     @staticmethod
-    def get_user_by_id(user_id: str) -> Optional[UserResponse]:
-        """Get user by ID"""
-        users_collection = MongoDB.get_users_collection()
+    async def get_user_by_id(user_id: str) -> Optional[UserResponse]:
+        """Get user by ID (async)"""
+        users_collection = await MongoDB.get_users_collection()
 
-        user_doc = users_collection.find_one({"_id": user_id})
+        user_doc = await users_collection.find_one({"_id": user_id})
         if not user_doc:
             return None
 
@@ -127,16 +135,16 @@ class UserCRUD:
         )
 
     @staticmethod
-    def create_or_update_google_user(google_profile: GoogleUserProfile) -> UserResponse:
-        """Create a new Google OAuth user or update existing one"""
-        users_collection = MongoDB.get_users_collection()
+    async def create_or_update_google_user(google_profile: GoogleUserProfile) -> UserResponse:
+        """Create a new Google OAuth user or update existing one (async)"""
+        users_collection = await MongoDB.get_users_collection()
 
         # Check if user already exists by email
-        existing_user = users_collection.find_one({"email": google_profile.email})
+        existing_user = await users_collection.find_one({"email": google_profile.email})
 
         if existing_user:
             # Update existing user with Google profile data
-            users_collection.update_one(
+            await users_collection.update_one(
                 {"_id": existing_user["_id"]},
                 {
                     "$set": {
@@ -183,7 +191,7 @@ class UserCRUD:
             }
 
             # Insert user into database
-            result = users_collection.insert_one(user_doc)
+            result = await users_collection.insert_one(user_doc)
 
             if result.inserted_id:
                 return UserResponse(
@@ -196,7 +204,7 @@ class UserCRUD:
             else:
                 raise Exception("Failed to create Google user")
 
-    def create_user_with_organization(
+    async def create_user_with_organization(
         self,
         email: str,
         first_name: str,
@@ -205,12 +213,15 @@ class UserCRUD:
         organization_id: ObjectId,
         role: str = "user"
     ) -> dict:
-        """Create user with organization (for invitation acceptance)"""
+        """Create user with organization (for invitation acceptance) - async"""
+        await self._ensure_initialized()
+
         # Check if user already exists
-        existing = self.collection.find_one({"email": email})
+        existing = await self.collection.find_one({"email": email})
         if existing:
             raise ValueError("Email already registered")
 
+        now = datetime.utcnow()
         user = {
             "firstName": first_name,
             "lastName": last_name,
@@ -219,39 +230,66 @@ class UserCRUD:
             "organizations": [{
                 "organization_id": organization_id,
                 "role": role,
-                "status": "active"
+                "status": "active",
+                "joinedAt": now
             }],
             "current_organization_id": organization_id,
             "auth_method": "email",
-            "createdAt": datetime.utcnow(),
-            "updatedAt": datetime.utcnow()
+            "createdAt": now,
+            "updatedAt": now
         }
 
-        result = self.collection.insert_one(user)
+        result = await self.collection.insert_one(user)
         user["_id"] = result.inserted_id
         return user
 
-    def get_by_id(self, user_id: ObjectId) -> dict:
-        """Get user by ObjectId"""
-        return self.collection.find_one({"_id": user_id})
+    async def get_by_id(self, user_id: ObjectId) -> Optional[dict]:
+        """Get user by ObjectId (async)"""
+        await self._ensure_initialized()
+        return await self.collection.find_one({"_id": user_id})
 
-    def remove_from_organization(self, user_id: ObjectId):
-        """Remove user from organization (soft delete)"""
-        self.collection.update_one(
-            {"_id": user_id},
-            {"$set": {"status": "removed", "updatedAt": datetime.utcnow()}}
+    async def get_by_ids(self, user_ids: List[ObjectId]) -> List[dict]:
+        """Batch fetch users by IDs (async) - NEW for optimization"""
+        await self._ensure_initialized()
+
+        if not user_ids:
+            return []
+
+        cursor = self.collection.find(
+            {"_id": {"$in": user_ids}},
+            {"password": 0}  # Exclude sensitive fields
+        )
+
+        return await cursor.to_list(length=None)
+
+    async def remove_from_organization(self, user_id: ObjectId, org_id: ObjectId):
+        """Remove user from organization (soft delete in organizations array) - async"""
+        await self._ensure_initialized()
+
+        # Update the status to "removed" for this specific organization in the array
+        await self.collection.update_one(
+            {
+                "_id": user_id,
+                "organizations.organization_id": org_id
+            },
+            {
+                "$set": {
+                    "organizations.$.status": "removed",
+                    "updatedAt": datetime.utcnow()
+                }
+            }
         )
 
 
-def get_user_crud() -> UserCRUD:
+async def get_user_crud() -> UserCRUD:
     """
-    Get or create UserCRUD instance (singleton pattern)
+    Get or create UserCRUD instance (singleton pattern) - async
 
     Returns:
         UserCRUD instance
     """
     global _user_crud
-    with _lock:
+    async with _lock:
         if _user_crud is None:
             _user_crud = UserCRUD()
         return _user_crud

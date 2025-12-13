@@ -291,7 +291,7 @@ export default function InvitationsPage() {
                             <div>
                               <p className="text-sm font-medium text-foreground">{invitation.email}</p>
                               <p className="text-xs text-muted-foreground">
-                                Sent {formatDate(invitation.created_at)}
+                                Sent {formatDate(invitation.createdAt)}
                               </p>
                             </div>
                           </div>
@@ -312,7 +312,7 @@ export default function InvitationsPage() {
                         </td>
                         <td className="py-4 px-6">
                           <span className="text-sm text-muted-foreground">
-                            {formatDate(invitation.expires_at)}
+                            {formatDate(invitation.expiresAt)}
                           </span>
                         </td>
                         <td className="py-4 px-6">

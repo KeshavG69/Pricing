@@ -7,7 +7,7 @@ export interface User {
   organization_id: string;
   role: 'admin' | 'user';
   status: 'active' | 'removed' | 'suspended';
-  created_at: string;
+  createdAt: string;
 }
 
 export interface LoginCredentials {
@@ -33,8 +33,8 @@ export interface Organization {
   name: string;
   slug: string;
   owner_id: string;
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
   status: 'active' | 'suspended';
   settings: OrganizationSettings;
   subscription: Subscription;
@@ -76,7 +76,8 @@ export interface TeamMember {
   lastName: string;
   role: 'admin' | 'user';
   status: 'active' | 'removed' | 'suspended';
-  created_at: string;
+  createdAt: string;
+  joinedAt?: string;
 }
 
 // Invitation types
@@ -88,8 +89,8 @@ export interface Invitation {
   status: 'pending' | 'accepted' | 'expired' | 'revoked';
   invited_by: string;
   invited_by_name: string;
-  created_at: string;
-  expires_at: string;
+  createdAt: string;
+  expiresAt: string;
 }
 
 export interface InviteUserRequest {
@@ -109,7 +110,7 @@ export interface ValidateTokenResponse {
   email: string;
   role: string;
   invited_by_name: string;
-  expires_at: string;
+  expiresAt: string;
   user_exists: boolean;
 }
 
@@ -117,7 +118,7 @@ export interface ValidateTokenResponse {
 export interface DocumentInfo {
   filename: string;
   file_size: number;
-  upload_date: string;
+  uploadDate: string;
   idrive_url: string;
   idrive_key: string;
   extracted_content?: string;
@@ -143,8 +144,8 @@ export interface Proposal {
   status: 'processing' | 'completed' | 'error' | 'draft';
   visibility?: 'private' | 'shared';
   shared_with?: string[];
-  created_at: string;
-  updated_at: string;
+  createdAt: string;
+  updatedAt: string;
   documents: DocumentInfo[];
   metadata?: ProposalMetadata;
   jobs?: JobPosition[];

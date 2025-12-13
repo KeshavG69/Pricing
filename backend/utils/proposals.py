@@ -1,92 +1,89 @@
 """
 CRUD operations for proposal management with MongoDB.
 
-Provides thread-safe operations for creating, reading, updating, and deleting proposals.
-Uses singleton pattern with RLock for thread safety.
+Provides async operations for creating, reading, updating, and deleting proposals.
+Uses singleton pattern with async lock for thread safety.
 """
 
-from pymongo.collection import Collection
+from motor.motor_asyncio import AsyncIOMotorCollection
 from typing import List, Dict, Optional
 from datetime import datetime
 from bson import ObjectId
-from functools import lru_cache
-import json
-import threading
-import time
+import asyncio
 
 
 class ProposalCRUD:
     """
-    Proposal CRUD operations with MongoDB (Thread-safe Singleton).
+    Proposal CRUD operations with MongoDB (Async Singleton).
 
     All methods use user_id (MongoDB ObjectId as string) for ownership verification.
     Thread-safe through:
-    - Singleton pattern ensures one instance across all threads
-    - RLock for thread-safe operations
-    - PyMongo's built-in connection pooling
+    - Singleton pattern ensures one instance across all async tasks
+    - asyncio.Lock for async-safe operations
+    - Motor's built-in connection pooling
     """
 
     _instance = None
-    _lock = threading.RLock()
+    _lock = asyncio.Lock()
     _initialized = False
 
-    def __new__(cls, collection: Collection = None):
-        """Singleton pattern with thread-safe instantiation."""
+    def __new__(cls, collection: AsyncIOMotorCollection = None):
+        """Singleton pattern with async-safe instantiation."""
         if cls._instance is None:
-            with cls._lock:
-                # Double-check locking pattern
-                if cls._instance is None:
-                    cls._instance = super(ProposalCRUD, cls).__new__(cls)
+            cls._instance = super(ProposalCRUD, cls).__new__(cls)
         return cls._instance
 
-    def __init__(self, collection: Collection = None):
+    def __init__(self, collection: AsyncIOMotorCollection = None):
         """
         Initialize ProposalCRUD with MongoDB collection (singleton).
 
         Only initializes once, subsequent calls are ignored.
 
         Args:
-            collection: PyMongo collection for proposals
+            collection: Motor AsyncIOMotorCollection for proposals
         """
         # Prevent re-initialization
         if self._initialized:
             return
 
-        with self._lock:
-            if self._initialized:
-                return
-
+        if not self._initialized:
             if collection is None:
-                raise ValueError("Collection must be provided on first initialization")
+                # Lazy initialization - collection will be set later
+                self.collection = None
+            else:
+                self.collection = collection
 
+            self.__class__._initialized = True
+
+    async def _ensure_initialized(self, collection: AsyncIOMotorCollection = None):
+        """Ensure collection is set (for lazy initialization)"""
+        if self.collection is None and collection is not None:
             self.collection = collection
-            self.operation_lock = threading.RLock()
 
             # Create indexes for performance (idempotent - safe to call multiple times)
             try:
-                self.collection.create_index([("user_id", 1), ("created_at", -1)])
-                self.collection.create_index("status")
+                await self.collection.create_index([("user_id", 1), ("created_at", -1)])
+                await self.collection.create_index("status")
 
                 # Compound index for efficient filtered dashboard queries
-                self.collection.create_index([
+                await self.collection.create_index([
                     ("user_id", 1),
                     ("status", 1),
                     ("created_at", -1)
                 ])
 
-                # Note: (_id, user_id) index may already exist from previous setup
-                # MongoDB's _id is already indexed, so this is optional
+                # Organization indexes
+                await self.collection.create_index([("organization_id", 1), ("created_at", -1)])
+                await self.collection.create_index("shared_with")
+
             except Exception:
                 # Silently ignore index creation errors (indexes may already exist)
                 pass
 
-            self.__class__._initialized = True
-
-    def create_proposal(self, user_id: str, data: dict) -> dict:
+    async def create_proposal(self, user_id: str, data: dict) -> dict:
         """
-        Create a new proposal (thread-safe).
-
-        Clears list cache to include new proposal.
+        
+        Create a new proposal (async).
 
         Args:
             user_id: User's MongoDB ObjectId (as string)
@@ -95,24 +92,21 @@ class ProposalCRUD:
         Returns:
             Created proposal document with _id
         """
-        with self.operation_lock:
-            proposal = {
-                "user_id": user_id,
-                "created_at": datetime.utcnow(),
-                "updated_at": datetime.utcnow(),
-                "status": "processing",  # processing, completed, error
-                **data
-            }
-            result = self.collection.insert_one(proposal)
-            proposal["_id"] = result.inserted_id
+        await self._ensure_initialized()
 
-            # Invalidate list cache to show new proposal
-            self.get_user_proposals.cache_clear()
+        proposal = {
+            "user_id": user_id,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+            "status": "processing",  # processing, completed, error
+            **data
+        }
+        result = await self.collection.insert_one(proposal)
+        proposal["_id"] = result.inserted_id
 
-            return proposal
+        return proposal
 
-    @lru_cache(maxsize=128)
-    def get_user_proposals(
+    async def get_user_proposals(
         self,
         user_id: str,
         skip: int = 0,
@@ -121,9 +115,7 @@ class ProposalCRUD:
         sort_order: str = "desc"
     ) -> List[dict]:
         """
-        Get paginated list of user's proposals (summary view, thread-safe, cached).
-
-        Cache stores up to 128 recent list queries for faster dashboard loading.
+        Get paginated list of user's proposals (summary view, async).
 
         Args:
             user_id: User's MongoDB ObjectId (as string)
@@ -135,43 +127,40 @@ class ProposalCRUD:
         Returns:
             List of proposal documents sorted by specified field and order
         """
-        with self.operation_lock:
-            # Map sort field names to MongoDB field names
-            sort_field_map = {
-                "date": "created_at",
-                "name": "name",
-                "status": "status"
-            }
+        await self._ensure_initialized()
 
-            # Get MongoDB field name, default to created_at if invalid
-            sort_field = sort_field_map.get(sort_by, "created_at")
+        # Map sort field names to MongoDB field names
+        sort_field_map = {
+            "date": "created_at",
+            "name": "name",
+            "status": "status"
+        }
 
-            # Convert sort order to MongoDB sort direction
-            sort_direction = -1 if sort_order == "desc" else 1
+        # Get MongoDB field name, default to created_at if invalid
+        sort_field = sort_field_map.get(sort_by, "created_at")
 
-            # Exclude large fields only (don't mix with inclusions)
-            # MongoDB doesn't allow mixing inclusion and exclusion projections
-            projection = {
-                "spreadsheet_data": 0,
-                "jobs": 0,
-                "rates": 0,
-                "escalation_rates": 0,
-                "documents": 0
-            }
+        # Convert sort order to MongoDB sort direction
+        sort_direction = -1 if sort_order == "desc" else 1
 
-            cursor = self.collection.find(
-                {"user_id": user_id},
-                projection
-            ).sort(sort_field, sort_direction).skip(skip).limit(limit)
-            return list(cursor)
+        # Exclude large fields for list view
+        projection = {
+            "spreadsheet_data": 0,
+            "jobs": 0,
+            "rates": 0,
+            "escalation_rates": 0,
+            "documents": 0
+        }
 
-    @lru_cache(maxsize=512)
-    def get_proposal(self, proposal_id: str, user_id: str) -> Optional[dict]:
+        cursor = self.collection.find(
+            {"user_id": user_id},
+            projection
+        ).sort(sort_field, sort_direction).skip(skip).limit(limit)
+
+        return await cursor.to_list(length=None)
+
+    async def get_proposal(self, proposal_id: str, user_id: str) -> Optional[dict]:
         """
-        Get single proposal if user owns it (thread-safe, cached).
-
-        Cache stores up to 512 recent proposals for faster access.
-        Cache is invalidated when proposal is updated.
+        Get single proposal if user owns it (async).
 
         Args:
             proposal_id: Proposal's MongoDB ObjectId (as string)
@@ -180,22 +169,17 @@ class ProposalCRUD:
         Returns:
             Proposal document or None if not found/unauthorized
         """
-        with self.operation_lock:
-            return self.collection.find_one({
-                "_id": ObjectId(proposal_id),
-                "user_id": user_id
-            })
+        await self._ensure_initialized()
 
-    def _make_proposal_cache_key(self, proposal_id: str, user_id: str) -> str:
-        """Create a hashable cache key for proposal lookups."""
-        return f"{proposal_id}:{user_id}"
+        return await self.collection.find_one({
+            "_id": ObjectId(proposal_id),
+            "user_id": user_id
+        })
 
-    @lru_cache(maxsize=256)
-    def get_proposal_summary(self, proposal_id: str, user_id: str) -> Optional[dict]:
+    async def get_proposal_summary(self, proposal_id: str, user_id: str) -> Optional[dict]:
         """
-        Get proposal summary (lightweight, cached).
+        Get proposal summary (lightweight, async).
 
-        Cache stores up to 256 recent summaries.
         Use this for dashboard previews or quick lookups.
         Excludes large fields like jobs, spreadsheet_data.
 
@@ -206,6 +190,8 @@ class ProposalCRUD:
         Returns:
             Lightweight proposal summary or None if not found
         """
+        await self._ensure_initialized()
+
         projection = {
             "jobs": 0,
             "spreadsheet_data": 0,
@@ -214,21 +200,19 @@ class ProposalCRUD:
             "documents": 0
         }
 
-        return self.collection.find_one(
+        return await self.collection.find_one(
             {"_id": ObjectId(proposal_id), "user_id": user_id},
             projection
         )
 
-    def update_proposal(
+    async def update_proposal(
         self,
         proposal_id: str,
         user_id: str,
         updates: dict
     ) -> Optional[dict]:
         """
-        Update proposal and return updated document (thread-safe).
-
-        Clears cache for this proposal to ensure fresh data.
+        Update proposal and return updated document (async).
 
         Args:
             proposal_id: Proposal's MongoDB ObjectId (as string)
@@ -238,27 +222,20 @@ class ProposalCRUD:
         Returns:
             Updated proposal document or None if not found/unauthorized
         """
-        with self.operation_lock:
-            updates["updated_at"] = datetime.utcnow()
-            result = self.collection.find_one_and_update(
-                {"_id": ObjectId(proposal_id), "user_id": user_id},
-                {"$set": updates},
-                return_document=True
-            )
+        await self._ensure_initialized()
 
-            # Invalidate caches for this proposal
-            if result:
-                self.get_proposal.cache_clear()  # Clear entire cache (simple approach)
-                self.get_proposal_summary.cache_clear()
-                self.get_user_proposals.cache_clear()
+        updates["updated_at"] = datetime.utcnow()
+        result = await self.collection.find_one_and_update(
+            {"_id": ObjectId(proposal_id), "user_id": user_id},
+            {"$set": updates},
+            return_document=True
+        )
 
-            return result
+        return result
 
-    def delete_proposal(self, proposal_id: str, user_id: str) -> bool:
+    async def delete_proposal(self, proposal_id: str, user_id: str) -> bool:
         """
-        Delete proposal if user owns it (thread-safe).
-
-        Clears cache after deletion.
+        Delete proposal if user owns it (async).
 
         Args:
             proposal_id: Proposal's MongoDB ObjectId (as string)
@@ -267,30 +244,23 @@ class ProposalCRUD:
         Returns:
             True if deleted, False if not found/unauthorized
         """
-        with self.operation_lock:
-            result = self.collection.delete_one({
-                "_id": ObjectId(proposal_id),
-                "user_id": user_id
-            })
+        await self._ensure_initialized()
 
-            # Invalidate caches
-            if result.deleted_count > 0:
-                self.get_proposal.cache_clear()
-                self.get_proposal_summary.cache_clear()
-                self.get_user_proposals.cache_clear()
+        result = await self.collection.delete_one({
+            "_id": ObjectId(proposal_id),
+            "user_id": user_id
+        })
 
-            return result.deleted_count > 0
+        return result.deleted_count > 0
 
-    def duplicate_proposal(
+    async def duplicate_proposal(
         self,
         proposal_id: str,
         user_id: str,
         new_name: str
     ) -> Optional[dict]:
         """
-        Duplicate an existing proposal (copies data, not documents, thread-safe).
-
-        Clears list cache to include new proposal.
+        Duplicate an existing proposal (copies data, not documents, async).
 
         Args:
             proposal_id: Source proposal's MongoDB ObjectId (as string)
@@ -300,37 +270,37 @@ class ProposalCRUD:
         Returns:
             New proposal document or None if source not found/unauthorized
         """
-        with self.operation_lock:
-            # Get source proposal
-            source = self.get_proposal(proposal_id, user_id)
-            if not source:
-                return None
+        await self._ensure_initialized()
 
-            # Create new proposal with copied data
-            new_proposal = {
-                "name": new_name,
-                "solicitation_number": source.get("solicitation_number"),
-                "metadata": source.get("metadata"),
-                "jobs": source.get("jobs"),
-                "rates": source.get("rates"),
-                "escalation_rates": source.get("escalation_rates"),
-                "spreadsheet_data": source.get("spreadsheet_data"),
-                "total_cost": source.get("total_cost"),
-                "documents": []  # Don't copy documents
-            }
+        # Get source proposal
+        source = await self.get_proposal(proposal_id, user_id)
+        if not source:
+            return None
 
-            # create_proposal already clears cache, but be explicit
-            result = self.create_proposal(user_id, new_proposal)
-            return result
+        # Create new proposal with copied data
+        new_proposal = {
+            "name": new_name,
+            "solicitation_number": source.get("solicitation_number"),
+            "metadata": source.get("metadata"),
+            "jobs": source.get("jobs"),
+            "rates": source.get("rates"),
+            "escalation_rates": source.get("escalation_rates"),
+            "spreadsheet_data": source.get("spreadsheet_data"),
+            "total_cost": source.get("total_cost"),
+            "documents": []  # Don't copy documents
+        }
 
-    def create_proposal_with_organization(
+        result = await self.create_proposal(user_id, new_proposal)
+        return result
+
+    async def create_proposal_with_organization(
         self,
         user_id: str,
         organization_id: ObjectId,
         data: dict
     ) -> dict:
         """
-        Create proposal with organization support.
+        Create proposal with organization support (async).
 
         Args:
             user_id: User's ID as string (UUID format)
@@ -340,49 +310,222 @@ class ProposalCRUD:
         Returns:
             Created proposal document with _id
         """
-        with self.operation_lock:
-            proposal = {
-                "user_id": user_id,  # Store as string (UUID format)
-                "organization_id": organization_id,
-                "visibility": "private",
-                "shared_with": [],
-                "created_at": datetime.utcnow(),
-                "updated_at": datetime.utcnow(),
-                "status": "processing",
-                **data
-            }
-            result = self.collection.insert_one(proposal)
-            proposal["_id"] = result.inserted_id
+        await self._ensure_initialized()
 
-            # Invalidate caches
-            self.get_user_proposals.cache_clear()
+        proposal = {
+            "user_id": user_id,  # Store as string (UUID format)
+            "organization_id": organization_id,
+            "visibility": "private",
+            "shared_with": [],
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow(),
+            "status": "processing",
+            **data
+        }
 
-            return proposal
+        result = await self.collection.insert_one(proposal)
+        proposal["_id"] = result.inserted_id
 
-    def get_user_proposals_by_org(
+        return proposal
+
+    async def get_user_proposals_by_org(
         self,
         user_id: str,
         organization_id: ObjectId,
-        role: str
+        role: str,
+        skip: int = 0,
+        limit: int = 20,
+        sort_by: str = "date",
+        sort_order: str = "desc"
     ) -> List[dict]:
         """
-        Get proposals based on user's role and organization.
+        Get proposals based on user's role in organization (async).
+
+        Admin: All org proposals
+        User: Own proposals + shared proposals
 
         Args:
-            user_id: User's ID as string (UUID format)
-            organization_id: Organization's MongoDB ObjectId
+            user_id: User's ID
+            organization_id: Organization's ObjectId
             role: User's role ("admin" or "user")
+            skip: Pagination skip
+            limit: Pagination limit
+            sort_by: Sort field
+            sort_order: Sort direction
 
         Returns:
-            List of proposal documents user can access
+            List of proposal documents
         """
-        with self.operation_lock:
+        await self._ensure_initialized()
+
+        # Build query based on role
+        if role == "admin":
+            # Admin sees all proposals in organization
+            query = {"organization_id": organization_id}
+        else:
+            # Regular user sees own + shared proposals
+            query = {
+                "$or": [
+                    {"user_id": user_id},
+                    {"shared_with": user_id}
+                ],
+                "organization_id": organization_id
+            }
+
+        # Map sort field names
+        sort_field_map = {
+            "date": "created_at",
+            "name": "name",
+            "status": "status"
+        }
+
+        sort_field = sort_field_map.get(sort_by, "created_at")
+        sort_direction = -1 if sort_order == "desc" else 1
+
+        # Exclude large fields
+        projection = {
+            "spreadsheet_data": 0,
+            "jobs": 0,
+            "rates": 0,
+            "escalation_rates": 0,
+            "documents": 0
+        }
+
+        cursor = self.collection.find(query, projection).sort(
+            sort_field, sort_direction
+        ).skip(skip).limit(limit)
+
+        return await cursor.to_list(length=None)
+
+    async def share_proposal(
+        self,
+        proposal_id: ObjectId,
+        user_ids: List[ObjectId],
+        admin_id: str
+    ) -> Optional[dict]:
+        """
+        Share proposal with specific users (admin only, async).
+
+        Args:
+            proposal_id: Proposal's ObjectId
+            user_ids: List of user ObjectIds to share with
+            admin_id: Admin's user ID (for verification)
+
+        Returns:
+            Updated proposal or None
+        """
+        await self._ensure_initialized()
+
+        result = await self.collection.find_one_and_update(
+            {"_id": proposal_id},
+            {
+                "$set": {
+                    "visibility": "shared",
+                    "shared_with": user_ids,
+                    "updated_at": datetime.utcnow()
+                }
+            },
+            return_document=True
+        )
+
+        return result
+
+    async def unshare_proposal(
+        self,
+        proposal_id: ObjectId,
+        user_id: ObjectId = None
+    ) -> Optional[dict]:
+        """
+        Remove user from shared list or make proposal private (async).
+
+        Args:
+            proposal_id: Proposal's ObjectId
+            user_id: Optional user ObjectId to remove (if None, makes private)
+
+        Returns:
+            Updated proposal or None
+        """
+        await self._ensure_initialized()
+
+        if user_id:
+            # Remove specific user from shared list
+            result = await self.collection.find_one_and_update(
+                {"_id": proposal_id},
+                {
+                    "$pull": {"shared_with": user_id},
+                    "$set": {"updated_at": datetime.utcnow()}
+                },
+                return_document=True
+            )
+
+            # If no more users, set visibility to private
+            if result and len(result.get("shared_with", [])) == 0:
+                result = await self.collection.find_one_and_update(
+                    {"_id": proposal_id},
+                    {"$set": {"visibility": "private"}},
+                    return_document=True
+                )
+        else:
+            # Make proposal private
+            result = await self.collection.find_one_and_update(
+                {"_id": proposal_id},
+                {
+                    "$set": {
+                        "visibility": "private",
+                        "shared_with": [],
+                        "updated_at": datetime.utcnow()
+                    }
+                },
+                return_document=True
+            )
+
+        return result
+
+    async def get_by_id(self, proposal_id: str) -> Optional[dict]:
+        """
+        Get proposal by ID without user check (async).
+
+        Use for admin operations or when user check is done elsewhere.
+
+        Args:
+            proposal_id: Proposal's ObjectId as string
+
+        Returns:
+            Proposal document or None
+        """
+        await self._ensure_initialized()
+
+        try:
+            obj_id = ObjectId(proposal_id)
+        except:
+            return None
+
+        return await self.collection.find_one({"_id": obj_id})
+
+    async def count_user_proposals(
+        self,
+        user_id: str,
+        organization_id: ObjectId = None,
+        role: str = "user"
+    ) -> int:
+        """
+        Count user's proposals (async).
+
+        Args:
+            user_id: User's ID
+            organization_id: Optional organization filter
+            role: User's role
+
+        Returns:
+            Count of proposals
+        """
+        await self._ensure_initialized()
+
+        if organization_id:
+            # Organization-aware count
             if role == "admin":
-                # Admin sees all proposals in organization
                 query = {"organization_id": organization_id}
             else:
-                # Regular user sees own + shared proposals
-                # Note: user_id in proposals is stored as string, not ObjectId
                 query = {
                     "$or": [
                         {"user_id": user_id},
@@ -390,118 +533,74 @@ class ProposalCRUD:
                     ],
                     "organization_id": organization_id
                 }
+        else:
+            # Simple user count
+            query = {"user_id": user_id}
 
-            # Exclude large fields
-            projection = {
-                "spreadsheet_data": 0,
-                "jobs": 0,
-                "rates": 0,
-                "escalation_rates": 0,
-                "documents": 0
-            }
+        return await self.collection.count_documents(query)
 
-            cursor = self.collection.find(query, projection).sort("created_at", -1)
-            return list(cursor)
+    async def get_org_proposal_count(self, organization_id: ObjectId) -> int:
+        """
+        Count proposals in organization (async).
 
-    def share_proposal(
+        Args:
+            organization_id: Organization's ObjectId
+
+        Returns:
+            Count of proposals
+        """
+        await self._ensure_initialized()
+
+        return await self.collection.count_documents({
+            "organization_id": organization_id
+        })
+
+    async def update_status(
         self,
-        proposal_id: ObjectId,
-        user_ids: List[ObjectId],
-        admin_id: ObjectId
-    ) -> dict:
+        proposal_id: str,
+        user_id: str,
+        status: str,
+        message: str = None
+    ) -> bool:
         """
-        Share proposal with specific users (admin only).
+        Update proposal status (async).
 
         Args:
-            proposal_id: Proposal's MongoDB ObjectId
-            user_ids: List of user ObjectIds to share with
-            admin_id: Admin user's ObjectId
+            proposal_id: Proposal's ObjectId as string
+            user_id: User's ID for verification
+            status: New status
+            message: Optional status message
 
         Returns:
-            Updated proposal document
-
-        Raises:
-            ValueError: If proposal not found or not in admin's organization
+            True if updated, False otherwise
         """
-        with self.operation_lock:
-            # Get proposal
-            proposal = self.collection.find_one({"_id": proposal_id})
-            if not proposal:
-                raise ValueError("Proposal not found")
+        await self._ensure_initialized()
 
-            # Get admin user to verify organization
-            from auth.database import MongoDB
-            users_collection = MongoDB.get_database()["users"]
-            admin = users_collection.find_one({"_id": admin_id})
+        updates = {
+            "status": status,
+            "updated_at": datetime.utcnow()
+        }
 
-            # Verify proposal belongs to admin's org
-            if proposal["organization_id"] != admin["organization_id"]:
-                raise ValueError("Cannot share proposals from other organizations")
+        if message:
+            updates["status_message"] = message
 
-            # Verify all user_ids belong to same org
-            for user_id in user_ids:
-                user = users_collection.find_one({"_id": user_id})
-                if not user or user["organization_id"] != admin["organization_id"]:
-                    raise ValueError(f"User not in your organization")
+        result = await self.collection.update_one(
+            {"_id": ObjectId(proposal_id), "user_id": user_id},
+            {"$set": updates}
+        )
 
-            # Update proposal
-            result = self.collection.find_one_and_update(
-                {"_id": proposal_id},
-                {
-                    "$set": {
-                        "visibility": "shared",
-                        "shared_with": user_ids,
-                        "updated_at": datetime.utcnow()
-                    }
-                },
-                return_document=True
-            )
-
-            # Invalidate caches
-            self.get_proposal.cache_clear()
-            self.get_proposal_summary.cache_clear()
-            self.get_user_proposals.cache_clear()
-
-            return result
-
-    def get_by_id(self, proposal_id: ObjectId) -> Optional[dict]:
-        """
-        Get proposal by ObjectId (no user verification).
-
-        Args:
-            proposal_id: Proposal's MongoDB ObjectId
-
-        Returns:
-            Proposal document or None if not found
-        """
-        with self.operation_lock:
-            return self.collection.find_one({"_id": proposal_id})
+        return result.modified_count > 0
 
 
-# Module-level singleton instance
-_proposal_crud_instance = None
-_instance_lock = threading.RLock()
-
-
-def get_proposal_crud(collection: Collection = None) -> ProposalCRUD:
+# Singleton pattern for ProposalCRUD
+def get_proposal_crud(collection=None):
     """
-    Get singleton ProposalCRUD instance (thread-safe).
+    Get singleton ProposalCRUD instance.
 
     Args:
-        collection: MongoDB collection (required on first call only)
+        collection: Motor AsyncIOMotorCollection for proposals
 
     Returns:
-        Singleton ProposalCRUD instance
-
-    Usage:
-        from utils.proposals import get_proposal_crud
-        crud = get_proposal_crud(collection)
+        ProposalCRUD singleton instance
     """
-    global _proposal_crud_instance
-
-    if _proposal_crud_instance is None:
-        with _instance_lock:
-            if _proposal_crud_instance is None:
-                _proposal_crud_instance = ProposalCRUD(collection)
-
-    return _proposal_crud_instance
+    return ProposalCRUD(collection)

@@ -36,8 +36,8 @@ async def get_my_organization(current_user: dict = Depends(get_current_user)):
     Returns:
         Organization document with serialized ObjectIds
     """
-    org_crud = get_organization_crud()
-    org = org_crud.get_by_id(current_user["organization_id"])
+    org_crud = await get_organization_crud()
+    org = await org_crud.get_by_id(current_user["organization_id"])
 
     if not org:
         raise HTTPException(
@@ -59,8 +59,8 @@ async def get_organization_members(current_user: dict = Depends(require_admin)):
     Returns:
         List of user documents with serialized ObjectIds
     """
-    org_crud = get_organization_crud()
-    members = org_crud.get_members(current_user["organization_id"])
+    org_crud = await get_organization_crud()
+    members = await org_crud.get_members(current_user["organization_id"])
 
     # Remove sensitive fields
     for member in members:
@@ -87,8 +87,8 @@ async def update_organization_settings(
     Returns:
         Updated organization document
     """
-    org_crud = get_organization_crud()
-    org = org_crud.get_by_id(current_user["organization_id"])
+    org_crud = await get_organization_crud()
+    org = await org_crud.get_by_id(current_user["organization_id"])
 
     if not org:
         raise HTTPException(
@@ -113,7 +113,7 @@ async def update_organization_settings(
         settings["allow_user_rate_override"] = settings_update.allow_user_rate_override
 
     # Update organization
-    updated_org = org_crud.update_settings(current_user["organization_id"], settings)
+    updated_org = await org_crud.update_settings(current_user["organization_id"], settings)
 
     return serialize_doc(updated_org)
 
@@ -157,8 +157,8 @@ async def remove_organization_member(
         )
 
     # Get target user
-    user_crud = get_user_crud()
-    target_user = user_crud.get_by_id(user_oid)
+    user_crud = await get_user_crud()
+    target_user = await user_crud.get_by_id(user_oid)
 
     if not target_user:
         raise HTTPException(
@@ -180,11 +180,11 @@ async def remove_organization_member(
             detail="You do not have permission to remove this user"
         )
 
-    # Remove user
-    user_crud.remove_from_organization(user_oid)
+    # Remove user from this organization
+    await user_crud.remove_from_organization(user_oid, current_user["organization_id"])
 
     return {
-        "message": "User removed successfully",
+        "message": "User removed successfully from organization",
         "user_id": user_id
     }
 
@@ -201,23 +201,32 @@ async def get_organization_stats(current_user: dict = Depends(get_current_user))
     """
     from auth.database import MongoDB
 
-    db = MongoDB.get_database()
     org_id = current_user["organization_id"]
 
-    # Count active members
-    active_members = db["users"].count_documents({
-        "organization_id": org_id,
-        "status": "active"
+    # Get collections
+    users_collection = await MongoDB.get_users_collection()
+    db = await MongoDB.get_database()
+    invitations_collection = db["invitations"]
+    proposals_collection = db["proposals"]
+
+    # Count active members (query organizations array)
+    active_members = await users_collection.count_documents({
+        "organizations": {
+            "$elemMatch": {
+                "organization_id": org_id,
+                "status": "active"
+            }
+        }
     })
 
     # Count pending invitations
-    pending_invitations = db["invitations"].count_documents({
+    pending_invitations = await invitations_collection.count_documents({
         "organization_id": org_id,
         "status": "pending"
     })
 
     # Count proposals (if using new organization-aware structure)
-    total_proposals = db["proposals"].count_documents({
+    total_proposals = await proposals_collection.count_documents({
         "organization_id": org_id
     })
 

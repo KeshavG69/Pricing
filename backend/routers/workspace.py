@@ -26,12 +26,12 @@ async def get_user_organizations(current_user: dict = Depends(get_current_user))
     Returns:
         List of organizations with user's role in each
     """
-    db = MongoDB.get_database()
-    users_collection = db["users"]
+    users_collection = await MongoDB.get_users_collection()
+    db = await MongoDB.get_database()
     orgs_collection = db["organizations"]
-    
+
     # Get user's organizations
-    user = users_collection.find_one({"_id": current_user["_id"]})
+    user = await users_collection.find_one({"_id": current_user["_id"]})
     organizations_data = user.get("organizations", [])
     
     # For backward compatibility
@@ -44,7 +44,7 @@ async def get_user_organizations(current_user: dict = Depends(get_current_user))
     
     result = []
     for org_membership in organizations_data:
-        org = orgs_collection.find_one({"_id": org_membership["organization_id"]})
+        org = await orgs_collection.find_one({"_id": org_membership["organization_id"]})
         if org:
             result.append({
                 "id": str(org["_id"]),
@@ -75,9 +75,8 @@ async def switch_organization(
         HTTPException 400: If organization ID is invalid
         HTTPException 403: If user is not a member of the organization
     """
-    db = MongoDB.get_database()
-    users_collection = db["users"]
-    
+    users_collection = await MongoDB.get_users_collection()
+
     # Validate organization ID
     try:
         org_id = ObjectId(switch_data.organization_id)
@@ -86,9 +85,9 @@ async def switch_organization(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid organization ID"
         )
-    
+
     # Get user's organizations
-    user = users_collection.find_one({"_id": current_user["_id"]})
+    user = await users_collection.find_one({"_id": current_user["_id"]})
     organizations = user.get("organizations", [])
     
     # Check if user is a member of this organization
@@ -104,7 +103,7 @@ async def switch_organization(
         )
     
     # Update current organization
-    users_collection.update_one(
+    await users_collection.update_one(
         {"_id": current_user["_id"]},
         {"$set": {"current_organization_id": org_id}}
     )

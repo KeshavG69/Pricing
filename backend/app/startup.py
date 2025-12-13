@@ -198,8 +198,8 @@ class StartupManager:
             from auth.database import MongoDB
 
             # Get database and ping
-            db = MongoDB.get_database()
-            db.command('ping')
+            db = await MongoDB.get_database()
+            await db.command('ping')
 
             duration_ms = (time.time() - start_time) * 1000
 
@@ -246,10 +246,10 @@ class StartupManager:
             from client.oews_mongodb import get_oews_mongo_client
 
             # Get client instance and run test query
-            client = get_oews_mongo_client()
+            client = await get_oews_mongo_client()
 
             # Test query: search for a common area to verify DB connection
-            test_results = client.search_areas("National")
+            test_results = await client.search_areas("National")
 
             duration_ms = (time.time() - start_time) * 1000
 
@@ -297,13 +297,12 @@ class StartupManager:
             # Phase 1: SOC Vector Search (most expensive)
             await self.prewarm_soc_vector_search()
 
-            # Phase 2: Others in parallel
-            await asyncio.gather(
-                self.prewarm_llm_embeddings(),
-                self.prewarm_mongodb_auth(),
-                self.prewarm_mongodb_oews(),
-                return_exceptions=True  # Don't fail entire warmup if one fails
-            )
+            # Phase 2: MongoDB connections sequentially (avoid connection storm to Railway)
+            await self.prewarm_mongodb_auth()
+            await self.prewarm_mongodb_oews()
+
+            # Phase 3: LLM embeddings (can run after MongoDB)
+            await self.prewarm_llm_embeddings()
 
             # Calculate total duration
             self.total_duration_ms = (time.time() - overall_start) * 1000

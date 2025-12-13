@@ -37,9 +37,10 @@ from auth.database import MongoDB
 router = APIRouter(prefix="/proposals", tags=["proposals"])
 
 # Get singleton ProposalCRUD instance
-def get_crud():
-    """Get singleton ProposalCRUD instance (thread-safe)."""
-    return get_proposal_crud(MongoDB.get_collection("proposals"))
+async def get_crud():
+    """Get singleton ProposalCRUD instance (async, thread-safe)."""
+    db = await MongoDB.get_database()
+    return get_proposal_crud(db["proposals"])
 
 
 def serialize_proposal(proposal: dict) -> dict:
@@ -85,11 +86,11 @@ async def process_proposal_documents(
     Uses singleton ProposalCRUD instance for thread safety.
     """
     # Get singleton CRUD instance
-    crud = get_crud()
+    crud = await get_crud()
 
     try:
         # Update status to processing
-        crud.update_proposal(
+        await crud.update_proposal(
             proposal_id,
             user_id,
             {"status": "processing", "progress": 0, "message": "Parsing documents..."}
@@ -98,7 +99,7 @@ async def process_proposal_documents(
         # Step 1: Parse documents to DataFrame
         df = await parse_documents_to_dataframe(file_paths)
 
-        crud.update_proposal(
+        await crud.update_proposal(
             proposal_id,
             user_id,
             {"progress": 30, "message": f"Found {len(df)} positions. Fetching wage data..."}
@@ -107,7 +108,7 @@ async def process_proposal_documents(
         # Step 2: Process with agents
         final_df = await process_dataframe_with_agents(df, max_workers=10)
 
-        crud.update_proposal(
+        await crud.update_proposal(
             proposal_id,
             user_id,
             {"progress": 80, "message": "Finalizing results..."}
@@ -203,7 +204,7 @@ async def process_proposal_documents(
                 escalation_rates[key] = 0.0299  # 2.99% for all other years
 
         # Update proposal with results
-        crud.update_proposal(
+        await crud.update_proposal(
             proposal_id,
             user_id,
             {
@@ -234,7 +235,7 @@ async def process_proposal_documents(
 
     except Exception as e:
         # Update proposal with error
-        crud.update_proposal(
+        await crud.update_proposal(
             proposal_id,
             user_id,
             {
@@ -267,7 +268,7 @@ async def upload_proposal_documents(
     try:
         # Initialize services
         storage = get_idrive_storage()
-        crud = get_crud()
+        crud = await get_crud()
 
         # Create temp directory for processing
         temp_dir = Path(tempfile.mkdtemp())
@@ -294,14 +295,14 @@ async def upload_proposal_documents(
 
         # Use organization-aware creation if user belongs to an organization
         if current_user.get("organization_id"):
-            proposal = crud.create_proposal_with_organization(
+            proposal = await crud.create_proposal_with_organization(
                 user_id=str(current_user["_id"]),  # Pass as string (UUID format)
                 organization_id=current_user["organization_id"],
                 data=proposal_data
             )
         else:
             # Fallback to old method for backward compatibility
-            proposal = crud.create_proposal(str(current_user["_id"]), proposal_data)
+            proposal = await crud.create_proposal(str(current_user["_id"]), proposal_data)
 
         proposal_id = str(proposal["_id"])
 
@@ -327,7 +328,7 @@ async def upload_proposal_documents(
             documents_info.append(doc_info)
 
         # Update proposal with document info
-        crud.update_proposal(
+        await crud.update_proposal(
             proposal_id,
             str(current_user["_id"]),
             {"documents": documents_info}
@@ -373,8 +374,8 @@ async def get_proposal_status(
 
     Returns only status, progress, and message (not full data).
     """
-    crud = get_crud()
-    proposal = crud.get_proposal(proposal_id, str(current_user["_id"]))
+    crud = await get_crud()
+    proposal = await crud.get_proposal(proposal_id, str(current_user["_id"]))
 
     if not proposal:
         raise HTTPException(
@@ -413,19 +414,19 @@ async def list_proposals(
         sort_by: Field to sort by ("date", "name", "status")
         sort_order: Sort order ("asc", "desc")
     """
-    crud = get_crud()
+    crud = await get_crud()
 
     # Use organization-aware query if user belongs to an organization
     if current_user.get("organization_id"):
         # Note: user_id is stored as string (UUID) in proposals, not ObjectId
-        proposals = crud.get_user_proposals_by_org(
+        proposals = await crud.get_user_proposals_by_org(
             user_id=str(current_user["_id"]),  # Convert to string to match database format
             organization_id=current_user["organization_id"],
             role=current_user.get("role", "user")
         )
     else:
         # Fallback to old method for backward compatibility
-        proposals = crud.get_user_proposals(str(current_user["_id"]), skip, limit, sort_by, sort_order)
+        proposals = await crud.get_user_proposals(str(current_user["_id"]), skip, limit, sort_by, sort_order)
 
     # Convert ObjectId to string for JSON serialization
     result = []
@@ -456,8 +457,8 @@ async def get_proposal(
 
     Called after status shows 'completed' or when user opens existing proposal.
     """
-    crud = get_crud()
-    proposal = crud.get_proposal(proposal_id, str(current_user["_id"]))
+    crud = await get_crud()
+    proposal = await crud.get_proposal(proposal_id, str(current_user["_id"]))
 
     if not proposal:
         raise HTTPException(
@@ -478,7 +479,7 @@ async def update_proposal(
     """
     Update proposal (name, rates, jobs, spreadsheet data, etc.).
     """
-    crud = get_crud()
+    crud = await get_crud()
 
     # Convert Pydantic model to dict, excluding None values
     update_dict = updates.dict(exclude_none=True)
@@ -489,7 +490,7 @@ async def update_proposal(
             detail="No fields to update"
         )
 
-    updated_proposal = crud.update_proposal(
+    updated_proposal = await crud.update_proposal(
         proposal_id,
         str(current_user["_id"]),
         update_dict
@@ -517,8 +518,8 @@ async def update_position_subcontractor_hours(
 
     This allows splitting a position between prime and subcontractor labor.
     """
-    crud = get_crud()
-    proposal = crud.get_proposal(proposal_id, str(current_user["_id"]))
+    crud = await get_crud()
+    proposal = await crud.get_proposal(proposal_id, str(current_user["_id"]))
 
     if not proposal:
         raise HTTPException(
@@ -569,7 +570,7 @@ async def update_position_subcontractor_hours(
                 position["prime_hours_per_year"][year] = year_hours - sub_year_hours
 
     # Update the proposal with modified jobs
-    updated_proposal = crud.update_proposal(
+    updated_proposal = await crud.update_proposal(
         proposal_id,
         str(current_user["_id"]),
         {"jobs": jobs}
@@ -596,11 +597,11 @@ async def delete_proposal(
     """
     Delete proposal and all associated documents from iDrive e2.
     """
-    crud = get_crud()
+    crud = await get_crud()
     storage = get_idrive_storage()
 
     # Get proposal first to access documents
-    proposal = crud.get_proposal(proposal_id, str(current_user["_id"]))
+    proposal = await crud.get_proposal(proposal_id, str(current_user["_id"]))
 
     if not proposal:
         raise HTTPException(
@@ -620,7 +621,7 @@ async def delete_proposal(
         # Continue with proposal deletion even if iDrive cleanup fails
 
     # Delete proposal from MongoDB
-    success = crud.delete_proposal(proposal_id, str(current_user["_id"]))
+    success = await crud.delete_proposal(proposal_id, str(current_user["_id"]))
 
     if not success:
         raise HTTPException(
@@ -643,7 +644,7 @@ async def duplicate_proposal(
     """
     Duplicate proposal (copies data, not documents).
     """
-    crud = get_crud()
+    crud = await get_crud()
 
     new_proposal = crud.duplicate_proposal(
         proposal_id,
@@ -676,8 +677,8 @@ async def list_proposal_documents(
     """
     Get list of documents for a proposal with iDrive URLs.
     """
-    crud = get_crud()
-    proposal = crud.get_proposal(proposal_id, str(current_user["_id"]))
+    crud = await get_crud()
+    proposal = await crud.get_proposal(proposal_id, str(current_user["_id"]))
 
     if not proposal:
         raise HTTPException(
@@ -697,11 +698,11 @@ async def delete_proposal_document(
     """
     Delete a specific document from proposal and iDrive e2.
     """
-    crud = get_crud()
+    crud = await get_crud()
     storage = get_idrive_storage()
 
     # Get proposal
-    proposal = crud.get_proposal(proposal_id, str(current_user["_id"]))
+    proposal = await crud.get_proposal(proposal_id, str(current_user["_id"]))
 
     if not proposal:
         raise HTTPException(
@@ -730,7 +731,7 @@ async def delete_proposal_document(
     documents.pop(document_index)
 
     # Update proposal
-    crud.update_proposal(
+    await crud.update_proposal(
         proposal_id,
         str(current_user["_id"]),
         {"documents": documents}
@@ -792,7 +793,7 @@ async def share_proposal_with_users(
         )
 
     # Use organization-aware proposal methods
-    crud = get_crud()
+    crud = await get_crud()
 
     try:
         updated_proposal = crud.share_proposal(
@@ -850,10 +851,10 @@ async def unshare_proposal(
             detail="Invalid proposal ID format"
         )
 
-    crud = get_crud()
+    crud = await get_crud()
 
     # Get proposal to verify ownership
-    proposal = crud.get_by_id(prop_oid)
+    proposal = await crud.get_by_id(prop_oid)
 
     if not proposal:
         raise HTTPException(
@@ -870,8 +871,8 @@ async def unshare_proposal(
 
     # Update to private visibility
     from auth.database import MongoDB
-    db = MongoDB.get_database()
-    result = db["proposals"].update_one(
+    db = await MongoDB.get_database()
+    result = await db["proposals"].update_one(
         {"_id": prop_oid},
         {
             "$set": {
@@ -925,8 +926,8 @@ async def get_proposal_access_info(
             detail="Invalid proposal ID format"
         )
 
-    crud = get_crud()
-    proposal = crud.get_by_id(prop_oid)
+    crud = await get_crud()
+    proposal = await crud.get_by_id(prop_oid)
 
     if not proposal:
         raise HTTPException(
@@ -947,11 +948,12 @@ async def get_proposal_access_info(
 
     if shared_with_ids:
         from auth.database import MongoDB
-        db = MongoDB.get_database()
-        users = db["users"].find(
+        db = await MongoDB.get_database()
+        cursor = db["users"].find(
             {"_id": {"$in": shared_with_ids}},
             {"firstName": 1, "lastName": 1, "email": 1}
         )
+        users = await cursor.to_list(length=None)
 
         for user in users:
             shared_users.append({

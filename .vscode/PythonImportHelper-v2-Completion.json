@@ -730,6 +730,14 @@
         "documentation": {}
     },
     {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Optional",
         "importPath": "typing",
         "description": "typing",
@@ -1378,22 +1386,6 @@
         "documentation": {}
     },
     {
-        "label": "timedelta",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
         "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
@@ -1426,11 +1418,27 @@
         "documentation": {}
     },
     {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
         "isExtraImport": true,
-        "detail": "dotenv",
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
         "documentation": {}
     },
     {
@@ -1490,11 +1498,19 @@
         "documentation": {}
     },
     {
-        "label": "ObjectId",
-        "importPath": "bson",
-        "description": "bson",
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
         "isExtraImport": true,
-        "detail": "bson",
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
         "documentation": {}
     },
     {
@@ -1635,172 +1651,43 @@
         "documentation": {}
     },
     {
-        "label": "threading",
-        "kind": 6,
+        "label": "AsyncIOMotorClient",
+        "importPath": "motor.motor_asyncio",
+        "description": "motor.motor_asyncio",
         "isExtraImport": true,
-        "importPath": "threading",
-        "description": "threading",
-        "detail": "threading",
+        "detail": "motor.motor_asyncio",
         "documentation": {}
     },
     {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "AsyncIOMotorClient",
+        "importPath": "motor.motor_asyncio",
+        "description": "motor.motor_asyncio",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "motor.motor_asyncio",
         "documentation": {}
     },
     {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "AsyncIOMotorDatabase",
+        "importPath": "motor.motor_asyncio",
+        "description": "motor.motor_asyncio",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "motor.motor_asyncio",
         "documentation": {}
     },
     {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "AsyncIOMotorClient",
+        "importPath": "motor.motor_asyncio",
+        "description": "motor.motor_asyncio",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "motor.motor_asyncio",
         "documentation": {}
     },
     {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "AsyncIOMotorCollection",
+        "importPath": "motor.motor_asyncio",
+        "description": "motor.motor_asyncio",
         "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "ASCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "DESCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "ASCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "DESCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "TEXT",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "ASCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "DESCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "ASCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "TEXT",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "motor.motor_asyncio",
         "documentation": {}
     },
     {
@@ -2272,6 +2159,15 @@
         "documentation": {}
     },
     {
+        "label": "threading",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "threading",
+        "description": "threading",
+        "detail": "threading",
+        "documentation": {}
+    },
+    {
         "label": "pandas",
         "kind": 6,
         "isExtraImport": true,
@@ -2313,44 +2209,12 @@
         "documentation": {}
     },
     {
-        "label": "Database",
-        "importPath": "pymongo.database",
-        "description": "pymongo.database",
-        "isExtraImport": true,
-        "detail": "pymongo.database",
-        "documentation": {}
-    },
-    {
-        "label": "Database",
-        "importPath": "pymongo.database",
-        "description": "pymongo.database",
-        "isExtraImport": true,
-        "detail": "pymongo.database",
-        "documentation": {}
-    },
-    {
         "label": "math",
         "kind": 6,
         "isExtraImport": true,
         "importPath": "math",
         "description": "math",
         "detail": "math",
-        "documentation": {}
-    },
-    {
-        "label": "lru_cache",
-        "importPath": "functools",
-        "description": "functools",
-        "isExtraImport": true,
-        "detail": "functools",
-        "documentation": {}
-    },
-    {
-        "label": "lru_cache",
-        "importPath": "functools",
-        "description": "functools",
-        "isExtraImport": true,
-        "detail": "functools",
         "documentation": {}
     },
     {
@@ -2908,6 +2772,150 @@
         "documentation": {}
     },
     {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "ASCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "DESCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "ASCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "DESCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "TEXT",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "ASCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "DESCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "ASCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "TEXT",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "Database",
+        "importPath": "pymongo.database",
+        "description": "pymongo.database",
+        "isExtraImport": true,
+        "detail": "pymongo.database",
+        "documentation": {}
+    },
+    {
         "label": "requests",
         "kind": 6,
         "isExtraImport": true,
@@ -2980,14 +2988,6 @@
         "description": "agent.agent",
         "isExtraImport": true,
         "detail": "agent.agent",
-        "documentation": {}
-    },
-    {
-        "label": "Collection",
-        "importPath": "pymongo.collection",
-        "description": "pymongo.collection",
-        "isExtraImport": true,
-        "detail": "pymongo.collection",
         "documentation": {}
     },
     {
@@ -3158,42 +3158,6 @@
         "description": "backend.app.startup",
         "peekOfCode": "startup_manager = StartupManager()",
         "detail": "backend.app.startup",
-        "documentation": {}
-    },
-    {
-        "label": "add_token_to_blacklist",
-        "kind": 2,
-        "importPath": "backend.auth.blacklist",
-        "description": "backend.auth.blacklist",
-        "peekOfCode": "def add_token_to_blacklist(user_email: str, token: str) -> bool:\n    \"\"\"\n    Add a token to the user's blacklist in their document\n    Args:\n        user_email: Email of the user whose token should be blacklisted\n        token: JWT token string to blacklist\n    Returns:\n        bool: True if successfully added, False otherwise\n    \"\"\"\n    try:",
-        "detail": "backend.auth.blacklist",
-        "documentation": {}
-    },
-    {
-        "label": "is_token_blacklisted",
-        "kind": 2,
-        "importPath": "backend.auth.blacklist",
-        "description": "backend.auth.blacklist",
-        "peekOfCode": "def is_token_blacklisted(user_email: str, token: str) -> bool:\n    \"\"\"\n    Check if a token is blacklisted for a specific user\n    Args:\n        user_email: Email of the user\n        token: JWT token string to check\n    Returns:\n        bool: True if token is blacklisted, False otherwise\n    \"\"\"\n    try:",
-        "detail": "backend.auth.blacklist",
-        "documentation": {}
-    },
-    {
-        "label": "cleanup_expired_tokens",
-        "kind": 2,
-        "importPath": "backend.auth.blacklist",
-        "description": "backend.auth.blacklist",
-        "peekOfCode": "def cleanup_expired_tokens(user_email: str) -> int:\n    \"\"\"\n    Remove expired tokens from a user's blacklist to keep the array clean\n    Args:\n        user_email: Email of the user whose expired tokens should be cleaned up\n    Returns:\n        int: Number of expired tokens removed\n    \"\"\"\n    try:\n        users_collection = MongoDB.get_users_collection()",
-        "detail": "backend.auth.blacklist",
-        "documentation": {}
-    },
-    {
-        "label": "cleanup_all_expired_tokens",
-        "kind": 2,
-        "importPath": "backend.auth.blacklist",
-        "description": "backend.auth.blacklist",
-        "peekOfCode": "def cleanup_all_expired_tokens() -> int:\n    \"\"\"\n    Clean up expired tokens for all users (can be used for periodic maintenance)\n    Returns:\n        int: Number of users whose expired tokens were cleaned up\n    \"\"\"\n    try:\n        users_collection = MongoDB.get_users_collection()\n        current_time = datetime.utcnow()\n        # Remove expired tokens from all users",
-        "detail": "backend.auth.blacklist",
         "documentation": {}
     },
     {
@@ -3381,16 +3345,7 @@
         "kind": 6,
         "importPath": "backend.auth.crud",
         "description": "backend.auth.crud",
-        "peekOfCode": "class UserCRUD:\n    def __init__(self):\n        \"\"\"Initialize UserCRUD with database collections\"\"\"\n        self.db = MongoDB.get_database()\n        self.collection = self.db[\"users\"]\n    @staticmethod\n    def create_user(user_data: UserSignup) -> UserResponse:\n        \"\"\"Create a new user in the database\"\"\"\n        users_collection = MongoDB.get_users_collection()\n        # Check if user already exists",
-        "detail": "backend.auth.crud",
-        "documentation": {}
-    },
-    {
-        "label": "get_user_crud",
-        "kind": 2,
-        "importPath": "backend.auth.crud",
-        "description": "backend.auth.crud",
-        "peekOfCode": "def get_user_crud() -> UserCRUD:\n    \"\"\"\n    Get or create UserCRUD instance (singleton pattern)\n    Returns:\n        UserCRUD instance\n    \"\"\"\n    global _user_crud\n    with _lock:\n        if _user_crud is None:\n            _user_crud = UserCRUD()",
+        "peekOfCode": "class UserCRUD:\n    \"\"\"Async UserCRUD with Motor driver\"\"\"\n    def __init__(self):\n        \"\"\"Initialize UserCRUD (lazy initialization for database)\"\"\"\n        self.db = None\n        self.collection = None\n    async def _ensure_initialized(self):\n        \"\"\"Ensure database connection is initialized\"\"\"\n        if self.db is None:\n            self.collection = await MongoDB.get_users_collection()",
         "detail": "backend.auth.crud",
         "documentation": {}
     },
@@ -3399,7 +3354,7 @@
         "kind": 5,
         "importPath": "backend.auth.crud",
         "description": "backend.auth.crud",
-        "peekOfCode": "_user_crud = None\n_lock = threading.RLock()\nclass UserCRUD:\n    def __init__(self):\n        \"\"\"Initialize UserCRUD with database collections\"\"\"\n        self.db = MongoDB.get_database()\n        self.collection = self.db[\"users\"]\n    @staticmethod\n    def create_user(user_data: UserSignup) -> UserResponse:\n        \"\"\"Create a new user in the database\"\"\"",
+        "peekOfCode": "_user_crud = None\n_lock = asyncio.Lock()\nclass UserCRUD:\n    \"\"\"Async UserCRUD with Motor driver\"\"\"\n    def __init__(self):\n        \"\"\"Initialize UserCRUD (lazy initialization for database)\"\"\"\n        self.db = None\n        self.collection = None\n    async def _ensure_initialized(self):\n        \"\"\"Ensure database connection is initialized\"\"\"",
         "detail": "backend.auth.crud",
         "documentation": {}
     },
@@ -3408,7 +3363,7 @@
         "kind": 5,
         "importPath": "backend.auth.crud",
         "description": "backend.auth.crud",
-        "peekOfCode": "_lock = threading.RLock()\nclass UserCRUD:\n    def __init__(self):\n        \"\"\"Initialize UserCRUD with database collections\"\"\"\n        self.db = MongoDB.get_database()\n        self.collection = self.db[\"users\"]\n    @staticmethod\n    def create_user(user_data: UserSignup) -> UserResponse:\n        \"\"\"Create a new user in the database\"\"\"\n        users_collection = MongoDB.get_users_collection()",
+        "peekOfCode": "_lock = asyncio.Lock()\nclass UserCRUD:\n    \"\"\"Async UserCRUD with Motor driver\"\"\"\n    def __init__(self):\n        \"\"\"Initialize UserCRUD (lazy initialization for database)\"\"\"\n        self.db = None\n        self.collection = None\n    async def _ensure_initialized(self):\n        \"\"\"Ensure database connection is initialized\"\"\"\n        if self.db is None:",
         "detail": "backend.auth.crud",
         "documentation": {}
     },
@@ -3417,7 +3372,7 @@
         "kind": 6,
         "importPath": "backend.auth.database",
         "description": "backend.auth.database",
-        "peekOfCode": "class MongoDB:\n    client: Optional[MongoClient] = None\n    database = None\n    _lock = threading.RLock()\n    @classmethod\n    def connect_to_mongo(cls):\n        \"\"\"Create database connection (thread-safe)\"\"\"\n        with cls._lock:\n            # Double-check locking pattern to prevent multiple connections\n            if cls.database is not None:",
+        "peekOfCode": "class MongoDB:\n    \"\"\"Async MongoDB singleton with Motor driver\"\"\"\n    client: Optional[AsyncIOMotorClient] = None\n    database = None\n    _lock = asyncio.Lock()\n    @classmethod\n    async def connect_to_mongo(cls):\n        \"\"\"Create database connection (async, thread-safe)\"\"\"\n        async with cls._lock:\n            # Double-check locking pattern to prevent multiple connections",
         "detail": "backend.auth.database",
         "documentation": {}
     },
@@ -3426,7 +3381,7 @@
         "kind": 5,
         "importPath": "backend.auth.database",
         "description": "backend.auth.database",
-        "peekOfCode": "USERS_COLLECTION = \"users\"\nclass MongoDB:\n    client: Optional[MongoClient] = None\n    database = None\n    _lock = threading.RLock()\n    @classmethod\n    def connect_to_mongo(cls):\n        \"\"\"Create database connection (thread-safe)\"\"\"\n        with cls._lock:\n            # Double-check locking pattern to prevent multiple connections",
+        "peekOfCode": "USERS_COLLECTION = \"users\"\nclass MongoDB:\n    \"\"\"Async MongoDB singleton with Motor driver\"\"\"\n    client: Optional[AsyncIOMotorClient] = None\n    database = None\n    _lock = asyncio.Lock()\n    @classmethod\n    async def connect_to_mongo(cls):\n        \"\"\"Create database connection (async, thread-safe)\"\"\"\n        async with cls._lock:",
         "detail": "backend.auth.database",
         "documentation": {}
     },
@@ -3435,7 +3390,7 @@
         "kind": 5,
         "importPath": "backend.auth.database",
         "description": "backend.auth.database",
-        "peekOfCode": "mongo_db = MongoDB()\nmongo_db.connect_to_mongo()",
+        "peekOfCode": "mongo_db = MongoDB()",
         "detail": "backend.auth.database",
         "documentation": {}
     },
@@ -3647,51 +3602,6 @@
         "documentation": {}
     },
     {
-        "label": "MONGODB_URL",
-        "kind": 5,
-        "importPath": "backend.auth.refresh_token",
-        "description": "backend.auth.refresh_token",
-        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\nclient = MongoClient(MONGODB_URL)\ndb = client[MONGODB_DATABASE]\nrefresh_tokens_collection = db[\"refresh_tokens\"]\ndef create_refresh_token_jwt(user_email: str, token_id: str) -> str:\n    \"\"\"\n    Create JWT refresh token\n    Args:\n        user_email: User's email address",
-        "detail": "backend.auth.refresh_token",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_DATABASE",
-        "kind": 5,
-        "importPath": "backend.auth.refresh_token",
-        "description": "backend.auth.refresh_token",
-        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\nclient = MongoClient(MONGODB_URL)\ndb = client[MONGODB_DATABASE]\nrefresh_tokens_collection = db[\"refresh_tokens\"]\ndef create_refresh_token_jwt(user_email: str, token_id: str) -> str:\n    \"\"\"\n    Create JWT refresh token\n    Args:\n        user_email: User's email address\n        token_id: Unique token identifier",
-        "detail": "backend.auth.refresh_token",
-        "documentation": {}
-    },
-    {
-        "label": "client",
-        "kind": 5,
-        "importPath": "backend.auth.refresh_token",
-        "description": "backend.auth.refresh_token",
-        "peekOfCode": "client = MongoClient(MONGODB_URL)\ndb = client[MONGODB_DATABASE]\nrefresh_tokens_collection = db[\"refresh_tokens\"]\ndef create_refresh_token_jwt(user_email: str, token_id: str) -> str:\n    \"\"\"\n    Create JWT refresh token\n    Args:\n        user_email: User's email address\n        token_id: Unique token identifier\n    Returns:",
-        "detail": "backend.auth.refresh_token",
-        "documentation": {}
-    },
-    {
-        "label": "db",
-        "kind": 5,
-        "importPath": "backend.auth.refresh_token",
-        "description": "backend.auth.refresh_token",
-        "peekOfCode": "db = client[MONGODB_DATABASE]\nrefresh_tokens_collection = db[\"refresh_tokens\"]\ndef create_refresh_token_jwt(user_email: str, token_id: str) -> str:\n    \"\"\"\n    Create JWT refresh token\n    Args:\n        user_email: User's email address\n        token_id: Unique token identifier\n    Returns:\n        JWT refresh token string",
-        "detail": "backend.auth.refresh_token",
-        "documentation": {}
-    },
-    {
-        "label": "refresh_tokens_collection",
-        "kind": 5,
-        "importPath": "backend.auth.refresh_token",
-        "description": "backend.auth.refresh_token",
-        "peekOfCode": "refresh_tokens_collection = db[\"refresh_tokens\"]\ndef create_refresh_token_jwt(user_email: str, token_id: str) -> str:\n    \"\"\"\n    Create JWT refresh token\n    Args:\n        user_email: User's email address\n        token_id: Unique token identifier\n    Returns:\n        JWT refresh token string\n    \"\"\"",
-        "detail": "backend.auth.refresh_token",
-        "documentation": {}
-    },
-    {
         "label": "hash_password",
         "kind": 2,
         "importPath": "backend.auth.utils",
@@ -3715,15 +3625,6 @@
         "importPath": "backend.auth.utils",
         "description": "backend.auth.utils",
         "peekOfCode": "def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):\n    \"\"\"Create JWT access token\"\"\"\n    to_encode = data.copy()\n    if expires_delta:\n        expire = datetime.utcnow() + expires_delta\n    else:\n        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)\n    to_encode.update({\"exp\": expire})\n    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)\n    return encoded_jwt",
-        "detail": "backend.auth.utils",
-        "documentation": {}
-    },
-    {
-        "label": "verify_token",
-        "kind": 2,
-        "importPath": "backend.auth.utils",
-        "description": "backend.auth.utils",
-        "peekOfCode": "def verify_token(token: str) -> Optional[TokenData]:\n    \"\"\"Verify JWT token and return token data\"\"\"\n    try:\n        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])\n        email: str = payload.get(\"sub\")\n        if email is None:\n            return None\n        # Check if token is blacklisted\n        if is_token_blacklisted(email, token):\n            return None  # Token is blacklisted",
         "detail": "backend.auth.utils",
         "documentation": {}
     },
@@ -3921,16 +3822,7 @@
         "kind": 6,
         "importPath": "backend.client.oews_mongodb",
         "description": "backend.client.oews_mongodb",
-        "peekOfCode": "class OEWSMongoLookup:\n    \"\"\"Query OEWS wage data from MongoDB.\"\"\"\n    def __init__(self):\n        \"\"\"Initialize MongoDB connection.\"\"\"\n        # Create MongoDB client with connection pooling\n        # PyMongo client is thread-safe and handles connection pooling automatically\n        self.client = MongoClient(settings.MONGODB_URL)\n        self.db: Database = self.client[settings.MONGODB_DATABASE]\n    def search_areas(self, keyword: str) -> List[Dict[str, str]]:\n        \"\"\"",
-        "detail": "backend.client.oews_mongodb",
-        "documentation": {}
-    },
-    {
-        "label": "get_oews_mongo_client",
-        "kind": 2,
-        "importPath": "backend.client.oews_mongodb",
-        "description": "backend.client.oews_mongodb",
-        "peekOfCode": "def get_oews_mongo_client() -> OEWSMongoLookup:\n    \"\"\"\n    Get or create OEWS MongoDB client (singleton pattern).\n    Returns:\n        OEWSMongoLookup instance\n    \"\"\"\n    global _oews_mongo_client\n    with _client_lock:\n        if _oews_mongo_client is None:\n            _oews_mongo_client = OEWSMongoLookup()",
+        "peekOfCode": "class OEWSMongoLookup:\n    \"\"\"Query OEWS wage data from MongoDB (Async).\"\"\"\n    def __init__(self):\n        \"\"\"Initialize MongoDB connection (lazy initialization).\"\"\"\n        self.client: Optional[AsyncIOMotorClient] = None\n        self.db: Optional[AsyncIOMotorDatabase] = None\n    async def _ensure_initialized(self):\n        \"\"\"Ensure MongoDB connection is initialized (lazy initialization)\"\"\"\n        if self.db is None:\n            # Create Motor async client",
         "detail": "backend.client.oews_mongodb",
         "documentation": {}
     },
@@ -3939,7 +3831,7 @@
         "kind": 5,
         "importPath": "backend.client.oews_mongodb",
         "description": "backend.client.oews_mongodb",
-        "peekOfCode": "_client_lock = threading.RLock()\ndef get_oews_mongo_client() -> OEWSMongoLookup:\n    \"\"\"\n    Get or create OEWS MongoDB client (singleton pattern).\n    Returns:\n        OEWSMongoLookup instance\n    \"\"\"\n    global _oews_mongo_client\n    with _client_lock:\n        if _oews_mongo_client is None:",
+        "peekOfCode": "_client_lock = asyncio.Lock()\nasync def get_oews_mongo_client() -> OEWSMongoLookup:\n    \"\"\"\n    Get or create OEWS MongoDB client (singleton pattern) - async.\n    Returns:\n        OEWSMongoLookup instance\n    \"\"\"\n    global _oews_mongo_client\n    async with _client_lock:\n        if _oews_mongo_client is None:",
         "detail": "backend.client.oews_mongodb",
         "documentation": {}
     },
@@ -4169,15 +4061,6 @@
         "documentation": {}
     },
     {
-        "label": "get_crud",
-        "kind": 2,
-        "importPath": "backend.routers.proposals",
-        "description": "backend.routers.proposals",
-        "peekOfCode": "def get_crud():\n    \"\"\"Get singleton ProposalCRUD instance (thread-safe).\"\"\"\n    return get_proposal_crud(MongoDB.get_collection(\"proposals\"))\ndef serialize_proposal(proposal: dict) -> dict:\n    \"\"\"\n    Convert all ObjectId fields to strings for JSON serialization.\n    Args:\n        proposal: Proposal document from MongoDB\n    Returns:\n        Proposal with all ObjectIds converted to strings",
-        "detail": "backend.routers.proposals",
-        "documentation": {}
-    },
-    {
         "label": "serialize_proposal",
         "kind": 2,
         "importPath": "backend.routers.proposals",
@@ -4191,7 +4074,7 @@
         "kind": 5,
         "importPath": "backend.routers.proposals",
         "description": "backend.routers.proposals",
-        "peekOfCode": "router = APIRouter(prefix=\"/proposals\", tags=[\"proposals\"])\n# Get singleton ProposalCRUD instance\ndef get_crud():\n    \"\"\"Get singleton ProposalCRUD instance (thread-safe).\"\"\"\n    return get_proposal_crud(MongoDB.get_collection(\"proposals\"))\ndef serialize_proposal(proposal: dict) -> dict:\n    \"\"\"\n    Convert all ObjectId fields to strings for JSON serialization.\n    Args:\n        proposal: Proposal document from MongoDB",
+        "peekOfCode": "router = APIRouter(prefix=\"/proposals\", tags=[\"proposals\"])\n# Get singleton ProposalCRUD instance\nasync def get_crud():\n    \"\"\"Get singleton ProposalCRUD instance (async, thread-safe).\"\"\"\n    db = await MongoDB.get_database()\n    return get_proposal_crud(db[\"proposals\"])\ndef serialize_proposal(proposal: dict) -> dict:\n    \"\"\"\n    Convert all ObjectId fields to strings for JSON serialization.\n    Args:",
         "detail": "backend.routers.proposals",
         "documentation": {}
     },
@@ -4211,6 +4094,15 @@
         "description": "backend.routers.workspace",
         "peekOfCode": "router = APIRouter(prefix=\"/api/workspace\", tags=[\"workspace\"])\nclass SwitchOrganizationRequest(BaseModel):\n    \"\"\"Request body for switching organization\"\"\"\n    organization_id: str\n@router.get(\"/organizations\")\nasync def get_user_organizations(current_user: dict = Depends(get_current_user)):\n    \"\"\"\n    Get all organizations the current user belongs to.\n    Returns:\n        List of organizations with user's role in each",
         "detail": "backend.routers.workspace",
+        "documentation": {}
+    },
+    {
+        "label": "add_joined_at_to_organizations",
+        "kind": 2,
+        "importPath": "backend.scripts.add_joined_at_to_orgs",
+        "description": "backend.scripts.add_joined_at_to_orgs",
+        "peekOfCode": "def add_joined_at_to_organizations():\n    \"\"\"Add joinedAt field to all organization memberships that are missing it\"\"\"\n    # Connect to MongoDB\n    mongodb_url = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\n    mongodb_database = os.getenv(\"MONGODB_DATABASE\", \"price-qastage01\")\n    client = MongoClient(\n        mongodb_url,\n        serverSelectionTimeoutMS=20000,\n        connectTimeoutMS=20000,\n        socketTimeoutMS=30000",
+        "detail": "backend.scripts.add_joined_at_to_orgs",
         "documentation": {}
     },
     {
@@ -4427,33 +4319,6 @@
         "description": "backend.scripts.migrate_proposals_to_orgs",
         "peekOfCode": "def migrate_proposals_to_organizations():\n    \"\"\"Add organization_id to existing proposals based on user's organization.\"\"\"\n    db = MongoDB.get_database()\n    proposals_collection = db[\"proposals\"]\n    users_collection = db[\"users\"]\n    print(\"Starting proposal migration to add organization_id...\")\n    # Find all proposals without organization_id\n    proposals_without_org = proposals_collection.find({\n        \"organization_id\": {\"$exists\": False}\n    })",
         "detail": "backend.scripts.migrate_proposals_to_orgs",
-        "documentation": {}
-    },
-    {
-        "label": "migrate_users",
-        "kind": 2,
-        "importPath": "backend.scripts.migrate_to_multi_org",
-        "description": "backend.scripts.migrate_to_multi_org",
-        "peekOfCode": "def migrate_users():\n    \"\"\"Convert single organization_id to organizations array\"\"\"\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    users = db[\"users\"]\n    # Find all users with organization_id\n    users_to_migrate = list(users.find({\"organization_id\": {\"$exists\": True}}))\n    print(f\"Found {len(users_to_migrate)} users to migrate\")\n    updated_count = 0\n    for user in users_to_migrate:",
-        "detail": "backend.scripts.migrate_to_multi_org",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_URL",
-        "kind": 5,
-        "importPath": "backend.scripts.migrate_to_multi_org",
-        "description": "backend.scripts.migrate_to_multi_org",
-        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef migrate_users():\n    \"\"\"Convert single organization_id to organizations array\"\"\"\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    users = db[\"users\"]\n    # Find all users with organization_id\n    users_to_migrate = list(users.find({\"organization_id\": {\"$exists\": True}}))\n    print(f\"Found {len(users_to_migrate)} users to migrate\")",
-        "detail": "backend.scripts.migrate_to_multi_org",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_DATABASE",
-        "kind": 5,
-        "importPath": "backend.scripts.migrate_to_multi_org",
-        "description": "backend.scripts.migrate_to_multi_org",
-        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef migrate_users():\n    \"\"\"Convert single organization_id to organizations array\"\"\"\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    users = db[\"users\"]\n    # Find all users with organization_id\n    users_to_migrate = list(users.find({\"organization_id\": {\"$exists\": True}}))\n    print(f\"Found {len(users_to_migrate)} users to migrate\")\n    updated_count = 0",
-        "detail": "backend.scripts.migrate_to_multi_org",
         "documentation": {}
     },
     {
@@ -4686,16 +4551,7 @@
         "kind": 6,
         "importPath": "backend.utils.invitations",
         "description": "backend.utils.invitations",
-        "peekOfCode": "class InvitationCRUD:\n    \"\"\"Invitation CRUD operations with token hashing\"\"\"\n    def __init__(self):\n        self.db = MongoDB.get_database()\n        self.collection = self.db[\"invitations\"]\n        self.users_collection = self.db[\"users\"]\n        self.orgs_collection = self.db[\"organizations\"]\n        self.email_service = EmailService()\n    @staticmethod\n    def _hash_token(token: str) -> str:",
-        "detail": "backend.utils.invitations",
-        "documentation": {}
-    },
-    {
-        "label": "get_invitation_crud",
-        "kind": 2,
-        "importPath": "backend.utils.invitations",
-        "description": "backend.utils.invitations",
-        "peekOfCode": "def get_invitation_crud() -> InvitationCRUD:\n    \"\"\"\n    Get or create InvitationCRUD instance (singleton pattern)\n    Returns:\n        InvitationCRUD instance\n    \"\"\"\n    global _invitation_crud\n    with _lock:\n        if _invitation_crud is None:\n            _invitation_crud = InvitationCRUD()",
+        "peekOfCode": "class InvitationCRUD:\n    \"\"\"Invitation CRUD operations with token hashing (Async Singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize InvitationCRUD (lazy initialization for database)\"\"\"\n        self.db = None\n        self.collection = None\n        self.users_collection = None\n        self.orgs_collection = None\n        self.email_service = EmailService()\n    async def _ensure_initialized(self):",
         "detail": "backend.utils.invitations",
         "documentation": {}
     },
@@ -4704,7 +4560,7 @@
         "kind": 5,
         "importPath": "backend.utils.invitations",
         "description": "backend.utils.invitations",
-        "peekOfCode": "_invitation_crud = None\n_lock = threading.RLock()\nclass InvitationCRUD:\n    \"\"\"Invitation CRUD operations with token hashing\"\"\"\n    def __init__(self):\n        self.db = MongoDB.get_database()\n        self.collection = self.db[\"invitations\"]\n        self.users_collection = self.db[\"users\"]\n        self.orgs_collection = self.db[\"organizations\"]\n        self.email_service = EmailService()",
+        "peekOfCode": "_invitation_crud = None\n_lock = asyncio.Lock()\nclass InvitationCRUD:\n    \"\"\"Invitation CRUD operations with token hashing (Async Singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize InvitationCRUD (lazy initialization for database)\"\"\"\n        self.db = None\n        self.collection = None\n        self.users_collection = None\n        self.orgs_collection = None",
         "detail": "backend.utils.invitations",
         "documentation": {}
     },
@@ -4713,7 +4569,7 @@
         "kind": 5,
         "importPath": "backend.utils.invitations",
         "description": "backend.utils.invitations",
-        "peekOfCode": "_lock = threading.RLock()\nclass InvitationCRUD:\n    \"\"\"Invitation CRUD operations with token hashing\"\"\"\n    def __init__(self):\n        self.db = MongoDB.get_database()\n        self.collection = self.db[\"invitations\"]\n        self.users_collection = self.db[\"users\"]\n        self.orgs_collection = self.db[\"organizations\"]\n        self.email_service = EmailService()\n    @staticmethod",
+        "peekOfCode": "_lock = asyncio.Lock()\nclass InvitationCRUD:\n    \"\"\"Invitation CRUD operations with token hashing (Async Singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize InvitationCRUD (lazy initialization for database)\"\"\"\n        self.db = None\n        self.collection = None\n        self.users_collection = None\n        self.orgs_collection = None\n        self.email_service = EmailService()",
         "detail": "backend.utils.invitations",
         "documentation": {}
     },
@@ -4722,16 +4578,7 @@
         "kind": 6,
         "importPath": "backend.utils.organizations",
         "description": "backend.utils.organizations",
-        "peekOfCode": "class OrganizationCRUD:\n    \"\"\"Organization CRUD operations\"\"\"\n    def __init__(self):\n        self.db = MongoDB.get_database()\n        self.collection = self.db[\"organizations\"]\n        self.users_collection = self.db[\"users\"]\n    def create_organization(self, name: str, owner_id: ObjectId) -> dict:\n        \"\"\"Create a new organization\"\"\"\n        slug = self._generate_slug(name)\n        org = {",
-        "detail": "backend.utils.organizations",
-        "documentation": {}
-    },
-    {
-        "label": "get_organization_crud",
-        "kind": 2,
-        "importPath": "backend.utils.organizations",
-        "description": "backend.utils.organizations",
-        "peekOfCode": "def get_organization_crud() -> OrganizationCRUD:\n    \"\"\"\n    Get or create OrganizationCRUD instance (singleton pattern)\n    Returns:\n        OrganizationCRUD instance\n    \"\"\"\n    global _organization_crud\n    with _lock:\n        if _organization_crud is None:\n            _organization_crud = OrganizationCRUD()",
+        "peekOfCode": "class OrganizationCRUD:\n    \"\"\"Organization CRUD operations with MongoDB (Async Singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize OrganizationCRUD (lazy initialization for database)\"\"\"\n        self.db = None\n        self.collection = None\n        self.users_collection = None\n    async def _ensure_initialized(self):\n        \"\"\"Ensure database connection is initialized\"\"\"\n        if self.db is None:",
         "detail": "backend.utils.organizations",
         "documentation": {}
     },
@@ -4740,7 +4587,7 @@
         "kind": 5,
         "importPath": "backend.utils.organizations",
         "description": "backend.utils.organizations",
-        "peekOfCode": "_organization_crud = None\n_lock = threading.RLock()\nclass OrganizationCRUD:\n    \"\"\"Organization CRUD operations\"\"\"\n    def __init__(self):\n        self.db = MongoDB.get_database()\n        self.collection = self.db[\"organizations\"]\n        self.users_collection = self.db[\"users\"]\n    def create_organization(self, name: str, owner_id: ObjectId) -> dict:\n        \"\"\"Create a new organization\"\"\"",
+        "peekOfCode": "_organization_crud = None\n_lock = asyncio.Lock()\nclass OrganizationCRUD:\n    \"\"\"Organization CRUD operations with MongoDB (Async Singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize OrganizationCRUD (lazy initialization for database)\"\"\"\n        self.db = None\n        self.collection = None\n        self.users_collection = None\n    async def _ensure_initialized(self):",
         "detail": "backend.utils.organizations",
         "documentation": {}
     },
@@ -4749,7 +4596,7 @@
         "kind": 5,
         "importPath": "backend.utils.organizations",
         "description": "backend.utils.organizations",
-        "peekOfCode": "_lock = threading.RLock()\nclass OrganizationCRUD:\n    \"\"\"Organization CRUD operations\"\"\"\n    def __init__(self):\n        self.db = MongoDB.get_database()\n        self.collection = self.db[\"organizations\"]\n        self.users_collection = self.db[\"users\"]\n    def create_organization(self, name: str, owner_id: ObjectId) -> dict:\n        \"\"\"Create a new organization\"\"\"\n        slug = self._generate_slug(name)",
+        "peekOfCode": "_lock = asyncio.Lock()\nclass OrganizationCRUD:\n    \"\"\"Organization CRUD operations with MongoDB (Async Singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize OrganizationCRUD (lazy initialization for database)\"\"\"\n        self.db = None\n        self.collection = None\n        self.users_collection = None\n    async def _ensure_initialized(self):\n        \"\"\"Ensure database connection is initialized\"\"\"",
         "detail": "backend.utils.organizations",
         "documentation": {}
     },
@@ -4758,7 +4605,7 @@
         "kind": 6,
         "importPath": "backend.utils.proposals",
         "description": "backend.utils.proposals",
-        "peekOfCode": "class ProposalCRUD:\n    \"\"\"\n    Proposal CRUD operations with MongoDB (Thread-safe Singleton).\n    All methods use user_id (MongoDB ObjectId as string) for ownership verification.\n    Thread-safe through:\n    - Singleton pattern ensures one instance across all threads\n    - RLock for thread-safe operations\n    - PyMongo's built-in connection pooling\n    \"\"\"\n    _instance = None",
+        "peekOfCode": "class ProposalCRUD:\n    \"\"\"\n    Proposal CRUD operations with MongoDB (Async Singleton).\n    All methods use user_id (MongoDB ObjectId as string) for ownership verification.\n    Thread-safe through:\n    - Singleton pattern ensures one instance across all async tasks\n    - asyncio.Lock for async-safe operations\n    - Motor's built-in connection pooling\n    \"\"\"\n    _instance = None",
         "detail": "backend.utils.proposals",
         "documentation": {}
     },
@@ -4767,25 +4614,7 @@
         "kind": 2,
         "importPath": "backend.utils.proposals",
         "description": "backend.utils.proposals",
-        "peekOfCode": "def get_proposal_crud(collection: Collection = None) -> ProposalCRUD:\n    \"\"\"\n    Get singleton ProposalCRUD instance (thread-safe).\n    Args:\n        collection: MongoDB collection (required on first call only)\n    Returns:\n        Singleton ProposalCRUD instance\n    Usage:\n        from utils.proposals import get_proposal_crud\n        crud = get_proposal_crud(collection)",
-        "detail": "backend.utils.proposals",
-        "documentation": {}
-    },
-    {
-        "label": "_proposal_crud_instance",
-        "kind": 5,
-        "importPath": "backend.utils.proposals",
-        "description": "backend.utils.proposals",
-        "peekOfCode": "_proposal_crud_instance = None\n_instance_lock = threading.RLock()\ndef get_proposal_crud(collection: Collection = None) -> ProposalCRUD:\n    \"\"\"\n    Get singleton ProposalCRUD instance (thread-safe).\n    Args:\n        collection: MongoDB collection (required on first call only)\n    Returns:\n        Singleton ProposalCRUD instance\n    Usage:",
-        "detail": "backend.utils.proposals",
-        "documentation": {}
-    },
-    {
-        "label": "_instance_lock",
-        "kind": 5,
-        "importPath": "backend.utils.proposals",
-        "description": "backend.utils.proposals",
-        "peekOfCode": "_instance_lock = threading.RLock()\ndef get_proposal_crud(collection: Collection = None) -> ProposalCRUD:\n    \"\"\"\n    Get singleton ProposalCRUD instance (thread-safe).\n    Args:\n        collection: MongoDB collection (required on first call only)\n    Returns:\n        Singleton ProposalCRUD instance\n    Usage:\n        from utils.proposals import get_proposal_crud",
+        "peekOfCode": "def get_proposal_crud(collection=None):\n    \"\"\"\n    Get singleton ProposalCRUD instance.\n    Args:\n        collection: Motor AsyncIOMotorCollection for proposals\n    Returns:\n        ProposalCRUD singleton instance\n    \"\"\"\n    return ProposalCRUD(collection)",
         "detail": "backend.utils.proposals",
         "documentation": {}
     },

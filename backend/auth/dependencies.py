@@ -48,16 +48,15 @@ async def get_current_user(
             )
 
         # Check if token is blacklisted
-        if is_token_blacklisted(email, token):
+        if await is_token_blacklisted(email, token):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Token has been revoked"
             )
 
-        # Get user from database
-        db = MongoDB.get_database()
-        users_collection = db["users"]
-        user = users_collection.find_one({"email": email})
+        # Get user from database (async)
+        users_collection = await MongoDB.get_users_collection()
+        user = await users_collection.find_one({"email": email})
 
         if not user:
             raise HTTPException(
@@ -65,32 +64,26 @@ async def get_current_user(
                 detail="User not found"
             )
 
-        # Get current organization membership
+        # Get current organization membership from organizations array
         current_org_id = user.get("current_organization_id")
         organizations = user.get("organizations", [])
 
-        # For backward compatibility, handle old single-org model
-        if not organizations and user.get("organization_id"):
-            user["organization_id"] = user.get("organization_id")
-            user["role"] = user.get("role", "user")
-            user["status"] = user.get("status", "active")
-        else:
-            # Find current organization membership
-            current_org = next(
-                (org for org in organizations if org["organization_id"] == current_org_id),
-                None
-            )
+        # Find current organization membership
+        current_org = next(
+            (org for org in organizations if org["organization_id"] == current_org_id),
+            None
+        )
 
-            if current_org:
-                # Add flat fields for easy access
-                user["organization_id"] = current_org["organization_id"]
-                user["role"] = current_org["role"]
-                user["status"] = current_org["status"]
-            else:
-                # No current organization set
-                user["organization_id"] = None
-                user["role"] = None
-                user["status"] = None
+        if current_org:
+            # Add flat fields for easy access in endpoints
+            user["organization_id"] = current_org["organization_id"]
+            user["role"] = current_org["role"]
+            user["status"] = current_org["status"]
+        else:
+            # No current organization set
+            user["organization_id"] = None
+            user["role"] = None
+            user["status"] = None
 
         # Check if account is active in current organization
         if user.get("status") != "active":
@@ -106,7 +99,7 @@ async def get_current_user(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token has expired"
         )
-    except jwt.InvalidTokenError:
+    except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token"

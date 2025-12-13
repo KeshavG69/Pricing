@@ -224,7 +224,7 @@ export default function TeamPage() {
                           </td>
                           <td className="py-4 px-6">
                             <span className="text-sm text-muted-foreground">
-                              {formatDate(member.created_at)}
+                              {member.joinedAt ? formatDate(member.joinedAt) : 'N/A'}
                             </span>
                           </td>
                           <td className="py-4 px-6">

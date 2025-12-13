@@ -79,10 +79,10 @@ async def send_invitation(
             detail="Role must be 'admin' or 'user'"
         )
 
-    invitation_crud = get_invitation_crud()
+    invitation_crud = await get_invitation_crud()
 
     try:
-        invitation = invitation_crud.create_invitation(
+        invitation = await invitation_crud.create_invitation(
             org_id=current_user["organization_id"],
             email=invite_data.email,
             role=invite_data.role,
@@ -121,8 +121,8 @@ async def list_pending_invitations(current_user: dict = Depends(require_admin)):
     Returns:
         List of pending invitation documents
     """
-    invitation_crud = get_invitation_crud()
-    invitations = invitation_crud.get_pending(current_user["organization_id"])
+    invitation_crud = await get_invitation_crud()
+    invitations = await invitation_crud.get_pending(current_user["organization_id"])
 
     # Remove token_hash from all invitations
     for invitation in invitations:
@@ -158,8 +158,8 @@ async def revoke_invitation(
             detail="Invalid invitation ID format"
         )
 
-    invitation_crud = get_invitation_crud()
-    success = invitation_crud.revoke_invitation(inv_oid, current_user["organization_id"])
+    invitation_crud = await get_invitation_crud()
+    success = await invitation_crud.revoke_invitation(inv_oid, current_user["organization_id"])
 
     if not success:
         raise HTTPException(
@@ -190,24 +190,29 @@ async def validate_invitation_token(token: str):
     Raises:
         HTTPException 400: If token is invalid, expired, or already used
     """
-    invitation_crud = get_invitation_crud()
-    user_crud = get_user_crud()
+    invitation_crud = await get_invitation_crud()
+    user_crud = await get_user_crud()
 
     try:
-        invitation = invitation_crud.validate_token(token)
+        invitation = await invitation_crud.validate_token(token)
 
         # Check if user already exists
-        existing_user = user_crud.collection.find_one({"email": invitation["email"]})
+        await user_crud._ensure_initialized()
+        existing_user = await user_crud.collection.find_one({"email": invitation["email"]})
         user_exists = existing_user is not None
 
         # Return safe invitation details (no token_hash, no ObjectIds)
+        # Use camelCase for consistency with other API responses
+        expires_at = invitation["expires_at"]
+        created_at = invitation["created_at"]
+
         return {
             "email": invitation["email"],
             "organization_name": invitation["organization_name"],
             "role": invitation["role"],
             "invited_by_name": invitation["invited_by_name"],
-            "expires_at": invitation["expires_at"].isoformat(),
-            "created_at": invitation["created_at"].isoformat(),
+            "expiresAt": expires_at.isoformat() + 'Z' if expires_at.tzinfo is None else expires_at.isoformat(),
+            "createdAt": created_at.isoformat() + 'Z' if created_at.tzinfo is None else created_at.isoformat(),
             "user_exists": user_exists
         }
 
@@ -235,18 +240,19 @@ async def accept_invitation(accept_data: AcceptInvitationRequest):
     Raises:
         HTTPException 400: If token invalid or missing required fields for new users
     """
-    invitation_crud = get_invitation_crud()
-    user_crud = get_user_crud()
+    invitation_crud = await get_invitation_crud()
+    user_crud = await get_user_crud()
 
     try:
         # Validate token
-        invitation = invitation_crud.validate_token(accept_data.token)
+        invitation = await invitation_crud.validate_token(accept_data.token)
 
         # Check if user already exists
-        existing_user = user_crud.collection.find_one({"email": invitation["email"]})
+        await user_crud._ensure_initialized()
+        existing_user = await user_crud.collection.find_one({"email": invitation["email"]})
 
         if existing_user:
-            # Existing user - add to organizations array
+            # Existing user - add to organizations array (multi-org support)
             from datetime import datetime
 
             # Check if already in organizations array
@@ -259,14 +265,16 @@ async def accept_invitation(accept_data: AcceptInvitationRequest):
             if already_member:
                 raise ValueError("You are already a member of this organization")
 
-            # Add new organization membership
+            # Add new organization membership to array
             new_org = {
                 "organization_id": invitation["organization_id"],
                 "role": invitation["role"],
-                "status": "active"
+                "status": "active",
+                "joinedAt": datetime.utcnow()
             }
 
-            user_crud.collection.update_one(
+            # Add to organizations array and set as current organization
+            await user_crud.collection.update_one(
                 {"_id": existing_user["_id"]},
                 {
                     "$push": {"organizations": new_org},
@@ -276,7 +284,7 @@ async def accept_invitation(accept_data: AcceptInvitationRequest):
                     }
                 }
             )
-            user = user_crud.collection.find_one({"_id": existing_user["_id"]})
+            user = await user_crud.collection.find_one({"_id": existing_user["_id"]})
             user_id = existing_user["_id"]
         else:
             # New user - validate required fields
@@ -287,7 +295,7 @@ async def accept_invitation(accept_data: AcceptInvitationRequest):
                 )
 
             # Create new user account
-            user = user_crud.create_user_with_organization(
+            user = await user_crud.create_user_with_organization(
                 email=invitation["email"],
                 first_name=accept_data.firstName,
                 last_name=accept_data.lastName,
@@ -298,7 +306,7 @@ async def accept_invitation(accept_data: AcceptInvitationRequest):
             user_id = user["_id"]
 
         # Mark invitation as accepted
-        invitation_crud.accept_invitation(accept_data.token, user_id)
+        await invitation_crud.accept_invitation(accept_data.token, user_id)
 
         # Generate authentication tokens
         access_token = create_access_token(

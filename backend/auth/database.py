@@ -1,6 +1,6 @@
-from pymongo import MongoClient
+from motor.motor_asyncio import AsyncIOMotorClient
 from typing import Optional
-import threading
+import asyncio
 from app.settings import settings
 
 # Users collection name
@@ -8,55 +8,66 @@ USERS_COLLECTION = "users"
 
 
 class MongoDB:
-    client: Optional[MongoClient] = None
+    """Async MongoDB singleton with Motor driver"""
+    client: Optional[AsyncIOMotorClient] = None
     database = None
-    _lock = threading.RLock()
+    _lock = asyncio.Lock()
 
     @classmethod
-    def connect_to_mongo(cls):
-        """Create database connection (thread-safe)"""
-        with cls._lock:
+    async def connect_to_mongo(cls):
+        """Create database connection (async, thread-safe)"""
+        async with cls._lock:
             # Double-check locking pattern to prevent multiple connections
             if cls.database is not None:
                 return
 
             try:
-                cls.client = MongoClient(settings.MONGODB_URL)
+                cls.client = AsyncIOMotorClient(
+                    settings.MONGODB_URL,
+                    # Connection pool tuning for Railway remote MongoDB
+                    maxPoolSize=200,        # Increase from default 100
+                    minPoolSize=10,         # Keep connections warm
+                    maxIdleTimeMS=60000,    # 60s idle timeout
+                    socketTimeoutMS=30000,  # 30s socket timeout
+                    connectTimeoutMS=20000, # 20s connection timeout
+                    serverSelectionTimeoutMS=20000,  # 20s server selection
+                    retryWrites=True,
+                    retryReads=True
+                )
                 cls.database = cls.client[settings.MONGODB_DATABASE]
-                print("Connected to MongoDB for authentication")
+                print("✅ Connected to MongoDB (async)")
             except Exception as e:
-                print(f"Error connecting to MongoDB: {e}")
+                print(f"❌ Error connecting to MongoDB: {e}")
                 raise e
 
     @classmethod
-    def close_mongo_connection(cls):
-        """Close database connection (thread-safe)"""
-        with cls._lock:
+    async def close_mongo_connection(cls):
+        """Close database connection (async, thread-safe)"""
+        async with cls._lock:
             if cls.client:
                 cls.client.close()
                 cls.database = None
-                print("MongoDB auth connection closed")
+                print("✅ MongoDB connection closed")
 
     @classmethod
-    def get_database(cls):
-        """Get the database instance (thread-safe)"""
+    async def get_database(cls):
+        """Get the database instance (async, thread-safe)"""
         if cls.database is None:
-            cls.connect_to_mongo()
+            await cls.connect_to_mongo()
         return cls.database
 
     @classmethod
-    def get_collection(cls, collection_name: str):
-        """Get a collection from the database (thread-safe)"""
+    async def get_collection(cls, collection_name: str):
+        """Get a collection from the database (async, thread-safe)"""
         if cls.database is None:
-            cls.connect_to_mongo()
+            await cls.connect_to_mongo()
         return cls.database[collection_name]
 
     @classmethod
-    def get_users_collection(cls):
-        """Get the users collection"""
-        return cls.get_collection(USERS_COLLECTION)
+    async def get_users_collection(cls):
+        """Get the users collection (async)"""
+        return await cls.get_collection(USERS_COLLECTION)
 
 
-# Initialize MongoDB connection
+# MongoDB instance (connection will be initialized on first use)
 mongo_db = MongoDB()
-mongo_db.connect_to_mongo()
