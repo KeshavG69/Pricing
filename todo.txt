@@ -1,10 +1,12 @@
 Keshav:-
-1.management narrative 
-2.technical narrative
+1.management narrative (ai narrative)
+2.technical narrative (ai narrative)
 3.custom rates vecttor
 4.ui similar to photo
 5. user management 
-
+6. proposal name change as well
+7.fix caching issue
+in progress or submited based on when they download excel
 
 Parth:-
 1.pricing  

@@ -38,6 +38,13 @@ class MongoDB:
                 print("MongoDB auth connection closed")
 
     @classmethod
+    def get_database(cls):
+        """Get the database instance (thread-safe)"""
+        if cls.database is None:
+            cls.connect_to_mongo()
+        return cls.database
+
+    @classmethod
     def get_collection(cls, collection_name: str):
         """Get a collection from the database (thread-safe)"""
         if cls.database is None:

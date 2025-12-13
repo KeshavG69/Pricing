@@ -159,6 +159,30 @@
         "documentation": {}
     },
     {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "status",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
         "label": "APIRouter",
         "importPath": "fastapi",
         "description": "fastapi",
@@ -240,6 +264,70 @@
     },
     {
         "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "status",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "status",
         "importPath": "fastapi",
         "description": "fastapi",
         "isExtraImport": true,
@@ -487,6 +575,22 @@
         "documentation": {}
     },
     {
+        "label": "organizations",
+        "importPath": "routers",
+        "description": "routers",
+        "isExtraImport": true,
+        "detail": "routers",
+        "documentation": {}
+    },
+    {
+        "label": "invitations",
+        "importPath": "routers",
+        "description": "routers",
+        "isExtraImport": true,
+        "detail": "routers",
+        "documentation": {}
+    },
+    {
         "label": "FRONTEND_URL",
         "importPath": "auth.config",
         "description": "auth.config",
@@ -559,6 +663,22 @@
         "documentation": {}
     },
     {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Dict",
         "importPath": "typing",
         "description": "typing",
@@ -799,6 +919,38 @@
         "documentation": {}
     },
     {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Dict",
         "importPath": "typing",
         "description": "typing",
@@ -1079,6 +1231,22 @@
         "documentation": {}
     },
     {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
         "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
@@ -1095,11 +1263,51 @@
         "documentation": {}
     },
     {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
         "isExtraImport": true,
-        "detail": "dotenv",
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
         "documentation": {}
     },
     {
@@ -1127,131 +1335,124 @@
         "documentation": {}
     },
     {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "dotenv",
         "documentation": {}
     },
     {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "dotenv",
         "documentation": {}
     },
     {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "ASCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "DESCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "ASCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "DESCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "TEXT",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "ASCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "DESCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "ASCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "bcrypt",
+        "kind": 6,
         "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "TEXT",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
+        "importPath": "bcrypt",
+        "description": "bcrypt",
+        "detail": "bcrypt",
         "documentation": {}
     },
     {
@@ -1264,11 +1465,139 @@
         "documentation": {}
     },
     {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
         "isExtraImport": true,
-        "detail": "app.settings",
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "ASCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "DESCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "ASCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "DESCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "TEXT",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "ASCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "DESCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "ASCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "TEXT",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
         "documentation": {}
     },
     {
@@ -1309,6 +1638,142 @@
         "description": "app.settings",
         "isExtraImport": true,
         "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPBearer",
+        "importPath": "fastapi.security",
+        "description": "fastapi.security",
+        "isExtraImport": true,
+        "detail": "fastapi.security",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPAuthorizationCredentials",
+        "importPath": "fastapi.security",
+        "description": "fastapi.security",
+        "isExtraImport": true,
+        "detail": "fastapi.security",
+        "documentation": {}
+    },
+    {
+        "label": "jwt",
+        "importPath": "jose",
+        "description": "jose",
+        "isExtraImport": true,
+        "detail": "jose",
+        "documentation": {}
+    },
+    {
+        "label": "JWTError",
+        "importPath": "jose",
+        "description": "jose",
+        "isExtraImport": true,
+        "detail": "jose",
+        "documentation": {}
+    },
+    {
+        "label": "jwt",
+        "importPath": "jose",
+        "description": "jose",
+        "isExtraImport": true,
+        "detail": "jose",
+        "documentation": {}
+    },
+    {
+        "label": "JWTError",
+        "importPath": "jose",
+        "description": "jose",
+        "isExtraImport": true,
+        "detail": "jose",
+        "documentation": {}
+    },
+    {
+        "label": "JWTError",
+        "importPath": "jose",
+        "description": "jose",
+        "isExtraImport": true,
+        "detail": "jose",
+        "documentation": {}
+    },
+    {
+        "label": "jwt",
+        "importPath": "jose",
+        "description": "jose",
+        "isExtraImport": true,
+        "detail": "jose",
+        "documentation": {}
+    },
+    {
+        "label": "config",
+        "importPath": "auth",
+        "description": "auth",
+        "isExtraImport": true,
+        "detail": "auth",
+        "documentation": {}
+    },
+    {
+        "label": "config",
+        "importPath": "auth",
+        "description": "auth",
+        "isExtraImport": true,
+        "detail": "auth",
+        "documentation": {}
+    },
+    {
+        "label": "MongoDB",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "MongoDB",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "MongoDB",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "MongoDB",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "MongoDB",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "is_token_blacklisted",
+        "importPath": "auth.blacklist",
+        "description": "auth.blacklist",
+        "isExtraImport": true,
+        "detail": "auth.blacklist",
         "documentation": {}
     },
     {
@@ -1408,6 +1873,46 @@
         "documentation": {}
     },
     {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "EmailStr",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
         "label": "uuid",
         "kind": 6,
         "isExtraImport": true,
@@ -1426,44 +1931,28 @@
         "documentation": {}
     },
     {
-        "label": "jwt",
-        "importPath": "jose",
-        "description": "jose",
-        "isExtraImport": true,
-        "detail": "jose",
-        "documentation": {}
-    },
-    {
-        "label": "JWTError",
-        "importPath": "jose",
-        "description": "jose",
-        "isExtraImport": true,
-        "detail": "jose",
-        "documentation": {}
-    },
-    {
-        "label": "JWTError",
-        "importPath": "jose",
-        "description": "jose",
-        "isExtraImport": true,
-        "detail": "jose",
-        "documentation": {}
-    },
-    {
-        "label": "jwt",
-        "importPath": "jose",
-        "description": "jose",
-        "isExtraImport": true,
-        "detail": "jose",
-        "documentation": {}
-    },
-    {
-        "label": "bcrypt",
+        "label": "smtplib",
         "kind": 6,
         "isExtraImport": true,
-        "importPath": "bcrypt",
-        "description": "bcrypt",
-        "detail": "bcrypt",
+        "importPath": "smtplib",
+        "description": "smtplib",
+        "detail": "smtplib",
+        "documentation": {}
+    },
+    {
+        "label": "MIMEText",
+        "importPath": "email.mime.text",
+        "description": "email.mime.text",
+        "isExtraImport": true,
+        "detail": "email.mime.text",
+        "documentation": {}
+    },
+    {
+        "label": "MIMEMultipart",
+        "importPath": "email.mime.multipart",
+        "description": "email.mime.multipart",
+        "isExtraImport": true,
+        "detail": "email.mime.multipart",
         "documentation": {}
     },
     {
@@ -1694,6 +2183,22 @@
         "documentation": {}
     },
     {
+        "label": "get_user_crud",
+        "importPath": "auth.crud",
+        "description": "auth.crud",
+        "isExtraImport": true,
+        "detail": "auth.crud",
+        "documentation": {}
+    },
+    {
+        "label": "get_user_crud",
+        "importPath": "auth.crud",
+        "description": "auth.crud",
+        "isExtraImport": true,
+        "detail": "auth.crud",
+        "documentation": {}
+    },
+    {
         "label": "create_access_token",
         "importPath": "auth.utils",
         "description": "auth.utils",
@@ -1711,6 +2216,14 @@
     },
     {
         "label": "ACCESS_TOKEN_EXPIRE_MINUTES",
+        "importPath": "auth.utils",
+        "description": "auth.utils",
+        "isExtraImport": true,
+        "detail": "auth.utils",
+        "documentation": {}
+    },
+    {
+        "label": "create_access_token",
         "importPath": "auth.utils",
         "description": "auth.utils",
         "isExtraImport": true,
@@ -1783,6 +2296,14 @@
     },
     {
         "label": "revoke_refresh_token",
+        "importPath": "auth.refresh_token",
+        "description": "auth.refresh_token",
+        "isExtraImport": true,
+        "detail": "auth.refresh_token",
+        "documentation": {}
+    },
+    {
+        "label": "create_refresh_token",
         "importPath": "auth.refresh_token",
         "description": "auth.refresh_token",
         "isExtraImport": true,
@@ -1920,28 +2441,124 @@
         "documentation": {}
     },
     {
+        "label": "get_current_user",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
+        "label": "require_admin",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
+        "label": "require_admin",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
+        "label": "require_admin",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_doc",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_docs",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_doc",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_docs",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_doc",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "get_invitation_crud",
+        "importPath": "utils.invitations",
+        "description": "utils.invitations",
+        "isExtraImport": true,
+        "detail": "utils.invitations",
+        "documentation": {}
+    },
+    {
+        "label": "get_organization_crud",
+        "importPath": "utils.organizations",
+        "description": "utils.organizations",
+        "isExtraImport": true,
+        "detail": "utils.organizations",
+        "documentation": {}
+    },
+    {
+        "label": "can_manage_user",
+        "importPath": "auth.rbac",
+        "description": "auth.rbac",
+        "isExtraImport": true,
+        "detail": "auth.rbac",
+        "documentation": {}
+    },
+    {
+        "label": "can_access_proposal",
+        "importPath": "auth.rbac",
+        "description": "auth.rbac",
+        "isExtraImport": true,
+        "detail": "auth.rbac",
+        "documentation": {}
+    },
+    {
         "label": "asyncio",
         "kind": 6,
         "isExtraImport": true,
         "importPath": "asyncio",
         "description": "asyncio",
         "detail": "asyncio",
-        "documentation": {}
-    },
-    {
-        "label": "ObjectId",
-        "importPath": "bson",
-        "description": "bson",
-        "isExtraImport": true,
-        "detail": "bson",
-        "documentation": {}
-    },
-    {
-        "label": "ObjectId",
-        "importPath": "bson",
-        "description": "bson",
-        "isExtraImport": true,
-        "detail": "bson",
         "documentation": {}
     },
     {
@@ -2033,14 +2650,6 @@
         "documentation": {}
     },
     {
-        "label": "MongoDB",
-        "importPath": "auth.database",
-        "description": "auth.database",
-        "isExtraImport": true,
-        "detail": "auth.database",
-        "documentation": {}
-    },
-    {
         "label": "time",
         "kind": 6,
         "isExtraImport": true,
@@ -2056,6 +2665,15 @@
         "importPath": "requests",
         "description": "requests",
         "detail": "requests",
+        "documentation": {}
+    },
+    {
+        "label": "secrets",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "secrets",
+        "description": "secrets",
+        "detail": "secrets",
         "documentation": {}
     },
     {
@@ -2080,6 +2698,23 @@
         "description": "client.oews_mongodb",
         "isExtraImport": true,
         "detail": "client.oews_mongodb",
+        "documentation": {}
+    },
+    {
+        "label": "EmailService",
+        "importPath": "client.email_service",
+        "description": "client.email_service",
+        "isExtraImport": true,
+        "detail": "client.email_service",
+        "documentation": {}
+    },
+    {
+        "label": "re",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "re",
+        "description": "re",
+        "detail": "re",
         "documentation": {}
     },
     {
@@ -2326,7 +2961,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "COOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -2335,7 +2970,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "COOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -2344,7 +2979,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "COOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -2353,7 +2988,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "COOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -2362,7 +2997,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "COOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -2371,7 +3006,52 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "FRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "FRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "detail": "backend.auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "SMTP_HOST",
+        "kind": 5,
+        "importPath": "backend.auth.config",
+        "description": "backend.auth.config",
+        "peekOfCode": "SMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "detail": "backend.auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "SMTP_PORT",
+        "kind": 5,
+        "importPath": "backend.auth.config",
+        "description": "backend.auth.config",
+        "peekOfCode": "SMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "detail": "backend.auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "SMTP_USER",
+        "kind": 5,
+        "importPath": "backend.auth.config",
+        "description": "backend.auth.config",
+        "peekOfCode": "SMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "detail": "backend.auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "SMTP_PASSWORD",
+        "kind": 5,
+        "importPath": "backend.auth.config",
+        "description": "backend.auth.config",
+        "peekOfCode": "SMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "detail": "backend.auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "FROM_EMAIL",
+        "kind": 5,
+        "importPath": "backend.auth.config",
+        "description": "backend.auth.config",
+        "peekOfCode": "FROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -2425,7 +3105,34 @@
         "kind": 6,
         "importPath": "backend.auth.crud",
         "description": "backend.auth.crud",
-        "peekOfCode": "class UserCRUD:\n    @staticmethod\n    def create_user(user_data: UserSignup) -> UserResponse:\n        \"\"\"Create a new user in the database\"\"\"\n        users_collection = MongoDB.get_users_collection()\n        # Check if user already exists\n        existing_user = users_collection.find_one({\"email\": user_data.email})\n        if existing_user:\n            raise ValueError(\"User with this email already exists\")\n        # Create user document",
+        "peekOfCode": "class UserCRUD:\n    def __init__(self):\n        \"\"\"Initialize UserCRUD with database collections\"\"\"\n        self.db = MongoDB.get_database()\n        self.collection = self.db[\"users\"]\n    @staticmethod\n    def create_user(user_data: UserSignup) -> UserResponse:\n        \"\"\"Create a new user in the database\"\"\"\n        users_collection = MongoDB.get_users_collection()\n        # Check if user already exists",
+        "detail": "backend.auth.crud",
+        "documentation": {}
+    },
+    {
+        "label": "get_user_crud",
+        "kind": 2,
+        "importPath": "backend.auth.crud",
+        "description": "backend.auth.crud",
+        "peekOfCode": "def get_user_crud() -> UserCRUD:\n    \"\"\"\n    Get or create UserCRUD instance (singleton pattern)\n    Returns:\n        UserCRUD instance\n    \"\"\"\n    global _user_crud\n    with _lock:\n        if _user_crud is None:\n            _user_crud = UserCRUD()",
+        "detail": "backend.auth.crud",
+        "documentation": {}
+    },
+    {
+        "label": "_user_crud",
+        "kind": 5,
+        "importPath": "backend.auth.crud",
+        "description": "backend.auth.crud",
+        "peekOfCode": "_user_crud = None\n_lock = threading.RLock()\nclass UserCRUD:\n    def __init__(self):\n        \"\"\"Initialize UserCRUD with database collections\"\"\"\n        self.db = MongoDB.get_database()\n        self.collection = self.db[\"users\"]\n    @staticmethod\n    def create_user(user_data: UserSignup) -> UserResponse:\n        \"\"\"Create a new user in the database\"\"\"",
+        "detail": "backend.auth.crud",
+        "documentation": {}
+    },
+    {
+        "label": "_lock",
+        "kind": 5,
+        "importPath": "backend.auth.crud",
+        "description": "backend.auth.crud",
+        "peekOfCode": "_lock = threading.RLock()\nclass UserCRUD:\n    def __init__(self):\n        \"\"\"Initialize UserCRUD with database collections\"\"\"\n        self.db = MongoDB.get_database()\n        self.collection = self.db[\"users\"]\n    @staticmethod\n    def create_user(user_data: UserSignup) -> UserResponse:\n        \"\"\"Create a new user in the database\"\"\"\n        users_collection = MongoDB.get_users_collection()",
         "detail": "backend.auth.crud",
         "documentation": {}
     },
@@ -2454,6 +3161,15 @@
         "description": "backend.auth.database",
         "peekOfCode": "mongo_db = MongoDB()\nmongo_db.connect_to_mongo()",
         "detail": "backend.auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "security",
+        "kind": 5,
+        "importPath": "backend.auth.dependencies",
+        "description": "backend.auth.dependencies",
+        "peekOfCode": "security = HTTPBearer()\nasync def get_current_user(\n    credentials: HTTPAuthorizationCredentials = Depends(security)\n) -> dict:\n    \"\"\"\n    Get current user from JWT token.\n    Validates JWT token and returns user dict with organization info.\n    Args:\n        credentials: HTTP Bearer token from Authorization header\n    Returns:",
+        "detail": "backend.auth.dependencies",
         "documentation": {}
     },
     {
@@ -2574,6 +3290,69 @@
         "documentation": {}
     },
     {
+        "label": "can_access_proposal",
+        "kind": 2,
+        "importPath": "backend.auth.rbac",
+        "description": "backend.auth.rbac",
+        "peekOfCode": "def can_access_proposal(proposal: dict, user: dict) -> bool:\n    \"\"\"\n    Check if user can access a proposal.\n    Access rules:\n    1. Must be same organization\n    2. Admin can access all org proposals\n    3. Owner can access their proposals\n    4. User can access explicitly shared proposals\n    Args:\n        proposal: Proposal document dict",
+        "detail": "backend.auth.rbac",
+        "documentation": {}
+    },
+    {
+        "label": "can_modify_proposal",
+        "kind": 2,
+        "importPath": "backend.auth.rbac",
+        "description": "backend.auth.rbac",
+        "peekOfCode": "def can_modify_proposal(proposal: dict, user: dict) -> bool:\n    \"\"\"\n    Check if user can modify/delete a proposal.\n    Modification rules:\n    1. Must be same organization\n    2. Admin can modify all org proposals\n    3. Owner can modify their proposals\n    4. Shared users CANNOT modify (read-only access)\n    Args:\n        proposal: Proposal document dict",
+        "detail": "backend.auth.rbac",
+        "documentation": {}
+    },
+    {
+        "label": "require_same_org",
+        "kind": 2,
+        "importPath": "backend.auth.rbac",
+        "description": "backend.auth.rbac",
+        "peekOfCode": "def require_same_org(resource_org_id: ObjectId, user_org_id: ObjectId):\n    \"\"\"\n    Verify resource belongs to user's organization.\n    Args:\n        resource_org_id: Resource's organization ObjectId\n        user_org_id: User's organization ObjectId\n    Raises:\n        ValueError: If resource belongs to different organization\n    \"\"\"\n    if resource_org_id != user_org_id:",
+        "detail": "backend.auth.rbac",
+        "documentation": {}
+    },
+    {
+        "label": "can_manage_user",
+        "kind": 2,
+        "importPath": "backend.auth.rbac",
+        "description": "backend.auth.rbac",
+        "peekOfCode": "def can_manage_user(target_user: dict, current_user: dict) -> bool:\n    \"\"\"\n    Check if current user can manage target user (remove, change role, etc.).\n    Management rules:\n    1. Must be admin\n    2. Must be same organization\n    3. Cannot manage yourself (prevent self-removal)\n    Args:\n        target_user: Target user document dict\n        current_user: Current user document dict",
+        "detail": "backend.auth.rbac",
+        "documentation": {}
+    },
+    {
+        "label": "can_invite_user",
+        "kind": 2,
+        "importPath": "backend.auth.rbac",
+        "description": "backend.auth.rbac",
+        "peekOfCode": "def can_invite_user(inviter: dict, max_seats: Optional[int] = None) -> bool:\n    \"\"\"\n    Check if user can invite new members.\n    Invitation rules:\n    1. Must be admin\n    2. If max_seats specified, check if organization is at capacity\n    Args:\n        inviter: Inviter user document dict\n        max_seats: Optional maximum seats allowed for organization\n    Returns:",
+        "detail": "backend.auth.rbac",
+        "documentation": {}
+    },
+    {
+        "label": "is_organization_owner",
+        "kind": 2,
+        "importPath": "backend.auth.rbac",
+        "description": "backend.auth.rbac",
+        "peekOfCode": "def is_organization_owner(user: dict, organization: dict) -> bool:\n    \"\"\"\n    Check if user is the owner of the organization.\n    Args:\n        user: User document dict\n        organization: Organization document dict\n    Returns:\n        True if user is organization owner, False otherwise\n    \"\"\"\n    return user.get(\"_id\") == organization.get(\"owner_id\")",
+        "detail": "backend.auth.rbac",
+        "documentation": {}
+    },
+    {
+        "label": "can_modify_organization_settings",
+        "kind": 2,
+        "importPath": "backend.auth.rbac",
+        "description": "backend.auth.rbac",
+        "peekOfCode": "def can_modify_organization_settings(user: dict, organization: dict) -> bool:\n    \"\"\"\n    Check if user can modify organization settings.\n    Settings modification rules:\n    1. Must be admin of the organization\n    2. Organization must match user's organization\n    Args:\n        user: User document dict\n        organization: Organization document dict\n    Returns:",
+        "detail": "backend.auth.rbac",
+        "documentation": {}
+    },
+    {
         "label": "create_refresh_token_jwt",
         "kind": 2,
         "importPath": "backend.auth.refresh_token",
@@ -2688,6 +3467,15 @@
         "description": "backend.client.calculation_service",
         "peekOfCode": "class Calculator:\n    \"\"\"\n    Pure calculation methods for multi-year pricing.\n    All methods are static - no state maintained.\n    \"\"\"\n    @staticmethod\n    def calculate_fblr(\n        annual_wage: float,\n        hours: int,\n        fringe_rate: float,",
         "detail": "backend.client.calculation_service",
+        "documentation": {}
+    },
+    {
+        "label": "EmailService",
+        "kind": 6,
+        "importPath": "backend.client.email_service",
+        "description": "backend.client.email_service",
+        "peekOfCode": "class EmailService:\n    def __init__(self):\n        self.smtp_host = config.SMTP_HOST\n        self.smtp_port = config.SMTP_PORT\n        self.smtp_user = config.SMTP_USER\n        self.smtp_password = config.SMTP_PASSWORD\n        self.from_email = config.FROM_EMAIL\n        self.frontend_url = config.FRONTEND_URL\n    def send_invitation_email(\n        self,",
+        "detail": "backend.client.email_service",
         "documentation": {}
     },
     {
@@ -3033,6 +3821,51 @@
         "documentation": {}
     },
     {
+        "label": "InviteUserRequest",
+        "kind": 6,
+        "importPath": "backend.routers.invitations",
+        "description": "backend.routers.invitations",
+        "peekOfCode": "class InviteUserRequest(BaseModel):\n    \"\"\"Request body for sending invitation\"\"\"\n    email: EmailStr = Field(..., description=\"Email address to invite\")\n    role: str = Field(..., description=\"Role for new user (admin or user)\")\n    class Config:\n        schema_extra = {\n            \"example\": {\n                \"email\": \"colleague@example.com\",\n                \"role\": \"user\"\n            }",
+        "detail": "backend.routers.invitations",
+        "documentation": {}
+    },
+    {
+        "label": "AcceptInvitationRequest",
+        "kind": 6,
+        "importPath": "backend.routers.invitations",
+        "description": "backend.routers.invitations",
+        "peekOfCode": "class AcceptInvitationRequest(BaseModel):\n    \"\"\"Request body for accepting invitation\"\"\"\n    token: str = Field(..., description=\"Invitation token from email\")\n    firstName: str = Field(..., min_length=1, max_length=100)\n    lastName: str = Field(..., min_length=1, max_length=100)\n    password: str = Field(..., min_length=8, max_length=100)\n    class Config:\n        schema_extra = {\n            \"example\": {\n                \"token\": \"abc123...\",",
+        "detail": "backend.routers.invitations",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.routers.invitations",
+        "description": "backend.routers.invitations",
+        "peekOfCode": "router = APIRouter(prefix=\"/api/invitations\", tags=[\"invitations\"])\nclass InviteUserRequest(BaseModel):\n    \"\"\"Request body for sending invitation\"\"\"\n    email: EmailStr = Field(..., description=\"Email address to invite\")\n    role: str = Field(..., description=\"Role for new user (admin or user)\")\n    class Config:\n        schema_extra = {\n            \"example\": {\n                \"email\": \"colleague@example.com\",\n                \"role\": \"user\"",
+        "detail": "backend.routers.invitations",
+        "documentation": {}
+    },
+    {
+        "label": "UpdateSettingsRequest",
+        "kind": 6,
+        "importPath": "backend.routers.organizations",
+        "description": "backend.routers.organizations",
+        "peekOfCode": "class UpdateSettingsRequest(BaseModel):\n    \"\"\"Request body for updating organization settings\"\"\"\n    default_rates: Dict[str, float] = None\n    default_escalation_rates: Dict[str, float] = None\n    fte_threshold: int = None\n    allow_user_rate_override: bool = None\n@router.get(\"/me\")\nasync def get_my_organization(current_user: dict = Depends(get_current_user)):\n    \"\"\"\n    Get current user's organization details.",
+        "detail": "backend.routers.organizations",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.routers.organizations",
+        "description": "backend.routers.organizations",
+        "peekOfCode": "router = APIRouter(prefix=\"/api/organizations\", tags=[\"organizations\"])\nclass UpdateSettingsRequest(BaseModel):\n    \"\"\"Request body for updating organization settings\"\"\"\n    default_rates: Dict[str, float] = None\n    default_escalation_rates: Dict[str, float] = None\n    fte_threshold: int = None\n    allow_user_rate_override: bool = None\n@router.get(\"/me\")\nasync def get_my_organization(current_user: dict = Depends(get_current_user)):\n    \"\"\"",
+        "detail": "backend.routers.organizations",
+        "documentation": {}
+    },
+    {
         "label": "split_position_by_hours",
         "kind": 2,
         "importPath": "backend.routers.pricing",
@@ -3060,6 +3893,15 @@
         "documentation": {}
     },
     {
+        "label": "ShareProposalRequest",
+        "kind": 6,
+        "importPath": "backend.routers.proposals",
+        "description": "backend.routers.proposals",
+        "peekOfCode": "class ShareProposalRequest(BaseModel):\n    \"\"\"Request body for sharing proposals\"\"\"\n    user_ids: List[str]\n@router.post(\"/{proposal_id}/share\")\nasync def share_proposal_with_users(\n    proposal_id: str,\n    share_data: ShareProposalRequest,\n    current_user: dict = Depends(require_admin)\n):\n    \"\"\"",
+        "detail": "backend.routers.proposals",
+        "documentation": {}
+    },
+    {
         "label": "get_crud",
         "kind": 2,
         "importPath": "backend.routers.proposals",
@@ -3078,6 +3920,15 @@
         "documentation": {}
     },
     {
+        "label": "safe_create_index",
+        "kind": 2,
+        "importPath": "backend.scripts.create_indexes",
+        "description": "backend.scripts.create_indexes",
+        "peekOfCode": "def safe_create_index(collection, keys, name, **kwargs):\n    \"\"\"Create index with error handling for existing indexes.\"\"\"\n    try:\n        collection.create_index(keys, name=name, **kwargs)\n        return True\n    except Exception as e:\n        error_msg = str(e).lower()\n        if \"already exists\" in error_msg or \"index already\" in error_msg:\n            return False  # Index already exists\n        else:",
+        "detail": "backend.scripts.create_indexes",
+        "documentation": {}
+    },
+    {
         "label": "create_indexes",
         "kind": 2,
         "importPath": "backend.scripts.create_indexes",
@@ -3091,7 +3942,7 @@
         "kind": 5,
         "importPath": "backend.scripts.create_indexes",
         "description": "backend.scripts.create_indexes",
-        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef create_indexes():\n    \"\"\"Create all necessary indexes.\"\"\"\n    print(\"Connecting to MongoDB...\")\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    print(f\"\\nCreating indexes on database: {MONGODB_DATABASE}\")\n    print(\"=\" * 60)\n    # =====================================================================",
+        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef safe_create_index(collection, keys, name, **kwargs):\n    \"\"\"Create index with error handling for existing indexes.\"\"\"\n    try:\n        collection.create_index(keys, name=name, **kwargs)\n        return True\n    except Exception as e:\n        error_msg = str(e).lower()\n        if \"already exists\" in error_msg or \"index already\" in error_msg:",
         "detail": "backend.scripts.create_indexes",
         "documentation": {}
     },
@@ -3100,7 +3951,7 @@
         "kind": 5,
         "importPath": "backend.scripts.create_indexes",
         "description": "backend.scripts.create_indexes",
-        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef create_indexes():\n    \"\"\"Create all necessary indexes.\"\"\"\n    print(\"Connecting to MongoDB...\")\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    print(f\"\\nCreating indexes on database: {MONGODB_DATABASE}\")\n    print(\"=\" * 60)\n    # =====================================================================\n    # PROPOSALS COLLECTION",
+        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef safe_create_index(collection, keys, name, **kwargs):\n    \"\"\"Create index with error handling for existing indexes.\"\"\"\n    try:\n        collection.create_index(keys, name=name, **kwargs)\n        return True\n    except Exception as e:\n        error_msg = str(e).lower()\n        if \"already exists\" in error_msg or \"index already\" in error_msg:\n            return False  # Index already exists",
         "detail": "backend.scripts.create_indexes",
         "documentation": {}
     },
@@ -3240,6 +4091,24 @@
         "documentation": {}
     },
     {
+        "label": "migrate_to_organizations",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_to_organizations",
+        "description": "backend.scripts.migrate_to_organizations",
+        "peekOfCode": "def migrate_to_organizations(dry_run=False):\n    \"\"\"\n    Migrate existing users and proposals to organization system.\n    Args:\n        dry_run: If True, preview changes without committing to database\n    \"\"\"\n    db = MongoDB.get_database()\n    mode = \"DRY RUN\" if dry_run else \"LIVE MIGRATION\"\n    print(\"=\" * 70)\n    print(f\"MIGRATION: Adding Organization Support ({mode})\")",
+        "detail": "backend.scripts.migrate_to_organizations",
+        "documentation": {}
+    },
+    {
+        "label": "rollback_migration",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_to_organizations",
+        "description": "backend.scripts.migrate_to_organizations",
+        "peekOfCode": "def rollback_migration():\n    \"\"\"\n    Rollback organization migration (use with caution!).\n    Removes organization-related fields from users and proposals.\n    Does NOT delete organization documents.\n    \"\"\"\n    db = MongoDB.get_database()\n    print(\"\\n⚠️  WARNING: Rolling back organization migration...\")\n    confirm = input(\"This will remove organization fields. Type 'yes' to confirm: \")\n    if confirm.lower() != \"yes\":",
+        "detail": "backend.scripts.migrate_to_organizations",
+        "documentation": {}
+    },
+    {
         "label": "download_file",
         "kind": 2,
         "importPath": "backend.scripts.setup_oews_data",
@@ -3321,6 +4190,60 @@
         "documentation": {}
     },
     {
+        "label": "clone_database",
+        "kind": 2,
+        "importPath": "backend.scripts.setup_qa_stage",
+        "description": "backend.scripts.setup_qa_stage",
+        "peekOfCode": "def clone_database():\n    \"\"\"Clone entire database with all collections and data.\"\"\"\n    print(\"=\" * 70)\n    print(f\"STEP 1: CLONING DATABASE\")\n    print(\"=\" * 70)\n    print(f\"Source: {SOURCE_DB}\")\n    print(f\"Target: {TARGET_DB}\")\n    # Connect to MongoDB\n    print(f\"\\nConnecting to MongoDB...\")\n    client = MongoClient(MONGODB_URL)",
+        "detail": "backend.scripts.setup_qa_stage",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_qa_database",
+        "kind": 2,
+        "importPath": "backend.scripts.setup_qa_stage",
+        "description": "backend.scripts.setup_qa_stage",
+        "peekOfCode": "def migrate_qa_database(client):\n    \"\"\"Run organization migration on QA database.\"\"\"\n    print(\"\\n\" + \"=\" * 70)\n    print(f\"STEP 2: MIGRATING QA DATABASE ({TARGET_DB})\")\n    print(\"=\" * 70)\n    db = client[TARGET_DB]\n    user_org_mapping = {}\n    stats = {\n        \"users_processed\": 0,\n        \"organizations_created\": 0,",
+        "detail": "backend.scripts.setup_qa_stage",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "backend.scripts.setup_qa_stage",
+        "description": "backend.scripts.setup_qa_stage",
+        "peekOfCode": "def main():\n    \"\"\"Main execution.\"\"\"\n    print(\"\\n🚀 SETTING UP QA STAGE DATABASE\\n\")\n    # Clone database\n    client = clone_database()\n    # Migrate QA database\n    stats = migrate_qa_database(client)\n    # Summary\n    print(\"\\n\" + \"=\" * 70)\n    print(\"✅ QA STAGE SETUP COMPLETE\")",
+        "detail": "backend.scripts.setup_qa_stage",
+        "documentation": {}
+    },
+    {
+        "label": "MONGODB_URL",
+        "kind": 5,
+        "importPath": "backend.scripts.setup_qa_stage",
+        "description": "backend.scripts.setup_qa_stage",
+        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nSOURCE_DB = \"priceiq\"\nTARGET_DB = \"price-qastage01\"\ndef clone_database():\n    \"\"\"Clone entire database with all collections and data.\"\"\"\n    print(\"=\" * 70)\n    print(f\"STEP 1: CLONING DATABASE\")\n    print(\"=\" * 70)\n    print(f\"Source: {SOURCE_DB}\")\n    print(f\"Target: {TARGET_DB}\")",
+        "detail": "backend.scripts.setup_qa_stage",
+        "documentation": {}
+    },
+    {
+        "label": "SOURCE_DB",
+        "kind": 5,
+        "importPath": "backend.scripts.setup_qa_stage",
+        "description": "backend.scripts.setup_qa_stage",
+        "peekOfCode": "SOURCE_DB = \"priceiq\"\nTARGET_DB = \"price-qastage01\"\ndef clone_database():\n    \"\"\"Clone entire database with all collections and data.\"\"\"\n    print(\"=\" * 70)\n    print(f\"STEP 1: CLONING DATABASE\")\n    print(\"=\" * 70)\n    print(f\"Source: {SOURCE_DB}\")\n    print(f\"Target: {TARGET_DB}\")\n    # Connect to MongoDB",
+        "detail": "backend.scripts.setup_qa_stage",
+        "documentation": {}
+    },
+    {
+        "label": "TARGET_DB",
+        "kind": 5,
+        "importPath": "backend.scripts.setup_qa_stage",
+        "description": "backend.scripts.setup_qa_stage",
+        "peekOfCode": "TARGET_DB = \"price-qastage01\"\ndef clone_database():\n    \"\"\"Clone entire database with all collections and data.\"\"\"\n    print(\"=\" * 70)\n    print(f\"STEP 1: CLONING DATABASE\")\n    print(\"=\" * 70)\n    print(f\"Source: {SOURCE_DB}\")\n    print(f\"Target: {TARGET_DB}\")\n    # Connect to MongoDB\n    print(f\"\\nConnecting to MongoDB...\")",
+        "detail": "backend.scripts.setup_qa_stage",
+        "documentation": {}
+    },
+    {
         "label": "create_custom_retreiver",
         "kind": 2,
         "importPath": "backend.utils.agno_tools",
@@ -3336,6 +4259,96 @@
         "description": "backend.utils.agno_tools",
         "peekOfCode": "def create_wage_tool():\n    \"\"\"\n    Create a custom tool for retrieving wage data from BLS OEWS database.\n    This tool queries MongoDB to fetch wage percentiles (10th, 25th, 50th/median, 75th, 90th)\n    for a given SOC code and geographic area. Data is sourced from the Bureau of Labor Statistics\n    Occupational Employment and Wage Statistics (OEWS) program.\n    Returns:\n        Callable tool function that can be used with agno agents to retrieve wage data\n    Example:\n        >>> wage_tool = create_wage_tool()",
         "detail": "backend.utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_doc",
+        "kind": 2,
+        "importPath": "backend.utils.helpers",
+        "description": "backend.utils.helpers",
+        "peekOfCode": "def serialize_doc(doc: dict) -> dict:\n    \"\"\"\n    Convert MongoDB document to JSON-serializable dict\n    Converts ObjectIds to strings, _id to id\n    \"\"\"\n    if not doc:\n        return None\n    # Convert _id to id\n    if \"_id\" in doc:\n        doc[\"id\"] = str(doc[\"_id\"])",
+        "detail": "backend.utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_docs",
+        "kind": 2,
+        "importPath": "backend.utils.helpers",
+        "description": "backend.utils.helpers",
+        "peekOfCode": "def serialize_docs(docs: list) -> list:\n    \"\"\"Convert list of MongoDB documents\"\"\"\n    return [serialize_doc(doc.copy()) for doc in docs]",
+        "detail": "backend.utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "InvitationCRUD",
+        "kind": 6,
+        "importPath": "backend.utils.invitations",
+        "description": "backend.utils.invitations",
+        "peekOfCode": "class InvitationCRUD:\n    \"\"\"Invitation CRUD operations with token hashing\"\"\"\n    def __init__(self):\n        self.db = MongoDB.get_database()\n        self.collection = self.db[\"invitations\"]\n        self.users_collection = self.db[\"users\"]\n        self.orgs_collection = self.db[\"organizations\"]\n        self.email_service = EmailService()\n    @staticmethod\n    def _hash_token(token: str) -> str:",
+        "detail": "backend.utils.invitations",
+        "documentation": {}
+    },
+    {
+        "label": "get_invitation_crud",
+        "kind": 2,
+        "importPath": "backend.utils.invitations",
+        "description": "backend.utils.invitations",
+        "peekOfCode": "def get_invitation_crud() -> InvitationCRUD:\n    \"\"\"\n    Get or create InvitationCRUD instance (singleton pattern)\n    Returns:\n        InvitationCRUD instance\n    \"\"\"\n    global _invitation_crud\n    with _lock:\n        if _invitation_crud is None:\n            _invitation_crud = InvitationCRUD()",
+        "detail": "backend.utils.invitations",
+        "documentation": {}
+    },
+    {
+        "label": "_invitation_crud",
+        "kind": 5,
+        "importPath": "backend.utils.invitations",
+        "description": "backend.utils.invitations",
+        "peekOfCode": "_invitation_crud = None\n_lock = threading.RLock()\nclass InvitationCRUD:\n    \"\"\"Invitation CRUD operations with token hashing\"\"\"\n    def __init__(self):\n        self.db = MongoDB.get_database()\n        self.collection = self.db[\"invitations\"]\n        self.users_collection = self.db[\"users\"]\n        self.orgs_collection = self.db[\"organizations\"]\n        self.email_service = EmailService()",
+        "detail": "backend.utils.invitations",
+        "documentation": {}
+    },
+    {
+        "label": "_lock",
+        "kind": 5,
+        "importPath": "backend.utils.invitations",
+        "description": "backend.utils.invitations",
+        "peekOfCode": "_lock = threading.RLock()\nclass InvitationCRUD:\n    \"\"\"Invitation CRUD operations with token hashing\"\"\"\n    def __init__(self):\n        self.db = MongoDB.get_database()\n        self.collection = self.db[\"invitations\"]\n        self.users_collection = self.db[\"users\"]\n        self.orgs_collection = self.db[\"organizations\"]\n        self.email_service = EmailService()\n    @staticmethod",
+        "detail": "backend.utils.invitations",
+        "documentation": {}
+    },
+    {
+        "label": "OrganizationCRUD",
+        "kind": 6,
+        "importPath": "backend.utils.organizations",
+        "description": "backend.utils.organizations",
+        "peekOfCode": "class OrganizationCRUD:\n    \"\"\"Organization CRUD operations\"\"\"\n    def __init__(self):\n        self.db = MongoDB.get_database()\n        self.collection = self.db[\"organizations\"]\n        self.users_collection = self.db[\"users\"]\n    def create_organization(self, name: str, owner_id: ObjectId) -> dict:\n        \"\"\"Create a new organization\"\"\"\n        slug = self._generate_slug(name)\n        org = {",
+        "detail": "backend.utils.organizations",
+        "documentation": {}
+    },
+    {
+        "label": "get_organization_crud",
+        "kind": 2,
+        "importPath": "backend.utils.organizations",
+        "description": "backend.utils.organizations",
+        "peekOfCode": "def get_organization_crud() -> OrganizationCRUD:\n    \"\"\"\n    Get or create OrganizationCRUD instance (singleton pattern)\n    Returns:\n        OrganizationCRUD instance\n    \"\"\"\n    global _organization_crud\n    with _lock:\n        if _organization_crud is None:\n            _organization_crud = OrganizationCRUD()",
+        "detail": "backend.utils.organizations",
+        "documentation": {}
+    },
+    {
+        "label": "_organization_crud",
+        "kind": 5,
+        "importPath": "backend.utils.organizations",
+        "description": "backend.utils.organizations",
+        "peekOfCode": "_organization_crud = None\n_lock = threading.RLock()\nclass OrganizationCRUD:\n    \"\"\"Organization CRUD operations\"\"\"\n    def __init__(self):\n        self.db = MongoDB.get_database()\n        self.collection = self.db[\"organizations\"]\n        self.users_collection = self.db[\"users\"]\n    def create_organization(self, name: str, owner_id: ObjectId) -> dict:\n        \"\"\"Create a new organization\"\"\"",
+        "detail": "backend.utils.organizations",
+        "documentation": {}
+    },
+    {
+        "label": "_lock",
+        "kind": 5,
+        "importPath": "backend.utils.organizations",
+        "description": "backend.utils.organizations",
+        "peekOfCode": "_lock = threading.RLock()\nclass OrganizationCRUD:\n    \"\"\"Organization CRUD operations\"\"\"\n    def __init__(self):\n        self.db = MongoDB.get_database()\n        self.collection = self.db[\"organizations\"]\n        self.users_collection = self.db[\"users\"]\n    def create_organization(self, name: str, owner_id: ObjectId) -> dict:\n        \"\"\"Create a new organization\"\"\"\n        slug = self._generate_slug(name)",
+        "detail": "backend.utils.organizations",
         "documentation": {}
     },
     {

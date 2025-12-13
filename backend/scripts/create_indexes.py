@@ -19,6 +19,20 @@ MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
 MONGODB_DATABASE = os.getenv("MONGODB_DATABASE", "oews_data")
 
 
+def safe_create_index(collection, keys, name, **kwargs):
+    """Create index with error handling for existing indexes."""
+    try:
+        collection.create_index(keys, name=name, **kwargs)
+        return True
+    except Exception as e:
+        error_msg = str(e).lower()
+        if "already exists" in error_msg or "index already" in error_msg:
+            return False  # Index already exists
+        else:
+            # Real error - re-raise
+            raise
+
+
 def create_indexes():
     """Create all necessary indexes."""
     print("Connecting to MongoDB...")
@@ -35,35 +49,44 @@ def create_indexes():
     proposals = db.proposals
 
     # Index for user_id + created_at (list user proposals sorted by date)
-    try:
-        proposals.create_index(
-            [("user_id", ASCENDING), ("created_at", DESCENDING)],
-            name="user_proposals_by_date"
-        )
+    if safe_create_index(proposals, [("user_id", ASCENDING), ("created_at", DESCENDING)], "user_proposals_by_date"):
         print("   ✓ Created: user_id + created_at (descending)")
-    except Exception as e:
-        if "already exists" in str(e):
-            print("   ⚠ Already exists: user_id + created_at")
-        else:
-            print(f"   ✗ Error: {e}")
+    else:
+        print("   ⚠ Already exists: user_id + created_at")
 
     # Index for status (filter by processing/completed/error)
-    proposals.create_index("status", name="status_index")
-    print("   ✓ Created: status")
+    if safe_create_index(proposals, "status", "status_index"):
+        print("   ✓ Created: status")
+    else:
+        print("   ⚠ Already exists: status")
 
     # Compound index for user_id + status (common query pattern)
-    proposals.create_index(
-        [("user_id", ASCENDING), ("status", ASCENDING)],
-        name="user_status_index"
-    )
-    print("   ✓ Created: user_id + status")
+    if safe_create_index(proposals, [("user_id", ASCENDING), ("status", ASCENDING)], "user_status_index"):
+        print("   ✓ Created: user_id + status")
+    else:
+        print("   ⚠ Already exists: user_id + status")
 
     # Index for _id + user_id (authorization checks)
-    proposals.create_index(
-        [("_id", ASCENDING), ("user_id", ASCENDING)],
-        name="id_user_index"
-    )
-    print("   ✓ Created: _id + user_id")
+    if safe_create_index(proposals, [("_id", ASCENDING), ("user_id", ASCENDING)], "id_user_index"):
+        print("   ✓ Created: _id + user_id")
+    else:
+        print("   ⚠ Already exists: _id + user_id")
+
+    # Organization-related indexes
+    if safe_create_index(proposals, [("organization_id", ASCENDING), ("created_at", DESCENDING)], "org_created_at_index"):
+        print("   ✓ Created: organization_id + created_at")
+    else:
+        print("   ⚠ Already exists: organization_id + created_at")
+
+    if safe_create_index(proposals, [("organization_id", ASCENDING), ("visibility", ASCENDING)], "org_visibility_index"):
+        print("   ✓ Created: organization_id + visibility")
+    else:
+        print("   ⚠ Already exists: organization_id + visibility")
+
+    if safe_create_index(proposals, "shared_with", "shared_with_index"):
+        print("   ✓ Created: shared_with")
+    else:
+        print("   ⚠ Already exists: shared_with")
 
     # =====================================================================
     # WAGE_DATA COLLECTION (6M+ records - most critical for performance)
@@ -72,14 +95,10 @@ def create_indexes():
     wage_data = db.wage_data
 
     # Index for series_id (primary query field)
-    # This is critical for regex queries like "^OEUN0000000000000151252"
-    wage_data.create_index("series_id", name="series_id_index")
-    print("   ✓ Created: series_id")
-
-    # Text index for full-text search (if needed)
-    # Note: Text indexes can be large, only create if you need full-text search
-    # wage_data.create_index([("series_id", "text")], name="series_id_text")
-    # print("   ✓ Created: series_id (text index)")
+    if safe_create_index(wage_data, "series_id", "series_id_index"):
+        print("   ✓ Created: series_id")
+    else:
+        print("   ⚠ Already exists: series_id")
 
     # =====================================================================
     # AREAS COLLECTION
@@ -88,22 +107,22 @@ def create_indexes():
     areas = db.areas
 
     # Index for area_code (exact lookups)
-    areas.create_index("area_code", name="area_code_index")
-    print("   ✓ Created: area_code")
+    if safe_create_index(areas, "area_code", "area_code_index"):
+        print("   ✓ Created: area_code")
+    else:
+        print("   ⚠ Already exists: area_code")
 
     # Index for area_name (for regex searches)
-    areas.create_index("area_name", name="area_name_index")
-    print("   ✓ Created: area_name")
+    if safe_create_index(areas, "area_name", "area_name_index"):
+        print("   ✓ Created: area_name")
+    else:
+        print("   ⚠ Already exists: area_name")
 
     # Text index for area_name (for full-text search)
-    try:
-        areas.create_index([("area_name", "text")], name="area_name_text")
+    if safe_create_index(areas, [("area_name", "text")], "area_name_text"):
         print("   ✓ Created: area_name (text index)")
-    except Exception as e:
-        if "already exists" in str(e):
-            print("   ⚠ Text index already exists")
-        else:
-            print(f"   ⚠ Could not create text index: {e}")
+    else:
+        print("   ⚠ Already exists: area_name (text index)")
 
     # =====================================================================
     # OCCUPATIONS COLLECTION
@@ -112,12 +131,16 @@ def create_indexes():
     occupations = db.occupations
 
     # Index for occupation_code (exact lookups)
-    occupations.create_index("occupation_code", name="occupation_code_index")
-    print("   ✓ Created: occupation_code")
+    if safe_create_index(occupations, "occupation_code", "occupation_code_index"):
+        print("   ✓ Created: occupation_code")
+    else:
+        print("   ⚠ Already exists: occupation_code")
 
     # Index for occupation_name (for searches)
-    occupations.create_index("occupation_name", name="occupation_name_index")
-    print("   ✓ Created: occupation_name")
+    if safe_create_index(occupations, "occupation_name", "occupation_name_index"):
+        print("   ✓ Created: occupation_name")
+    else:
+        print("   ⚠ Already exists: occupation_name")
 
     # =====================================================================
     # USERS COLLECTION
@@ -126,30 +149,99 @@ def create_indexes():
     users = db.users
 
     # Index for email (unique, for login)
-    users.create_index("email", unique=True, name="email_unique_index")
-    print("   ✓ Created: email (unique)")
+    if safe_create_index(users, "email", "email_unique_index", unique=True):
+        print("   ✓ Created: email (unique)")
+    else:
+        print("   ⚠ Already exists: email (unique)")
 
     # Index for google_id (for Google OAuth)
-    users.create_index("google_id", sparse=True, name="google_id_index")
-    print("   ✓ Created: google_id (sparse)")
+    if safe_create_index(users, "google_id", "google_id_index", sparse=True):
+        print("   ✓ Created: google_id (sparse)")
+    else:
+        print("   ⚠ Already exists: google_id (sparse)")
+
+    # Organization-related indexes
+    if safe_create_index(users, [("organization_id", ASCENDING), ("role", ASCENDING)], "org_role_index"):
+        print("   ✓ Created: organization_id + role")
+    else:
+        print("   ⚠ Already exists: organization_id + role")
+
+    if safe_create_index(users, [("organization_id", ASCENDING), ("status", ASCENDING)], "org_status_index"):
+        print("   ✓ Created: organization_id + status")
+    else:
+        print("   ⚠ Already exists: organization_id + status")
+
+    # =====================================================================
+    # ORGANIZATIONS COLLECTION
+    # =====================================================================
+    print("\n6. ORGANIZATIONS Collection:")
+    organizations = db.organizations
+
+    # Slug (unique) - for URL-friendly org lookups
+    if safe_create_index(organizations, "slug", "slug_unique_index", unique=True):
+        print("   ✓ Created: slug (unique)")
+    else:
+        print("   ⚠ Already exists: slug (unique)")
+
+    # Owner ID - for finding orgs owned by user
+    if safe_create_index(organizations, "owner_id", "owner_id_index"):
+        print("   ✓ Created: owner_id")
+    else:
+        print("   ⚠ Already exists: owner_id")
+
+    # Status - for filtering active orgs
+    if safe_create_index(organizations, "status", "org_status_index"):
+        print("   ✓ Created: status")
+    else:
+        print("   ⚠ Already exists: status")
+
+    # =====================================================================
+    # INVITATIONS COLLECTION
+    # =====================================================================
+    print("\n7. INVITATIONS Collection:")
+    invitations = db.invitations
+
+    # Token Hash (unique) - for invitation validation
+    if safe_create_index(invitations, "token_hash", "token_hash_unique_index", unique=True):
+        print("   ✓ Created: token_hash (unique)")
+    else:
+        print("   ⚠ Already exists: token_hash (unique)")
+
+    # Organization + Status - for listing org invitations
+    if safe_create_index(invitations, [("organization_id", ASCENDING), ("status", ASCENDING)], "inv_org_status_index"):
+        print("   ✓ Created: organization_id + status")
+    else:
+        print("   ⚠ Already exists: organization_id + status")
+
+    # Email + Status - for checking duplicate invitations
+    if safe_create_index(invitations, [("email", ASCENDING), ("status", ASCENDING)], "email_status_index"):
+        print("   ✓ Created: email + status")
+    else:
+        print("   ⚠ Already exists: email + status")
+
+    # Expires At (TTL) - auto-delete expired invitations after 30 days
+    if safe_create_index(invitations, "expires_at", "expires_at_ttl_index", expireAfterSeconds=2592000):
+        print("   ✓ Created: expires_at (TTL - auto-deletes after 30 days)")
+    else:
+        print("   ⚠ Already exists: expires_at (TTL)")
 
     # =====================================================================
     # TOKEN_BLACKLIST COLLECTION
     # =====================================================================
-    print("\n6. TOKEN_BLACKLIST Collection:")
+    print("\n8. TOKEN_BLACKLIST Collection:")
     token_blacklist = db.token_blacklist
 
     # Index for token (unique, for logout)
-    token_blacklist.create_index("token", unique=True, name="token_unique_index")
-    print("   ✓ Created: token (unique)")
+    if safe_create_index(token_blacklist, "token", "token_unique_index", unique=True):
+        print("   ✓ Created: token (unique)")
+    else:
+        print("   ⚠ Already exists: token (unique)")
 
     # TTL index to auto-delete expired tokens after 24 hours
-    token_blacklist.create_index(
-        "created_at",
-        expireAfterSeconds=86400,  # 24 hours
-        name="token_ttl_index"
-    )
-    print("   ✓ Created: created_at (TTL - expires after 24h)")
+    if safe_create_index(token_blacklist, "created_at", "token_ttl_index", expireAfterSeconds=86400):
+        print("   ✓ Created: created_at (TTL - expires after 24h)")
+    else:
+        print("   ⚠ Already exists: created_at (TTL)")
 
     # =====================================================================
     # SUMMARY
@@ -159,7 +251,7 @@ def create_indexes():
     print("=" * 60)
 
     # List all indexes per collection
-    collections = ["proposals", "wage_data", "areas", "occupations", "users", "token_blacklist"]
+    collections = ["proposals", "wage_data", "areas", "occupations", "users", "organizations", "invitations", "token_blacklist"]
     for coll_name in collections:
         coll = db[coll_name]
         indexes = list(coll.list_indexes())

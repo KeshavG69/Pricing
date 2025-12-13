@@ -323,6 +323,159 @@ class ProposalCRUD:
             result = self.create_proposal(user_id, new_proposal)
             return result
 
+    def create_proposal_with_organization(
+        self,
+        user_id: ObjectId,
+        organization_id: ObjectId,
+        data: dict
+    ) -> dict:
+        """
+        Create proposal with organization support (ObjectId-based).
+
+        Args:
+            user_id: User's MongoDB ObjectId
+            organization_id: Organization's MongoDB ObjectId
+            data: Proposal data (name, solicitation_number, documents, etc.)
+
+        Returns:
+            Created proposal document with _id
+        """
+        with self.operation_lock:
+            proposal = {
+                "user_id": user_id,
+                "organization_id": organization_id,
+                "visibility": "private",
+                "shared_with": [],
+                "created_at": datetime.utcnow(),
+                "updated_at": datetime.utcnow(),
+                "status": "processing",
+                **data
+            }
+            result = self.collection.insert_one(proposal)
+            proposal["_id"] = result.inserted_id
+
+            # Invalidate caches
+            self.get_user_proposals.cache_clear()
+
+            return proposal
+
+    def get_user_proposals_by_org(
+        self,
+        user_id: ObjectId,
+        organization_id: ObjectId,
+        role: str
+    ) -> List[dict]:
+        """
+        Get proposals based on user's role and organization.
+
+        Args:
+            user_id: User's MongoDB ObjectId
+            organization_id: Organization's MongoDB ObjectId
+            role: User's role ("admin" or "user")
+
+        Returns:
+            List of proposal documents user can access
+        """
+        with self.operation_lock:
+            if role == "admin":
+                # Admin sees all proposals in organization
+                query = {"organization_id": organization_id}
+            else:
+                # Regular user sees own + shared proposals
+                query = {
+                    "$or": [
+                        {"user_id": user_id},
+                        {"shared_with": user_id}
+                    ],
+                    "organization_id": organization_id
+                }
+
+            # Exclude large fields
+            projection = {
+                "spreadsheet_data": 0,
+                "jobs": 0,
+                "rates": 0,
+                "escalation_rates": 0,
+                "documents": 0
+            }
+
+            cursor = self.collection.find(query, projection).sort("created_at", -1)
+            return list(cursor)
+
+    def share_proposal(
+        self,
+        proposal_id: ObjectId,
+        user_ids: List[ObjectId],
+        admin_id: ObjectId
+    ) -> dict:
+        """
+        Share proposal with specific users (admin only).
+
+        Args:
+            proposal_id: Proposal's MongoDB ObjectId
+            user_ids: List of user ObjectIds to share with
+            admin_id: Admin user's ObjectId
+
+        Returns:
+            Updated proposal document
+
+        Raises:
+            ValueError: If proposal not found or not in admin's organization
+        """
+        with self.operation_lock:
+            # Get proposal
+            proposal = self.collection.find_one({"_id": proposal_id})
+            if not proposal:
+                raise ValueError("Proposal not found")
+
+            # Get admin user to verify organization
+            from auth.database import MongoDB
+            users_collection = MongoDB.get_database()["users"]
+            admin = users_collection.find_one({"_id": admin_id})
+
+            # Verify proposal belongs to admin's org
+            if proposal["organization_id"] != admin["organization_id"]:
+                raise ValueError("Cannot share proposals from other organizations")
+
+            # Verify all user_ids belong to same org
+            for user_id in user_ids:
+                user = users_collection.find_one({"_id": user_id})
+                if not user or user["organization_id"] != admin["organization_id"]:
+                    raise ValueError(f"User not in your organization")
+
+            # Update proposal
+            result = self.collection.find_one_and_update(
+                {"_id": proposal_id},
+                {
+                    "$set": {
+                        "visibility": "shared",
+                        "shared_with": user_ids,
+                        "updated_at": datetime.utcnow()
+                    }
+                },
+                return_document=True
+            )
+
+            # Invalidate caches
+            self.get_proposal.cache_clear()
+            self.get_proposal_summary.cache_clear()
+            self.get_user_proposals.cache_clear()
+
+            return result
+
+    def get_by_id(self, proposal_id: ObjectId) -> Optional[dict]:
+        """
+        Get proposal by ObjectId (no user verification).
+
+        Args:
+            proposal_id: Proposal's MongoDB ObjectId
+
+        Returns:
+            Proposal document or None if not found
+        """
+        with self.operation_lock:
+            return self.collection.find_one({"_id": proposal_id})
+
 
 # Module-level singleton instance
 _proposal_crud_instance = None

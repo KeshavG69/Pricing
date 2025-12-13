@@ -702,3 +702,230 @@ async def delete_proposal_document(
         "message": "Document deleted successfully",
         "filename": doc["filename"]
     }
+
+
+# ============================================================================
+# PROPOSAL SHARING (Organization Feature)
+# ============================================================================
+
+from pydantic import BaseModel
+from auth.dependencies import require_admin
+from auth.rbac import can_access_proposal
+from utils.helpers import serialize_doc
+
+
+class ShareProposalRequest(BaseModel):
+    """Request body for sharing proposals"""
+    user_ids: List[str]
+
+
+@router.post("/{proposal_id}/share")
+async def share_proposal_with_users(
+    proposal_id: str,
+    share_data: ShareProposalRequest,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Share proposal with specific users (admin only).
+
+    Allows specified users to view the proposal in read-only mode.
+    All user_ids must belong to the same organization.
+
+    Args:
+        proposal_id: Proposal's ObjectId as string
+        share_data: List of user ObjectIds to share with
+
+    Returns:
+        Updated proposal document
+
+    Raises:
+        HTTPException 400: If invalid IDs or users not in organization
+        HTTPException 403: If not admin
+        HTTPException 404: If proposal not found
+    """
+    # Validate ObjectIds
+    try:
+        prop_oid = ObjectId(proposal_id)
+        user_oids = [ObjectId(uid) for uid in share_data.user_ids]
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid ID format"
+        )
+
+    # Use organization-aware proposal methods
+    crud = get_crud()
+
+    try:
+        updated_proposal = crud.share_proposal(
+            proposal_id=prop_oid,
+            user_ids=user_oids,
+            admin_id=current_user["_id"]
+        )
+
+        return {
+            "message": "Proposal shared successfully",
+            "proposal": serialize_doc(updated_proposal),
+            "shared_with_count": len(user_oids)
+        }
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to share proposal: {str(e)}"
+        )
+
+
+@router.delete("/{proposal_id}/share")
+async def unshare_proposal(
+    proposal_id: str,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Make proposal private (remove all shares) (admin only).
+
+    Removes all users from shared_with list, making proposal
+    visible only to owner and admins.
+
+    Args:
+        proposal_id: Proposal's ObjectId as string
+
+    Returns:
+        Success message
+
+    Raises:
+        HTTPException 400: If invalid proposal ID
+        HTTPException 403: If not admin or proposal not in your org
+        HTTPException 404: If proposal not found
+    """
+    # Validate ObjectId
+    try:
+        prop_oid = ObjectId(proposal_id)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid proposal ID format"
+        )
+
+    crud = get_crud()
+
+    # Get proposal to verify ownership
+    proposal = crud.get_by_id(prop_oid)
+
+    if not proposal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Proposal not found"
+        )
+
+    # Verify proposal belongs to admin's organization
+    if proposal.get("organization_id") != current_user["organization_id"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot modify proposals from other organizations"
+        )
+
+    # Update to private visibility
+    from auth.database import MongoDB
+    db = MongoDB.get_database()
+    result = db["proposals"].update_one(
+        {"_id": prop_oid},
+        {
+            "$set": {
+                "visibility": "private",
+                "shared_with": [],
+                "updated_at": datetime.utcnow()
+            }
+        }
+    )
+
+    if result.modified_count == 0:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Proposal not found or already private"
+        )
+
+    return {
+        "message": "Proposal is now private",
+        "proposal_id": proposal_id
+    }
+
+
+@router.get("/{proposal_id}/access")
+async def get_proposal_access_info(
+    proposal_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get access information for a proposal.
+
+    Shows visibility setting and list of users with access.
+    Useful for admins to see who can view a proposal.
+
+    Args:
+        proposal_id: Proposal's ObjectId as string
+
+    Returns:
+        Access information including visibility and shared_with users
+
+    Raises:
+        HTTPException 400: If invalid proposal ID
+        HTTPException 403: If user cannot access proposal
+        HTTPException 404: If proposal not found
+    """
+    # Validate ObjectId
+    try:
+        prop_oid = ObjectId(proposal_id)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid proposal ID format"
+        )
+
+    crud = get_crud()
+    proposal = crud.get_by_id(prop_oid)
+
+    if not proposal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Proposal not found"
+        )
+
+    # Check if user can access this proposal
+    if not can_access_proposal(proposal, current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have access to this proposal"
+        )
+
+    # Get details of shared users
+    shared_with_ids = proposal.get("shared_with", [])
+    shared_users = []
+
+    if shared_with_ids:
+        from auth.database import MongoDB
+        db = MongoDB.get_database()
+        users = db["users"].find(
+            {"_id": {"$in": shared_with_ids}},
+            {"firstName": 1, "lastName": 1, "email": 1}
+        )
+
+        for user in users:
+            shared_users.append({
+                "id": str(user["_id"]),
+                "name": f"{user['firstName']} {user['lastName']}",
+                "email": user["email"]
+            })
+
+    return {
+        "proposal_id": proposal_id,
+        "visibility": proposal.get("visibility", "private"),
+        "owner_id": str(proposal.get("user_id")),
+        "shared_with": shared_users,
+        "shared_count": len(shared_users)
+    }

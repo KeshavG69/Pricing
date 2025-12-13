@@ -1,11 +1,23 @@
 from typing import Optional
 from datetime import datetime
+from bson import ObjectId
+import bcrypt
+import threading
 from .database import MongoDB
 from .models import UserSignup, UserResponse, GoogleUserProfile
 from .utils import hash_password, verify_password, generate_user_id
 
 
+# Global singleton instance
+_user_crud = None
+_lock = threading.RLock()
+
+
 class UserCRUD:
+    def __init__(self):
+        """Initialize UserCRUD with database collections"""
+        self.db = MongoDB.get_database()
+        self.collection = self.db["users"]
     @staticmethod
     def create_user(user_data: UserSignup) -> UserResponse:
         """Create a new user in the database"""
@@ -174,3 +186,60 @@ class UserCRUD:
                 )
             else:
                 raise Exception("Failed to create Google user")
+
+    def create_user_with_organization(
+        self,
+        email: str,
+        first_name: str,
+        last_name: str,
+        password: str,
+        organization_id: ObjectId,
+        role: str = "user"
+    ) -> dict:
+        """Create user with organization (for invitation acceptance)"""
+        # Check if user already exists
+        existing = self.collection.find_one({"email": email})
+        if existing:
+            raise ValueError("Email already registered")
+
+        user = {
+            "firstName": first_name,
+            "lastName": last_name,
+            "email": email,
+            "password": bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode(),
+            "organization_id": organization_id,
+            "role": role,
+            "status": "active",
+            "auth_method": "email",
+            "createdAt": datetime.utcnow(),
+            "updatedAt": datetime.utcnow()
+        }
+
+        result = self.collection.insert_one(user)
+        user["_id"] = result.inserted_id
+        return user
+
+    def get_by_id(self, user_id: ObjectId) -> dict:
+        """Get user by ObjectId"""
+        return self.collection.find_one({"_id": user_id})
+
+    def remove_from_organization(self, user_id: ObjectId):
+        """Remove user from organization (soft delete)"""
+        self.collection.update_one(
+            {"_id": user_id},
+            {"$set": {"status": "removed", "updatedAt": datetime.utcnow()}}
+        )
+
+
+def get_user_crud() -> UserCRUD:
+    """
+    Get or create UserCRUD instance (singleton pattern)
+
+    Returns:
+        UserCRUD instance
+    """
+    global _user_crud
+    with _lock:
+        if _user_crud is None:
+            _user_crud = UserCRUD()
+        return _user_crud
