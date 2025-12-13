@@ -1,92 +1,5 @@
 [
     {
-        "label": "runpy",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "runpy",
-        "description": "runpy",
-        "detail": "runpy",
-        "documentation": {}
-    },
-    {
-        "label": "annotations",
-        "importPath": "__future__",
-        "description": "__future__",
-        "isExtraImport": true,
-        "detail": "__future__",
-        "documentation": {}
-    },
-    {
-        "label": "os",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "os",
-        "description": "os",
-        "detail": "os",
-        "documentation": {}
-    },
-    {
-        "label": "site",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "site",
-        "description": "site",
-        "detail": "site",
-        "documentation": {}
-    },
-    {
-        "label": "sys",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "sys",
-        "description": "sys",
-        "detail": "sys",
-        "documentation": {}
-    },
-    {
-        "label": "json",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "json",
-        "description": "json",
-        "detail": "json",
-        "documentation": {}
-    },
-    {
-        "label": "argparse",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "argparse",
-        "description": "argparse",
-        "detail": "argparse",
-        "documentation": {}
-    },
-    {
-        "label": "pformat",
-        "importPath": "pprint",
-        "description": "pprint",
-        "isExtraImport": true,
-        "detail": "pprint",
-        "documentation": {}
-    },
-    {
-        "label": "jmespath",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "jmespath",
-        "description": "jmespath",
-        "detail": "jmespath",
-        "documentation": {}
-    },
-    {
-        "label": "exceptions",
-        "importPath": "jmespath",
-        "description": "jmespath",
-        "isExtraImport": true,
-        "detail": "jmespath",
-        "documentation": {}
-    },
-    {
         "label": "Agent",
         "importPath": "agno.agent",
         "description": "agno.agent",
@@ -509,30 +422,6 @@
         "description": "fastapi.responses",
         "isExtraImport": true,
         "detail": "fastapi.responses",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
         "documentation": {}
     },
     {
@@ -1226,30 +1115,6 @@
         "documentation": {}
     },
     {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
         "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
@@ -1386,14 +1251,6 @@
         "documentation": {}
     },
     {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
         "label": "timedelta",
         "importPath": "datetime",
         "description": "datetime",
@@ -1418,27 +1275,12 @@
         "documentation": {}
     },
     {
-        "label": "timedelta",
-        "importPath": "datetime",
-        "description": "datetime",
+        "label": "os",
+        "kind": 6,
         "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
+        "importPath": "os",
+        "description": "os",
+        "detail": "os",
         "documentation": {}
     },
     {
@@ -1455,102 +1297,6 @@
         "description": "dotenv",
         "isExtraImport": true,
         "detail": "dotenv",
-        "documentation": {}
-    },
-    {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
-        "isExtraImport": true,
-        "detail": "dotenv",
-        "documentation": {}
-    },
-    {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
-        "isExtraImport": true,
-        "detail": "dotenv",
-        "documentation": {}
-    },
-    {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
-        "isExtraImport": true,
-        "detail": "dotenv",
-        "documentation": {}
-    },
-    {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
-        "isExtraImport": true,
-        "detail": "dotenv",
-        "documentation": {}
-    },
-    {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
-        "isExtraImport": true,
-        "detail": "dotenv",
-        "documentation": {}
-    },
-    {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
-        "isExtraImport": true,
-        "detail": "dotenv",
-        "documentation": {}
-    },
-    {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
-        "isExtraImport": true,
-        "detail": "dotenv",
-        "documentation": {}
-    },
-    {
-        "label": "ObjectId",
-        "importPath": "bson",
-        "description": "bson",
-        "isExtraImport": true,
-        "detail": "bson",
-        "documentation": {}
-    },
-    {
-        "label": "ObjectId",
-        "importPath": "bson",
-        "description": "bson",
-        "isExtraImport": true,
-        "detail": "bson",
-        "documentation": {}
-    },
-    {
-        "label": "ObjectId",
-        "importPath": "bson",
-        "description": "bson",
-        "isExtraImport": true,
-        "detail": "bson",
-        "documentation": {}
-    },
-    {
-        "label": "ObjectId",
-        "importPath": "bson",
-        "description": "bson",
-        "isExtraImport": true,
-        "detail": "bson",
-        "documentation": {}
-    },
-    {
-        "label": "ObjectId",
-        "importPath": "bson",
-        "description": "bson",
-        "isExtraImport": true,
-        "detail": "bson",
         "documentation": {}
     },
     {
@@ -1668,14 +1414,6 @@
     },
     {
         "label": "AsyncIOMotorDatabase",
-        "importPath": "motor.motor_asyncio",
-        "description": "motor.motor_asyncio",
-        "isExtraImport": true,
-        "detail": "motor.motor_asyncio",
-        "documentation": {}
-    },
-    {
-        "label": "AsyncIOMotorClient",
         "importPath": "motor.motor_asyncio",
         "description": "motor.motor_asyncio",
         "isExtraImport": true,
@@ -1816,38 +1554,6 @@
         "description": "auth",
         "isExtraImport": true,
         "detail": "auth",
-        "documentation": {}
-    },
-    {
-        "label": "MongoDB",
-        "importPath": "auth.database",
-        "description": "auth.database",
-        "isExtraImport": true,
-        "detail": "auth.database",
-        "documentation": {}
-    },
-    {
-        "label": "MongoDB",
-        "importPath": "auth.database",
-        "description": "auth.database",
-        "isExtraImport": true,
-        "detail": "auth.database",
-        "documentation": {}
-    },
-    {
-        "label": "MongoDB",
-        "importPath": "auth.database",
-        "description": "auth.database",
-        "isExtraImport": true,
-        "detail": "auth.database",
-        "documentation": {}
-    },
-    {
-        "label": "MongoDB",
-        "importPath": "auth.database",
-        "description": "auth.database",
-        "isExtraImport": true,
-        "detail": "auth.database",
         "documentation": {}
     },
     {
@@ -2524,83 +2230,35 @@
         "documentation": {}
     },
     {
-        "label": "parse_documents_to_dataframe",
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
-        "isExtraImport": true,
-        "detail": "client.jd_parser",
-        "documentation": {}
-    },
-    {
-        "label": "parse_documents_to_dataframe",
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
-        "isExtraImport": true,
-        "detail": "client.jd_parser",
-        "documentation": {}
-    },
-    {
-        "label": "parse_documents_to_dataframe",
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
-        "isExtraImport": true,
-        "detail": "client.jd_parser",
-        "documentation": {}
-    },
-    {
         "label": "process_dataframe_with_agents",
         "importPath": "utils.pipeline",
         "description": "utils.pipeline",
         "isExtraImport": true,
         "detail": "utils.pipeline",
-        "documentation": {}
-    },
-    {
-        "label": "process_dataframe_with_agents",
-        "importPath": "utils.pipeline",
-        "description": "utils.pipeline",
-        "isExtraImport": true,
-        "detail": "utils.pipeline",
-        "documentation": {}
-    },
-    {
-        "label": "process_dataframe_with_agents",
-        "importPath": "utils.pipeline",
-        "description": "utils.pipeline",
-        "isExtraImport": true,
-        "detail": "utils.pipeline",
-        "documentation": {}
-    },
-    {
-        "label": "process_dataframe_with_agents",
-        "importPath": "utils.pipeline",
-        "description": "utils.pipeline",
-        "isExtraImport": true,
-        "detail": "utils.pipeline",
-        "documentation": {}
-    },
-    {
-        "label": "ExcelGenerator",
-        "importPath": "client.excel_generator",
-        "description": "client.excel_generator",
-        "isExtraImport": true,
-        "detail": "client.excel_generator",
-        "documentation": {}
-    },
-    {
-        "label": "ExcelGenerator",
-        "importPath": "client.excel_generator",
-        "description": "client.excel_generator",
-        "isExtraImport": true,
-        "detail": "client.excel_generator",
         "documentation": {}
     },
     {
         "label": "build_project_data_from_dataframe",
-        "importPath": "main",
-        "description": "main",
+        "importPath": "utils.pipeline",
+        "description": "utils.pipeline",
         "isExtraImport": true,
-        "detail": "main",
+        "detail": "utils.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "process_dataframe_with_agents",
+        "importPath": "utils.pipeline",
+        "description": "utils.pipeline",
+        "isExtraImport": true,
+        "detail": "utils.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "ExcelGenerator",
+        "importPath": "client.excel_generator",
+        "description": "client.excel_generator",
+        "isExtraImport": true,
+        "detail": "client.excel_generator",
         "documentation": {}
     },
     {
@@ -2716,38 +2374,6 @@
         "documentation": {}
     },
     {
-        "label": "get_proposal_crud",
-        "importPath": "utils.proposals",
-        "description": "utils.proposals",
-        "isExtraImport": true,
-        "detail": "utils.proposals",
-        "documentation": {}
-    },
-    {
-        "label": "split_position_by_hours",
-        "importPath": "routers.pricing",
-        "description": "routers.pricing",
-        "isExtraImport": true,
-        "detail": "routers.pricing",
-        "documentation": {}
-    },
-    {
-        "label": "split_multi_year_position",
-        "importPath": "routers.pricing",
-        "description": "routers.pricing",
-        "isExtraImport": true,
-        "detail": "routers.pricing",
-        "documentation": {}
-    },
-    {
-        "label": "split_multi_year_position",
-        "importPath": "routers.pricing",
-        "description": "routers.pricing",
-        "isExtraImport": true,
-        "detail": "routers.pricing",
-        "documentation": {}
-    },
-    {
         "label": "split_position_by_hours",
         "importPath": "routers.pricing",
         "description": "routers.pricing",
@@ -2780,70 +2406,6 @@
         "documentation": {}
     },
     {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "ASCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "DESCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "ASCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "DESCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "TEXT",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
         "label": "ASCENDING",
         "importPath": "pymongo",
         "description": "pymongo",
@@ -2884,27 +2446,12 @@
         "documentation": {}
     },
     {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "sys",
+        "kind": 6,
         "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
+        "importPath": "sys",
+        "description": "sys",
+        "detail": "sys",
         "documentation": {}
     },
     {
@@ -2922,15 +2469,6 @@
         "importPath": "requests",
         "description": "requests",
         "detail": "requests",
-        "documentation": {}
-    },
-    {
-        "label": "secrets",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "secrets",
-        "description": "secrets",
-        "detail": "secrets",
         "documentation": {}
     },
     {
@@ -2958,6 +2496,15 @@
         "documentation": {}
     },
     {
+        "label": "secrets",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "secrets",
+        "description": "secrets",
+        "detail": "secrets",
+        "documentation": {}
+    },
+    {
         "label": "EmailService",
         "importPath": "client.email_service",
         "description": "client.email_service",
@@ -2975,126 +2522,20 @@
         "documentation": {}
     },
     {
-        "label": "create_pricing_agent",
-        "importPath": "agent.agent",
-        "description": "agent.agent",
-        "isExtraImport": true,
-        "detail": "agent.agent",
-        "documentation": {}
-    },
-    {
-        "label": "create_pricing_agent",
-        "importPath": "agent.agent",
-        "description": "agent.agent",
-        "isExtraImport": true,
-        "detail": "agent.agent",
-        "documentation": {}
-    },
-    {
-        "label": "Calculator",
-        "importPath": "client.calculation_service",
-        "description": "client.calculation_service",
-        "isExtraImport": true,
-        "detail": "client.calculation_service",
-        "documentation": {}
-    },
-    {
-        "label": "numpy",
+        "label": "json",
         "kind": 6,
         "isExtraImport": true,
-        "importPath": "numpy",
-        "description": "numpy",
-        "detail": "numpy",
+        "importPath": "json",
+        "description": "json",
+        "detail": "json",
         "documentation": {}
     },
     {
-        "label": "bin_dir",
-        "kind": 5,
-        "importPath": "backend..venv.bin.activate_this",
-        "description": "backend..venv.bin.activate_this",
-        "peekOfCode": "bin_dir = os.path.dirname(abs_file)\nbase = bin_dir[: -len(\"bin\") - 1]  # strip away the bin part from the __file__, plus the path separator\n# prepend bin to PATH (this file is inside the bin directory)\nos.environ[\"PATH\"] = os.pathsep.join([bin_dir, *os.environ.get(\"PATH\", \"\").split(os.pathsep)])\nos.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"pricing\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.13/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))",
-        "detail": "backend..venv.bin.activate_this",
-        "documentation": {}
-    },
-    {
-        "label": "base",
-        "kind": 5,
-        "importPath": "backend..venv.bin.activate_this",
-        "description": "backend..venv.bin.activate_this",
-        "peekOfCode": "base = bin_dir[: -len(\"bin\") - 1]  # strip away the bin part from the __file__, plus the path separator\n# prepend bin to PATH (this file is inside the bin directory)\nos.environ[\"PATH\"] = os.pathsep.join([bin_dir, *os.environ.get(\"PATH\", \"\").split(os.pathsep)])\nos.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"pricing\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.13/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)",
-        "detail": "backend..venv.bin.activate_this",
-        "documentation": {}
-    },
-    {
-        "label": "os.environ[\"PATH\"]",
-        "kind": 5,
-        "importPath": "backend..venv.bin.activate_this",
-        "description": "backend..venv.bin.activate_this",
-        "peekOfCode": "os.environ[\"PATH\"] = os.pathsep.join([bin_dir, *os.environ.get(\"PATH\", \"\").split(os.pathsep)])\nos.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"pricing\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.13/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix",
-        "detail": "backend..venv.bin.activate_this",
-        "documentation": {}
-    },
-    {
-        "label": "os.environ[\"VIRTUAL_ENV\"]",
-        "kind": 5,
-        "importPath": "backend..venv.bin.activate_this",
-        "description": "backend..venv.bin.activate_this",
-        "peekOfCode": "os.environ[\"VIRTUAL_ENV\"] = base  # virtual env is right above bin directory\nos.environ[\"VIRTUAL_ENV_PROMPT\"] = \"pricing\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.13/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
-        "detail": "backend..venv.bin.activate_this",
-        "documentation": {}
-    },
-    {
-        "label": "os.environ[\"VIRTUAL_ENV_PROMPT\"]",
-        "kind": 5,
-        "importPath": "backend..venv.bin.activate_this",
-        "description": "backend..venv.bin.activate_this",
-        "peekOfCode": "os.environ[\"VIRTUAL_ENV_PROMPT\"] = \"pricing\" or os.path.basename(base)  # noqa: SIM222\n# add the virtual environments libraries to the host python import mechanism\nprev_length = len(sys.path)\nfor lib in \"../lib/python3.13/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
-        "detail": "backend..venv.bin.activate_this",
-        "documentation": {}
-    },
-    {
-        "label": "prev_length",
-        "kind": 5,
-        "importPath": "backend..venv.bin.activate_this",
-        "description": "backend..venv.bin.activate_this",
-        "peekOfCode": "prev_length = len(sys.path)\nfor lib in \"../lib/python3.13/site-packages\".split(os.pathsep):\n    path = os.path.realpath(os.path.join(bin_dir, lib))\n    site.addsitedir(path)\nsys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
-        "detail": "backend..venv.bin.activate_this",
-        "documentation": {}
-    },
-    {
-        "label": "sys.path[:]",
-        "kind": 5,
-        "importPath": "backend..venv.bin.activate_this",
-        "description": "backend..venv.bin.activate_this",
-        "peekOfCode": "sys.path[:] = sys.path[prev_length:] + sys.path[0:prev_length]\nsys.real_prefix = sys.prefix\nsys.prefix = base",
-        "detail": "backend..venv.bin.activate_this",
-        "documentation": {}
-    },
-    {
-        "label": "sys.real_prefix",
-        "kind": 5,
-        "importPath": "backend..venv.bin.activate_this",
-        "description": "backend..venv.bin.activate_this",
-        "peekOfCode": "sys.real_prefix = sys.prefix\nsys.prefix = base",
-        "detail": "backend..venv.bin.activate_this",
-        "documentation": {}
-    },
-    {
-        "label": "sys.prefix",
-        "kind": 5,
-        "importPath": "backend..venv.bin.activate_this",
-        "description": "backend..venv.bin.activate_this",
-        "peekOfCode": "sys.prefix = base",
-        "detail": "backend..venv.bin.activate_this",
-        "documentation": {}
-    },
-    {
-        "label": "main",
-        "kind": 2,
-        "importPath": "backend..venv.bin.jp",
-        "description": "backend..venv.bin.jp",
-        "peekOfCode": "def main():\n    parser = argparse.ArgumentParser()\n    parser.add_argument('expression')\n    parser.add_argument('-f', '--filename',\n                        help=('The filename containing the input data.  '\n                              'If a filename is not given then data is '\n                              'read from stdin.'))\n    parser.add_argument('--ast', action='store_true',\n                        help=('Pretty print the AST, do not search the data.'))\n    args = parser.parse_args()",
-        "detail": "backend..venv.bin.jp",
+        "label": "create_pricing_agent",
+        "importPath": "agent.agent",
+        "description": "agent.agent",
+        "isExtraImport": true,
+        "detail": "agent.agent",
         "documentation": {}
     },
     {
@@ -4097,24 +3538,6 @@
         "documentation": {}
     },
     {
-        "label": "add_joined_at_to_organizations",
-        "kind": 2,
-        "importPath": "backend.scripts.add_joined_at_to_orgs",
-        "description": "backend.scripts.add_joined_at_to_orgs",
-        "peekOfCode": "def add_joined_at_to_organizations():\n    \"\"\"Add joinedAt field to all organization memberships that are missing it\"\"\"\n    # Connect to MongoDB\n    mongodb_url = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\n    mongodb_database = os.getenv(\"MONGODB_DATABASE\", \"price-qastage01\")\n    client = MongoClient(\n        mongodb_url,\n        serverSelectionTimeoutMS=20000,\n        connectTimeoutMS=20000,\n        socketTimeoutMS=30000",
-        "detail": "backend.scripts.add_joined_at_to_orgs",
-        "documentation": {}
-    },
-    {
-        "label": "check_proposals_and_users",
-        "kind": 2,
-        "importPath": "backend.scripts.check_proposals",
-        "description": "backend.scripts.check_proposals",
-        "peekOfCode": "def check_proposals_and_users():\n    \"\"\"Check proposals and users data.\"\"\"\n    db = MongoDB.get_database()\n    proposals_collection = db[\"proposals\"]\n    users_collection = db[\"users\"]\n    print(\"=\" * 60)\n    print(\"CHECKING USERS\")\n    print(\"=\" * 60)\n    users = users_collection.find()\n    for user in users:",
-        "detail": "backend.scripts.check_proposals",
-        "documentation": {}
-    },
-    {
         "label": "safe_create_index",
         "kind": 2,
         "importPath": "backend.scripts.create_indexes",
@@ -4148,69 +3571,6 @@
         "description": "backend.scripts.create_indexes",
         "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef safe_create_index(collection, keys, name, **kwargs):\n    \"\"\"Create index with error handling for existing indexes.\"\"\"\n    try:\n        collection.create_index(keys, name=name, **kwargs)\n        return True\n    except Exception as e:\n        error_msg = str(e).lower()\n        if \"already exists\" in error_msg or \"index already\" in error_msg:\n            return False  # Index already exists",
         "detail": "backend.scripts.create_indexes",
-        "documentation": {}
-    },
-    {
-        "label": "safe_create_index",
-        "kind": 2,
-        "importPath": "backend.scripts.create_indexes_safe",
-        "description": "backend.scripts.create_indexes_safe",
-        "peekOfCode": "def safe_create_index(collection, keys, **kwargs):\n    \"\"\"Safely create index, handling existing indexes.\"\"\"\n    try:\n        collection.create_index(keys, **kwargs)\n        return f\"✓ Created: {kwargs.get('name', str(keys))}\"\n    except Exception as e:\n        if \"already exists\" in str(e).lower():\n            return f\"⚠ Already exists: {kwargs.get('name', str(keys))}\"\n        else:\n            return f\"✗ Error: {str(e)[:100]}\"",
-        "detail": "backend.scripts.create_indexes_safe",
-        "documentation": {}
-    },
-    {
-        "label": "create_indexes",
-        "kind": 2,
-        "importPath": "backend.scripts.create_indexes_safe",
-        "description": "backend.scripts.create_indexes_safe",
-        "peekOfCode": "def create_indexes():\n    \"\"\"Create all necessary indexes.\"\"\"\n    print(\"Connecting to MongoDB...\")\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    print(f\"\\nCreating indexes on database: {MONGODB_DATABASE}\")\n    print(\"=\" * 70)\n    # =====================================================================\n    # PROPOSALS COLLECTION\n    # =====================================================================",
-        "detail": "backend.scripts.create_indexes_safe",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_URL",
-        "kind": 5,
-        "importPath": "backend.scripts.create_indexes_safe",
-        "description": "backend.scripts.create_indexes_safe",
-        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef safe_create_index(collection, keys, **kwargs):\n    \"\"\"Safely create index, handling existing indexes.\"\"\"\n    try:\n        collection.create_index(keys, **kwargs)\n        return f\"✓ Created: {kwargs.get('name', str(keys))}\"\n    except Exception as e:\n        if \"already exists\" in str(e).lower():\n            return f\"⚠ Already exists: {kwargs.get('name', str(keys))}\"",
-        "detail": "backend.scripts.create_indexes_safe",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_DATABASE",
-        "kind": 5,
-        "importPath": "backend.scripts.create_indexes_safe",
-        "description": "backend.scripts.create_indexes_safe",
-        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef safe_create_index(collection, keys, **kwargs):\n    \"\"\"Safely create index, handling existing indexes.\"\"\"\n    try:\n        collection.create_index(keys, **kwargs)\n        return f\"✓ Created: {kwargs.get('name', str(keys))}\"\n    except Exception as e:\n        if \"already exists\" in str(e).lower():\n            return f\"⚠ Already exists: {kwargs.get('name', str(keys))}\"\n        else:",
-        "detail": "backend.scripts.create_indexes_safe",
-        "documentation": {}
-    },
-    {
-        "label": "create_refresh_token_indexes",
-        "kind": 2,
-        "importPath": "backend.scripts.create_refresh_token_indexes",
-        "description": "backend.scripts.create_refresh_token_indexes",
-        "peekOfCode": "def create_refresh_token_indexes():\n    \"\"\"Create indexes for refresh_tokens collection\"\"\"\n    try:\n        # Connect to MongoDB\n        client = MongoClient(MONGODB_URL)\n        db = client[MONGODB_DATABASE]\n        collection = db[\"refresh_tokens\"]\n        print(\"Creating indexes for refresh_tokens collection...\")\n        # 1. Compound index on user_email + token_family_id (for queries)\n        collection.create_index(",
-        "detail": "backend.scripts.create_refresh_token_indexes",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_URL",
-        "kind": 5,
-        "importPath": "backend.scripts.create_refresh_token_indexes",
-        "description": "backend.scripts.create_refresh_token_indexes",
-        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef create_refresh_token_indexes():\n    \"\"\"Create indexes for refresh_tokens collection\"\"\"\n    try:\n        # Connect to MongoDB\n        client = MongoClient(MONGODB_URL)\n        db = client[MONGODB_DATABASE]\n        collection = db[\"refresh_tokens\"]\n        print(\"Creating indexes for refresh_tokens collection...\")",
-        "detail": "backend.scripts.create_refresh_token_indexes",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_DATABASE",
-        "kind": 5,
-        "importPath": "backend.scripts.create_refresh_token_indexes",
-        "description": "backend.scripts.create_refresh_token_indexes",
-        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef create_refresh_token_indexes():\n    \"\"\"Create indexes for refresh_tokens collection\"\"\"\n    try:\n        # Connect to MongoDB\n        client = MongoClient(MONGODB_URL)\n        db = client[MONGODB_DATABASE]\n        collection = db[\"refresh_tokens\"]\n        print(\"Creating indexes for refresh_tokens collection...\")\n        # 1. Compound index on user_email + token_family_id (for queries)",
-        "detail": "backend.scripts.create_refresh_token_indexes",
         "documentation": {}
     },
     {
@@ -4283,87 +3643,6 @@
         "description": "backend.scripts.import_oews_to_mongo",
         "peekOfCode": "DATA_DIR = Path(\"data/oews\")\ndef create_mongo_client() -> Tuple[MongoClient, Database]:\n    \"\"\"Create MongoDB client and return client + database.\"\"\"\n    print(f\"Connecting to MongoDB at {settings.MONGODB_URL}...\")\n    client = MongoClient(settings.MONGODB_URL)\n    # Test connection\n    client.server_info()\n    print(\"  ✓ Connected to MongoDB\")\n    db = client[settings.MONGODB_DATABASE]\n    print(f\"  ✓ Using database: {settings.MONGODB_DATABASE}\")",
         "detail": "backend.scripts.import_oews_to_mongo",
-        "documentation": {}
-    },
-    {
-        "label": "migrate_escalation_rates",
-        "kind": 2,
-        "importPath": "backend.scripts.migrate_escalation_rates",
-        "description": "backend.scripts.migrate_escalation_rates",
-        "peekOfCode": "def migrate_escalation_rates():\n    \"\"\"Convert default_escalation_rates dict to default_escalation_rate float\"\"\"\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    organizations = db[\"organizations\"]\n    # Find all organizations with the old field\n    orgs_with_old_field = list(organizations.find({\"settings.default_escalation_rates\": {\"$exists\": True}}))\n    print(f\"Found {len(orgs_with_old_field)} organizations to migrate\")\n    updated_count = 0\n    for org in orgs_with_old_field:",
-        "detail": "backend.scripts.migrate_escalation_rates",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_URL",
-        "kind": 5,
-        "importPath": "backend.scripts.migrate_escalation_rates",
-        "description": "backend.scripts.migrate_escalation_rates",
-        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef migrate_escalation_rates():\n    \"\"\"Convert default_escalation_rates dict to default_escalation_rate float\"\"\"\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    organizations = db[\"organizations\"]\n    # Find all organizations with the old field\n    orgs_with_old_field = list(organizations.find({\"settings.default_escalation_rates\": {\"$exists\": True}}))\n    print(f\"Found {len(orgs_with_old_field)} organizations to migrate\")",
-        "detail": "backend.scripts.migrate_escalation_rates",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_DATABASE",
-        "kind": 5,
-        "importPath": "backend.scripts.migrate_escalation_rates",
-        "description": "backend.scripts.migrate_escalation_rates",
-        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef migrate_escalation_rates():\n    \"\"\"Convert default_escalation_rates dict to default_escalation_rate float\"\"\"\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    organizations = db[\"organizations\"]\n    # Find all organizations with the old field\n    orgs_with_old_field = list(organizations.find({\"settings.default_escalation_rates\": {\"$exists\": True}}))\n    print(f\"Found {len(orgs_with_old_field)} organizations to migrate\")\n    updated_count = 0",
-        "detail": "backend.scripts.migrate_escalation_rates",
-        "documentation": {}
-    },
-    {
-        "label": "migrate_proposals_to_organizations",
-        "kind": 2,
-        "importPath": "backend.scripts.migrate_proposals_to_orgs",
-        "description": "backend.scripts.migrate_proposals_to_orgs",
-        "peekOfCode": "def migrate_proposals_to_organizations():\n    \"\"\"Add organization_id to existing proposals based on user's organization.\"\"\"\n    db = MongoDB.get_database()\n    proposals_collection = db[\"proposals\"]\n    users_collection = db[\"users\"]\n    print(\"Starting proposal migration to add organization_id...\")\n    # Find all proposals without organization_id\n    proposals_without_org = proposals_collection.find({\n        \"organization_id\": {\"$exists\": False}\n    })",
-        "detail": "backend.scripts.migrate_proposals_to_orgs",
-        "documentation": {}
-    },
-    {
-        "label": "migrate_to_organizations",
-        "kind": 2,
-        "importPath": "backend.scripts.migrate_to_organizations",
-        "description": "backend.scripts.migrate_to_organizations",
-        "peekOfCode": "def migrate_to_organizations(dry_run=False):\n    \"\"\"\n    Migrate existing users and proposals to organization system.\n    Args:\n        dry_run: If True, preview changes without committing to database\n    \"\"\"\n    db = MongoDB.get_database()\n    mode = \"DRY RUN\" if dry_run else \"LIVE MIGRATION\"\n    print(\"=\" * 70)\n    print(f\"MIGRATION: Adding Organization Support ({mode})\")",
-        "detail": "backend.scripts.migrate_to_organizations",
-        "documentation": {}
-    },
-    {
-        "label": "rollback_migration",
-        "kind": 2,
-        "importPath": "backend.scripts.migrate_to_organizations",
-        "description": "backend.scripts.migrate_to_organizations",
-        "peekOfCode": "def rollback_migration():\n    \"\"\"\n    Rollback organization migration (use with caution!).\n    Removes organization-related fields from users and proposals.\n    Does NOT delete organization documents.\n    \"\"\"\n    db = MongoDB.get_database()\n    print(\"\\n⚠️  WARNING: Rolling back organization migration...\")\n    confirm = input(\"This will remove organization fields. Type 'yes' to confirm: \")\n    if confirm.lower() != \"yes\":",
-        "detail": "backend.scripts.migrate_to_organizations",
-        "documentation": {}
-    },
-    {
-        "label": "remove_fte_threshold",
-        "kind": 2,
-        "importPath": "backend.scripts.remove_fte_threshold",
-        "description": "backend.scripts.remove_fte_threshold",
-        "peekOfCode": "def remove_fte_threshold():\n    \"\"\"Remove fte_threshold field from all organizations\"\"\"\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    organizations = db[\"organizations\"]\n    # Remove fte_threshold from settings\n    result = organizations.update_many(\n        {\"settings.fte_threshold\": {\"$exists\": True}},\n        {\"$unset\": {\"settings.fte_threshold\": \"\"}}\n    )",
-        "detail": "backend.scripts.remove_fte_threshold",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_URL",
-        "kind": 5,
-        "importPath": "backend.scripts.remove_fte_threshold",
-        "description": "backend.scripts.remove_fte_threshold",
-        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef remove_fte_threshold():\n    \"\"\"Remove fte_threshold field from all organizations\"\"\"\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    organizations = db[\"organizations\"]\n    # Remove fte_threshold from settings\n    result = organizations.update_many(\n        {\"settings.fte_threshold\": {\"$exists\": True}},",
-        "detail": "backend.scripts.remove_fte_threshold",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_DATABASE",
-        "kind": 5,
-        "importPath": "backend.scripts.remove_fte_threshold",
-        "description": "backend.scripts.remove_fte_threshold",
-        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef remove_fte_threshold():\n    \"\"\"Remove fte_threshold field from all organizations\"\"\"\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    organizations = db[\"organizations\"]\n    # Remove fte_threshold from settings\n    result = organizations.update_many(\n        {\"settings.fte_threshold\": {\"$exists\": True}},\n        {\"$unset\": {\"settings.fte_threshold\": \"\"}}",
-        "detail": "backend.scripts.remove_fte_threshold",
         "documentation": {}
     },
     {
@@ -4445,69 +3724,6 @@
         "description": "backend.scripts.setup_oews_data",
         "peekOfCode": "DATA_DIR = Path(\"data/oews\")\ndef download_file(filename: str, output_path: Path) -> bool:\n    \"\"\"Download a file from BLS.\"\"\"\n    url = BLS_BASE + filename\n    print(f\"Downloading {filename}...\")\n    headers = {\n        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',\n        'Accept': '*/*',\n    }\n    try:",
         "detail": "backend.scripts.setup_oews_data",
-        "documentation": {}
-    },
-    {
-        "label": "clone_database",
-        "kind": 2,
-        "importPath": "backend.scripts.setup_qa_stage",
-        "description": "backend.scripts.setup_qa_stage",
-        "peekOfCode": "def clone_database():\n    \"\"\"Clone entire database with all collections and data.\"\"\"\n    print(\"=\" * 70)\n    print(f\"STEP 1: CLONING DATABASE\")\n    print(\"=\" * 70)\n    print(f\"Source: {SOURCE_DB}\")\n    print(f\"Target: {TARGET_DB}\")\n    # Connect to MongoDB\n    print(f\"\\nConnecting to MongoDB...\")\n    client = MongoClient(MONGODB_URL)",
-        "detail": "backend.scripts.setup_qa_stage",
-        "documentation": {}
-    },
-    {
-        "label": "migrate_qa_database",
-        "kind": 2,
-        "importPath": "backend.scripts.setup_qa_stage",
-        "description": "backend.scripts.setup_qa_stage",
-        "peekOfCode": "def migrate_qa_database(client):\n    \"\"\"Run organization migration on QA database.\"\"\"\n    print(\"\\n\" + \"=\" * 70)\n    print(f\"STEP 2: MIGRATING QA DATABASE ({TARGET_DB})\")\n    print(\"=\" * 70)\n    db = client[TARGET_DB]\n    user_org_mapping = {}\n    stats = {\n        \"users_processed\": 0,\n        \"organizations_created\": 0,",
-        "detail": "backend.scripts.setup_qa_stage",
-        "documentation": {}
-    },
-    {
-        "label": "main",
-        "kind": 2,
-        "importPath": "backend.scripts.setup_qa_stage",
-        "description": "backend.scripts.setup_qa_stage",
-        "peekOfCode": "def main():\n    \"\"\"Main execution.\"\"\"\n    print(\"\\n🚀 SETTING UP QA STAGE DATABASE\\n\")\n    # Clone database\n    client = clone_database()\n    # Migrate QA database\n    stats = migrate_qa_database(client)\n    # Summary\n    print(\"\\n\" + \"=\" * 70)\n    print(\"✅ QA STAGE SETUP COMPLETE\")",
-        "detail": "backend.scripts.setup_qa_stage",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_URL",
-        "kind": 5,
-        "importPath": "backend.scripts.setup_qa_stage",
-        "description": "backend.scripts.setup_qa_stage",
-        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nSOURCE_DB = \"priceiq\"\nTARGET_DB = \"price-qastage01\"\ndef clone_database():\n    \"\"\"Clone entire database with all collections and data.\"\"\"\n    print(\"=\" * 70)\n    print(f\"STEP 1: CLONING DATABASE\")\n    print(\"=\" * 70)\n    print(f\"Source: {SOURCE_DB}\")\n    print(f\"Target: {TARGET_DB}\")",
-        "detail": "backend.scripts.setup_qa_stage",
-        "documentation": {}
-    },
-    {
-        "label": "SOURCE_DB",
-        "kind": 5,
-        "importPath": "backend.scripts.setup_qa_stage",
-        "description": "backend.scripts.setup_qa_stage",
-        "peekOfCode": "SOURCE_DB = \"priceiq\"\nTARGET_DB = \"price-qastage01\"\ndef clone_database():\n    \"\"\"Clone entire database with all collections and data.\"\"\"\n    print(\"=\" * 70)\n    print(f\"STEP 1: CLONING DATABASE\")\n    print(\"=\" * 70)\n    print(f\"Source: {SOURCE_DB}\")\n    print(f\"Target: {TARGET_DB}\")\n    # Connect to MongoDB",
-        "detail": "backend.scripts.setup_qa_stage",
-        "documentation": {}
-    },
-    {
-        "label": "TARGET_DB",
-        "kind": 5,
-        "importPath": "backend.scripts.setup_qa_stage",
-        "description": "backend.scripts.setup_qa_stage",
-        "peekOfCode": "TARGET_DB = \"price-qastage01\"\ndef clone_database():\n    \"\"\"Clone entire database with all collections and data.\"\"\"\n    print(\"=\" * 70)\n    print(f\"STEP 1: CLONING DATABASE\")\n    print(\"=\" * 70)\n    print(f\"Source: {SOURCE_DB}\")\n    print(f\"Target: {TARGET_DB}\")\n    # Connect to MongoDB\n    print(f\"\\nConnecting to MongoDB...\")",
-        "detail": "backend.scripts.setup_qa_stage",
-        "documentation": {}
-    },
-    {
-        "label": "test_proposal_queries",
-        "kind": 2,
-        "importPath": "backend.scripts.test_proposal_query",
-        "description": "backend.scripts.test_proposal_query",
-        "peekOfCode": "def test_proposal_queries():\n    \"\"\"Test that proposal queries work correctly.\"\"\"\n    db = MongoDB.get_database()\n    users_collection = db[\"users\"]\n    # Get the test user\n    user = users_collection.find_one({\"email\": \"gargkeshav204@gmail.com\"})\n    if not user:\n        print(\"❌ User not found\")\n        return\n    print(f\"\\n✓ Found user: {user['email']}\")",
-        "detail": "backend.scripts.test_proposal_query",
         "documentation": {}
     },
     {
@@ -4601,6 +3817,15 @@
         "documentation": {}
     },
     {
+        "label": "build_project_data_from_dataframe",
+        "kind": 2,
+        "importPath": "backend.utils.pipeline",
+        "description": "backend.utils.pipeline",
+        "peekOfCode": "def build_project_data_from_dataframe(\n    df: pd.DataFrame,\n    project_config: Dict[str, Any]\n) -> Dict[str, Any]:\n    \"\"\"\n    Build project data structure from DataFrame for Excel generation.\n    Args:\n        df: DataFrame with positions and wage data\n        project_config: Configuration with solicitation info, rates, etc.\n    Returns:",
+        "detail": "backend.utils.pipeline",
+        "documentation": {}
+    },
+    {
         "label": "ProposalCRUD",
         "kind": 6,
         "importPath": "backend.utils.proposals",
@@ -4616,42 +3841,6 @@
         "description": "backend.utils.proposals",
         "peekOfCode": "def get_proposal_crud(collection=None):\n    \"\"\"\n    Get singleton ProposalCRUD instance.\n    Args:\n        collection: Motor AsyncIOMotorCollection for proposals\n    Returns:\n        ProposalCRUD singleton instance\n    \"\"\"\n    return ProposalCRUD(collection)",
         "detail": "backend.utils.proposals",
-        "documentation": {}
-    },
-    {
-        "label": "build_project_data_from_dataframe",
-        "kind": 2,
-        "importPath": "backend.main",
-        "description": "backend.main",
-        "peekOfCode": "def build_project_data_from_dataframe(\n    df: pd.DataFrame,\n    project_config: Dict[str, Any]\n) -> Dict[str, Any]:\n    \"\"\"\n    Build project data structure from DataFrame for Excel generation.\n    Args:\n        df: DataFrame with positions and wage data\n        project_config: Configuration with solicitation info, rates, etc.\n    Returns:",
-        "detail": "backend.main",
-        "documentation": {}
-    },
-    {
-        "label": "clean_value",
-        "kind": 2,
-        "importPath": "backend.test_full_pipeline",
-        "description": "backend.test_full_pipeline",
-        "peekOfCode": "def clean_value(val):\n    \"\"\"Clean NaN/inf values for JSON serialization.\"\"\"\n    if isinstance(val, float):\n        if np.isnan(val) or np.isinf(val):\n            return None\n    return val\nasync def test_full_pipeline(pdf_path: str):\n    \"\"\"\n    Run complete pipeline test.\n    Args:",
-        "detail": "backend.test_full_pipeline",
-        "documentation": {}
-    },
-    {
-        "label": "test_splitting_with_partial_years",
-        "kind": 2,
-        "importPath": "backend.test_splitting",
-        "description": "backend.test_splitting",
-        "peekOfCode": "def test_splitting_with_partial_years():\n    \"\"\"\n    Test position splitting with 8-month year.\n    Scenario:\n    - Year 1: 12 months, 1920 hours (1 FTE, no split needed)\n    - Year 2: 12 months, 1920 hours (1 FTE, no split needed)\n    - Year 3: 8 months, 2560 hours (exceeds 8-month threshold)\n    Expected FTE threshold for Year 3: (8/12) × 1920 = 1280 hours\n    Expected split: 2560 / 1280 = 2 FTEs needed\n    Expected result: 2 positions with [1280, 1280] hours in Year 3",
-        "detail": "backend.test_splitting",
-        "documentation": {}
-    },
-    {
-        "label": "test_no_split_needed",
-        "kind": 2,
-        "importPath": "backend.test_splitting",
-        "description": "backend.test_splitting",
-        "peekOfCode": "def test_no_split_needed():\n    \"\"\"\n    Test that positions within threshold are NOT split.\n    \"\"\"\n    print(\"Testing No Split Needed (8-month year with 1280 hours)\")\n    print(\"-\"*80)\n    position = {\n        'labor_category': 'Project Manager',\n        'hours_per_year': {\n            '1': 1920,  # 12 months, 1920 hours (OK)",
-        "detail": "backend.test_splitting",
         "documentation": {}
     },
     {
