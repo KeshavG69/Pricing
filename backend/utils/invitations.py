@@ -48,10 +48,13 @@ class InvitationCRUD:
         if existing:
             raise ValueError("User already has a pending invitation")
 
-        # Check if user already exists with this email
-        existing_user = self.users_collection.find_one({"email": email})
+        # Check if user already exists in THIS organization
+        existing_user = self.users_collection.find_one({
+            "email": email,
+            "organization_id": org_id
+        })
         if existing_user:
-            raise ValueError("User with this email already exists")
+            raise ValueError("User is already a member of this organization")
 
         # Generate secure random token
         token = secrets.token_urlsafe(48)  # 64 characters

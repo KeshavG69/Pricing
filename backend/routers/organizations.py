@@ -6,7 +6,7 @@ Handles organization settings, member management, and admin operations.
 from fastapi import APIRouter, Depends, HTTPException, status
 from bson import ObjectId
 from pydantic import BaseModel
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from auth.dependencies import get_current_user, require_admin
 from utils.helpers import serialize_doc, serialize_docs
 from utils.organizations import get_organization_crud
@@ -19,10 +19,11 @@ router = APIRouter(prefix="/api/organizations", tags=["organizations"])
 
 class UpdateSettingsRequest(BaseModel):
     """Request body for updating organization settings"""
-    default_rates: Dict[str, float] = None
-    default_escalation_rates: Dict[str, float] = None
-    fte_threshold: int = None
-    allow_user_rate_override: bool = None
+    model_config = {"extra": "ignore"}
+
+    default_rates: Optional[Dict[str, float]] = None
+    default_escalation_rate: Optional[float] = None
+    allow_user_rate_override: Optional[bool] = None
 
 
 @router.get("/me")
@@ -105,11 +106,8 @@ async def update_organization_settings(
             **settings_update.default_rates
         }
 
-    if settings_update.default_escalation_rates is not None:
-        settings["default_escalation_rates"] = settings_update.default_escalation_rates
-
-    if settings_update.fte_threshold is not None:
-        settings["fte_threshold"] = settings_update.fte_threshold
+    if settings_update.default_escalation_rate is not None:
+        settings["default_escalation_rate"] = settings_update.default_escalation_rate
 
     if settings_update.allow_user_rate_override is not None:
         settings["allow_user_rate_override"] = settings_update.allow_user_rate_override

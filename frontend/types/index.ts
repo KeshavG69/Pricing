@@ -4,6 +4,9 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
+  organization_id: string;
+  role: 'admin' | 'user';
+  status: 'active' | 'removed' | 'suspended';
   created_at: string;
 }
 
@@ -22,6 +25,92 @@ export interface SignupData {
 export interface AuthResponse {
   access_token: string;
   token_type: string;
+}
+
+// Organization types
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  owner_id: string;
+  created_at: string;
+  updated_at: string;
+  status: 'active' | 'suspended';
+  settings: OrganizationSettings;
+  subscription: Subscription;
+}
+
+export interface OrganizationSettings {
+  default_rates: {
+    fringe: number;
+    oh: number;
+    ga: number;
+    fee: number;
+    smh: number;
+    sub_fee: number;
+    ga_passthrough: number;
+    ga_adder: number;
+  };
+  default_escalation_rate: number;
+  allow_user_rate_override: boolean;
+}
+
+export interface Subscription {
+  plan: 'free' | 'pro' | 'enterprise';
+  seats: number;
+  expires_at: string | null;
+}
+
+export interface OrganizationStats {
+  total_members: number;
+  active_members: number;
+  total_proposals: number;
+  pending_invitations: number;
+}
+
+// Team member types
+export interface TeamMember {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: 'admin' | 'user';
+  status: 'active' | 'removed' | 'suspended';
+  created_at: string;
+}
+
+// Invitation types
+export interface Invitation {
+  id: string;
+  organization_id: string;
+  email: string;
+  role: 'admin' | 'user';
+  status: 'pending' | 'accepted' | 'expired' | 'revoked';
+  invited_by: string;
+  invited_by_name: string;
+  created_at: string;
+  expires_at: string;
+}
+
+export interface InviteUserRequest {
+  email: string;
+  role: 'admin' | 'user';
+}
+
+export interface AcceptInvitationRequest {
+  token: string;
+  firstName?: string;
+  lastName?: string;
+  password?: string;
+}
+
+export interface ValidateTokenResponse {
+  organization_name: string;
+  email: string;
+  role: string;
+  invited_by_name: string;
+  expires_at: string;
+  user_exists: boolean;
 }
 
 // Document types
@@ -46,11 +135,14 @@ export interface ProposalMetadata {
 export interface Proposal {
   id: string;
   user_id: string;
+  organization_id: string;
   name: string;
   solicitation_number?: string;
   prime_contractor_name?: string;
   dcaa_contact?: string;
   status: 'processing' | 'completed' | 'error' | 'draft';
+  visibility?: 'private' | 'shared';
+  shared_with?: string[];
   created_at: string;
   updated_at: string;
   documents: DocumentInfo[];

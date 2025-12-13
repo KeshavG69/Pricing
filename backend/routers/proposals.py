@@ -15,8 +15,7 @@ import asyncio
 from bson import ObjectId
 
 # Authentication
-from routers.auth import get_current_user
-from auth.models import UserResponse
+from auth.dependencies import get_current_user
 
 # Proposal models and CRUD
 from models.proposal import ProposalCreate, ProposalUpdate, DocumentInfo
@@ -232,10 +231,8 @@ async def process_proposal_documents(
 async def upload_proposal_documents(
     background_tasks: BackgroundTasks,
     files: List[UploadFile] = File(...),
-    solicitation_number: str = 
-    
-    Form(None),
-    current_user: UserResponse = Depends(get_current_user)
+    solicitation_number: str = Form(None),
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Upload documents, store in iDrive e2, and start async processing.
@@ -270,7 +267,17 @@ async def upload_proposal_documents(
             "message": "Uploading documents..."
         }
 
-        proposal = crud.create_proposal(str(current_user.id), proposal_data)
+        # Use organization-aware creation if user belongs to an organization
+        if current_user.get("organization_id"):
+            proposal = crud.create_proposal_with_organization(
+                user_id=str(current_user["_id"]),  # Pass as string (UUID format)
+                organization_id=current_user["organization_id"],
+                data=proposal_data
+            )
+        else:
+            # Fallback to old method for backward compatibility
+            proposal = crud.create_proposal(str(current_user["_id"]), proposal_data)
+
         proposal_id = str(proposal["_id"])
 
         # Upload documents to iDrive e2
@@ -279,7 +286,7 @@ async def upload_proposal_documents(
             # Upload to iDrive
             idrive_url, idrive_key = storage.upload_document(
                 file_path=file_path,
-                user_id=str(current_user.id),
+                user_id=str(current_user["_id"]),
                 proposal_id=proposal_id,
                 filename=file.filename
             )
@@ -297,7 +304,7 @@ async def upload_proposal_documents(
         # Update proposal with document info
         crud.update_proposal(
             proposal_id,
-            str(current_user.id),
+            str(current_user["_id"]),
             {"documents": documents_info}
         )
 
@@ -305,7 +312,7 @@ async def upload_proposal_documents(
         background_tasks.add_task(
             process_proposal_documents,
             proposal_id,
-            str(current_user.id),
+            str(current_user["_id"]),
             file_paths,
             file_names,
             temp_dir
@@ -334,7 +341,7 @@ async def upload_proposal_documents(
 @router.get("/{proposal_id}/status")
 async def get_proposal_status(
     proposal_id: str,
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Get lightweight status for polling during processing.
@@ -342,7 +349,7 @@ async def get_proposal_status(
     Returns only status, progress, and message (not full data).
     """
     crud = get_crud()
-    proposal = crud.get_proposal(proposal_id, str(current_user.id))
+    proposal = crud.get_proposal(proposal_id, str(current_user["_id"]))
 
     if not proposal:
         raise HTTPException(
@@ -367,12 +374,13 @@ async def list_proposals(
     limit: int = 20,
     sort_by: str = "date",
     sort_order: str = "desc",
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Get paginated list of user's proposals (summary view).
 
     Returns basic info only (no full jobs/rates data).
+    Filtered by user's current organization.
 
     Args:
         skip: Number of proposals to skip for pagination
@@ -381,7 +389,18 @@ async def list_proposals(
         sort_order: Sort order ("asc", "desc")
     """
     crud = get_crud()
-    proposals = crud.get_user_proposals(str(current_user.id), skip, limit, sort_by, sort_order)
+
+    # Use organization-aware query if user belongs to an organization
+    if current_user.get("organization_id"):
+        # Note: user_id is stored as string (UUID) in proposals, not ObjectId
+        proposals = crud.get_user_proposals_by_org(
+            user_id=str(current_user["_id"]),  # Convert to string to match database format
+            organization_id=current_user["organization_id"],
+            role=current_user.get("role", "user")
+        )
+    else:
+        # Fallback to old method for backward compatibility
+        proposals = crud.get_user_proposals(str(current_user["_id"]), skip, limit, sort_by, sort_order)
 
     # Convert ObjectId to string for JSON serialization
     result = []
@@ -405,7 +424,7 @@ async def list_proposals(
 @router.get("/{proposal_id}")
 async def get_proposal(
     proposal_id: str,
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Get complete proposal data including all jobs, rates, and spreadsheet data.
@@ -413,7 +432,7 @@ async def get_proposal(
     Called after status shows 'completed' or when user opens existing proposal.
     """
     crud = get_crud()
-    proposal = crud.get_proposal(proposal_id, str(current_user.id))
+    proposal = crud.get_proposal(proposal_id, str(current_user["_id"]))
 
     if not proposal:
         raise HTTPException(
@@ -432,7 +451,7 @@ async def get_proposal(
 async def update_proposal(
     proposal_id: str,
     updates: ProposalUpdate,
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Update proposal (name, rates, jobs, spreadsheet data, etc.).
@@ -450,7 +469,7 @@ async def update_proposal(
 
     updated_proposal = crud.update_proposal(
         proposal_id,
-        str(current_user.id),
+        str(current_user["_id"]),
         update_dict
     )
 
@@ -472,7 +491,7 @@ async def update_position_subcontractor_hours(
     proposal_id: str,
     position_index: int,
     update_data: Dict[str, Any],
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Update a specific position's subcontractor hours.
@@ -480,7 +499,7 @@ async def update_position_subcontractor_hours(
     This allows splitting a position between prime and subcontractor labor.
     """
     crud = get_crud()
-    proposal = crud.get_proposal(proposal_id, str(current_user.id))
+    proposal = crud.get_proposal(proposal_id, str(current_user["_id"]))
 
     if not proposal:
         raise HTTPException(
@@ -533,7 +552,7 @@ async def update_position_subcontractor_hours(
     # Update the proposal with modified jobs
     updated_proposal = crud.update_proposal(
         proposal_id,
-        str(current_user.id),
+        str(current_user["_id"]),
         {"jobs": jobs}
     )
 
@@ -553,7 +572,7 @@ async def update_position_subcontractor_hours(
 @router.delete("/{proposal_id}")
 async def delete_proposal(
     proposal_id: str,
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Delete proposal and all associated documents from iDrive e2.
@@ -562,7 +581,7 @@ async def delete_proposal(
     storage = get_idrive_storage()
 
     # Get proposal first to access documents
-    proposal = crud.get_proposal(proposal_id, str(current_user.id))
+    proposal = crud.get_proposal(proposal_id, str(current_user["_id"]))
 
     if not proposal:
         raise HTTPException(
@@ -573,7 +592,7 @@ async def delete_proposal(
     # Delete documents from iDrive e2
     try:
         deleted_count = storage.delete_proposal_documents(
-            str(current_user.id),
+            str(current_user["_id"]),
             proposal_id
         )
         print(f"Deleted {deleted_count} documents from iDrive e2")
@@ -582,7 +601,7 @@ async def delete_proposal(
         # Continue with proposal deletion even if iDrive cleanup fails
 
     # Delete proposal from MongoDB
-    success = crud.delete_proposal(proposal_id, str(current_user.id))
+    success = crud.delete_proposal(proposal_id, str(current_user["_id"]))
 
     if not success:
         raise HTTPException(
@@ -600,7 +619,7 @@ async def delete_proposal(
 async def duplicate_proposal(
     proposal_id: str,
     new_name: str,
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Duplicate proposal (copies data, not documents).
@@ -609,7 +628,7 @@ async def duplicate_proposal(
 
     new_proposal = crud.duplicate_proposal(
         proposal_id,
-        str(current_user.id),
+        str(current_user["_id"]),
         new_name
     )
 
@@ -633,13 +652,13 @@ async def duplicate_proposal(
 @router.get("/{proposal_id}/documents")
 async def list_proposal_documents(
     proposal_id: str,
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Get list of documents for a proposal with iDrive URLs.
     """
     crud = get_crud()
-    proposal = crud.get_proposal(proposal_id, str(current_user.id))
+    proposal = crud.get_proposal(proposal_id, str(current_user["_id"]))
 
     if not proposal:
         raise HTTPException(
@@ -654,7 +673,7 @@ async def list_proposal_documents(
 async def delete_proposal_document(
     proposal_id: str,
     document_index: int,
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user)
 ):
     """
     Delete a specific document from proposal and iDrive e2.
@@ -663,7 +682,7 @@ async def delete_proposal_document(
     storage = get_idrive_storage()
 
     # Get proposal
-    proposal = crud.get_proposal(proposal_id, str(current_user.id))
+    proposal = crud.get_proposal(proposal_id, str(current_user["_id"]))
 
     if not proposal:
         raise HTTPException(
@@ -694,7 +713,7 @@ async def delete_proposal_document(
     # Update proposal
     crud.update_proposal(
         proposal_id,
-        str(current_user.id),
+        str(current_user["_id"]),
         {"documents": documents}
     )
 

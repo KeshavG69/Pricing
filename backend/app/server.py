@@ -9,7 +9,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
 
-from routers import pricing, auth, excel_export, proposals, organizations, invitations
+from routers import pricing, auth, excel_export, proposals, organizations, invitations, workspace
 from auth.config import FRONTEND_URL
 
 # Create FastAPI app
@@ -42,6 +42,7 @@ app.add_middleware(
 app.include_router(auth.router, prefix="/api", tags=["authentication"])
 app.include_router(organizations.router, tags=["organizations"])
 app.include_router(invitations.router, tags=["invitations"])
+app.include_router(workspace.router, tags=["workspace"])
 app.include_router(proposals.router, prefix="/api", tags=["proposals"])
 app.include_router(pricing.router, prefix="/api/pricing", tags=["pricing"])
 app.include_router(excel_export.router, prefix="/api/excel", tags=["excel-export"])

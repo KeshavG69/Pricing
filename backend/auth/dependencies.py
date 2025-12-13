@@ -65,11 +65,38 @@ async def get_current_user(
                 detail="User not found"
             )
 
-        # Check if account is active
+        # Get current organization membership
+        current_org_id = user.get("current_organization_id")
+        organizations = user.get("organizations", [])
+
+        # For backward compatibility, handle old single-org model
+        if not organizations and user.get("organization_id"):
+            user["organization_id"] = user.get("organization_id")
+            user["role"] = user.get("role", "user")
+            user["status"] = user.get("status", "active")
+        else:
+            # Find current organization membership
+            current_org = next(
+                (org for org in organizations if org["organization_id"] == current_org_id),
+                None
+            )
+
+            if current_org:
+                # Add flat fields for easy access
+                user["organization_id"] = current_org["organization_id"]
+                user["role"] = current_org["role"]
+                user["status"] = current_org["status"]
+            else:
+                # No current organization set
+                user["organization_id"] = None
+                user["role"] = None
+                user["status"] = None
+
+        # Check if account is active in current organization
         if user.get("status") != "active":
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
-                detail="Account suspended or inactive"
+                detail="Account suspended or inactive in this organization"
             )
 
         return user

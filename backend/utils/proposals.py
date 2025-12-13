@@ -325,15 +325,15 @@ class ProposalCRUD:
 
     def create_proposal_with_organization(
         self,
-        user_id: ObjectId,
+        user_id: str,
         organization_id: ObjectId,
         data: dict
     ) -> dict:
         """
-        Create proposal with organization support (ObjectId-based).
+        Create proposal with organization support.
 
         Args:
-            user_id: User's MongoDB ObjectId
+            user_id: User's ID as string (UUID format)
             organization_id: Organization's MongoDB ObjectId
             data: Proposal data (name, solicitation_number, documents, etc.)
 
@@ -342,7 +342,7 @@ class ProposalCRUD:
         """
         with self.operation_lock:
             proposal = {
-                "user_id": user_id,
+                "user_id": user_id,  # Store as string (UUID format)
                 "organization_id": organization_id,
                 "visibility": "private",
                 "shared_with": [],
@@ -361,7 +361,7 @@ class ProposalCRUD:
 
     def get_user_proposals_by_org(
         self,
-        user_id: ObjectId,
+        user_id: str,
         organization_id: ObjectId,
         role: str
     ) -> List[dict]:
@@ -369,7 +369,7 @@ class ProposalCRUD:
         Get proposals based on user's role and organization.
 
         Args:
-            user_id: User's MongoDB ObjectId
+            user_id: User's ID as string (UUID format)
             organization_id: Organization's MongoDB ObjectId
             role: User's role ("admin" or "user")
 
@@ -382,6 +382,7 @@ class ProposalCRUD:
                 query = {"organization_id": organization_id}
             else:
                 # Regular user sees own + shared proposals
+                # Note: user_id in proposals is stored as string, not ObjectId
                 query = {
                     "$or": [
                         {"user_id": user_id},

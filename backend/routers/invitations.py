@@ -36,9 +36,9 @@ class InviteUserRequest(BaseModel):
 class AcceptInvitationRequest(BaseModel):
     """Request body for accepting invitation"""
     token: str = Field(..., description="Invitation token from email")
-    firstName: str = Field(..., min_length=1, max_length=100)
-    lastName: str = Field(..., min_length=1, max_length=100)
-    password: str = Field(..., min_length=8, max_length=100)
+    firstName: str = Field(None, min_length=1, max_length=100, description="Required for new users only")
+    lastName: str = Field(None, min_length=1, max_length=100, description="Required for new users only")
+    password: str = Field(None, min_length=8, max_length=100, description="Required for new users only")
 
     class Config:
         schema_extra = {
@@ -185,15 +185,20 @@ async def validate_invitation_token(token: str):
         token: Invitation token from email URL
 
     Returns:
-        Invitation details (email, organization name, role, inviter)
+        Invitation details (email, organization name, role, inviter, user_exists flag)
 
     Raises:
         HTTPException 400: If token is invalid, expired, or already used
     """
     invitation_crud = get_invitation_crud()
+    user_crud = get_user_crud()
 
     try:
         invitation = invitation_crud.validate_token(token)
+
+        # Check if user already exists
+        existing_user = user_crud.collection.find_one({"email": invitation["email"]})
+        user_exists = existing_user is not None
 
         # Return safe invitation details (no token_hash, no ObjectIds)
         return {
@@ -202,7 +207,8 @@ async def validate_invitation_token(token: str):
             "role": invitation["role"],
             "invited_by_name": invitation["invited_by_name"],
             "expires_at": invitation["expires_at"].isoformat(),
-            "created_at": invitation["created_at"].isoformat()
+            "created_at": invitation["created_at"].isoformat(),
+            "user_exists": user_exists
         }
 
     except ValueError as e:
@@ -215,19 +221,19 @@ async def validate_invitation_token(token: str):
 @router.post("/accept")
 async def accept_invitation(accept_data: AcceptInvitationRequest):
     """
-    Accept invitation and create user account (public endpoint).
+    Accept invitation and join organization (public endpoint).
 
-    Validates token, creates user with organization and role,
-    marks invitation as accepted, and returns auth tokens.
+    For new users: Creates account with firstName, lastName, password.
+    For existing users: Updates their organization and role.
 
     Args:
-        accept_data: Token, name, and password for new user
+        accept_data: Token (required), firstName/lastName/password (required for new users only)
 
     Returns:
         User document and authentication tokens
 
     Raises:
-        HTTPException 400: If token invalid or user creation fails
+        HTTPException 400: If token invalid or missing required fields for new users
     """
     invitation_crud = get_invitation_crud()
     user_crud = get_user_crud()
@@ -236,18 +242,63 @@ async def accept_invitation(accept_data: AcceptInvitationRequest):
         # Validate token
         invitation = invitation_crud.validate_token(accept_data.token)
 
-        # Create user with organization
-        user = user_crud.create_user_with_organization(
-            email=invitation["email"],
-            first_name=accept_data.firstName,
-            last_name=accept_data.lastName,
-            password=accept_data.password,
-            organization_id=invitation["organization_id"],
-            role=invitation["role"]
-        )
+        # Check if user already exists
+        existing_user = user_crud.collection.find_one({"email": invitation["email"]})
+
+        if existing_user:
+            # Existing user - add to organizations array
+            from datetime import datetime
+
+            # Check if already in organizations array
+            organizations = existing_user.get("organizations", [])
+            already_member = any(
+                org["organization_id"] == invitation["organization_id"]
+                for org in organizations
+            )
+
+            if already_member:
+                raise ValueError("You are already a member of this organization")
+
+            # Add new organization membership
+            new_org = {
+                "organization_id": invitation["organization_id"],
+                "role": invitation["role"],
+                "status": "active"
+            }
+
+            user_crud.collection.update_one(
+                {"_id": existing_user["_id"]},
+                {
+                    "$push": {"organizations": new_org},
+                    "$set": {
+                        "current_organization_id": invitation["organization_id"],
+                        "updatedAt": datetime.utcnow()
+                    }
+                }
+            )
+            user = user_crud.collection.find_one({"_id": existing_user["_id"]})
+            user_id = existing_user["_id"]
+        else:
+            # New user - validate required fields
+            if not accept_data.firstName or not accept_data.lastName or not accept_data.password:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="firstName, lastName, and password are required for new users"
+                )
+
+            # Create new user account
+            user = user_crud.create_user_with_organization(
+                email=invitation["email"],
+                first_name=accept_data.firstName,
+                last_name=accept_data.lastName,
+                password=accept_data.password,
+                organization_id=invitation["organization_id"],
+                role=invitation["role"]
+            )
+            user_id = user["_id"]
 
         # Mark invitation as accepted
-        invitation_crud.accept_invitation(accept_data.token, user["_id"])
+        invitation_crud.accept_invitation(accept_data.token, user_id)
 
         # Generate authentication tokens
         access_token = create_access_token(

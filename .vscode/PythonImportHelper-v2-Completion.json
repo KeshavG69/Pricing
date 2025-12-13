@@ -415,6 +415,38 @@
         "documentation": {}
     },
     {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "status",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
         "label": "CORSMiddleware",
         "importPath": "fastapi.middleware.cors",
         "description": "fastapi.middleware.cors",
@@ -584,6 +616,14 @@
     },
     {
         "label": "invitations",
+        "importPath": "routers",
+        "description": "routers",
+        "isExtraImport": true,
+        "detail": "routers",
+        "documentation": {}
+    },
+    {
+        "label": "workspace",
         "importPath": "routers",
         "description": "routers",
         "isExtraImport": true,
@@ -951,6 +991,14 @@
         "documentation": {}
     },
     {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Dict",
         "importPath": "typing",
         "description": "typing",
@@ -1351,6 +1399,70 @@
         "documentation": {}
     },
     {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
+        "documentation": {}
+    },
+    {
         "label": "ObjectId",
         "importPath": "bson",
         "description": "bson",
@@ -1601,6 +1713,30 @@
         "documentation": {}
     },
     {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
         "label": "settings",
         "importPath": "app.settings",
         "description": "app.settings",
@@ -1769,6 +1905,38 @@
         "documentation": {}
     },
     {
+        "label": "MongoDB",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "MongoDB",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "MongoDB",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "MongoDB",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
         "label": "is_token_blacklisted",
         "importPath": "auth.blacklist",
         "description": "auth.blacklist",
@@ -1890,6 +2058,14 @@
     },
     {
         "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
         "importPath": "pydantic",
         "description": "pydantic",
         "isExtraImport": true,
@@ -2167,14 +2343,6 @@
         "documentation": {}
     },
     {
-        "label": "UserResponse",
-        "importPath": "auth.models",
-        "description": "auth.models",
-        "isExtraImport": true,
-        "detail": "auth.models",
-        "documentation": {}
-    },
-    {
         "label": "UserCRUD",
         "importPath": "auth.crud",
         "description": "auth.crud",
@@ -2319,6 +2487,70 @@
         "documentation": {}
     },
     {
+        "label": "get_current_user",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
+        "label": "require_admin",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
+        "label": "require_admin",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
+        "label": "require_admin",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
         "label": "tempfile",
         "kind": 6,
         "isExtraImport": true,
@@ -2441,46 +2673,6 @@
         "documentation": {}
     },
     {
-        "label": "get_current_user",
-        "importPath": "auth.dependencies",
-        "description": "auth.dependencies",
-        "isExtraImport": true,
-        "detail": "auth.dependencies",
-        "documentation": {}
-    },
-    {
-        "label": "require_admin",
-        "importPath": "auth.dependencies",
-        "description": "auth.dependencies",
-        "isExtraImport": true,
-        "detail": "auth.dependencies",
-        "documentation": {}
-    },
-    {
-        "label": "get_current_user",
-        "importPath": "auth.dependencies",
-        "description": "auth.dependencies",
-        "isExtraImport": true,
-        "detail": "auth.dependencies",
-        "documentation": {}
-    },
-    {
-        "label": "require_admin",
-        "importPath": "auth.dependencies",
-        "description": "auth.dependencies",
-        "isExtraImport": true,
-        "detail": "auth.dependencies",
-        "documentation": {}
-    },
-    {
-        "label": "require_admin",
-        "importPath": "auth.dependencies",
-        "description": "auth.dependencies",
-        "isExtraImport": true,
-        "detail": "auth.dependencies",
-        "documentation": {}
-    },
-    {
         "label": "serialize_doc",
         "importPath": "utils.helpers",
         "description": "utils.helpers",
@@ -2514,6 +2706,14 @@
     },
     {
         "label": "serialize_doc",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_docs",
         "importPath": "utils.helpers",
         "description": "utils.helpers",
         "isExtraImport": true,
@@ -2562,14 +2762,6 @@
         "documentation": {}
     },
     {
-        "label": "get_current_user",
-        "importPath": "routers.auth",
-        "description": "routers.auth",
-        "isExtraImport": true,
-        "detail": "routers.auth",
-        "documentation": {}
-    },
-    {
         "label": "ProposalCreate",
         "importPath": "models.proposal",
         "description": "models.proposal",
@@ -2591,6 +2783,14 @@
         "description": "models.proposal",
         "isExtraImport": true,
         "detail": "models.proposal",
+        "documentation": {}
+    },
+    {
+        "label": "get_proposal_crud",
+        "importPath": "utils.proposals",
+        "description": "utils.proposals",
+        "isExtraImport": true,
+        "detail": "utils.proposals",
         "documentation": {}
     },
     {
@@ -3195,7 +3395,7 @@
         "kind": 6,
         "importPath": "backend.auth.models",
         "description": "backend.auth.models",
-        "peekOfCode": "class UserLogin(BaseModel):\n    email: EmailStr\n    password: str\nclass UserResponse(BaseModel):\n    id: str\n    firstName: str\n    lastName: str\n    email: str\n    createdAt: datetime\nclass Token(BaseModel):",
+        "peekOfCode": "class UserLogin(BaseModel):\n    email: EmailStr\n    password: str\nclass UserResponse(BaseModel):\n    id: str\n    firstName: str\n    lastName: str\n    email: str\n    organization_id: Optional[str] = None\n    role: Optional[str] = None",
         "detail": "backend.auth.models",
         "documentation": {}
     },
@@ -3204,7 +3404,7 @@
         "kind": 6,
         "importPath": "backend.auth.models",
         "description": "backend.auth.models",
-        "peekOfCode": "class UserResponse(BaseModel):\n    id: str\n    firstName: str\n    lastName: str\n    email: str\n    createdAt: datetime\nclass Token(BaseModel):\n    access_token: str\n    token_type: str\nclass TokenData(BaseModel):",
+        "peekOfCode": "class UserResponse(BaseModel):\n    id: str\n    firstName: str\n    lastName: str\n    email: str\n    organization_id: Optional[str] = None\n    role: Optional[str] = None\n    status: Optional[str] = None\n    createdAt: datetime\nclass Token(BaseModel):",
         "detail": "backend.auth.models",
         "documentation": {}
     },
@@ -3776,20 +3976,11 @@
         "documentation": {}
     },
     {
-        "label": "get_current_user",
-        "kind": 2,
-        "importPath": "backend.routers.auth",
-        "description": "backend.routers.auth",
-        "peekOfCode": "def get_current_user(request: Request):\n    \"\"\"Get current user from Authorization header\"\"\"\n    # Get Authorization header\n    auth_header = request.headers.get(\"Authorization\")\n    if not auth_header:\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=\"Not authenticated\",\n            headers={\"WWW-Authenticate\": \"Bearer\"},\n        )",
-        "detail": "backend.routers.auth",
-        "documentation": {}
-    },
-    {
         "label": "router",
         "kind": 5,
         "importPath": "backend.routers.auth",
         "description": "backend.routers.auth",
-        "peekOfCode": "router = APIRouter(prefix=\"/auth\", tags=[\"authentication\"])\ndef get_current_user(request: Request):\n    \"\"\"Get current user from Authorization header\"\"\"\n    # Get Authorization header\n    auth_header = request.headers.get(\"Authorization\")\n    if not auth_header:\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=\"Not authenticated\",\n            headers={\"WWW-Authenticate\": \"Bearer\"},",
+        "peekOfCode": "router = APIRouter(prefix=\"/auth\", tags=[\"authentication\"])\n@router.post(\"/signup\", response_model=UserResponse)\nasync def signup(user_data: UserSignup):\n    \"\"\"\n    Register a new user\n    Args:\n        user_data: User signup data including firstName, lastName, email, password\n    Returns:\n        UserResponse: Created user information\n    \"\"\"",
         "detail": "backend.routers.auth",
         "documentation": {}
     },
@@ -3834,7 +4025,7 @@
         "kind": 6,
         "importPath": "backend.routers.invitations",
         "description": "backend.routers.invitations",
-        "peekOfCode": "class AcceptInvitationRequest(BaseModel):\n    \"\"\"Request body for accepting invitation\"\"\"\n    token: str = Field(..., description=\"Invitation token from email\")\n    firstName: str = Field(..., min_length=1, max_length=100)\n    lastName: str = Field(..., min_length=1, max_length=100)\n    password: str = Field(..., min_length=8, max_length=100)\n    class Config:\n        schema_extra = {\n            \"example\": {\n                \"token\": \"abc123...\",",
+        "peekOfCode": "class AcceptInvitationRequest(BaseModel):\n    \"\"\"Request body for accepting invitation\"\"\"\n    token: str = Field(..., description=\"Invitation token from email\")\n    firstName: str = Field(None, min_length=1, max_length=100, description=\"Required for new users only\")\n    lastName: str = Field(None, min_length=1, max_length=100, description=\"Required for new users only\")\n    password: str = Field(None, min_length=8, max_length=100, description=\"Required for new users only\")\n    class Config:\n        schema_extra = {\n            \"example\": {\n                \"token\": \"abc123...\",",
         "detail": "backend.routers.invitations",
         "documentation": {}
     },
@@ -3852,7 +4043,7 @@
         "kind": 6,
         "importPath": "backend.routers.organizations",
         "description": "backend.routers.organizations",
-        "peekOfCode": "class UpdateSettingsRequest(BaseModel):\n    \"\"\"Request body for updating organization settings\"\"\"\n    default_rates: Dict[str, float] = None\n    default_escalation_rates: Dict[str, float] = None\n    fte_threshold: int = None\n    allow_user_rate_override: bool = None\n@router.get(\"/me\")\nasync def get_my_organization(current_user: dict = Depends(get_current_user)):\n    \"\"\"\n    Get current user's organization details.",
+        "peekOfCode": "class UpdateSettingsRequest(BaseModel):\n    \"\"\"Request body for updating organization settings\"\"\"\n    model_config = {\"extra\": \"ignore\"}\n    default_rates: Optional[Dict[str, float]] = None\n    default_escalation_rate: Optional[float] = None\n    allow_user_rate_override: Optional[bool] = None\n@router.get(\"/me\")\nasync def get_my_organization(current_user: dict = Depends(get_current_user)):\n    \"\"\"\n    Get current user's organization details.",
         "detail": "backend.routers.organizations",
         "documentation": {}
     },
@@ -3861,7 +4052,7 @@
         "kind": 5,
         "importPath": "backend.routers.organizations",
         "description": "backend.routers.organizations",
-        "peekOfCode": "router = APIRouter(prefix=\"/api/organizations\", tags=[\"organizations\"])\nclass UpdateSettingsRequest(BaseModel):\n    \"\"\"Request body for updating organization settings\"\"\"\n    default_rates: Dict[str, float] = None\n    default_escalation_rates: Dict[str, float] = None\n    fte_threshold: int = None\n    allow_user_rate_override: bool = None\n@router.get(\"/me\")\nasync def get_my_organization(current_user: dict = Depends(get_current_user)):\n    \"\"\"",
+        "peekOfCode": "router = APIRouter(prefix=\"/api/organizations\", tags=[\"organizations\"])\nclass UpdateSettingsRequest(BaseModel):\n    \"\"\"Request body for updating organization settings\"\"\"\n    model_config = {\"extra\": \"ignore\"}\n    default_rates: Optional[Dict[str, float]] = None\n    default_escalation_rate: Optional[float] = None\n    allow_user_rate_override: Optional[bool] = None\n@router.get(\"/me\")\nasync def get_my_organization(current_user: dict = Depends(get_current_user)):\n    \"\"\"",
         "detail": "backend.routers.organizations",
         "documentation": {}
     },
@@ -3917,6 +4108,33 @@
         "description": "backend.routers.proposals",
         "peekOfCode": "router = APIRouter(prefix=\"/proposals\", tags=[\"proposals\"])\n# Get singleton ProposalCRUD instance\ndef get_crud():\n    \"\"\"Get singleton ProposalCRUD instance (thread-safe).\"\"\"\n    return get_proposal_crud(MongoDB.get_collection(\"proposals\"))\n# ============================================================================\n# DOCUMENT UPLOAD & ASYNC PROCESSING\n# ============================================================================\nasync def process_proposal_documents(\n    proposal_id: str,",
         "detail": "backend.routers.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "SwitchOrganizationRequest",
+        "kind": 6,
+        "importPath": "backend.routers.workspace",
+        "description": "backend.routers.workspace",
+        "peekOfCode": "class SwitchOrganizationRequest(BaseModel):\n    \"\"\"Request body for switching organization\"\"\"\n    organization_id: str\n@router.get(\"/organizations\")\nasync def get_user_organizations(current_user: dict = Depends(get_current_user)):\n    \"\"\"\n    Get all organizations the current user belongs to.\n    Returns:\n        List of organizations with user's role in each\n    \"\"\"",
+        "detail": "backend.routers.workspace",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.routers.workspace",
+        "description": "backend.routers.workspace",
+        "peekOfCode": "router = APIRouter(prefix=\"/api/workspace\", tags=[\"workspace\"])\nclass SwitchOrganizationRequest(BaseModel):\n    \"\"\"Request body for switching organization\"\"\"\n    organization_id: str\n@router.get(\"/organizations\")\nasync def get_user_organizations(current_user: dict = Depends(get_current_user)):\n    \"\"\"\n    Get all organizations the current user belongs to.\n    Returns:\n        List of organizations with user's role in each",
+        "detail": "backend.routers.workspace",
+        "documentation": {}
+    },
+    {
+        "label": "check_proposals_and_users",
+        "kind": 2,
+        "importPath": "backend.scripts.check_proposals",
+        "description": "backend.scripts.check_proposals",
+        "peekOfCode": "def check_proposals_and_users():\n    \"\"\"Check proposals and users data.\"\"\"\n    db = MongoDB.get_database()\n    proposals_collection = db[\"proposals\"]\n    users_collection = db[\"users\"]\n    print(\"=\" * 60)\n    print(\"CHECKING USERS\")\n    print(\"=\" * 60)\n    users = users_collection.find()\n    for user in users:",
+        "detail": "backend.scripts.check_proposals",
         "documentation": {}
     },
     {
@@ -4091,6 +4309,69 @@
         "documentation": {}
     },
     {
+        "label": "migrate_escalation_rates",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_escalation_rates",
+        "description": "backend.scripts.migrate_escalation_rates",
+        "peekOfCode": "def migrate_escalation_rates():\n    \"\"\"Convert default_escalation_rates dict to default_escalation_rate float\"\"\"\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    organizations = db[\"organizations\"]\n    # Find all organizations with the old field\n    orgs_with_old_field = list(organizations.find({\"settings.default_escalation_rates\": {\"$exists\": True}}))\n    print(f\"Found {len(orgs_with_old_field)} organizations to migrate\")\n    updated_count = 0\n    for org in orgs_with_old_field:",
+        "detail": "backend.scripts.migrate_escalation_rates",
+        "documentation": {}
+    },
+    {
+        "label": "MONGODB_URL",
+        "kind": 5,
+        "importPath": "backend.scripts.migrate_escalation_rates",
+        "description": "backend.scripts.migrate_escalation_rates",
+        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef migrate_escalation_rates():\n    \"\"\"Convert default_escalation_rates dict to default_escalation_rate float\"\"\"\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    organizations = db[\"organizations\"]\n    # Find all organizations with the old field\n    orgs_with_old_field = list(organizations.find({\"settings.default_escalation_rates\": {\"$exists\": True}}))\n    print(f\"Found {len(orgs_with_old_field)} organizations to migrate\")",
+        "detail": "backend.scripts.migrate_escalation_rates",
+        "documentation": {}
+    },
+    {
+        "label": "MONGODB_DATABASE",
+        "kind": 5,
+        "importPath": "backend.scripts.migrate_escalation_rates",
+        "description": "backend.scripts.migrate_escalation_rates",
+        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef migrate_escalation_rates():\n    \"\"\"Convert default_escalation_rates dict to default_escalation_rate float\"\"\"\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    organizations = db[\"organizations\"]\n    # Find all organizations with the old field\n    orgs_with_old_field = list(organizations.find({\"settings.default_escalation_rates\": {\"$exists\": True}}))\n    print(f\"Found {len(orgs_with_old_field)} organizations to migrate\")\n    updated_count = 0",
+        "detail": "backend.scripts.migrate_escalation_rates",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_proposals_to_organizations",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_proposals_to_orgs",
+        "description": "backend.scripts.migrate_proposals_to_orgs",
+        "peekOfCode": "def migrate_proposals_to_organizations():\n    \"\"\"Add organization_id to existing proposals based on user's organization.\"\"\"\n    db = MongoDB.get_database()\n    proposals_collection = db[\"proposals\"]\n    users_collection = db[\"users\"]\n    print(\"Starting proposal migration to add organization_id...\")\n    # Find all proposals without organization_id\n    proposals_without_org = proposals_collection.find({\n        \"organization_id\": {\"$exists\": False}\n    })",
+        "detail": "backend.scripts.migrate_proposals_to_orgs",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_users",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_to_multi_org",
+        "description": "backend.scripts.migrate_to_multi_org",
+        "peekOfCode": "def migrate_users():\n    \"\"\"Convert single organization_id to organizations array\"\"\"\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    users = db[\"users\"]\n    # Find all users with organization_id\n    users_to_migrate = list(users.find({\"organization_id\": {\"$exists\": True}}))\n    print(f\"Found {len(users_to_migrate)} users to migrate\")\n    updated_count = 0\n    for user in users_to_migrate:",
+        "detail": "backend.scripts.migrate_to_multi_org",
+        "documentation": {}
+    },
+    {
+        "label": "MONGODB_URL",
+        "kind": 5,
+        "importPath": "backend.scripts.migrate_to_multi_org",
+        "description": "backend.scripts.migrate_to_multi_org",
+        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef migrate_users():\n    \"\"\"Convert single organization_id to organizations array\"\"\"\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    users = db[\"users\"]\n    # Find all users with organization_id\n    users_to_migrate = list(users.find({\"organization_id\": {\"$exists\": True}}))\n    print(f\"Found {len(users_to_migrate)} users to migrate\")",
+        "detail": "backend.scripts.migrate_to_multi_org",
+        "documentation": {}
+    },
+    {
+        "label": "MONGODB_DATABASE",
+        "kind": 5,
+        "importPath": "backend.scripts.migrate_to_multi_org",
+        "description": "backend.scripts.migrate_to_multi_org",
+        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef migrate_users():\n    \"\"\"Convert single organization_id to organizations array\"\"\"\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    users = db[\"users\"]\n    # Find all users with organization_id\n    users_to_migrate = list(users.find({\"organization_id\": {\"$exists\": True}}))\n    print(f\"Found {len(users_to_migrate)} users to migrate\")\n    updated_count = 0",
+        "detail": "backend.scripts.migrate_to_multi_org",
+        "documentation": {}
+    },
+    {
         "label": "migrate_to_organizations",
         "kind": 2,
         "importPath": "backend.scripts.migrate_to_organizations",
@@ -4106,6 +4387,33 @@
         "description": "backend.scripts.migrate_to_organizations",
         "peekOfCode": "def rollback_migration():\n    \"\"\"\n    Rollback organization migration (use with caution!).\n    Removes organization-related fields from users and proposals.\n    Does NOT delete organization documents.\n    \"\"\"\n    db = MongoDB.get_database()\n    print(\"\\n⚠️  WARNING: Rolling back organization migration...\")\n    confirm = input(\"This will remove organization fields. Type 'yes' to confirm: \")\n    if confirm.lower() != \"yes\":",
         "detail": "backend.scripts.migrate_to_organizations",
+        "documentation": {}
+    },
+    {
+        "label": "remove_fte_threshold",
+        "kind": 2,
+        "importPath": "backend.scripts.remove_fte_threshold",
+        "description": "backend.scripts.remove_fte_threshold",
+        "peekOfCode": "def remove_fte_threshold():\n    \"\"\"Remove fte_threshold field from all organizations\"\"\"\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    organizations = db[\"organizations\"]\n    # Remove fte_threshold from settings\n    result = organizations.update_many(\n        {\"settings.fte_threshold\": {\"$exists\": True}},\n        {\"$unset\": {\"settings.fte_threshold\": \"\"}}\n    )",
+        "detail": "backend.scripts.remove_fte_threshold",
+        "documentation": {}
+    },
+    {
+        "label": "MONGODB_URL",
+        "kind": 5,
+        "importPath": "backend.scripts.remove_fte_threshold",
+        "description": "backend.scripts.remove_fte_threshold",
+        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef remove_fte_threshold():\n    \"\"\"Remove fte_threshold field from all organizations\"\"\"\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    organizations = db[\"organizations\"]\n    # Remove fte_threshold from settings\n    result = organizations.update_many(\n        {\"settings.fte_threshold\": {\"$exists\": True}},",
+        "detail": "backend.scripts.remove_fte_threshold",
+        "documentation": {}
+    },
+    {
+        "label": "MONGODB_DATABASE",
+        "kind": 5,
+        "importPath": "backend.scripts.remove_fte_threshold",
+        "description": "backend.scripts.remove_fte_threshold",
+        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef remove_fte_threshold():\n    \"\"\"Remove fte_threshold field from all organizations\"\"\"\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    organizations = db[\"organizations\"]\n    # Remove fte_threshold from settings\n    result = organizations.update_many(\n        {\"settings.fte_threshold\": {\"$exists\": True}},\n        {\"$unset\": {\"settings.fte_threshold\": \"\"}}",
+        "detail": "backend.scripts.remove_fte_threshold",
         "documentation": {}
     },
     {
@@ -4241,6 +4549,15 @@
         "description": "backend.scripts.setup_qa_stage",
         "peekOfCode": "TARGET_DB = \"price-qastage01\"\ndef clone_database():\n    \"\"\"Clone entire database with all collections and data.\"\"\"\n    print(\"=\" * 70)\n    print(f\"STEP 1: CLONING DATABASE\")\n    print(\"=\" * 70)\n    print(f\"Source: {SOURCE_DB}\")\n    print(f\"Target: {TARGET_DB}\")\n    # Connect to MongoDB\n    print(f\"\\nConnecting to MongoDB...\")",
         "detail": "backend.scripts.setup_qa_stage",
+        "documentation": {}
+    },
+    {
+        "label": "test_proposal_queries",
+        "kind": 2,
+        "importPath": "backend.scripts.test_proposal_query",
+        "description": "backend.scripts.test_proposal_query",
+        "peekOfCode": "def test_proposal_queries():\n    \"\"\"Test that proposal queries work correctly.\"\"\"\n    db = MongoDB.get_database()\n    users_collection = db[\"users\"]\n    # Get the test user\n    user = users_collection.find_one({\"email\": \"gargkeshav204@gmail.com\"})\n    if not user:\n        print(\"❌ User not found\")\n        return\n    print(f\"\\n✓ Found user: {user['email']}\")",
+        "detail": "backend.scripts.test_proposal_query",
         "documentation": {}
     },
     {

@@ -40,8 +40,7 @@ class OrganizationCRUD:
                     "ga_passthrough": 0.025,
                     "ga_adder": 0.0243
                 },
-                "default_escalation_rates": {},
-                "fte_threshold": 1920,
+                "default_escalation_rate": 0.03,
                 "allow_user_rate_override": True
             },
             "subscription": {

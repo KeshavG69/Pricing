@@ -7,6 +7,8 @@ import {
   Copy,
   Trash2,
   MoreVertical,
+  Users,
+  Share2,
 } from 'lucide-react';
 import { Proposal } from '@/types';
 
@@ -15,10 +17,12 @@ interface ProposalCardProps {
   onClick: (id: string) => void;
   onDuplicate: (id: string, name: string, e: React.MouseEvent) => void;
   onDelete: (id: string, e: React.MouseEvent) => void;
+  onShare?: (id: string, name: string, e: React.MouseEvent) => void;
+  showShareButton?: boolean;
 }
 
 export const ProposalCard = React.memo(
-  ({ proposal, onClick, onDuplicate, onDelete }: ProposalCardProps) => {
+  ({ proposal, onClick, onDuplicate, onDelete, onShare, showShareButton = false }: ProposalCardProps) => {
     const getStatusIcon = (status: string) => {
       switch (status) {
         case 'completed':
@@ -79,9 +83,17 @@ export const ProposalCard = React.memo(
             {getStatusIcon(proposal.status)}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
-              {proposal.name}
-            </p>
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                {proposal.name}
+              </p>
+              {proposal.visibility === 'shared' && proposal.shared_with && proposal.shared_with.length > 0 && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200 flex-shrink-0">
+                  <Users className="w-3 h-3 mr-1" />
+                  Shared
+                </span>
+              )}
+            </div>
             {proposal.solicitation_number && (
               <p className="text-xs text-muted-foreground truncate">
                 {proposal.solicitation_number}
@@ -102,6 +114,15 @@ export const ProposalCard = React.memo(
             </p>
           </div>
           <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {showShareButton && onShare && (
+              <button
+                onClick={(e) => onShare(proposal.id, proposal.name, e)}
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                title="Share"
+              >
+                <Share2 className="w-4 h-4" />
+              </button>
+            )}
             <button
               onClick={(e) => onDuplicate(proposal.id, proposal.name, e)}
               className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"

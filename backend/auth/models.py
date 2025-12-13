@@ -20,6 +20,9 @@ class UserResponse(BaseModel):
     firstName: str
     lastName: str
     email: str
+    organization_id: Optional[str] = None
+    role: Optional[str] = None
+    status: Optional[str] = None
     createdAt: datetime
 
 

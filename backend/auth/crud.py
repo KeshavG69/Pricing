@@ -80,6 +80,9 @@ class UserCRUD:
             firstName=user_doc["firstName"],
             lastName=user_doc["lastName"],
             email=user_doc["email"],
+            organization_id=str(user_doc.get("organization_id")) if user_doc.get("organization_id") else None,
+            role=user_doc.get("role"),
+            status=user_doc.get("status"),
             createdAt=user_doc["createdAt"]
         )
 
@@ -97,6 +100,9 @@ class UserCRUD:
             firstName=user_doc["firstName"],
             lastName=user_doc["lastName"],
             email=user_doc["email"],
+            organization_id=str(user_doc.get("organization_id")) if user_doc.get("organization_id") else None,
+            role=user_doc.get("role"),
+            status=user_doc.get("status"),
             createdAt=user_doc["createdAt"]
         )
 
@@ -114,6 +120,9 @@ class UserCRUD:
             firstName=user_doc["firstName"],
             lastName=user_doc["lastName"],
             email=user_doc["email"],
+            organization_id=str(user_doc.get("organization_id")) if user_doc.get("organization_id") else None,
+            role=user_doc.get("role"),
+            status=user_doc.get("status"),
             createdAt=user_doc["createdAt"]
         )
 
@@ -207,9 +216,12 @@ class UserCRUD:
             "lastName": last_name,
             "email": email,
             "password": bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode(),
-            "organization_id": organization_id,
-            "role": role,
-            "status": "active",
+            "organizations": [{
+                "organization_id": organization_id,
+                "role": role,
+                "status": "active"
+            }],
+            "current_organization_id": organization_id,
             "auth_method": "email",
             "createdAt": datetime.utcnow(),
             "updatedAt": datetime.utcnow()
