@@ -26,17 +26,18 @@ class OEWSMongoLookup:
         """Ensure MongoDB connection is initialized (lazy initialization)"""
         if self.db is None:
             # Create Motor async client
-            # Increased timeouts for Railway remote MongoDB connection
+            # Connection pool tuning for Railway MongoDB proxy
             self.client = AsyncIOMotorClient(
                 settings.MONGODB_URL,
-                maxPoolSize=200,
-                minPoolSize=10,
-                maxIdleTimeMS=60000,
+                maxPoolSize=50,
+                minPoolSize=0,           # Don't keep warm connections (Railway proxy issue)
+                maxIdleTimeMS=300000,    # 5min idle timeout
                 socketTimeoutMS=30000,
                 connectTimeoutMS=20000,
                 serverSelectionTimeoutMS=20000,
                 retryWrites=True,
-                retryReads=True
+                retryReads=True,
+                heartbeatFrequencyMS=120000,  # Check every 2min instead of default 10s
             )
             self.db = self.client[settings.MONGODB_DATABASE]
 

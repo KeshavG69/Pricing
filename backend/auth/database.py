@@ -24,15 +24,17 @@ class MongoDB:
             try:
                 cls.client = AsyncIOMotorClient(
                     settings.MONGODB_URL,
-                    # Connection pool tuning for Railway remote MongoDB
-                    maxPoolSize=200,        # Increase from default 100
-                    minPoolSize=10,         # Keep connections warm
-                    maxIdleTimeMS=60000,    # 60s idle timeout
-                    socketTimeoutMS=30000,  # 30s socket timeout
-                    connectTimeoutMS=20000, # 20s connection timeout
+                    # Connection pool tuning for Railway MongoDB proxy
+                    maxPoolSize=50,          # Reasonable max pool
+                    minPoolSize=0,           # Don't keep warm connections (Railway proxy issue)
+                    maxIdleTimeMS=300000,    # 5min idle timeout
+                    socketTimeoutMS=30000,   # 30s socket timeout
+                    connectTimeoutMS=20000,  # 20s connection timeout
                     serverSelectionTimeoutMS=20000,  # 20s server selection
                     retryWrites=True,
-                    retryReads=True
+                    retryReads=True,
+                    # Reduce background heartbeat checks (Railway proxy flakiness)
+                    heartbeatFrequencyMS=120000,  # Check every 2min instead of default 10s
                 )
                 cls.database = cls.client[settings.MONGODB_DATABASE]
                 print("✅ Connected to MongoDB (async)")
