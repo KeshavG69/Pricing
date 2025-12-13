@@ -108,7 +108,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   // Get last 3 proposals sorted by date
   const recentProposals = proposals
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 3);
 
   return (
@@ -248,7 +248,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                           {proposal.name}
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          {new Date(proposal.created_at).toLocaleDateString()}
+                          {new Date(proposal.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                     </Link>

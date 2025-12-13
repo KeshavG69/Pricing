@@ -135,7 +135,7 @@ export default function OrganizationSettingsPage() {
   };
 
   // Show loading state
-  if (!user || !isAdmin(user) || !settings) {
+  if (!user || !isAdmin(user) || !settings || !organization) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[400px]">

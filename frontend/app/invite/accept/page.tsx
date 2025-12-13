@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { invitationsApi } from '@/lib/api/invitations';
@@ -12,7 +12,7 @@ import RoleBadge from '@/components/ui/RoleBadge';
 import { Mail, Building, User, CheckCircle, XCircle, AlertCircle, BarChart3 } from 'lucide-react';
 import { ValidateTokenResponse, AcceptInvitationRequest } from '@/types';
 
-export default function AcceptInvitationPage() {
+function AcceptInvitationContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get('token');
@@ -358,5 +358,20 @@ export default function AcceptInvitationPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function AcceptInvitationPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
+        <div className="text-center py-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p className="text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    }>
+      <AcceptInvitationContent />
+    </Suspense>
   );
 }
