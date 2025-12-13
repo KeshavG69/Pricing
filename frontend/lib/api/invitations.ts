@@ -8,6 +8,14 @@ interface AcceptInvitationResponse {
   user: any;
 }
 
+export interface InvitationStats {
+  pending: number;
+  accepted: number;
+  expired: number;
+  revoked: number;
+  total: number;
+}
+
 export const invitationsApi = {
   // Send invitation (admin only)
   sendInvitation: async (data: InviteUserRequest): Promise<{ message: string }> => {
@@ -15,9 +23,16 @@ export const invitationsApi = {
     return response.data;
   },
 
-  // List pending invitations (admin only)
-  listInvitations: async (): Promise<Invitation[]> => {
-    const response = await apiClient.get<Invitation[]>('/invitations');
+  // List invitations with optional status filter (admin only)
+  listInvitations: async (status?: 'pending' | 'accepted' | 'expired' | 'revoked'): Promise<Invitation[]> => {
+    const params = status ? { status } : {};
+    const response = await apiClient.get<Invitation[]>('/invitations', { params });
+    return response.data;
+  },
+
+  // Get invitation statistics (admin only)
+  getStats: async (): Promise<InvitationStats> => {
+    const response = await apiClient.get<InvitationStats>('/invitations/stats');
     return response.data;
   },
 

@@ -140,25 +140,32 @@ async def remove_organization_member(
         HTTPException 403: If user not in your organization
         HTTPException 404: If user not found
     """
-    # Validate ObjectId
-    try:
-        user_oid = ObjectId(user_id)
-    except Exception:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid user ID format"
-        )
+    # Get current user ID as string
+    current_user_id = str(current_user.get("_id")) if current_user.get("_id") else current_user.get("id")
 
     # Cannot remove yourself
-    if str(current_user["_id"]) == user_id:
+    if current_user_id == user_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Cannot remove yourself from the organization"
         )
 
-    # Get target user
+    # Get target user (try both ObjectId and string ID)
     user_crud = await get_user_crud()
-    target_user = await user_crud.get_by_id(user_oid)
+    await user_crud._ensure_initialized()
+
+    # Try to find user by _id (ObjectId) or by serialized id field
+    try:
+        user_oid = ObjectId(user_id)
+        target_user = await user_crud.collection.find_one({"_id": user_oid})
+    except:
+        # If not a valid ObjectId, treat as string UUID
+        target_user = await user_crud.collection.find_one({
+            "$or": [
+                {"_id": user_id},
+                {"id": user_id}
+            ]
+        })
 
     if not target_user:
         raise HTTPException(
@@ -180,8 +187,20 @@ async def remove_organization_member(
             detail="You do not have permission to remove this user"
         )
 
-    # Remove user from this organization
-    await user_crud.remove_from_organization(user_oid, current_user["organization_id"])
+    # Remove user from this organization (update status in organizations array)
+    from datetime import datetime
+    await user_crud.collection.update_one(
+        {
+            "_id": target_user["_id"],
+            "organizations.organization_id": current_user["organization_id"]
+        },
+        {
+            "$set": {
+                "organizations.$.status": "removed",
+                "updatedAt": datetime.utcnow()
+            }
+        }
+    )
 
     return {
         "message": "User removed successfully from organization",

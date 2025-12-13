@@ -6,11 +6,14 @@ import type { Column } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
 import { AdvancedPosition, IndirectRates, EscalationRates, GridRow, BreakdownType, ContextMenuItem } from '@/types';
-import { ChevronDown, ChevronRight, Trash2, MoreVertical } from 'lucide-react';
+import { ChevronDown, ChevronRight, Trash2, MoreVertical, Plus } from 'lucide-react';
 import { ContextMenu } from '@/components/ui/ContextMenu';
 import { ConvertToSubcontractorModal } from '@/components/pricing/ConvertToSubcontractorModal';
 import { SalarySelectionModal } from '@/components/pricing/SalarySelectionModal';
+import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { getAvailablePercentiles } from '@/lib/utils/percentileHelpers';
+import Button from '@/components/ui/Button';
+import { usePricingStore } from '@/lib/stores/pricingStore';
 
 // Calculate averaged FBLR for an advanced position using proportional hourly rates
 const calculateAveragedFBLR = (
@@ -107,6 +110,9 @@ export const PrimeLaborSection = ({
   // Salary selection modal state
   const [salaryModalOpen, setSalaryModalOpen] = useState(false);
   const [positionToEdit, setPositionToEdit] = useState<AdvancedPosition | null>(null);
+
+  // Add position modal state
+  const [addPositionModalOpen, setAddPositionModalOpen] = useState(false);
 
   // Handle right-click on grid rows (BEFORE useMemo to maintain hook order)
   const handleContextMenu = useCallback((e: React.MouseEvent, position: AdvancedPosition) => {
@@ -738,13 +744,32 @@ export const PrimeLaborSection = ({
     );
   }
 
+  // Get store methods (positions for the modal)
+  const { addPosition, positions: basicPositions } = usePricingStore();
+
+  // Handle add position - open modal
+  const handleAddPosition = useCallback(() => {
+    setAddPositionModalOpen(true);
+  }, []);
+
+  // Handle modal submit
+  const handleModalAddPosition = useCallback((positionData: any) => {
+    addPosition(positionData);
+  }, [addPosition]);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between px-6">
-        <h3 className="text-base font-semibold text-foreground">Prime Labor</h3>
-        <p className="text-xs text-muted-foreground">
-          {positions.length} position{positions.length !== 1 ? 's' : ''}
-        </p>
+        <div className="flex items-center space-x-3">
+          <h3 className="text-base font-semibold text-foreground">Prime Labor</h3>
+          <p className="text-xs text-muted-foreground">
+            {positions.length} position{positions.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleAddPosition}>
+          <Plus className="w-4 h-4 mr-2" />
+          Add Position
+        </Button>
       </div>
 
       <div
@@ -794,6 +819,15 @@ export const PrimeLaborSection = ({
             onUpdatePosition(positionToEdit.id, updates);
           }
         }}
+      />
+
+      {/* Add Position Modal */}
+      <AddPositionModal
+        open={addPositionModalOpen}
+        onClose={() => setAddPositionModalOpen(false)}
+        positions={basicPositions}
+        totalYears={totalYears}
+        onAdd={handleModalAddPosition}
       />
     </div>
   );

@@ -74,23 +74,34 @@ async def get_current_user(
             None
         )
 
-        if current_org:
-            # Add flat fields for easy access in endpoints
-            user["organization_id"] = current_org["organization_id"]
-            user["role"] = current_org["role"]
-            user["status"] = current_org["status"]
-        else:
-            # No current organization set
-            user["organization_id"] = None
-            user["role"] = None
-            user["status"] = None
-
-        # Check if account is active in current organization
-        if user.get("status") != "active":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Account suspended or inactive in this organization"
+        # If current org is not active, try to switch to another active org
+        if not current_org or current_org.get("status") != "active":
+            # Find first active organization
+            active_org = next(
+                (org for org in organizations if org.get("status") == "active"),
+                None
             )
+
+            if active_org:
+                # Switch to active organization
+                current_org = active_org
+                # Update current_organization_id in database
+                await users_collection.update_one(
+                    {"_id": user["_id"]},
+                    {"$set": {"current_organization_id": active_org["organization_id"]}}
+                )
+                user["current_organization_id"] = active_org["organization_id"]
+            else:
+                # No active organizations, account is suspended
+                raise HTTPException(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    detail="Account suspended or removed from all organizations"
+                )
+
+        # Add flat fields for easy access in endpoints
+        user["organization_id"] = current_org["organization_id"]
+        user["role"] = current_org["role"]
+        user["status"] = current_org["status"]
 
         return user
 

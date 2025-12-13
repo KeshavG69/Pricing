@@ -46,12 +46,13 @@ async def get_crud():
 def serialize_proposal(proposal: dict) -> dict:
     """
     Convert all ObjectId fields to strings for JSON serialization.
+    Also converts snake_case date fields to camelCase for frontend consistency.
 
     Args:
         proposal: Proposal document from MongoDB
 
     Returns:
-        Proposal with all ObjectIds converted to strings
+        Proposal with all ObjectIds converted to strings and dates in camelCase
     """
     if not proposal:
         return proposal
@@ -64,6 +65,12 @@ def serialize_proposal(proposal: dict) -> dict:
     # Convert organization_id
     if "organization_id" in proposal and proposal["organization_id"]:
         proposal["organization_id"] = str(proposal["organization_id"])
+
+    # Convert snake_case to camelCase for date fields
+    if "created_at" in proposal:
+        proposal["createdAt"] = proposal.pop("created_at")
+    if "updated_at" in proposal:
+        proposal["updatedAt"] = proposal.pop("updated_at")
 
     return proposal
 
@@ -432,14 +439,14 @@ async def list_proposals(
     result = []
     for prop in proposals:
         prop["_id"] = str(prop["_id"])
-        # Only include summary fields
+        # Only include summary fields (use camelCase for frontend)
         summary = {
             "id": prop["_id"],
             "name": prop.get("name", "Untitled"),
             "solicitation_number": prop.get("solicitation_number"),
             "status": prop.get("status", "draft"),
-            "created_at": prop.get("created_at"),
-            "updated_at": prop.get("updated_at"),
+            "createdAt": prop.get("created_at"),  # Convert to camelCase
+            "updatedAt": prop.get("updated_at"),  # Convert to camelCase
             "total_cost": prop.get("total_cost")
         }
         result.append(summary)
@@ -456,14 +463,32 @@ async def get_proposal(
     Get complete proposal data including all jobs, rates, and spreadsheet data.
 
     Called after status shows 'completed' or when user opens existing proposal.
+    Checks RBAC for shared access.
     """
+    # Validate ObjectId
+    try:
+        prop_oid = ObjectId(proposal_id)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid proposal ID format"
+        )
+
     crud = await get_crud()
-    proposal = await crud.get_proposal(proposal_id, str(current_user["_id"]))
+    # Get proposal without user_id filter (we'll check access with RBAC)
+    proposal = await crud.get_by_id(prop_oid)
 
     if not proposal:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Proposal not found"
+        )
+
+    # Check if user has access (owner, admin, or shared)
+    if not can_access_proposal(proposal, current_user):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="You do not have access to this proposal"
         )
 
     # Convert all ObjectIds to strings
@@ -782,30 +807,36 @@ async def share_proposal_with_users(
         HTTPException 403: If not admin
         HTTPException 404: If proposal not found
     """
-    # Validate ObjectIds
+    # Validate proposal ObjectId
     try:
         prop_oid = ObjectId(proposal_id)
-        user_oids = [ObjectId(uid) for uid in share_data.user_ids]
-    except Exception:
+    except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Invalid ID format"
+            detail=f"Invalid proposal ID format: {proposal_id}"
+        )
+
+    # User IDs are strings (UUIDs), no conversion needed
+    if not share_data.user_ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="At least one user ID must be provided"
         )
 
     # Use organization-aware proposal methods
     crud = await get_crud()
 
     try:
-        updated_proposal = crud.share_proposal(
+        updated_proposal = await crud.share_proposal(
             proposal_id=prop_oid,
-            user_ids=user_oids,
-            admin_id=current_user["_id"]
+            user_ids=share_data.user_ids,  # Pass strings directly
+            admin_id=str(current_user["_id"])
         )
 
         return {
             "message": "Proposal shared successfully",
             "proposal": serialize_doc(updated_proposal),
-            "shared_with_count": len(user_oids)
+            "shared_with_count": len(share_data.user_ids)
         }
 
     except ValueError as e:
@@ -948,24 +979,44 @@ async def get_proposal_access_info(
 
     if shared_with_ids:
         from auth.database import MongoDB
+        from auth.crud import get_user_crud
+
         db = await MongoDB.get_database()
-        cursor = db["users"].find(
-            {"_id": {"$in": shared_with_ids}},
-            {"firstName": 1, "lastName": 1, "email": 1}
+        user_crud = await get_user_crud()
+        await user_crud._ensure_initialized()
+
+        # Query users by string IDs
+        # Try both _id (if they're stored as strings) and a separate id field
+        cursor = user_crud.collection.find(
+            {
+                "$or": [
+                    {"_id": {"$in": shared_with_ids}},
+                    {"id": {"$in": shared_with_ids}}
+                ]
+            },
+            {"firstName": 1, "lastName": 1, "email": 1, "_id": 1, "id": 1}
         )
         users = await cursor.to_list(length=None)
 
         for user in users:
+            user_id = user.get("id") or str(user.get("_id"))
             shared_users.append({
-                "id": str(user["_id"]),
-                "name": f"{user['firstName']} {user['lastName']}",
+                "id": user_id,
+                "firstName": user.get("firstName", ""),
+                "lastName": user.get("lastName", ""),
                 "email": user["email"]
             })
+
+    # Check if current user is the owner
+    owner_id = str(proposal.get("user_id"))
+    current_user_id = str(current_user.get("_id")) if current_user.get("_id") else current_user.get("id")
+    is_owner = (owner_id == current_user_id)
 
     return {
         "proposal_id": proposal_id,
         "visibility": proposal.get("visibility", "private"),
-        "owner_id": str(proposal.get("user_id")),
+        "owner_id": owner_id,
+        "is_owner": is_owner,
         "shared_with": shared_users,
         "shared_count": len(shared_users)
     }

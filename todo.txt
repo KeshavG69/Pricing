@@ -3,9 +3,9 @@ Keshav:-
 2.technical narrative (ai narrative)
 3.custom rates vecttor
 4.ui similar to photo
-5. user management 
+5. user management x
 6. proposal name change as well
-7.fix caching issue
+7.fix caching issue x
 in progress or submited based on when they download excel
 
 Parth:-

@@ -44,6 +44,10 @@ async def get_user_organizations(current_user: dict = Depends(get_current_user))
     
     result = []
     for org_membership in organizations_data:
+        # Only show active organizations
+        if org_membership.get("status") != "active":
+            continue
+
         org = await orgs_collection.find_one({"_id": org_membership["organization_id"]})
         if org:
             result.append({
@@ -53,7 +57,7 @@ async def get_user_organizations(current_user: dict = Depends(get_current_user))
                 "status": org_membership["status"],
                 "is_current": org["_id"] == user.get("current_organization_id")
             })
-    
+
     return result
 
 

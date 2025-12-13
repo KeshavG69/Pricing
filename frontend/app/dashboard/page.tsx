@@ -11,7 +11,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Dialog } from '@/components/ui/Dialog';
 import Input from '@/components/ui/Input';
 import { ProposalCard } from '@/components/proposals/ProposalCard';
-import ShareProposalModal from '@/components/proposals/ShareProposalModal';
+import { ShareProposalModal } from '@/components/proposals/ShareProposalModal';
 import { Plus, FileText, Clock, CheckCircle, AlertCircle, Trash2, Copy, Search, Filter, MoreVertical, ChevronRight } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
 import { isAdmin } from '@/lib/utils/permissions';

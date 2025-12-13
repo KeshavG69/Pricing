@@ -111,24 +111,87 @@ async def send_invitation(
 
 
 @router.get("")
-async def list_pending_invitations(current_user: dict = Depends(require_admin)):
+async def list_invitations(
+    status: str = None,
+    current_user: dict = Depends(require_admin)
+):
     """
-    Get all pending invitations for the organization (admin only).
+    Get invitations for the organization (admin only).
 
-    Returns list of invitations sorted by creation date (newest first).
-    Excludes token hashes for security.
+    Args:
+        status: Optional filter by status (pending, accepted, expired, revoked)
 
     Returns:
-        List of pending invitation documents
+        List of invitation documents sorted by creation date (newest first).
+        Excludes token hashes for security.
     """
     invitation_crud = await get_invitation_crud()
-    invitations = await invitation_crud.get_pending(current_user["organization_id"])
 
-    # Remove token_hash from all invitations
+    # Get all invitations for the organization
+    from auth.database import MongoDB
+    db = await MongoDB.get_database()
+
+    query = {"organization_id": current_user["organization_id"]}
+    if status:
+        query["status"] = status
+
+    invitations = await db["invitations"].find(query).sort("created_at", -1).to_list(length=None)
+
+    # Remove token_hash and convert to camelCase
     for invitation in invitations:
         invitation.pop("token_hash", None)
+        # Convert snake_case to camelCase for consistency
+        if "created_at" in invitation:
+            invitation["createdAt"] = invitation.pop("created_at")
+        if "expires_at" in invitation:
+            invitation["expiresAt"] = invitation.pop("expires_at")
+        if "accepted_at" in invitation:
+            invitation["acceptedAt"] = invitation.pop("accepted_at")
 
     return serialize_docs(invitations)
+
+
+@router.get("/stats")
+async def get_invitation_stats(current_user: dict = Depends(require_admin)):
+    """
+    Get invitation statistics for the organization (admin only).
+
+    Returns:
+        Counts of invitations by status
+    """
+    from auth.database import MongoDB
+    db = await MongoDB.get_database()
+
+    org_id = current_user["organization_id"]
+
+    # Get counts for each status
+    pipeline = [
+        {"$match": {"organization_id": org_id}},
+        {"$group": {
+            "_id": "$status",
+            "count": {"$sum": 1}
+        }}
+    ]
+
+    results = await db["invitations"].aggregate(pipeline).to_list(length=None)
+
+    # Convert to dict
+    stats = {
+        "pending": 0,
+        "accepted": 0,
+        "expired": 0,
+        "revoked": 0,
+        "total": 0
+    }
+
+    for result in results:
+        status = result["_id"]
+        count = result["count"]
+        if status in stats:
+            stats[status] = count
+        stats["total"] += count
+
+    return stats
 
 
 @router.delete("/{invitation_id}")

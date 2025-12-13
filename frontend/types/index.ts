@@ -84,6 +84,7 @@ export interface TeamMember {
 export interface Invitation {
   id: string;
   organization_id: string;
+  organization_name: string;
   email: string;
   role: 'admin' | 'user';
   status: 'pending' | 'accepted' | 'expired' | 'revoked';
@@ -91,6 +92,8 @@ export interface Invitation {
   invited_by_name: string;
   createdAt: string;
   expiresAt: string;
+  acceptedAt?: string;
+  accepted_by?: string;
 }
 
 export interface InviteUserRequest {

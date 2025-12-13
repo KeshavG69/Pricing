@@ -3534,7 +3534,7 @@
         "kind": 2,
         "importPath": "backend.auth.rbac",
         "description": "backend.auth.rbac",
-        "peekOfCode": "def can_modify_proposal(proposal: dict, user: dict) -> bool:\n    \"\"\"\n    Check if user can modify/delete a proposal.\n    Modification rules:\n    1. Must be same organization\n    2. Admin can modify all org proposals\n    3. Owner can modify their proposals\n    4. Shared users CANNOT modify (read-only access)\n    Args:\n        proposal: Proposal document dict",
+        "peekOfCode": "def can_modify_proposal(proposal: dict, user: dict) -> bool:\n    \"\"\"\n    Check if user can modify/delete a proposal.\n    Modification rules:\n    1. Must be same organization\n    2. Admin can modify all org proposals\n    3. Owner can modify their proposals\n    4. Shared users CAN modify (full access)\n    Args:\n        proposal: Proposal document dict",
         "detail": "backend.auth.rbac",
         "documentation": {}
     },
@@ -4065,7 +4065,7 @@
         "kind": 2,
         "importPath": "backend.routers.proposals",
         "description": "backend.routers.proposals",
-        "peekOfCode": "def serialize_proposal(proposal: dict) -> dict:\n    \"\"\"\n    Convert all ObjectId fields to strings for JSON serialization.\n    Args:\n        proposal: Proposal document from MongoDB\n    Returns:\n        Proposal with all ObjectIds converted to strings\n    \"\"\"\n    if not proposal:\n        return proposal",
+        "peekOfCode": "def serialize_proposal(proposal: dict) -> dict:\n    \"\"\"\n    Convert all ObjectId fields to strings for JSON serialization.\n    Also converts snake_case date fields to camelCase for frontend consistency.\n    Args:\n        proposal: Proposal document from MongoDB\n    Returns:\n        Proposal with all ObjectIds converted to strings and dates in camelCase\n    \"\"\"\n    if not proposal:",
         "detail": "backend.routers.proposals",
         "documentation": {}
     },
@@ -4074,7 +4074,7 @@
         "kind": 5,
         "importPath": "backend.routers.proposals",
         "description": "backend.routers.proposals",
-        "peekOfCode": "router = APIRouter(prefix=\"/proposals\", tags=[\"proposals\"])\n# Get singleton ProposalCRUD instance\nasync def get_crud():\n    \"\"\"Get singleton ProposalCRUD instance (async, thread-safe).\"\"\"\n    db = await MongoDB.get_database()\n    return get_proposal_crud(db[\"proposals\"])\ndef serialize_proposal(proposal: dict) -> dict:\n    \"\"\"\n    Convert all ObjectId fields to strings for JSON serialization.\n    Args:",
+        "peekOfCode": "router = APIRouter(prefix=\"/proposals\", tags=[\"proposals\"])\n# Get singleton ProposalCRUD instance\nasync def get_crud():\n    \"\"\"Get singleton ProposalCRUD instance (async, thread-safe).\"\"\"\n    db = await MongoDB.get_database()\n    return get_proposal_crud(db[\"proposals\"])\ndef serialize_proposal(proposal: dict) -> dict:\n    \"\"\"\n    Convert all ObjectId fields to strings for JSON serialization.\n    Also converts snake_case date fields to camelCase for frontend consistency.",
         "detail": "backend.routers.proposals",
         "documentation": {}
     },

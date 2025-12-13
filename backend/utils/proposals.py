@@ -400,7 +400,7 @@ class ProposalCRUD:
     async def share_proposal(
         self,
         proposal_id: ObjectId,
-        user_ids: List[ObjectId],
+        user_ids: List[str],
         admin_id: str
     ) -> Optional[dict]:
         """
@@ -408,7 +408,7 @@ class ProposalCRUD:
 
         Args:
             proposal_id: Proposal's ObjectId
-            user_ids: List of user ObjectIds to share with
+            user_ids: List of user IDs (strings) to share with
             admin_id: Admin's user ID (for verification)
 
         Returns:

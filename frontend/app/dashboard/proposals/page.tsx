@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useProposalsStore } from '@/lib/stores/proposalsStore';
+import { useAuthStore } from '@/lib/stores/authStore';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -11,6 +12,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Dialog } from '@/components/ui/Dialog';
 import Input from '@/components/ui/Input';
 import { ProposalList } from '@/components/proposals/ProposalList';
+import { ShareProposalModal } from '@/components/proposals/ShareProposalModal';
 import { useInfiniteScroll } from '@/lib/hooks/useInfiniteScroll';
 import { Plus, Loader2, ArrowUpDown } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
@@ -31,6 +33,7 @@ const sortOptions: SortOption[] = [
 
 export default function ProposalsPage() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const {
     proposals,
     isLoading,
@@ -59,6 +62,13 @@ export default function ProposalsPage() {
   } | null>(null);
   const [duplicateName, setDuplicateName] = useState('');
   const [isDuplicating, setIsDuplicating] = useState(false);
+
+  // Share dialog state
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [proposalToShare, setProposalToShare] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
 
   // Load initial data
   useEffect(() => {
@@ -146,6 +156,23 @@ export default function ProposalsPage() {
     setDuplicateName('');
   };
 
+  // Share handlers
+  const handleShareClick = (id: string, name: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setProposalToShare({ id, name });
+    setShareDialogOpen(true);
+  };
+
+  const handleShareSuccess = () => {
+    // Refresh proposals list to show updated shared status
+    fetchProposalsPaginated(false);
+  };
+
+  const handleShareClose = () => {
+    setShareDialogOpen(false);
+    setProposalToShare(null);
+  };
+
   const handleProposalClick = (id: string) => {
     router.push(`/proposals/${id}`);
   };
@@ -211,6 +238,8 @@ export default function ProposalsPage() {
               onProposalClick={handleProposalClick}
               onDuplicate={handleDuplicateClick}
               onDelete={handleDeleteClick}
+              onShare={handleShareClick}
+              showShareButton={user?.role === 'admin'}
               emptyMessage="No proposals found. Create your first proposal to get started."
               emptyAction={
                 <Link href="/dashboard/upload">
@@ -288,6 +317,17 @@ export default function ProposalsPage() {
           </div>
         </div>
       </Dialog>
+
+      {/* Share Proposal Modal */}
+      {proposalToShare && (
+        <ShareProposalModal
+          isOpen={shareDialogOpen}
+          onClose={handleShareClose}
+          proposalId={proposalToShare.id}
+          proposalName={proposalToShare.name}
+          onSuccess={handleShareSuccess}
+        />
+      )}
     </DashboardLayout>
   );
 }

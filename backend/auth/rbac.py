@@ -32,13 +32,19 @@ def can_access_proposal(proposal: dict, user: dict) -> bool:
     if user.get("role") == "admin":
         return True
 
+    # Get user ID (handle both ObjectId and string formats)
+    user_id = str(user.get("_id")) if user.get("_id") else user.get("id")
+    proposal_owner_id = str(proposal.get("user_id"))
+
     # Owner can access their proposals
-    if proposal.get("user_id") == user.get("_id"):
+    if proposal_owner_id == user_id:
         return True
 
     # Check if explicitly shared with user
     shared_with = proposal.get("shared_with", [])
-    if user.get("_id") in shared_with:
+    # Normalize all IDs to strings for comparison
+    shared_with_str = [str(uid) for uid in shared_with]
+    if user_id in shared_with_str:
         return True
 
     return False
@@ -52,7 +58,7 @@ def can_modify_proposal(proposal: dict, user: dict) -> bool:
     1. Must be same organization
     2. Admin can modify all org proposals
     3. Owner can modify their proposals
-    4. Shared users CANNOT modify (read-only access)
+    4. Shared users CAN modify (full access)
 
     Args:
         proposal: Proposal document dict
@@ -69,11 +75,20 @@ def can_modify_proposal(proposal: dict, user: dict) -> bool:
     if user.get("role") == "admin":
         return True
 
+    # Get user ID (handle both ObjectId and string formats)
+    user_id = str(user.get("_id")) if user.get("_id") else user.get("id")
+    proposal_owner_id = str(proposal.get("user_id"))
+
     # Owner can modify their proposals
-    if proposal.get("user_id") == user.get("_id"):
+    if proposal_owner_id == user_id:
         return True
 
-    # Shared users cannot modify
+    # Shared users can modify (full access)
+    shared_with = proposal.get("shared_with", [])
+    shared_with_str = [str(uid) for uid in shared_with]
+    if user_id in shared_with_str:
+        return True
+
     return False
 
 
@@ -116,8 +131,10 @@ def can_manage_user(target_user: dict, current_user: dict) -> bool:
     if target_user.get("organization_id") != current_user.get("organization_id"):
         return False
 
-    # Cannot manage yourself
-    if target_user.get("_id") == current_user.get("_id"):
+    # Cannot manage yourself (handle both ObjectId and string ID formats)
+    target_id = str(target_user.get("_id")) if target_user.get("_id") else target_user.get("id")
+    current_id = str(current_user.get("_id")) if current_user.get("_id") else current_user.get("id")
+    if target_id == current_id:
         return False
 
     return True
