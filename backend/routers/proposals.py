@@ -1020,3 +1020,83 @@ async def get_proposal_access_info(
         "shared_with": shared_users,
         "shared_count": len(shared_users)
     }
+
+
+@router.post("/{proposal_id}/refresh-urls")
+async def refresh_document_urls(
+    proposal_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Refresh pre-signed URLs for all documents in a proposal.
+
+    Pre-signed URLs expire after 7 days. This endpoint regenerates
+    fresh URLs with a new 7-day expiration.
+
+    Args:
+        proposal_id: Proposal's ObjectId as string
+
+    Returns:
+        Updated proposal with fresh document URLs
+
+    Raises:
+        HTTPException 400: If invalid proposal ID
+        HTTPException 404: If proposal not found
+    """
+    # Validate ObjectId
+    try:
+        prop_oid = ObjectId(proposal_id)
+    except Exception:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid proposal ID format"
+        )
+
+    # Get proposal
+    proposal_crud = await get_crud()
+    proposal = await proposal_crud.get_by_id(prop_oid)
+
+    if not proposal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Proposal not found"
+        )
+
+    # Refresh URLs for all documents
+    documents = proposal.get("documents", [])
+    if not documents:
+        return serialize_proposal(proposal)
+
+    idrive = get_idrive_storage()
+    updated_documents = []
+
+    for doc in documents:
+        object_key = doc.get("object_key")
+        if object_key:
+            try:
+                # Generate fresh pre-signed URL (7 days)
+                fresh_url = idrive.get_presigned_url(object_key)
+                updated_doc = {**doc, "url": fresh_url}
+                updated_documents.append(updated_doc)
+            except Exception as e:
+                print(f"Error refreshing URL for {object_key}: {e}")
+                # Keep old URL if refresh fails
+                updated_documents.append(doc)
+        else:
+            updated_documents.append(doc)
+
+    # Update proposal in database
+    await proposal_crud.collection.update_one(
+        {"_id": prop_oid},
+        {
+            "$set": {
+                "documents": updated_documents,
+                "updated_at": datetime.utcnow()
+            }
+        }
+    )
+
+    # Fetch updated proposal
+    updated_proposal = await proposal_crud.get_by_id(prop_oid)
+
+    return serialize_proposal(updated_proposal)

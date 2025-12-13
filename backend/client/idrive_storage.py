@@ -50,8 +50,8 @@ class IDriveStorage:
             filename: Original filename (e.g., "solicitation.pdf")
 
         Returns:
-            Tuple of (public_url, object_key)
-            - public_url: Full URL to access the document
+            Tuple of (presigned_url, object_key)
+            - presigned_url: Pre-signed URL valid for 7 days
             - object_key: S3 object key for deletion (user_id/proposal_id/filename)
 
         Raises:
@@ -65,13 +65,42 @@ class IDriveStorage:
                 # Upload file to S3
                 self.s3.upload_file(file_path, self.bucket, object_key)
 
-                # Construct public URL
-                url = f"{settings.IDRIVE_E2_ENDPOINT}/{self.bucket}/{object_key}"
+                # Generate pre-signed URL (7 days expiration - maximum allowed)
+                presigned_url = self.get_presigned_url(object_key)
 
-                return url, object_key
+                return presigned_url, object_key
 
             except ClientError as e:
                 print(f"Error uploading {filename} to iDrive e2: {e}")
+                raise
+
+    def get_presigned_url(self, object_key: str, expiration: int = 604800) -> str:
+        """
+        Generate a pre-signed URL for secure access to a document.
+
+        Args:
+            object_key: S3 object key (e.g., "user_id/proposal_id/filename.pdf")
+            expiration: URL expiration in seconds (default: 604800 = 7 days, max allowed)
+
+        Returns:
+            Pre-signed URL string valid for the specified duration
+
+        Raises:
+            ClientError: If URL generation fails
+        """
+        with self._lock:
+            try:
+                url = self.s3.generate_presigned_url(
+                    'get_object',
+                    Params={
+                        'Bucket': self.bucket,
+                        'Key': object_key
+                    },
+                    ExpiresIn=expiration  # 7 days maximum
+                )
+                return url
+            except ClientError as e:
+                print(f"Error generating pre-signed URL for {object_key}: {e}")
                 raise
 
     def delete_document(self, object_key: str) -> bool:
