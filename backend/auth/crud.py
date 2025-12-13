@@ -28,7 +28,9 @@ class UserCRUD:
             self.db = await MongoDB.get_database()
     @staticmethod
     async def create_user(user_data: UserSignup) -> UserResponse:
-        """Create a new user in the database (async)"""
+        """Create a new user with default organization (async)"""
+        from utils.organizations import get_organization_crud
+
         users_collection = await MongoDB.get_users_collection()
 
         # Check if user already exists
@@ -36,9 +38,23 @@ class UserCRUD:
         if existing_user:
             raise ValueError("User with this email already exists")
 
-        # Create user document
+        # Create user ID
         user_id = generate_user_id()
         hashed_password = hash_password(user_data.password)
+        now = datetime.utcnow()
+
+        # Create organization with slug as name
+        org_crud = await get_organization_crud()
+        temp_name = f"{user_data.firstName}-{user_data.lastName}-org"
+        organization = await org_crud.create_organization(temp_name, user_id)
+        org_id = organization["_id"]
+
+        # Update organization name to match slug (unique name)
+        db = await MongoDB.get_database()
+        await db.organizations.update_one(
+            {"_id": org_id},
+            {"$set": {"name": organization["slug"]}}
+        )
 
         user_doc = {
             "_id": user_id,
@@ -47,8 +63,15 @@ class UserCRUD:
             "email": user_data.email,
             "password": hashed_password,
             "auth_method": "email",
-            "createdAt": datetime.utcnow(),
-            "updatedAt": datetime.utcnow()
+            "current_organization_id": org_id,
+            "organizations": [{
+                "organization_id": org_id,
+                "role": "admin",
+                "status": "active",
+                "joinedAt": now
+            }],
+            "createdAt": now,
+            "updatedAt": now
         }
 
         # Insert user into database
@@ -137,6 +160,8 @@ class UserCRUD:
     @staticmethod
     async def create_or_update_google_user(google_profile: GoogleUserProfile) -> UserResponse:
         """Create a new Google OAuth user or update existing one (async)"""
+        from utils.organizations import get_organization_crud
+
         users_collection = await MongoDB.get_users_collection()
 
         # Check if user already exists by email
@@ -170,8 +195,23 @@ class UserCRUD:
                 createdAt=existing_user["createdAt"]
             )
         else:
-            # Create new Google user
+            # Create new Google user with organization
             user_id = generate_user_id()
+            now = datetime.utcnow()
+
+            # Create organization with slug as name
+            org_crud = await get_organization_crud()
+            temp_name = f"{google_profile.given_name}-{google_profile.family_name}-org"
+            organization = await org_crud.create_organization(temp_name, user_id)
+            org_id = organization["_id"]
+
+            # Update organization name to match slug (unique name)
+            db = await MongoDB.get_database()
+            await db.organizations.update_one(
+                {"_id": org_id},
+                {"$set": {"name": organization["slug"]}}
+            )
+
             user_doc = {
                 "_id": user_id,
                 "firstName": google_profile.given_name,
@@ -186,8 +226,15 @@ class UserCRUD:
                     "email_verified": google_profile.email_verified
                 },
                 "auth_method": "google",
-                "createdAt": datetime.utcnow(),
-                "updatedAt": datetime.utcnow()
+                "current_organization_id": org_id,
+                "organizations": [{
+                    "organization_id": org_id,
+                    "role": "admin",
+                    "status": "active",
+                    "joinedAt": now
+                }],
+                "createdAt": now,
+                "updatedAt": now
             }
 
             # Insert user into database
