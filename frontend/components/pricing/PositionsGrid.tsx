@@ -13,7 +13,7 @@ import { SalarySelectionModal } from './SalarySelectionModal';
 import { getAvailablePercentiles } from '@/lib/utils/percentileHelpers';
 
 export const PositionsGrid = () => {
-  const { positions, totalYears, monthsPerYear, rates, escalationRates, updatePosition, deletePosition } = usePricingStore();
+  const { positions, totalYears, monthsPerYear, rates, escalationRates, updatePosition, deletePosition, advancedMode } = usePricingStore();
 
   // Context menu state
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; position: SpreadsheetPosition; columnKey?: string } | null>(null);
@@ -147,31 +147,60 @@ export const PositionsGrid = () => {
     }
 
     // Default context menu for other columns
-    return [
-      {
+    const items: ContextMenuItem[] = [];
+
+    // Only show "Convert to Subcontractor" in advanced mode
+    if (advancedMode) {
+      items.push({
         label: 'Convert to Subcontractor',
         icon: <MoreVertical className="w-4 h-4" />,
         onClick: () => {
           setPositionToConvert(position);
           setConversionModalOpen(true);
         },
+      });
+    }
+
+    // Always show "Delete Position"
+    items.push({
+      label: 'Delete Position',
+      icon: <Trash2 className="w-4 h-4" />,
+      onClick: () => {
+        if (confirm(`Delete position "${position.labor_category}"?`)) {
+          deletePosition(position.id);
+        }
       },
-      {
-        label: 'Delete Position',
-        icon: <Trash2 className="w-4 h-4" />,
-        onClick: () => {
-          if (confirm(`Delete position "${position.labor_category}"?`)) {
-            deletePosition(position.id);
-          }
-        },
-        danger: true,
-      },
-    ];
-  }, [deletePosition, updatePosition]);
+      danger: true,
+    });
+
+    return items;
+  }, [deletePosition, updatePosition, advancedMode]);
 
   // Generate columns dynamically
   const columns = useMemo<Column<SpreadsheetPosition>[]>(() => {
     const cols: Column<SpreadsheetPosition>[] = [
+      // Actions column - leftmost
+      {
+        key: 'actions',
+        name: '',
+        width: 50,
+        resizable: false,
+        frozen: true,
+        renderCell: ({ row }) => (
+          <div className="flex items-center justify-center h-full">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleContextMenu(e as any, row);
+              }}
+              className="p-1 hover:bg-gray-100 rounded"
+              title="Actions"
+            >
+              <MoreVertical className="w-4 h-4" />
+            </button>
+          </div>
+        ),
+      },
       // Labor Category - Editable
       {
         key: 'labor_category',
@@ -402,31 +431,8 @@ export const PositionsGrid = () => {
       }
     );
 
-    // Actions column
-    cols.push({
-      key: 'actions',
-      name: 'Actions',
-      width: 80,
-      frozen: true,
-      renderCell: ({ row }) => (
-        <div className="flex items-center justify-center h-full">
-          <button
-            onClick={() => {
-              if (confirm(`Delete position "${row.labor_category}"?`)) {
-                deletePosition(row.id);
-              }
-            }}
-            className="text-muted-foreground hover:text-red-600 transition-colors p-1"
-            title="Delete position"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
-        </div>
-      ),
-    });
-
     return cols;
-  }, [totalYears, rates, updatePosition, deletePosition]);
+  }, [totalYears, rates, updatePosition, deletePosition, handleContextMenu]);
 
   if (positions.length === 0) {
     return (

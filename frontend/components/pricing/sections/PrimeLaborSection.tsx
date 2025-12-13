@@ -93,7 +93,7 @@ export const PrimeLaborSection = ({
   expandedPositions,
   manualOverrides,
   onToggleExpand,
-  onCellChange,
+  onCellChange: _onCellChange, // TODO: Implement editable cells
   onDeletePosition,
   onUpdatePosition,
 }: PrimeLaborSectionProps) => {
@@ -266,10 +266,39 @@ export const PrimeLaborSection = ({
   // Generate columns dynamically
   const columns = useMemo<Column<GridRow>[]>(() => {
     const cols: Column<GridRow>[] = [
-      // Cost Element - Expandable indicator + labor category
+      // Actions column - leftmost
+      {
+        key: 'actions',
+        name: '',
+        width: 50,
+        resizable: false,
+        frozen: true,
+        renderCell: ({ row }) => {
+          // Only show actions for position rows, not breakdown rows
+          if (row.type === 'position') {
+            const pos = row.data as AdvancedPosition;
+            return (
+              <div className="flex items-center justify-center h-full">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleContextMenu(e as any, pos);
+                  }}
+                  className="p-1 hover:bg-gray-100 rounded"
+                  title="Actions"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </button>
+              </div>
+            );
+          }
+          return null;
+        },
+      },
+      // Labour Category - Expandable indicator + labor category
       {
         key: 'cost_element',
-        name: 'Cost Element',
+        name: 'Labour Category',
         width: 250,
         resizable: true,
         frozen: true,
@@ -695,37 +724,8 @@ export const PrimeLaborSection = ({
       }
     );
 
-    // Actions column
-    cols.push({
-      key: 'actions',
-      name: 'Actions',
-      width: 80,
-      frozen: true,
-      renderCell: ({ row }) => {
-        if (row.type === 'position') {
-          const pos = row.data as AdvancedPosition;
-          return (
-            <div className="flex items-center justify-center h-full">
-              <button
-                onClick={() => {
-                  if (confirm(`Delete position "${pos.labor_category}"?`)) {
-                    onDeletePosition(row.positionId);
-                  }
-                }}
-                className="text-muted-foreground hover:text-red-600 transition-colors p-1"
-                title="Delete position"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          );
-        }
-        return <div className="h-full bg-muted/30" />;
-      },
-    });
-
     return cols;
-  }, [totalYears, expandedPositions, manualOverrides, onToggleExpand, onDeletePosition]);
+  }, [totalYears, expandedPositions, manualOverrides, onToggleExpand, onDeletePosition, handleContextMenu]);
 
   if (positions.length === 0) {
     return (

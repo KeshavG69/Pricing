@@ -135,6 +135,23 @@
         "documentation": {}
     },
     {
+        "label": "asyncio",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "asyncio",
+        "description": "asyncio",
+        "detail": "asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "asynccontextmanager",
+        "importPath": "contextlib",
+        "description": "contextlib",
+        "isExtraImport": true,
+        "detail": "contextlib",
+        "documentation": {}
+    },
+    {
         "label": "FastAPI",
         "importPath": "fastapi",
         "description": "fastapi",
@@ -639,6 +656,14 @@
         "documentation": {}
     },
     {
+        "label": "startup_manager",
+        "importPath": "app.startup",
+        "description": "app.startup",
+        "isExtraImport": true,
+        "detail": "app.startup",
+        "documentation": {}
+    },
+    {
         "label": "BaseSettings",
         "importPath": "pydantic_settings",
         "description": "pydantic_settings",
@@ -647,6 +672,40 @@
         "documentation": {}
     },
     {
+        "label": "time",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "time",
+        "description": "time",
+        "detail": "time",
+        "documentation": {}
+    },
+    {
+        "label": "logging",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "logging",
+        "description": "logging",
+        "detail": "logging",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Optional",
         "importPath": "typing",
         "description": "typing",
@@ -1180,6 +1239,14 @@
         "description": "typing",
         "isExtraImport": true,
         "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
         "documentation": {}
     },
     {
@@ -2753,15 +2820,6 @@
         "documentation": {}
     },
     {
-        "label": "asyncio",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "asyncio",
-        "description": "asyncio",
-        "detail": "asyncio",
-        "documentation": {}
-    },
-    {
         "label": "ProposalCreate",
         "importPath": "models.proposal",
         "description": "models.proposal",
@@ -2847,15 +2905,6 @@
         "description": "client.idrive_storage",
         "isExtraImport": true,
         "detail": "client.idrive_storage",
-        "documentation": {}
-    },
-    {
-        "label": "time",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "time",
-        "description": "time",
-        "detail": "time",
         "documentation": {}
     },
     {
@@ -3053,7 +3102,7 @@
         "kind": 5,
         "importPath": "backend.app.server",
         "description": "backend.app.server",
-        "peekOfCode": "app = FastAPI(\n    title=\"Government Contractor Pricing API\",\n    description=\"API for pricing government contractor labor categories using BLS OEWS wage data\",\n    version=\"1.0.0\"\n)\n# Add GZip compression middleware (compress responses > 1KB)\n# This significantly reduces network payload for large JSON responses\napp.add_middleware(GZipMiddleware, minimum_size=1000)\n# Mount static files\nstatic_path = Path(__file__).parent.parent / \"static\"",
+        "peekOfCode": "app = FastAPI(\n    title=\"Government Contractor Pricing API\",\n    description=\"API for pricing government contractor labor categories using BLS OEWS wage data\",\n    version=\"1.0.0\",\n    lifespan=lifespan\n)\n# Add GZip compression middleware (compress responses > 1KB)\n# This significantly reduces network payload for large JSON responses\napp.add_middleware(GZipMiddleware, minimum_size=1000)\n# Mount static files",
         "detail": "backend.app.server",
         "documentation": {}
     },
@@ -3082,6 +3131,33 @@
         "description": "backend.app.settings",
         "peekOfCode": "settings = Settings()",
         "detail": "backend.app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "StartupManager",
+        "kind": 6,
+        "importPath": "backend.app.startup",
+        "description": "backend.app.startup",
+        "peekOfCode": "class StartupManager:\n    \"\"\"\n    Manages pre-warming of expensive clients at server startup.\n    Thread-safe singleton that tracks pre-warming status and timing.\n    \"\"\"\n    _instance = None\n    _initialized = False\n    def __new__(cls):\n        if cls._instance is None:\n            cls._instance = super(StartupManager, cls).__new__(cls)",
+        "detail": "backend.app.startup",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.app.startup",
+        "description": "backend.app.startup",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nclass StartupManager:\n    \"\"\"\n    Manages pre-warming of expensive clients at server startup.\n    Thread-safe singleton that tracks pre-warming status and timing.\n    \"\"\"\n    _instance = None\n    _initialized = False\n    def __new__(cls):\n        if cls._instance is None:",
+        "detail": "backend.app.startup",
+        "documentation": {}
+    },
+    {
+        "label": "startup_manager",
+        "kind": 5,
+        "importPath": "backend.app.startup",
+        "description": "backend.app.startup",
+        "peekOfCode": "startup_manager = StartupManager()",
+        "detail": "backend.app.startup",
         "documentation": {}
     },
     {
@@ -4097,7 +4173,16 @@
         "kind": 2,
         "importPath": "backend.routers.proposals",
         "description": "backend.routers.proposals",
-        "peekOfCode": "def get_crud():\n    \"\"\"Get singleton ProposalCRUD instance (thread-safe).\"\"\"\n    return get_proposal_crud(MongoDB.get_collection(\"proposals\"))\n# ============================================================================\n# DOCUMENT UPLOAD & ASYNC PROCESSING\n# ============================================================================\nasync def process_proposal_documents(\n    proposal_id: str,\n    user_id: str,\n    file_paths: List[str],",
+        "peekOfCode": "def get_crud():\n    \"\"\"Get singleton ProposalCRUD instance (thread-safe).\"\"\"\n    return get_proposal_crud(MongoDB.get_collection(\"proposals\"))\ndef serialize_proposal(proposal: dict) -> dict:\n    \"\"\"\n    Convert all ObjectId fields to strings for JSON serialization.\n    Args:\n        proposal: Proposal document from MongoDB\n    Returns:\n        Proposal with all ObjectIds converted to strings",
+        "detail": "backend.routers.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_proposal",
+        "kind": 2,
+        "importPath": "backend.routers.proposals",
+        "description": "backend.routers.proposals",
+        "peekOfCode": "def serialize_proposal(proposal: dict) -> dict:\n    \"\"\"\n    Convert all ObjectId fields to strings for JSON serialization.\n    Args:\n        proposal: Proposal document from MongoDB\n    Returns:\n        Proposal with all ObjectIds converted to strings\n    \"\"\"\n    if not proposal:\n        return proposal",
         "detail": "backend.routers.proposals",
         "documentation": {}
     },
@@ -4106,7 +4191,7 @@
         "kind": 5,
         "importPath": "backend.routers.proposals",
         "description": "backend.routers.proposals",
-        "peekOfCode": "router = APIRouter(prefix=\"/proposals\", tags=[\"proposals\"])\n# Get singleton ProposalCRUD instance\ndef get_crud():\n    \"\"\"Get singleton ProposalCRUD instance (thread-safe).\"\"\"\n    return get_proposal_crud(MongoDB.get_collection(\"proposals\"))\n# ============================================================================\n# DOCUMENT UPLOAD & ASYNC PROCESSING\n# ============================================================================\nasync def process_proposal_documents(\n    proposal_id: str,",
+        "peekOfCode": "router = APIRouter(prefix=\"/proposals\", tags=[\"proposals\"])\n# Get singleton ProposalCRUD instance\ndef get_crud():\n    \"\"\"Get singleton ProposalCRUD instance (thread-safe).\"\"\"\n    return get_proposal_crud(MongoDB.get_collection(\"proposals\"))\ndef serialize_proposal(proposal: dict) -> dict:\n    \"\"\"\n    Convert all ObjectId fields to strings for JSON serialization.\n    Args:\n        proposal: Proposal document from MongoDB",
         "detail": "backend.routers.proposals",
         "documentation": {}
     },

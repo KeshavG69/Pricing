@@ -42,6 +42,31 @@ def get_crud():
     return get_proposal_crud(MongoDB.get_collection("proposals"))
 
 
+def serialize_proposal(proposal: dict) -> dict:
+    """
+    Convert all ObjectId fields to strings for JSON serialization.
+
+    Args:
+        proposal: Proposal document from MongoDB
+
+    Returns:
+        Proposal with all ObjectIds converted to strings
+    """
+    if not proposal:
+        return proposal
+
+    # Convert _id
+    if "_id" in proposal:
+        proposal["_id"] = str(proposal["_id"])
+        proposal["id"] = proposal["_id"]
+
+    # Convert organization_id
+    if "organization_id" in proposal and proposal["organization_id"]:
+        proposal["organization_id"] = str(proposal["organization_id"])
+
+    return proposal
+
+
 # ============================================================================
 # DOCUMENT UPLOAD & ASYNC PROCESSING
 # ============================================================================
@@ -440,11 +465,8 @@ async def get_proposal(
             detail="Proposal not found"
         )
 
-    # Convert ObjectId to string
-    proposal["_id"] = str(proposal["_id"])
-    proposal["id"] = proposal["_id"]
-
-    return proposal
+    # Convert all ObjectIds to strings
+    return serialize_proposal(proposal)
 
 
 @router.patch("/{proposal_id}")
@@ -479,11 +501,8 @@ async def update_proposal(
             detail="Proposal not found"
         )
 
-    # Convert ObjectId to string
-    updated_proposal["_id"] = str(updated_proposal["_id"])
-    updated_proposal["id"] = updated_proposal["_id"]
-
-    return updated_proposal
+    # Convert all ObjectIds to strings
+    return serialize_proposal(updated_proposal)
 
 
 @router.patch("/{proposal_id}/positions/{position_index}")

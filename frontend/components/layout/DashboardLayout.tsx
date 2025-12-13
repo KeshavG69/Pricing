@@ -59,6 +59,23 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     };
   }, [isProfileMenuOpen, isRecentOpen]);
 
+  // Focus refresh: Fetch fresh data when user returns to tab
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('[FOCUS] Tab gained focus, refreshing proposals...');
+
+      // Fetch fresh proposals when user returns
+      if (user) {
+        fetchProposals();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [user, fetchProposals]);
+
   const handleLogout = async () => {
     await logout();
     router.push('/');

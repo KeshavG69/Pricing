@@ -2,6 +2,9 @@
 FastAPI server for government contractor pricing system.
 """
 
+import asyncio
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -11,12 +14,33 @@ from pathlib import Path
 
 from routers import pricing, auth, excel_export, proposals, organizations, invitations, workspace
 from auth.config import FRONTEND_URL
+from app.startup import startup_manager
 
-# Create FastAPI app
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan context manager for FastAPI.
+
+    Startup: Pre-warm expensive clients in background (non-blocking)
+    Shutdown: Cleanup resources
+    """
+    # Startup: Pre-warm clients in background
+    # Using create_task to not block server startup
+    asyncio.create_task(startup_manager.prewarm_all_clients())
+
+    yield
+
+    # Shutdown: Add cleanup logic here if needed
+    pass
+
+
+# Create FastAPI app with lifespan
 app = FastAPI(
     title="Government Contractor Pricing API",
     description="API for pricing government contractor labor categories using BLS OEWS wage data",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # Add GZip compression middleware (compress responses > 1KB)
@@ -66,6 +90,17 @@ async def root():
 async def health():
     """Health check endpoint."""
     return {"status": "healthy"}
+
+
+@app.get("/api/warmup-status")
+async def warmup_status():
+    """
+    Get pre-warming status for all clients.
+
+    Returns:
+        Dict with overall status and per-client timing details
+    """
+    return startup_manager.get_warmup_status()
 
 
 if __name__ == "__main__":

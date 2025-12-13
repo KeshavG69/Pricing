@@ -45,9 +45,11 @@ export default function DashboardPage() {
     name: string;
   } | null>(null);
 
+  // Fetch proposals on mount and when organization changes
   useEffect(() => {
+    console.log('[DASHBOARD] Fetching proposals for org:', user?.organization_id);
     fetchProposals();
-  }, [fetchProposals]);
+  }, [fetchProposals, user?.organization_id]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {

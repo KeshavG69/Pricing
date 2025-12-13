@@ -6,6 +6,7 @@ import { workspaceApi, UserOrganization } from '@/lib/api/workspace';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useProposalsStore } from '@/lib/stores/proposalsStore';
 import { useRouter } from 'next/navigation';
+import { cacheManager } from '@/lib/cache';
 
 interface WorkspaceSwitcherProps {
   isCollapsed?: boolean;
@@ -41,22 +42,39 @@ export default function WorkspaceSwitcher({ isCollapsed = false }: WorkspaceSwit
 
     try {
       setIsSwitching(true);
+
+      // 1. Get current org before switch
+      const currentOrgId = user?.organization_id;
+
+      // 2. Switch organization (backend)
       await workspaceApi.switchOrganization(orgId);
 
-      // Refresh user data to get updated organization
-      await fetchUser();
+      // 3. Invalidate old org caches
+      if (currentOrgId) {
+        console.log(`[WORKSPACE] Clearing cache for org: ${currentOrgId}`);
+        cacheManager.invalidate(`proposals:list:${currentOrgId}`);
+        cacheManager.invalidate(`proposal:${currentOrgId}:*`);
+        cacheManager.invalidate(`org:${currentOrgId}:*`);
+      }
 
-      // Clear proposals cache and fetch new organization's proposals
-      resetPagination();
-      await fetchProposals();
+      // 4. Invalidate all caches (old and new org)
+      console.log(`[WORKSPACE] Clearing cache for org: ${currentOrgId} and ${orgId}`);
+      cacheManager.invalidate(); // Clear ALL cache to ensure fresh data
 
-      // Close dropdown
+      // 5. Close dropdown
       setIsOpen(false);
 
-      // Full page reload to refresh all organization-scoped data
+      console.log('[WORKSPACE] Successfully switched to organization:', orgId);
+      console.log('[WORKSPACE] Reloading page to refresh all data...');
+
+      // 6. Full page reload to ensure all state is fresh
+      // This is necessary because:
+      // - User state needs to be fully refreshed
+      // - All organization-scoped data needs to reload
+      // - Prevents race conditions and stale state
       window.location.reload();
     } catch (error) {
-      console.error('Failed to switch organization:', error);
+      console.error('[WORKSPACE] Failed to switch organization:', error);
       setIsSwitching(false);
     }
   };
