@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useProposalsStore } from '@/lib/stores/proposalsStore';
 import { useAuthStore } from '@/lib/stores/authStore';
+import { proposalsApi } from '@/lib/api/proposals';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -69,6 +70,15 @@ export default function ProposalsPage() {
     id: string;
     name: string;
   } | null>(null);
+
+  // Rename dialog state
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [proposalToRename, setProposalToRename] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+  const [renameName, setRenameName] = useState('');
+  const [isRenaming, setIsRenaming] = useState(false);
 
   // Load initial data
   useEffect(() => {
@@ -173,6 +183,39 @@ export default function ProposalsPage() {
     setProposalToShare(null);
   };
 
+  // Rename handlers
+  const handleRenameClick = (id: string, name: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setProposalToRename({ id, name });
+    setRenameName(name);
+    setRenameDialogOpen(true);
+  };
+
+  const handleRenameConfirm = async () => {
+    if (!proposalToRename || !renameName.trim()) return;
+
+    setIsRenaming(true);
+    try {
+      await proposalsApi.update(proposalToRename.id, {
+        name: renameName.trim(),
+      });
+      toast.success('Proposal renamed successfully');
+      await fetchProposalsPaginated(false);
+      handleRenameCancel();
+    } catch (error) {
+      console.error('Failed to rename proposal:', error);
+      toast.error('Failed to rename proposal');
+    } finally {
+      setIsRenaming(false);
+    }
+  };
+
+  const handleRenameCancel = () => {
+    setRenameDialogOpen(false);
+    setProposalToRename(null);
+    setRenameName('');
+  };
+
   const handleProposalClick = (id: string) => {
     router.push(`/proposals/${id}`);
   };
@@ -239,6 +282,7 @@ export default function ProposalsPage() {
               onDuplicate={handleDuplicateClick}
               onDelete={handleDeleteClick}
               onShare={handleShareClick}
+              onRename={handleRenameClick}
               showShareButton={user?.role === 'admin'}
               emptyMessage="No proposals found. Create your first proposal to get started."
               emptyAction={
@@ -328,6 +372,45 @@ export default function ProposalsPage() {
           onSuccess={handleShareSuccess}
         />
       )}
+
+      {/* Rename Dialog */}
+      <Dialog
+        isOpen={renameDialogOpen}
+        onClose={handleRenameCancel}
+        title="Rename Proposal"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Enter a new name for the proposal
+          </p>
+          <Input
+            type="text"
+            placeholder="Proposal name"
+            value={renameName}
+            onChange={(e) => setRenameName(e.target.value)}
+            autoFocus
+          />
+          <div className="flex justify-end gap-3 pt-4">
+            <Button variant="ghost" onClick={handleRenameCancel}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleRenameConfirm}
+              disabled={isRenaming || !renameName.trim()}
+            >
+              {isRenaming ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Renaming...
+                </>
+              ) : (
+                'Rename'
+              )}
+            </Button>
+          </div>
+        </div>
+      </Dialog>
     </DashboardLayout>
   );
 }

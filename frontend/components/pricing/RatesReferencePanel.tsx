@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { IndirectRates, EscalationRates } from '@/types';
+import { useToast } from '@/lib/hooks/useToast';
 
 interface RatesReferencePanelProps {
   rates: IndirectRates;
@@ -22,6 +23,8 @@ export const RatesReferencePanel = ({
   onUpdateRates,
   onUpdateEscalationRates,
 }: RatesReferencePanelProps) => {
+  const toast = useToast();
+
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
   const [editedRates, setEditedRates] = useState<IndirectRates>(rates);
@@ -58,7 +61,7 @@ export const RatesReferencePanel = ({
       .every(validateRate);
 
     if (!allRatesValid || !allEscalationRatesValid) {
-      alert('All rates must be valid numbers between 0% and 100%');
+      toast.error('All rates must be valid numbers between 0% and 100%');
       return;
     }
 
@@ -66,6 +69,7 @@ export const RatesReferencePanel = ({
     onUpdateRates(editedRates);
     onUpdateEscalationRates(editedEscalationRates);
 
+    toast.success('Rates updated successfully');
     setIsEditing(false);
   };
 

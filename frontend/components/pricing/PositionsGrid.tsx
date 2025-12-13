@@ -8,6 +8,7 @@ import { usePricingStore } from '@/lib/stores/pricingStore';
 import { SpreadsheetPosition } from '@/types';
 import { Trash2, MoreVertical } from 'lucide-react';
 import { ContextMenu, ContextMenuItem } from '@/components/ui/ContextMenu';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ConvertToSubcontractorModal } from './ConvertToSubcontractorModal';
 import { SalarySelectionModal } from './SalarySelectionModal';
 import { getAvailablePercentiles } from '@/lib/utils/percentileHelpers';
@@ -25,6 +26,10 @@ export const PositionsGrid = () => {
   // Salary selection modal state
   const [salaryModalOpen, setSalaryModalOpen] = useState(false);
   const [positionToEdit, setPositionToEdit] = useState<SpreadsheetPosition | null>(null);
+
+  // Delete confirmation state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [positionToDelete, setPositionToDelete] = useState<SpreadsheetPosition | null>(null);
 
   // Handle row changes (for inline editing)
   const handleRowsChange = useCallback((newRows: SpreadsheetPosition[]) => {
@@ -166,9 +171,9 @@ export const PositionsGrid = () => {
       label: 'Delete Position',
       icon: <Trash2 className="w-4 h-4" />,
       onClick: () => {
-        if (confirm(`Delete position "${position.labor_category}"?`)) {
-          deletePosition(position.id);
-        }
+        setPositionToDelete(position);
+        setDeleteDialogOpen(true);
+        setContextMenu(null);
       },
       danger: true,
     });
@@ -504,6 +509,27 @@ export const PositionsGrid = () => {
             updatePosition(positionToEdit.id, updates);
           }
         }}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setPositionToDelete(null);
+        }}
+        onConfirm={() => {
+          if (positionToDelete) {
+            deletePosition(positionToDelete.id);
+          }
+          setDeleteDialogOpen(false);
+          setPositionToDelete(null);
+        }}
+        title="Delete Position"
+        message={`Are you sure you want to delete position "${positionToDelete?.labor_category}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="danger"
       />
     </div>
   );

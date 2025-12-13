@@ -4,11 +4,11 @@ Keshav:-
 3.custom rates vecttor
 4.ui similar to photo
 5. user management x
-6. proposal name change as well
+6. proposal name change as well x 
 7.fix caching issue x
 in progress or submited based on when they download excel
 
 Parth:-
-1.pricing  
+1.payment  
 2.sources
 

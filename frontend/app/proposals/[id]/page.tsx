@@ -17,11 +17,13 @@ import PricingTabs from '@/components/pricing/PricingTabs';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { SubcontractorSection } from '@/components/pricing/SubcontractorSection';
 import { Loader2, CheckCircle, AlertCircle, ArrowLeft, Plus, Download, Pencil, Check, X } from 'lucide-react';
+import { useToast } from '@/lib/hooks/useToast';
 
 export default function ProposalPage() {
   const params = useParams();
   const router = useRouter();
   const proposalId = params.id as string;
+  const toast = useToast();
 
   const { currentProposal, fetchProposal, isLoading } = useProposalsStore();
   const {
@@ -47,6 +49,8 @@ export default function ProposalPage() {
   const [pricingLoaded, setPricingLoaded] = useState(false);
   const [isEditingSolicitation, setIsEditingSolicitation] = useState(false);
   const [editedSolicitation, setEditedSolicitation] = useState('');
+  const [isEditingName, setIsEditingName] = useState(false);
+  const [editedName, setEditedName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [addPositionModalOpen, setAddPositionModalOpen] = useState(false);
 
@@ -145,6 +149,39 @@ export default function ProposalPage() {
   const handleStartEdit = () => {
     setEditedSolicitation(currentProposal?.solicitation_number || '');
     setIsEditingSolicitation(true);
+  };
+
+  const handleSaveProposalName = async () => {
+    console.log('Saving proposal name:', editedName);
+    if (!editedName.trim()) {
+      toast.error('Proposal name cannot be empty');
+      return;
+    }
+
+    setIsSaving(true);
+    try {
+      await proposalsApi.update(proposalId, {
+        name: editedName.trim(),
+      });
+      await fetchProposal(proposalId);
+      setIsEditingName(false);
+      toast.success('Proposal name updated successfully');
+    } catch (error) {
+      console.error('Failed to update proposal name:', error);
+      toast.error('Failed to update proposal name');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancelEditName = () => {
+    setIsEditingName(false);
+    setEditedName(currentProposal?.name || '');
+  };
+
+  const handleStartEditName = () => {
+    setEditedName(currentProposal?.name || '');
+    setIsEditingName(true);
   };
 
   if (isLoading || !currentProposal) {
@@ -336,9 +373,62 @@ export default function ProposalPage() {
       <div className="max-w-[1800px] mx-auto">
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-lg font-bold text-foreground mb-2">
-              {currentProposal.name}
-            </h1>
+            {/* Proposal Name with Inline Edit */}
+            <div className="flex items-center gap-2 mb-2">
+              {!isEditingName ? (
+                <>
+                  <h1 className="text-lg font-bold text-foreground">
+                    {currentProposal.name}
+                  </h1>
+                  <button
+                    onClick={handleStartEditName}
+                    className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                    title="Edit proposal name"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                </>
+              ) : (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSaveProposalName();
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <Input
+                    type="text"
+                    value={editedName}
+                    onChange={(e) => setEditedName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        handleCancelEditName();
+                      }
+                    }}
+                    placeholder="Enter proposal name"
+                    className="w-96"
+                    autoFocus
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="p-2 text-green-600 hover:text-green-700 disabled:opacity-50 hover:bg-green-50 rounded transition-colors"
+                    title="Save"
+                  >
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelEditName}
+                    disabled={isSaving}
+                    className="p-2 text-red-600 hover:text-red-700 disabled:opacity-50 hover:bg-red-50 rounded transition-colors"
+                    title="Cancel"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </form>
+              )}
+            </div>
             {/* Solicitation Number with Inline Edit */}
             <div className="flex items-center gap-2">
               {!isEditingSolicitation ? (

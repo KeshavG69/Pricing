@@ -8,6 +8,7 @@ import styles from './PrimeLaborSection.module.css';
 import { AdvancedPosition, IndirectRates, EscalationRates, GridRow, BreakdownType, ContextMenuItem } from '@/types';
 import { ChevronDown, ChevronRight, Trash2, MoreVertical, Plus } from 'lucide-react';
 import { ContextMenu } from '@/components/ui/ContextMenu';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ConvertToSubcontractorModal } from '@/components/pricing/ConvertToSubcontractorModal';
 import { SalarySelectionModal } from '@/components/pricing/SalarySelectionModal';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
@@ -114,6 +115,10 @@ export const PrimeLaborSection = ({
   // Add position modal state
   const [addPositionModalOpen, setAddPositionModalOpen] = useState(false);
 
+  // Delete confirmation state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [positionToDelete, setPositionToDelete] = useState<AdvancedPosition | null>(null);
+
   // Handle right-click on grid rows (BEFORE useMemo to maintain hook order)
   const handleContextMenu = useCallback((e: React.MouseEvent, position: AdvancedPosition) => {
     e.preventDefault();
@@ -172,9 +177,9 @@ export const PrimeLaborSection = ({
         label: 'Delete Position',
         icon: <Trash2 className="w-4 h-4" />,
         onClick: () => {
-          if (confirm(`Delete position "${position.labor_category}"?`)) {
-            onDeletePosition(position.id);
-          }
+          setPositionToDelete(position);
+          setDeleteDialogOpen(true);
+          setContextMenu(null);
         },
         danger: true,
       },
@@ -828,6 +833,27 @@ export const PrimeLaborSection = ({
         positions={basicPositions}
         totalYears={totalYears}
         onAdd={handleModalAddPosition}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setPositionToDelete(null);
+        }}
+        onConfirm={() => {
+          if (positionToDelete) {
+            onDeletePosition(positionToDelete.id);
+          }
+          setDeleteDialogOpen(false);
+          setPositionToDelete(null);
+        }}
+        title="Delete Position"
+        message={`Are you sure you want to delete position "${positionToDelete?.labor_category}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="danger"
       />
     </div>
   );

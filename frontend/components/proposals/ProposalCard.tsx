@@ -9,6 +9,7 @@ import {
   MoreVertical,
   Users,
   Share2,
+  Pencil,
 } from 'lucide-react';
 import { Proposal } from '@/types';
 
@@ -18,11 +19,12 @@ interface ProposalCardProps {
   onDuplicate: (id: string, name: string, e: React.MouseEvent) => void;
   onDelete: (id: string, e: React.MouseEvent) => void;
   onShare?: (id: string, name: string, e: React.MouseEvent) => void;
+  onRename?: (id: string, name: string, e: React.MouseEvent) => void;
   showShareButton?: boolean;
 }
 
 export const ProposalCard = React.memo(
-  ({ proposal, onClick, onDuplicate, onDelete, onShare, showShareButton = false }: ProposalCardProps) => {
+  ({ proposal, onClick, onDuplicate, onDelete, onShare, onRename, showShareButton = false }: ProposalCardProps) => {
     const getStatusIcon = (status: string) => {
       switch (status) {
         case 'completed':
@@ -114,6 +116,15 @@ export const ProposalCard = React.memo(
             </p>
           </div>
           <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {onRename && (
+              <button
+                onClick={(e) => onRename(proposal.id, proposal.name, e)}
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                title="Rename"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+            )}
             {showShareButton && onShare && (
               <button
                 onClick={(e) => onShare(proposal.id, proposal.name, e)}
