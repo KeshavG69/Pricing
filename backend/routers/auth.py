@@ -25,55 +25,9 @@ from auth.refresh_token import (
     revoke_refresh_token
 )
 from auth.google_auth import GoogleAuthService
+from auth.dependencies import get_current_user as get_current_user_from_deps
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
-
-
-def get_current_user(request: Request):
-    """Get current user from Authorization header"""
-    # Get Authorization header
-    auth_header = request.headers.get("Authorization")
-    if not auth_header:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Not authenticated",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    # Extract token from "Bearer <token>" format
-    try:
-        scheme, access_token = auth_header.split()
-        if scheme.lower() != "bearer":
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid authentication scheme",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-    except ValueError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid authorization header format",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    # Verify token
-    token_data = verify_token(access_token)
-    if token_data is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-
-    # Get user
-    user = UserCRUD.get_user_by_email(token_data.email)
-    if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    return user
 
 
 @router.post("/signup", response_model=UserResponse)
@@ -88,7 +42,7 @@ async def signup(user_data: UserSignup):
         UserResponse: Created user information
     """
     try:
-        user = UserCRUD.create_user(user_data)
+        user = await UserCRUD.create_user(user_data)
         return user
     except ValueError as e:
         raise HTTPException(
@@ -115,12 +69,31 @@ async def login(user_data: UserLogin, request: Request):
         Dict with tokens and user info
     """
     try:
-        user = UserCRUD.authenticate_user(user_data.email, user_data.password)
+        user = await UserCRUD.authenticate_user(user_data.email, user_data.password)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Incorrect email or password",
             )
+
+        # Get full user document to extract organization info
+        from auth.database import MongoDB
+        users_collection = await MongoDB.get_users_collection()
+        user_doc = await users_collection.find_one({"email": user_data.email})
+
+        # Extract role and organization from organizations array
+        current_org_id = user_doc.get("current_organization_id")
+        organizations = user_doc.get("organizations", [])
+
+        if organizations and current_org_id:
+            current_org = next(
+                (org for org in organizations if org["organization_id"] == current_org_id),
+                None
+            )
+            if current_org:
+                user.organization_id = str(current_org["organization_id"])
+                user.role = current_org["role"]
+                user.status = current_org["status"]
 
         # Create access token
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -182,7 +155,26 @@ async def google_login(
             )
 
         # Create or update user in database
-        user = UserCRUD.create_or_update_google_user(google_profile)
+        user = await UserCRUD.create_or_update_google_user(google_profile)
+
+        # Get full user document to extract organization info
+        from auth.database import MongoDB
+        users_collection = await MongoDB.get_users_collection()
+        user_doc = await users_collection.find_one({"email": user.email})
+
+        # Extract role and organization from organizations array
+        current_org_id = user_doc.get("current_organization_id")
+        organizations = user_doc.get("organizations", [])
+
+        if organizations and current_org_id:
+            current_org = next(
+                (org for org in organizations if org["organization_id"] == current_org_id),
+                None
+            )
+            if current_org:
+                user.organization_id = str(current_org["organization_id"])
+                user.role = current_org["role"]
+                user.status = current_org["status"]
 
         # Create access token
         access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -217,15 +209,25 @@ async def google_login(
         )
 
 
-@router.get("/me", response_model=UserResponse)
-async def get_current_user_info(current_user: UserResponse = Depends(get_current_user)):
+@router.get("/me")
+async def get_current_user_info(current_user: dict = Depends(get_current_user_from_deps)):
     """
     Get current authenticated user information
 
     Returns:
-        UserResponse: Current user information
+        User information with current organization role
     """
-    return current_user
+    # Return user info with organization-specific fields
+    return {
+        "id": str(current_user["_id"]),
+        "email": current_user["email"],
+        "firstName": current_user["firstName"],
+        "lastName": current_user["lastName"],
+        "organization_id": str(current_user.get("organization_id")) if current_user.get("organization_id") else None,
+        "role": current_user.get("role"),
+        "status": current_user.get("status"),
+        "created_at": current_user["createdAt"].isoformat() if current_user.get("createdAt") else None
+    }
 
 
 @router.post("/refresh")
@@ -308,7 +310,7 @@ async def refresh_token_endpoint(
 @router.post("/logout", response_model=LogoutResponse)
 async def logout(
     request: Request,
-    current_user: UserResponse = Depends(get_current_user)
+    current_user: dict = Depends(get_current_user_from_deps)
 ):
     """
     Logout user by revoking refresh token

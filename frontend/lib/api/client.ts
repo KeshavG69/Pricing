@@ -41,11 +41,31 @@ apiClient.interceptors.request.use(
   }
 );
 
-// Response interceptor - handle 401 with automatic token refresh
+// Response interceptor - handle 401 with automatic token refresh and 403 org removal
 apiClient.interceptors.response.use(
   (response) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
+
+    // Handle 403 Forbidden - user removed from organization
+    if (error.response?.status === 403) {
+      const errorDetail = (error.response.data as any)?.detail || '';
+
+      // If user was removed from organization, refetch user to auto-switch
+      if (errorDetail.includes('suspended') || errorDetail.includes('inactive') || errorDetail.includes('removed')) {
+        console.log('[API] User removed from organization, refetching user...');
+
+        // Trigger user refetch which will auto-switch to another org
+        if (typeof window !== 'undefined') {
+          try {
+            const { useAuthStore } = await import('@/lib/stores/authStore');
+            await useAuthStore.getState().fetchUser();
+          } catch (fetchError) {
+            console.error('[API] Failed to refetch user:', fetchError);
+          }
+        }
+      }
+    }
 
     // Handle 401 Unauthorized
     if (error.response?.status === 401 && !originalRequest._retry) {

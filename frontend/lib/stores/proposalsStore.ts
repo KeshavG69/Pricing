@@ -1,12 +1,15 @@
 import { create } from 'zustand';
 import { Proposal, ProposalUpdate } from '@/types';
 import { proposalsApi } from '../api/proposals';
+import { cacheManager } from '../cache';
+import { useAuthStore } from './authStore';
 
 interface ProposalsState {
   proposals: Proposal[];
   currentProposal: Proposal | null;
   isLoading: boolean;
   error: string | null;
+  lastFetchedOrgId: string | null; // Track organization changes
 
   // Pagination state
   hasMore: boolean;
@@ -39,6 +42,7 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
   currentProposal: null,
   isLoading: false,
   error: null,
+  lastFetchedOrgId: null,
 
   // Pagination state
   hasMore: true,
@@ -48,9 +52,54 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
 
   fetchProposals: async () => {
     try {
-      set({ isLoading: true, error: null });
-      const proposals = await proposalsApi.list();
-      set({ proposals, isLoading: false });
+      // Get current organization ID
+      const user = useAuthStore.getState().user;
+      const orgId = user?.organization_id;
+
+      if (!orgId) {
+        console.warn('[PROPOSALS] No organization ID, skipping fetch');
+        return;
+      }
+
+      // Check if organization changed
+      const state = get();
+      if (state.lastFetchedOrgId && state.lastFetchedOrgId !== orgId) {
+        console.log(`[PROPOSALS] Organization changed: ${state.lastFetchedOrgId} -> ${orgId}`);
+        // Clear old org cache
+        cacheManager.invalidate(`proposals:list:${state.lastFetchedOrgId}`);
+        cacheManager.invalidate(`proposal:${state.lastFetchedOrgId}:*`);
+      }
+
+      // Always-refresh pattern: Check cache first, then ALWAYS fetch fresh
+      const cacheKey = `proposals:list:${orgId}`;
+      const cached = cacheManager.get<Proposal[]>(cacheKey);
+
+      // Show cached data immediately if valid (instant display)
+      if (cached && !cached.isExpired) {
+        console.log('[PROPOSALS] Showing cached data (instant display)');
+        set({
+          proposals: cached.data,
+          isLoading: false,
+          lastFetchedOrgId: orgId,
+        });
+      } else {
+        set({ isLoading: true, error: null });
+      }
+
+      // ALWAYS fetch fresh data in background (even if cache hit)
+      console.log('[PROPOSALS] Fetching fresh data in background...');
+      const freshProposals = await proposalsApi.list();
+
+      // Update with fresh data and cache
+      set({
+        proposals: freshProposals,
+        isLoading: false,
+        lastFetchedOrgId: orgId,
+      });
+
+      // Update cache
+      cacheManager.set(cacheKey, freshProposals);
+      console.log('[PROPOSALS] Fresh data loaded and cached');
     } catch (error: any) {
       set({
         error: error.response?.data?.detail || 'Failed to fetch proposals',
@@ -76,6 +125,13 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       const response = await proposalsApi.upload(files, solicitationNumber);
+
+      // Invalidate proposals list cache (new proposal added)
+      const user = useAuthStore.getState().user;
+      if (user?.organization_id) {
+        cacheManager.invalidate(`proposals:list:${user.organization_id}`);
+      }
+
       set({ isLoading: false });
       return response.proposal_id;
     } catch (error: any) {
@@ -91,6 +147,13 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       const updated = await proposalsApi.update(id, updates);
+
+      // Invalidate cache (proposal updated)
+      const user = useAuthStore.getState().user;
+      if (user?.organization_id) {
+        cacheManager.invalidate(`proposal:${id}`);
+        cacheManager.invalidate(`proposals:list:${user.organization_id}`);
+      }
 
       // Update in list
       set((state) => ({
@@ -112,6 +175,13 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       await proposalsApi.delete(id);
+
+      // Invalidate cache (proposal deleted)
+      const user = useAuthStore.getState().user;
+      if (user?.organization_id) {
+        cacheManager.invalidate(`proposal:${id}`);
+        cacheManager.invalidate(`proposals:list:${user.organization_id}`);
+      }
 
       // Remove from list
       set((state) => ({

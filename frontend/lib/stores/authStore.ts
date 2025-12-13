@@ -98,6 +98,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
 
+      // Clear all cache on logout
+      if (typeof window !== 'undefined') {
+        try {
+          const { cacheManager } = await import('@/lib/cache');
+          cacheManager.invalidate(); // Clear all cache
+        } catch (error) {
+          console.error('[AUTH] Failed to clear cache on logout:', error);
+        }
+      }
+
       // Clear user from state
       set({ user: null });
     }
@@ -105,8 +115,33 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   fetchUser: async () => {
     try {
+      const previousUser = get().user;
       const user = await authApi.getCurrentUser();
-      set({ user });
+
+      // Check if organization changed (user was removed from org and switched to another)
+      if (previousUser && user && previousUser.organization_id !== user.organization_id) {
+        console.log('[AUTH] Organization changed, clearing cache and refreshing...');
+
+        // Clear all cache when organization changes
+        if (typeof window !== 'undefined') {
+          try {
+            const { cacheManager } = await import('@/lib/cache');
+            cacheManager.invalidate(); // Clear all cache
+          } catch (error) {
+            console.error('[AUTH] Failed to clear cache:', error);
+          }
+        }
+
+        // Update user
+        set({ user });
+
+        // Redirect to dashboard to refresh data
+        if (typeof window !== 'undefined') {
+          window.location.href = '/dashboard';
+        }
+      } else {
+        set({ user });
+      }
     } catch (error) {
       console.error('Failed to fetch user:', error);
       set({ user: null });

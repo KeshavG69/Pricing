@@ -3,7 +3,7 @@ name = "pricing"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
     "agno>=2.2.13",
     "bcrypt>=4.0.1",
@@ -17,6 +17,7 @@ dependencies = [
     "langchain-openai>=1.0.3",
     "llama-cloud-services>=0.6.81",
     "llama-parse>=0.6.81",
+    "motor>=3.7.1",
     "openai>=2.8.1",
     "openpyxl>=3.1.5",
     "pandas>=2.3.3",

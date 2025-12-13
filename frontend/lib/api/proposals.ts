@@ -117,4 +117,34 @@ export const proposalsApi = {
     );
     return response.data;
   },
+
+  // Share proposal with users (admin only)
+  shareProposal: async (
+    proposalId: string,
+    userIds: string[]
+  ): Promise<{ message: string }> => {
+    const response = await apiClient.post<{ message: string }>(
+      `/proposals/${proposalId}/share`,
+      { user_ids: userIds }
+    );
+    return response.data;
+  },
+
+  // Make proposal private (admin only)
+  makePrivate: async (proposalId: string): Promise<{ message: string }> => {
+    const response = await apiClient.delete<{ message: string }>(
+      `/proposals/${proposalId}/share`
+    );
+    return response.data;
+  },
+
+  // Get proposal access info
+  getAccessInfo: async (proposalId: string): Promise<{
+    visibility: string;
+    shared_with: Array<{ id: string; email: string; firstName: string; lastName: string }>;
+    is_owner: boolean;
+  }> => {
+    const response = await apiClient.get(`/proposals/${proposalId}/access`);
+    return response.data;
+  },
 };

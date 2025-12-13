@@ -5,8 +5,11 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useProposalsStore } from '@/lib/stores/proposalsStore';
-import { FileText, LogOut, Plus, Settings, LayoutGrid, ChevronRight, BarChart3, ChevronLeft, Menu, Clock, ChevronDown } from 'lucide-react';
+import { FileText, LogOut, Plus, Settings, LayoutGrid, ChevronRight, BarChart3, ChevronLeft, Menu, Clock, ChevronDown, Users, Mail, Building } from 'lucide-react';
 import Button from '../ui/Button';
+import RoleBadge from '../ui/RoleBadge';
+import WorkspaceSwitcher from '../workspace/WorkspaceSwitcher';
+import { isAdmin } from '@/lib/utils/permissions';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -56,6 +59,23 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     };
   }, [isProfileMenuOpen, isRecentOpen]);
 
+  // Focus refresh: Fetch fresh data when user returns to tab
+  useEffect(() => {
+    const handleFocus = () => {
+      console.log('[FOCUS] Tab gained focus, refreshing proposals...');
+
+      // Fetch fresh proposals when user returns
+      if (user) {
+        fetchProposals();
+      }
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, [user, fetchProposals]);
+
   const handleLogout = async () => {
     await logout();
     router.push('/');
@@ -80,9 +100,15 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     { href: '/dashboard/proposals', label: 'Proposals', icon: FileText },
   ];
 
+  const adminNavItems = [
+    { href: '/dashboard/team', label: 'Team', icon: Users },
+    { href: '/dashboard/invitations', label: 'Invitations', icon: Mail },
+    { href: '/dashboard/settings/organization', label: 'Organization', icon: Building },
+  ];
+
   // Get last 3 proposals sorted by date
   const recentProposals = proposals
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     .slice(0, 3);
 
   return (
@@ -113,6 +139,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             </button>
           </div>
         </div>
+
+        {/* Workspace Switcher */}
+        <WorkspaceSwitcher isCollapsed={isCollapsed} />
 
         {/* Navigation */}
         <nav className="flex-1 px-4 py-6 space-y-1">
@@ -156,6 +185,36 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
             })}
           </div>
 
+          {/* Admin Navigation */}
+          {isAdmin(user) && (
+            <div className="space-y-1 mt-6">
+              {!isCollapsed && (
+                <p className="px-4 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Admin</p>
+              )}
+              {adminNavItems.map((item) => {
+                const isActive = pathname === item.href;
+                const Icon = item.icon;
+                return (
+                  <Link key={item.href} href={item.href} title={isCollapsed ? item.label : ''}>
+                    <div
+                      className={`flex items-center ${isCollapsed ? 'justify-center px-4' : 'justify-between px-4'} py-3 rounded-lg transition-all duration-200 group ${
+                        isActive
+                          ? 'bg-primary/10 text-primary font-medium'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                      }`}
+                    >
+                      <div className={`flex items-center ${isCollapsed ? '' : 'space-x-3'}`}>
+                        <Icon className={`w-5 h-5 ${isActive ? 'text-primary' : 'text-muted-foreground group-hover:text-foreground'}`} />
+                        {!isCollapsed && <span className="text-sm">{item.label}</span>}
+                      </div>
+                      {isActive && !isCollapsed && <ChevronRight className="w-4 h-4 text-primary/50" />}
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+
           {/* Recent Section */}
           {recentProposals.length > 0 && (
             <div className="mt-6 relative recent-menu-container">
@@ -189,7 +248,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                           {proposal.name}
                         </span>
                         <span className="text-xs text-muted-foreground">
-                          {new Date(proposal.created_at).toLocaleDateString()}
+                          {new Date(proposal.createdAt).toLocaleDateString()}
                         </span>
                       </div>
                     </Link>
@@ -213,9 +272,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                   {user.firstName[0]}{user.lastName[0]}
                 </div>
                 <div className="flex-1 min-w-0 text-left">
-                  <p className="text-sm font-medium text-foreground truncate">
-                    {user.firstName} {user.lastName}
-                  </p>
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <p className="text-sm font-medium text-foreground truncate">
+                      {user.firstName} {user.lastName}
+                    </p>
+                    <RoleBadge role={user.role} size="sm" />
+                  </div>
                   <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                 </div>
                 <ChevronRight className={`w-4 h-4 text-muted-foreground transition-transform ${isProfileMenuOpen ? 'rotate-90' : ''}`} />

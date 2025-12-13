@@ -298,9 +298,9 @@ export const AddPositionModal = ({
                       <Clock className="w-4 h-4 text-muted-foreground" />
                       <Input
                         type="number"
-                        value={yearHours}
+                        value={yearHours === 0 ? '' : yearHours}
                         onChange={(e) => {
-                          const value = parseFloat(e.target.value) || 0;
+                          const value = e.target.value === '' ? 0 : parseFloat(e.target.value) || 0;
                           setHoursPerYear({ ...hoursPerYear, [yearStr]: value });
                           setErrors({ ...errors, [`hours_${yearStr}`]: '', hours: '' });
                         }}

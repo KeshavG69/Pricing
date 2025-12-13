@@ -372,11 +372,14 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
     loadProposal: async (proposalId, existingProposal) => {
       try {
-        // Check cache first
-        const cachedData = getCachedProposal(proposalId);
-        if (cachedData) {
-          set(cachedData);
-          return;
+        // If existingProposal is provided, skip cache (it's fresh data)
+        if (!existingProposal) {
+          // Check cache only when fetching from API
+          const cachedData = getCachedProposal(proposalId);
+          if (cachedData) {
+            set(cachedData);
+            return;
+          }
         }
 
         // Use existing proposal data if provided, otherwise fetch
@@ -604,9 +607,47 @@ export const usePricingStore = create<PricingState>((set, get) => {
         }
       }
 
-      // 7. Trigger recalculation and auto-save
+      // 7. Trigger recalculation
       debouncedRecalculate();
-      debouncedAutoSave(); // Explicit auto-save to persist to MongoDB immediately
+
+      // 8. Force IMMEDIATE save to MongoDB (bypass debounce)
+      if (state.proposalId) {
+        console.log('💾 Forcing immediate save to MongoDB...');
+        try {
+          await proposalsApi.update(state.proposalId, {
+            spreadsheet_data: {
+              positions: get().positions,
+              subcontractors: get().subcontractors,
+              odcs: get().odcs,
+              rates: get().rates,
+              escalation_rates: get().escalationRates,
+              months_per_year: get().monthsPerYear,
+            },
+          });
+          console.log('✅ Proposal saved successfully');
+
+          // 9. Invalidate cache BEFORE refetching (critical!)
+          proposalCache.delete(state.proposalId);
+          console.log('🗑️  Cache cleared before reload');
+
+          // 10. Refetch proposal and reload pricing data (no page reload!)
+          console.log('🔄 Refetching proposal data...');
+          const freshProposal = await proposalsApi.get(state.proposalId);
+
+          // Reload pricing data with fresh proposal
+          await get().loadProposal(state.proposalId, freshProposal);
+
+          // 11. If in advanced mode, retransform the positions
+          if (get().advancedMode) {
+            console.log('🔄 Retransforming to advanced mode...');
+            get().transformToAdvanced();
+          }
+
+          console.log('✅ Pricing data refreshed - subcontractor now visible!');
+        } catch (error) {
+          console.error('❌ Failed to save/refresh proposal:', error);
+        }
+      }
     },
 
     addODC: (odc) => {
@@ -1038,29 +1079,22 @@ export const usePricingStore = create<PricingState>((set, get) => {
       console.log('Recalculating advanced mode...');
 
       try {
-        // Build request (exclude manual override fields)
-        const positions = state.positionsAdvanced.map((pos) => {
-          const overrides = state.manualOverrides.get(pos.id) || new Set();
-
-          // Build breakdown with manual overrides preserved
-          const breakdown = { ...pos.breakdown };
-
-          // For each year, mark which fields to skip in recalculation
-          Object.keys(breakdown).forEach((year) => {
-            Object.keys(breakdown[year]).forEach((field) => {
-              if (overrides.has(`${year}.${field}`)) {
-                // Mark for backend to preserve
-                (breakdown[year] as any)[`${field}_manual`] = true;
-              }
-            });
-          });
-
-          return {
-            id: pos.id,
-            percentile: pos.percentile,
-            breakdown,
-          };
-        });
+        // Note: Manual overrides are currently not sent to backend
+        // TODO: Implement advanced recalculation with manual override preservation
+        // const positions = state.positionsAdvanced.map((pos) => {
+        //   const overrides = state.manualOverrides.get(pos.id) || new Set();
+        //   // Build breakdown with manual overrides preserved
+        //   const breakdown = { ...pos.breakdown };
+        //   // For each year, mark which fields to skip in recalculation
+        //   Object.keys(breakdown).forEach((year) => {
+        //     Object.keys(breakdown[year]).forEach((field) => {
+        //       if (overrides.has(`${year}.${field}`)) {
+        //         (breakdown[year] as any)[`${field}_manual`] = true;
+        //       }
+        //     });
+        //   });
+        //   return { id: pos.id, percentile: pos.percentile, breakdown };
+        // });
 
         // Call API (for now, we'll use the same recalculate endpoint)
         // TODO: Create a dedicated recalculateAdvanced endpoint

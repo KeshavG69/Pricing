@@ -11,11 +11,15 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Dialog } from '@/components/ui/Dialog';
 import Input from '@/components/ui/Input';
 import { ProposalCard } from '@/components/proposals/ProposalCard';
+import { ShareProposalModal } from '@/components/proposals/ShareProposalModal';
 import { Plus, FileText, Clock, CheckCircle, AlertCircle, Trash2, Copy, Search, Filter, MoreVertical, ChevronRight } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
+import { isAdmin } from '@/lib/utils/permissions';
+import { useAuthStore } from '@/lib/stores/authStore';
 
 export default function DashboardPage() {
   const router = useRouter();
+  const { user } = useAuthStore();
   const { proposals, isLoading, fetchProposals, deleteProposal, duplicateProposal } =
     useProposalsStore();
   const toast = useToast();
@@ -34,9 +38,18 @@ export default function DashboardPage() {
   const [duplicateName, setDuplicateName] = useState('');
   const [isDuplicating, setIsDuplicating] = useState(false);
 
+  // Share modal state
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [proposalToShare, setProposalToShare] = useState<{
+    id: string;
+    name: string;
+  } | null>(null);
+
+  // Fetch proposals on mount and when organization changes
   useEffect(() => {
+    console.log('[DASHBOARD] Fetching proposals for org:', user?.organization_id);
     fetchProposals();
-  }, [fetchProposals]);
+  }, [fetchProposals, user?.organization_id]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -134,6 +147,18 @@ export default function DashboardPage() {
     } finally {
       setIsDuplicating(false);
     }
+  };
+
+  // Share handlers
+  const handleShareClick = (id: string, name: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setProposalToShare({ id, name });
+    setShareModalOpen(true);
+  };
+
+  const handleShareSuccess = () => {
+    // Refresh proposals to get updated sharing status
+    fetchProposals();
   };
 
   return (
@@ -243,6 +268,8 @@ export default function DashboardPage() {
                       onClick={() => router.push(`/proposals/${proposal.id}`)}
                       onDuplicate={handleDuplicateClick}
                       onDelete={handleDeleteClick}
+                      onShare={handleShareClick}
+                      showShareButton={user ? isAdmin(user) : false}
                     />
                   ))}
                 </div>
@@ -301,6 +328,20 @@ export default function DashboardPage() {
           />
         </div>
       </Dialog>
+
+      {/* Share Proposal Modal */}
+      {proposalToShare && (
+        <ShareProposalModal
+          isOpen={shareModalOpen}
+          onClose={() => {
+            setShareModalOpen(false);
+            setProposalToShare(null);
+          }}
+          proposalId={proposalToShare.id}
+          proposalName={proposalToShare.name}
+          onSuccess={handleShareSuccess}
+        />
+      )}
     </DashboardLayout>
   );
 }

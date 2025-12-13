@@ -1,13 +1,18 @@
 'use client';
 
-import { useMemo, useEffect } from 'react';
+import { useMemo, useEffect, useState } from 'react';
 import { usePricingStore } from '@/lib/stores/pricingStore';
 import { Card } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { Trash2, Building2 } from 'lucide-react';
 
 export const SubcontractorSection = () => {
   const { subcontractors, totalYears, deleteSubcontractor } = usePricingStore();
+
+  // Delete confirmation state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [subToDelete, setSubToDelete] = useState<{ id: string; name: string; positionCount: number } | null>(null);
 
   // Debug logging
   useEffect(() => {
@@ -76,13 +81,12 @@ export const SubcontractorSection = () => {
               variant="outline"
               size="sm"
               onClick={() => {
-                if (
-                  confirm(
-                    `Delete subcontractor "${sub.name}" and all ${sub.positions.length} position(s)?`
-                  )
-                ) {
-                  deleteSubcontractor(sub.id);
-                }
+                setSubToDelete({
+                  id: sub.id,
+                  name: sub.name,
+                  positionCount: sub.positions.length,
+                });
+                setDeleteDialogOpen(true);
               }}
               className="text-muted-foreground hover:text-red-600 hover:bg-red-50 hover:border-red-200"
             >
@@ -167,6 +171,27 @@ export const SubcontractorSection = () => {
           </div>
         </Card>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setSubToDelete(null);
+        }}
+        onConfirm={() => {
+          if (subToDelete) {
+            deleteSubcontractor(subToDelete.id);
+          }
+          setDeleteDialogOpen(false);
+          setSubToDelete(null);
+        }}
+        title="Delete Subcontractor"
+        message={`Are you sure you want to delete subcontractor "${subToDelete?.name}" and all ${subToDelete?.positionCount} position(s)? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="danger"
+      />
     </div>
   );
 };
