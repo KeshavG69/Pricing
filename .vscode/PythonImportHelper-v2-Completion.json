@@ -2701,16 +2701,7 @@
         "kind": 5,
         "importPath": "backend.app.server",
         "description": "backend.app.server",
-        "peekOfCode": "app = FastAPI(\n    title=\"Government Contractor Pricing API\",\n    description=\"API for pricing government contractor labor categories using BLS OEWS wage data\",\n    version=\"1.0.0\",\n    lifespan=lifespan\n)\n# Add GZip compression middleware (compress responses > 1KB)\n# This significantly reduces network payload for large JSON responses\napp.add_middleware(GZipMiddleware, minimum_size=1000)\n# Mount static files",
-        "detail": "backend.app.server",
-        "documentation": {}
-    },
-    {
-        "label": "static_path",
-        "kind": 5,
-        "importPath": "backend.app.server",
-        "description": "backend.app.server",
-        "peekOfCode": "static_path = Path(__file__).parent.parent / \"static\"\nif static_path.exists():\n    app.mount(\"/static\", StaticFiles(directory=str(static_path)), name=\"static\")\n# Configure CORS - IMPORTANT: Specific origin required for cookies\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=[FRONTEND_URL],  # Specific origin required for allow_credentials=True\n    allow_credentials=True,  # Required for cookies\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],",
+        "peekOfCode": "app = FastAPI(\n    title=\"Government Contractor Pricing API\",\n    description=\"API for pricing government contractor labor categories using BLS OEWS wage data\",\n    version=\"1.0.0\",\n    lifespan=lifespan\n)\n# Add GZip compression middleware (compress responses > 1KB)\n# This significantly reduces network payload for large JSON responses\napp.add_middleware(GZipMiddleware, minimum_size=1000)\n# Configure CORS - IMPORTANT: Specific origin required for cookies",
         "detail": "backend.app.server",
         "documentation": {}
     },
