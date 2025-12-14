@@ -88,7 +88,10 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
 
       // ALWAYS fetch fresh data in background (even if cache hit)
       console.log('[PROPOSALS] Fetching fresh data in background...');
-      const freshProposals = await proposalsApi.list();
+      const response = await proposalsApi.list();
+
+      // Handle response format: extract proposals array from metadata response
+      const freshProposals = Array.isArray(response) ? response : response.proposals;
 
       // Update with fresh data and cache
       set({
@@ -273,19 +276,33 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
       const skip = append && !sortChanged ? currentState.currentPage * 20 : 0;
       const limit = 20;
 
-      const newProposals = await proposalsApi.list(
+      const response = await proposalsApi.list(
         skip,
         limit,
         currentState.sortBy,
         currentState.sortOrder
       );
 
+      // Handle both response formats: object with metadata (skip=0) or plain array (skip>0)
+      let proposalsArray: Proposal[];
+      let hasMoreData: boolean;
+
+      if (skip === 0 && !Array.isArray(response) && typeof response === 'object' && 'proposals' in response) {
+        // New format with metadata (skip=0)
+        proposalsArray = response.proposals as Proposal[];
+        hasMoreData = response.hasMore as boolean;
+      } else {
+        // Old format (plain array) for backwards compatibility (skip>0)
+        proposalsArray = Array.isArray(response) ? response : [];
+        hasMoreData = proposalsArray.length === limit;
+      }
+
       set((state) => ({
         proposals:
           append && !sortChanged
-            ? [...state.proposals, ...newProposals]
-            : newProposals,
-        hasMore: newProposals.length === limit,
+            ? [...state.proposals, ...proposalsArray]
+            : proposalsArray,
+        hasMore: hasMoreData,
         currentPage: sortChanged ? 1 : state.currentPage + 1,
         isLoading: false,
       }));

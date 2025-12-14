@@ -9,7 +9,7 @@ from bson import ObjectId
 from jose import jwt, JWTError
 from typing import Optional
 from auth import config
-from auth.database import MongoDB
+from auth.database import get_mongodb_client
 from auth.blacklist import is_token_blacklisted
 
 
@@ -54,9 +54,9 @@ async def get_current_user(
                 detail="Token has been revoked"
             )
 
-        # Get user from database (async)
-        users_collection = await MongoDB.get_users_collection()
-        user = await users_collection.find_one({"email": email})
+        # Get user from database
+        users_collection = get_mongodb_client().get_users_collection()
+        user = users_collection.find_one({"email": email})
 
         if not user:
             raise HTTPException(
@@ -86,7 +86,7 @@ async def get_current_user(
                 # Switch to active organization
                 current_org = active_org
                 # Update current_organization_id in database
-                await users_collection.update_one(
+                users_collection.update_one(
                     {"_id": user["_id"]},
                     {"$set": {"current_organization_id": active_org["organization_id"]}}
                 )

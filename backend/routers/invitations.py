@@ -79,10 +79,10 @@ async def send_invitation(
             detail="Role must be 'admin' or 'user'"
         )
 
-    invitation_crud = await get_invitation_crud()
+    invitation_crud = get_invitation_crud()
 
     try:
-        invitation = await invitation_crud.create_invitation(
+        invitation = invitation_crud.create_invitation(
             org_id=current_user["organization_id"],
             email=invite_data.email,
             role=invite_data.role,
@@ -125,17 +125,17 @@ async def list_invitations(
         List of invitation documents sorted by creation date (newest first).
         Excludes token hashes for security.
     """
-    invitation_crud = await get_invitation_crud()
+    invitation_crud = get_invitation_crud()
 
     # Get all invitations for the organization
-    from auth.database import MongoDB
-    db = await MongoDB.get_database()
+    from auth.database import get_mongodb_client
+    db = get_mongodb_client().get_database()
 
     query = {"organization_id": current_user["organization_id"]}
     if status:
         query["status"] = status
 
-    invitations = await db["invitations"].find(query).sort("created_at", -1).to_list(length=None)
+    invitations = list(db["invitations"].find(query).sort("created_at", -1))
 
     # Remove token_hash and convert to camelCase
     for invitation in invitations:
@@ -159,8 +159,8 @@ async def get_invitation_stats(current_user: dict = Depends(require_admin)):
     Returns:
         Counts of invitations by status
     """
-    from auth.database import MongoDB
-    db = await MongoDB.get_database()
+    from auth.database import get_mongodb_client
+    db = get_mongodb_client().get_database()
 
     org_id = current_user["organization_id"]
 
@@ -173,7 +173,7 @@ async def get_invitation_stats(current_user: dict = Depends(require_admin)):
         }}
     ]
 
-    results = await db["invitations"].aggregate(pipeline).to_list(length=None)
+    results = list(db["invitations"].aggregate(pipeline))
 
     # Convert to dict
     stats = {
@@ -221,8 +221,8 @@ async def revoke_invitation(
             detail="Invalid invitation ID format"
         )
 
-    invitation_crud = await get_invitation_crud()
-    success = await invitation_crud.revoke_invitation(inv_oid, current_user["organization_id"])
+    invitation_crud = get_invitation_crud()
+    success = invitation_crud.revoke_invitation(inv_oid, current_user["organization_id"])
 
     if not success:
         raise HTTPException(
@@ -253,15 +253,14 @@ async def validate_invitation_token(token: str):
     Raises:
         HTTPException 400: If token is invalid, expired, or already used
     """
-    invitation_crud = await get_invitation_crud()
-    user_crud = await get_user_crud()
+    invitation_crud = get_invitation_crud()
+    user_crud = get_user_crud()
 
     try:
-        invitation = await invitation_crud.validate_token(token)
+        invitation = invitation_crud.validate_token(token)
 
         # Check if user already exists
-        await user_crud._ensure_initialized()
-        existing_user = await user_crud.collection.find_one({"email": invitation["email"]})
+        existing_user = user_crud.collection.find_one({"email": invitation["email"]})
         user_exists = existing_user is not None
 
         # Return safe invitation details (no token_hash, no ObjectIds)
@@ -303,16 +302,15 @@ async def accept_invitation(accept_data: AcceptInvitationRequest):
     Raises:
         HTTPException 400: If token invalid or missing required fields for new users
     """
-    invitation_crud = await get_invitation_crud()
-    user_crud = await get_user_crud()
+    invitation_crud = get_invitation_crud()
+    user_crud = get_user_crud()
 
     try:
         # Validate token
-        invitation = await invitation_crud.validate_token(accept_data.token)
+        invitation = invitation_crud.validate_token(accept_data.token)
 
         # Check if user already exists
-        await user_crud._ensure_initialized()
-        existing_user = await user_crud.collection.find_one({"email": invitation["email"]})
+        existing_user = user_crud.collection.find_one({"email": invitation["email"]})
 
         if existing_user:
             # Existing user - add to organizations array (multi-org support)
@@ -337,7 +335,7 @@ async def accept_invitation(accept_data: AcceptInvitationRequest):
             }
 
             # Add to organizations array and set as current organization
-            await user_crud.collection.update_one(
+            user_crud.collection.update_one(
                 {"_id": existing_user["_id"]},
                 {
                     "$push": {"organizations": new_org},
@@ -347,7 +345,7 @@ async def accept_invitation(accept_data: AcceptInvitationRequest):
                     }
                 }
             )
-            user = await user_crud.collection.find_one({"_id": existing_user["_id"]})
+            user = user_crud.collection.find_one({"_id": existing_user["_id"]})
             user_id = existing_user["_id"]
         else:
             # New user - validate required fields
@@ -358,7 +356,7 @@ async def accept_invitation(accept_data: AcceptInvitationRequest):
                 )
 
             # Create new user account
-            user = await user_crud.create_user_with_organization(
+            user = user_crud.create_user_with_organization(
                 email=invitation["email"],
                 first_name=accept_data.firstName,
                 last_name=accept_data.lastName,
@@ -369,7 +367,7 @@ async def accept_invitation(accept_data: AcceptInvitationRequest):
             user_id = user["_id"]
 
         # Mark invitation as accepted
-        await invitation_crud.accept_invitation(accept_data.token, user_id)
+        invitation_crud.accept_invitation(accept_data.token, user_id)
 
         # Generate authentication tokens
         access_token = create_access_token(

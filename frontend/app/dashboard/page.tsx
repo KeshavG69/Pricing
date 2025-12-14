@@ -16,6 +16,8 @@ import { Plus, FileText, Clock, CheckCircle, AlertCircle, Trash2, Copy, Search, 
 import { useToast } from '@/lib/hooks/useToast';
 import { isAdmin } from '@/lib/utils/permissions';
 import { useAuthStore } from '@/lib/stores/authStore';
+import { proposalsApi, ProposalStats } from '@/lib/api/proposals';
+import { cacheManager } from '@/lib/cache';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -23,6 +25,15 @@ export default function DashboardPage() {
   const { proposals, isLoading, fetchProposals, deleteProposal, duplicateProposal } =
     useProposalsStore();
   const toast = useToast();
+
+  // Stats state
+  const [stats, setStats] = useState<ProposalStats>({
+    total: 0,
+    completed: 0,
+    processing: 0,
+    error: 0,
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
 
   // Delete confirmation state
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -45,10 +56,55 @@ export default function DashboardPage() {
     name: string;
   } | null>(null);
 
-  // Fetch proposals on mount and when organization changes
+  // Fetch proposals and stats on mount and when organization changes
   useEffect(() => {
-    console.log('[DASHBOARD] Fetching proposals for org:', user?.organization_id);
-    fetchProposals();
+    const fetchData = async () => {
+      console.log('[DASHBOARD] Fetching proposals for org:', user?.organization_id);
+      fetchProposals();
+
+      // Fetch stats with caching for instant display
+      const orgId = user?.organization_id;
+      if (!orgId) {
+        console.warn('[DASHBOARD] No organization ID, skipping stats fetch');
+        return;
+      }
+
+      // Cache key scoped to organization
+      const cacheKey = `stats:${orgId}`;
+
+      // Check cache first - show cached stats immediately
+      const cached = cacheManager.get<ProposalStats>(cacheKey);
+      if (cached && !cached.isExpired) {
+        console.log('[DASHBOARD] Showing cached stats (instant display)');
+        setStats(cached.data);
+        setStatsLoading(false);
+      } else {
+        setStatsLoading(true);
+      }
+
+      // ALWAYS fetch fresh stats in background (even if cache hit)
+      try {
+        console.log('[DASHBOARD] Fetching fresh stats in background...');
+        const freshStats = await proposalsApi.getStats();
+
+        // Update with fresh stats and cache
+        setStats(freshStats);
+        cacheManager.set(cacheKey, freshStats, 2 * 60 * 1000); // Cache for 2 minutes
+        console.log('[DASHBOARD] Fresh stats loaded and cached');
+      } catch (error) {
+        console.error('Failed to fetch stats:', error);
+        // Only set loading to false if we don't have cached data
+        if (!cached || cached.isExpired) {
+          setStatsLoading(false);
+        }
+      } finally {
+        setStatsLoading(false);
+      }
+    };
+
+    if (user?.organization_id) {
+      fetchData();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.organization_id]);
 
@@ -118,6 +174,12 @@ export default function DashboardPage() {
       toast.success('Proposal deleted successfully');
       setDeleteConfirmOpen(false);
       setProposalToDelete(null);
+
+      // Invalidate stats cache
+      const orgId = user?.organization_id;
+      if (orgId) {
+        cacheManager.invalidate(`stats:${orgId}`);
+      }
     } catch (error) {
       toast.error('Failed to delete proposal');
     } finally {
@@ -143,6 +205,12 @@ export default function DashboardPage() {
       setDuplicateDialogOpen(false);
       setProposalToDuplicate(null);
       setDuplicateName('');
+
+      // Invalidate stats cache
+      const orgId = user?.organization_id;
+      if (orgId) {
+        cacheManager.invalidate(`stats:${orgId}`);
+      }
     } catch (error) {
       toast.error('Failed to duplicate proposal');
     } finally {
@@ -157,9 +225,23 @@ export default function DashboardPage() {
     setShareModalOpen(true);
   };
 
-  const handleShareSuccess = () => {
+  const handleShareSuccess = async () => {
     // Refresh proposals to get updated sharing status
     fetchProposals();
+
+    // Invalidate stats cache and refresh
+    const orgId = user?.organization_id;
+    if (orgId) {
+      cacheManager.invalidate(`stats:${orgId}`);
+
+      try {
+        const freshStats = await proposalsApi.getStats();
+        setStats(freshStats);
+        cacheManager.set(`stats:${orgId}`, freshStats, 2 * 60 * 1000);
+      } catch (error) {
+        console.error('Failed to refresh stats:', error);
+      }
+    }
   };
 
   return (
@@ -189,7 +271,9 @@ export default function DashboardPage() {
                 </div>
                 <span className="text-xs font-medium text-muted-foreground bg-muted/50 px-2 py-1 rounded-full">Total</span>
               </div>
-              <p className="text-3xl font-bold text-foreground mb-1">{proposals.length}</p>
+              <p className="text-3xl font-bold text-foreground mb-1">
+                {statsLoading ? '...' : stats.total}
+              </p>
               <p className="text-sm text-muted-foreground">Active proposals</p>
             </CardContent>
           </Card>
@@ -203,7 +287,7 @@ export default function DashboardPage() {
                 <span className="text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">Completed</span>
               </div>
               <p className="text-3xl font-bold text-foreground mb-1">
-                {proposals.filter((p) => p.status === 'completed').length}
+                {statsLoading ? '...' : stats.completed}
               </p>
               <p className="text-sm text-muted-foreground">Ready for review</p>
             </CardContent>
@@ -218,7 +302,7 @@ export default function DashboardPage() {
                 <span className="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded-full">In Progress</span>
               </div>
               <p className="text-3xl font-bold text-foreground mb-1">
-                {proposals.filter((p) => p.status === 'processing').length}
+                {statsLoading ? '...' : stats.processing}
               </p>
               <p className="text-sm text-muted-foreground">Processing now</p>
             </CardContent>

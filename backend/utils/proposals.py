@@ -1,89 +1,56 @@
 """
 CRUD operations for proposal management with MongoDB.
 
-Provides async operations for creating, reading, updating, and deleting proposals.
-Uses singleton pattern with async lock for thread safety.
+Provides sync operations for creating, reading, updating, and deleting proposals.
+Uses singleton pattern with thread safety.
 """
 
-from motor.motor_asyncio import AsyncIOMotorCollection
 from typing import List, Dict, Optional
 from datetime import datetime
 from bson import ObjectId
-import asyncio
+from pymongo import ReturnDocument
+import threading
+from auth.database import get_mongodb_client
 
 
 class ProposalCRUD:
     """
-    Proposal CRUD operations with MongoDB (Async Singleton).
+    Proposal CRUD operations with MongoDB (Sync Singleton).
 
     All methods use user_id (MongoDB ObjectId as string) for ownership verification.
-    Thread-safe through:
-    - Singleton pattern ensures one instance across all async tasks
-    - asyncio.Lock for async-safe operations
-    - Motor's built-in connection pooling
+    Thread-safe through singleton pattern with threading.RLock().
     """
 
-    _instance = None
-    _lock = asyncio.Lock()
-    _initialized = False
+    def __init__(self):
+        """Initialize ProposalCRUD with MongoDB collection"""
+        mongodb = get_mongodb_client()
+        self.db = mongodb.get_database()
+        self.collection = self.db["proposals"]
 
-    def __new__(cls, collection: AsyncIOMotorCollection = None):
-        """Singleton pattern with async-safe instantiation."""
-        if cls._instance is None:
-            cls._instance = super(ProposalCRUD, cls).__new__(cls)
-        return cls._instance
+        # Create indexes for performance (idempotent - safe to call multiple times)
+        try:
+            self.collection.create_index([("user_id", 1), ("created_at", -1)])
+            self.collection.create_index("status")
 
-    def __init__(self, collection: AsyncIOMotorCollection = None):
-        """
-        Initialize ProposalCRUD with MongoDB collection (singleton).
+            # Compound index for efficient filtered dashboard queries
+            self.collection.create_index([
+                ("user_id", 1),
+                ("status", 1),
+                ("created_at", -1)
+            ])
 
-        Only initializes once, subsequent calls are ignored.
+            # Organization indexes
+            self.collection.create_index([("organization_id", 1), ("created_at", -1)])
+            self.collection.create_index("shared_with")
 
-        Args:
-            collection: Motor AsyncIOMotorCollection for proposals
-        """
-        # Prevent re-initialization
-        if self._initialized:
-            return
+        except Exception:
+            # Silently ignore index creation errors (indexes may already exist)
+            pass
 
-        if not self._initialized:
-            if collection is None:
-                # Lazy initialization - collection will be set later
-                self.collection = None
-            else:
-                self.collection = collection
-
-            self.__class__._initialized = True
-
-    async def _ensure_initialized(self, collection: AsyncIOMotorCollection = None):
-        """Ensure collection is set (for lazy initialization)"""
-        if self.collection is None and collection is not None:
-            self.collection = collection
-
-            # Create indexes for performance (idempotent - safe to call multiple times)
-            try:
-                await self.collection.create_index([("user_id", 1), ("created_at", -1)])
-                await self.collection.create_index("status")
-
-                # Compound index for efficient filtered dashboard queries
-                await self.collection.create_index([
-                    ("user_id", 1),
-                    ("status", 1),
-                    ("created_at", -1)
-                ])
-
-                # Organization indexes
-                await self.collection.create_index([("organization_id", 1), ("created_at", -1)])
-                await self.collection.create_index("shared_with")
-
-            except Exception:
-                # Silently ignore index creation errors (indexes may already exist)
-                pass
-
-    async def create_proposal(self, user_id: str, data: dict) -> dict:
+    def create_proposal(self, user_id: str, data: dict) -> dict:
         """
         
-        Create a new proposal (async).
+        Create a new proposal (sync).
 
         Args:
             user_id: User's MongoDB ObjectId (as string)
@@ -92,7 +59,7 @@ class ProposalCRUD:
         Returns:
             Created proposal document with _id
         """
-        await self._ensure_initialized()
+        
 
         proposal = {
             "user_id": user_id,
@@ -101,12 +68,12 @@ class ProposalCRUD:
             "status": "processing",  # processing, completed, error
             **data
         }
-        result = await self.collection.insert_one(proposal)
+        result = self.collection.insert_one(proposal)
         proposal["_id"] = result.inserted_id
 
         return proposal
 
-    async def get_user_proposals(
+    def get_user_proposals(
         self,
         user_id: str,
         skip: int = 0,
@@ -127,7 +94,7 @@ class ProposalCRUD:
         Returns:
             List of proposal documents sorted by specified field and order
         """
-        await self._ensure_initialized()
+        
 
         # Map sort field names to MongoDB field names
         sort_field_map = {
@@ -156,27 +123,56 @@ class ProposalCRUD:
             projection
         ).sort(sort_field, sort_direction).skip(skip).limit(limit)
 
-        return await cursor.to_list(length=None)
+        return list(cursor)
 
-    async def get_proposal(self, proposal_id: str, user_id: str) -> Optional[dict]:
+    def get_proposal(
+        self,
+        proposal_id: str,
+        user_id: str,
+        organization_id: Optional[str] = None,
+        role: Optional[str] = None
+    ) -> Optional[dict]:
         """
-        Get single proposal if user owns it (async).
+        Get single proposal if user has access to it (sync).
 
         Args:
             proposal_id: Proposal's MongoDB ObjectId (as string)
             user_id: User's MongoDB ObjectId (as string)
+            organization_id: User's organization ID (optional)
+            role: User's role (optional, 'admin' gets full org access)
 
         Returns:
             Proposal document or None if not found/unauthorized
         """
-        await self._ensure_initialized()
 
-        return await self.collection.find_one({
-            "_id": ObjectId(proposal_id),
-            "user_id": user_id
-        })
+        # Build query based on access level
+        if organization_id:
+            if role == "admin":
+                # Admin can access any proposal in their org
+                query = {
+                    "_id": ObjectId(proposal_id),
+                    "organization_id": organization_id
+                }
+            else:
+                # Regular user: owned by them OR shared with them
+                query = {
+                    "_id": ObjectId(proposal_id),
+                    "$or": [
+                        {"user_id": user_id},
+                        {"shared_with": user_id}
+                    ],
+                    "organization_id": organization_id
+                }
+        else:
+            # No organization - simple ownership check
+            query = {
+                "_id": ObjectId(proposal_id),
+                "user_id": user_id
+            }
 
-    async def get_proposal_summary(self, proposal_id: str, user_id: str) -> Optional[dict]:
+        return self.collection.find_one(query)
+
+    def get_proposal_summary(self, proposal_id: str, user_id: str) -> Optional[dict]:
         """
         Get proposal summary (lightweight, async).
 
@@ -190,7 +186,7 @@ class ProposalCRUD:
         Returns:
             Lightweight proposal summary or None if not found
         """
-        await self._ensure_initialized()
+        
 
         projection = {
             "jobs": 0,
@@ -200,19 +196,19 @@ class ProposalCRUD:
             "documents": 0
         }
 
-        return await self.collection.find_one(
+        return self.collection.find_one(
             {"_id": ObjectId(proposal_id), "user_id": user_id},
             projection
         )
 
-    async def update_proposal(
+    def update_proposal(
         self,
         proposal_id: str,
         user_id: str,
         updates: dict
     ) -> Optional[dict]:
         """
-        Update proposal and return updated document (async).
+        Update proposal and return updated document (sync).
 
         Args:
             proposal_id: Proposal's MongoDB ObjectId (as string)
@@ -222,38 +218,65 @@ class ProposalCRUD:
         Returns:
             Updated proposal document or None if not found/unauthorized
         """
-        await self._ensure_initialized()
+        
 
         updates["updated_at"] = datetime.utcnow()
-        result = await self.collection.find_one_and_update(
+        result = self.collection.find_one_and_update(
             {"_id": ObjectId(proposal_id), "user_id": user_id},
             {"$set": updates},
-            return_document=True
+            return_document=ReturnDocument.AFTER
         )
 
         return result
 
-    async def delete_proposal(self, proposal_id: str, user_id: str) -> bool:
+    def delete_proposal(
+        self,
+        proposal_id: str,
+        user_id: str,
+        organization_id: Optional[str] = None,
+        role: Optional[str] = None
+    ) -> bool:
         """
-        Delete proposal if user owns it (async).
+        Delete proposal if user has access to it (sync).
 
         Args:
             proposal_id: Proposal's MongoDB ObjectId (as string)
             user_id: User's MongoDB ObjectId (as string)
+            organization_id: User's organization ID (optional)
+            role: User's role (optional, 'admin' can delete any org proposal)
 
         Returns:
             True if deleted, False if not found/unauthorized
         """
-        await self._ensure_initialized()
 
-        result = await self.collection.delete_one({
-            "_id": ObjectId(proposal_id),
-            "user_id": user_id
-        })
+        # Build query based on access level
+        if organization_id:
+            if role == "admin":
+                # Admin can delete any proposal in their org
+                query = {
+                    "_id": ObjectId(proposal_id),
+                    "organization_id": organization_id
+                }
+            else:
+                # Regular user: can only delete proposals they own
+                # Note: shared_with users cannot delete proposals
+                query = {
+                    "_id": ObjectId(proposal_id),
+                    "user_id": user_id,
+                    "organization_id": organization_id
+                }
+        else:
+            # No organization - simple ownership check
+            query = {
+                "_id": ObjectId(proposal_id),
+                "user_id": user_id
+            }
+
+        result = self.collection.delete_one(query)
 
         return result.deleted_count > 0
 
-    async def duplicate_proposal(
+    def duplicate_proposal(
         self,
         proposal_id: str,
         user_id: str,
@@ -270,10 +293,10 @@ class ProposalCRUD:
         Returns:
             New proposal document or None if source not found/unauthorized
         """
-        await self._ensure_initialized()
+        
 
         # Get source proposal
-        source = await self.get_proposal(proposal_id, user_id)
+        source = self.get_proposal(proposal_id, user_id)
         if not source:
             return None
 
@@ -290,17 +313,17 @@ class ProposalCRUD:
             "documents": []  # Don't copy documents
         }
 
-        result = await self.create_proposal(user_id, new_proposal)
+        result = self.create_proposal(user_id, new_proposal)
         return result
 
-    async def create_proposal_with_organization(
+    def create_proposal_with_organization(
         self,
         user_id: str,
         organization_id: ObjectId,
         data: dict
     ) -> dict:
         """
-        Create proposal with organization support (async).
+        Create proposal with organization support (sync).
 
         Args:
             user_id: User's ID as string (UUID format)
@@ -310,7 +333,7 @@ class ProposalCRUD:
         Returns:
             Created proposal document with _id
         """
-        await self._ensure_initialized()
+        
 
         proposal = {
             "user_id": user_id,  # Store as string (UUID format)
@@ -323,12 +346,12 @@ class ProposalCRUD:
             **data
         }
 
-        result = await self.collection.insert_one(proposal)
+        result = self.collection.insert_one(proposal)
         proposal["_id"] = result.inserted_id
 
         return proposal
 
-    async def get_user_proposals_by_org(
+    def get_user_proposals_by_org(
         self,
         user_id: str,
         organization_id: ObjectId,
@@ -339,7 +362,7 @@ class ProposalCRUD:
         sort_order: str = "desc"
     ) -> List[dict]:
         """
-        Get proposals based on user's role in organization (async).
+        Get proposals based on user's role in organization (sync).
 
         Admin: All org proposals
         User: Own proposals + shared proposals
@@ -356,7 +379,7 @@ class ProposalCRUD:
         Returns:
             List of proposal documents
         """
-        await self._ensure_initialized()
+        
 
         # Build query based on role
         if role == "admin":
@@ -395,9 +418,9 @@ class ProposalCRUD:
             sort_field, sort_direction
         ).skip(skip).limit(limit)
 
-        return await cursor.to_list(length=None)
+        return list(cursor)
 
-    async def share_proposal(
+    def share_proposal(
         self,
         proposal_id: ObjectId,
         user_ids: List[str],
@@ -414,9 +437,9 @@ class ProposalCRUD:
         Returns:
             Updated proposal or None
         """
-        await self._ensure_initialized()
+        
 
-        result = await self.collection.find_one_and_update(
+        result = self.collection.find_one_and_update(
             {"_id": proposal_id},
             {
                 "$set": {
@@ -425,18 +448,18 @@ class ProposalCRUD:
                     "updated_at": datetime.utcnow()
                 }
             },
-            return_document=True
+            return_document=ReturnDocument.AFTER
         )
 
         return result
 
-    async def unshare_proposal(
+    def unshare_proposal(
         self,
         proposal_id: ObjectId,
         user_id: ObjectId = None
     ) -> Optional[dict]:
         """
-        Remove user from shared list or make proposal private (async).
+        Remove user from shared list or make proposal private (sync).
 
         Args:
             proposal_id: Proposal's ObjectId
@@ -445,29 +468,29 @@ class ProposalCRUD:
         Returns:
             Updated proposal or None
         """
-        await self._ensure_initialized()
+        
 
         if user_id:
             # Remove specific user from shared list
-            result = await self.collection.find_one_and_update(
+            result = self.collection.find_one_and_update(
                 {"_id": proposal_id},
                 {
                     "$pull": {"shared_with": user_id},
                     "$set": {"updated_at": datetime.utcnow()}
                 },
-                return_document=True
+                return_document=ReturnDocument.AFTER
             )
 
             # If no more users, set visibility to private
             if result and len(result.get("shared_with", [])) == 0:
-                result = await self.collection.find_one_and_update(
+                result = self.collection.find_one_and_update(
                     {"_id": proposal_id},
                     {"$set": {"visibility": "private"}},
-                    return_document=True
+                    return_document=ReturnDocument.AFTER
                 )
         else:
             # Make proposal private
-            result = await self.collection.find_one_and_update(
+            result = self.collection.find_one_and_update(
                 {"_id": proposal_id},
                 {
                     "$set": {
@@ -476,14 +499,14 @@ class ProposalCRUD:
                         "updated_at": datetime.utcnow()
                     }
                 },
-                return_document=True
+                return_document=ReturnDocument.AFTER
             )
 
         return result
 
-    async def get_by_id(self, proposal_id: str) -> Optional[dict]:
+    def get_by_id(self, proposal_id: str) -> Optional[dict]:
         """
-        Get proposal by ID without user check (async).
+        Get proposal by ID without user check (sync).
 
         Use for admin operations or when user check is done elsewhere.
 
@@ -493,23 +516,23 @@ class ProposalCRUD:
         Returns:
             Proposal document or None
         """
-        await self._ensure_initialized()
+        
 
         try:
             obj_id = ObjectId(proposal_id)
         except:
             return None
 
-        return await self.collection.find_one({"_id": obj_id})
+        return self.collection.find_one({"_id": obj_id})
 
-    async def count_user_proposals(
+    def count_user_proposals(
         self,
         user_id: str,
         organization_id: ObjectId = None,
         role: str = "user"
     ) -> int:
         """
-        Count user's proposals (async).
+        Count user's proposals (sync).
 
         Args:
             user_id: User's ID
@@ -519,7 +542,7 @@ class ProposalCRUD:
         Returns:
             Count of proposals
         """
-        await self._ensure_initialized()
+        
 
         if organization_id:
             # Organization-aware count
@@ -537,11 +560,11 @@ class ProposalCRUD:
             # Simple user count
             query = {"user_id": user_id}
 
-        return await self.collection.count_documents(query)
+        return self.collection.count_documents(query)
 
-    async def get_org_proposal_count(self, organization_id: ObjectId) -> int:
+    def get_org_proposal_count(self, organization_id: ObjectId) -> int:
         """
-        Count proposals in organization (async).
+        Count proposals in organization (sync).
 
         Args:
             organization_id: Organization's ObjectId
@@ -549,13 +572,13 @@ class ProposalCRUD:
         Returns:
             Count of proposals
         """
-        await self._ensure_initialized()
+        
 
-        return await self.collection.count_documents({
+        return self.collection.count_documents({
             "organization_id": organization_id
         })
 
-    async def update_status(
+    def update_status(
         self,
         proposal_id: str,
         user_id: str,
@@ -563,7 +586,7 @@ class ProposalCRUD:
         message: str = None
     ) -> bool:
         """
-        Update proposal status (async).
+        Update proposal status (sync).
 
         Args:
             proposal_id: Proposal's ObjectId as string
@@ -574,7 +597,7 @@ class ProposalCRUD:
         Returns:
             True if updated, False otherwise
         """
-        await self._ensure_initialized()
+        
 
         updates = {
             "status": status,
@@ -584,7 +607,7 @@ class ProposalCRUD:
         if message:
             updates["status_message"] = message
 
-        result = await self.collection.update_one(
+        result = self.collection.update_one(
             {"_id": ObjectId(proposal_id), "user_id": user_id},
             {"$set": updates}
         )
@@ -592,15 +615,20 @@ class ProposalCRUD:
         return result.modified_count > 0
 
 
-# Singleton pattern for ProposalCRUD
-def get_proposal_crud(collection=None):
-    """
-    Get singleton ProposalCRUD instance.
+# Global singleton instance
+_proposal_crud = None
+_lock = threading.RLock()
 
-    Args:
-        collection: Motor AsyncIOMotorCollection for proposals
+
+def get_proposal_crud() -> ProposalCRUD:
+    """
+    Get or create ProposalCRUD instance (singleton pattern)
 
     Returns:
-        ProposalCRUD singleton instance
+        ProposalCRUD instance
     """
-    return ProposalCRUD(collection)
+    global _proposal_crud
+    with _lock:
+        if _proposal_crud is None:
+            _proposal_crud = ProposalCRUD()
+        return _proposal_crud

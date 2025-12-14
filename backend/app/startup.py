@@ -195,11 +195,12 @@ class StartupManager:
 
         try:
             # Import here to avoid circular dependencies
-            from auth.database import MongoDB
+            from auth.database import get_mongodb_client
 
-            # Get database and ping
-            db = await MongoDB.get_database()
-            await db.command('ping')
+            # Get database and ping (sync operations)
+            mongodb = get_mongodb_client()
+            db = mongodb.get_database()
+            db.command('ping')
 
             duration_ms = (time.time() - start_time) * 1000
 
