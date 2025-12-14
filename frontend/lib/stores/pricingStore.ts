@@ -333,17 +333,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
     positions: [],
     subcontractors: [],
     odcs: [],
-    rates: {
-      fringe: 0.247,
-      oh: 0.0711,
-      ga: 0.2243,
-      fee: 0.07,
-      smh: 0.065,
-      sub_fee: 0.05,
-      ga_passthrough: 0.025,
-      ga_adder: 0.0243,
-    },
-    escalationRates: {},
+    rates: {} as IndirectRates,  // Will be populated from backend (org settings)
+    escalationRates: {} as EscalationRates,  // Will be populated from backend (org settings)
     totalYears: 1,
     baseYears: 1,
     optionYears: 0,
@@ -394,14 +385,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
           positions = proposal.jobs.map((job, index) => mapJobToPosition(job, index));
         }
 
-        // Setup default escalation rates based on years
-        const totalYears = proposal.metadata?.total_years || 1;
-        const defaultEscalationRates: EscalationRates = {};
-        for (let i = 1; i < totalYears; i++) {
-          defaultEscalationRates[`${i}_to_${i + 1}`] = 0.0272; // Default 2.72%
-        }
-
         // Generate default months if not provided
+        const totalYears = proposal.metadata?.total_years || 1;
         const defaultMonthsPerYear: Record<string, number> = {};
         for (let i = 1; i <= totalYears; i++) {
           defaultMonthsPerYear[i.toString()] = 12;
@@ -416,9 +401,9 @@ export const usePricingStore = create<PricingState>((set, get) => {
           positions,
           subcontractors: proposal.spreadsheet_data?.subcontractors || [],
           odcs: proposal.spreadsheet_data?.odcs || [],
-          rates: proposal.rates || get().rates,
-          escalationRates: proposal.escalation_rates || defaultEscalationRates,
-          totalYears: proposal.metadata?.total_years || 1,
+          rates: proposal.rates,  // Use rates from backend (org settings)
+          escalationRates: proposal.escalation_rates,  // Use escalation from backend (org settings)
+          totalYears,
           baseYears: proposal.metadata?.base_years || 1,
           optionYears: proposal.metadata?.option_years || 0,
           monthsPerYear: proposal.metadata?.months_per_year || defaultMonthsPerYear,
@@ -437,9 +422,9 @@ export const usePricingStore = create<PricingState>((set, get) => {
           positions,
           subcontractors: proposal.spreadsheet_data?.subcontractors || [],
           odcs: proposal.spreadsheet_data?.odcs || [],
-          rates: proposal.rates || get().rates,
-          escalationRates: proposal.escalation_rates || defaultEscalationRates,
-          totalYears: proposal.metadata?.total_years || 1,
+          rates: proposal.rates,  // Use rates from backend (org settings)
+          escalationRates: proposal.escalation_rates,  // Use escalation from backend (org settings)
+          totalYears,
           baseYears: proposal.metadata?.base_years || 1,
           optionYears: proposal.metadata?.option_years || 0,
           monthsPerYear: proposal.metadata?.months_per_year || defaultMonthsPerYear,
@@ -1159,17 +1144,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
         positions: [],
         subcontractors: [],
         odcs: [],
-        rates: {
-          fringe: 0.247,
-          oh: 0.0711,
-          ga: 0.2243,
-          fee: 0.07,
-          smh: 0.065,
-          sub_fee: 0.05,
-          ga_passthrough: 0.025,
-          ga_adder: 0.0243,
-        },
-        escalationRates: {},
+        rates: {} as IndirectRates,  // Will be populated from backend (org settings)
+        escalationRates: {} as EscalationRates,  // Will be populated from backend (org settings)
         totalYears: 1,
         baseYears: 1,
         optionYears: 0,

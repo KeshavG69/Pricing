@@ -96,6 +96,33 @@ async def process_proposal_documents(
     crud = await get_crud()
 
     try:
+        # Get proposal to fetch organization settings
+        proposal = await crud.get_by_id(ObjectId(proposal_id))
+        organization_id = proposal.get("organization_id")
+
+        # Get organization settings for default rates and escalation rate
+        default_escalation_rate = 0.03  # Fallback default
+        default_rates = {
+            "fringe": 0.247,
+            "oh": 0.0711,
+            "ga": 0.2243,
+            "fee": 0.07,
+            "smh": 0.065,
+            "sub_fee": 0.05,
+            "ga_passthrough": 0.025,
+            "ga_adder": 0.0243
+        }
+
+        if organization_id:
+            from utils.organizations import get_organization_crud
+            org_crud = await get_organization_crud()
+            org = await org_crud.get_by_id(organization_id)
+            if org and "settings" in org:
+                settings = org.get("settings", {})
+                default_escalation_rate = settings.get("default_escalation_rate", 0.03)
+                if "default_rates" in settings:
+                    default_rates = settings.get("default_rates")
+
         # Update status to processing
         await crud.update_proposal(
             proposal_id,
@@ -201,14 +228,11 @@ async def process_proposal_documents(
         if option_years is None:
             option_years = total_years - base_years
 
-        # Generate dynamic escalation rates based on total_years
+        # Generate dynamic escalation rates based on total_years using organization default
         escalation_rates = {}
         for year in range(1, total_years):
             key = f"{year}_to_{year + 1}"
-            if year == 1:
-                escalation_rates[key] = 0.0272  # 2.72% for Year 1 to 2
-            else:
-                escalation_rates[key] = 0.0299  # 2.99% for all other years
+            escalation_rates[key] = default_escalation_rate
 
         # Update proposal with results
         await crud.update_proposal(
@@ -226,16 +250,7 @@ async def process_proposal_documents(
                     "total_years": total_years,
                     "fte_hours_threshold": fte_threshold
                 },
-                "rates": {
-                    "fringe": 0.247,
-                    "oh": 0.0711,
-                    "ga": 0.2243,
-                    "fee": 0.08,
-                    "smh": 0.0665,
-                    "sub_fee": 0.0126,
-                    "ga_passthrough": 0.0,
-                    "ga_adder": 0.2212
-                },
+                "rates": default_rates,
                 "escalation_rates": escalation_rates
             }
         )

@@ -36,7 +36,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     if (user && proposals.length === 0) {
       fetchProposals();
     }
-  }, [user, proposals.length, fetchProposals]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, proposals.length]);
 
   // Close profile menu when clicking outside
   useEffect(() => {
@@ -74,7 +75,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     return () => {
       window.removeEventListener('focus', handleFocus);
     };
-  }, [user, fetchProposals]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   const handleLogout = async () => {
     await logout();

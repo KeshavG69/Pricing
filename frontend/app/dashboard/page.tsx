@@ -49,7 +49,8 @@ export default function DashboardPage() {
   useEffect(() => {
     console.log('[DASHBOARD] Fetching proposals for org:', user?.organization_id);
     fetchProposals();
-  }, [fetchProposals, user?.organization_id]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.organization_id]);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
