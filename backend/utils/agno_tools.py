@@ -100,7 +100,7 @@ def create_wage_tool():
     # Get singleton MongoDB client (thread-safe, shared across agents)
     mongo_client = get_oews_mongo_client()
     @tool(stop_after_tool_call=True)
-    def wage_tool(
+    async def wage_tool(
         soc_code: str,
         area: Optional[str] = "National"
     ) -> Dict[str, Any]:
@@ -160,7 +160,7 @@ def create_wage_tool():
             (isinstance(area, float) and math.isnan(area))):
             area = "National"
 
-        result = mongo_client.get_wage_by_soc(soc_code=soc_code, area=area)
+        result = await mongo_client.get_wage_by_soc(soc_code=soc_code, area=area)
         return result
 
     return wage_tool
