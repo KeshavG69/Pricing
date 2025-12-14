@@ -11,6 +11,7 @@ export interface ProposalStats {
   total: number;
   completed: number;
   processing: number;
+  submitted: number;
   error: number;
 }
 
@@ -167,6 +168,12 @@ export const proposalsApi = {
     is_owner: boolean;
   }> => {
     const response = await apiClient.get(`/proposals/${proposalId}/access`);
+    return response.data;
+  },
+
+  // Mark proposal as downloaded (Excel exported)
+  markDownloaded: async (proposalId: string): Promise<{ message: string; excel_downloaded: boolean }> => {
+    const response = await apiClient.post(`/proposals/${proposalId}/mark-downloaded`);
     return response.data;
   },
 };

@@ -66,6 +66,7 @@ class ProposalCRUD:
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),
             "status": "processing",  # processing, completed, error
+            "excel_downloaded": False,  # Track if user has downloaded the Excel file
             **data
         }
         result = self.collection.insert_one(proposal)
@@ -343,6 +344,7 @@ class ProposalCRUD:
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),
             "status": "processing",
+            "excel_downloaded": False,  # Track if user has downloaded the Excel file
             **data
         }
 
