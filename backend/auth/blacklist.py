@@ -1,6 +1,6 @@
 from typing import Optional
 from datetime import datetime, timedelta
-from .database import MongoDB
+from .database import get_mongodb_client
 from .config import ACCESS_TOKEN_EXPIRE_MINUTES
 
 
@@ -16,13 +16,13 @@ async def add_token_to_blacklist(user_email: str, token: str) -> bool:
         bool: True if successfully added, False otherwise
     """
     try:
-        users_collection = await MongoDB.get_users_collection()
+        users_collection = get_mongodb_client().get_users_collection()
 
         # Calculate when this token expires (so we can clean it up later)
         expires_at = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
 
         # Add token to user's blacklisted_tokens array
-        result = await users_collection.update_one(
+        result = users_collection.update_one(
             {"email": user_email},
             {
                 "$push": {
@@ -56,10 +56,10 @@ async def is_token_blacklisted(user_email: str, token: str) -> bool:
         bool: True if token is blacklisted, False otherwise
     """
     try:
-        users_collection = await MongoDB.get_users_collection()
+        users_collection = get_mongodb_client().get_users_collection()
 
         # Look for user with this email who has this specific token in their blacklist
-        user = await users_collection.find_one({
+        user = users_collection.find_one({
             "email": user_email,
             "blacklisted_tokens.token": token
         })
@@ -81,11 +81,11 @@ async def cleanup_expired_tokens(user_email: str) -> int:
         int: Number of expired tokens removed
     """
     try:
-        users_collection = await MongoDB.get_users_collection()
+        users_collection = get_mongodb_client().get_users_collection()
         current_time = datetime.utcnow()
 
         # Remove tokens that have expired
-        result = await users_collection.update_one(
+        result = users_collection.update_one(
             {"email": user_email},
             {
                 "$pull": {
@@ -113,11 +113,11 @@ async def cleanup_all_expired_tokens() -> int:
         int: Number of users whose expired tokens were cleaned up
     """
     try:
-        users_collection = await MongoDB.get_users_collection()
+        users_collection = get_mongodb_client().get_users_collection()
         current_time = datetime.utcnow()
 
         # Remove expired tokens from all users
-        result = await users_collection.update_many(
+        result = users_collection.update_many(
             {"blacklisted_tokens.expires_at": {"$lt": current_time}},
             {
                 "$pull": {

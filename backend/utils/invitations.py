@@ -1,5 +1,5 @@
 """
-Invitation CRUD operations with MongoDB (Async).
+Invitation CRUD operations with MongoDB (Sync).
 
 Handles invitation creation, validation, acceptance, and revocation.
 Uses token hashing for security - plain tokens never stored in database.
@@ -9,34 +9,27 @@ from bson import ObjectId
 from datetime import datetime, timedelta
 import secrets
 import hashlib
-import asyncio
-from auth.database import MongoDB
+import threading
+from auth.database import get_mongodb_client
 from client.email_service import EmailService
 
 
 # Global singleton instance
 _invitation_crud = None
-_lock = asyncio.Lock()
+_lock = threading.RLock()
 
 
 class InvitationCRUD:
-    """Invitation CRUD operations with token hashing (Async Singleton)"""
+    """Invitation CRUD operations with token hashing (Sync Singleton)"""
 
     def __init__(self):
-        """Initialize InvitationCRUD (lazy initialization for database)"""
-        self.db = None
-        self.collection = None
-        self.users_collection = None
-        self.orgs_collection = None
+        """Initialize InvitationCRUD"""
+        mongodb = get_mongodb_client()
+        self.db = mongodb.get_database()
+        self.collection = self.db["invitations"]
+        self.users_collection = mongodb.get_users_collection()
+        self.orgs_collection = self.db["organizations"]
         self.email_service = EmailService()
-
-    async def _ensure_initialized(self):
-        """Ensure database connection is initialized"""
-        if self.db is None:
-            self.db = await MongoDB.get_database()
-            self.collection = self.db["invitations"]
-            self.users_collection = await MongoDB.get_users_collection()
-            self.orgs_collection = self.db["organizations"]
 
     @staticmethod
     def _hash_token(token: str) -> str:
@@ -46,18 +39,18 @@ class InvitationCRUD:
         """
         return hashlib.sha256(token.encode()).hexdigest()
 
-    async def create_invitation(
+    def create_invitation(
         self,
         org_id: ObjectId,
         email: str,
         role: str,
         invited_by: ObjectId
     ) -> dict:
-        """Create and send invitation (async)"""
-        await self._ensure_initialized()
+        """Create and send invitation (sync)"""
+        
 
         # Check for duplicate pending invitation
-        existing = await self.collection.find_one({
+        existing = self.collection.find_one({
             "organization_id": org_id,
             "email": email,
             "status": "pending"
@@ -66,7 +59,7 @@ class InvitationCRUD:
             raise ValueError("User already has a pending invitation")
 
         # Check if user already exists in THIS organization
-        existing_user = await self.users_collection.find_one({
+        existing_user = self.users_collection.find_one({
             "email": email,
             "organization_id": org_id
         })
@@ -78,8 +71,8 @@ class InvitationCRUD:
         token_hash = self._hash_token(token)
 
         # Get inviter and org details for email
-        inviter = await self.users_collection.find_one({"_id": invited_by})
-        org = await self.orgs_collection.find_one({"_id": org_id})
+        inviter = self.users_collection.find_one({"_id": invited_by})
+        org = self.orgs_collection.find_one({"_id": org_id})
 
         invitation = {
             "organization_id": org_id,
@@ -95,7 +88,7 @@ class InvitationCRUD:
             "accepted_at": None
         }
 
-        result = await self.collection.insert_one(invitation)
+        result = self.collection.insert_one(invitation)
         invitation["_id"] = result.inserted_id
 
         # Send email with plain token (only time it's visible)
@@ -112,12 +105,12 @@ class InvitationCRUD:
 
         return invitation
 
-    async def validate_token(self, token: str) -> dict:
-        """Validate invitation token (async)"""
-        await self._ensure_initialized()
+    def validate_token(self, token: str) -> dict:
+        """Validate invitation token (sync)"""
+        
 
         token_hash = self._hash_token(token)
-        invitation = await self.collection.find_one({"token_hash": token_hash})
+        invitation = self.collection.find_one({"token_hash": token_hash})
 
         if not invitation:
             raise ValueError("Invalid invitation token")
@@ -127,7 +120,7 @@ class InvitationCRUD:
 
         if datetime.utcnow() > invitation["expires_at"]:
             # Mark as expired
-            await self.collection.update_one(
+            self.collection.update_one(
                 {"_id": invitation["_id"]},
                 {"$set": {"status": "expired"}}
             )
@@ -135,12 +128,12 @@ class InvitationCRUD:
 
         return invitation
 
-    async def accept_invitation(self, token: str, user_id: ObjectId):
-        """Mark invitation as accepted (async)"""
-        await self._ensure_initialized()
+    def accept_invitation(self, token: str, user_id: ObjectId):
+        """Mark invitation as accepted (sync)"""
+        
 
         token_hash = self._hash_token(token)
-        result = await self.collection.update_one(
+        result = self.collection.update_one(
             {"token_hash": token_hash, "status": "pending"},
             {
                 "$set": {
@@ -154,22 +147,20 @@ class InvitationCRUD:
         if result.modified_count == 0:
             raise ValueError("Invalid or already used invitation")
 
-    async def get_pending(self, org_id: ObjectId) -> list:
-        """Get all pending invitations for organization (async)"""
-        await self._ensure_initialized()
-
+    def get_pending(self, org_id: ObjectId) -> list:
+        """Get all pending invitations for organization (sync)"""
         cursor = self.collection.find({
             "organization_id": org_id,
             "status": "pending"
         }).sort("created_at", -1)
 
-        return await cursor.to_list(length=None)
+        return list(cursor)
 
-    async def revoke_invitation(self, invitation_id: ObjectId, org_id: ObjectId) -> bool:
-        """Revoke/cancel invitation (async)"""
-        await self._ensure_initialized()
+    def revoke_invitation(self, invitation_id: ObjectId, org_id: ObjectId) -> bool:
+        """Revoke/cancel invitation (sync)"""
+        
 
-        result = await self.collection.update_one(
+        result = self.collection.update_one(
             {
                 "_id": invitation_id,
                 "organization_id": org_id,
@@ -186,15 +177,15 @@ class InvitationCRUD:
         return result.modified_count > 0
 
 
-async def get_invitation_crud() -> InvitationCRUD:
+def get_invitation_crud() -> InvitationCRUD:
     """
-    Get or create InvitationCRUD instance (singleton pattern) - async
+    Get or create InvitationCRUD instance (singleton pattern)
 
     Returns:
         InvitationCRUD instance
     """
     global _invitation_crud
-    async with _lock:
+    with _lock:
         if _invitation_crud is None:
             _invitation_crud = InvitationCRUD()
         return _invitation_crud

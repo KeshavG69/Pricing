@@ -52,8 +52,8 @@ export const RatesReferencePanel = ({
 
   // Save and cancel handlers
   const handleSave = () => {
-    // Validate inputs (all rates should be numbers between 0 and 1)
-    const validateRate = (rate: number) => !isNaN(rate) && rate >= 0 && rate <= 1;
+    // Validate inputs (all rates should be valid numbers)
+    const validateRate = (rate: number) => !isNaN(rate);
 
     const allRatesValid = Object.values(editedRates).every(validateRate);
     const allEscalationRatesValid = Object.values(editedEscalationRates)
@@ -61,7 +61,7 @@ export const RatesReferencePanel = ({
       .every(validateRate);
 
     if (!allRatesValid || !allEscalationRatesValid) {
-      toast.error('All rates must be valid numbers between 0% and 100%');
+      toast.error('All rates must be valid numbers');
       return;
     }
 
@@ -79,34 +79,96 @@ export const RatesReferencePanel = ({
     setIsEditing(false);
   };
 
-  // Rate input component
+  // Rate input component with local state for editing
   const RateInput = ({ label, value, onChange }: {
     label: string;
     value: number;
     onChange: (value: number) => void;
-  }) => (
-    <div className="flex items-center justify-between">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      {isEditing ? (
-        <input
-          type="number"
-          step="0.01"
-          min="0"
-          max="100"
-          value={(value * 100).toFixed(2)}
-          onChange={(e) => {
-            const percentValue = parseFloat(e.target.value) || 0;
-            onChange(percentValue / 100);
-          }}
-          className="w-24 px-2 py-1 bg-background border border-input rounded text-foreground text-sm font-mono text-right focus:border-primary focus:outline-none"
-        />
-      ) : (
-        <span className="text-sm font-mono font-semibold text-amber-600 bg-amber-100 px-2 py-1 rounded">
-          {formatPercentage(value)}
-        </span>
-      )}
-    </div>
-  );
+  }) => {
+    const [inputValue, setInputValue] = useState((value * 100).toFixed(2));
+
+    // Sync with prop when not focused
+    useEffect(() => {
+      setInputValue((value * 100).toFixed(2));
+    }, [value]);
+
+    return (
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-muted-foreground">{label}</span>
+        {isEditing ? (
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => {
+              const newValue = e.target.value;
+              // Allow typing any numeric input including negative and decimals
+              if (newValue === '' || newValue === '-' || newValue === '.' || /^-?\d*\.?\d*$/.test(newValue)) {
+                setInputValue(newValue);
+              }
+            }}
+            onBlur={() => {
+              // Convert to decimal and update parent
+              const percentValue = parseFloat(inputValue) || 0;
+              onChange(percentValue / 100);
+              // Re-format the display
+              setInputValue((percentValue).toFixed(2));
+            }}
+            className="w-24 px-2 py-1 bg-background border border-input rounded text-foreground text-sm font-mono text-right focus:border-primary focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          />
+        ) : (
+          <span className="text-sm font-mono font-semibold text-amber-600 bg-amber-100 px-2 py-1 rounded">
+            {formatPercentage(value)}
+          </span>
+        )}
+      </div>
+    );
+  };
+
+  // Escalation rate input component with local state
+  const EscalationRateInput = ({ label, rate, isEditing, onChange }: {
+    label: string;
+    rate: number;
+    isEditing: boolean;
+    onChange: (value: number) => void;
+  }) => {
+    const [inputValue, setInputValue] = useState((rate * 100).toFixed(2));
+
+    // Sync with prop when not focused
+    useEffect(() => {
+      setInputValue((rate * 100).toFixed(2));
+    }, [rate]);
+
+    return (
+      <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 px-3 py-2 rounded-md">
+        <span className="text-xs text-muted-foreground">{label}:</span>
+        {isEditing ? (
+          <input
+            type="text"
+            value={inputValue}
+            onChange={(e) => {
+              const newValue = e.target.value;
+              // Allow typing any numeric input including negative and decimals
+              if (newValue === '' || newValue === '-' || newValue === '.' || /^-?\d*\.?\d*$/.test(newValue)) {
+                setInputValue(newValue);
+              }
+            }}
+            onBlur={() => {
+              // Convert to decimal and update parent
+              const percentValue = parseFloat(inputValue) || 0;
+              onChange(percentValue / 100);
+              // Re-format the display
+              setInputValue((percentValue).toFixed(2));
+            }}
+            className="w-20 px-2 py-1 bg-background border border-input rounded text-foreground text-xs font-mono text-right focus:border-primary focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+          />
+        ) : (
+          <span className="text-xs font-mono font-semibold text-blue-600">
+            {formatPercentage(rate)}
+          </span>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden">
@@ -244,35 +306,18 @@ export const RatesReferencePanel = ({
                     : (escalationRates[key] || 0);
 
                   return (
-                    <div
+                    <EscalationRateInput
                       key={key}
-                      className="flex items-center gap-2 bg-blue-50 border border-blue-200 px-3 py-2 rounded-md"
-                    >
-                      <span className="text-xs text-muted-foreground">
-                        {getEscalationLabel(fromYear, toYear)}:
-                      </span>
-                      {isEditing ? (
-                        <input
-                          type="number"
-                          step="0.01"
-                          min="0"
-                          max="100"
-                          value={(rate * 100).toFixed(2)}
-                          onChange={(e) => {
-                            const percentValue = parseFloat(e.target.value) || 0;
-                            setEditedEscalationRates({
-                              ...editedEscalationRates,
-                              [key]: percentValue / 100
-                            });
-                          }}
-                          className="w-20 px-2 py-1 bg-background border border-input rounded text-foreground text-xs font-mono text-right focus:border-primary focus:outline-none"
-                        />
-                      ) : (
-                        <span className="text-xs font-mono font-semibold text-blue-600">
-                          {formatPercentage(rate)}
-                        </span>
-                      )}
-                    </div>
+                      label={getEscalationLabel(fromYear, toYear)}
+                      rate={rate}
+                      isEditing={isEditing}
+                      onChange={(newRate) => {
+                        setEditedEscalationRates({
+                          ...editedEscalationRates,
+                          [key]: newRate
+                        });
+                      }}
+                    />
                   );
                 })}
               </div>

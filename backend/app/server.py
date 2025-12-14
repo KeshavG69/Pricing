@@ -32,8 +32,8 @@ async def lifespan(app: FastAPI):
     yield
 
     # Shutdown: Close MongoDB connections
-    from auth.database import MongoDB
-    await MongoDB.close_mongo_connection()
+    from auth.database import close_mongodb_client
+    close_mongodb_client()
 
     # Close OEWS MongoDB client if initialized
     from client.oews_mongodb import _oews_mongo_client

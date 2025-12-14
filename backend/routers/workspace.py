@@ -7,7 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from bson import ObjectId
 from pydantic import BaseModel
 from auth.dependencies import get_current_user
-from auth.database import MongoDB
+from auth.database import get_mongodb_client
 from utils.helpers import serialize_docs
 
 router = APIRouter(prefix="/api/workspace", tags=["workspace"])
@@ -26,12 +26,12 @@ async def get_user_organizations(current_user: dict = Depends(get_current_user))
     Returns:
         List of organizations with user's role in each
     """
-    users_collection = await MongoDB.get_users_collection()
-    db = await MongoDB.get_database()
+    users_collection = get_mongodb_client().get_users_collection()
+    db = get_mongodb_client().get_database()
     orgs_collection = db["organizations"]
 
     # Get user's organizations
-    user = await users_collection.find_one({"_id": current_user["_id"]})
+    user = users_collection.find_one({"_id": current_user["_id"]})
     organizations_data = user.get("organizations", [])
     
     # For backward compatibility
@@ -48,7 +48,7 @@ async def get_user_organizations(current_user: dict = Depends(get_current_user))
         if org_membership.get("status") != "active":
             continue
 
-        org = await orgs_collection.find_one({"_id": org_membership["organization_id"]})
+        org = orgs_collection.find_one({"_id": org_membership["organization_id"]})
         if org:
             result.append({
                 "id": str(org["_id"]),
@@ -79,7 +79,7 @@ async def switch_organization(
         HTTPException 400: If organization ID is invalid
         HTTPException 403: If user is not a member of the organization
     """
-    users_collection = await MongoDB.get_users_collection()
+    users_collection = get_mongodb_client().get_users_collection()
 
     # Validate organization ID
     try:
@@ -91,7 +91,7 @@ async def switch_organization(
         )
 
     # Get user's organizations
-    user = await users_collection.find_one({"_id": current_user["_id"]})
+    user = users_collection.find_one({"_id": current_user["_id"]})
     organizations = user.get("organizations", [])
     
     # Check if user is a member of this organization
@@ -107,7 +107,7 @@ async def switch_organization(
         )
     
     # Update current organization
-    await users_collection.update_one(
+    users_collection.update_one(
         {"_id": current_user["_id"]},
         {"$set": {"current_organization_id": org_id}}
     )
