@@ -36,8 +36,8 @@ async def get_my_organization(current_user: dict = Depends(get_current_user)):
     Returns:
         Organization document with serialized ObjectIds
     """
-    org_crud = await get_organization_crud()
-    org = await org_crud.get_by_id(current_user["organization_id"])
+    org_crud = get_organization_crud()
+    org = org_crud.get_by_id(current_user["organization_id"])
 
     if not org:
         raise HTTPException(
@@ -59,8 +59,8 @@ async def get_organization_members(current_user: dict = Depends(require_admin)):
     Returns:
         List of user documents with serialized ObjectIds
     """
-    org_crud = await get_organization_crud()
-    members = await org_crud.get_members(current_user["organization_id"])
+    org_crud = get_organization_crud()
+    members = org_crud.get_members(current_user["organization_id"])
 
     # Remove sensitive fields
     for member in members:
@@ -87,8 +87,8 @@ async def update_organization_settings(
     Returns:
         Updated organization document
     """
-    org_crud = await get_organization_crud()
-    org = await org_crud.get_by_id(current_user["organization_id"])
+    org_crud = get_organization_crud()
+    org = org_crud.get_by_id(current_user["organization_id"])
 
     if not org:
         raise HTTPException(
@@ -113,7 +113,7 @@ async def update_organization_settings(
         settings["allow_user_rate_override"] = settings_update.allow_user_rate_override
 
     # Update organization
-    updated_org = await org_crud.update_settings(current_user["organization_id"], settings)
+    updated_org = org_crud.update_settings(current_user["organization_id"], settings)
 
     return serialize_doc(updated_org)
 
@@ -151,16 +151,15 @@ async def remove_organization_member(
         )
 
     # Get target user (try both ObjectId and string ID)
-    user_crud = await get_user_crud()
-    await user_crud._ensure_initialized()
+    user_crud = get_user_crud()
 
     # Try to find user by _id (ObjectId) or by serialized id field
     try:
         user_oid = ObjectId(user_id)
-        target_user = await user_crud.collection.find_one({"_id": user_oid})
+        target_user = user_crud.collection.find_one({"_id": user_oid})
     except:
         # If not a valid ObjectId, treat as string UUID
-        target_user = await user_crud.collection.find_one({
+        target_user = user_crud.collection.find_one({
             "$or": [
                 {"_id": user_id},
                 {"id": user_id}
@@ -189,7 +188,7 @@ async def remove_organization_member(
 
     # Remove user from this organization (update status in organizations array)
     from datetime import datetime
-    await user_crud.collection.update_one(
+    user_crud.collection.update_one(
         {
             "_id": target_user["_id"],
             "organizations.organization_id": current_user["organization_id"]
@@ -218,18 +217,18 @@ async def get_organization_stats(current_user: dict = Depends(get_current_user))
     Returns:
         Organization statistics
     """
-    from auth.database import MongoDB
+    from auth.database import get_mongodb_client
 
     org_id = current_user["organization_id"]
 
     # Get collections
-    users_collection = await MongoDB.get_users_collection()
-    db = await MongoDB.get_database()
+    users_collection = get_mongodb_client().get_users_collection()
+    db = get_mongodb_client().get_database()
     invitations_collection = db["invitations"]
     proposals_collection = db["proposals"]
 
     # Count active members (query organizations array)
-    active_members = await users_collection.count_documents({
+    active_members = users_collection.count_documents({
         "organizations": {
             "$elemMatch": {
                 "organization_id": org_id,
@@ -239,13 +238,13 @@ async def get_organization_stats(current_user: dict = Depends(get_current_user))
     })
 
     # Count pending invitations
-    pending_invitations = await invitations_collection.count_documents({
+    pending_invitations = invitations_collection.count_documents({
         "organization_id": org_id,
         "status": "pending"
     })
 
     # Count proposals (if using new organization-aware structure)
-    total_proposals = await proposals_collection.count_documents({
+    total_proposals = proposals_collection.count_documents({
         "organization_id": org_id
     })
 

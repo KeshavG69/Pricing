@@ -88,6 +88,12 @@ def create_indexes():
     else:
         print("   ⚠ Already exists: shared_with")
 
+    # Compound index for organization_id + status (stats query optimization)
+    if safe_create_index(proposals, [("organization_id", ASCENDING), ("status", ASCENDING)], "org_status_index"):
+        print("   ✓ Created: organization_id + status")
+    else:
+        print("   ⚠ Already exists: organization_id + status")
+
     # =====================================================================
     # WAGE_DATA COLLECTION (6M+ records - most critical for performance)
     # =====================================================================

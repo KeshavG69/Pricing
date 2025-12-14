@@ -84,14 +84,16 @@ export default function ProposalsPage() {
   useEffect(() => {
     resetPagination();
     fetchProposalsPaginated(false);
-  }, [fetchProposalsPaginated, resetPagination]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.organization_id]);
 
   // Infinite scroll callback
   const handleLoadMore = useCallback(() => {
     if (!isLoading && hasMore) {
       fetchProposalsPaginated(true);
     }
-  }, [isLoading, hasMore, fetchProposalsPaginated]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, hasMore]);
 
   const { sentinelRef } = useInfiniteScroll({
     onLoadMore: handleLoadMore,

@@ -7,7 +7,28 @@ import {
   DocumentInfo,
 } from '@/types';
 
+export interface ProposalStats {
+  total: number;
+  completed: number;
+  processing: number;
+  error: number;
+}
+
+export interface ProposalListResponse {
+  proposals: Proposal[];
+  total: number;
+  hasMore: boolean;
+  skip: number;
+  limit: number;
+}
+
 export const proposalsApi = {
+  // Get proposal statistics
+  getStats: async (): Promise<ProposalStats> => {
+    const response = await apiClient.get<ProposalStats>('/proposals/stats');
+    return response.data;
+  },
+
   // Upload documents and create proposal
   upload: async (files: File[], solicitationNumber?: string): Promise<UploadResponse> => {
     const formData = new FormData();
@@ -40,13 +61,14 @@ export const proposalsApi = {
   },
 
   // List user's proposals
+  // Returns ProposalListResponse when skip=0 (with metadata), Proposal[] otherwise
   list: async (
     skip: number = 0,
     limit: number = 20,
     sortBy: 'date' | 'name' | 'status' = 'date',
     sortOrder: 'asc' | 'desc' = 'desc'
-  ): Promise<Proposal[]> => {
-    const response = await apiClient.get<Proposal[]>('/proposals', {
+  ): Promise<Proposal[] | ProposalListResponse> => {
+    const response = await apiClient.get<Proposal[] | ProposalListResponse>('/proposals', {
       params: { skip, limit, sort_by: sortBy, sort_order: sortOrder },
     });
     return response.data;

@@ -42,7 +42,7 @@ async def signup(user_data: UserSignup):
         UserResponse: Created user information
     """
     try:
-        user = await UserCRUD.create_user(user_data)
+        user = UserCRUD.create_user(user_data)
         return user
     except ValueError as e:
         raise HTTPException(
@@ -69,7 +69,7 @@ async def login(user_data: UserLogin, request: Request):
         Dict with tokens and user info
     """
     try:
-        user = await UserCRUD.authenticate_user(user_data.email, user_data.password)
+        user = UserCRUD.authenticate_user(user_data.email, user_data.password)
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
@@ -77,9 +77,9 @@ async def login(user_data: UserLogin, request: Request):
             )
 
         # Get full user document to extract organization info
-        from auth.database import MongoDB
-        users_collection = await MongoDB.get_users_collection()
-        user_doc = await users_collection.find_one({"email": user_data.email})
+        from auth.database import get_mongodb_client
+        users_collection = get_mongodb_client().get_users_collection()
+        user_doc = users_collection.find_one({"email": user_data.email})
 
         # Extract role and organization from organizations array
         current_org_id = user_doc.get("current_organization_id")
@@ -155,12 +155,12 @@ async def google_login(
             )
 
         # Create or update user in database
-        user = await UserCRUD.create_or_update_google_user(google_profile)
+        user = UserCRUD.create_or_update_google_user(google_profile)
 
         # Get full user document to extract organization info
-        from auth.database import MongoDB
-        users_collection = await MongoDB.get_users_collection()
-        user_doc = await users_collection.find_one({"email": user.email})
+        from auth.database import get_mongodb_client
+        users_collection = get_mongodb_client().get_users_collection()
+        user_doc = users_collection.find_one({"email": user.email})
 
         # Extract role and organization from organizations array
         current_org_id = user_doc.get("current_organization_id")
