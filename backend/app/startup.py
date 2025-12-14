@@ -246,7 +246,7 @@ class StartupManager:
             from client.oews_mongodb import get_oews_mongo_client
 
             # Get client instance and run test query
-            client = await get_oews_mongo_client()
+            client = get_oews_mongo_client()
 
             # Test query: search for a common area to verify DB connection
             test_results = await client.search_areas("National")

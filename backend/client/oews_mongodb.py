@@ -287,18 +287,27 @@ class OEWSMongoLookup:
 
 # Global singleton instance with thread-safe lazy initialization
 _oews_mongo_client: Optional[OEWSMongoLookup] = None
-_client_lock = asyncio.Lock()
+_client_lock = None  # Will be initialized when needed
 
 
-async def get_oews_mongo_client() -> OEWSMongoLookup:
+def get_oews_mongo_client() -> OEWSMongoLookup:
     """
-    Get or create OEWS MongoDB client (singleton pattern) - async.
+    Get or create OEWS MongoDB client (singleton pattern).
+
+    Thread-safe synchronous getter. The client itself uses async methods
+    with lazy initialization via _ensure_initialized().
 
     Returns:
         OEWSMongoLookup instance
     """
-    global _oews_mongo_client
-    async with _client_lock:
+    global _oews_mongo_client, _client_lock
+
+    # Initialize lock on first call
+    if _client_lock is None:
+        import threading
+        _client_lock = threading.Lock()
+
+    with _client_lock:
         if _oews_mongo_client is None:
             _oews_mongo_client = OEWSMongoLookup()
         return _oews_mongo_client
