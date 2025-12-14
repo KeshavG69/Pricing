@@ -145,6 +145,7 @@ export interface Proposal {
   prime_contractor_name?: string;
   dcaa_contact?: string;
   status: 'processing' | 'completed' | 'error' | 'draft';
+  excel_downloaded?: boolean;
   visibility?: 'private' | 'shared';
   shared_with?: string[];
   createdAt: string;

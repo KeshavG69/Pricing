@@ -31,6 +31,7 @@ export default function DashboardPage() {
     total: 0,
     completed: 0,
     processing: 0,
+    submitted: 0,
     error: 0,
   });
   const [statsLoading, setStatsLoading] = useState(true);
@@ -274,7 +275,7 @@ export default function DashboardPage() {
               <p className="text-3xl font-bold text-foreground mb-1">
                 {statsLoading ? '...' : stats.total}
               </p>
-              <p className="text-sm text-muted-foreground">Active proposals</p>
+              <p className="text-sm text-muted-foreground">Total proposals</p>
             </CardContent>
           </Card>
 
@@ -284,12 +285,12 @@ export default function DashboardPage() {
                 <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center">
                   <CheckCircle className="w-5 h-5 text-emerald-600" />
                 </div>
-                <span className="text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">Completed</span>
+                <span className="text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">In Progress</span>
               </div>
               <p className="text-3xl font-bold text-foreground mb-1">
                 {statsLoading ? '...' : stats.completed}
               </p>
-              <p className="text-sm text-muted-foreground">Ready for review</p>
+              <p className="text-sm text-muted-foreground">In Progress proposals</p>
             </CardContent>
           </Card>
 
@@ -297,14 +298,14 @@ export default function DashboardPage() {
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                  <Clock className="w-5 h-5 text-blue-600" />
+                  <CheckCircle className="w-5 h-5 text-blue-600" />
                 </div>
-                <span className="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded-full">In Progress</span>
+                <span className="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded-full">Submitted</span>
               </div>
               <p className="text-3xl font-bold text-foreground mb-1">
-                {statsLoading ? '...' : stats.processing}
+                {statsLoading ? '...' : stats.submitted}
               </p>
-              <p className="text-sm text-muted-foreground">Processing now</p>
+              <p className="text-sm text-muted-foreground">Submitted proposals</p>
             </CardContent>
           </Card>
         </div>

@@ -891,6 +891,15 @@ export const usePricingStore = create<PricingState>((set, get) => {
         window.URL.revokeObjectURL(url);
 
         console.log('Excel file downloaded successfully');
+
+        // Mark proposal as downloaded (changes status from "In Progress" to "Submitted")
+        try {
+          await proposalsApi.markDownloaded(state.proposalId);
+          console.log('Proposal marked as downloaded');
+        } catch (error) {
+          console.error('Failed to mark proposal as downloaded:', error);
+          // Don't throw - the Excel was already downloaded successfully
+        }
       } catch (error: any) {
         console.error('Excel export failed:', error);
         console.error('Error details:', error.response?.data);
