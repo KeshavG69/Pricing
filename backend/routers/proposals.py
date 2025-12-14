@@ -433,9 +433,10 @@ async def get_proposal_stats(
     Get proposal statistics for the current user.
 
     Returns:
-        Statistics including total count, completed count, processing count, error count
+        Statistics including total, completed, processing (not downloaded),
+        submitted (downloaded), and error counts
 
-    Optimized: Uses single aggregation pipeline instead of 4 separate count queries
+    Optimized: Uses single aggregation pipeline instead of multiple count queries
     """
     crud = await get_crud()
 
@@ -465,13 +466,33 @@ async def get_proposal_stats(
             {"$match": match_query},
             {
                 "$facet": {
-                    "total": [{"$count": "count"}],
-                    "completed": [
+                    "total": [
                         {"$match": {"status": "completed"}},
+                        {"$count": "count"}
+                    ],
+                    "completed": [
+                        {
+                            "$match": {
+                                "status": "completed",
+                                "$or": [
+                                    {"excel_downloaded": {"$exists": False}},
+                                    {"excel_downloaded": False}
+                                ]
+                            }
+                        },
                         {"$count": "count"}
                     ],
                     "processing": [
                         {"$match": {"status": "processing"}},
+                        {"$count": "count"}
+                    ],
+                    "submitted": [
+                        {
+                            "$match": {
+                                "status": "completed",
+                                "excel_downloaded": True
+                            }
+                        },
                         {"$count": "count"}
                     ],
                     "error": [
@@ -490,6 +511,7 @@ async def get_proposal_stats(
                 "total": stats["total"][0]["count"] if stats["total"] else 0,
                 "completed": stats["completed"][0]["count"] if stats["completed"] else 0,
                 "processing": stats["processing"][0]["count"] if stats["processing"] else 0,
+                "submitted": stats["submitted"][0]["count"] if stats["submitted"] else 0,
                 "error": stats["error"][0]["count"] if stats["error"] else 0
             }
 
@@ -497,6 +519,7 @@ async def get_proposal_stats(
             "total": 0,
             "completed": 0,
             "processing": 0,
+            "submitted": 0,
             "error": 0
         }
 
@@ -818,6 +841,56 @@ async def delete_proposal(
     return {
         "message": "Proposal deleted successfully",
         "deleted_documents": deleted_count
+    }
+
+
+@router.post("/{proposal_id}/mark-downloaded")
+async def mark_proposal_downloaded(
+    proposal_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Mark proposal as downloaded (Excel file downloaded).
+
+    This updates the proposal status to indicate the user has downloaded
+    the Excel file, changing it from "In Progress" to "Submitted".
+    """
+    crud = await get_crud()
+
+    # Get user's organization and role for access control
+    organization_id = current_user.get("organization_id")
+    role = current_user.get("role")
+
+    # Check if user has access to this proposal
+    proposal = crud.get_proposal(
+        proposal_id,
+        str(current_user["_id"]),
+        organization_id=organization_id,
+        role=role
+    )
+
+    if not proposal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Proposal not found"
+        )
+
+    # Update the excel_downloaded field
+    updated_proposal = crud.update_proposal(
+        proposal_id,
+        str(current_user["_id"]),
+        {"excel_downloaded": True}
+    )
+
+    if not updated_proposal:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to mark proposal as downloaded"
+        )
+
+    return {
+        "message": "Proposal marked as downloaded",
+        "excel_downloaded": True
     }
 
 

@@ -5,9 +5,9 @@ Keshav:-
 5. user management x
 6. proposal name change as well x 
 7.fix caching issue x
-8. in progress or submited based on when they download excel
+8. in progress or submited based on when they download excel x
 
 Parth:-
-1.pricing   
+1.payment gateway   
 2.sources
 
