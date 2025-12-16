@@ -34,6 +34,7 @@ export const AdvancedAnalysisGrid = () => {
     toggleRatesReference,
     updateRates,
     updateEscalationRates,
+    recalculate,
   } = usePricingStore();
 
   // ODC modal state
@@ -187,6 +188,7 @@ export const AdvancedAnalysisGrid = () => {
         onToggle={toggleRatesReference}
         onUpdateRates={updateRates}
         onUpdateEscalationRates={updateEscalationRates}
+        onRecalculate={recalculate}
       />
 
       {/* Prime Labor Section */}

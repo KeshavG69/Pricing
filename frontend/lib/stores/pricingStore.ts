@@ -250,6 +250,11 @@ export const usePricingStore = create<PricingState>((set, get) => {
         isDirty: true,
       });
 
+      // If in advanced mode, transform to update detailed view
+      if (get().advancedMode) {
+        get().transformToAdvanced();
+      }
+
       console.log('Calculations updated');
 
       // Trigger auto-save
@@ -401,8 +406,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
           positions,
           subcontractors: proposal.spreadsheet_data?.subcontractors || [],
           odcs: proposal.spreadsheet_data?.odcs || [],
-          rates: proposal.rates,  // Use rates from backend (org settings)
-          escalationRates: proposal.escalation_rates,  // Use escalation from backend (org settings)
+          rates: proposal.spreadsheet_data?.rates || proposal.rates,  // Try spreadsheet_data first, fallback to org defaults
+          escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Try spreadsheet_data first
           totalYears,
           baseYears: proposal.metadata?.base_years || 1,
           optionYears: proposal.metadata?.option_years || 0,
@@ -422,8 +427,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
           positions,
           subcontractors: proposal.spreadsheet_data?.subcontractors || [],
           odcs: proposal.spreadsheet_data?.odcs || [],
-          rates: proposal.rates,  // Use rates from backend (org settings)
-          escalationRates: proposal.escalation_rates,  // Use escalation from backend (org settings)
+          rates: proposal.spreadsheet_data?.rates || proposal.rates,  // Try spreadsheet_data first, fallback to org defaults
+          escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Try spreadsheet_data first
           totalYears,
           baseYears: proposal.metadata?.base_years || 1,
           optionYears: proposal.metadata?.option_years || 0,

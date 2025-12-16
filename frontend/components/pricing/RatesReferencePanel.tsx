@@ -12,6 +12,7 @@ interface RatesReferencePanelProps {
   onToggle: () => void;
   onUpdateRates: (rates: Partial<IndirectRates>) => void;
   onUpdateEscalationRates: (rates: Partial<EscalationRates>) => void;
+  onRecalculate?: () => Promise<void>;
 }
 
 export const RatesReferencePanel = ({
@@ -22,6 +23,7 @@ export const RatesReferencePanel = ({
   onToggle,
   onUpdateRates,
   onUpdateEscalationRates,
+  onRecalculate,
 }: RatesReferencePanelProps) => {
   const toast = useToast();
 
@@ -51,7 +53,7 @@ export const RatesReferencePanel = ({
   };
 
   // Save and cancel handlers
-  const handleSave = () => {
+  const handleSave = async () => {
     // Validate inputs (all rates should be valid numbers)
     const validateRate = (rate: number) => !isNaN(rate);
 
@@ -68,6 +70,11 @@ export const RatesReferencePanel = ({
     // Call store update methods
     onUpdateRates(editedRates);
     onUpdateEscalationRates(editedEscalationRates);
+
+    // Trigger immediate recalculation
+    if (onRecalculate) {
+      await onRecalculate();
+    }
 
     toast.success('Rates updated successfully');
     setIsEditing(false);
