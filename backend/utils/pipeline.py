@@ -239,7 +239,7 @@ def build_project_data_from_dataframe(
                 hours_per_year[str(year)] = hours_per_year.get(str(year-1), 1880)
 
         position = {
-            'name': row.get('name', 'TBD'),
+            'name': row.get('name', project_config.get('prime_contractor_name', 'TBD')),  # Use prime contractor name
             'labor_category': row['labor_category'],
             'ecraft_code': row.get('BLS Labour Category Mapping', row.get('ecraft_code', row.get('soc_title', 'TBD'))),  # Use BLS labor category or soc_title
             'bls_code': row.get('BLS Code', row.get('soc_code', '')),  # Add BLS Code or soc_code

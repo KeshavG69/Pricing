@@ -3565,7 +3565,7 @@
         "kind": 6,
         "importPath": "backend.models.proposal",
         "description": "backend.models.proposal",
-        "peekOfCode": "class ProposalUpdate(BaseModel):\n    \"\"\"Schema for updating an existing proposal.\"\"\"\n    name: Optional[str] = Field(None, description=\"Updated proposal name\")\n    solicitation_number: Optional[str] = Field(None, description=\"Updated solicitation number\")\n    status: Optional[str] = Field(\n        None,\n        description=\"Proposal status (draft, processing, completed, error)\"\n    )\n    rates: Optional[Dict[str, float]] = Field(\n        None,",
+        "peekOfCode": "class ProposalUpdate(BaseModel):\n    \"\"\"Schema for updating an existing proposal.\"\"\"\n    name: Optional[str] = Field(None, description=\"Updated proposal name\")\n    solicitation_number: Optional[str] = Field(None, description=\"Updated solicitation number\")\n    prime_contractor_name: Optional[str] = Field(None, description=\"Updated prime contractor name\")\n    status: Optional[str] = Field(\n        None,\n        description=\"Proposal status (draft, processing, completed, error)\"\n    )\n    rates: Optional[Dict[str, float]] = Field(",
         "detail": "backend.models.proposal",
         "documentation": {}
     },

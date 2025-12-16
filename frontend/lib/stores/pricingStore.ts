@@ -15,6 +15,7 @@ import {
 } from '@/types';
 import { pricingApi } from '../api/pricing';
 import { proposalsApi } from '../api/proposals';
+import { useOrganizationStore } from './organizationStore';
 
 interface PricingState {
   // Data
@@ -65,8 +66,9 @@ interface PricingState {
   updateEscalationRates: (rates: Partial<EscalationRates>) => void;
   updateMonthsForYear: (year: string, months: number) => void;
   updateAllMonths: (monthsPerYear: Record<string, number>) => void;
+  updatePrimeContractorName: (name: string) => void;
   recalculate: () => Promise<void>;
-  exportToExcel: () => Promise<void>;
+  exportToExcel: (overrides?: { primeContractorName?: string }) => Promise<void>;
   reset: () => void;
 
   // Advanced mode actions
@@ -410,6 +412,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
     try {
       await proposalsApi.update(state.proposalId, {
+        prime_contractor_name: state.primeContractorName,  // Save at proposal level
         spreadsheet_data: {
           positions: state.positions,
           subcontractors: state.subcontractors,
@@ -519,11 +522,24 @@ export const usePricingStore = create<PricingState>((set, get) => {
           defaultMonthsPerYear[i.toString()] = 12;
         }
 
+        // If prime contractor name is TBD or empty, use organization name
+        let primeContractorName = proposal.prime_contractor_name || 'TBD';
+        if (primeContractorName === 'TBD' || !primeContractorName) {
+          const orgState = useOrganizationStore.getState();
+          if (orgState.organization?.name) {
+            primeContractorName = orgState.organization.name;
+            console.log('[PRICING] Using organization name as prime contractor:', primeContractorName);
+
+            // Immediately save to backend to persist the change
+            proposalsApi.update(proposalId, { prime_contractor_name: primeContractorName });
+          }
+        }
+
         set({
           proposalId,
           proposalName: proposal.name,
           solicitationNumber: proposal.solicitation_number,
-          primeContractorName: proposal.prime_contractor_name || 'TBD',
+          primeContractorName,
           dcaaContact: proposal.dcaa_contact || '',
           positions,
           subcontractors: proposal.spreadsheet_data?.subcontractors || [],
@@ -544,7 +560,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           proposalId,
           proposalName: proposal.name,
           solicitationNumber: proposal.solicitation_number,
-          primeContractorName: proposal.prime_contractor_name || 'TBD',
+          primeContractorName,
           dcaaContact: proposal.dcaa_contact || '',
           positions,
           subcontractors: proposal.spreadsheet_data?.subcontractors || [],
@@ -845,18 +861,27 @@ export const usePricingStore = create<PricingState>((set, get) => {
       debouncedAutoSave();
     },
 
+    updatePrimeContractorName: (name) => {
+      set({ primeContractorName: name, isDirty: true });
+      debouncedAutoSave();
+    },
+
     recalculate: async () => {
       // Force immediate recalculation (bypass debounce)
       debouncedRecalculate.cancel();
       await debouncedRecalculate();
     },
 
-    exportToExcel: async () => {
+    exportToExcel: async (overrides) => {
       const state = get();
       if (!state.proposalId) return;
 
+      // Use override if provided, otherwise use store value
+      const primeContractorName = overrides?.primeContractorName || state.primeContractorName || 'TBD';
+
       try {
         console.log('Generating Excel file...');
+        console.log('[EXPORT] Using prime contractor name:', primeContractorName);
 
         // Basic mode: Export simple Excel spreadsheet matching frontend grid
         if (!state.advancedMode) {
@@ -972,6 +997,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           jobs: state.positions.map((p) => ({
             labor_category: p.labor_category,
             soc_code: p.soc_code,
+            soc_title: p.soc_title,  // Add BLS Category name for Excel export
             hours_per_year: p.hours_per_year,
             selected_wage: p.custom_salary || p[`wage_${p.percentile}`] || p.selected_wage || 0,
             percentile: p.percentile,
@@ -984,7 +1010,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           })),
           project_config: {
             solicitation_number: state.solicitationNumber || '',
-            prime_contractor_name: state.primeContractorName || 'TBD',
+            prime_contractor_name: primeContractorName,
             subcontractor_names: state.subcontractors.map(s => s.name),
             dcaa_contact: state.dcaaContact || '',
             total_years: state.totalYears,

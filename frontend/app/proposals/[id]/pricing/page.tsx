@@ -16,7 +16,7 @@ export default function PricingWorkspacePage() {
   const router = useRouter();
   const proposalId = params.id as string;
 
-  const { loadProposal, proposalName, positions, error, reset, addPosition } =
+  const { loadProposal, proposalName, primeContractorName, updatePrimeContractorName, error, reset, addPosition } =
     usePricingStore();
   const [isLoading, setIsLoading] = useState(true);
   const [monthModalOpen, setMonthModalOpen] = useState(false);
@@ -93,9 +93,21 @@ export default function PricingWorkspacePage() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
             </Button>
-            <div>
-              <h1 className="text-sm font-bold text-slate-50">{proposalName}</h1>
-              <p className="text-xs text-slate-400">Pricing Workspace</p>
+            <div className="flex items-center gap-4">
+              <div>
+                <h1 className="text-sm font-bold text-slate-50">{proposalName}</h1>
+                <p className="text-xs text-slate-400">Pricing Workspace</p>
+              </div>
+              <div className="border-l border-slate-700 pl-4">
+                <label className="text-xs text-slate-400 block mb-1">Prime Contractor</label>
+                <input
+                  type="text"
+                  value={primeContractorName}
+                  onChange={(e) => updatePrimeContractorName(e.target.value)}
+                  className="bg-slate-800 text-slate-50 text-sm px-3 py-1 rounded border border-slate-700 focus:border-primary focus:outline-none w-64"
+                  placeholder="Enter company name"
+                />
+              </div>
             </div>
           </div>
           <div className="flex items-center space-x-2">
