@@ -37,6 +37,13 @@ export const AdvancedAnalysisGrid = () => {
     recalculate,
   } = usePricingStore();
 
+  // Debug: Log when component re-renders
+  console.log('[AdvancedAnalysisGrid] Re-render with', positionsAdvanced.length, 'positions, aggregates:', {
+    totalFringe: aggregates.totalFringe,
+    totalOH: aggregates.totalOH,
+    totalGA: aggregates.totalGA
+  });
+
   // ODC modal state
   const [isODCModalOpen, setIsODCModalOpen] = useState(false);
   const [editingODC, setEditingODC] = useState<ODCItem | null>(null);

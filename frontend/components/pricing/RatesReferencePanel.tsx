@@ -67,13 +67,21 @@ export const RatesReferencePanel = ({
       return;
     }
 
+    console.log('[RATES PANEL] Saving rates:', editedRates);
+    console.log('[RATES PANEL] Saving escalation rates:', editedEscalationRates);
+
     // Call store update methods
     onUpdateRates(editedRates);
     onUpdateEscalationRates(editedEscalationRates);
 
+    // Wait a bit for state to update before triggering recalculation
+    await new Promise(resolve => setTimeout(resolve, 50));
+
     // Trigger immediate recalculation
     if (onRecalculate) {
+      console.log('[RATES PANEL] Calling recalculate API...');
       await onRecalculate();
+      console.log('[RATES PANEL] Recalculate API completed');
     }
 
     toast.success('Rates updated successfully');

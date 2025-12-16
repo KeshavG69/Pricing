@@ -47,6 +47,7 @@ interface PricingState {
   manualOverrides: Map<string, Set<string>>;
   aggregates: Aggregates;
   ratesReferenceExpanded: boolean;
+  advancedModeVersion: number; // Force re-render counter
   activeTab: 'overview' | 'main' | 'subcontractors' | 'rate-table';
 
   // Actions
@@ -209,6 +210,126 @@ const setCachedProposal = (proposalId: string, data: any) => {
 };
 
 export const usePricingStore = create<PricingState>((set, get) => {
+  // Helper function for actual transformation logic
+  const performTransformToAdvanced = () => {
+    const state = get();
+
+    console.log('[TRANSFORM] Starting transformation with rates:', {
+      fringe: state.rates.fringe,
+      oh: state.rates.oh,
+      ga: state.rates.ga,
+      fee: state.rates.fee
+    });
+
+    // Convert each SpreadsheetPosition to AdvancedPosition
+    const advanced = state.positions.map((pos) => {
+      const breakdown: AdvancedPosition['breakdown'] = {};
+
+      // For each year, create detailed breakdown
+      Object.entries(pos.hours_per_year).forEach(([year, hours]) => {
+        // Prioritize custom_salary, then percentile wage, then selected_wage
+        const wage = pos.custom_salary || pos[`wage_${pos.percentile}`] || pos.selected_wage || 0;
+        const dlRate = hours > 0 ? wage / hours : 0;
+        const dlAmount = dlRate * hours;
+
+        const fringe = dlRate * state.rates.fringe;
+        const fringeAmount = fringe * hours;
+
+        const oh = (dlRate + fringe) * state.rates.oh;
+        const ohAmount = oh * hours;
+
+        const ga = (dlRate + fringe + oh) * state.rates.ga;
+        const gaAmount = ga * hours;
+
+        const fee = (dlRate + fringe + oh + ga) * state.rates.fee;
+        const feeAmount = fee * hours;
+
+        const fblr = dlRate + fringe + oh + ga + fee;
+        const totalAmount = fblr * hours;
+
+        breakdown[year] = {
+          hours,
+          wage,
+          dlRate,
+          dlAmount,
+          fringe,
+          fringeAmount,
+          oh,
+          ohAmount,
+          ga,
+          gaAmount,
+          fee,
+          feeAmount,
+          fblr,
+          totalAmount,
+        };
+      });
+
+      return {
+        ...pos,
+        breakdown,
+        total_hours: Object.values(pos.hours_per_year).reduce((sum, h) => sum + h, 0),
+        total_amount: Object.values(breakdown).reduce((sum, b) => sum + b.totalAmount, 0),
+      } as AdvancedPosition;
+    });
+
+    // Calculate aggregates
+    const aggregates: Aggregates = {
+      totalDL: 0,
+      totalFringe: 0,
+      totalOH: 0,
+      totalGA: 0,
+      totalFBLR: 0,
+      byYear: {},
+    };
+
+    advanced.forEach((pos) => {
+      Object.entries(pos.breakdown).forEach(([year, breakdown]) => {
+        if (!aggregates.byYear[year]) {
+          aggregates.byYear[year] = {
+            dl: 0,
+            fringe: 0,
+            oh: 0,
+            ga: 0,
+            fblr: 0,
+            totalAmount: 0,
+          };
+        }
+
+        aggregates.byYear[year].dl += breakdown.dlAmount;
+        aggregates.byYear[year].fringe += breakdown.fringeAmount;
+        aggregates.byYear[year].oh += breakdown.ohAmount;
+        aggregates.byYear[year].ga += breakdown.gaAmount;
+        aggregates.byYear[year].fblr += breakdown.totalAmount;
+        aggregates.byYear[year].totalAmount += breakdown.totalAmount;
+
+        aggregates.totalDL += breakdown.dlAmount;
+        aggregates.totalFringe += breakdown.fringeAmount;
+        aggregates.totalOH += breakdown.ohAmount;
+        aggregates.totalGA += breakdown.gaAmount;
+        aggregates.totalFBLR += breakdown.totalAmount;
+      });
+    });
+
+    console.log('[TRANSFORM] Setting positionsAdvanced:', advanced.length, 'positions');
+    console.log('[TRANSFORM] Setting aggregates:', {
+      totalFringe: aggregates.totalFringe,
+      totalOH: aggregates.totalOH,
+      totalGA: aggregates.totalGA
+    });
+
+    // Increment version to force React re-render
+    const newVersion = state.advancedModeVersion + 1;
+    set({
+      positionsAdvanced: advanced,
+      aggregates,
+      advancedModeVersion: newVersion
+    });
+
+    console.log('[TRANSFORM] State updated with version', newVersion, '- should trigger re-render');
+  };
+
+
   // Debounced recalculation (500ms)
   const debouncedRecalculate = debounce(async () => {
     const state = get();
@@ -252,7 +373,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
       // If in advanced mode, transform to update detailed view
       if (get().advancedMode) {
-        get().transformToAdvanced();
+        performTransformToAdvanced();
       }
 
       console.log('Calculations updated');
@@ -364,6 +485,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
       byYear: {},
     },
     ratesReferenceExpanded: false,
+    advancedModeVersion: 0,
     activeTab: 'overview',
 
     loadProposal: async (proposalId, existingProposal) => {
@@ -630,7 +752,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           // 11. If in advanced mode, retransform the positions
           if (get().advancedMode) {
             console.log('🔄 Retransforming to advanced mode...');
-            get().transformToAdvanced();
+            performTransformToAdvanced();
           }
 
           console.log('✅ Pricing data refreshed - subcontractor now visible!');
@@ -666,16 +788,38 @@ export const usePricingStore = create<PricingState>((set, get) => {
     },
 
     updateRates: (rates) => {
-      set((state) => ({
+      const state = get();
+
+      // Update rates
+      set({
         rates: { ...state.rates, ...rates },
-      }));
+      });
+
+      // If in advanced mode, immediately transform (synchronous, no async wrapper)
+      if (state.advancedMode) {
+        console.log('[RATES] Immediately transforming (synchronous)...');
+        performTransformToAdvanced();
+      }
+
+      // Still trigger API recalculation in background
       debouncedRecalculate();
     },
 
     updateEscalationRates: (rates) => {
-      set((state) => ({
+      const state = get();
+
+      // Update escalation rates
+      set({
         escalationRates: { ...state.escalationRates, ...rates },
-      }));
+      });
+
+      // If in advanced mode, immediately transform (synchronous, no async wrapper)
+      if (state.advancedMode) {
+        console.log('[RATES] Immediately transforming (synchronous)...');
+        performTransformToAdvanced();
+      }
+
+      // Still trigger API recalculation in background
       debouncedRecalculate();
     },
 
@@ -917,99 +1061,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
     },
 
     transformToAdvanced: () => {
-      const state = get();
-
-      // Convert each SpreadsheetPosition to AdvancedPosition
-      const advanced = state.positions.map((pos) => {
-        const breakdown: AdvancedPosition['breakdown'] = {};
-
-        // For each year, create detailed breakdown
-        Object.entries(pos.hours_per_year).forEach(([year, hours]) => {
-          // Prioritize custom_salary, then percentile wage, then selected_wage
-          const wage = pos.custom_salary || pos[`wage_${pos.percentile}`] || pos.selected_wage || 0;
-          const dlRate = hours > 0 ? wage / hours : 0;
-          const dlAmount = dlRate * hours;
-
-          const fringe = dlRate * state.rates.fringe;
-          const fringeAmount = fringe * hours;
-
-          const oh = (dlRate + fringe) * state.rates.oh;
-          const ohAmount = oh * hours;
-
-          const ga = (dlRate + fringe + oh) * state.rates.ga;
-          const gaAmount = ga * hours;
-
-          const fee = (dlRate + fringe + oh + ga) * state.rates.fee;
-          const feeAmount = fee * hours;
-
-          const fblr = dlRate + fringe + oh + ga + fee;
-          const totalAmount = fblr * hours;
-
-          breakdown[year] = {
-            hours,
-            wage,
-            dlRate,
-            dlAmount,
-            fringe,
-            fringeAmount,
-            oh,
-            ohAmount,
-            ga,
-            gaAmount,
-            fee,
-            feeAmount,
-            fblr,
-            totalAmount,
-          };
-        });
-
-        return {
-          ...pos,
-          breakdown,
-          total_hours: Object.values(pos.hours_per_year).reduce((sum, h) => sum + h, 0),
-          total_amount: Object.values(breakdown).reduce((sum, b) => sum + b.totalAmount, 0),
-        } as AdvancedPosition;
-      });
-
-      // Calculate aggregates
-      const aggregates: Aggregates = {
-        totalDL: 0,
-        totalFringe: 0,
-        totalOH: 0,
-        totalGA: 0,
-        totalFBLR: 0,
-        byYear: {},
-      };
-
-      advanced.forEach((pos) => {
-        Object.entries(pos.breakdown).forEach(([year, breakdown]) => {
-          if (!aggregates.byYear[year]) {
-            aggregates.byYear[year] = {
-              dl: 0,
-              fringe: 0,
-              oh: 0,
-              ga: 0,
-              fblr: 0,
-              totalAmount: 0,
-            };
-          }
-
-          aggregates.byYear[year].dl += breakdown.dlAmount;
-          aggregates.byYear[year].fringe += breakdown.fringeAmount;
-          aggregates.byYear[year].oh += breakdown.ohAmount;
-          aggregates.byYear[year].ga += breakdown.gaAmount;
-          aggregates.byYear[year].fblr += breakdown.totalAmount;
-          aggregates.byYear[year].totalAmount += breakdown.totalAmount;
-
-          aggregates.totalDL += breakdown.dlAmount;
-          aggregates.totalFringe += breakdown.fringeAmount;
-          aggregates.totalOH += breakdown.ohAmount;
-          aggregates.totalGA += breakdown.gaAmount;
-          aggregates.totalFBLR += breakdown.totalAmount;
-        });
-      });
-
-      set({ positionsAdvanced: advanced, aggregates });
+      // Direct synchronous call
+      performTransformToAdvanced();
     },
 
     updateAdvancedPosition: (id, updates) => {
@@ -1024,7 +1077,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
       // Then retransform to advanced mode to recalculate breakdown
       console.log('[ADVANCED MODE] Calling transformToAdvanced');
-      get().transformToAdvanced();
+      performTransformToAdvanced();
 
       // Set isDirty AFTER transformation to ensure it persists through all state updates
       console.log('[ADVANCED MODE] Setting isDirty=true, proposalId=', get().proposalId);
@@ -1129,7 +1182,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         });
 
         // Re-transform to advanced mode with new calculations
-        get().transformToAdvanced();
+        performTransformToAdvanced();
 
         console.log('Advanced mode recalculation complete');
       } catch (error: any) {
@@ -1182,6 +1235,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           byYear: {},
         },
         ratesReferenceExpanded: false,
+        advancedModeVersion: 0,
         activeTab: 'overview',
       });
     },

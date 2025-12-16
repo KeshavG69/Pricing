@@ -101,6 +101,14 @@ export const PrimeLaborSection = ({
   onDeletePosition,
   onUpdatePosition,
 }: PrimeLaborSectionProps) => {
+  // Debug: Log when component re-renders
+  console.log('[PrimeLaborSection] Re-render with', positions.length, 'positions, rates:', {
+    fringe: rates.fringe,
+    oh: rates.oh,
+    ga: rates.ga,
+    fee: rates.fee
+  });
+
   // Context menu state
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; position: AdvancedPosition; columnKey?: string } | null>(null);
 
@@ -237,7 +245,7 @@ export const PrimeLaborSection = ({
     });
 
     return rows;
-  }, [positions, expandedPositions]);
+  }, [positions, expandedPositions, rates, escalationRates, totalYears]);
 
   // Get cell styling for manual overrides
   const getCellClassName = (positionId: string, year: string, field: string) => {
@@ -736,7 +744,7 @@ export const PrimeLaborSection = ({
     );
 
     return cols;
-  }, [totalYears, expandedPositions, manualOverrides, onToggleExpand, onDeletePosition, handleContextMenu]);
+  }, [totalYears, expandedPositions, manualOverrides, onToggleExpand, onDeletePosition, handleContextMenu, rates, escalationRates]);
 
   if (positions.length === 0) {
     return (

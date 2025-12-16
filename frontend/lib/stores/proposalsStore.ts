@@ -3,6 +3,7 @@ import { Proposal, ProposalUpdate } from '@/types';
 import { proposalsApi } from '../api/proposals';
 import { cacheManager } from '../cache';
 import { useAuthStore } from './authStore';
+import { deduplicateRequest } from '../utils/requestDeduplication';
 
 interface ProposalsState {
   proposals: Proposal[];
@@ -18,7 +19,7 @@ interface ProposalsState {
   sortOrder: 'asc' | 'desc';
 
   // Actions
-  fetchProposals: () => Promise<void>;
+  fetchProposals: (force?: boolean) => Promise<void>;
   fetchProposal: (id: string) => Promise<void>;
   uploadDocuments: (files: File[], solicitationNumber?: string) => Promise<string>;
   updateProposal: (id: string, updates: ProposalUpdate) => Promise<void>;
@@ -50,7 +51,7 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
   sortBy: 'date',
   sortOrder: 'desc',
 
-  fetchProposals: async () => {
+  fetchProposals: async (force = false) => {
     try {
       // Get current organization ID
       const user = useAuthStore.getState().user;
@@ -70,25 +71,30 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
         cacheManager.invalidate(`proposal:${state.lastFetchedOrgId}:*`);
       }
 
-      // Always-refresh pattern: Check cache first, then ALWAYS fetch fresh
+      // Conditional refresh pattern: Check cache first, only fetch if expired or forced
       const cacheKey = `proposals:list:${orgId}`;
       const cached = cacheManager.get<Proposal[]>(cacheKey);
 
-      // Show cached data immediately if valid (instant display)
-      if (cached && !cached.isExpired) {
-        console.log('[PROPOSALS] Showing cached data (instant display)');
+      // If cache is valid and not forced, use cached data (no fetch)
+      if (cached && !cached.isExpired && !force) {
+        console.log('[PROPOSALS] ✅ Using cached data (no fetch needed)');
         set({
           proposals: cached.data,
           isLoading: false,
           lastFetchedOrgId: orgId,
         });
-      } else {
-        set({ isLoading: true, error: null });
+        return;
       }
 
-      // ALWAYS fetch fresh data in background (even if cache hit)
-      console.log('[PROPOSALS] Fetching fresh data in background...');
-      const response = await proposalsApi.list();
+      // Cache expired or forced refresh - fetch from API
+      set({ isLoading: true, error: null });
+      console.log(`[PROPOSALS] Fetching fresh data... (force=${force}, expired=${cached?.isExpired})`);
+
+      // Deduplicate request to prevent multiple simultaneous calls
+      const response = await deduplicateRequest(
+        cacheKey,
+        () => proposalsApi.list()
+      );
 
       // Handle response format: extract proposals array from metadata response
       const freshProposals = Array.isArray(response) ? response : response.proposals;
@@ -114,7 +120,13 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
   fetchProposal: async (id) => {
     try {
       set({ isLoading: true, error: null });
-      const proposal = await proposalsApi.get(id);
+
+      // Deduplicate request to prevent multiple simultaneous calls for same proposal
+      const proposal = await deduplicateRequest(
+        `proposal:${id}`,
+        () => proposalsApi.get(id)
+      );
+
       set({ currentProposal: proposal, isLoading: false });
     } catch (error: any) {
       set({

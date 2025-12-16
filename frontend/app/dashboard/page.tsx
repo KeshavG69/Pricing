@@ -18,6 +18,7 @@ import { isAdmin } from '@/lib/utils/permissions';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { proposalsApi, ProposalStats } from '@/lib/api/proposals';
 import { cacheManager } from '@/lib/cache';
+import { deduplicateRequest } from '@/lib/utils/requestDeduplication';
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -63,7 +64,7 @@ export default function DashboardPage() {
       console.log('[DASHBOARD] Fetching proposals for org:', user?.organization_id);
       fetchProposals();
 
-      // Fetch stats with caching for instant display
+      // Fetch stats with conditional refresh pattern
       const orgId = user?.organization_id;
       if (!orgId) {
         console.warn('[DASHBOARD] No organization ID, skipping stats fetch');
@@ -73,31 +74,34 @@ export default function DashboardPage() {
       // Cache key scoped to organization
       const cacheKey = `stats:${orgId}`;
 
-      // Check cache first - show cached stats immediately
+      // Check cache first
       const cached = cacheManager.get<ProposalStats>(cacheKey);
+
+      // If cache is valid, use cached data (no fetch)
       if (cached && !cached.isExpired) {
-        console.log('[DASHBOARD] Showing cached stats (instant display)');
+        console.log('[DASHBOARD] ✅ Using cached stats (no fetch needed)');
         setStats(cached.data);
         setStatsLoading(false);
-      } else {
-        setStatsLoading(true);
+        return;
       }
 
-      // ALWAYS fetch fresh stats in background (even if cache hit)
+      // Cache expired or missing - fetch from API
+      setStatsLoading(true);
       try {
-        console.log('[DASHBOARD] Fetching fresh stats in background...');
-        const freshStats = await proposalsApi.getStats();
+        console.log(`[DASHBOARD] Fetching stats... (expired=${cached?.isExpired})`);
+
+        // Deduplicate request to prevent multiple simultaneous calls
+        const freshStats = await deduplicateRequest(
+          cacheKey,
+          () => proposalsApi.getStats()
+        );
 
         // Update with fresh stats and cache
         setStats(freshStats);
         cacheManager.set(cacheKey, freshStats, 2 * 60 * 1000); // Cache for 2 minutes
-        console.log('[DASHBOARD] Fresh stats loaded and cached');
+        console.log('[DASHBOARD] Stats loaded and cached');
       } catch (error) {
         console.error('Failed to fetch stats:', error);
-        // Only set loading to false if we don't have cached data
-        if (!cached || cached.isExpired) {
-          setStatsLoading(false);
-        }
       } finally {
         setStatsLoading(false);
       }
