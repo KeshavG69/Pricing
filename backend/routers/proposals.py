@@ -306,9 +306,11 @@ async def upload_proposal_documents(
             file_names.append(file.filename)
 
         # Create proposal in MongoDB (status: processing)
+        # Note: prime_contractor_name will be set by frontend from organization data
         proposal_data = {
             "name": f"Proposal {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}",
             "solicitation_number": solicitation_number,
+            "prime_contractor_name": "TBD",  # Frontend will update this from org data
             "documents": [],
             "progress": 0,
             "message": "Uploading documents..."

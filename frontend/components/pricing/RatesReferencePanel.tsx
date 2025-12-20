@@ -12,6 +12,7 @@ interface RatesReferencePanelProps {
   onToggle: () => void;
   onUpdateRates: (rates: Partial<IndirectRates>) => void;
   onUpdateEscalationRates: (rates: Partial<EscalationRates>) => void;
+  onRecalculate?: () => Promise<void>;
 }
 
 export const RatesReferencePanel = ({
@@ -22,6 +23,7 @@ export const RatesReferencePanel = ({
   onToggle,
   onUpdateRates,
   onUpdateEscalationRates,
+  onRecalculate,
 }: RatesReferencePanelProps) => {
   const toast = useToast();
 
@@ -51,7 +53,7 @@ export const RatesReferencePanel = ({
   };
 
   // Save and cancel handlers
-  const handleSave = () => {
+  const handleSave = async () => {
     // Validate inputs (all rates should be valid numbers)
     const validateRate = (rate: number) => !isNaN(rate);
 
@@ -65,9 +67,22 @@ export const RatesReferencePanel = ({
       return;
     }
 
+    console.log('[RATES PANEL] Saving rates:', editedRates);
+    console.log('[RATES PANEL] Saving escalation rates:', editedEscalationRates);
+
     // Call store update methods
     onUpdateRates(editedRates);
     onUpdateEscalationRates(editedEscalationRates);
+
+    // Wait a bit for state to update before triggering recalculation
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Trigger immediate recalculation
+    if (onRecalculate) {
+      console.log('[RATES PANEL] Calling recalculate API...');
+      await onRecalculate();
+      console.log('[RATES PANEL] Recalculate API completed');
+    }
 
     toast.success('Rates updated successfully');
     setIsEditing(false);
