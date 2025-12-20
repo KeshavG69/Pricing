@@ -53,15 +53,12 @@ app = FastAPI(
 # This significantly reduces network payload for large JSON responses
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# Mount static files
-static_path = Path(__file__).parent.parent / "static"
-if static_path.exists():
-    app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
+
 
 # Configure CORS - IMPORTANT: Specific origin required for cookies
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL],  # Specific origin required for allow_credentials=True
+    allow_origins=["*"],  # Specific origin required for allow_credentials=True
     allow_credentials=True,  # Required for cookies
     allow_methods=["*"],
     allow_headers=["*"],
@@ -81,14 +78,11 @@ app.include_router(excel_export.router, prefix="/api/excel", tags=["excel-export
 @app.get("/")
 async def root():
     """Root endpoint - serve the UI."""
-    static_path = Path(__file__).parent.parent / "static" / "index.html"
-    if static_path.exists():
-        return FileResponse(str(static_path))
     return {
         "message": "Government Contractor Pricing API",
         "docs": "/docs",
         "version": "1.0.0",
-        "ui": "/static/index.html"
+       
     }
 
 

@@ -34,7 +34,15 @@ export const AdvancedAnalysisGrid = () => {
     toggleRatesReference,
     updateRates,
     updateEscalationRates,
+    recalculate,
   } = usePricingStore();
+
+  // Debug: Log when component re-renders
+  console.log('[AdvancedAnalysisGrid] Re-render with', positionsAdvanced.length, 'positions, aggregates:', {
+    totalFringe: aggregates.totalFringe,
+    totalOH: aggregates.totalOH,
+    totalGA: aggregates.totalGA
+  });
 
   // ODC modal state
   const [isODCModalOpen, setIsODCModalOpen] = useState(false);
@@ -187,6 +195,7 @@ export const AdvancedAnalysisGrid = () => {
         onToggle={toggleRatesReference}
         onUpdateRates={updateRates}
         onUpdateEscalationRates={updateEscalationRates}
+        onRecalculate={recalculate}
       />
 
       {/* Prime Labor Section */}
