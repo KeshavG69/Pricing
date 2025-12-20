@@ -169,6 +169,7 @@ export interface ProposalCreate {
 export interface ProposalUpdate {
   name?: string;
   solicitation_number?: string;
+  prime_contractor_name?: string;
   status?: string;
   rates?: IndirectRates;
   escalation_rates?: EscalationRates;

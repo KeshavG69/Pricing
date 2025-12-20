@@ -6,6 +6,8 @@ Keshav:-
 6. proposal name change as well x 
 7.fix caching issue x
 8. in progress or submited based on when they download excel x
+9.company repository 
+10.show each rate indivually
 
 Parth:-
 1.payment gateway   

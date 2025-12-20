@@ -51,6 +51,8 @@ export default function ProposalPage() {
   const [editedSolicitation, setEditedSolicitation] = useState('');
   const [isEditingName, setIsEditingName] = useState(false);
   const [editedName, setEditedName] = useState('');
+  const [isEditingPrimeContractor, setIsEditingPrimeContractor] = useState(false);
+  const [editedPrimeContractor, setEditedPrimeContractor] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [addPositionModalOpen, setAddPositionModalOpen] = useState(false);
 
@@ -182,6 +184,37 @@ export default function ProposalPage() {
   const handleStartEditName = () => {
     setEditedName(currentProposal?.name || '');
     setIsEditingName(true);
+  };
+
+  const handleSavePrimeContractor = async () => {
+    setIsSaving(true);
+    try {
+      const updatedName = editedPrimeContractor.trim() || 'TBD';
+      await proposalsApi.update(proposalId, {
+        prime_contractor_name: updatedName
+      });
+
+      // Reload proposal data
+      await fetchProposal(proposalId);
+
+      setIsEditingPrimeContractor(false);
+      toast.success('Prime contractor name updated');
+    } catch (error) {
+      console.error('Failed to update prime contractor name:', error);
+      toast.error('Failed to update prime contractor name');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancelEditPrimeContractor = () => {
+    setIsEditingPrimeContractor(false);
+    setEditedPrimeContractor(currentProposal?.prime_contractor_name || '');
+  };
+
+  const handleStartEditPrimeContractor = () => {
+    setEditedPrimeContractor(currentProposal?.prime_contractor_name || '');
+    setIsEditingPrimeContractor(true);
   };
 
   if (isLoading || !currentProposal) {
@@ -473,11 +506,73 @@ export default function ProposalPage() {
                 </div>
               )}
             </div>
+            {/* Prime Contractor with Inline Edit */}
+            <div className="flex items-center gap-2 mt-1">
+              {!isEditingPrimeContractor ? (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    Prime Contractor: {currentProposal.prime_contractor_name || 'Not specified'}
+                  </p>
+                  <button
+                    onClick={handleStartEditPrimeContractor}
+                    className="p-1 text-muted-foreground hover:text-foreground transition-colors"
+                    title="Edit prime contractor name"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                </>
+              ) : (
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSavePrimeContractor();
+                  }}
+                  className="flex items-center gap-2"
+                >
+                  <span className="text-sm text-muted-foreground"> Prime Contractor Name:</span>
+                  <Input
+                    type="text"
+                    value={editedPrimeContractor}
+                    onChange={(e) => setEditedPrimeContractor(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Escape') {
+                        handleCancelEditPrimeContractor();
+                      }
+                    }}
+                    placeholder="Enter prime contractor name"
+                    className="w-64"
+                    autoFocus
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSaving}
+                    className="p-1 text-green-600 hover:text-green-700 disabled:opacity-50 hover:bg-green-50 rounded transition-colors"
+                    title="Save"
+                  >
+                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleCancelEditPrimeContractor}
+                    disabled={isSaving}
+                    className="p-1 text-red-600 hover:text-red-700 disabled:opacity-50 hover:bg-red-50 rounded transition-colors"
+                    title="Cancel"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </form>
+              )}
+            </div>
           </div>
           {currentProposal.status === 'completed' && (
             <Button
               variant="outline"
-              onClick={exportToExcel}
+              onClick={() => {
+                // Pass current prime contractor name to export
+                exportToExcel({
+                  primeContractorName: currentProposal?.prime_contractor_name || 'TBD'
+                });
+              }}
               disabled={isRecalculating}
             >
               <Download className="w-4 h-4 mr-2" />
