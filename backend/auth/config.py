@@ -24,5 +24,12 @@ COOKIE_REFRESH_TOKEN_NAME = "refresh_token"
 # Frontend URL for CORS
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
+# Email Configuration
+SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
+SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
+SMTP_USER = os.getenv("SMTP_USER", "")
+SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
+FROM_EMAIL = os.getenv("FROM_EMAIL", "noreply@priceiq.com")
+
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")

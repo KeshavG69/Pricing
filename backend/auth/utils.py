@@ -33,8 +33,8 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 
-def verify_token(token: str) -> Optional[TokenData]:
-    """Verify JWT token and return token data"""
+async def verify_token(token: str) -> Optional[TokenData]:
+    """Verify JWT token and return token data (async)"""
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         email: str = payload.get("sub")
@@ -42,7 +42,7 @@ def verify_token(token: str) -> Optional[TokenData]:
             return None
 
         # Check if token is blacklisted
-        if is_token_blacklisted(email, token):
+        if await is_token_blacklisted(email, token):
             return None  # Token is blacklisted
 
         token_data = TokenData(email=email)

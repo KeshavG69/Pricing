@@ -4,7 +4,10 @@ export interface User {
   email: string;
   firstName: string;
   lastName: string;
-  created_at: string;
+  organization_id: string;
+  role: 'admin' | 'user';
+  status: 'active' | 'removed' | 'suspended';
+  createdAt: string;
 }
 
 export interface LoginCredentials {
@@ -24,11 +27,101 @@ export interface AuthResponse {
   token_type: string;
 }
 
+// Organization types
+export interface Organization {
+  id: string;
+  name: string;
+  slug: string;
+  owner_id: string;
+  createdAt: string;
+  updatedAt: string;
+  status: 'active' | 'suspended';
+  settings: OrganizationSettings;
+  subscription: Subscription;
+}
+
+export interface OrganizationSettings {
+  default_rates: {
+    fringe: number;
+    oh: number;
+    ga: number;
+    fee: number;
+    smh: number;
+    sub_fee: number;
+    ga_passthrough: number;
+    ga_adder: number;
+  };
+  default_escalation_rate: number;
+  allow_user_rate_override: boolean;
+}
+
+export interface Subscription {
+  plan: 'free' | 'pro' | 'enterprise';
+  seats: number;
+  expires_at: string | null;
+}
+
+export interface OrganizationStats {
+  total_members: number;
+  active_members: number;
+  total_proposals: number;
+  pending_invitations: number;
+}
+
+// Team member types
+export interface TeamMember {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  role: 'admin' | 'user';
+  status: 'active' | 'removed' | 'suspended';
+  createdAt: string;
+  joinedAt?: string;
+}
+
+// Invitation types
+export interface Invitation {
+  id: string;
+  organization_id: string;
+  organization_name: string;
+  email: string;
+  role: 'admin' | 'user';
+  status: 'pending' | 'accepted' | 'expired' | 'revoked';
+  invited_by: string;
+  invited_by_name: string;
+  createdAt: string;
+  expiresAt: string;
+  acceptedAt?: string;
+  accepted_by?: string;
+}
+
+export interface InviteUserRequest {
+  email: string;
+  role: 'admin' | 'user';
+}
+
+export interface AcceptInvitationRequest {
+  token: string;
+  firstName?: string;
+  lastName?: string;
+  password?: string;
+}
+
+export interface ValidateTokenResponse {
+  organization_name: string;
+  email: string;
+  role: string;
+  invited_by_name: string;
+  expiresAt: string;
+  user_exists: boolean;
+}
+
 // Document types
 export interface DocumentInfo {
   filename: string;
   file_size: number;
-  upload_date: string;
+  uploadDate: string;
   idrive_url: string;
   idrive_key: string;
   extracted_content?: string;
@@ -46,13 +139,17 @@ export interface ProposalMetadata {
 export interface Proposal {
   id: string;
   user_id: string;
+  organization_id: string;
   name: string;
   solicitation_number?: string;
   prime_contractor_name?: string;
   dcaa_contact?: string;
   status: 'processing' | 'completed' | 'error' | 'draft';
-  created_at: string;
-  updated_at: string;
+  excel_downloaded?: boolean;
+  visibility?: 'private' | 'shared';
+  shared_with?: string[];
+  createdAt: string;
+  updatedAt: string;
   documents: DocumentInfo[];
   metadata?: ProposalMetadata;
   jobs?: JobPosition[];
@@ -72,6 +169,7 @@ export interface ProposalCreate {
 export interface ProposalUpdate {
   name?: string;
   solicitation_number?: string;
+  prime_contractor_name?: string;
   status?: string;
   rates?: IndirectRates;
   escalation_rates?: EscalationRates;

@@ -15,6 +15,7 @@ import {
 } from '@/types';
 import { pricingApi } from '../api/pricing';
 import { proposalsApi } from '../api/proposals';
+import { useOrganizationStore } from './organizationStore';
 
 interface PricingState {
   // Data
@@ -47,6 +48,7 @@ interface PricingState {
   manualOverrides: Map<string, Set<string>>;
   aggregates: Aggregates;
   ratesReferenceExpanded: boolean;
+  advancedModeVersion: number; // Force re-render counter
   activeTab: 'overview' | 'main' | 'subcontractors' | 'rate-table';
 
   // Actions
@@ -64,8 +66,9 @@ interface PricingState {
   updateEscalationRates: (rates: Partial<EscalationRates>) => void;
   updateMonthsForYear: (year: string, months: number) => void;
   updateAllMonths: (monthsPerYear: Record<string, number>) => void;
+  updatePrimeContractorName: (name: string) => void;
   recalculate: () => Promise<void>;
-  exportToExcel: () => Promise<void>;
+  exportToExcel: (overrides?: { primeContractorName?: string }) => Promise<void>;
   reset: () => void;
 
   // Advanced mode actions
@@ -209,6 +212,126 @@ const setCachedProposal = (proposalId: string, data: any) => {
 };
 
 export const usePricingStore = create<PricingState>((set, get) => {
+  // Helper function for actual transformation logic
+  const performTransformToAdvanced = () => {
+    const state = get();
+
+    console.log('[TRANSFORM] Starting transformation with rates:', {
+      fringe: state.rates.fringe,
+      oh: state.rates.oh,
+      ga: state.rates.ga,
+      fee: state.rates.fee
+    });
+
+    // Convert each SpreadsheetPosition to AdvancedPosition
+    const advanced = state.positions.map((pos) => {
+      const breakdown: AdvancedPosition['breakdown'] = {};
+
+      // For each year, create detailed breakdown
+      Object.entries(pos.hours_per_year).forEach(([year, hours]) => {
+        // Prioritize custom_salary, then percentile wage, then selected_wage
+        const wage = pos.custom_salary || pos[`wage_${pos.percentile}`] || pos.selected_wage || 0;
+        const dlRate = hours > 0 ? wage / hours : 0;
+        const dlAmount = dlRate * hours;
+
+        const fringe = dlRate * state.rates.fringe;
+        const fringeAmount = fringe * hours;
+
+        const oh = (dlRate + fringe) * state.rates.oh;
+        const ohAmount = oh * hours;
+
+        const ga = (dlRate + fringe + oh) * state.rates.ga;
+        const gaAmount = ga * hours;
+
+        const fee = (dlRate + fringe + oh + ga) * state.rates.fee;
+        const feeAmount = fee * hours;
+
+        const fblr = dlRate + fringe + oh + ga + fee;
+        const totalAmount = fblr * hours;
+
+        breakdown[year] = {
+          hours,
+          wage,
+          dlRate,
+          dlAmount,
+          fringe,
+          fringeAmount,
+          oh,
+          ohAmount,
+          ga,
+          gaAmount,
+          fee,
+          feeAmount,
+          fblr,
+          totalAmount,
+        };
+      });
+
+      return {
+        ...pos,
+        breakdown,
+        total_hours: Object.values(pos.hours_per_year).reduce((sum, h) => sum + h, 0),
+        total_amount: Object.values(breakdown).reduce((sum, b) => sum + b.totalAmount, 0),
+      } as AdvancedPosition;
+    });
+
+    // Calculate aggregates
+    const aggregates: Aggregates = {
+      totalDL: 0,
+      totalFringe: 0,
+      totalOH: 0,
+      totalGA: 0,
+      totalFBLR: 0,
+      byYear: {},
+    };
+
+    advanced.forEach((pos) => {
+      Object.entries(pos.breakdown).forEach(([year, breakdown]) => {
+        if (!aggregates.byYear[year]) {
+          aggregates.byYear[year] = {
+            dl: 0,
+            fringe: 0,
+            oh: 0,
+            ga: 0,
+            fblr: 0,
+            totalAmount: 0,
+          };
+        }
+
+        aggregates.byYear[year].dl += breakdown.dlAmount;
+        aggregates.byYear[year].fringe += breakdown.fringeAmount;
+        aggregates.byYear[year].oh += breakdown.ohAmount;
+        aggregates.byYear[year].ga += breakdown.gaAmount;
+        aggregates.byYear[year].fblr += breakdown.totalAmount;
+        aggregates.byYear[year].totalAmount += breakdown.totalAmount;
+
+        aggregates.totalDL += breakdown.dlAmount;
+        aggregates.totalFringe += breakdown.fringeAmount;
+        aggregates.totalOH += breakdown.ohAmount;
+        aggregates.totalGA += breakdown.gaAmount;
+        aggregates.totalFBLR += breakdown.totalAmount;
+      });
+    });
+
+    console.log('[TRANSFORM] Setting positionsAdvanced:', advanced.length, 'positions');
+    console.log('[TRANSFORM] Setting aggregates:', {
+      totalFringe: aggregates.totalFringe,
+      totalOH: aggregates.totalOH,
+      totalGA: aggregates.totalGA
+    });
+
+    // Increment version to force React re-render
+    const newVersion = state.advancedModeVersion + 1;
+    set({
+      positionsAdvanced: advanced,
+      aggregates,
+      advancedModeVersion: newVersion
+    });
+
+    console.log('[TRANSFORM] State updated with version', newVersion, '- should trigger re-render');
+  };
+
+
   // Debounced recalculation (500ms)
   const debouncedRecalculate = debounce(async () => {
     const state = get();
@@ -250,6 +373,11 @@ export const usePricingStore = create<PricingState>((set, get) => {
         isDirty: true,
       });
 
+      // If in advanced mode, transform to update detailed view
+      if (get().advancedMode) {
+        performTransformToAdvanced();
+      }
+
       console.log('Calculations updated');
 
       // Trigger auto-save
@@ -284,6 +412,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
     try {
       await proposalsApi.update(state.proposalId, {
+        prime_contractor_name: state.primeContractorName,  // Save at proposal level
         spreadsheet_data: {
           positions: state.positions,
           subcontractors: state.subcontractors,
@@ -333,17 +462,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
     positions: [],
     subcontractors: [],
     odcs: [],
-    rates: {
-      fringe: 0.247,
-      oh: 0.0711,
-      ga: 0.2243,
-      fee: 0.07,
-      smh: 0.065,
-      sub_fee: 0.05,
-      ga_passthrough: 0.025,
-      ga_adder: 0.0243,
-    },
-    escalationRates: {},
+    rates: {} as IndirectRates,  // Will be populated from backend (org settings)
+    escalationRates: {} as EscalationRates,  // Will be populated from backend (org settings)
     totalYears: 1,
     baseYears: 1,
     optionYears: 0,
@@ -368,15 +488,19 @@ export const usePricingStore = create<PricingState>((set, get) => {
       byYear: {},
     },
     ratesReferenceExpanded: false,
+    advancedModeVersion: 0,
     activeTab: 'overview',
 
     loadProposal: async (proposalId, existingProposal) => {
       try {
-        // Check cache first
-        const cachedData = getCachedProposal(proposalId);
-        if (cachedData) {
-          set(cachedData);
-          return;
+        // If existingProposal is provided, skip cache (it's fresh data)
+        if (!existingProposal) {
+          // Check cache only when fetching from API
+          const cachedData = getCachedProposal(proposalId);
+          if (cachedData) {
+            set(cachedData);
+            return;
+          }
         }
 
         // Use existing proposal data if provided, otherwise fetch
@@ -391,31 +515,38 @@ export const usePricingStore = create<PricingState>((set, get) => {
           positions = proposal.jobs.map((job, index) => mapJobToPosition(job, index));
         }
 
-        // Setup default escalation rates based on years
-        const totalYears = proposal.metadata?.total_years || 1;
-        const defaultEscalationRates: EscalationRates = {};
-        for (let i = 1; i < totalYears; i++) {
-          defaultEscalationRates[`${i}_to_${i + 1}`] = 0.0272; // Default 2.72%
-        }
-
         // Generate default months if not provided
+        const totalYears = proposal.metadata?.total_years || 1;
         const defaultMonthsPerYear: Record<string, number> = {};
         for (let i = 1; i <= totalYears; i++) {
           defaultMonthsPerYear[i.toString()] = 12;
+        }
+
+        // If prime contractor name is TBD or empty, use organization name
+        let primeContractorName = proposal.prime_contractor_name || 'TBD';
+        if (primeContractorName === 'TBD' || !primeContractorName) {
+          const orgState = useOrganizationStore.getState();
+          if (orgState.organization?.name) {
+            primeContractorName = orgState.organization.name;
+            console.log('[PRICING] Using organization name as prime contractor:', primeContractorName);
+
+            // Immediately save to backend to persist the change
+            proposalsApi.update(proposalId, { prime_contractor_name: primeContractorName });
+          }
         }
 
         set({
           proposalId,
           proposalName: proposal.name,
           solicitationNumber: proposal.solicitation_number,
-          primeContractorName: proposal.prime_contractor_name || 'TBD',
+          primeContractorName,
           dcaaContact: proposal.dcaa_contact || '',
           positions,
           subcontractors: proposal.spreadsheet_data?.subcontractors || [],
           odcs: proposal.spreadsheet_data?.odcs || [],
-          rates: proposal.rates || get().rates,
-          escalationRates: proposal.escalation_rates || defaultEscalationRates,
-          totalYears: proposal.metadata?.total_years || 1,
+          rates: proposal.spreadsheet_data?.rates || proposal.rates,  // Try spreadsheet_data first, fallback to org defaults
+          escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Try spreadsheet_data first
+          totalYears,
           baseYears: proposal.metadata?.base_years || 1,
           optionYears: proposal.metadata?.option_years || 0,
           monthsPerYear: proposal.metadata?.months_per_year || defaultMonthsPerYear,
@@ -429,14 +560,14 @@ export const usePricingStore = create<PricingState>((set, get) => {
           proposalId,
           proposalName: proposal.name,
           solicitationNumber: proposal.solicitation_number,
-          primeContractorName: proposal.prime_contractor_name || 'TBD',
+          primeContractorName,
           dcaaContact: proposal.dcaa_contact || '',
           positions,
           subcontractors: proposal.spreadsheet_data?.subcontractors || [],
           odcs: proposal.spreadsheet_data?.odcs || [],
-          rates: proposal.rates || get().rates,
-          escalationRates: proposal.escalation_rates || defaultEscalationRates,
-          totalYears: proposal.metadata?.total_years || 1,
+          rates: proposal.spreadsheet_data?.rates || proposal.rates,  // Try spreadsheet_data first, fallback to org defaults
+          escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Try spreadsheet_data first
+          totalYears,
           baseYears: proposal.metadata?.base_years || 1,
           optionYears: proposal.metadata?.option_years || 0,
           monthsPerYear: proposal.metadata?.months_per_year || defaultMonthsPerYear,
@@ -604,9 +735,47 @@ export const usePricingStore = create<PricingState>((set, get) => {
         }
       }
 
-      // 7. Trigger recalculation and auto-save
+      // 7. Trigger recalculation
       debouncedRecalculate();
-      debouncedAutoSave(); // Explicit auto-save to persist to MongoDB immediately
+
+      // 8. Force IMMEDIATE save to MongoDB (bypass debounce)
+      if (state.proposalId) {
+        console.log('💾 Forcing immediate save to MongoDB...');
+        try {
+          await proposalsApi.update(state.proposalId, {
+            spreadsheet_data: {
+              positions: get().positions,
+              subcontractors: get().subcontractors,
+              odcs: get().odcs,
+              rates: get().rates,
+              escalation_rates: get().escalationRates,
+              months_per_year: get().monthsPerYear,
+            },
+          });
+          console.log('✅ Proposal saved successfully');
+
+          // 9. Invalidate cache BEFORE refetching (critical!)
+          proposalCache.delete(state.proposalId);
+          console.log('🗑️  Cache cleared before reload');
+
+          // 10. Refetch proposal and reload pricing data (no page reload!)
+          console.log('🔄 Refetching proposal data...');
+          const freshProposal = await proposalsApi.get(state.proposalId);
+
+          // Reload pricing data with fresh proposal
+          await get().loadProposal(state.proposalId, freshProposal);
+
+          // 11. If in advanced mode, retransform the positions
+          if (get().advancedMode) {
+            console.log('🔄 Retransforming to advanced mode...');
+            performTransformToAdvanced();
+          }
+
+          console.log('✅ Pricing data refreshed - subcontractor now visible!');
+        } catch (error) {
+          console.error('❌ Failed to save/refresh proposal:', error);
+        }
+      }
     },
 
     addODC: (odc) => {
@@ -635,16 +804,38 @@ export const usePricingStore = create<PricingState>((set, get) => {
     },
 
     updateRates: (rates) => {
-      set((state) => ({
+      const state = get();
+
+      // Update rates
+      set({
         rates: { ...state.rates, ...rates },
-      }));
+      });
+
+      // If in advanced mode, immediately transform (synchronous, no async wrapper)
+      if (state.advancedMode) {
+        console.log('[RATES] Immediately transforming (synchronous)...');
+        performTransformToAdvanced();
+      }
+
+      // Still trigger API recalculation in background
       debouncedRecalculate();
     },
 
     updateEscalationRates: (rates) => {
-      set((state) => ({
+      const state = get();
+
+      // Update escalation rates
+      set({
         escalationRates: { ...state.escalationRates, ...rates },
-      }));
+      });
+
+      // If in advanced mode, immediately transform (synchronous, no async wrapper)
+      if (state.advancedMode) {
+        console.log('[RATES] Immediately transforming (synchronous)...');
+        performTransformToAdvanced();
+      }
+
+      // Still trigger API recalculation in background
       debouncedRecalculate();
     },
 
@@ -670,18 +861,27 @@ export const usePricingStore = create<PricingState>((set, get) => {
       debouncedAutoSave();
     },
 
+    updatePrimeContractorName: (name) => {
+      set({ primeContractorName: name, isDirty: true });
+      debouncedAutoSave();
+    },
+
     recalculate: async () => {
       // Force immediate recalculation (bypass debounce)
       debouncedRecalculate.cancel();
       await debouncedRecalculate();
     },
 
-    exportToExcel: async () => {
+    exportToExcel: async (overrides) => {
       const state = get();
       if (!state.proposalId) return;
 
+      // Use override if provided, otherwise use store value
+      const primeContractorName = overrides?.primeContractorName || state.primeContractorName || 'TBD';
+
       try {
         console.log('Generating Excel file...');
+        console.log('[EXPORT] Using prime contractor name:', primeContractorName);
 
         // Basic mode: Export simple Excel spreadsheet matching frontend grid
         if (!state.advancedMode) {
@@ -797,6 +997,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           jobs: state.positions.map((p) => ({
             labor_category: p.labor_category,
             soc_code: p.soc_code,
+            soc_title: p.soc_title,  // Add BLS Category name for Excel export
             hours_per_year: p.hours_per_year,
             selected_wage: p.custom_salary || p[`wage_${p.percentile}`] || p.selected_wage || 0,
             percentile: p.percentile,
@@ -809,7 +1010,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           })),
           project_config: {
             solicitation_number: state.solicitationNumber || '',
-            prime_contractor_name: state.primeContractorName || 'TBD',
+            prime_contractor_name: primeContractorName,
             subcontractor_names: state.subcontractors.map(s => s.name),
             dcaa_contact: state.dcaaContact || '',
             total_years: state.totalYears,
@@ -865,6 +1066,15 @@ export const usePricingStore = create<PricingState>((set, get) => {
         window.URL.revokeObjectURL(url);
 
         console.log('Excel file downloaded successfully');
+
+        // Mark proposal as downloaded (changes status from "In Progress" to "Submitted")
+        try {
+          await proposalsApi.markDownloaded(state.proposalId);
+          console.log('Proposal marked as downloaded');
+        } catch (error) {
+          console.error('Failed to mark proposal as downloaded:', error);
+          // Don't throw - the Excel was already downloaded successfully
+        }
       } catch (error: any) {
         console.error('Excel export failed:', error);
         console.error('Error details:', error.response?.data);
@@ -877,99 +1087,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
     },
 
     transformToAdvanced: () => {
-      const state = get();
-
-      // Convert each SpreadsheetPosition to AdvancedPosition
-      const advanced = state.positions.map((pos) => {
-        const breakdown: AdvancedPosition['breakdown'] = {};
-
-        // For each year, create detailed breakdown
-        Object.entries(pos.hours_per_year).forEach(([year, hours]) => {
-          // Prioritize custom_salary, then percentile wage, then selected_wage
-          const wage = pos.custom_salary || pos[`wage_${pos.percentile}`] || pos.selected_wage || 0;
-          const dlRate = hours > 0 ? wage / hours : 0;
-          const dlAmount = dlRate * hours;
-
-          const fringe = dlRate * state.rates.fringe;
-          const fringeAmount = fringe * hours;
-
-          const oh = (dlRate + fringe) * state.rates.oh;
-          const ohAmount = oh * hours;
-
-          const ga = (dlRate + fringe + oh) * state.rates.ga;
-          const gaAmount = ga * hours;
-
-          const fee = (dlRate + fringe + oh + ga) * state.rates.fee;
-          const feeAmount = fee * hours;
-
-          const fblr = dlRate + fringe + oh + ga + fee;
-          const totalAmount = fblr * hours;
-
-          breakdown[year] = {
-            hours,
-            wage,
-            dlRate,
-            dlAmount,
-            fringe,
-            fringeAmount,
-            oh,
-            ohAmount,
-            ga,
-            gaAmount,
-            fee,
-            feeAmount,
-            fblr,
-            totalAmount,
-          };
-        });
-
-        return {
-          ...pos,
-          breakdown,
-          total_hours: Object.values(pos.hours_per_year).reduce((sum, h) => sum + h, 0),
-          total_amount: Object.values(breakdown).reduce((sum, b) => sum + b.totalAmount, 0),
-        } as AdvancedPosition;
-      });
-
-      // Calculate aggregates
-      const aggregates: Aggregates = {
-        totalDL: 0,
-        totalFringe: 0,
-        totalOH: 0,
-        totalGA: 0,
-        totalFBLR: 0,
-        byYear: {},
-      };
-
-      advanced.forEach((pos) => {
-        Object.entries(pos.breakdown).forEach(([year, breakdown]) => {
-          if (!aggregates.byYear[year]) {
-            aggregates.byYear[year] = {
-              dl: 0,
-              fringe: 0,
-              oh: 0,
-              ga: 0,
-              fblr: 0,
-              totalAmount: 0,
-            };
-          }
-
-          aggregates.byYear[year].dl += breakdown.dlAmount;
-          aggregates.byYear[year].fringe += breakdown.fringeAmount;
-          aggregates.byYear[year].oh += breakdown.ohAmount;
-          aggregates.byYear[year].ga += breakdown.gaAmount;
-          aggregates.byYear[year].fblr += breakdown.totalAmount;
-          aggregates.byYear[year].totalAmount += breakdown.totalAmount;
-
-          aggregates.totalDL += breakdown.dlAmount;
-          aggregates.totalFringe += breakdown.fringeAmount;
-          aggregates.totalOH += breakdown.ohAmount;
-          aggregates.totalGA += breakdown.gaAmount;
-          aggregates.totalFBLR += breakdown.totalAmount;
-        });
-      });
-
-      set({ positionsAdvanced: advanced, aggregates });
+      // Direct synchronous call
+      performTransformToAdvanced();
     },
 
     updateAdvancedPosition: (id, updates) => {
@@ -984,7 +1103,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
       // Then retransform to advanced mode to recalculate breakdown
       console.log('[ADVANCED MODE] Calling transformToAdvanced');
-      get().transformToAdvanced();
+      performTransformToAdvanced();
 
       // Set isDirty AFTER transformation to ensure it persists through all state updates
       console.log('[ADVANCED MODE] Setting isDirty=true, proposalId=', get().proposalId);
@@ -1038,29 +1157,22 @@ export const usePricingStore = create<PricingState>((set, get) => {
       console.log('Recalculating advanced mode...');
 
       try {
-        // Build request (exclude manual override fields)
-        const positions = state.positionsAdvanced.map((pos) => {
-          const overrides = state.manualOverrides.get(pos.id) || new Set();
-
-          // Build breakdown with manual overrides preserved
-          const breakdown = { ...pos.breakdown };
-
-          // For each year, mark which fields to skip in recalculation
-          Object.keys(breakdown).forEach((year) => {
-            Object.keys(breakdown[year]).forEach((field) => {
-              if (overrides.has(`${year}.${field}`)) {
-                // Mark for backend to preserve
-                (breakdown[year] as any)[`${field}_manual`] = true;
-              }
-            });
-          });
-
-          return {
-            id: pos.id,
-            percentile: pos.percentile,
-            breakdown,
-          };
-        });
+        // Note: Manual overrides are currently not sent to backend
+        // TODO: Implement advanced recalculation with manual override preservation
+        // const positions = state.positionsAdvanced.map((pos) => {
+        //   const overrides = state.manualOverrides.get(pos.id) || new Set();
+        //   // Build breakdown with manual overrides preserved
+        //   const breakdown = { ...pos.breakdown };
+        //   // For each year, mark which fields to skip in recalculation
+        //   Object.keys(breakdown).forEach((year) => {
+        //     Object.keys(breakdown[year]).forEach((field) => {
+        //       if (overrides.has(`${year}.${field}`)) {
+        //         (breakdown[year] as any)[`${field}_manual`] = true;
+        //       }
+        //     });
+        //   });
+        //   return { id: pos.id, percentile: pos.percentile, breakdown };
+        // });
 
         // Call API (for now, we'll use the same recalculate endpoint)
         // TODO: Create a dedicated recalculateAdvanced endpoint
@@ -1096,7 +1208,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         });
 
         // Re-transform to advanced mode with new calculations
-        get().transformToAdvanced();
+        performTransformToAdvanced();
 
         console.log('Advanced mode recalculation complete');
       } catch (error: any) {
@@ -1125,17 +1237,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
         positions: [],
         subcontractors: [],
         odcs: [],
-        rates: {
-          fringe: 0.247,
-          oh: 0.0711,
-          ga: 0.2243,
-          fee: 0.07,
-          smh: 0.065,
-          sub_fee: 0.05,
-          ga_passthrough: 0.025,
-          ga_adder: 0.0243,
-        },
-        escalationRates: {},
+        rates: {} as IndirectRates,  // Will be populated from backend (org settings)
+        escalationRates: {} as EscalationRates,  // Will be populated from backend (org settings)
         totalYears: 1,
         baseYears: 1,
         optionYears: 0,
@@ -1158,6 +1261,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           byYear: {},
         },
         ratesReferenceExpanded: false,
+        advancedModeVersion: 0,
         activeTab: 'overview',
       });
     },

@@ -47,6 +47,7 @@ class ProposalUpdate(BaseModel):
 
     name: Optional[str] = Field(None, description="Updated proposal name")
     solicitation_number: Optional[str] = Field(None, description="Updated solicitation number")
+    prime_contractor_name: Optional[str] = Field(None, description="Updated prime contractor name")
     status: Optional[str] = Field(
         None,
         description="Proposal status (draft, processing, completed, error)"

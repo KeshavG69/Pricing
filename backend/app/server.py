@@ -2,6 +2,9 @@
 FastAPI server for government contractor pricing system.
 """
 
+import asyncio
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
@@ -9,29 +12,53 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
 
-from routers import pricing, auth, excel_export, proposals
+from routers import pricing, auth, excel_export, proposals, organizations, invitations, workspace
 from auth.config import FRONTEND_URL
+from app.startup import startup_manager
 
-# Create FastAPI app
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """
+    Lifespan context manager for FastAPI.
+
+    Startup: Pre-warm expensive clients in background (non-blocking)
+    Shutdown: Cleanup resources
+    """
+    # Startup: Pre-warm clients in background
+    # Using create_task to not block server startup
+    asyncio.create_task(startup_manager.prewarm_all_clients())
+
+    yield
+
+    # Shutdown: Close MongoDB connections
+    from auth.database import close_mongodb_client
+    close_mongodb_client()
+
+    # Close OEWS MongoDB client if initialized
+    from client.oews_mongodb import _oews_mongo_client
+    if _oews_mongo_client:
+        await _oews_mongo_client.close()
+
+
+# Create FastAPI app with lifespan
 app = FastAPI(
     title="Government Contractor Pricing API",
     description="API for pricing government contractor labor categories using BLS OEWS wage data",
-    version="1.0.0"
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # Add GZip compression middleware (compress responses > 1KB)
 # This significantly reduces network payload for large JSON responses
 app.add_middleware(GZipMiddleware, minimum_size=1000)
 
-# Mount static files
-static_path = Path(__file__).parent.parent / "static"
-if static_path.exists():
-    app.mount("/static", StaticFiles(directory=str(static_path)), name="static")
+
 
 # Configure CORS - IMPORTANT: Specific origin required for cookies
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[FRONTEND_URL],  # Specific origin required for allow_credentials=True
+    allow_origins=["*"],  # Specific origin required for allow_credentials=True
     allow_credentials=True,  # Required for cookies
     allow_methods=["*"],
     allow_headers=["*"],
@@ -40,6 +67,9 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router, prefix="/api", tags=["authentication"])
+app.include_router(organizations.router, tags=["organizations"])
+app.include_router(invitations.router, tags=["invitations"])
+app.include_router(workspace.router, tags=["workspace"])
 app.include_router(proposals.router, prefix="/api", tags=["proposals"])
 app.include_router(pricing.router, prefix="/api/pricing", tags=["pricing"])
 app.include_router(excel_export.router, prefix="/api/excel", tags=["excel-export"])
@@ -48,14 +78,11 @@ app.include_router(excel_export.router, prefix="/api/excel", tags=["excel-export
 @app.get("/")
 async def root():
     """Root endpoint - serve the UI."""
-    static_path = Path(__file__).parent.parent / "static" / "index.html"
-    if static_path.exists():
-        return FileResponse(str(static_path))
     return {
         "message": "Government Contractor Pricing API",
         "docs": "/docs",
         "version": "1.0.0",
-        "ui": "/static/index.html"
+       
     }
 
 
@@ -63,6 +90,17 @@ async def root():
 async def health():
     """Health check endpoint."""
     return {"status": "healthy"}
+
+
+@app.get("/api/warmup-status")
+async def warmup_status():
+    """
+    Get pre-warming status for all clients.
+
+    Returns:
+        Dict with overall status and per-client timing details
+    """
+    return startup_manager.get_warmup_status()
 
 
 if __name__ == "__main__":

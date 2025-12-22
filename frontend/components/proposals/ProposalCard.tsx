@@ -7,6 +7,9 @@ import {
   Copy,
   Trash2,
   MoreVertical,
+  Users,
+  Share2,
+  Pencil,
 } from 'lucide-react';
 import { Proposal } from '@/types';
 
@@ -15,14 +18,19 @@ interface ProposalCardProps {
   onClick: (id: string) => void;
   onDuplicate: (id: string, name: string, e: React.MouseEvent) => void;
   onDelete: (id: string, e: React.MouseEvent) => void;
+  onShare?: (id: string, name: string, e: React.MouseEvent) => void;
+  onRename?: (id: string, name: string, e: React.MouseEvent) => void;
+  showShareButton?: boolean;
 }
 
 export const ProposalCard = React.memo(
-  ({ proposal, onClick, onDuplicate, onDelete }: ProposalCardProps) => {
-    const getStatusIcon = (status: string) => {
+  ({ proposal, onClick, onDuplicate, onDelete, onShare, onRename, showShareButton = false }: ProposalCardProps) => {
+    const getStatusIcon = (status: string, excelDownloaded?: boolean) => {
+      if (status === 'completed') {
+        // Completed proposals: In Progress (not downloaded) or Submitted (downloaded)
+        return <CheckCircle className={`w-5 h-5 ${excelDownloaded ? 'text-blue-500' : 'text-emerald-500'}`} />;
+      }
       switch (status) {
-        case 'completed':
-          return <CheckCircle className="w-5 h-5 text-emerald-500" />;
         case 'processing':
           return <Clock className="w-5 h-5 text-blue-500 animate-pulse" />;
         case 'error':
@@ -32,14 +40,24 @@ export const ProposalCard = React.memo(
       }
     };
 
-    const getStatusBadge = (status: string) => {
-      switch (status) {
-        case 'completed':
+    const getStatusBadge = (status: string, excelDownloaded?: boolean) => {
+      if (status === 'completed') {
+        // Completed proposals: In Progress (not downloaded) or Submitted (downloaded)
+        if (excelDownloaded) {
           return (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
-              Completed
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+              Submitted
             </span>
           );
+        } else {
+          return (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
+              In Progress
+            </span>
+          );
+        }
+      }
+      switch (status) {
         case 'processing':
           return (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
@@ -76,12 +94,20 @@ export const ProposalCard = React.memo(
       >
         <div className="flex items-center space-x-4 flex-1 min-w-0">
           <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center group-hover:bg-muted/80 transition-colors">
-            {getStatusIcon(proposal.status)}
+            {getStatusIcon(proposal.status, proposal.excel_downloaded)}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
-              {proposal.name}
-            </p>
+            <div className="flex items-center gap-2 mb-1">
+              <p className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                {proposal.name}
+              </p>
+              {proposal.visibility === 'shared' && proposal.shared_with && proposal.shared_with.length > 0 && (
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200 flex-shrink-0">
+                  <Users className="w-3 h-3 mr-1" />
+                  Shared
+                </span>
+              )}
+            </div>
             {proposal.solicitation_number && (
               <p className="text-xs text-muted-foreground truncate">
                 {proposal.solicitation_number}
@@ -93,15 +119,33 @@ export const ProposalCard = React.memo(
         <div className="flex items-center space-x-6">
           <div className="hidden sm:block text-right">
             <p className="text-xs text-muted-foreground mb-1">Status</p>
-            {getStatusBadge(proposal.status)}
+            {getStatusBadge(proposal.status, proposal.excel_downloaded)}
           </div>
           <div className="text-right min-w-[80px]">
             <p className="text-xs text-muted-foreground mb-1">Created</p>
             <p className="text-sm text-muted-foreground">
-              {formatDate(proposal.created_at)}
+              {formatDate(proposal.createdAt)}
             </p>
           </div>
           <div className="flex items-center space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+            {onRename && (
+              <button
+                onClick={(e) => onRename(proposal.id, proposal.name, e)}
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                title="Rename"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+            )}
+            {showShareButton && onShare && (
+              <button
+                onClick={(e) => onShare(proposal.id, proposal.name, e)}
+                className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"
+                title="Share"
+              >
+                <Share2 className="w-4 h-4" />
+              </button>
+            )}
             <button
               onClick={(e) => onDuplicate(proposal.id, proposal.name, e)}
               className="p-2 text-muted-foreground hover:text-foreground hover:bg-muted rounded-lg transition-colors"

@@ -1,5 +1,5 @@
 """
-Refresh token management utilities
+Refresh token management utilities (Async with Motor)
 Handles creation, validation, rotation, and revocation of refresh tokens
 """
 
@@ -7,20 +7,18 @@ import uuid
 import hashlib
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
-from pymongo import MongoClient
-import os
 
 from .config import REFRESH_TOKEN_EXPIRE_DAYS, SECRET_KEY, ALGORITHM
 from .models import RefreshTokenValidationResult
+from .database import get_mongodb_client
 from jose import jwt, JWTError
 
 
-# MongoDB connection (reuse existing connection)
-MONGODB_URL = os.getenv("MONGODB_URL", "mongodb://localhost:27017")
-MONGODB_DATABASE = os.getenv("MONGODB_DATABASE", "oews_data")
-client = MongoClient(MONGODB_URL)
-db = client[MONGODB_DATABASE]
-refresh_tokens_collection = db["refresh_tokens"]
+# Helper to get refresh tokens collection
+def _get_refresh_tokens_collection():
+    """Get refresh_tokens collection (cached connection)"""
+    db = get_mongodb_client().get_database()
+    return db["refresh_tokens"]
 
 
 def create_refresh_token_jwt(user_email: str, token_id: str) -> str:
@@ -90,7 +88,8 @@ async def create_refresh_token(
         "revoked_at": None
     }
 
-    refresh_tokens_collection.insert_one(token_data)
+    collection = _get_refresh_tokens_collection()
+    collection.insert_one(token_data)
 
     return refresh_token
 
@@ -126,7 +125,8 @@ async def validate_refresh_token(token: str) -> RefreshTokenValidationResult:
             )
 
         # Find token in database
-        token_data = refresh_tokens_collection.find_one({"token_id": token_id})
+        collection = _get_refresh_tokens_collection()
+        token_data = collection.find_one({"token_id": token_id})
 
         if not token_data:
             return RefreshTokenValidationResult(
@@ -195,7 +195,8 @@ async def rotate_refresh_token(
         user_email = payload.get("sub")
 
         # Revoke old token
-        refresh_tokens_collection.update_one(
+        collection = _get_refresh_tokens_collection()
+        collection.update_one(
             {"token_id": old_token_id},
             {
                 "$set": {
@@ -233,7 +234,8 @@ async def revoke_refresh_token(token: str) -> bool:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         token_id = payload.get("jti")
 
-        result = refresh_tokens_collection.update_one(
+        collection = _get_refresh_tokens_collection()
+        result = collection.update_one(
             {"token_id": token_id},
             {
                 "$set": {
@@ -260,7 +262,8 @@ async def revoke_refresh_token_family(token_family_id: str) -> int:
         Number of tokens revoked
     """
     try:
-        result = refresh_tokens_collection.update_many(
+        collection = _get_refresh_tokens_collection()
+        result = collection.update_many(
             {"token_family_id": token_family_id, "is_revoked": False},
             {
                 "$set": {
@@ -287,7 +290,8 @@ async def revoke_user_refresh_tokens(user_email: str) -> int:
         Number of tokens revoked
     """
     try:
-        result = refresh_tokens_collection.update_many(
+        collection = _get_refresh_tokens_collection()
+        result = collection.update_many(
             {"user_email": user_email, "is_revoked": False},
             {
                 "$set": {
@@ -311,7 +315,8 @@ async def cleanup_expired_tokens() -> int:
         Number of tokens deleted
     """
     try:
-        result = refresh_tokens_collection.delete_many({
+        collection = _get_refresh_tokens_collection()
+        result = collection.delete_many({
             "expires_at": {"$lt": datetime.utcnow()}
         })
 

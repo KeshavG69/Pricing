@@ -135,6 +135,23 @@
         "documentation": {}
     },
     {
+        "label": "asyncio",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "asyncio",
+        "description": "asyncio",
+        "detail": "asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "asynccontextmanager",
+        "importPath": "contextlib",
+        "description": "contextlib",
+        "isExtraImport": true,
+        "detail": "contextlib",
+        "documentation": {}
+    },
+    {
         "label": "FastAPI",
         "importPath": "fastapi",
         "description": "fastapi",
@@ -152,6 +169,30 @@
     },
     {
         "label": "Request",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "status",
         "importPath": "fastapi",
         "description": "fastapi",
         "isExtraImport": true,
@@ -255,6 +296,70 @@
         "documentation": {}
     },
     {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "status",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "status",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
         "label": "HTTPException",
         "importPath": "fastapi",
         "description": "fastapi",
@@ -312,6 +417,38 @@
     },
     {
         "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "status",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
         "importPath": "fastapi",
         "description": "fastapi",
         "isExtraImport": true,
@@ -431,30 +568,6 @@
         "documentation": {}
     },
     {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
         "label": "pricing",
         "importPath": "routers",
         "description": "routers",
@@ -487,11 +600,43 @@
         "documentation": {}
     },
     {
+        "label": "organizations",
+        "importPath": "routers",
+        "description": "routers",
+        "isExtraImport": true,
+        "detail": "routers",
+        "documentation": {}
+    },
+    {
+        "label": "invitations",
+        "importPath": "routers",
+        "description": "routers",
+        "isExtraImport": true,
+        "detail": "routers",
+        "documentation": {}
+    },
+    {
+        "label": "workspace",
+        "importPath": "routers",
+        "description": "routers",
+        "isExtraImport": true,
+        "detail": "routers",
+        "documentation": {}
+    },
+    {
         "label": "FRONTEND_URL",
         "importPath": "auth.config",
         "description": "auth.config",
         "isExtraImport": true,
         "detail": "auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "startup_manager",
+        "importPath": "app.startup",
+        "description": "app.startup",
+        "isExtraImport": true,
+        "detail": "app.startup",
         "documentation": {}
     },
     {
@@ -503,7 +648,65 @@
         "documentation": {}
     },
     {
+        "label": "time",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "time",
+        "description": "time",
+        "detail": "time",
+        "documentation": {}
+    },
+    {
+        "label": "logging",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "logging",
+        "description": "logging",
+        "detail": "logging",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -799,6 +1002,46 @@
         "documentation": {}
     },
     {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Dict",
         "importPath": "typing",
         "description": "typing",
@@ -959,27 +1202,99 @@
         "documentation": {}
     },
     {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
         "isExtraImport": true,
-        "detail": "typing",
+        "detail": "datetime",
         "documentation": {}
     },
     {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
         "isExtraImport": true,
-        "detail": "typing",
+        "detail": "datetime",
         "documentation": {}
     },
     {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
         "isExtraImport": true,
-        "detail": "typing",
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
         "documentation": {}
     },
     {
@@ -1039,54 +1354,6 @@
         "documentation": {}
     },
     {
-        "label": "timedelta",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "timedelta",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
         "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
@@ -1111,147 +1378,100 @@
         "documentation": {}
     },
     {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "dotenv",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "dotenv",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "ASCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "DESCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "ASCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "DESCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
         "isExtraImport": true,
-        "detail": "pymongo",
+        "detail": "bson",
         "documentation": {}
     },
     {
-        "label": "TEXT",
-        "importPath": "pymongo",
-        "description": "pymongo",
+        "label": "bcrypt",
+        "kind": 6,
         "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "ASCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "DESCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "ASCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "TEXT",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
+        "importPath": "bcrypt",
+        "description": "bcrypt",
+        "detail": "bcrypt",
         "documentation": {}
     },
     {
@@ -1264,11 +1484,67 @@
         "documentation": {}
     },
     {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
         "isExtraImport": true,
-        "detail": "app.settings",
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "ASCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "DESCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "ASCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "TEXT",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "ReturnDocument",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
         "documentation": {}
     },
     {
@@ -1309,6 +1585,150 @@
         "description": "app.settings",
         "isExtraImport": true,
         "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPBearer",
+        "importPath": "fastapi.security",
+        "description": "fastapi.security",
+        "isExtraImport": true,
+        "detail": "fastapi.security",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPAuthorizationCredentials",
+        "importPath": "fastapi.security",
+        "description": "fastapi.security",
+        "isExtraImport": true,
+        "detail": "fastapi.security",
+        "documentation": {}
+    },
+    {
+        "label": "jwt",
+        "importPath": "jose",
+        "description": "jose",
+        "isExtraImport": true,
+        "detail": "jose",
+        "documentation": {}
+    },
+    {
+        "label": "JWTError",
+        "importPath": "jose",
+        "description": "jose",
+        "isExtraImport": true,
+        "detail": "jose",
+        "documentation": {}
+    },
+    {
+        "label": "jwt",
+        "importPath": "jose",
+        "description": "jose",
+        "isExtraImport": true,
+        "detail": "jose",
+        "documentation": {}
+    },
+    {
+        "label": "JWTError",
+        "importPath": "jose",
+        "description": "jose",
+        "isExtraImport": true,
+        "detail": "jose",
+        "documentation": {}
+    },
+    {
+        "label": "JWTError",
+        "importPath": "jose",
+        "description": "jose",
+        "isExtraImport": true,
+        "detail": "jose",
+        "documentation": {}
+    },
+    {
+        "label": "jwt",
+        "importPath": "jose",
+        "description": "jose",
+        "isExtraImport": true,
+        "detail": "jose",
+        "documentation": {}
+    },
+    {
+        "label": "config",
+        "importPath": "auth",
+        "description": "auth",
+        "isExtraImport": true,
+        "detail": "auth",
+        "documentation": {}
+    },
+    {
+        "label": "config",
+        "importPath": "auth",
+        "description": "auth",
+        "isExtraImport": true,
+        "detail": "auth",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "is_token_blacklisted",
+        "importPath": "auth.blacklist",
+        "description": "auth.blacklist",
+        "isExtraImport": true,
+        "detail": "auth.blacklist",
         "documentation": {}
     },
     {
@@ -1408,6 +1828,54 @@
         "documentation": {}
     },
     {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "EmailStr",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
         "label": "uuid",
         "kind": 6,
         "isExtraImport": true,
@@ -1426,44 +1894,28 @@
         "documentation": {}
     },
     {
-        "label": "jwt",
-        "importPath": "jose",
-        "description": "jose",
-        "isExtraImport": true,
-        "detail": "jose",
-        "documentation": {}
-    },
-    {
-        "label": "JWTError",
-        "importPath": "jose",
-        "description": "jose",
-        "isExtraImport": true,
-        "detail": "jose",
-        "documentation": {}
-    },
-    {
-        "label": "JWTError",
-        "importPath": "jose",
-        "description": "jose",
-        "isExtraImport": true,
-        "detail": "jose",
-        "documentation": {}
-    },
-    {
-        "label": "jwt",
-        "importPath": "jose",
-        "description": "jose",
-        "isExtraImport": true,
-        "detail": "jose",
-        "documentation": {}
-    },
-    {
-        "label": "bcrypt",
+        "label": "smtplib",
         "kind": 6,
         "isExtraImport": true,
-        "importPath": "bcrypt",
-        "description": "bcrypt",
-        "detail": "bcrypt",
+        "importPath": "smtplib",
+        "description": "smtplib",
+        "detail": "smtplib",
+        "documentation": {}
+    },
+    {
+        "label": "MIMEText",
+        "importPath": "email.mime.text",
+        "description": "email.mime.text",
+        "isExtraImport": true,
+        "detail": "email.mime.text",
+        "documentation": {}
+    },
+    {
+        "label": "MIMEMultipart",
+        "importPath": "email.mime.multipart",
+        "description": "email.mime.multipart",
+        "isExtraImport": true,
+        "detail": "email.mime.multipart",
         "documentation": {}
     },
     {
@@ -1581,19 +2033,19 @@
         "documentation": {}
     },
     {
-        "label": "Database",
-        "importPath": "pymongo.database",
-        "description": "pymongo.database",
+        "label": "AsyncIOMotorClient",
+        "importPath": "motor.motor_asyncio",
+        "description": "motor.motor_asyncio",
         "isExtraImport": true,
-        "detail": "pymongo.database",
+        "detail": "motor.motor_asyncio",
         "documentation": {}
     },
     {
-        "label": "Database",
-        "importPath": "pymongo.database",
-        "description": "pymongo.database",
+        "label": "AsyncIOMotorDatabase",
+        "importPath": "motor.motor_asyncio",
+        "description": "motor.motor_asyncio",
         "isExtraImport": true,
-        "detail": "pymongo.database",
+        "detail": "motor.motor_asyncio",
         "documentation": {}
     },
     {
@@ -1603,22 +2055,6 @@
         "importPath": "math",
         "description": "math",
         "detail": "math",
-        "documentation": {}
-    },
-    {
-        "label": "lru_cache",
-        "importPath": "functools",
-        "description": "functools",
-        "isExtraImport": true,
-        "detail": "functools",
-        "documentation": {}
-    },
-    {
-        "label": "lru_cache",
-        "importPath": "functools",
-        "description": "functools",
-        "isExtraImport": true,
-        "detail": "functools",
         "documentation": {}
     },
     {
@@ -1678,15 +2114,23 @@
         "documentation": {}
     },
     {
-        "label": "UserResponse",
-        "importPath": "auth.models",
-        "description": "auth.models",
+        "label": "UserCRUD",
+        "importPath": "auth.crud",
+        "description": "auth.crud",
         "isExtraImport": true,
-        "detail": "auth.models",
+        "detail": "auth.crud",
         "documentation": {}
     },
     {
-        "label": "UserCRUD",
+        "label": "get_user_crud",
+        "importPath": "auth.crud",
+        "description": "auth.crud",
+        "isExtraImport": true,
+        "detail": "auth.crud",
+        "documentation": {}
+    },
+    {
+        "label": "get_user_crud",
         "importPath": "auth.crud",
         "description": "auth.crud",
         "isExtraImport": true,
@@ -1711,6 +2155,14 @@
     },
     {
         "label": "ACCESS_TOKEN_EXPIRE_MINUTES",
+        "importPath": "auth.utils",
+        "description": "auth.utils",
+        "isExtraImport": true,
+        "detail": "auth.utils",
+        "documentation": {}
+    },
+    {
+        "label": "create_access_token",
         "importPath": "auth.utils",
         "description": "auth.utils",
         "isExtraImport": true,
@@ -1790,11 +2242,83 @@
         "documentation": {}
     },
     {
+        "label": "create_refresh_token",
+        "importPath": "auth.refresh_token",
+        "description": "auth.refresh_token",
+        "isExtraImport": true,
+        "detail": "auth.refresh_token",
+        "documentation": {}
+    },
+    {
         "label": "GoogleAuthService",
         "importPath": "auth.google_auth",
         "description": "auth.google_auth",
         "isExtraImport": true,
         "detail": "auth.google_auth",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
+        "label": "require_admin",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
+        "label": "require_admin",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
+        "label": "require_admin",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
         "documentation": {}
     },
     {
@@ -1840,116 +2364,115 @@
         "documentation": {}
     },
     {
-        "label": "parse_documents_to_dataframe",
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
-        "isExtraImport": true,
-        "detail": "client.jd_parser",
-        "documentation": {}
-    },
-    {
-        "label": "parse_documents_to_dataframe",
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
-        "isExtraImport": true,
-        "detail": "client.jd_parser",
-        "documentation": {}
-    },
-    {
-        "label": "parse_documents_to_dataframe",
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
-        "isExtraImport": true,
-        "detail": "client.jd_parser",
-        "documentation": {}
-    },
-    {
         "label": "process_dataframe_with_agents",
         "importPath": "utils.pipeline",
         "description": "utils.pipeline",
         "isExtraImport": true,
         "detail": "utils.pipeline",
-        "documentation": {}
-    },
-    {
-        "label": "process_dataframe_with_agents",
-        "importPath": "utils.pipeline",
-        "description": "utils.pipeline",
-        "isExtraImport": true,
-        "detail": "utils.pipeline",
-        "documentation": {}
-    },
-    {
-        "label": "process_dataframe_with_agents",
-        "importPath": "utils.pipeline",
-        "description": "utils.pipeline",
-        "isExtraImport": true,
-        "detail": "utils.pipeline",
-        "documentation": {}
-    },
-    {
-        "label": "process_dataframe_with_agents",
-        "importPath": "utils.pipeline",
-        "description": "utils.pipeline",
-        "isExtraImport": true,
-        "detail": "utils.pipeline",
-        "documentation": {}
-    },
-    {
-        "label": "ExcelGenerator",
-        "importPath": "client.excel_generator",
-        "description": "client.excel_generator",
-        "isExtraImport": true,
-        "detail": "client.excel_generator",
-        "documentation": {}
-    },
-    {
-        "label": "ExcelGenerator",
-        "importPath": "client.excel_generator",
-        "description": "client.excel_generator",
-        "isExtraImport": true,
-        "detail": "client.excel_generator",
         "documentation": {}
     },
     {
         "label": "build_project_data_from_dataframe",
-        "importPath": "main",
-        "description": "main",
+        "importPath": "utils.pipeline",
+        "description": "utils.pipeline",
         "isExtraImport": true,
-        "detail": "main",
+        "detail": "utils.pipeline",
         "documentation": {}
     },
     {
-        "label": "asyncio",
-        "kind": 6,
+        "label": "process_dataframe_with_agents",
+        "importPath": "utils.pipeline",
+        "description": "utils.pipeline",
         "isExtraImport": true,
-        "importPath": "asyncio",
-        "description": "asyncio",
-        "detail": "asyncio",
+        "detail": "utils.pipeline",
         "documentation": {}
     },
     {
-        "label": "ObjectId",
-        "importPath": "bson",
-        "description": "bson",
+        "label": "ExcelGenerator",
+        "importPath": "client.excel_generator",
+        "description": "client.excel_generator",
         "isExtraImport": true,
-        "detail": "bson",
+        "detail": "client.excel_generator",
         "documentation": {}
     },
     {
-        "label": "ObjectId",
-        "importPath": "bson",
-        "description": "bson",
+        "label": "serialize_doc",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
         "isExtraImport": true,
-        "detail": "bson",
+        "detail": "utils.helpers",
         "documentation": {}
     },
     {
-        "label": "get_current_user",
-        "importPath": "routers.auth",
-        "description": "routers.auth",
+        "label": "serialize_docs",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
         "isExtraImport": true,
-        "detail": "routers.auth",
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_doc",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_docs",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_doc",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_docs",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "get_invitation_crud",
+        "importPath": "utils.invitations",
+        "description": "utils.invitations",
+        "isExtraImport": true,
+        "detail": "utils.invitations",
+        "documentation": {}
+    },
+    {
+        "label": "get_organization_crud",
+        "importPath": "utils.organizations",
+        "description": "utils.organizations",
+        "isExtraImport": true,
+        "detail": "utils.organizations",
+        "documentation": {}
+    },
+    {
+        "label": "can_manage_user",
+        "importPath": "auth.rbac",
+        "description": "auth.rbac",
+        "isExtraImport": true,
+        "detail": "auth.rbac",
+        "documentation": {}
+    },
+    {
+        "label": "can_access_proposal",
+        "importPath": "auth.rbac",
+        "description": "auth.rbac",
+        "isExtraImport": true,
+        "detail": "auth.rbac",
         "documentation": {}
     },
     {
@@ -2001,30 +2524,6 @@
         "documentation": {}
     },
     {
-        "label": "split_multi_year_position",
-        "importPath": "routers.pricing",
-        "description": "routers.pricing",
-        "isExtraImport": true,
-        "detail": "routers.pricing",
-        "documentation": {}
-    },
-    {
-        "label": "split_position_by_hours",
-        "importPath": "routers.pricing",
-        "description": "routers.pricing",
-        "isExtraImport": true,
-        "detail": "routers.pricing",
-        "documentation": {}
-    },
-    {
-        "label": "split_multi_year_position",
-        "importPath": "routers.pricing",
-        "description": "routers.pricing",
-        "isExtraImport": true,
-        "detail": "routers.pricing",
-        "documentation": {}
-    },
-    {
         "label": "get_idrive_storage",
         "importPath": "client.idrive_storage",
         "description": "client.idrive_storage",
@@ -2033,20 +2532,11 @@
         "documentation": {}
     },
     {
-        "label": "MongoDB",
-        "importPath": "auth.database",
-        "description": "auth.database",
+        "label": "Database",
+        "importPath": "pymongo.database",
+        "description": "pymongo.database",
         "isExtraImport": true,
-        "detail": "auth.database",
-        "documentation": {}
-    },
-    {
-        "label": "time",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "time",
-        "description": "time",
-        "detail": "time",
+        "detail": "pymongo.database",
         "documentation": {}
     },
     {
@@ -2083,44 +2573,37 @@
         "documentation": {}
     },
     {
-        "label": "create_pricing_agent",
-        "importPath": "agent.agent",
-        "description": "agent.agent",
-        "isExtraImport": true,
-        "detail": "agent.agent",
-        "documentation": {}
-    },
-    {
-        "label": "create_pricing_agent",
-        "importPath": "agent.agent",
-        "description": "agent.agent",
-        "isExtraImport": true,
-        "detail": "agent.agent",
-        "documentation": {}
-    },
-    {
-        "label": "Collection",
-        "importPath": "pymongo.collection",
-        "description": "pymongo.collection",
-        "isExtraImport": true,
-        "detail": "pymongo.collection",
-        "documentation": {}
-    },
-    {
-        "label": "Calculator",
-        "importPath": "client.calculation_service",
-        "description": "client.calculation_service",
-        "isExtraImport": true,
-        "detail": "client.calculation_service",
-        "documentation": {}
-    },
-    {
-        "label": "numpy",
+        "label": "secrets",
         "kind": 6,
         "isExtraImport": true,
-        "importPath": "numpy",
-        "description": "numpy",
-        "detail": "numpy",
+        "importPath": "secrets",
+        "description": "secrets",
+        "detail": "secrets",
+        "documentation": {}
+    },
+    {
+        "label": "EmailService",
+        "importPath": "client.email_service",
+        "description": "client.email_service",
+        "isExtraImport": true,
+        "detail": "client.email_service",
+        "documentation": {}
+    },
+    {
+        "label": "re",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "re",
+        "description": "re",
+        "detail": "re",
+        "documentation": {}
+    },
+    {
+        "label": "create_pricing_agent",
+        "importPath": "agent.agent",
+        "description": "agent.agent",
+        "isExtraImport": true,
+        "detail": "agent.agent",
         "documentation": {}
     },
     {
@@ -2218,16 +2701,7 @@
         "kind": 5,
         "importPath": "backend.app.server",
         "description": "backend.app.server",
-        "peekOfCode": "app = FastAPI(\n    title=\"Government Contractor Pricing API\",\n    description=\"API for pricing government contractor labor categories using BLS OEWS wage data\",\n    version=\"1.0.0\"\n)\n# Add GZip compression middleware (compress responses > 1KB)\n# This significantly reduces network payload for large JSON responses\napp.add_middleware(GZipMiddleware, minimum_size=1000)\n# Mount static files\nstatic_path = Path(__file__).parent.parent / \"static\"",
-        "detail": "backend.app.server",
-        "documentation": {}
-    },
-    {
-        "label": "static_path",
-        "kind": 5,
-        "importPath": "backend.app.server",
-        "description": "backend.app.server",
-        "peekOfCode": "static_path = Path(__file__).parent.parent / \"static\"\nif static_path.exists():\n    app.mount(\"/static\", StaticFiles(directory=str(static_path)), name=\"static\")\n# Configure CORS - IMPORTANT: Specific origin required for cookies\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=[FRONTEND_URL],  # Specific origin required for allow_credentials=True\n    allow_credentials=True,  # Required for cookies\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],",
+        "peekOfCode": "app = FastAPI(\n    title=\"Government Contractor Pricing API\",\n    description=\"API for pricing government contractor labor categories using BLS OEWS wage data\",\n    version=\"1.0.0\",\n    lifespan=lifespan\n)\n# Add GZip compression middleware (compress responses > 1KB)\n# This significantly reduces network payload for large JSON responses\napp.add_middleware(GZipMiddleware, minimum_size=1000)\n# Configure CORS - IMPORTANT: Specific origin required for cookies",
         "detail": "backend.app.server",
         "documentation": {}
     },
@@ -2250,39 +2724,30 @@
         "documentation": {}
     },
     {
-        "label": "add_token_to_blacklist",
-        "kind": 2,
-        "importPath": "backend.auth.blacklist",
-        "description": "backend.auth.blacklist",
-        "peekOfCode": "def add_token_to_blacklist(user_email: str, token: str) -> bool:\n    \"\"\"\n    Add a token to the user's blacklist in their document\n    Args:\n        user_email: Email of the user whose token should be blacklisted\n        token: JWT token string to blacklist\n    Returns:\n        bool: True if successfully added, False otherwise\n    \"\"\"\n    try:",
-        "detail": "backend.auth.blacklist",
+        "label": "StartupManager",
+        "kind": 6,
+        "importPath": "backend.app.startup",
+        "description": "backend.app.startup",
+        "peekOfCode": "class StartupManager:\n    \"\"\"\n    Manages pre-warming of expensive clients at server startup.\n    Thread-safe singleton that tracks pre-warming status and timing.\n    \"\"\"\n    _instance = None\n    _initialized = False\n    def __new__(cls):\n        if cls._instance is None:\n            cls._instance = super(StartupManager, cls).__new__(cls)",
+        "detail": "backend.app.startup",
         "documentation": {}
     },
     {
-        "label": "is_token_blacklisted",
-        "kind": 2,
-        "importPath": "backend.auth.blacklist",
-        "description": "backend.auth.blacklist",
-        "peekOfCode": "def is_token_blacklisted(user_email: str, token: str) -> bool:\n    \"\"\"\n    Check if a token is blacklisted for a specific user\n    Args:\n        user_email: Email of the user\n        token: JWT token string to check\n    Returns:\n        bool: True if token is blacklisted, False otherwise\n    \"\"\"\n    try:",
-        "detail": "backend.auth.blacklist",
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.app.startup",
+        "description": "backend.app.startup",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nclass StartupManager:\n    \"\"\"\n    Manages pre-warming of expensive clients at server startup.\n    Thread-safe singleton that tracks pre-warming status and timing.\n    \"\"\"\n    _instance = None\n    _initialized = False\n    def __new__(cls):\n        if cls._instance is None:",
+        "detail": "backend.app.startup",
         "documentation": {}
     },
     {
-        "label": "cleanup_expired_tokens",
-        "kind": 2,
-        "importPath": "backend.auth.blacklist",
-        "description": "backend.auth.blacklist",
-        "peekOfCode": "def cleanup_expired_tokens(user_email: str) -> int:\n    \"\"\"\n    Remove expired tokens from a user's blacklist to keep the array clean\n    Args:\n        user_email: Email of the user whose expired tokens should be cleaned up\n    Returns:\n        int: Number of expired tokens removed\n    \"\"\"\n    try:\n        users_collection = MongoDB.get_users_collection()",
-        "detail": "backend.auth.blacklist",
-        "documentation": {}
-    },
-    {
-        "label": "cleanup_all_expired_tokens",
-        "kind": 2,
-        "importPath": "backend.auth.blacklist",
-        "description": "backend.auth.blacklist",
-        "peekOfCode": "def cleanup_all_expired_tokens() -> int:\n    \"\"\"\n    Clean up expired tokens for all users (can be used for periodic maintenance)\n    Returns:\n        int: Number of users whose expired tokens were cleaned up\n    \"\"\"\n    try:\n        users_collection = MongoDB.get_users_collection()\n        current_time = datetime.utcnow()\n        # Remove expired tokens from all users",
-        "detail": "backend.auth.blacklist",
+        "label": "startup_manager",
+        "kind": 5,
+        "importPath": "backend.app.startup",
+        "description": "backend.app.startup",
+        "peekOfCode": "startup_manager = StartupManager()",
+        "detail": "backend.app.startup",
         "documentation": {}
     },
     {
@@ -2326,7 +2791,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "COOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -2335,7 +2800,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "COOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -2344,7 +2809,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "COOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -2353,7 +2818,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "COOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -2362,7 +2827,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "COOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -2371,7 +2836,52 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "FRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "FRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "detail": "backend.auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "SMTP_HOST",
+        "kind": 5,
+        "importPath": "backend.auth.config",
+        "description": "backend.auth.config",
+        "peekOfCode": "SMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "detail": "backend.auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "SMTP_PORT",
+        "kind": 5,
+        "importPath": "backend.auth.config",
+        "description": "backend.auth.config",
+        "peekOfCode": "SMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "detail": "backend.auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "SMTP_USER",
+        "kind": 5,
+        "importPath": "backend.auth.config",
+        "description": "backend.auth.config",
+        "peekOfCode": "SMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "detail": "backend.auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "SMTP_PASSWORD",
+        "kind": 5,
+        "importPath": "backend.auth.config",
+        "description": "backend.auth.config",
+        "peekOfCode": "SMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "detail": "backend.auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "FROM_EMAIL",
+        "kind": 5,
+        "importPath": "backend.auth.config",
+        "description": "backend.auth.config",
+        "peekOfCode": "FROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -2425,7 +2935,34 @@
         "kind": 6,
         "importPath": "backend.auth.crud",
         "description": "backend.auth.crud",
-        "peekOfCode": "class UserCRUD:\n    @staticmethod\n    def create_user(user_data: UserSignup) -> UserResponse:\n        \"\"\"Create a new user in the database\"\"\"\n        users_collection = MongoDB.get_users_collection()\n        # Check if user already exists\n        existing_user = users_collection.find_one({\"email\": user_data.email})\n        if existing_user:\n            raise ValueError(\"User with this email already exists\")\n        # Create user document",
+        "peekOfCode": "class UserCRUD:\n    \"\"\"Sync UserCRUD with PyMongo driver\"\"\"\n    def __init__(self):\n        \"\"\"Initialize UserCRUD\"\"\"\n        self.mongodb = get_mongodb_client()\n        self.collection = self.mongodb.get_users_collection()\n        self.db = self.mongodb.get_database()\n    @staticmethod\n    def create_user(user_data: UserSignup) -> UserResponse:\n        \"\"\"Create a new user with default organization\"\"\"",
+        "detail": "backend.auth.crud",
+        "documentation": {}
+    },
+    {
+        "label": "get_user_crud",
+        "kind": 2,
+        "importPath": "backend.auth.crud",
+        "description": "backend.auth.crud",
+        "peekOfCode": "def get_user_crud() -> UserCRUD:\n    \"\"\"\n    Get or create UserCRUD instance (singleton pattern)\n    Returns:\n        UserCRUD instance\n    \"\"\"\n    global _user_crud\n    with _lock:\n        if _user_crud is None:\n            _user_crud = UserCRUD()",
+        "detail": "backend.auth.crud",
+        "documentation": {}
+    },
+    {
+        "label": "_user_crud",
+        "kind": 5,
+        "importPath": "backend.auth.crud",
+        "description": "backend.auth.crud",
+        "peekOfCode": "_user_crud = None\n_lock = threading.RLock()\nclass UserCRUD:\n    \"\"\"Sync UserCRUD with PyMongo driver\"\"\"\n    def __init__(self):\n        \"\"\"Initialize UserCRUD\"\"\"\n        self.mongodb = get_mongodb_client()\n        self.collection = self.mongodb.get_users_collection()\n        self.db = self.mongodb.get_database()\n    @staticmethod",
+        "detail": "backend.auth.crud",
+        "documentation": {}
+    },
+    {
+        "label": "_lock",
+        "kind": 5,
+        "importPath": "backend.auth.crud",
+        "description": "backend.auth.crud",
+        "peekOfCode": "_lock = threading.RLock()\nclass UserCRUD:\n    \"\"\"Sync UserCRUD with PyMongo driver\"\"\"\n    def __init__(self):\n        \"\"\"Initialize UserCRUD\"\"\"\n        self.mongodb = get_mongodb_client()\n        self.collection = self.mongodb.get_users_collection()\n        self.db = self.mongodb.get_database()\n    @staticmethod\n    def create_user(user_data: UserSignup) -> UserResponse:",
         "detail": "backend.auth.crud",
         "documentation": {}
     },
@@ -2434,7 +2971,25 @@
         "kind": 6,
         "importPath": "backend.auth.database",
         "description": "backend.auth.database",
-        "peekOfCode": "class MongoDB:\n    client: Optional[MongoClient] = None\n    database = None\n    _lock = threading.RLock()\n    @classmethod\n    def connect_to_mongo(cls):\n        \"\"\"Create database connection (thread-safe)\"\"\"\n        with cls._lock:\n            # Double-check locking pattern to prevent multiple connections\n            if cls.database is not None:",
+        "peekOfCode": "class MongoDB:\n    \"\"\"MongoDB client for authentication (thread-safe singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize MongoDB client\"\"\"\n        if not settings.MONGODB_URL:\n            raise ValueError(\"MONGODB_URL not configured\")\n        if not settings.MONGODB_DATABASE:\n            raise ValueError(\"MONGODB_DATABASE not configured\")\n        self._client = None\n        self._db = None",
+        "detail": "backend.auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "kind": 2,
+        "importPath": "backend.auth.database",
+        "description": "backend.auth.database",
+        "peekOfCode": "def get_mongodb_client() -> MongoDB:\n    \"\"\"\n    Get or create MongoDB client (singleton pattern)\n    Returns:\n        MongoDB instance\n    \"\"\"\n    global _mongodb_client\n    with _client_lock:\n        if _mongodb_client is None:\n            _mongodb_client = MongoDB()",
+        "detail": "backend.auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "close_mongodb_client",
+        "kind": 2,
+        "importPath": "backend.auth.database",
+        "description": "backend.auth.database",
+        "peekOfCode": "def close_mongodb_client():\n    \"\"\"Close MongoDB client connection\"\"\"\n    global _mongodb_client\n    with _client_lock:\n        if _mongodb_client is not None:\n            _mongodb_client.close()\n            _mongodb_client = None",
         "detail": "backend.auth.database",
         "documentation": {}
     },
@@ -2443,17 +2998,26 @@
         "kind": 5,
         "importPath": "backend.auth.database",
         "description": "backend.auth.database",
-        "peekOfCode": "USERS_COLLECTION = \"users\"\nclass MongoDB:\n    client: Optional[MongoClient] = None\n    database = None\n    _lock = threading.RLock()\n    @classmethod\n    def connect_to_mongo(cls):\n        \"\"\"Create database connection (thread-safe)\"\"\"\n        with cls._lock:\n            # Double-check locking pattern to prevent multiple connections",
+        "peekOfCode": "USERS_COLLECTION = \"users\"\nclass MongoDB:\n    \"\"\"MongoDB client for authentication (thread-safe singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize MongoDB client\"\"\"\n        if not settings.MONGODB_URL:\n            raise ValueError(\"MONGODB_URL not configured\")\n        if not settings.MONGODB_DATABASE:\n            raise ValueError(\"MONGODB_DATABASE not configured\")\n        self._client = None",
         "detail": "backend.auth.database",
         "documentation": {}
     },
     {
-        "label": "mongo_db",
+        "label": "_client_lock",
         "kind": 5,
         "importPath": "backend.auth.database",
         "description": "backend.auth.database",
-        "peekOfCode": "mongo_db = MongoDB()\nmongo_db.connect_to_mongo()",
+        "peekOfCode": "_client_lock = threading.RLock()\ndef get_mongodb_client() -> MongoDB:\n    \"\"\"\n    Get or create MongoDB client (singleton pattern)\n    Returns:\n        MongoDB instance\n    \"\"\"\n    global _mongodb_client\n    with _client_lock:\n        if _mongodb_client is None:",
         "detail": "backend.auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "security",
+        "kind": 5,
+        "importPath": "backend.auth.dependencies",
+        "description": "backend.auth.dependencies",
+        "peekOfCode": "security = HTTPBearer()\nasync def get_current_user(\n    credentials: HTTPAuthorizationCredentials = Depends(security)\n) -> dict:\n    \"\"\"\n    Get current user from JWT token.\n    Validates JWT token and returns user dict with organization info.\n    Args:\n        credentials: HTTP Bearer token from Authorization header\n    Returns:",
+        "detail": "backend.auth.dependencies",
         "documentation": {}
     },
     {
@@ -2479,7 +3043,7 @@
         "kind": 6,
         "importPath": "backend.auth.models",
         "description": "backend.auth.models",
-        "peekOfCode": "class UserLogin(BaseModel):\n    email: EmailStr\n    password: str\nclass UserResponse(BaseModel):\n    id: str\n    firstName: str\n    lastName: str\n    email: str\n    createdAt: datetime\nclass Token(BaseModel):",
+        "peekOfCode": "class UserLogin(BaseModel):\n    email: EmailStr\n    password: str\nclass UserResponse(BaseModel):\n    id: str\n    firstName: str\n    lastName: str\n    email: str\n    organization_id: Optional[str] = None\n    role: Optional[str] = None",
         "detail": "backend.auth.models",
         "documentation": {}
     },
@@ -2488,7 +3052,7 @@
         "kind": 6,
         "importPath": "backend.auth.models",
         "description": "backend.auth.models",
-        "peekOfCode": "class UserResponse(BaseModel):\n    id: str\n    firstName: str\n    lastName: str\n    email: str\n    createdAt: datetime\nclass Token(BaseModel):\n    access_token: str\n    token_type: str\nclass TokenData(BaseModel):",
+        "peekOfCode": "class UserResponse(BaseModel):\n    id: str\n    firstName: str\n    lastName: str\n    email: str\n    organization_id: Optional[str] = None\n    role: Optional[str] = None\n    status: Optional[str] = None\n    createdAt: datetime\nclass Token(BaseModel):",
         "detail": "backend.auth.models",
         "documentation": {}
     },
@@ -2574,6 +3138,69 @@
         "documentation": {}
     },
     {
+        "label": "can_access_proposal",
+        "kind": 2,
+        "importPath": "backend.auth.rbac",
+        "description": "backend.auth.rbac",
+        "peekOfCode": "def can_access_proposal(proposal: dict, user: dict) -> bool:\n    \"\"\"\n    Check if user can access a proposal.\n    Access rules:\n    1. Must be same organization\n    2. Admin can access all org proposals\n    3. Owner can access their proposals\n    4. User can access explicitly shared proposals\n    Args:\n        proposal: Proposal document dict",
+        "detail": "backend.auth.rbac",
+        "documentation": {}
+    },
+    {
+        "label": "can_modify_proposal",
+        "kind": 2,
+        "importPath": "backend.auth.rbac",
+        "description": "backend.auth.rbac",
+        "peekOfCode": "def can_modify_proposal(proposal: dict, user: dict) -> bool:\n    \"\"\"\n    Check if user can modify/delete a proposal.\n    Modification rules:\n    1. Must be same organization\n    2. Admin can modify all org proposals\n    3. Owner can modify their proposals\n    4. Shared users CAN modify (full access)\n    Args:\n        proposal: Proposal document dict",
+        "detail": "backend.auth.rbac",
+        "documentation": {}
+    },
+    {
+        "label": "require_same_org",
+        "kind": 2,
+        "importPath": "backend.auth.rbac",
+        "description": "backend.auth.rbac",
+        "peekOfCode": "def require_same_org(resource_org_id: ObjectId, user_org_id: ObjectId):\n    \"\"\"\n    Verify resource belongs to user's organization.\n    Args:\n        resource_org_id: Resource's organization ObjectId\n        user_org_id: User's organization ObjectId\n    Raises:\n        ValueError: If resource belongs to different organization\n    \"\"\"\n    if resource_org_id != user_org_id:",
+        "detail": "backend.auth.rbac",
+        "documentation": {}
+    },
+    {
+        "label": "can_manage_user",
+        "kind": 2,
+        "importPath": "backend.auth.rbac",
+        "description": "backend.auth.rbac",
+        "peekOfCode": "def can_manage_user(target_user: dict, current_user: dict) -> bool:\n    \"\"\"\n    Check if current user can manage target user (remove, change role, etc.).\n    Management rules:\n    1. Must be admin\n    2. Must be same organization\n    3. Cannot manage yourself (prevent self-removal)\n    Args:\n        target_user: Target user document dict\n        current_user: Current user document dict",
+        "detail": "backend.auth.rbac",
+        "documentation": {}
+    },
+    {
+        "label": "can_invite_user",
+        "kind": 2,
+        "importPath": "backend.auth.rbac",
+        "description": "backend.auth.rbac",
+        "peekOfCode": "def can_invite_user(inviter: dict, max_seats: Optional[int] = None) -> bool:\n    \"\"\"\n    Check if user can invite new members.\n    Invitation rules:\n    1. Must be admin\n    2. If max_seats specified, check if organization is at capacity\n    Args:\n        inviter: Inviter user document dict\n        max_seats: Optional maximum seats allowed for organization\n    Returns:",
+        "detail": "backend.auth.rbac",
+        "documentation": {}
+    },
+    {
+        "label": "is_organization_owner",
+        "kind": 2,
+        "importPath": "backend.auth.rbac",
+        "description": "backend.auth.rbac",
+        "peekOfCode": "def is_organization_owner(user: dict, organization: dict) -> bool:\n    \"\"\"\n    Check if user is the owner of the organization.\n    Args:\n        user: User document dict\n        organization: Organization document dict\n    Returns:\n        True if user is organization owner, False otherwise\n    \"\"\"\n    return user.get(\"_id\") == organization.get(\"owner_id\")",
+        "detail": "backend.auth.rbac",
+        "documentation": {}
+    },
+    {
+        "label": "can_modify_organization_settings",
+        "kind": 2,
+        "importPath": "backend.auth.rbac",
+        "description": "backend.auth.rbac",
+        "peekOfCode": "def can_modify_organization_settings(user: dict, organization: dict) -> bool:\n    \"\"\"\n    Check if user can modify organization settings.\n    Settings modification rules:\n    1. Must be admin of the organization\n    2. Organization must match user's organization\n    Args:\n        user: User document dict\n        organization: Organization document dict\n    Returns:",
+        "detail": "backend.auth.rbac",
+        "documentation": {}
+    },
+    {
         "label": "create_refresh_token_jwt",
         "kind": 2,
         "importPath": "backend.auth.refresh_token",
@@ -2588,51 +3215,6 @@
         "importPath": "backend.auth.refresh_token",
         "description": "backend.auth.refresh_token",
         "peekOfCode": "def verify_refresh_token_jwt(token: str) -> Optional[Dict[str, Any]]:\n    \"\"\"\n    Verify and decode refresh token JWT\n    Args:\n        token: JWT refresh token string\n    Returns:\n        Token payload if valid, None otherwise\n    \"\"\"\n    try:\n        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])",
-        "detail": "backend.auth.refresh_token",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_URL",
-        "kind": 5,
-        "importPath": "backend.auth.refresh_token",
-        "description": "backend.auth.refresh_token",
-        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\nclient = MongoClient(MONGODB_URL)\ndb = client[MONGODB_DATABASE]\nrefresh_tokens_collection = db[\"refresh_tokens\"]\ndef create_refresh_token_jwt(user_email: str, token_id: str) -> str:\n    \"\"\"\n    Create JWT refresh token\n    Args:\n        user_email: User's email address",
-        "detail": "backend.auth.refresh_token",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_DATABASE",
-        "kind": 5,
-        "importPath": "backend.auth.refresh_token",
-        "description": "backend.auth.refresh_token",
-        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\nclient = MongoClient(MONGODB_URL)\ndb = client[MONGODB_DATABASE]\nrefresh_tokens_collection = db[\"refresh_tokens\"]\ndef create_refresh_token_jwt(user_email: str, token_id: str) -> str:\n    \"\"\"\n    Create JWT refresh token\n    Args:\n        user_email: User's email address\n        token_id: Unique token identifier",
-        "detail": "backend.auth.refresh_token",
-        "documentation": {}
-    },
-    {
-        "label": "client",
-        "kind": 5,
-        "importPath": "backend.auth.refresh_token",
-        "description": "backend.auth.refresh_token",
-        "peekOfCode": "client = MongoClient(MONGODB_URL)\ndb = client[MONGODB_DATABASE]\nrefresh_tokens_collection = db[\"refresh_tokens\"]\ndef create_refresh_token_jwt(user_email: str, token_id: str) -> str:\n    \"\"\"\n    Create JWT refresh token\n    Args:\n        user_email: User's email address\n        token_id: Unique token identifier\n    Returns:",
-        "detail": "backend.auth.refresh_token",
-        "documentation": {}
-    },
-    {
-        "label": "db",
-        "kind": 5,
-        "importPath": "backend.auth.refresh_token",
-        "description": "backend.auth.refresh_token",
-        "peekOfCode": "db = client[MONGODB_DATABASE]\nrefresh_tokens_collection = db[\"refresh_tokens\"]\ndef create_refresh_token_jwt(user_email: str, token_id: str) -> str:\n    \"\"\"\n    Create JWT refresh token\n    Args:\n        user_email: User's email address\n        token_id: Unique token identifier\n    Returns:\n        JWT refresh token string",
-        "detail": "backend.auth.refresh_token",
-        "documentation": {}
-    },
-    {
-        "label": "refresh_tokens_collection",
-        "kind": 5,
-        "importPath": "backend.auth.refresh_token",
-        "description": "backend.auth.refresh_token",
-        "peekOfCode": "refresh_tokens_collection = db[\"refresh_tokens\"]\ndef create_refresh_token_jwt(user_email: str, token_id: str) -> str:\n    \"\"\"\n    Create JWT refresh token\n    Args:\n        user_email: User's email address\n        token_id: Unique token identifier\n    Returns:\n        JWT refresh token string\n    \"\"\"",
         "detail": "backend.auth.refresh_token",
         "documentation": {}
     },
@@ -2664,15 +3246,6 @@
         "documentation": {}
     },
     {
-        "label": "verify_token",
-        "kind": 2,
-        "importPath": "backend.auth.utils",
-        "description": "backend.auth.utils",
-        "peekOfCode": "def verify_token(token: str) -> Optional[TokenData]:\n    \"\"\"Verify JWT token and return token data\"\"\"\n    try:\n        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])\n        email: str = payload.get(\"sub\")\n        if email is None:\n            return None\n        # Check if token is blacklisted\n        if is_token_blacklisted(email, token):\n            return None  # Token is blacklisted",
-        "detail": "backend.auth.utils",
-        "documentation": {}
-    },
-    {
         "label": "generate_user_id",
         "kind": 2,
         "importPath": "backend.auth.utils",
@@ -2688,6 +3261,15 @@
         "description": "backend.client.calculation_service",
         "peekOfCode": "class Calculator:\n    \"\"\"\n    Pure calculation methods for multi-year pricing.\n    All methods are static - no state maintained.\n    \"\"\"\n    @staticmethod\n    def calculate_fblr(\n        annual_wage: float,\n        hours: int,\n        fringe_rate: float,",
         "detail": "backend.client.calculation_service",
+        "documentation": {}
+    },
+    {
+        "label": "EmailService",
+        "kind": 6,
+        "importPath": "backend.client.email_service",
+        "description": "backend.client.email_service",
+        "peekOfCode": "class EmailService:\n    def __init__(self):\n        self.smtp_host = config.SMTP_HOST\n        self.smtp_port = config.SMTP_PORT\n        self.smtp_user = config.SMTP_USER\n        self.smtp_password = config.SMTP_PASSWORD\n        self.from_email = config.FROM_EMAIL\n        self.frontend_url = config.FRONTEND_URL\n    def send_invitation_email(\n        self,",
+        "detail": "backend.client.email_service",
         "documentation": {}
     },
     {
@@ -2857,7 +3439,7 @@
         "kind": 6,
         "importPath": "backend.client.oews_mongodb",
         "description": "backend.client.oews_mongodb",
-        "peekOfCode": "class OEWSMongoLookup:\n    \"\"\"Query OEWS wage data from MongoDB.\"\"\"\n    def __init__(self):\n        \"\"\"Initialize MongoDB connection.\"\"\"\n        # Create MongoDB client with connection pooling\n        # PyMongo client is thread-safe and handles connection pooling automatically\n        self.client = MongoClient(settings.MONGODB_URL)\n        self.db: Database = self.client[settings.MONGODB_DATABASE]\n    def search_areas(self, keyword: str) -> List[Dict[str, str]]:\n        \"\"\"",
+        "peekOfCode": "class OEWSMongoLookup:\n    \"\"\"Query OEWS wage data from MongoDB (Async).\"\"\"\n    def __init__(self):\n        \"\"\"Initialize MongoDB connection (lazy initialization).\"\"\"\n        self.client: Optional[AsyncIOMotorClient] = None\n        self.db: Optional[AsyncIOMotorDatabase] = None\n    async def _ensure_initialized(self):\n        \"\"\"Ensure MongoDB connection is initialized (lazy initialization)\"\"\"\n        if self.db is None:\n            # Create Motor async client",
         "detail": "backend.client.oews_mongodb",
         "documentation": {}
     },
@@ -2866,7 +3448,7 @@
         "kind": 2,
         "importPath": "backend.client.oews_mongodb",
         "description": "backend.client.oews_mongodb",
-        "peekOfCode": "def get_oews_mongo_client() -> OEWSMongoLookup:\n    \"\"\"\n    Get or create OEWS MongoDB client (singleton pattern).\n    Returns:\n        OEWSMongoLookup instance\n    \"\"\"\n    global _oews_mongo_client\n    with _client_lock:\n        if _oews_mongo_client is None:\n            _oews_mongo_client = OEWSMongoLookup()",
+        "peekOfCode": "def get_oews_mongo_client() -> OEWSMongoLookup:\n    \"\"\"\n    Get or create OEWS MongoDB client (singleton pattern).\n    Thread-safe synchronous getter. The client itself uses async methods\n    with lazy initialization via _ensure_initialized().\n    Returns:\n        OEWSMongoLookup instance\n    \"\"\"\n    global _oews_mongo_client, _client_lock\n    # Initialize lock on first call",
         "detail": "backend.client.oews_mongodb",
         "documentation": {}
     },
@@ -2875,7 +3457,7 @@
         "kind": 5,
         "importPath": "backend.client.oews_mongodb",
         "description": "backend.client.oews_mongodb",
-        "peekOfCode": "_client_lock = threading.RLock()\ndef get_oews_mongo_client() -> OEWSMongoLookup:\n    \"\"\"\n    Get or create OEWS MongoDB client (singleton pattern).\n    Returns:\n        OEWSMongoLookup instance\n    \"\"\"\n    global _oews_mongo_client\n    with _client_lock:\n        if _oews_mongo_client is None:",
+        "peekOfCode": "_client_lock = None  # Will be initialized when needed\ndef get_oews_mongo_client() -> OEWSMongoLookup:\n    \"\"\"\n    Get or create OEWS MongoDB client (singleton pattern).\n    Thread-safe synchronous getter. The client itself uses async methods\n    with lazy initialization via _ensure_initialized().\n    Returns:\n        OEWSMongoLookup instance\n    \"\"\"\n    global _oews_mongo_client, _client_lock",
         "detail": "backend.client.oews_mongodb",
         "documentation": {}
     },
@@ -2983,17 +3565,8 @@
         "kind": 6,
         "importPath": "backend.models.proposal",
         "description": "backend.models.proposal",
-        "peekOfCode": "class ProposalUpdate(BaseModel):\n    \"\"\"Schema for updating an existing proposal.\"\"\"\n    name: Optional[str] = Field(None, description=\"Updated proposal name\")\n    solicitation_number: Optional[str] = Field(None, description=\"Updated solicitation number\")\n    status: Optional[str] = Field(\n        None,\n        description=\"Proposal status (draft, processing, completed, error)\"\n    )\n    rates: Optional[Dict[str, float]] = Field(\n        None,",
+        "peekOfCode": "class ProposalUpdate(BaseModel):\n    \"\"\"Schema for updating an existing proposal.\"\"\"\n    name: Optional[str] = Field(None, description=\"Updated proposal name\")\n    solicitation_number: Optional[str] = Field(None, description=\"Updated solicitation number\")\n    prime_contractor_name: Optional[str] = Field(None, description=\"Updated prime contractor name\")\n    status: Optional[str] = Field(\n        None,\n        description=\"Proposal status (draft, processing, completed, error)\"\n    )\n    rates: Optional[Dict[str, float]] = Field(",
         "detail": "backend.models.proposal",
-        "documentation": {}
-    },
-    {
-        "label": "get_current_user",
-        "kind": 2,
-        "importPath": "backend.routers.auth",
-        "description": "backend.routers.auth",
-        "peekOfCode": "def get_current_user(request: Request):\n    \"\"\"Get current user from Authorization header\"\"\"\n    # Get Authorization header\n    auth_header = request.headers.get(\"Authorization\")\n    if not auth_header:\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=\"Not authenticated\",\n            headers={\"WWW-Authenticate\": \"Bearer\"},\n        )",
-        "detail": "backend.routers.auth",
         "documentation": {}
     },
     {
@@ -3001,7 +3574,7 @@
         "kind": 5,
         "importPath": "backend.routers.auth",
         "description": "backend.routers.auth",
-        "peekOfCode": "router = APIRouter(prefix=\"/auth\", tags=[\"authentication\"])\ndef get_current_user(request: Request):\n    \"\"\"Get current user from Authorization header\"\"\"\n    # Get Authorization header\n    auth_header = request.headers.get(\"Authorization\")\n    if not auth_header:\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=\"Not authenticated\",\n            headers={\"WWW-Authenticate\": \"Bearer\"},",
+        "peekOfCode": "router = APIRouter(prefix=\"/auth\", tags=[\"authentication\"])\n@router.post(\"/signup\", response_model=UserResponse)\nasync def signup(user_data: UserSignup):\n    \"\"\"\n    Register a new user\n    Args:\n        user_data: User signup data including firstName, lastName, email, password\n    Returns:\n        UserResponse: Created user information\n    \"\"\"",
         "detail": "backend.routers.auth",
         "documentation": {}
     },
@@ -3033,6 +3606,51 @@
         "documentation": {}
     },
     {
+        "label": "InviteUserRequest",
+        "kind": 6,
+        "importPath": "backend.routers.invitations",
+        "description": "backend.routers.invitations",
+        "peekOfCode": "class InviteUserRequest(BaseModel):\n    \"\"\"Request body for sending invitation\"\"\"\n    email: EmailStr = Field(..., description=\"Email address to invite\")\n    role: str = Field(..., description=\"Role for new user (admin or user)\")\n    class Config:\n        schema_extra = {\n            \"example\": {\n                \"email\": \"colleague@example.com\",\n                \"role\": \"user\"\n            }",
+        "detail": "backend.routers.invitations",
+        "documentation": {}
+    },
+    {
+        "label": "AcceptInvitationRequest",
+        "kind": 6,
+        "importPath": "backend.routers.invitations",
+        "description": "backend.routers.invitations",
+        "peekOfCode": "class AcceptInvitationRequest(BaseModel):\n    \"\"\"Request body for accepting invitation\"\"\"\n    token: str = Field(..., description=\"Invitation token from email\")\n    firstName: str = Field(None, min_length=1, max_length=100, description=\"Required for new users only\")\n    lastName: str = Field(None, min_length=1, max_length=100, description=\"Required for new users only\")\n    password: str = Field(None, min_length=8, max_length=100, description=\"Required for new users only\")\n    class Config:\n        schema_extra = {\n            \"example\": {\n                \"token\": \"abc123...\",",
+        "detail": "backend.routers.invitations",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.routers.invitations",
+        "description": "backend.routers.invitations",
+        "peekOfCode": "router = APIRouter(prefix=\"/api/invitations\", tags=[\"invitations\"])\nclass InviteUserRequest(BaseModel):\n    \"\"\"Request body for sending invitation\"\"\"\n    email: EmailStr = Field(..., description=\"Email address to invite\")\n    role: str = Field(..., description=\"Role for new user (admin or user)\")\n    class Config:\n        schema_extra = {\n            \"example\": {\n                \"email\": \"colleague@example.com\",\n                \"role\": \"user\"",
+        "detail": "backend.routers.invitations",
+        "documentation": {}
+    },
+    {
+        "label": "UpdateSettingsRequest",
+        "kind": 6,
+        "importPath": "backend.routers.organizations",
+        "description": "backend.routers.organizations",
+        "peekOfCode": "class UpdateSettingsRequest(BaseModel):\n    \"\"\"Request body for updating organization settings\"\"\"\n    model_config = {\"extra\": \"ignore\"}\n    default_rates: Optional[Dict[str, float]] = None\n    default_escalation_rate: Optional[float] = None\n    allow_user_rate_override: Optional[bool] = None\n@router.get(\"/me\")\nasync def get_my_organization(current_user: dict = Depends(get_current_user)):\n    \"\"\"\n    Get current user's organization details.",
+        "detail": "backend.routers.organizations",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.routers.organizations",
+        "description": "backend.routers.organizations",
+        "peekOfCode": "router = APIRouter(prefix=\"/api/organizations\", tags=[\"organizations\"])\nclass UpdateSettingsRequest(BaseModel):\n    \"\"\"Request body for updating organization settings\"\"\"\n    model_config = {\"extra\": \"ignore\"}\n    default_rates: Optional[Dict[str, float]] = None\n    default_escalation_rate: Optional[float] = None\n    allow_user_rate_override: Optional[bool] = None\n@router.get(\"/me\")\nasync def get_my_organization(current_user: dict = Depends(get_current_user)):\n    \"\"\"",
+        "detail": "backend.routers.organizations",
+        "documentation": {}
+    },
+    {
         "label": "split_position_by_hours",
         "kind": 2,
         "importPath": "backend.routers.pricing",
@@ -3060,11 +3678,20 @@
         "documentation": {}
     },
     {
-        "label": "get_crud",
+        "label": "ShareProposalRequest",
+        "kind": 6,
+        "importPath": "backend.routers.proposals",
+        "description": "backend.routers.proposals",
+        "peekOfCode": "class ShareProposalRequest(BaseModel):\n    \"\"\"Request body for sharing proposals\"\"\"\n    user_ids: List[str]\n@router.post(\"/{proposal_id}/share\")\nasync def share_proposal_with_users(\n    proposal_id: str,\n    share_data: ShareProposalRequest,\n    current_user: dict = Depends(require_admin)\n):\n    \"\"\"",
+        "detail": "backend.routers.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_proposal",
         "kind": 2,
         "importPath": "backend.routers.proposals",
         "description": "backend.routers.proposals",
-        "peekOfCode": "def get_crud():\n    \"\"\"Get singleton ProposalCRUD instance (thread-safe).\"\"\"\n    return get_proposal_crud(MongoDB.get_collection(\"proposals\"))\n# ============================================================================\n# DOCUMENT UPLOAD & ASYNC PROCESSING\n# ============================================================================\nasync def process_proposal_documents(\n    proposal_id: str,\n    user_id: str,\n    file_paths: List[str],",
+        "peekOfCode": "def serialize_proposal(proposal: dict) -> dict:\n    \"\"\"\n    Convert all ObjectId fields to strings for JSON serialization.\n    Also converts snake_case date fields to camelCase for frontend consistency.\n    Args:\n        proposal: Proposal document from MongoDB\n    Returns:\n        Proposal with all ObjectIds converted to strings and dates in camelCase\n    \"\"\"\n    if not proposal:",
         "detail": "backend.routers.proposals",
         "documentation": {}
     },
@@ -3073,8 +3700,35 @@
         "kind": 5,
         "importPath": "backend.routers.proposals",
         "description": "backend.routers.proposals",
-        "peekOfCode": "router = APIRouter(prefix=\"/proposals\", tags=[\"proposals\"])\n# Get singleton ProposalCRUD instance\ndef get_crud():\n    \"\"\"Get singleton ProposalCRUD instance (thread-safe).\"\"\"\n    return get_proposal_crud(MongoDB.get_collection(\"proposals\"))\n# ============================================================================\n# DOCUMENT UPLOAD & ASYNC PROCESSING\n# ============================================================================\nasync def process_proposal_documents(\n    proposal_id: str,",
+        "peekOfCode": "router = APIRouter(prefix=\"/proposals\", tags=[\"proposals\"])\n# Get singleton ProposalCRUD instance\nasync def get_crud():\n    \"\"\"Get singleton ProposalCRUD instance (async, thread-safe).\"\"\"\n    return get_proposal_crud()\ndef serialize_proposal(proposal: dict) -> dict:\n    \"\"\"\n    Convert all ObjectId fields to strings for JSON serialization.\n    Also converts snake_case date fields to camelCase for frontend consistency.\n    Args:",
         "detail": "backend.routers.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "SwitchOrganizationRequest",
+        "kind": 6,
+        "importPath": "backend.routers.workspace",
+        "description": "backend.routers.workspace",
+        "peekOfCode": "class SwitchOrganizationRequest(BaseModel):\n    \"\"\"Request body for switching organization\"\"\"\n    organization_id: str\n@router.get(\"/organizations\")\nasync def get_user_organizations(current_user: dict = Depends(get_current_user)):\n    \"\"\"\n    Get all organizations the current user belongs to.\n    Returns:\n        List of organizations with user's role in each\n    \"\"\"",
+        "detail": "backend.routers.workspace",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.routers.workspace",
+        "description": "backend.routers.workspace",
+        "peekOfCode": "router = APIRouter(prefix=\"/api/workspace\", tags=[\"workspace\"])\nclass SwitchOrganizationRequest(BaseModel):\n    \"\"\"Request body for switching organization\"\"\"\n    organization_id: str\n@router.get(\"/organizations\")\nasync def get_user_organizations(current_user: dict = Depends(get_current_user)):\n    \"\"\"\n    Get all organizations the current user belongs to.\n    Returns:\n        List of organizations with user's role in each",
+        "detail": "backend.routers.workspace",
+        "documentation": {}
+    },
+    {
+        "label": "safe_create_index",
+        "kind": 2,
+        "importPath": "backend.scripts.create_indexes",
+        "description": "backend.scripts.create_indexes",
+        "peekOfCode": "def safe_create_index(collection, keys, name, **kwargs):\n    \"\"\"Create index with error handling for existing indexes.\"\"\"\n    try:\n        collection.create_index(keys, name=name, **kwargs)\n        return True\n    except Exception as e:\n        error_msg = str(e).lower()\n        if \"already exists\" in error_msg or \"index already\" in error_msg:\n            return False  # Index already exists\n        else:",
+        "detail": "backend.scripts.create_indexes",
         "documentation": {}
     },
     {
@@ -3091,7 +3745,7 @@
         "kind": 5,
         "importPath": "backend.scripts.create_indexes",
         "description": "backend.scripts.create_indexes",
-        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef create_indexes():\n    \"\"\"Create all necessary indexes.\"\"\"\n    print(\"Connecting to MongoDB...\")\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    print(f\"\\nCreating indexes on database: {MONGODB_DATABASE}\")\n    print(\"=\" * 60)\n    # =====================================================================",
+        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef safe_create_index(collection, keys, name, **kwargs):\n    \"\"\"Create index with error handling for existing indexes.\"\"\"\n    try:\n        collection.create_index(keys, name=name, **kwargs)\n        return True\n    except Exception as e:\n        error_msg = str(e).lower()\n        if \"already exists\" in error_msg or \"index already\" in error_msg:",
         "detail": "backend.scripts.create_indexes",
         "documentation": {}
     },
@@ -3100,71 +3754,8 @@
         "kind": 5,
         "importPath": "backend.scripts.create_indexes",
         "description": "backend.scripts.create_indexes",
-        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef create_indexes():\n    \"\"\"Create all necessary indexes.\"\"\"\n    print(\"Connecting to MongoDB...\")\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    print(f\"\\nCreating indexes on database: {MONGODB_DATABASE}\")\n    print(\"=\" * 60)\n    # =====================================================================\n    # PROPOSALS COLLECTION",
+        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef safe_create_index(collection, keys, name, **kwargs):\n    \"\"\"Create index with error handling for existing indexes.\"\"\"\n    try:\n        collection.create_index(keys, name=name, **kwargs)\n        return True\n    except Exception as e:\n        error_msg = str(e).lower()\n        if \"already exists\" in error_msg or \"index already\" in error_msg:\n            return False  # Index already exists",
         "detail": "backend.scripts.create_indexes",
-        "documentation": {}
-    },
-    {
-        "label": "safe_create_index",
-        "kind": 2,
-        "importPath": "backend.scripts.create_indexes_safe",
-        "description": "backend.scripts.create_indexes_safe",
-        "peekOfCode": "def safe_create_index(collection, keys, **kwargs):\n    \"\"\"Safely create index, handling existing indexes.\"\"\"\n    try:\n        collection.create_index(keys, **kwargs)\n        return f\"✓ Created: {kwargs.get('name', str(keys))}\"\n    except Exception as e:\n        if \"already exists\" in str(e).lower():\n            return f\"⚠ Already exists: {kwargs.get('name', str(keys))}\"\n        else:\n            return f\"✗ Error: {str(e)[:100]}\"",
-        "detail": "backend.scripts.create_indexes_safe",
-        "documentation": {}
-    },
-    {
-        "label": "create_indexes",
-        "kind": 2,
-        "importPath": "backend.scripts.create_indexes_safe",
-        "description": "backend.scripts.create_indexes_safe",
-        "peekOfCode": "def create_indexes():\n    \"\"\"Create all necessary indexes.\"\"\"\n    print(\"Connecting to MongoDB...\")\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    print(f\"\\nCreating indexes on database: {MONGODB_DATABASE}\")\n    print(\"=\" * 70)\n    # =====================================================================\n    # PROPOSALS COLLECTION\n    # =====================================================================",
-        "detail": "backend.scripts.create_indexes_safe",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_URL",
-        "kind": 5,
-        "importPath": "backend.scripts.create_indexes_safe",
-        "description": "backend.scripts.create_indexes_safe",
-        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef safe_create_index(collection, keys, **kwargs):\n    \"\"\"Safely create index, handling existing indexes.\"\"\"\n    try:\n        collection.create_index(keys, **kwargs)\n        return f\"✓ Created: {kwargs.get('name', str(keys))}\"\n    except Exception as e:\n        if \"already exists\" in str(e).lower():\n            return f\"⚠ Already exists: {kwargs.get('name', str(keys))}\"",
-        "detail": "backend.scripts.create_indexes_safe",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_DATABASE",
-        "kind": 5,
-        "importPath": "backend.scripts.create_indexes_safe",
-        "description": "backend.scripts.create_indexes_safe",
-        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef safe_create_index(collection, keys, **kwargs):\n    \"\"\"Safely create index, handling existing indexes.\"\"\"\n    try:\n        collection.create_index(keys, **kwargs)\n        return f\"✓ Created: {kwargs.get('name', str(keys))}\"\n    except Exception as e:\n        if \"already exists\" in str(e).lower():\n            return f\"⚠ Already exists: {kwargs.get('name', str(keys))}\"\n        else:",
-        "detail": "backend.scripts.create_indexes_safe",
-        "documentation": {}
-    },
-    {
-        "label": "create_refresh_token_indexes",
-        "kind": 2,
-        "importPath": "backend.scripts.create_refresh_token_indexes",
-        "description": "backend.scripts.create_refresh_token_indexes",
-        "peekOfCode": "def create_refresh_token_indexes():\n    \"\"\"Create indexes for refresh_tokens collection\"\"\"\n    try:\n        # Connect to MongoDB\n        client = MongoClient(MONGODB_URL)\n        db = client[MONGODB_DATABASE]\n        collection = db[\"refresh_tokens\"]\n        print(\"Creating indexes for refresh_tokens collection...\")\n        # 1. Compound index on user_email + token_family_id (for queries)\n        collection.create_index(",
-        "detail": "backend.scripts.create_refresh_token_indexes",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_URL",
-        "kind": 5,
-        "importPath": "backend.scripts.create_refresh_token_indexes",
-        "description": "backend.scripts.create_refresh_token_indexes",
-        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef create_refresh_token_indexes():\n    \"\"\"Create indexes for refresh_tokens collection\"\"\"\n    try:\n        # Connect to MongoDB\n        client = MongoClient(MONGODB_URL)\n        db = client[MONGODB_DATABASE]\n        collection = db[\"refresh_tokens\"]\n        print(\"Creating indexes for refresh_tokens collection...\")",
-        "detail": "backend.scripts.create_refresh_token_indexes",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_DATABASE",
-        "kind": 5,
-        "importPath": "backend.scripts.create_refresh_token_indexes",
-        "description": "backend.scripts.create_refresh_token_indexes",
-        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef create_refresh_token_indexes():\n    \"\"\"Create indexes for refresh_tokens collection\"\"\"\n    try:\n        # Connect to MongoDB\n        client = MongoClient(MONGODB_URL)\n        db = client[MONGODB_DATABASE]\n        collection = db[\"refresh_tokens\"]\n        print(\"Creating indexes for refresh_tokens collection...\")\n        # 1. Compound index on user_email + token_family_id (for queries)",
-        "detail": "backend.scripts.create_refresh_token_indexes",
         "documentation": {}
     },
     {
@@ -3339,11 +3930,110 @@
         "documentation": {}
     },
     {
+        "label": "serialize_doc",
+        "kind": 2,
+        "importPath": "backend.utils.helpers",
+        "description": "backend.utils.helpers",
+        "peekOfCode": "def serialize_doc(doc: dict) -> dict:\n    \"\"\"\n    Convert MongoDB document to JSON-serializable dict\n    Converts ObjectIds to strings, _id to id\n    \"\"\"\n    if not doc:\n        return None\n    # Convert _id to id\n    if \"_id\" in doc:\n        doc[\"id\"] = str(doc[\"_id\"])",
+        "detail": "backend.utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_docs",
+        "kind": 2,
+        "importPath": "backend.utils.helpers",
+        "description": "backend.utils.helpers",
+        "peekOfCode": "def serialize_docs(docs: list) -> list:\n    \"\"\"Convert list of MongoDB documents\"\"\"\n    return [serialize_doc(doc.copy()) for doc in docs]",
+        "detail": "backend.utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "InvitationCRUD",
+        "kind": 6,
+        "importPath": "backend.utils.invitations",
+        "description": "backend.utils.invitations",
+        "peekOfCode": "class InvitationCRUD:\n    \"\"\"Invitation CRUD operations with token hashing (Sync Singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize InvitationCRUD\"\"\"\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"invitations\"]\n        self.users_collection = mongodb.get_users_collection()\n        self.orgs_collection = self.db[\"organizations\"]\n        self.email_service = EmailService()",
+        "detail": "backend.utils.invitations",
+        "documentation": {}
+    },
+    {
+        "label": "get_invitation_crud",
+        "kind": 2,
+        "importPath": "backend.utils.invitations",
+        "description": "backend.utils.invitations",
+        "peekOfCode": "def get_invitation_crud() -> InvitationCRUD:\n    \"\"\"\n    Get or create InvitationCRUD instance (singleton pattern)\n    Returns:\n        InvitationCRUD instance\n    \"\"\"\n    global _invitation_crud\n    with _lock:\n        if _invitation_crud is None:\n            _invitation_crud = InvitationCRUD()",
+        "detail": "backend.utils.invitations",
+        "documentation": {}
+    },
+    {
+        "label": "_invitation_crud",
+        "kind": 5,
+        "importPath": "backend.utils.invitations",
+        "description": "backend.utils.invitations",
+        "peekOfCode": "_invitation_crud = None\n_lock = threading.RLock()\nclass InvitationCRUD:\n    \"\"\"Invitation CRUD operations with token hashing (Sync Singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize InvitationCRUD\"\"\"\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"invitations\"]\n        self.users_collection = mongodb.get_users_collection()",
+        "detail": "backend.utils.invitations",
+        "documentation": {}
+    },
+    {
+        "label": "_lock",
+        "kind": 5,
+        "importPath": "backend.utils.invitations",
+        "description": "backend.utils.invitations",
+        "peekOfCode": "_lock = threading.RLock()\nclass InvitationCRUD:\n    \"\"\"Invitation CRUD operations with token hashing (Sync Singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize InvitationCRUD\"\"\"\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"invitations\"]\n        self.users_collection = mongodb.get_users_collection()\n        self.orgs_collection = self.db[\"organizations\"]",
+        "detail": "backend.utils.invitations",
+        "documentation": {}
+    },
+    {
+        "label": "OrganizationCRUD",
+        "kind": 6,
+        "importPath": "backend.utils.organizations",
+        "description": "backend.utils.organizations",
+        "peekOfCode": "class OrganizationCRUD:\n    \"\"\"Organization CRUD operations with MongoDB (Sync Singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize OrganizationCRUD\"\"\"\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"organizations\"]\n        self.users_collection = mongodb.get_users_collection()\n    def create_organization(self, name: str, owner_id: ObjectId) -> dict:\n        \"\"\"Create a new organization (async)\"\"\"",
+        "detail": "backend.utils.organizations",
+        "documentation": {}
+    },
+    {
+        "label": "get_organization_crud",
+        "kind": 2,
+        "importPath": "backend.utils.organizations",
+        "description": "backend.utils.organizations",
+        "peekOfCode": "def get_organization_crud() -> OrganizationCRUD:\n    \"\"\"\n    Get or create OrganizationCRUD instance (singleton pattern)\n    Returns:\n        OrganizationCRUD instance\n    \"\"\"\n    global _organization_crud\n    with _lock:\n        if _organization_crud is None:\n            _organization_crud = OrganizationCRUD()",
+        "detail": "backend.utils.organizations",
+        "documentation": {}
+    },
+    {
+        "label": "_organization_crud",
+        "kind": 5,
+        "importPath": "backend.utils.organizations",
+        "description": "backend.utils.organizations",
+        "peekOfCode": "_organization_crud = None\n_lock = threading.RLock()\nclass OrganizationCRUD:\n    \"\"\"Organization CRUD operations with MongoDB (Sync Singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize OrganizationCRUD\"\"\"\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"organizations\"]\n        self.users_collection = mongodb.get_users_collection()",
+        "detail": "backend.utils.organizations",
+        "documentation": {}
+    },
+    {
+        "label": "_lock",
+        "kind": 5,
+        "importPath": "backend.utils.organizations",
+        "description": "backend.utils.organizations",
+        "peekOfCode": "_lock = threading.RLock()\nclass OrganizationCRUD:\n    \"\"\"Organization CRUD operations with MongoDB (Sync Singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize OrganizationCRUD\"\"\"\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"organizations\"]\n        self.users_collection = mongodb.get_users_collection()\n    def create_organization(self, name: str, owner_id: ObjectId) -> dict:",
+        "detail": "backend.utils.organizations",
+        "documentation": {}
+    },
+    {
+        "label": "build_project_data_from_dataframe",
+        "kind": 2,
+        "importPath": "backend.utils.pipeline",
+        "description": "backend.utils.pipeline",
+        "peekOfCode": "def build_project_data_from_dataframe(\n    df: pd.DataFrame,\n    project_config: Dict[str, Any]\n) -> Dict[str, Any]:\n    \"\"\"\n    Build project data structure from DataFrame for Excel generation.\n    Args:\n        df: DataFrame with positions and wage data\n        project_config: Configuration with solicitation info, rates, etc.\n    Returns:",
+        "detail": "backend.utils.pipeline",
+        "documentation": {}
+    },
+    {
         "label": "ProposalCRUD",
         "kind": 6,
         "importPath": "backend.utils.proposals",
         "description": "backend.utils.proposals",
-        "peekOfCode": "class ProposalCRUD:\n    \"\"\"\n    Proposal CRUD operations with MongoDB (Thread-safe Singleton).\n    All methods use user_id (MongoDB ObjectId as string) for ownership verification.\n    Thread-safe through:\n    - Singleton pattern ensures one instance across all threads\n    - RLock for thread-safe operations\n    - PyMongo's built-in connection pooling\n    \"\"\"\n    _instance = None",
+        "peekOfCode": "class ProposalCRUD:\n    \"\"\"\n    Proposal CRUD operations with MongoDB (Sync Singleton).\n    All methods use user_id (MongoDB ObjectId as string) for ownership verification.\n    Thread-safe through singleton pattern with threading.RLock().\n    \"\"\"\n    def __init__(self):\n        \"\"\"Initialize ProposalCRUD with MongoDB collection\"\"\"\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()",
         "detail": "backend.utils.proposals",
         "documentation": {}
     },
@@ -3352,62 +4042,26 @@
         "kind": 2,
         "importPath": "backend.utils.proposals",
         "description": "backend.utils.proposals",
-        "peekOfCode": "def get_proposal_crud(collection: Collection = None) -> ProposalCRUD:\n    \"\"\"\n    Get singleton ProposalCRUD instance (thread-safe).\n    Args:\n        collection: MongoDB collection (required on first call only)\n    Returns:\n        Singleton ProposalCRUD instance\n    Usage:\n        from utils.proposals import get_proposal_crud\n        crud = get_proposal_crud(collection)",
+        "peekOfCode": "def get_proposal_crud() -> ProposalCRUD:\n    \"\"\"\n    Get or create ProposalCRUD instance (singleton pattern)\n    Returns:\n        ProposalCRUD instance\n    \"\"\"\n    global _proposal_crud\n    with _lock:\n        if _proposal_crud is None:\n            _proposal_crud = ProposalCRUD()",
         "detail": "backend.utils.proposals",
         "documentation": {}
     },
     {
-        "label": "_proposal_crud_instance",
+        "label": "_proposal_crud",
         "kind": 5,
         "importPath": "backend.utils.proposals",
         "description": "backend.utils.proposals",
-        "peekOfCode": "_proposal_crud_instance = None\n_instance_lock = threading.RLock()\ndef get_proposal_crud(collection: Collection = None) -> ProposalCRUD:\n    \"\"\"\n    Get singleton ProposalCRUD instance (thread-safe).\n    Args:\n        collection: MongoDB collection (required on first call only)\n    Returns:\n        Singleton ProposalCRUD instance\n    Usage:",
+        "peekOfCode": "_proposal_crud = None\n_lock = threading.RLock()\ndef get_proposal_crud() -> ProposalCRUD:\n    \"\"\"\n    Get or create ProposalCRUD instance (singleton pattern)\n    Returns:\n        ProposalCRUD instance\n    \"\"\"\n    global _proposal_crud\n    with _lock:",
         "detail": "backend.utils.proposals",
         "documentation": {}
     },
     {
-        "label": "_instance_lock",
+        "label": "_lock",
         "kind": 5,
         "importPath": "backend.utils.proposals",
         "description": "backend.utils.proposals",
-        "peekOfCode": "_instance_lock = threading.RLock()\ndef get_proposal_crud(collection: Collection = None) -> ProposalCRUD:\n    \"\"\"\n    Get singleton ProposalCRUD instance (thread-safe).\n    Args:\n        collection: MongoDB collection (required on first call only)\n    Returns:\n        Singleton ProposalCRUD instance\n    Usage:\n        from utils.proposals import get_proposal_crud",
+        "peekOfCode": "_lock = threading.RLock()\ndef get_proposal_crud() -> ProposalCRUD:\n    \"\"\"\n    Get or create ProposalCRUD instance (singleton pattern)\n    Returns:\n        ProposalCRUD instance\n    \"\"\"\n    global _proposal_crud\n    with _lock:\n        if _proposal_crud is None:",
         "detail": "backend.utils.proposals",
-        "documentation": {}
-    },
-    {
-        "label": "build_project_data_from_dataframe",
-        "kind": 2,
-        "importPath": "backend.main",
-        "description": "backend.main",
-        "peekOfCode": "def build_project_data_from_dataframe(\n    df: pd.DataFrame,\n    project_config: Dict[str, Any]\n) -> Dict[str, Any]:\n    \"\"\"\n    Build project data structure from DataFrame for Excel generation.\n    Args:\n        df: DataFrame with positions and wage data\n        project_config: Configuration with solicitation info, rates, etc.\n    Returns:",
-        "detail": "backend.main",
-        "documentation": {}
-    },
-    {
-        "label": "clean_value",
-        "kind": 2,
-        "importPath": "backend.test_full_pipeline",
-        "description": "backend.test_full_pipeline",
-        "peekOfCode": "def clean_value(val):\n    \"\"\"Clean NaN/inf values for JSON serialization.\"\"\"\n    if isinstance(val, float):\n        if np.isnan(val) or np.isinf(val):\n            return None\n    return val\nasync def test_full_pipeline(pdf_path: str):\n    \"\"\"\n    Run complete pipeline test.\n    Args:",
-        "detail": "backend.test_full_pipeline",
-        "documentation": {}
-    },
-    {
-        "label": "test_splitting_with_partial_years",
-        "kind": 2,
-        "importPath": "backend.test_splitting",
-        "description": "backend.test_splitting",
-        "peekOfCode": "def test_splitting_with_partial_years():\n    \"\"\"\n    Test position splitting with 8-month year.\n    Scenario:\n    - Year 1: 12 months, 1920 hours (1 FTE, no split needed)\n    - Year 2: 12 months, 1920 hours (1 FTE, no split needed)\n    - Year 3: 8 months, 2560 hours (exceeds 8-month threshold)\n    Expected FTE threshold for Year 3: (8/12) × 1920 = 1280 hours\n    Expected split: 2560 / 1280 = 2 FTEs needed\n    Expected result: 2 positions with [1280, 1280] hours in Year 3",
-        "detail": "backend.test_splitting",
-        "documentation": {}
-    },
-    {
-        "label": "test_no_split_needed",
-        "kind": 2,
-        "importPath": "backend.test_splitting",
-        "description": "backend.test_splitting",
-        "peekOfCode": "def test_no_split_needed():\n    \"\"\"\n    Test that positions within threshold are NOT split.\n    \"\"\"\n    print(\"Testing No Split Needed (8-month year with 1280 hours)\")\n    print(\"-\"*80)\n    position = {\n        'labor_category': 'Project Manager',\n        'hours_per_year': {\n            '1': 1920,  # 12 months, 1920 hours (OK)",
-        "detail": "backend.test_splitting",
         "documentation": {}
     },
     {

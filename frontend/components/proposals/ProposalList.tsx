@@ -9,6 +9,9 @@ interface ProposalListProps {
   onProposalClick: (id: string) => void;
   onDuplicate: (id: string, name: string, e: React.MouseEvent) => void;
   onDelete: (id: string, e: React.MouseEvent) => void;
+  onShare?: (id: string, name: string, e: React.MouseEvent) => void;
+  onRename?: (id: string, name: string, e: React.MouseEvent) => void;
+  showShareButton?: boolean;
   emptyMessage?: string;
   emptyAction?: React.ReactNode;
 }
@@ -19,6 +22,9 @@ export const ProposalList: React.FC<ProposalListProps> = ({
   onProposalClick,
   onDuplicate,
   onDelete,
+  onShare,
+  onRename,
+  showShareButton = false,
   emptyMessage = 'No proposals found',
   emptyAction,
 }) => {
@@ -57,6 +63,9 @@ export const ProposalList: React.FC<ProposalListProps> = ({
           onClick={onProposalClick}
           onDuplicate={onDuplicate}
           onDelete={onDelete}
+          onShare={onShare}
+          onRename={onRename}
+          showShareButton={showShareButton}
         />
       ))}
     </div>

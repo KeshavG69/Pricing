@@ -6,11 +6,15 @@ import type { Column } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
 import { AdvancedPosition, IndirectRates, EscalationRates, GridRow, BreakdownType, ContextMenuItem } from '@/types';
-import { ChevronDown, ChevronRight, Trash2, MoreVertical } from 'lucide-react';
+import { ChevronDown, ChevronRight, Trash2, MoreVertical, Plus } from 'lucide-react';
 import { ContextMenu } from '@/components/ui/ContextMenu';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ConvertToSubcontractorModal } from '@/components/pricing/ConvertToSubcontractorModal';
 import { SalarySelectionModal } from '@/components/pricing/SalarySelectionModal';
+import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { getAvailablePercentiles } from '@/lib/utils/percentileHelpers';
+import Button from '@/components/ui/Button';
+import { usePricingStore } from '@/lib/stores/pricingStore';
 
 // Calculate averaged FBLR for an advanced position using proportional hourly rates
 const calculateAveragedFBLR = (
@@ -93,10 +97,18 @@ export const PrimeLaborSection = ({
   expandedPositions,
   manualOverrides,
   onToggleExpand,
-  onCellChange,
+  onCellChange: _onCellChange, // TODO: Implement editable cells
   onDeletePosition,
   onUpdatePosition,
 }: PrimeLaborSectionProps) => {
+  // Debug: Log when component re-renders
+  console.log('[PrimeLaborSection] Re-render with', positions.length, 'positions, rates:', {
+    fringe: rates.fringe,
+    oh: rates.oh,
+    ga: rates.ga,
+    fee: rates.fee
+  });
+
   // Context menu state
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; position: AdvancedPosition; columnKey?: string } | null>(null);
 
@@ -107,6 +119,13 @@ export const PrimeLaborSection = ({
   // Salary selection modal state
   const [salaryModalOpen, setSalaryModalOpen] = useState(false);
   const [positionToEdit, setPositionToEdit] = useState<AdvancedPosition | null>(null);
+
+  // Add position modal state
+  const [addPositionModalOpen, setAddPositionModalOpen] = useState(false);
+
+  // Delete confirmation state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [positionToDelete, setPositionToDelete] = useState<AdvancedPosition | null>(null);
 
   // Handle right-click on grid rows (BEFORE useMemo to maintain hook order)
   const handleContextMenu = useCallback((e: React.MouseEvent, position: AdvancedPosition) => {
@@ -166,9 +185,9 @@ export const PrimeLaborSection = ({
         label: 'Delete Position',
         icon: <Trash2 className="w-4 h-4" />,
         onClick: () => {
-          if (confirm(`Delete position "${position.labor_category}"?`)) {
-            onDeletePosition(position.id);
-          }
+          setPositionToDelete(position);
+          setDeleteDialogOpen(true);
+          setContextMenu(null);
         },
         danger: true,
       },
@@ -226,7 +245,7 @@ export const PrimeLaborSection = ({
     });
 
     return rows;
-  }, [positions, expandedPositions]);
+  }, [positions, expandedPositions, rates, escalationRates, totalYears]);
 
   // Get cell styling for manual overrides
   const getCellClassName = (positionId: string, year: string, field: string) => {
@@ -266,10 +285,39 @@ export const PrimeLaborSection = ({
   // Generate columns dynamically
   const columns = useMemo<Column<GridRow>[]>(() => {
     const cols: Column<GridRow>[] = [
-      // Cost Element - Expandable indicator + labor category
+      // Actions column - leftmost
+      {
+        key: 'actions',
+        name: '',
+        width: 50,
+        resizable: false,
+        frozen: true,
+        renderCell: ({ row }) => {
+          // Only show actions for position rows, not breakdown rows
+          if (row.type === 'position') {
+            const pos = row.data as AdvancedPosition;
+            return (
+              <div className="flex items-center justify-center h-full">
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleContextMenu(e as any, pos);
+                  }}
+                  className="p-1 hover:bg-gray-100 rounded"
+                  title="Actions"
+                >
+                  <MoreVertical className="w-4 h-4" />
+                </button>
+              </div>
+            );
+          }
+          return null;
+        },
+      },
+      // Labour Category - Expandable indicator + labor category
       {
         key: 'cost_element',
-        name: 'Cost Element',
+        name: 'Labour Category',
         width: 250,
         resizable: true,
         frozen: true,
@@ -695,37 +743,8 @@ export const PrimeLaborSection = ({
       }
     );
 
-    // Actions column
-    cols.push({
-      key: 'actions',
-      name: 'Actions',
-      width: 80,
-      frozen: true,
-      renderCell: ({ row }) => {
-        if (row.type === 'position') {
-          const pos = row.data as AdvancedPosition;
-          return (
-            <div className="flex items-center justify-center h-full">
-              <button
-                onClick={() => {
-                  if (confirm(`Delete position "${pos.labor_category}"?`)) {
-                    onDeletePosition(row.positionId);
-                  }
-                }}
-                className="text-muted-foreground hover:text-red-600 transition-colors p-1"
-                title="Delete position"
-              >
-                <Trash2 className="w-4 h-4" />
-              </button>
-            </div>
-          );
-        }
-        return <div className="h-full bg-muted/30" />;
-      },
-    });
-
     return cols;
-  }, [totalYears, expandedPositions, manualOverrides, onToggleExpand, onDeletePosition]);
+  }, [totalYears, expandedPositions, manualOverrides, onToggleExpand, onDeletePosition, handleContextMenu, rates, escalationRates]);
 
   if (positions.length === 0) {
     return (
@@ -738,13 +757,32 @@ export const PrimeLaborSection = ({
     );
   }
 
+  // Get store methods (positions for the modal)
+  const { addPosition, positions: basicPositions } = usePricingStore();
+
+  // Handle add position - open modal
+  const handleAddPosition = useCallback(() => {
+    setAddPositionModalOpen(true);
+  }, []);
+
+  // Handle modal submit
+  const handleModalAddPosition = useCallback((positionData: any) => {
+    addPosition(positionData);
+  }, [addPosition]);
+
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between px-6">
-        <h3 className="text-base font-semibold text-foreground">Prime Labor</h3>
-        <p className="text-xs text-muted-foreground">
-          {positions.length} position{positions.length !== 1 ? 's' : ''}
-        </p>
+        <div className="flex items-center space-x-3">
+          <h3 className="text-base font-semibold text-foreground">Prime Labor</h3>
+          <p className="text-xs text-muted-foreground">
+            {positions.length} position{positions.length !== 1 ? 's' : ''}
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={handleAddPosition}>
+          <Plus className="w-4 h-4 mr-2" />
+          Add Position
+        </Button>
       </div>
 
       <div
@@ -794,6 +832,36 @@ export const PrimeLaborSection = ({
             onUpdatePosition(positionToEdit.id, updates);
           }
         }}
+      />
+
+      {/* Add Position Modal */}
+      <AddPositionModal
+        open={addPositionModalOpen}
+        onClose={() => setAddPositionModalOpen(false)}
+        positions={basicPositions}
+        totalYears={totalYears}
+        onAdd={handleModalAddPosition}
+      />
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => {
+          setDeleteDialogOpen(false);
+          setPositionToDelete(null);
+        }}
+        onConfirm={() => {
+          if (positionToDelete) {
+            onDeletePosition(positionToDelete.id);
+          }
+          setDeleteDialogOpen(false);
+          setPositionToDelete(null);
+        }}
+        title="Delete Position"
+        message={`Are you sure you want to delete position "${positionToDelete?.labor_category}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="danger"
       />
     </div>
   );

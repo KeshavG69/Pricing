@@ -72,13 +72,14 @@ export default function OverviewTab() {
     totalYears,
   } = usePricingStore();
 
-  // Calculate all costs
+  // Calculate all costs with FBLR breakdown
   const costMetrics = useMemo(() => {
-    // Prime labor total (from aggregates)
-    const primeLaborTotal = Object.values(aggregates.byYear).reduce(
-      (sum, yearData) => sum + yearData.totalAmount,
-      0
-    );
+    // Prime labor components (from aggregates - already calculated)
+    const directLaborTotal = aggregates.totalDL;
+    const fringeTotal = aggregates.totalFringe;
+    const ohTotal = aggregates.totalOH;
+    const gaTotal = aggregates.totalGA;
+    const primeLaborTotal = aggregates.totalFBLR;
 
     // Subcontractor costs
     let subcontractorTotal = 0;
@@ -110,6 +111,10 @@ export default function OverviewTab() {
     const grandTotal = primeLaborTotal + subcontractorTotal + passthroughTotal + feeTotal + odcTotal;
 
     return {
+      directLaborTotal,
+      fringeTotal,
+      ohTotal,
+      gaTotal,
       primeLaborTotal,
       subcontractorTotal,
       passthroughTotal,
@@ -242,35 +247,53 @@ export default function OverviewTab() {
         </CardHeader>
         <CardContent>
           <CostBreakdownBar
-            label="Prime Labor (Direct + Indirect)"
-            amount={costMetrics.primeLaborTotal}
-            percentage={(costMetrics.primeLaborTotal / costMetrics.grandTotal) * 100}
-            color="bg-emerald-500"
+            label="Direct Labor"
+            amount={costMetrics.directLaborTotal}
+            percentage={(costMetrics.directLaborTotal / costMetrics.grandTotal) * 100}
+            color="bg-blue-600"
+          />
+          <CostBreakdownBar
+            label="Fringe"
+            amount={costMetrics.fringeTotal}
+            percentage={(costMetrics.fringeTotal / costMetrics.grandTotal) * 100}
+            color="bg-blue-600"
+          />
+          <CostBreakdownBar
+            label="Overhead (OH)"
+            amount={costMetrics.ohTotal}
+            percentage={(costMetrics.ohTotal / costMetrics.grandTotal) * 100}
+            color="bg-blue-600"
+          />
+          <CostBreakdownBar
+            label="G&A"
+            amount={costMetrics.gaTotal}
+            percentage={(costMetrics.gaTotal / costMetrics.grandTotal) * 100}
+            color="bg-blue-600"
           />
           <CostBreakdownBar
             label="Subcontractor Labor"
             amount={costMetrics.subcontractorTotal}
             percentage={(costMetrics.subcontractorTotal / costMetrics.grandTotal) * 100}
-            color="bg-orange-500"
+            color="bg-blue-600"
           />
           <CostBreakdownBar
             label="Passthrough (S&MH + G&A on Subs)"
             amount={costMetrics.passthroughTotal}
             percentage={(costMetrics.passthroughTotal / costMetrics.grandTotal) * 100}
-            color="bg-yellow-500"
+            color="bg-blue-600"
           />
           <CostBreakdownBar
             label="Fee"
             amount={costMetrics.feeTotal}
             percentage={(costMetrics.feeTotal / costMetrics.grandTotal) * 100}
-            color="bg-purple-500"
+            color="bg-blue-600"
           />
           {costMetrics.odcTotal > 0 && (
             <CostBreakdownBar
               label="ODC & Travel"
               amount={costMetrics.odcTotal}
               percentage={(costMetrics.odcTotal / costMetrics.grandTotal) * 100}
-              color="bg-blue-500"
+              color="bg-blue-600"
             />
           )}
         </CardContent>

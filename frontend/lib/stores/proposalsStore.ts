@@ -1,12 +1,16 @@
 import { create } from 'zustand';
 import { Proposal, ProposalUpdate } from '@/types';
 import { proposalsApi } from '../api/proposals';
+import { cacheManager } from '../cache';
+import { useAuthStore } from './authStore';
+import { deduplicateRequest } from '../utils/requestDeduplication';
 
 interface ProposalsState {
   proposals: Proposal[];
   currentProposal: Proposal | null;
   isLoading: boolean;
   error: string | null;
+  lastFetchedOrgId: string | null; // Track organization changes
 
   // Pagination state
   hasMore: boolean;
@@ -15,7 +19,7 @@ interface ProposalsState {
   sortOrder: 'asc' | 'desc';
 
   // Actions
-  fetchProposals: () => Promise<void>;
+  fetchProposals: (force?: boolean) => Promise<void>;
   fetchProposal: (id: string) => Promise<void>;
   uploadDocuments: (files: File[], solicitationNumber?: string) => Promise<string>;
   updateProposal: (id: string, updates: ProposalUpdate) => Promise<void>;
@@ -39,6 +43,7 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
   currentProposal: null,
   isLoading: false,
   error: null,
+  lastFetchedOrgId: null,
 
   // Pagination state
   hasMore: true,
@@ -46,11 +51,64 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
   sortBy: 'date',
   sortOrder: 'desc',
 
-  fetchProposals: async () => {
+  fetchProposals: async (force = false) => {
     try {
+      // Get current organization ID
+      const user = useAuthStore.getState().user;
+      const orgId = user?.organization_id;
+
+      if (!orgId) {
+        console.warn('[PROPOSALS] No organization ID, skipping fetch');
+        return;
+      }
+
+      // Check if organization changed
+      const state = get();
+      if (state.lastFetchedOrgId && state.lastFetchedOrgId !== orgId) {
+        console.log(`[PROPOSALS] Organization changed: ${state.lastFetchedOrgId} -> ${orgId}`);
+        // Clear old org cache
+        cacheManager.invalidate(`proposals:list:${state.lastFetchedOrgId}`);
+        cacheManager.invalidate(`proposal:${state.lastFetchedOrgId}:*`);
+      }
+
+      // Conditional refresh pattern: Check cache first, only fetch if expired or forced
+      const cacheKey = `proposals:list:${orgId}`;
+      const cached = cacheManager.get<Proposal[]>(cacheKey);
+
+      // If cache is valid and not forced, use cached data (no fetch)
+      if (cached && !cached.isExpired && !force) {
+        console.log('[PROPOSALS] ✅ Using cached data (no fetch needed)');
+        set({
+          proposals: cached.data,
+          isLoading: false,
+          lastFetchedOrgId: orgId,
+        });
+        return;
+      }
+
+      // Cache expired or forced refresh - fetch from API
       set({ isLoading: true, error: null });
-      const proposals = await proposalsApi.list();
-      set({ proposals, isLoading: false });
+      console.log(`[PROPOSALS] Fetching fresh data... (force=${force}, expired=${cached?.isExpired})`);
+
+      // Deduplicate request to prevent multiple simultaneous calls
+      const response = await deduplicateRequest(
+        cacheKey,
+        () => proposalsApi.list()
+      );
+
+      // Handle response format: extract proposals array from metadata response
+      const freshProposals = Array.isArray(response) ? response : response.proposals;
+
+      // Update with fresh data and cache
+      set({
+        proposals: freshProposals,
+        isLoading: false,
+        lastFetchedOrgId: orgId,
+      });
+
+      // Update cache
+      cacheManager.set(cacheKey, freshProposals);
+      console.log('[PROPOSALS] Fresh data loaded and cached');
     } catch (error: any) {
       set({
         error: error.response?.data?.detail || 'Failed to fetch proposals',
@@ -62,7 +120,13 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
   fetchProposal: async (id) => {
     try {
       set({ isLoading: true, error: null });
-      const proposal = await proposalsApi.get(id);
+
+      // Deduplicate request to prevent multiple simultaneous calls for same proposal
+      const proposal = await deduplicateRequest(
+        `proposal:${id}`,
+        () => proposalsApi.get(id)
+      );
+
       set({ currentProposal: proposal, isLoading: false });
     } catch (error: any) {
       set({
@@ -76,6 +140,13 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       const response = await proposalsApi.upload(files, solicitationNumber);
+
+      // Invalidate proposals list cache (new proposal added)
+      const user = useAuthStore.getState().user;
+      if (user?.organization_id) {
+        cacheManager.invalidate(`proposals:list:${user.organization_id}`);
+      }
+
       set({ isLoading: false });
       return response.proposal_id;
     } catch (error: any) {
@@ -91,6 +162,13 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       const updated = await proposalsApi.update(id, updates);
+
+      // Invalidate cache (proposal updated)
+      const user = useAuthStore.getState().user;
+      if (user?.organization_id) {
+        cacheManager.invalidate(`proposal:${id}`);
+        cacheManager.invalidate(`proposals:list:${user.organization_id}`);
+      }
 
       // Update in list
       set((state) => ({
@@ -112,6 +190,13 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
       await proposalsApi.delete(id);
+
+      // Invalidate cache (proposal deleted)
+      const user = useAuthStore.getState().user;
+      if (user?.organization_id) {
+        cacheManager.invalidate(`proposal:${id}`);
+        cacheManager.invalidate(`proposals:list:${user.organization_id}`);
+      }
 
       // Remove from list
       set((state) => ({
@@ -203,19 +288,33 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
       const skip = append && !sortChanged ? currentState.currentPage * 20 : 0;
       const limit = 20;
 
-      const newProposals = await proposalsApi.list(
+      const response = await proposalsApi.list(
         skip,
         limit,
         currentState.sortBy,
         currentState.sortOrder
       );
 
+      // Handle both response formats: object with metadata (skip=0) or plain array (skip>0)
+      let proposalsArray: Proposal[];
+      let hasMoreData: boolean;
+
+      if (skip === 0 && !Array.isArray(response) && typeof response === 'object' && 'proposals' in response) {
+        // New format with metadata (skip=0)
+        proposalsArray = response.proposals as Proposal[];
+        hasMoreData = response.hasMore as boolean;
+      } else {
+        // Old format (plain array) for backwards compatibility (skip>0)
+        proposalsArray = Array.isArray(response) ? response : [];
+        hasMoreData = proposalsArray.length === limit;
+      }
+
       set((state) => ({
         proposals:
           append && !sortChanged
-            ? [...state.proposals, ...newProposals]
-            : newProposals,
-        hasMore: newProposals.length === limit,
+            ? [...state.proposals, ...proposalsArray]
+            : proposalsArray,
+        hasMore: hasMoreData,
         currentPage: sortChanged ? 1 : state.currentPage + 1,
         isLoading: false,
       }));

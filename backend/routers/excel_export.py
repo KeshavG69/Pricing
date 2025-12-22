@@ -17,9 +17,8 @@ from io import BytesIO
 from datetime import datetime
 
 from client.jd_parser import parse_documents_to_dataframe
-from utils.pipeline import process_dataframe_with_agents
+from utils.pipeline import process_dataframe_with_agents, build_project_data_from_dataframe
 from client.excel_generator import ExcelGenerator
-from main import build_project_data_from_dataframe
 
 router = APIRouter()
 
