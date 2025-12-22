@@ -135,11 +135,6 @@ export const ODCSection = ({
                       Escalate
                     </span>
                   )}
-                  {row.applyGAAdder && (
-                    <span className="px-2 py-0.5 bg-green-50 text-green-600 rounded border border-green-100">
-                      +G&amp;A
-                    </span>
-                  )}
                 </div>
               </div>
             </div>

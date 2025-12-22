@@ -4,12 +4,14 @@ interface PricingTabsProps {
   activeTab: 'overview' | 'main' | 'subcontractors' | 'rate-table';
   onTabChange: (tab: 'overview' | 'main' | 'subcontractors' | 'rate-table') => void;
   hasSubcontractors: boolean;
+  mode?: 'initial' | 'advanced'; // initial = only Overview + Pricing Workspace, advanced = all tabs
 }
 
 export const PricingTabs = ({
   activeTab,
   onTabChange,
   hasSubcontractors,
+  mode = 'advanced', // default to advanced for backwards compatibility
 }: PricingTabsProps) => {
   const tabs = [
     {
@@ -56,7 +58,7 @@ export const PricingTabs = ({
           />
         </svg>
       ),
-      hidden: !hasSubcontractors,
+      hidden: mode === 'initial' || !hasSubcontractors, // Hide in initial mode or when no subcontractors
     },
     {
       id: 'rate-table' as const,
@@ -72,7 +74,7 @@ export const PricingTabs = ({
           />
         </svg>
       ),
-      hidden: !hasSubcontractors,
+      hidden: mode === 'initial' || !hasSubcontractors, // Hide in initial mode or when no subcontractors
     },
   ];
 

@@ -127,7 +127,10 @@ export default function OverviewTab() {
   // Calculate year-by-year breakdown
   const yearBreakdown = useMemo(() => {
     const breakdown: Record<string, {
-      primeLabor: number;
+      directLabor: number;
+      fringe: number;
+      oh: number;
+      ga: number;
       subcontractor: number;
       passthrough: number;
       fee: number;
@@ -138,7 +141,10 @@ export default function OverviewTab() {
     // Initialize years
     for (let i = 1; i <= totalYears; i++) {
       breakdown[i] = {
-        primeLabor: 0,
+        directLabor: 0,
+        fringe: 0,
+        oh: 0,
+        ga: 0,
         subcontractor: 0,
         passthrough: 0,
         fee: 0,
@@ -147,10 +153,13 @@ export default function OverviewTab() {
       };
     }
 
-    // Prime labor by year
+    // Prime labor components by year (DL, Fringe, OH, G&A)
     Object.entries(aggregates.byYear).forEach(([year, yearData]) => {
       if (breakdown[year]) {
-        breakdown[year].primeLabor = yearData.totalAmount;
+        breakdown[year].directLabor = yearData.dl;
+        breakdown[year].fringe = yearData.fringe;
+        breakdown[year].oh = yearData.oh;
+        breakdown[year].ga = yearData.ga;
       }
     });
 
@@ -173,8 +182,10 @@ export default function OverviewTab() {
 
     // Fee by year
     Object.keys(breakdown).forEach((year) => {
-      const primeFee = breakdown[year].primeLabor * rates.fee;
-      const subFee = breakdown[year].subcontractor * (rates.sub_fee || 0);
+      const yearData = breakdown[year];
+      const primeLabor = yearData.directLabor + yearData.fringe + yearData.oh + yearData.ga;
+      const primeFee = primeLabor * rates.fee;
+      const subFee = yearData.subcontractor * (rates.sub_fee || 0);
       breakdown[year].fee = primeFee + subFee;
     });
 
@@ -190,7 +201,8 @@ export default function OverviewTab() {
     // Calculate totals
     Object.keys(breakdown).forEach((year) => {
       const data = breakdown[year];
-      data.total = data.primeLabor + data.subcontractor + data.passthrough + data.fee + data.odc;
+      const primeLabor = data.directLabor + data.fringe + data.oh + data.ga;
+      data.total = primeLabor + data.subcontractor + data.passthrough + data.fee + data.odc;
     });
 
     return breakdown;
@@ -234,9 +246,9 @@ export default function OverviewTab() {
           subtitle={`${subcontractors.length} subcontractor${subcontractors.length !== 1 ? 's' : ''}`}
         />
         <MetricCard
-          title="Fees & Markups"
-          value={formatCurrency(costMetrics.feeTotal + costMetrics.passthroughTotal)}
-          subtitle={`${((( costMetrics.feeTotal + costMetrics.passthroughTotal) / costMetrics.grandTotal) * 100).toFixed(1)}% of total`}
+          title="Fee"
+          value={formatCurrency(costMetrics.feeTotal)}
+          subtitle={`${((costMetrics.feeTotal / costMetrics.grandTotal) * 100).toFixed(1)}% of total`}
         />
       </div>
 
@@ -310,7 +322,10 @@ export default function OverviewTab() {
               <thead>
                 <tr className="border-b border-border">
                   <th className="text-left py-3 px-4 text-sm font-semibold text-foreground">Year</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">Prime Labor</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">Direct Labor</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">Fringe</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">OH</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">G&A</th>
                   <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">Subcontractors</th>
                   <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">Passthrough</th>
                   <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">Fee</th>
@@ -325,7 +340,16 @@ export default function OverviewTab() {
                   <tr key={year} className="border-b border-border hover:bg-muted/20">
                     <td className="py-3 px-4 text-sm font-medium text-foreground">Year {year}</td>
                     <td className="py-3 px-4 text-sm text-right text-muted-foreground">
-                      {formatCurrency(data.primeLabor)}
+                      {formatCurrency(data.directLabor)}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-right text-muted-foreground">
+                      {formatCurrency(data.fringe)}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-right text-muted-foreground">
+                      {formatCurrency(data.oh)}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-right text-muted-foreground">
+                      {formatCurrency(data.ga)}
                     </td>
                     <td className="py-3 px-4 text-sm text-right text-muted-foreground">
                       {formatCurrency(data.subcontractor)}
@@ -350,7 +374,16 @@ export default function OverviewTab() {
                 <tr className="bg-muted/50 font-semibold">
                   <td className="py-3 px-4 text-sm text-foreground">Total</td>
                   <td className="py-3 px-4 text-sm text-right text-foreground">
-                    {formatCurrency(costMetrics.primeLaborTotal)}
+                    {formatCurrency(costMetrics.directLaborTotal)}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-right text-foreground">
+                    {formatCurrency(costMetrics.fringeTotal)}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-right text-foreground">
+                    {formatCurrency(costMetrics.ohTotal)}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-right text-foreground">
+                    {formatCurrency(costMetrics.gaTotal)}
                   </td>
                   <td className="py-3 px-4 text-sm text-right text-foreground">
                     {formatCurrency(costMetrics.subcontractorTotal)}
@@ -441,12 +474,6 @@ export default function OverviewTab() {
                   <span className="text-sm text-muted-foreground">G&A Passthrough:</span>
                   <span className="text-sm font-medium text-foreground">
                     {formatPercentage(rates.ga_passthrough || 0)}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center py-2 px-3 bg-muted/30 rounded">
-                  <span className="text-sm text-muted-foreground">G&A Adder (ODC):</span>
-                  <span className="text-sm font-medium text-foreground">
-                    {formatPercentage(rates.ga_adder || 0)}
                   </span>
                 </div>
               </div>

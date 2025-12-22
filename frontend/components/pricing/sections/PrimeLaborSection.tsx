@@ -87,6 +87,7 @@ interface PrimeLaborSectionProps {
   onCellChange: (positionId: string, year: string, field: string, value: number) => void;
   onDeletePosition: (positionId: string) => void;
   onUpdatePosition: (id: string, updates: Partial<AdvancedPosition>) => void;
+  isAdvancedMode?: boolean; // Controls whether Convert to Subcontractor is available
 }
 
 export const PrimeLaborSection = ({
@@ -100,6 +101,7 @@ export const PrimeLaborSection = ({
   onCellChange: _onCellChange, // TODO: Implement editable cells
   onDeletePosition,
   onUpdatePosition,
+  isAdvancedMode = true, // Default to true for backwards compatibility
 }: PrimeLaborSectionProps) => {
   // Debug: Log when component re-renders
   console.log('[PrimeLaborSection] Re-render with', positions.length, 'positions, rates:', {
@@ -172,27 +174,34 @@ export const PrimeLaborSection = ({
     }
 
     // Default context menu for other columns
-    return [
-      {
+    const items: ContextMenuItem[] = [];
+
+    // Only show "Convert to Subcontractor" in advanced mode
+    if (isAdvancedMode) {
+      items.push({
         label: 'Convert to Subcontractor',
         icon: <MoreVertical className="w-4 h-4" />,
         onClick: () => {
           setPositionToConvert(position);
           setConversionModalOpen(true);
         },
+      });
+    }
+
+    // Always show "Delete Position"
+    items.push({
+      label: 'Delete Position',
+      icon: <Trash2 className="w-4 h-4" />,
+      onClick: () => {
+        setPositionToDelete(position);
+        setDeleteDialogOpen(true);
+        setContextMenu(null);
       },
-      {
-        label: 'Delete Position',
-        icon: <Trash2 className="w-4 h-4" />,
-        onClick: () => {
-          setPositionToDelete(position);
-          setDeleteDialogOpen(true);
-          setContextMenu(null);
-        },
-        danger: true,
-      },
-    ];
-  }, [onDeletePosition, onUpdatePosition]);
+      danger: true,
+    });
+
+    return items;
+  }, [onDeletePosition, onUpdatePosition, isAdvancedMode]);
 
   // Transform positions to grid rows with breakdown rows
   const gridRows = useMemo<GridRow[]>(() => {

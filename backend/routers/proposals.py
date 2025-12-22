@@ -109,7 +109,7 @@ async def process_proposal_documents(
             "smh": 0.065,
             "sub_fee": 0.05,
             "ga_passthrough": 0.025,
-            "ga_adder": 0.0243
+            "ga_adder": 0.0
         }
 
         if organization_id:
