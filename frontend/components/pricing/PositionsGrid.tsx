@@ -8,10 +8,12 @@ import { usePricingStore } from '@/lib/stores/pricingStore';
 import { SpreadsheetPosition } from '@/types';
 import { Trash2, MoreVertical } from 'lucide-react';
 import { ContextMenu, ContextMenuItem } from '@/components/ui/ContextMenu';
+import { SalaryContextMenu } from './SalaryContextMenu';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ConvertToSubcontractorModal } from './ConvertToSubcontractorModal';
 import { SalarySelectionModal } from './SalarySelectionModal';
 import { getAvailablePercentiles } from '@/lib/utils/percentileHelpers';
+import { getEffectiveSalary, getSalaryDisplayLabel, isMultiSelectMode } from '@/lib/utils/salaryHelpers';
 
 export const PositionsGrid = () => {
   const { positions, totalYears, monthsPerYear, rates, escalationRates, updatePosition, deletePosition, advancedMode } = usePricingStore();
@@ -54,8 +56,8 @@ export const PositionsGrid = () => {
 
   // Calculate averaged FBLR for a position across all contract years with escalation
   const calculateFBLR = (position: SpreadsheetPosition) => {
-    // Prioritize custom_salary, then percentile wage, then selected_wage, then 0
-    const baseWage = position.custom_salary || position[`wage_${position.percentile}`] || position.selected_wage || 0;
+    // Get effective salary (supports multi-select averaging)
+    const baseWage = getEffectiveSalary(position);
 
     if (baseWage === 0 || totalYears === 0) {
       return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
@@ -271,9 +273,10 @@ export const PositionsGrid = () => {
         width: 200,
         resizable: true,
         renderCell: ({ row }) => {
-          // Display custom salary if set, otherwise show percentile wage
-          const displaySalary = row.custom_salary || row[`wage_${row.percentile}`] || row.selected_wage || 0;
-          const isCustom = !!row.custom_salary;
+          // Get effective salary and display info
+          const wage = getEffectiveSalary(row);
+          const label = getSalaryDisplayLabel(row);
+          const isMulti = isMultiSelectMode(row);
 
           return (
             <div
@@ -294,11 +297,24 @@ export const PositionsGrid = () => {
               }}
             >
               <div className="flex items-center gap-1">
-                <span className={`font-mono text-sm ${isCustom ? 'text-blue-600 dark:text-blue-400 font-semibold' : ''}`}>
-                  ${displaySalary.toLocaleString()}
-                </span>
-                {isCustom && (
-                  <span className="text-[10px] text-blue-600 dark:text-blue-400">✎</span>
+                {isMulti ? (
+                  // Multi-select mode - show label and averaged amount
+                  <>
+                    <span className="text-xs text-purple-600 dark:text-purple-400 font-semibold mr-1">{label}</span>
+                    <span className="font-mono text-sm text-purple-600 dark:text-purple-400 font-semibold">
+                      ${wage.toLocaleString()}
+                    </span>
+                  </>
+                ) : (
+                  // Single-select mode
+                  <>
+                    <span className={`font-mono text-sm ${label === 'Custom' ? 'text-blue-600 dark:text-blue-400 font-semibold' : ''}`}>
+                      ${wage.toLocaleString()}
+                    </span>
+                    {label === 'Custom' && (
+                      <span className="text-[10px] text-blue-600 dark:text-blue-400">✎</span>
+                    )}
+                  </>
                 )}
               </div>
             </div>
@@ -476,8 +492,24 @@ export const PositionsGrid = () => {
         />
       </div>
 
-      {/* Context Menu */}
-      {contextMenu && (
+      {/* Context Menu - Use SalaryContextMenu for salary column */}
+      {contextMenu && contextMenu.columnKey === 'salary' && (
+        <SalaryContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          position={contextMenu.position}
+          onClose={() => setContextMenu(null)}
+          onApply={(updates) => {
+            updatePosition(contextMenu.position.id, updates);
+          }}
+          onOpenModal={() => {
+            setPositionToEdit(contextMenu.position);
+            setSalaryModalOpen(true);
+          }}
+        />
+      )}
+      {/* Regular Context Menu for other columns */}
+      {contextMenu && contextMenu.columnKey !== 'salary' && (
         <ContextMenu
           x={contextMenu.x}
           y={contextMenu.y}

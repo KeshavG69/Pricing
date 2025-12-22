@@ -8,11 +8,13 @@ import styles from './PrimeLaborSection.module.css';
 import { AdvancedPosition, IndirectRates, EscalationRates, GridRow, BreakdownType, ContextMenuItem } from '@/types';
 import { ChevronDown, ChevronRight, Trash2, MoreVertical, Plus } from 'lucide-react';
 import { ContextMenu } from '@/components/ui/ContextMenu';
+import { SalaryContextMenu } from '@/components/pricing/SalaryContextMenu';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ConvertToSubcontractorModal } from '@/components/pricing/ConvertToSubcontractorModal';
 import { SalarySelectionModal } from '@/components/pricing/SalarySelectionModal';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { getAvailablePercentiles } from '@/lib/utils/percentileHelpers';
+import { getEffectiveSalary, getSalaryDisplayLabel, getSalarySelectionCount, isMultiSelectMode } from '@/lib/utils/salaryHelpers';
 import Button from '@/components/ui/Button';
 import { usePricingStore } from '@/lib/stores/pricingStore';
 
@@ -23,8 +25,8 @@ const calculateAveragedFBLR = (
   escalationRates: EscalationRates,
   totalYears: number
 ) => {
-  // Prioritize custom_salary, then percentile wage
-  const baseWage = position.custom_salary || position[`wage_${position.percentile}`] || 0;
+  // Get effective salary (supports multi-select averaging)
+  const baseWage = getEffectiveSalary(position);
 
   if (baseWage === 0 || totalYears === 0) {
     return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
@@ -413,8 +415,9 @@ export const PrimeLaborSection = ({
         renderCell: ({ row }) => {
           if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
-            const wage = pos.custom_salary || pos[`wage_${pos.percentile}`] || 0;
-            const isCustom = !!pos.custom_salary;
+            const wage = getEffectiveSalary(pos);
+            const label = getSalaryDisplayLabel(pos);
+            const isMulti = isMultiSelectMode(pos);
             return (
               <div
                 className="flex items-center h-full px-2 cursor-pointer hover:bg-muted/50 transition-colors"
@@ -433,7 +436,15 @@ export const PrimeLaborSection = ({
                   });
                 }}
               >
-                {isCustom ? (
+                {isMulti ? (
+                  // Multi-select - show label + averaged amount
+                  <>
+                    <span className="text-purple-600 dark:text-purple-400 font-semibold">{label}</span>
+                    <span className="ml-2 text-xs px-2 py-0.5 rounded text-purple-600 bg-purple-600/10">
+                      ${wage.toLocaleString()}
+                    </span>
+                  </>
+                ) : label === 'Custom' ? (
                   // Custom salary - only show amount with icon
                   <span className="text-blue-600 dark:text-blue-400 font-semibold">
                     ${wage.toLocaleString()} ✎
@@ -441,7 +452,7 @@ export const PrimeLaborSection = ({
                 ) : (
                   // BLS percentile - show percentile + wage
                   <>
-                    <span className="font-semibold text-foreground">{pos.percentile}</span>
+                    <span className="font-semibold text-foreground">{label}</span>
                     <span className="ml-2 text-xs px-2 py-0.5 rounded text-primary bg-primary/10">
                       ${wage.toLocaleString()}
                     </span>
@@ -808,8 +819,24 @@ export const PrimeLaborSection = ({
         />
       </div>
 
-      {/* Context Menu */}
-      {contextMenu && (
+      {/* Context Menu - Use SalaryContextMenu for salary/percentile column */}
+      {contextMenu && contextMenu.columnKey === 'percentile' && (
+        <SalaryContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          position={contextMenu.position}
+          onClose={() => setContextMenu(null)}
+          onApply={(updates) => {
+            onUpdatePosition(contextMenu.position.id, updates);
+          }}
+          onOpenModal={() => {
+            setPositionToEdit(contextMenu.position);
+            setSalaryModalOpen(true);
+          }}
+        />
+      )}
+      {/* Regular Context Menu for other columns */}
+      {contextMenu && contextMenu.columnKey !== 'percentile' && (
         <ContextMenu
           x={contextMenu.x}
           y={contextMenu.y}

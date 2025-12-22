@@ -239,7 +239,13 @@ export interface SpreadsheetPosition {
   wage_75th?: number;
   wage_90th?: number;
   selected_wage?: number; // The actual wage selected based on experience/percentile
-  custom_salary?: number; // Manually entered salary (overrides percentile wages)
+  custom_salary?: number; // Manually entered salary (overrides percentile wages) - DEPRECATED, use selected_salaries
+  // Multi-salary selection support
+  selected_salaries?: number[]; // Array of selected salary amounts (averaged for calculations)
+  salary_sources?: {
+    percentiles: ('10th' | '25th' | '50th' | '75th' | '90th')[]; // Selected percentiles
+    custom_amounts: number[]; // Custom salary amounts
+  };
   hours_per_year: Record<string, number>; // {"1": 1880, "2": 1880, ...}
   standard_fte_hours?: number; // Full-time equivalent hours (e.g., 1880, 1920, 2080)
   // Calculated fields (from backend)
@@ -311,7 +317,13 @@ export interface AdvancedPosition {
   wage_50th?: number;
   wage_75th?: number;
   wage_90th?: number;
-  custom_salary?: number; // Manually entered salary (overrides percentile wages)
+  custom_salary?: number; // Manually entered salary (overrides percentile wages) - DEPRECATED, use selected_salaries
+  // Multi-salary selection support
+  selected_salaries?: number[]; // Array of selected salary amounts (averaged for calculations)
+  salary_sources?: {
+    percentiles: ('10th' | '25th' | '50th' | '75th' | '90th')[]; // Selected percentiles
+    custom_amounts: number[]; // Custom salary amounts
+  };
 
   // Per-year breakdown
   breakdown: {
