@@ -228,6 +228,7 @@ export interface EscalationRates {
 export interface SpreadsheetPosition {
   id: string; // Frontend-generated ID
   labor_category: string;
+  description?: string; // Job description extracted from document
   experience?: number; // Years of experience
   location?: string; // Job location
   soc_code?: string;
@@ -307,6 +308,7 @@ export interface YearBreakdown {
 export interface AdvancedPosition {
   id: string;
   labor_category: string;
+  description?: string; // Job description extracted from document
   experience?: number;
   location?: string;
   soc_code?: string;
@@ -480,4 +482,49 @@ export interface UploadResponse {
   proposal_id: string;
   status: string;
   message: string;
+}
+
+// SOC (Standard Occupational Classification) types
+export interface SOCSuggestion {
+  soc_code: string;
+  soc_title: string;
+  similarity_score?: number;
+  is_best_match?: boolean;
+}
+
+export interface SOCSearchAIRequest {
+  labor_category: string;
+  description?: string;
+  experience?: number;
+  location?: string;
+  top_k?: number;
+}
+
+export interface SOCSearchRequest {
+  query: string;
+  limit?: number;
+}
+
+export interface SOCAllResponse {
+  status: string;
+  total: number;
+  skip: number;
+  limit: number;
+  has_more: boolean;
+  occupations: SOCSuggestion[];
+}
+
+export interface WageRefreshResponse {
+  status: string;
+  wage_data: {
+    soc_code: string;
+    soc_title: string;
+    wage_10th?: number;
+    wage_25th?: number;
+    wage_50th?: number;
+    wage_75th?: number;
+    wage_90th?: number;
+    selected_wage?: number;
+    percentile?: string;
+  };
 }

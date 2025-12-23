@@ -464,6 +464,46 @@
         "documentation": {}
     },
     {
+        "label": "Query",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "status",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
         "label": "CORSMiddleware",
         "importPath": "fastapi.middleware.cors",
         "description": "fastapi.middleware.cors",
@@ -509,6 +549,14 @@
         "description": "fastapi.responses",
         "isExtraImport": true,
         "detail": "fastapi.responses",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
         "documentation": {}
     },
     {
@@ -617,6 +665,14 @@
     },
     {
         "label": "workspace",
+        "importPath": "routers",
+        "description": "routers",
+        "isExtraImport": true,
+        "detail": "routers",
+        "documentation": {}
+    },
+    {
+        "label": "soc",
         "importPath": "routers",
         "description": "routers",
         "isExtraImport": true,
@@ -1098,6 +1154,30 @@
         "documentation": {}
     },
     {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Dict",
         "importPath": "typing",
         "description": "typing",
@@ -1524,6 +1604,14 @@
         "documentation": {}
     },
     {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
         "label": "ASCENDING",
         "importPath": "pymongo",
         "description": "pymongo",
@@ -1545,6 +1633,14 @@
         "description": "pymongo",
         "isExtraImport": true,
         "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
         "documentation": {}
     },
     {
@@ -1861,6 +1957,22 @@
     },
     {
         "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
         "importPath": "pydantic",
         "description": "pydantic",
         "isExtraImport": true,
@@ -2322,6 +2434,14 @@
         "documentation": {}
     },
     {
+        "label": "get_current_user",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
         "label": "tempfile",
         "kind": 6,
         "isExtraImport": true,
@@ -2532,6 +2652,55 @@
         "documentation": {}
     },
     {
+        "label": "re",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "re",
+        "description": "re",
+        "detail": "re",
+        "documentation": {}
+    },
+    {
+        "label": "lru_cache",
+        "importPath": "functools",
+        "description": "functools",
+        "isExtraImport": true,
+        "detail": "functools",
+        "documentation": {}
+    },
+    {
+        "label": "get_soc_vector_search_client",
+        "importPath": "client.soc_vector_search",
+        "description": "client.soc_vector_search",
+        "isExtraImport": true,
+        "detail": "client.soc_vector_search",
+        "documentation": {}
+    },
+    {
+        "label": "get_soc_vector_search_client",
+        "importPath": "client.soc_vector_search",
+        "description": "client.soc_vector_search",
+        "isExtraImport": true,
+        "detail": "client.soc_vector_search",
+        "documentation": {}
+    },
+    {
+        "label": "get_oews_mongo_client",
+        "importPath": "client.oews_mongodb",
+        "description": "client.oews_mongodb",
+        "isExtraImport": true,
+        "detail": "client.oews_mongodb",
+        "documentation": {}
+    },
+    {
+        "label": "get_oews_mongo_client",
+        "importPath": "client.oews_mongodb",
+        "description": "client.oews_mongodb",
+        "isExtraImport": true,
+        "detail": "client.oews_mongodb",
+        "documentation": {}
+    },
+    {
         "label": "Database",
         "importPath": "pymongo.database",
         "description": "pymongo.database",
@@ -2557,22 +2726,6 @@
         "documentation": {}
     },
     {
-        "label": "get_soc_vector_search_client",
-        "importPath": "client.soc_vector_search",
-        "description": "client.soc_vector_search",
-        "isExtraImport": true,
-        "detail": "client.soc_vector_search",
-        "documentation": {}
-    },
-    {
-        "label": "get_oews_mongo_client",
-        "importPath": "client.oews_mongodb",
-        "description": "client.oews_mongodb",
-        "isExtraImport": true,
-        "detail": "client.oews_mongodb",
-        "documentation": {}
-    },
-    {
         "label": "secrets",
         "kind": 6,
         "isExtraImport": true,
@@ -2587,15 +2740,6 @@
         "description": "client.email_service",
         "isExtraImport": true,
         "detail": "client.email_service",
-        "documentation": {}
-    },
-    {
-        "label": "re",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "re",
-        "description": "re",
-        "detail": "re",
         "documentation": {}
     },
     {
@@ -3705,6 +3849,78 @@
         "documentation": {}
     },
     {
+        "label": "SOCSearchAIRequest",
+        "kind": 6,
+        "importPath": "backend.routers.soc",
+        "description": "backend.routers.soc",
+        "peekOfCode": "class SOCSearchAIRequest(BaseModel):\n    \"\"\"Request model for AI-powered SOC code search (FAISS).\"\"\"\n    labor_category: str = Field(..., description=\"Job title or labor category to search for\")\n    description: Optional[str] = Field(None, description=\"Job description for better matching accuracy\")\n    experience: Optional[int] = Field(None, description=\"Years of experience (not currently used in search)\")\n    location: Optional[str] = Field(None, description=\"Location (not currently used in search)\")\n    top_k: int = Field(5, ge=1, le=20, description=\"Number of top matches to return (1-20)\")\nclass SOCSearchRequest(BaseModel):\n    \"\"\"Request model for MongoDB hybrid search (text + regex).\"\"\"\n    query: str = Field(..., description=\"Search query for SOC code or occupation name\")",
+        "detail": "backend.routers.soc",
+        "documentation": {}
+    },
+    {
+        "label": "SOCSearchRequest",
+        "kind": 6,
+        "importPath": "backend.routers.soc",
+        "description": "backend.routers.soc",
+        "peekOfCode": "class SOCSearchRequest(BaseModel):\n    \"\"\"Request model for MongoDB hybrid search (text + regex).\"\"\"\n    query: str = Field(..., description=\"Search query for SOC code or occupation name\")\n    limit: int = Field(50, ge=1, le=100, description=\"Maximum number of results to return\")\ndef format_soc_code(occupation_code: str) -> str:\n    \"\"\"\n    Format occupation code from 6-digit to XX-XXXX format.\n    Args:\n        occupation_code: 6-digit code like \"151252\"\n    Returns:",
+        "detail": "backend.routers.soc",
+        "documentation": {}
+    },
+    {
+        "label": "format_soc_code",
+        "kind": 2,
+        "importPath": "backend.routers.soc",
+        "description": "backend.routers.soc",
+        "peekOfCode": "def format_soc_code(occupation_code: str) -> str:\n    \"\"\"\n    Format occupation code from 6-digit to XX-XXXX format.\n    Args:\n        occupation_code: 6-digit code like \"151252\"\n    Returns:\n        Formatted code like \"15-1252\"\n    \"\"\"\n    if len(occupation_code) == 6:\n        return f\"{occupation_code[:2]}-{occupation_code[2:]}\"",
+        "detail": "backend.routers.soc",
+        "documentation": {}
+    },
+    {
+        "label": "normalize_soc_query_for_display",
+        "kind": 2,
+        "importPath": "backend.routers.soc",
+        "description": "backend.routers.soc",
+        "peekOfCode": "def normalize_soc_query_for_display(query: str) -> str:\n    \"\"\"\n    Normalize SOC code query for display (XX-XXXX format).\n    Args:\n        query: Raw query string like \"151252\", \"15-1252\", or \"15\"\n    Returns:\n        Normalized query with hyphen for display\n    \"\"\"\n    # Remove any existing hyphens\n    clean = query.replace('-', '')",
+        "detail": "backend.routers.soc",
+        "documentation": {}
+    },
+    {
+        "label": "normalize_soc_query_for_mongo",
+        "kind": 2,
+        "importPath": "backend.routers.soc",
+        "description": "backend.routers.soc",
+        "peekOfCode": "def normalize_soc_query_for_mongo(query: str) -> str:\n    \"\"\"\n    Normalize SOC code query for MongoDB search (6 digits, no hyphen).\n    Args:\n        query: Raw query string like \"15-1252\", \"151252\", or \"15\"\n    Returns:\n        Normalized query without hyphen for MongoDB\n    \"\"\"\n    # Remove hyphens for MongoDB query\n    return query.replace('-', '')",
+        "detail": "backend.routers.soc",
+        "documentation": {}
+    },
+    {
+        "label": "is_soc_code_pattern",
+        "kind": 2,
+        "importPath": "backend.routers.soc",
+        "description": "backend.routers.soc",
+        "peekOfCode": "def is_soc_code_pattern(query: str) -> bool:\n    \"\"\"\n    Detect if query matches SOC code pattern (cached for performance).\n    Pattern: 2 digits, optional hyphen, 0-4 digits\n    Examples: \"15\", \"15-\", \"15-1\", \"15-1252\", \"151\", \"151252\"\n    Args:\n        query: Query string to check\n    Returns:\n        True if query looks like SOC code, False otherwise\n    \"\"\"",
+        "detail": "backend.routers.soc",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.routers.soc",
+        "description": "backend.routers.soc",
+        "peekOfCode": "router = APIRouter(prefix=\"/soc\", tags=[\"soc\"])\n# ============================================================================\n# IN-MEMORY CACHE for all occupations (static data, loaded once)\n# ============================================================================\n_all_occupations_cache: Optional[List[Dict]] = None\n_cache_timestamp: Optional[float] = None\nCACHE_TTL = 3600  # 1 hour (occupations rarely change)\nclass SOCSearchAIRequest(BaseModel):\n    \"\"\"Request model for AI-powered SOC code search (FAISS).\"\"\"\n    labor_category: str = Field(..., description=\"Job title or labor category to search for\")",
+        "detail": "backend.routers.soc",
+        "documentation": {}
+    },
+    {
+        "label": "CACHE_TTL",
+        "kind": 5,
+        "importPath": "backend.routers.soc",
+        "description": "backend.routers.soc",
+        "peekOfCode": "CACHE_TTL = 3600  # 1 hour (occupations rarely change)\nclass SOCSearchAIRequest(BaseModel):\n    \"\"\"Request model for AI-powered SOC code search (FAISS).\"\"\"\n    labor_category: str = Field(..., description=\"Job title or labor category to search for\")\n    description: Optional[str] = Field(None, description=\"Job description for better matching accuracy\")\n    experience: Optional[int] = Field(None, description=\"Years of experience (not currently used in search)\")\n    location: Optional[str] = Field(None, description=\"Location (not currently used in search)\")\n    top_k: int = Field(5, ge=1, le=20, description=\"Number of top matches to return (1-20)\")\nclass SOCSearchRequest(BaseModel):\n    \"\"\"Request model for MongoDB hybrid search (text + regex).\"\"\"",
+        "detail": "backend.routers.soc",
+        "documentation": {}
+    },
+    {
         "label": "SwitchOrganizationRequest",
         "kind": 6,
         "importPath": "backend.routers.workspace",
@@ -3756,6 +3972,33 @@
         "description": "backend.scripts.create_indexes",
         "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef safe_create_index(collection, keys, name, **kwargs):\n    \"\"\"Create index with error handling for existing indexes.\"\"\"\n    try:\n        collection.create_index(keys, name=name, **kwargs)\n        return True\n    except Exception as e:\n        error_msg = str(e).lower()\n        if \"already exists\" in error_msg or \"index already\" in error_msg:\n            return False  # Index already exists",
         "detail": "backend.scripts.create_indexes",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_connection",
+        "kind": 2,
+        "importPath": "backend.scripts.create_soc_indexes",
+        "description": "backend.scripts.create_soc_indexes",
+        "peekOfCode": "def get_mongodb_connection():\n    \"\"\"Get synchronous MongoDB connection for this script.\"\"\"\n    client = MongoClient(\n        settings.MONGODB_URL,\n        serverSelectionTimeoutMS=20000\n    )\n    # Test connection\n    client.admin.command(\"ping\")\n    return client[settings.MONGODB_DATABASE]\ndef create_soc_indexes():",
+        "detail": "backend.scripts.create_soc_indexes",
+        "documentation": {}
+    },
+    {
+        "label": "create_soc_indexes",
+        "kind": 2,
+        "importPath": "backend.scripts.create_soc_indexes",
+        "description": "backend.scripts.create_soc_indexes",
+        "peekOfCode": "def create_soc_indexes():\n    \"\"\"Create indexes for occupations collection.\"\"\"\n    print(\"\\n\" + \"=\"*70)\n    print(\"Creating MongoDB Indexes for SOC Occupations Collection\")\n    print(\"=\"*70 + \"\\n\")\n    try:\n        db = get_mongodb_connection()\n        occupations = db[\"occupations\"]\n        # Get collection stats\n        total_count = occupations.count_documents({})",
+        "detail": "backend.scripts.create_soc_indexes",
+        "documentation": {}
+    },
+    {
+        "label": "backend_dir",
+        "kind": 5,
+        "importPath": "backend.scripts.create_soc_indexes",
+        "description": "backend.scripts.create_soc_indexes",
+        "peekOfCode": "backend_dir = Path(__file__).parent.parent\nsys.path.insert(0, str(backend_dir))\nfrom pymongo import MongoClient\nfrom app.settings import settings\ndef get_mongodb_connection():\n    \"\"\"Get synchronous MongoDB connection for this script.\"\"\"\n    client = MongoClient(\n        settings.MONGODB_URL,\n        serverSelectionTimeoutMS=20000\n    )",
+        "detail": "backend.scripts.create_soc_indexes",
         "documentation": {}
     },
     {

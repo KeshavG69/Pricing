@@ -12,6 +12,7 @@ import { SalaryContextMenu } from '@/components/pricing/SalaryContextMenu';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ConvertToSubcontractorModal } from '@/components/pricing/ConvertToSubcontractorModal';
 import { SalarySelectionModal } from '@/components/pricing/SalarySelectionModal';
+import { SOCSelectionModal } from '@/components/pricing/SOCSelectionModal';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { getAvailablePercentiles } from '@/lib/utils/percentileHelpers';
 import { getEffectiveSalary, getSalaryDisplayLabel, getSalarySelectionCount, isMultiSelectMode } from '@/lib/utils/salaryHelpers';
@@ -123,6 +124,10 @@ export const PrimeLaborSection = ({
   // Salary selection modal state
   const [salaryModalOpen, setSalaryModalOpen] = useState(false);
   const [positionToEdit, setPositionToEdit] = useState<AdvancedPosition | null>(null);
+
+  // SOC selection modal state
+  const [socModalOpen, setSOCModalOpen] = useState(false);
+  const [positionToEditSOC, setPositionToEditSOC] = useState<AdvancedPosition | null>(null);
 
   // Add position modal state
   const [addPositionModalOpen, setAddPositionModalOpen] = useState(false);
@@ -370,7 +375,7 @@ export const PrimeLaborSection = ({
           }
         },
       },
-      // BLS Category
+      // BLS Category - Clickable (position rows only)
       {
         key: 'bls_category',
         name: 'BLS Category',
@@ -380,7 +385,13 @@ export const PrimeLaborSection = ({
           if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             return (
-              <div className="flex items-center h-full px-2">
+              <div
+                className="flex items-center h-full px-2 cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => {
+                  setPositionToEditSOC(pos);
+                  setSOCModalOpen(true);
+                }}
+              >
                 <span className="text-xs text-muted-foreground">{pos.soc_title || '-'}</span>
               </div>
             );
@@ -388,7 +399,7 @@ export const PrimeLaborSection = ({
           return <div className="h-full bg-muted/30" />;
         },
       },
-      // BLS Code
+      // BLS Code - Clickable (position rows only)
       {
         key: 'bls_code',
         name: 'BLS Code',
@@ -398,7 +409,13 @@ export const PrimeLaborSection = ({
           if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             return (
-              <div className="flex items-center h-full px-2">
+              <div
+                className="flex items-center h-full px-2 cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => {
+                  setPositionToEditSOC(pos);
+                  setSOCModalOpen(true);
+                }}
+              >
                 <span className="text-xs text-muted-foreground">{pos.soc_code || '-'}</span>
               </div>
             );
@@ -866,6 +883,21 @@ export const PrimeLaborSection = ({
         onUpdate={(updates) => {
           if (positionToEdit) {
             onUpdatePosition(positionToEdit.id, updates);
+          }
+        }}
+      />
+
+      {/* SOC Selection Modal */}
+      <SOCSelectionModal
+        open={socModalOpen}
+        onClose={() => {
+          setSOCModalOpen(false);
+          setPositionToEditSOC(null);
+        }}
+        position={positionToEditSOC}
+        onUpdate={(updates) => {
+          if (positionToEditSOC) {
+            onUpdatePosition(positionToEditSOC.id, updates);
           }
         }}
       />

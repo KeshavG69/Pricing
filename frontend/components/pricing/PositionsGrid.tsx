@@ -12,6 +12,7 @@ import { SalaryContextMenu } from './SalaryContextMenu';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ConvertToSubcontractorModal } from './ConvertToSubcontractorModal';
 import { SalarySelectionModal } from './SalarySelectionModal';
+import { SOCSelectionModal } from './SOCSelectionModal';
 import { getAvailablePercentiles } from '@/lib/utils/percentileHelpers';
 import { getEffectiveSalary, getSalaryDisplayLabel, isMultiSelectMode } from '@/lib/utils/salaryHelpers';
 
@@ -28,6 +29,10 @@ export const PositionsGrid = () => {
   // Salary selection modal state
   const [salaryModalOpen, setSalaryModalOpen] = useState(false);
   const [positionToEdit, setPositionToEdit] = useState<SpreadsheetPosition | null>(null);
+
+  // SOC selection modal state
+  const [socModalOpen, setSOCModalOpen] = useState(false);
+  const [positionToEditSOC, setPositionToEditSOC] = useState<SpreadsheetPosition | null>(null);
 
   // Delete confirmation state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -242,26 +247,38 @@ export const PositionsGrid = () => {
           </div>
         ),
       },
-      // SOC Code - Read-only
+      // SOC Code - Clickable
       {
         key: 'soc_code',
         name: 'BLS Code',
         width: 100,
         resizable: true,
         renderCell: ({ row }) => (
-          <div className="flex items-center h-full px-2">
+          <div
+            className="flex items-center h-full px-2 cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => {
+              setPositionToEditSOC(row);
+              setSOCModalOpen(true);
+            }}
+          >
             <span className="text-muted-foreground text-xs">{row.soc_code || '-'}</span>
           </div>
         ),
       },
-      // SOC Title - Read-only
+      // SOC Title - Clickable
       {
         key: 'soc_title',
         name: 'BLS Labour Category',
         width: 220,
         resizable: true,
         renderCell: ({ row }) => (
-          <div className="flex items-center h-full px-2">
+          <div
+            className="flex items-center h-full px-2 cursor-pointer hover:bg-muted/50 transition-colors"
+            onClick={() => {
+              setPositionToEditSOC(row);
+              setSOCModalOpen(true);
+            }}
+          >
             <span className="text-muted-foreground text-xs">{row.soc_title || '-'}</span>
           </div>
         ),
@@ -539,6 +556,21 @@ export const PositionsGrid = () => {
         onUpdate={(updates) => {
           if (positionToEdit) {
             updatePosition(positionToEdit.id, updates);
+          }
+        }}
+      />
+
+      {/* SOC Selection Modal */}
+      <SOCSelectionModal
+        open={socModalOpen}
+        onClose={() => {
+          setSOCModalOpen(false);
+          setPositionToEditSOC(null);
+        }}
+        position={positionToEditSOC}
+        onUpdate={(updates) => {
+          if (positionToEditSOC) {
+            updatePosition(positionToEditSOC.id, updates);
           }
         }}
       />

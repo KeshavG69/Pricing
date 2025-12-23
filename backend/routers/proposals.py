@@ -1335,3 +1335,190 @@ async def refresh_document_urls(
     updated_proposal = proposal_crud.get_by_id(prop_oid)
 
     return serialize_proposal(updated_proposal)
+
+
+@router.post("/{proposal_id}/positions/{position_id}/refresh-wage")
+async def refresh_position_wage_data(
+    proposal_id: str,
+    position_id: str,
+    update_data: Dict[str, Any],
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Refresh wage data for a position when SOC code changes.
+
+    Fetches new wage percentiles from MongoDB wage_data collection
+    based on the new SOC code and location, then updates the position.
+
+    Args:
+        proposal_id: Proposal ID
+        position_id: Position ID (string ID from frontend)
+        update_data: Dict with soc_code, soc_title, location?, experience?
+        current_user: Authenticated user
+
+    Returns:
+        Dict with status and updated wage_data
+
+    Raises:
+        HTTPException: If proposal/position not found or wage lookup fails
+    """
+    from client.oews_mongodb import OEWSMongoLookup
+
+    crud = await get_crud()
+
+    # Get user's organization and role
+    organization_id = current_user.get("organization_id")
+    role = current_user.get("role")
+
+    # Get proposal with access control
+    proposal = crud.get_proposal(
+        proposal_id,
+        str(current_user["_id"]),
+        organization_id=organization_id,
+        role=role
+    )
+
+    if not proposal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Proposal not found"
+        )
+
+    # Get position from spreadsheet_data
+    spreadsheet_data = proposal.get("spreadsheet_data", {})
+    positions = spreadsheet_data.get("positions", [])
+
+    # Find position by ID
+    position_index = None
+    position = None
+    for i, pos in enumerate(positions):
+        if pos.get("id") == position_id:
+            position_index = i
+            position = pos
+            break
+
+    if position is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Position with ID '{position_id}' not found"
+        )
+
+    # Extract required fields
+    soc_code = update_data.get("soc_code")
+    soc_title = update_data.get("soc_title")
+    location = update_data.get("location") or position.get("location") or "National"
+    experience = update_data.get("experience") or position.get("experience")
+
+    if not soc_code or not soc_title:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="soc_code and soc_title are required"
+        )
+
+    # Normalize SOC code to XX-XXXX format (accepts both "518000" and "51-8000")
+    import re
+    soc_code = soc_code.strip()
+
+    # Remove existing hyphens
+    clean_code = soc_code.replace('-', '')
+
+    # Validate it's 6 digits
+    if not re.match(r'^\d{6}$', clean_code):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid SOC code format: '{soc_code}'. Expected 6 digits (e.g., '518000' or '51-8000')"
+        )
+
+    # Format as XX-XXXX
+    soc_code = f"{clean_code[:2]}-{clean_code[2:]}"
+
+    try:
+        # Get wage lookup client
+        wage_client = OEWSMongoLookup()
+
+        # Fetch wage data for new SOC code (async call)
+        wage_data = await wage_client.get_wage_by_soc(soc_code, location)
+
+        if not wage_data or "wages" not in wage_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No wage data found for SOC code '{soc_code}' in location '{location}'. Try 'National' as location."
+            )
+
+        wages = wage_data["wages"]
+
+        # Use occupation_name from database (more reliable than user input)
+        soc_title = wage_data.get("occupation_name", soc_title)
+
+        # Determine appropriate percentile based on experience
+        # Same logic as utils/pipeline.py:process_single_row
+        if experience is not None:
+            if experience < 3:
+                selected_percentile = "25th"
+            elif experience <= 5:
+                selected_percentile = "50th"
+            else:
+                selected_percentile = "75th"
+        else:
+            selected_percentile = "50th"  # Default to median
+
+        selected_wage = wages.get(selected_percentile)
+
+        # Build updated wage data
+        updated_wage_data = {
+            "soc_code": soc_code,
+            "soc_title": soc_title,
+            "wage_10th": wages.get("10th"),
+            "wage_25th": wages.get("25th"),
+            "wage_50th": wages.get("50th"),
+            "wage_75th": wages.get("75th"),
+            "wage_90th": wages.get("90th"),
+            "selected_wage": selected_wage,
+            "percentile": selected_percentile
+        }
+
+        # Update position in MongoDB
+        position.update({
+            "soc_code": soc_code,
+            "soc_title": soc_title,
+            "wage_10th": wages.get("10th"),
+            "wage_25th": wages.get("25th"),
+            "wage_50th": wages.get("50th"),
+            "wage_75th": wages.get("75th"),
+            "wage_90th": wages.get("90th"),
+            "percentile": selected_percentile
+        })
+
+        # Update the positions array
+        positions[position_index] = position
+        spreadsheet_data["positions"] = positions
+
+        # Save to MongoDB
+        updated_proposal = crud.update_proposal(
+            proposal_id,
+            str(current_user["_id"]),
+            {"spreadsheet_data": spreadsheet_data}
+        )
+
+        if not updated_proposal:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update proposal"
+            )
+
+        return {
+            "status": "success",
+            "wage_data": updated_wage_data
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        print(f"❌ Wage refresh failed: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to refresh wage data: {str(e)}"
+        )
