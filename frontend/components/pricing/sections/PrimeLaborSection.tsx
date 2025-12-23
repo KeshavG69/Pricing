@@ -8,11 +8,14 @@ import styles from './PrimeLaborSection.module.css';
 import { AdvancedPosition, IndirectRates, EscalationRates, GridRow, BreakdownType, ContextMenuItem } from '@/types';
 import { ChevronDown, ChevronRight, Trash2, MoreVertical, Plus } from 'lucide-react';
 import { ContextMenu } from '@/components/ui/ContextMenu';
+import { SalaryContextMenu } from '@/components/pricing/SalaryContextMenu';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ConvertToSubcontractorModal } from '@/components/pricing/ConvertToSubcontractorModal';
 import { SalarySelectionModal } from '@/components/pricing/SalarySelectionModal';
+import { SOCSelectionModal } from '@/components/pricing/SOCSelectionModal';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { getAvailablePercentiles } from '@/lib/utils/percentileHelpers';
+import { getEffectiveSalary, getSalaryDisplayLabel, getSalarySelectionCount, isMultiSelectMode } from '@/lib/utils/salaryHelpers';
 import Button from '@/components/ui/Button';
 import { usePricingStore } from '@/lib/stores/pricingStore';
 
@@ -23,8 +26,8 @@ const calculateAveragedFBLR = (
   escalationRates: EscalationRates,
   totalYears: number
 ) => {
-  // Prioritize custom_salary, then percentile wage
-  const baseWage = position.custom_salary || position[`wage_${position.percentile}`] || 0;
+  // Get effective salary (supports multi-select averaging)
+  const baseWage = getEffectiveSalary(position);
 
   if (baseWage === 0 || totalYears === 0) {
     return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
@@ -87,6 +90,7 @@ interface PrimeLaborSectionProps {
   onCellChange: (positionId: string, year: string, field: string, value: number) => void;
   onDeletePosition: (positionId: string) => void;
   onUpdatePosition: (id: string, updates: Partial<AdvancedPosition>) => void;
+  isAdvancedMode?: boolean; // Controls whether Convert to Subcontractor is available
 }
 
 export const PrimeLaborSection = ({
@@ -100,6 +104,7 @@ export const PrimeLaborSection = ({
   onCellChange: _onCellChange, // TODO: Implement editable cells
   onDeletePosition,
   onUpdatePosition,
+  isAdvancedMode = true, // Default to true for backwards compatibility
 }: PrimeLaborSectionProps) => {
   // Debug: Log when component re-renders
   console.log('[PrimeLaborSection] Re-render with', positions.length, 'positions, rates:', {
@@ -119,6 +124,10 @@ export const PrimeLaborSection = ({
   // Salary selection modal state
   const [salaryModalOpen, setSalaryModalOpen] = useState(false);
   const [positionToEdit, setPositionToEdit] = useState<AdvancedPosition | null>(null);
+
+  // SOC selection modal state
+  const [socModalOpen, setSOCModalOpen] = useState(false);
+  const [positionToEditSOC, setPositionToEditSOC] = useState<AdvancedPosition | null>(null);
 
   // Add position modal state
   const [addPositionModalOpen, setAddPositionModalOpen] = useState(false);
@@ -172,27 +181,34 @@ export const PrimeLaborSection = ({
     }
 
     // Default context menu for other columns
-    return [
-      {
+    const items: ContextMenuItem[] = [];
+
+    // Only show "Convert to Subcontractor" in advanced mode
+    if (isAdvancedMode) {
+      items.push({
         label: 'Convert to Subcontractor',
         icon: <MoreVertical className="w-4 h-4" />,
         onClick: () => {
           setPositionToConvert(position);
           setConversionModalOpen(true);
         },
+      });
+    }
+
+    // Always show "Delete Position"
+    items.push({
+      label: 'Delete Position',
+      icon: <Trash2 className="w-4 h-4" />,
+      onClick: () => {
+        setPositionToDelete(position);
+        setDeleteDialogOpen(true);
+        setContextMenu(null);
       },
-      {
-        label: 'Delete Position',
-        icon: <Trash2 className="w-4 h-4" />,
-        onClick: () => {
-          setPositionToDelete(position);
-          setDeleteDialogOpen(true);
-          setContextMenu(null);
-        },
-        danger: true,
-      },
-    ];
-  }, [onDeletePosition, onUpdatePosition]);
+      danger: true,
+    });
+
+    return items;
+  }, [onDeletePosition, onUpdatePosition, isAdvancedMode]);
 
   // Transform positions to grid rows with breakdown rows
   const gridRows = useMemo<GridRow[]>(() => {
@@ -359,7 +375,7 @@ export const PrimeLaborSection = ({
           }
         },
       },
-      // BLS Category
+      // BLS Category - Clickable (position rows only)
       {
         key: 'bls_category',
         name: 'BLS Category',
@@ -369,7 +385,13 @@ export const PrimeLaborSection = ({
           if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             return (
-              <div className="flex items-center h-full px-2">
+              <div
+                className="flex items-center h-full px-2 cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => {
+                  setPositionToEditSOC(pos);
+                  setSOCModalOpen(true);
+                }}
+              >
                 <span className="text-xs text-muted-foreground">{pos.soc_title || '-'}</span>
               </div>
             );
@@ -377,7 +399,7 @@ export const PrimeLaborSection = ({
           return <div className="h-full bg-muted/30" />;
         },
       },
-      // BLS Code
+      // BLS Code - Clickable (position rows only)
       {
         key: 'bls_code',
         name: 'BLS Code',
@@ -387,7 +409,13 @@ export const PrimeLaborSection = ({
           if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             return (
-              <div className="flex items-center h-full px-2">
+              <div
+                className="flex items-center h-full px-2 cursor-pointer hover:bg-muted/50 transition-colors"
+                onClick={() => {
+                  setPositionToEditSOC(pos);
+                  setSOCModalOpen(true);
+                }}
+              >
                 <span className="text-xs text-muted-foreground">{pos.soc_code || '-'}</span>
               </div>
             );
@@ -404,8 +432,9 @@ export const PrimeLaborSection = ({
         renderCell: ({ row }) => {
           if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
-            const wage = pos.custom_salary || pos[`wage_${pos.percentile}`] || 0;
-            const isCustom = !!pos.custom_salary;
+            const wage = getEffectiveSalary(pos);
+            const label = getSalaryDisplayLabel(pos);
+            const isMulti = isMultiSelectMode(pos);
             return (
               <div
                 className="flex items-center h-full px-2 cursor-pointer hover:bg-muted/50 transition-colors"
@@ -424,7 +453,15 @@ export const PrimeLaborSection = ({
                   });
                 }}
               >
-                {isCustom ? (
+                {isMulti ? (
+                  // Multi-select - show label + averaged amount
+                  <>
+                    <span className="text-purple-600 dark:text-purple-400 font-semibold">{label}</span>
+                    <span className="ml-2 text-xs px-2 py-0.5 rounded text-purple-600 bg-purple-600/10">
+                      ${wage.toLocaleString()}
+                    </span>
+                  </>
+                ) : label === 'Custom' ? (
                   // Custom salary - only show amount with icon
                   <span className="text-blue-600 dark:text-blue-400 font-semibold">
                     ${wage.toLocaleString()} ✎
@@ -432,7 +469,7 @@ export const PrimeLaborSection = ({
                 ) : (
                   // BLS percentile - show percentile + wage
                   <>
-                    <span className="font-semibold text-foreground">{pos.percentile}</span>
+                    <span className="font-semibold text-foreground">{label}</span>
                     <span className="ml-2 text-xs px-2 py-0.5 rounded text-primary bg-primary/10">
                       ${wage.toLocaleString()}
                     </span>
@@ -799,8 +836,24 @@ export const PrimeLaborSection = ({
         />
       </div>
 
-      {/* Context Menu */}
-      {contextMenu && (
+      {/* Context Menu - Use SalaryContextMenu for salary/percentile column */}
+      {contextMenu && contextMenu.columnKey === 'percentile' && (
+        <SalaryContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          position={contextMenu.position}
+          onClose={() => setContextMenu(null)}
+          onApply={(updates) => {
+            onUpdatePosition(contextMenu.position.id, updates);
+          }}
+          onOpenModal={() => {
+            setPositionToEdit(contextMenu.position);
+            setSalaryModalOpen(true);
+          }}
+        />
+      )}
+      {/* Regular Context Menu for other columns */}
+      {contextMenu && contextMenu.columnKey !== 'percentile' && (
         <ContextMenu
           x={contextMenu.x}
           y={contextMenu.y}
@@ -830,6 +883,21 @@ export const PrimeLaborSection = ({
         onUpdate={(updates) => {
           if (positionToEdit) {
             onUpdatePosition(positionToEdit.id, updates);
+          }
+        }}
+      />
+
+      {/* SOC Selection Modal */}
+      <SOCSelectionModal
+        open={socModalOpen}
+        onClose={() => {
+          setSOCModalOpen(false);
+          setPositionToEditSOC(null);
+        }}
+        position={positionToEditSOC}
+        onUpdate={(updates) => {
+          if (positionToEditSOC) {
+            onUpdatePosition(positionToEditSOC.id, updates);
           }
         }}
       />

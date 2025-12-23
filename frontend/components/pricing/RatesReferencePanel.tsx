@@ -296,11 +296,6 @@ export const RatesReferencePanel = ({
                   value={isEditing ? (editedRates.ga_passthrough || 0) : (rates.ga_passthrough || 0)}
                   onChange={(val) => setEditedRates({ ...editedRates, ga_passthrough: val })}
                 />
-                <RateInput
-                  label="G&A Adder (ODC)"
-                  value={isEditing ? (editedRates.ga_adder || 0) : (rates.ga_adder || 0)}
-                  onChange={(val) => setEditedRates({ ...editedRates, ga_adder: val })}
-                />
               </div>
             </div>
           </div>

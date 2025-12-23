@@ -48,7 +48,7 @@ class OrganizationCRUD:
                     "smh": 0.065,
                     "sub_fee": 0.05,
                     "ga_passthrough": 0.025,
-                    "ga_adder": 0.0243
+                    "ga_adder": 0.0
                 },
                 "default_escalation_rate": 0.03,
                 "allow_user_rate_override": True

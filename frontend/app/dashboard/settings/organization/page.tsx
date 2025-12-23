@@ -271,14 +271,6 @@ export default function OrganizationSettingsPage() {
                 placeholder="2.50"
                 suffix="%"
               />
-              <Input
-                label="G&A Adder Rate (ODCs)"
-                type="number"
-                value={toPercentageDisplay(settings.default_rates.ga_adder)}
-                onChange={(e) => updateDefaultRate('ga_adder', e.target.value)}
-                placeholder="2.43"
-                suffix="%"
-              />
             </div>
           </CardContent>
         </Card>
