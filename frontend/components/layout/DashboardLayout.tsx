@@ -103,9 +103,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   ];
 
   const adminNavItems = [
-    { href: '/dashboard/team', label: 'Team', icon: Users },
-    { href: '/dashboard/invitations', label: 'Invitations', icon: Mail },
     { href: '/dashboard/settings/organization', label: 'Organization', icon: Building },
+    { href: '/dashboard/invitations', label: 'Invitations', icon: Mail },
+    { href: '/dashboard/team', label: 'Team', icon: Users },
   ];
 
   // Get last 3 proposals sorted by date
