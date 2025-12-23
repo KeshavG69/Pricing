@@ -40,6 +40,18 @@ export interface Organization {
   subscription: Subscription;
 }
 
+export interface RatePreset {
+  id: string;
+  name: string;
+  fringe: number;
+  oh: number;
+  ga: number;
+  fee: number;
+  smh: number;
+  sub_fee: number;
+  ga_passthrough: number;
+}
+
 export interface OrganizationSettings {
   default_rates: {
     fringe: number;
@@ -53,6 +65,7 @@ export interface OrganizationSettings {
   };
   default_escalation_rate: number;
   allow_user_rate_override: boolean;
+  rate_presets?: RatePreset[];
 }
 
 export interface Subscription {
