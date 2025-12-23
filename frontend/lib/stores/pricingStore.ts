@@ -16,6 +16,7 @@ import {
 import { pricingApi } from '../api/pricing';
 import { proposalsApi } from '../api/proposals';
 import { useOrganizationStore } from './organizationStore';
+import { getEffectiveSalary } from '../utils/salaryHelpers';
 
 interface PricingState {
   // Data
@@ -229,8 +230,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
       // For each year, create detailed breakdown
       Object.entries(pos.hours_per_year).forEach(([year, hours]) => {
-        // Prioritize custom_salary, then percentile wage, then selected_wage
-        const wage = pos.custom_salary || pos[`wage_${pos.percentile}`] || pos.selected_wage || 0;
+        // Use getEffectiveSalary to handle multi-select averaging
+        const wage = getEffectiveSalary(pos);
         const dlRate = hours > 0 ? wage / hours : 0;
         const dlAmount = dlRate * hours;
 
@@ -892,8 +893,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
           // Helper to calculate averaged FBLR
           const calculateAveragedFBLR = (p: SpreadsheetPosition) => {
-            // Prioritize custom_salary, then percentile wage, then selected_wage
-            const baseWage = p.custom_salary || p[`wage_${p.percentile}`] || p.selected_wage || 0;
+            // Use getEffectiveSalary to handle multi-select averaging
+            const baseWage = getEffectiveSalary(p);
             if (baseWage === 0 || state.totalYears === 0) {
               return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
             }
@@ -957,7 +958,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
               'Wage 50th': p.wage_50th ?? 0,
               'Wage 75th': p.wage_75th ?? 0,
               'Wage 90th': p.wage_90th ?? 0,
-              'Selected Wage': p.custom_salary || p[`wage_${p.percentile}`] || p.selected_wage || 0,
+              'Selected Wage': getEffectiveSalary(p),
             };
 
             // Add year columns dynamically
@@ -999,7 +1000,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
             soc_code: p.soc_code,
             soc_title: p.soc_title,  // Add BLS Category name for Excel export
             hours_per_year: p.hours_per_year,
-            selected_wage: p.custom_salary || p[`wage_${p.percentile}`] || p.selected_wage || 0,
+            selected_wage: getEffectiveSalary(p),
             percentile: p.percentile,
             wage_10th: p.wage_10th,
             wage_25th: p.wage_25th,

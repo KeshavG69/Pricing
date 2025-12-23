@@ -9,7 +9,6 @@ import { proposalsApi } from '@/lib/api/proposals';
 import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import PositionsGrid from '@/components/pricing/PositionsGrid';
 import AdvancedAnalysisGrid from '@/components/pricing/AdvancedAnalysisGrid';
 import OverviewTab from '@/components/pricing/OverviewTab';
 import RateTableView from '@/components/pricing/RateTableView';
@@ -65,11 +64,17 @@ export default function ProposalPage() {
 
   // Load pricing data when proposal is completed
   useEffect(() => {
-    if (currentProposal?.status === 'completed' && proposalId && !pricingLoaded) {
-      // Always fetch fresh data from API (don't use cached currentProposal)
-      loadProposal(proposalId);
-      setPricingLoaded(true);
-    }
+    const loadPricingData = async () => {
+      if (currentProposal?.status === 'completed' && proposalId && !pricingLoaded) {
+        // Always fetch fresh data from API (don't use cached currentProposal)
+        await loadProposal(proposalId);
+        // Transform to advanced format immediately so we can show expandable grid in initial view
+        transformToAdvanced();
+        setPricingLoaded(true);
+      }
+    };
+
+    loadPricingData();
 
     return () => {
       if (pricingLoaded) {
@@ -338,58 +343,39 @@ export default function ProposalPage() {
         </CardContent>
       </Card>
 
-      {/* Pricing Workspace */}
-      {!advancedMode ? (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Job Positions & Pricing</CardTitle>
-              <Button variant="outline" size="sm" onClick={handleAddPosition}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Position
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="pl-0">
-            <div className="h-[600px]">
-              <PositionsGrid />
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        /* Advanced Mode with Tabs */
-        <Card>
-          <CardHeader>
-            <CardTitle>Advanced Analysis</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {/* Tab Navigation */}
-            <PricingTabs
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-              hasSubcontractors={subcontractors.length > 0}
-            />
+      {/* Pricing Workspace - Both initial and advanced show tabs */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{advancedMode ? 'Advanced Analysis' : 'Initial Analysis'}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Tab Navigation - mode determines which tabs are shown */}
+          <PricingTabs
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            hasSubcontractors={subcontractors.length > 0}
+            mode={advancedMode ? 'advanced' : 'initial'}
+          />
 
-            {/* Tab Content */}
-            <div className="mt-6">
-              {activeTab === 'overview' && <OverviewTab />}
-              {activeTab === 'main' && (
-                <div className="overflow-y-auto" style={{ maxHeight: '800px' }}>
-                  <AdvancedAnalysisGrid />
-                </div>
-              )}
-              {activeTab === 'subcontractors' && <SubcontractorSection />}
-              {activeTab === 'rate-table' && (
-                <RateTableView
-                  subcontractors={subcontractors}
-                  feeRate={rates.sub_fee || 0.05}
-                  smhRate={rates.smh || 0.065}
-                />
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
+          {/* Tab Content */}
+          <div className="mt-6">
+            {activeTab === 'overview' && <OverviewTab />}
+            {activeTab === 'main' && (
+              <div className="overflow-y-auto" style={{ maxHeight: '800px' }}>
+                <AdvancedAnalysisGrid isAdvancedMode={advancedMode} />
+              </div>
+            )}
+            {activeTab === 'subcontractors' && advancedMode && <SubcontractorSection />}
+            {activeTab === 'rate-table' && advancedMode && (
+              <RateTableView
+                subcontractors={subcontractors}
+                feeRate={rates.sub_fee || 0.05}
+                smhRate={rates.smh || 0.065}
+              />
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Back button */}
       <div>
@@ -564,7 +550,8 @@ export default function ProposalPage() {
               )}
             </div>
           </div>
-          {currentProposal.status === 'completed' && (
+          {/* Export Excel button - only show in advanced mode */}
+          {currentProposal.status === 'completed' && advancedMode && (
             <Button
               variant="outline"
               onClick={() => {

@@ -227,19 +227,6 @@ export const ODCFormModal = ({
                 Apply escalation (year-over-year increase)
               </label>
             </div>
-
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="gaAdder"
-                checked={applyGAAdder}
-                onChange={(e) => setApplyGAAdder(e.target.checked)}
-                className="w-4 h-4 text-primary bg-background border-input rounded focus:ring-2 focus:ring-ring"
-              />
-              <label htmlFor="gaAdder" className="ml-2 text-sm text-muted-foreground">
-                Apply G&amp;A adder (2.43%)
-              </label>
-            </div>
           </div>
 
           {/* Total cost display */}
