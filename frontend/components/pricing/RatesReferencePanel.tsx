@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react';
 import { IndirectRates, EscalationRates } from '@/types';
 import { useToast } from '@/lib/hooks/useToast';
+import Input from '@/components/ui/Input';
+import { Info } from 'lucide-react';
 
 interface RatesReferencePanelProps {
   rates: IndirectRates;
@@ -40,9 +42,9 @@ export const RatesReferencePanel = ({
     }
   }, [rates, escalationRates, isEditing]);
 
-  // Format percentage
-  const formatPercentage = (value: number) => {
-    return `${(value * 100).toFixed(2)}%`;
+  // Helper to format decimal to percentage display (fixes floating point precision)
+  const toPercentageDisplay = (decimal: number): number => {
+    return Math.round(decimal * 10000) / 100; // Round to 2 decimal places in percentage
   };
 
   // Get escalation rate label
@@ -50,6 +52,47 @@ export const RatesReferencePanel = ({
     if (fromYear === 0) return 'Base Period';
     if (fromYear === 1 && toYear === 2) return 'Base → Option 1';
     return `Option ${fromYear - 1} → ${toYear - 1}`;
+  };
+
+  // Update rate handlers
+  const updateDefaultRate = (key: string, value: string) => {
+    // Allow empty string for clearing
+    if (value === '') {
+      setEditedRates({
+        ...editedRates,
+        [key]: 0,
+      });
+      return;
+    }
+
+    // Parse and validate the number
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue)) {
+      setEditedRates({
+        ...editedRates,
+        [key]: numValue / 100, // Convert percentage to decimal
+      });
+    }
+  };
+
+  const updateEscalationRate = (key: string, value: string) => {
+    // Allow empty string for clearing
+    if (value === '') {
+      setEditedEscalationRates({
+        ...editedEscalationRates,
+        [key]: 0,
+      });
+      return;
+    }
+
+    // Parse and validate the number
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue)) {
+      setEditedEscalationRates({
+        ...editedEscalationRates,
+        [key]: numValue / 100, // Convert percentage to decimal
+      });
+    }
   };
 
   // Save and cancel handlers
@@ -92,97 +135,6 @@ export const RatesReferencePanel = ({
     setEditedRates(rates);
     setEditedEscalationRates(escalationRates);
     setIsEditing(false);
-  };
-
-  // Rate input component with local state for editing
-  const RateInput = ({ label, value, onChange }: {
-    label: string;
-    value: number;
-    onChange: (value: number) => void;
-  }) => {
-    const [inputValue, setInputValue] = useState((value * 100).toFixed(2));
-
-    // Sync with prop when not focused
-    useEffect(() => {
-      setInputValue((value * 100).toFixed(2));
-    }, [value]);
-
-    return (
-      <div className="flex items-center justify-between">
-        <span className="text-sm text-muted-foreground">{label}</span>
-        {isEditing ? (
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => {
-              const newValue = e.target.value;
-              // Allow typing any numeric input including negative and decimals
-              if (newValue === '' || newValue === '-' || newValue === '.' || /^-?\d*\.?\d*$/.test(newValue)) {
-                setInputValue(newValue);
-              }
-            }}
-            onBlur={() => {
-              // Convert to decimal and update parent
-              const percentValue = parseFloat(inputValue) || 0;
-              onChange(percentValue / 100);
-              // Re-format the display
-              setInputValue((percentValue).toFixed(2));
-            }}
-            className="w-24 px-2 py-1 bg-background border border-input rounded text-foreground text-sm font-mono text-right focus:border-primary focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-          />
-        ) : (
-          <span className="text-sm font-mono font-semibold text-amber-600 bg-amber-100 px-2 py-1 rounded">
-            {formatPercentage(value)}
-          </span>
-        )}
-      </div>
-    );
-  };
-
-  // Escalation rate input component with local state
-  const EscalationRateInput = ({ label, rate, isEditing, onChange }: {
-    label: string;
-    rate: number;
-    isEditing: boolean;
-    onChange: (value: number) => void;
-  }) => {
-    const [inputValue, setInputValue] = useState((rate * 100).toFixed(2));
-
-    // Sync with prop when not focused
-    useEffect(() => {
-      setInputValue((rate * 100).toFixed(2));
-    }, [rate]);
-
-    return (
-      <div className="flex items-center gap-2 bg-blue-50 border border-blue-200 px-3 py-2 rounded-md">
-        <span className="text-xs text-muted-foreground">{label}:</span>
-        {isEditing ? (
-          <input
-            type="text"
-            value={inputValue}
-            onChange={(e) => {
-              const newValue = e.target.value;
-              // Allow typing any numeric input including negative and decimals
-              if (newValue === '' || newValue === '-' || newValue === '.' || /^-?\d*\.?\d*$/.test(newValue)) {
-                setInputValue(newValue);
-              }
-            }}
-            onBlur={() => {
-              // Convert to decimal and update parent
-              const percentValue = parseFloat(inputValue) || 0;
-              onChange(percentValue / 100);
-              // Re-format the display
-              setInputValue((percentValue).toFixed(2));
-            }}
-            className="w-20 px-2 py-1 bg-background border border-input rounded text-foreground text-xs font-mono text-right focus:border-primary focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-          />
-        ) : (
-          <span className="text-xs font-mono font-semibold text-blue-600">
-            {formatPercentage(rate)}
-          </span>
-        )}
-      </div>
-    );
   };
 
   return (
@@ -232,7 +184,12 @@ export const RatesReferencePanel = ({
             </>
           ) : (
             <button
-              onClick={() => setIsEditing(true)}
+              onClick={() => {
+                if (!isExpanded) {
+                  onToggle(); // Expand the panel first
+                }
+                setIsEditing(true);
+              }}
               className="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-semibold rounded-md transition-colors"
             >
               Edit Rates
@@ -243,70 +200,81 @@ export const RatesReferencePanel = ({
 
       {/* Content - Collapsible */}
       {isExpanded && (
-        <div className="px-6 pb-6 space-y-6">
-          {/* Two-column grid for rate categories */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Indirect Rates */}
-            <div className="bg-muted/30 rounded-lg p-4 border border-border">
-              <h4 className="text-sm font-bold text-emerald-600 mb-3 uppercase tracking-wide">
-                Indirect Rates
-              </h4>
-              <div className="space-y-2">
-                <RateInput
-                  label="Fringe"
-                  value={isEditing ? editedRates.fringe : rates.fringe}
-                  onChange={(val) => setEditedRates({ ...editedRates, fringe: val })}
-                />
-                <RateInput
-                  label="Overhead (OH)"
-                  value={isEditing ? editedRates.oh : rates.oh}
-                  onChange={(val) => setEditedRates({ ...editedRates, oh: val })}
-                />
-                <RateInput
-                  label="G&A"
-                  value={isEditing ? editedRates.ga : rates.ga}
-                  onChange={(val) => setEditedRates({ ...editedRates, ga: val })}
-                />
-              </div>
-            </div>
-
-            {/* Fee & Passthrough Rates */}
-            <div className="bg-muted/30 rounded-lg p-4 border border-border">
-              <h4 className="text-sm font-bold text-purple-600 mb-3 uppercase tracking-wide">
-                Fee &amp; Passthrough Rates
-              </h4>
-              <div className="space-y-2">
-                <RateInput
-                  label="Prime Labor Fee"
-                  value={isEditing ? editedRates.fee : rates.fee}
-                  onChange={(val) => setEditedRates({ ...editedRates, fee: val })}
-                />
-                <RateInput
-                  label="Sub Labor Fee"
-                  value={isEditing ? (editedRates.sub_fee || 0) : (rates.sub_fee || 0)}
-                  onChange={(val) => setEditedRates({ ...editedRates, sub_fee: val })}
-                />
-                <RateInput
-                  label="S&MH (Handling)"
-                  value={isEditing ? (editedRates.smh || 0) : (rates.smh || 0)}
-                  onChange={(val) => setEditedRates({ ...editedRates, smh: val })}
-                />
-                <RateInput
-                  label="G&A Passthrough"
-                  value={isEditing ? (editedRates.ga_passthrough || 0) : (rates.ga_passthrough || 0)}
-                  onChange={(val) => setEditedRates({ ...editedRates, ga_passthrough: val })}
-                />
-              </div>
-            </div>
+        <div className="px-6 pb-6 space-y-4">
+          {/* Indirect Rates Grid */}
+          <div className="grid md:grid-cols-2 gap-4">
+            <Input
+              label="Fringe Rate"
+              type="number"
+              value={toPercentageDisplay(isEditing ? editedRates.fringe : rates.fringe)}
+              onChange={(e) => updateDefaultRate('fringe', e.target.value)}
+              placeholder="24.70"
+              suffix="%"
+              disabled={!isEditing}
+            />
+            <Input
+              label="Overhead (OH) Rate"
+              type="number"
+              value={toPercentageDisplay(isEditing ? editedRates.oh : rates.oh)}
+              onChange={(e) => updateDefaultRate('oh', e.target.value)}
+              placeholder="7.11"
+              suffix="%"
+              disabled={!isEditing}
+            />
+            <Input
+              label="G&A Rate"
+              type="number"
+              value={toPercentageDisplay(isEditing ? editedRates.ga : rates.ga)}
+              onChange={(e) => updateDefaultRate('ga', e.target.value)}
+              placeholder="22.43"
+              suffix="%"
+              disabled={!isEditing}
+            />
+            <Input
+              label="Fee Rate (Prime Labor)"
+              type="number"
+              value={toPercentageDisplay(isEditing ? editedRates.fee : rates.fee)}
+              onChange={(e) => updateDefaultRate('fee', e.target.value)}
+              placeholder="7.00"
+              suffix="%"
+              disabled={!isEditing}
+            />
+            <Input
+              label="S&MH Rate (Subcontractor)"
+              type="number"
+              value={toPercentageDisplay(isEditing ? (editedRates.smh || 0) : (rates.smh || 0))}
+              onChange={(e) => updateDefaultRate('smh', e.target.value)}
+              placeholder="6.50"
+              suffix="%"
+              disabled={!isEditing}
+            />
+            <Input
+              label="Fee Rate (Sub Labor)"
+              type="number"
+              value={toPercentageDisplay(isEditing ? (editedRates.sub_fee || 0) : (rates.sub_fee || 0))}
+              onChange={(e) => updateDefaultRate('sub_fee', e.target.value)}
+              placeholder="5.00"
+              suffix="%"
+              disabled={!isEditing}
+            />
+            <Input
+              label="G&A Passthrough Rate"
+              type="number"
+              value={toPercentageDisplay(isEditing ? (editedRates.ga_passthrough || 0) : (rates.ga_passthrough || 0))}
+              onChange={(e) => updateDefaultRate('ga_passthrough', e.target.value)}
+              placeholder="2.50"
+              suffix="%"
+              disabled={!isEditing}
+            />
           </div>
 
           {/* Escalation Rates */}
           {totalYears > 1 && (
-            <div className="bg-muted/30 rounded-lg p-4 border border-border">
-              <h4 className="text-sm font-bold text-blue-600 mb-3 uppercase tracking-wide">
-                Escalation Rates
+            <div className="pt-4 border-t border-border">
+              <h4 className="text-sm font-medium text-foreground mb-3">
+                Escalation Rates (Year-over-Year)
               </h4>
-              <div className="flex flex-wrap gap-3">
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {Array.from({ length: totalYears - 1 }, (_, i) => {
                   const fromYear = i + 1;
                   const toYear = i + 2;
@@ -316,17 +284,15 @@ export const RatesReferencePanel = ({
                     : (escalationRates[key] || 0);
 
                   return (
-                    <EscalationRateInput
+                    <Input
                       key={key}
                       label={getEscalationLabel(fromYear, toYear)}
-                      rate={rate}
-                      isEditing={isEditing}
-                      onChange={(newRate) => {
-                        setEditedEscalationRates({
-                          ...editedEscalationRates,
-                          [key]: newRate
-                        });
-                      }}
+                      type="number"
+                      value={toPercentageDisplay(rate)}
+                      onChange={(e) => updateEscalationRate(key, e.target.value)}
+                      placeholder="3.00"
+                      suffix="%"
+                      disabled={!isEditing}
                     />
                   );
                 })}
@@ -334,26 +300,16 @@ export const RatesReferencePanel = ({
             </div>
           )}
 
-          {/* Info note */}
-          <div className="flex items-start gap-3 bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <svg
-              className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <div className="text-xs text-muted-foreground">
-              <p className="font-semibold mb-1 text-foreground">About These Rates</p>
-              <p>
+          {/* Info Banner */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 flex items-start gap-3">
+            <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-blue-900 mb-1">
+                About These Rates
+              </p>
+              <p className="text-xs text-blue-700">
                 These rates are used throughout the cost proposal calculations. Indirect
-                rates apply to prime labor (Fringe → OH → G&amp;A cascade). Fee and
+                rates apply to prime labor (Fringe → OH → G&A cascade). Fee and
                 passthrough rates apply to subcontractor costs. Escalation rates
                 compound year-over-year.
               </p>
