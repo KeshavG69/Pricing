@@ -27,7 +27,7 @@ router = APIRouter(prefix="/soc", tags=["soc"])
 # ============================================================================
 _all_occupations_cache: Optional[List[Dict]] = None
 _cache_timestamp: Optional[float] = None
-CACHE_TTL = 86400  # 1 hour (occupations rarely change)
+CACHE_TTL = 86400  # 24 hours (occupations rarely change)
 
 
 class SOCSearchAIRequest(BaseModel):
