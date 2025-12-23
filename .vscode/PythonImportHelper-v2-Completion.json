@@ -3777,6 +3777,33 @@
         "documentation": {}
     },
     {
+        "label": "RatePreset",
+        "kind": 6,
+        "importPath": "backend.routers.organizations",
+        "description": "backend.routers.organizations",
+        "peekOfCode": "class RatePreset(BaseModel):\n    \"\"\"Rate preset with name and all rates\"\"\"\n    id: str\n    name: str\n    fringe: float\n    oh: float\n    ga: float\n    fee: float\n    smh: float = 0.0\n    sub_fee: float = 0.0",
+        "detail": "backend.routers.organizations",
+        "documentation": {}
+    },
+    {
+        "label": "CreateRatePresetRequest",
+        "kind": 6,
+        "importPath": "backend.routers.organizations",
+        "description": "backend.routers.organizations",
+        "peekOfCode": "class CreateRatePresetRequest(BaseModel):\n    \"\"\"Request to create a new rate preset\"\"\"\n    name: str\n    fringe: float\n    oh: float\n    ga: float\n    fee: float\n    smh: float = 0.0\n    sub_fee: float = 0.0\n    ga_passthrough: float = 0.0",
+        "detail": "backend.routers.organizations",
+        "documentation": {}
+    },
+    {
+        "label": "UpdateRatePresetRequest",
+        "kind": 6,
+        "importPath": "backend.routers.organizations",
+        "description": "backend.routers.organizations",
+        "peekOfCode": "class UpdateRatePresetRequest(BaseModel):\n    \"\"\"Request to update an existing rate preset\"\"\"\n    name: Optional[str] = None\n    fringe: Optional[float] = None\n    oh: Optional[float] = None\n    ga: Optional[float] = None\n    fee: Optional[float] = None\n    smh: Optional[float] = None\n    sub_fee: Optional[float] = None\n    ga_passthrough: Optional[float] = None",
+        "detail": "backend.routers.organizations",
+        "documentation": {}
+    },
+    {
         "label": "UpdateSettingsRequest",
         "kind": 6,
         "importPath": "backend.routers.organizations",
@@ -3790,7 +3817,7 @@
         "kind": 5,
         "importPath": "backend.routers.organizations",
         "description": "backend.routers.organizations",
-        "peekOfCode": "router = APIRouter(prefix=\"/api/organizations\", tags=[\"organizations\"])\nclass UpdateSettingsRequest(BaseModel):\n    \"\"\"Request body for updating organization settings\"\"\"\n    model_config = {\"extra\": \"ignore\"}\n    default_rates: Optional[Dict[str, float]] = None\n    default_escalation_rate: Optional[float] = None\n    allow_user_rate_override: Optional[bool] = None\n@router.get(\"/me\")\nasync def get_my_organization(current_user: dict = Depends(get_current_user)):\n    \"\"\"",
+        "peekOfCode": "router = APIRouter(prefix=\"/api/organizations\", tags=[\"organizations\"])\nclass RatePreset(BaseModel):\n    \"\"\"Rate preset with name and all rates\"\"\"\n    id: str\n    name: str\n    fringe: float\n    oh: float\n    ga: float\n    fee: float\n    smh: float = 0.0",
         "detail": "backend.routers.organizations",
         "documentation": {}
     },
