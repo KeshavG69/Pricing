@@ -12,7 +12,11 @@ import ODCFormModal from './ODCFormModal';
 import RatesReferencePanel from './RatesReferencePanel';
 import GrandTotalSection from './sections/GrandTotalSection';
 
-export const AdvancedAnalysisGrid = () => {
+interface AdvancedAnalysisGridProps {
+  isAdvancedMode?: boolean; // true = full advanced mode, false = initial view mode
+}
+
+export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysisGridProps) => {
   const {
     positionsAdvanced,
     subcontractors,
@@ -177,14 +181,15 @@ export const AdvancedAnalysisGrid = () => {
 
   return (
     <div className="space-y-2">
-      {/* Header with mode indicator */}
-      {/* Header with mode indicator */}
-      <div className="flex justify-end items-center mb-2 px-6">
-        <div className="text-xs font-medium text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 flex items-center">
-          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-2 animate-pulse" />
-          Advanced Mode Active
+      {/* Header with mode indicator - only show in advanced mode */}
+      {isAdvancedMode && (
+        <div className="flex justify-end items-center mb-2 px-6">
+          <div className="text-xs font-medium text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 flex items-center">
+            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-2 animate-pulse" />
+            Advanced Mode Active
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Rates Reference Panel */}
       <RatesReferencePanel
@@ -210,6 +215,7 @@ export const AdvancedAnalysisGrid = () => {
         onCellChange={handleCellChange}
         onDeletePosition={handleDeletePosition}
         onUpdatePosition={updateAdvancedPosition}
+        isAdvancedMode={isAdvancedMode}
       />
 
       {/* Prime Labor Aggregates */}
