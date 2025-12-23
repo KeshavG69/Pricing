@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Dialog from '@/components/ui/Dialog';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -74,12 +74,9 @@ export const SOCSelectionModal = ({
   const [aiSuggestions, setAiSuggestions] = useState<SOCSuggestion[]>([]);
   const [isLoadingAI, setIsLoadingAI] = useState(false);
 
-  // Browse All state with infinite scroll
+  // Browse All state (loads all occupations at once, no pagination)
   const [allOccupations, setAllOccupations] = useState<SOCSuggestion[]>([]);
   const [isLoadingAll, setIsLoadingAll] = useState(false);
-  const [hasMoreOccupations, setHasMoreOccupations] = useState(true);
-  const [currentSkip, setCurrentSkip] = useState(0);
-  const [totalOccupations, setTotalOccupations] = useState(0);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -91,15 +88,18 @@ export const SOCSelectionModal = ({
 
   const proposalId = usePricingStore((state) => state.proposalId);
 
-  // Infinite scroll observer ref
-  const observerTarget = useRef<HTMLDivElement>(null);
-
   // Initialize modal
   useEffect(() => {
     if (open && position) {
-      // Set initial selected SOC
+      // Set initial selected SOC (normalize format to match list items)
       if (position.soc_code && position.soc_title) {
-        setSelectedSOC({ code: position.soc_code, title: position.soc_title });
+        // Ensure SOC code is in XX-XXXX format for comparison
+        const normalizedCode = position.soc_code.includes('-')
+          ? position.soc_code
+          : `${position.soc_code.slice(0, 2)}-${position.soc_code.slice(2)}`;
+
+        console.log('🔍 Initializing selected SOC:', normalizedCode, position.soc_title);
+        setSelectedSOC({ code: normalizedCode, title: position.soc_title });
       } else {
         setSelectedSOC(null);
       }
@@ -114,7 +114,7 @@ export const SOCSelectionModal = ({
       setSearchQuery('');
       setSearchResults([]);
     }
-  }, [open, position]);
+  }, [open, position?.soc_code, position?.soc_title]);
 
   // Fetch AI suggestions (FAISS vector search) with caching
   const fetchAISuggestions = async () => {
@@ -153,34 +153,32 @@ export const SOCSelectionModal = ({
     }
   };
 
-  // Load initial batch of all occupations with caching
+  // Load ALL occupations at once with caching
   const loadInitialOccupations = async () => {
     // Check cache first
     const cached = getCachedData<SOCSuggestion[]>(BROWSE_ALL_CACHE);
 
     if (cached && cached.length > 0) {
-      console.log('✅ Using cached browse all occupations');
-      setAllOccupations(cached.slice(0, 20)); // First 20
-      setCurrentSkip(20);
-      setTotalOccupations(cached.length);
-      setHasMoreOccupations(cached.length > 20);
+      console.log('✅ Using cached all occupations:', cached.length);
+      setAllOccupations(cached);
       return;
     }
 
     setIsLoadingAll(true);
     try {
+      // Load ALL occupations in one request (no pagination)
       const response = await apiClient.get('/soc/all', {
-        params: { skip: 0, limit: 20 }
+        params: { skip: 0, limit: 2000 } // Get all (~1,100 occupations)
       });
 
       const data = response.data;
-      setAllOccupations(data.occupations || []);
-      setCurrentSkip(20);
-      setTotalOccupations(data.total || 0);
-      setHasMoreOccupations(data.has_more || false);
+      const allOccs = data.occupations || [];
 
-      // Cache first load (we'll incrementally add to cache as user scrolls)
-      setCachedData(BROWSE_ALL_CACHE, data.occupations || []);
+      setAllOccupations(allOccs);
+
+      // Cache all occupations
+      setCachedData(BROWSE_ALL_CACHE, allOccs);
+      console.log('✅ Loaded and cached all occupations:', allOccs.length);
     } catch (error) {
       console.error('Failed to load occupations:', error);
       setAllOccupations([]);
@@ -189,88 +187,35 @@ export const SOCSelectionModal = ({
     }
   };
 
-  // Load more occupations (infinite scroll)
-  const loadMoreOccupations = useCallback(async () => {
-    if (!hasMoreOccupations || isLoadingAll) return;
-
-    setIsLoadingAll(true);
-    try {
-      const response = await apiClient.get('/soc/all', {
-        params: { skip: currentSkip, limit: 20 }
-      });
-
-      const data = response.data;
-      const newOccupations = data.occupations || [];
-
-      setAllOccupations((prev) => {
-        const updated = [...prev, ...newOccupations];
-
-        // Update cache with new data
-        const cached = getCachedData<SOCSuggestion[]>(BROWSE_ALL_CACHE) || [];
-        setCachedData(BROWSE_ALL_CACHE, [...cached, ...newOccupations]);
-
-        return updated;
-      });
-
-      setCurrentSkip((prev) => prev + newOccupations.length);
-      setHasMoreOccupations(data.has_more || false);
-    } catch (error) {
-      console.error('Failed to load more occupations:', error);
-    } finally {
-      setIsLoadingAll(false);
-    }
-  }, [currentSkip, hasMoreOccupations, isLoadingAll]);
-
-  // Intersection Observer for infinite scroll
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting && hasMoreOccupations && !isLoadingAll && searchQuery === '') {
-          loadMoreOccupations();
-        }
-      },
-      { threshold: 0.1 }
-    );
-
-    const currentTarget = observerTarget.current;
-    if (currentTarget) {
-      observer.observe(currentTarget);
-    }
-
-    return () => {
-      if (currentTarget) {
-        observer.unobserve(currentTarget);
-      }
-    };
-  }, [hasMoreOccupations, isLoadingAll, searchQuery, loadMoreOccupations]);
-
-  // Debounced search with MongoDB (300ms)
+  // Client-side search filtering (instant, no debounce needed)
   useEffect(() => {
     // Empty query - show all occupations
     if (searchQuery.trim() === '') {
       setSearchResults([]);
+      setIsSearching(false);
       return;
     }
 
-    const timer = setTimeout(async () => {
-      setIsSearching(true);
-      try {
-        const response = await apiClient.post('/soc/search', {
-          query: searchQuery,
-          limit: 50,
-        });
+    setIsSearching(true);
 
-        setSearchResults(response.data.suggestions || []);
-      } catch (error) {
-        console.error('Search failed:', error);
-        setSearchResults([]);
-      } finally {
-        setIsSearching(false);
-      }
-    }, 300);
+    // Filter allOccupations by substring match (case-insensitive)
+    const query = searchQuery.toLowerCase().trim();
+    const queryNoDash = query.replace(/-/g, ''); // Normalize: remove dashes
 
-    return () => clearTimeout(timer);
-  }, [searchQuery]);
+    const filtered = allOccupations.filter((occ) => {
+      // Match in SOC code (normalize both to allow "151252" to match "15-1252")
+      const codeNoDash = occ.soc_code.replace(/-/g, '');
+      const codeMatch = codeNoDash.includes(queryNoDash) || occ.soc_code.toLowerCase().includes(query);
+
+      // Match in title
+      const titleMatch = occ.soc_title.toLowerCase().includes(query);
+
+      return codeMatch || titleMatch;
+    });
+
+    setSearchResults(filtered.slice(0, 50)); // Limit to 50 results
+    setIsSearching(false);
+  }, [searchQuery, allOccupations]);
 
   const handleSelectSOC = (soc: SOCSuggestion) => {
     setSelectedSOC({ code: soc.soc_code, title: soc.soc_title });
@@ -318,7 +263,6 @@ export const SOCSelectionModal = ({
 
   // Determine which list to show in Browse All section
   const browseAllList = searchQuery.trim() !== '' ? searchResults : allOccupations;
-  const showInfiniteScroll = searchQuery.trim() === '' && hasMoreOccupations;
 
   return (
     <Dialog
@@ -402,18 +346,8 @@ export const SOCSelectionModal = ({
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="mb-1">
                         <span className="text-xs font-mono text-muted-foreground">{suggestion.soc_code}</span>
-                        {suggestion.is_best_match && (
-                          <span className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded">
-                            Best Match
-                          </span>
-                        )}
-                        {suggestion.similarity_score && (
-                          <span className="text-xs text-muted-foreground">
-                            {Math.round(suggestion.similarity_score * 100)}% match
-                          </span>
-                        )}
                       </div>
                       <div className="text-sm font-medium text-foreground">{suggestion.soc_title}</div>
                     </div>
@@ -448,7 +382,7 @@ export const SOCSelectionModal = ({
             {searchQuery.trim() !== '' ? (
               <>Showing {browseAllList.length} search results</>
             ) : (
-              <>Showing {allOccupations.length} of {totalOccupations} occupations</>
+              <>Showing {allOccupations.length} occupations</>
             )}
           </div>
 
@@ -481,15 +415,6 @@ export const SOCSelectionModal = ({
                     </div>
                   </button>
                 ))}
-
-                {/* Infinite scroll trigger */}
-                {showInfiniteScroll && (
-                  <div ref={observerTarget} className="py-4 flex justify-center">
-                    {isLoadingAll && (
-                      <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                    )}
-                  </div>
-                )}
               </>
             ) : (
               <div className="text-sm text-muted-foreground text-center py-8">

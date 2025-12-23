@@ -3907,7 +3907,7 @@
         "kind": 5,
         "importPath": "backend.routers.soc",
         "description": "backend.routers.soc",
-        "peekOfCode": "router = APIRouter(prefix=\"/soc\", tags=[\"soc\"])\n# ============================================================================\n# IN-MEMORY CACHE for all occupations (static data, loaded once)\n# ============================================================================\n_all_occupations_cache: Optional[List[Dict]] = None\n_cache_timestamp: Optional[float] = None\nCACHE_TTL = 3600  # 1 hour (occupations rarely change)\nclass SOCSearchAIRequest(BaseModel):\n    \"\"\"Request model for AI-powered SOC code search (FAISS).\"\"\"\n    labor_category: str = Field(..., description=\"Job title or labor category to search for\")",
+        "peekOfCode": "router = APIRouter(prefix=\"/soc\", tags=[\"soc\"])\n# ============================================================================\n# IN-MEMORY CACHE for all occupations (static data, loaded once)\n# ============================================================================\n_all_occupations_cache: Optional[List[Dict]] = None\n_cache_timestamp: Optional[float] = None\nCACHE_TTL = 86400  # 1 hour (occupations rarely change)\nclass SOCSearchAIRequest(BaseModel):\n    \"\"\"Request model for AI-powered SOC code search (FAISS).\"\"\"\n    labor_category: str = Field(..., description=\"Job title or labor category to search for\")",
         "detail": "backend.routers.soc",
         "documentation": {}
     },
@@ -3916,7 +3916,7 @@
         "kind": 5,
         "importPath": "backend.routers.soc",
         "description": "backend.routers.soc",
-        "peekOfCode": "CACHE_TTL = 3600  # 1 hour (occupations rarely change)\nclass SOCSearchAIRequest(BaseModel):\n    \"\"\"Request model for AI-powered SOC code search (FAISS).\"\"\"\n    labor_category: str = Field(..., description=\"Job title or labor category to search for\")\n    description: Optional[str] = Field(None, description=\"Job description for better matching accuracy\")\n    experience: Optional[int] = Field(None, description=\"Years of experience (not currently used in search)\")\n    location: Optional[str] = Field(None, description=\"Location (not currently used in search)\")\n    top_k: int = Field(5, ge=1, le=20, description=\"Number of top matches to return (1-20)\")\nclass SOCSearchRequest(BaseModel):\n    \"\"\"Request model for MongoDB hybrid search (text + regex).\"\"\"",
+        "peekOfCode": "CACHE_TTL = 86400  # 1 hour (occupations rarely change)\nclass SOCSearchAIRequest(BaseModel):\n    \"\"\"Request model for AI-powered SOC code search (FAISS).\"\"\"\n    labor_category: str = Field(..., description=\"Job title or labor category to search for\")\n    description: Optional[str] = Field(None, description=\"Job description for better matching accuracy\")\n    experience: Optional[int] = Field(None, description=\"Years of experience (not currently used in search)\")\n    location: Optional[str] = Field(None, description=\"Location (not currently used in search)\")\n    top_k: int = Field(5, ge=1, le=20, description=\"Number of top matches to return (1-20)\")\nclass SOCSearchRequest(BaseModel):\n    \"\"\"Request model for MongoDB hybrid search (text + regex).\"\"\"",
         "detail": "backend.routers.soc",
         "documentation": {}
     },

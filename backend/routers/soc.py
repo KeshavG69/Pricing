@@ -27,7 +27,7 @@ router = APIRouter(prefix="/soc", tags=["soc"])
 # ============================================================================
 _all_occupations_cache: Optional[List[Dict]] = None
 _cache_timestamp: Optional[float] = None
-CACHE_TTL = 3600  # 1 hour (occupations rarely change)
+CACHE_TTL = 86400  # 1 hour (occupations rarely change)
 
 
 class SOCSearchAIRequest(BaseModel):
@@ -91,7 +91,10 @@ async def get_all_occupations_cached() -> List[Dict]:
 
         # MongoDB stores as occupation_code (6 digits without hyphen)
         cursor = mongo_client.db.occupations.find(
-            {"selectable": "T"},  # Only selectable occupations
+            {
+                "selectable": "T",  # Only selectable occupations
+                "occupation_code": {"$not": {"$regex": "^00"}}  # Exclude aggregate codes (00-0000, etc.)
+            },
             {"occupation_code": 1, "occupation_name": 1, "_id": 0}
         ).sort("occupation_code", 1)
 
@@ -241,13 +244,13 @@ async def search_soc_codes_ai(
 @router.get("/all")
 async def get_all_soc_codes(
     skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(20, ge=1, le=100, description="Number of records to return"),
+    limit: int = Query(20, ge=1, le=2000, description="Number of records to return"),
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Get paginated SOC codes for infinite scroll (with in-memory caching).
+    Get SOC codes with in-memory caching (supports fetching all at once).
 
-    Returns occupation codes sorted by SOC code with pagination support.
+    Returns occupation codes sorted by SOC code with optional pagination.
     Uses in-memory cache for instant responses after first load.
 
     Performance:
@@ -255,8 +258,8 @@ async def get_all_soc_codes(
     - Cached loads: ~1ms (in-memory slice)
 
     Args:
-        skip: Number of records to skip (for pagination)
-        limit: Number of records to return (default: 20, max: 100)
+        skip: Number of records to skip (for pagination, default: 0)
+        limit: Number of records to return (default: 20, max: 2000 to fetch all)
         current_user: Authenticated user (from JWT token)
 
     Returns:
@@ -372,7 +375,11 @@ async def search_soc_codes_hybrid(
             try:
                 # Use MongoDB text search with relevance scoring
                 cursor = mongo_client.db.occupations.find(
-                    {"$text": {"$search": query}, "selectable": "T"},
+                    {
+                        "$text": {"$search": query},
+                        "selectable": "T",
+                        "occupation_code": {"$not": {"$regex": "^00"}}  # Exclude aggregate codes
+                    },
                     {
                         "occupation_code": 1,
                         "occupation_name": 1,
