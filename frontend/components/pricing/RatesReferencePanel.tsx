@@ -1,8 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { IndirectRates, EscalationRates } from '@/types';
+import { IndirectRates, EscalationRates, RatePreset } from '@/types';
 import { useToast } from '@/lib/hooks/useToast';
+import { useOrganizationStore } from '@/lib/stores/organizationStore';
 import Input from '@/components/ui/Input';
 import { Info } from 'lucide-react';
 
@@ -28,11 +29,25 @@ export const RatesReferencePanel = ({
   onRecalculate,
 }: RatesReferencePanelProps) => {
   const toast = useToast();
+  const { organization, fetchOrganization } = useOrganizationStore();
+
+  // Fetch organization on mount to ensure we have latest presets
+  useEffect(() => {
+    fetchOrganization();
+  }, [fetchOrganization]);
 
   // Edit mode state
   const [isEditing, setIsEditing] = useState(false);
   const [editedRates, setEditedRates] = useState<IndirectRates>(rates);
   const [editedEscalationRates, setEditedEscalationRates] = useState<EscalationRates>(escalationRates);
+
+  // Preset selector state
+  const [selectedPresetId, setSelectedPresetId] = useState<string>('');
+  const [appliedPresetName, setAppliedPresetName] = useState<string>('');
+
+  // Get rate presets from organization
+  const ratePresets = organization?.settings?.rate_presets || [];
+
 
   // Sync with props when not editing
   useEffect(() => {
@@ -41,6 +56,30 @@ export const RatesReferencePanel = ({
       setEditedEscalationRates(escalationRates);
     }
   }, [rates, escalationRates, isEditing]);
+
+  // Check if current rates match any preset
+  useEffect(() => {
+    if (ratePresets.length === 0) return;
+
+    const matchingPreset = ratePresets.find(preset => {
+      const ratesMatch =
+        Math.abs(preset.fringe - rates.fringe) < 0.0001 &&
+        Math.abs(preset.oh - rates.oh) < 0.0001 &&
+        Math.abs(preset.ga - rates.ga) < 0.0001 &&
+        Math.abs(preset.fee - rates.fee) < 0.0001 &&
+        Math.abs((preset.smh || 0) - (rates.smh || 0)) < 0.0001 &&
+        Math.abs((preset.sub_fee || 0) - (rates.sub_fee || 0)) < 0.0001 &&
+        Math.abs((preset.ga_passthrough || 0) - (rates.ga_passthrough || 0)) < 0.0001;
+
+      return ratesMatch;
+    });
+
+    if (matchingPreset) {
+      setAppliedPresetName(matchingPreset.name);
+    } else {
+      setAppliedPresetName('');
+    }
+  }, [rates, ratePresets]);
 
   // Helper to format decimal to percentage display (fixes floating point precision)
   const toPercentageDisplay = (decimal: number): number => {
@@ -137,6 +176,45 @@ export const RatesReferencePanel = ({
     setIsEditing(false);
   };
 
+  const handleApplyPreset = async () => {
+    if (!selectedPresetId) {
+      toast.error('Please select a preset first');
+      return;
+    }
+
+    const preset = ratePresets.find(p => p.id === selectedPresetId);
+    if (!preset) {
+      toast.error('Preset not found');
+      return;
+    }
+
+    // Apply preset rates
+    const newRates: IndirectRates = {
+      fringe: preset.fringe,
+      oh: preset.oh,
+      ga: preset.ga,
+      fee: preset.fee,
+      smh: preset.smh,
+      sub_fee: preset.sub_fee,
+      ga_passthrough: preset.ga_passthrough,
+    };
+
+    setEditedRates(newRates);
+    onUpdateRates(newRates);
+
+    // Wait for state update
+    await new Promise(resolve => setTimeout(resolve, 50));
+
+    // Trigger recalculation
+    if (onRecalculate) {
+      await onRecalculate();
+    }
+
+    toast.success(`Applied preset: ${preset.name}`);
+    setAppliedPresetName(preset.name);
+    setSelectedPresetId(''); // Reset selector
+  };
+
   return (
     <div className="bg-card border border-border rounded-lg overflow-hidden">
       {/* Header - Always visible */}
@@ -160,7 +238,16 @@ export const RatesReferencePanel = ({
               d="M9 5l7 7-7 7"
             />
           </svg>
-          <h3 className="text-base font-bold text-foreground">Rates Reference</h3>
+          <div className="flex items-center gap-2">
+            <h3 className="text-base font-bold text-foreground">
+              Rates Reference
+            </h3>
+            {appliedPresetName && (
+              <span className="px-2 py-0.5 text-xs font-semibold bg-blue-100 text-blue-700 rounded-full border border-blue-200">
+                {appliedPresetName}
+              </span>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground">
             {isExpanded ? '(Click to collapse)' : '(Click to expand)'}
           </p>
@@ -201,6 +288,36 @@ export const RatesReferencePanel = ({
       {/* Content - Collapsible */}
       {isExpanded && (
         <div className="px-6 pb-6 space-y-4">
+          {/* Rate Preset Selector */}
+          {ratePresets.length > 0 && (
+            <div className="flex items-center gap-2 pb-4 border-b border-border">
+              <label className="text-sm font-medium text-foreground">Apply Preset:</label>
+              <select
+                value={selectedPresetId}
+                onChange={(e) => setSelectedPresetId(e.target.value)}
+                className="flex-1 px-3 py-2 bg-background border border-input rounded-md text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+              >
+                <option value="">Select Preset...</option>
+                {ratePresets.map(preset => (
+                  <option key={preset.id} value={preset.id}>
+                    {preset.name}
+                  </option>
+                ))}
+              </select>
+              <button
+                onClick={handleApplyPreset}
+                disabled={!selectedPresetId}
+                className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors ${
+                  selectedPresetId
+                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                    : 'bg-muted text-muted-foreground cursor-not-allowed'
+                }`}
+              >
+                Apply
+              </button>
+            </div>
+          )}
+
           {/* Indirect Rates Grid */}
           <div className="grid md:grid-cols-2 gap-4">
             <Input

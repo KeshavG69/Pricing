@@ -17,6 +17,43 @@ from auth.rbac import can_manage_user
 router = APIRouter(prefix="/api/organizations", tags=["organizations"])
 
 
+class RatePreset(BaseModel):
+    """Rate preset with name and all rates"""
+    id: str
+    name: str
+    fringe: float
+    oh: float
+    ga: float
+    fee: float
+    smh: float = 0.0
+    sub_fee: float = 0.0
+    ga_passthrough: float = 0.0
+
+
+class CreateRatePresetRequest(BaseModel):
+    """Request to create a new rate preset"""
+    name: str
+    fringe: float
+    oh: float
+    ga: float
+    fee: float
+    smh: float = 0.0
+    sub_fee: float = 0.0
+    ga_passthrough: float = 0.0
+
+
+class UpdateRatePresetRequest(BaseModel):
+    """Request to update an existing rate preset"""
+    name: Optional[str] = None
+    fringe: Optional[float] = None
+    oh: Optional[float] = None
+    ga: Optional[float] = None
+    fee: Optional[float] = None
+    smh: Optional[float] = None
+    sub_fee: Optional[float] = None
+    ga_passthrough: Optional[float] = None
+
+
 class UpdateSettingsRequest(BaseModel):
     """Request body for updating organization settings"""
     model_config = {"extra": "ignore"}
@@ -116,6 +153,176 @@ async def update_organization_settings(
     updated_org = org_crud.update_settings(current_user["organization_id"], settings)
 
     return serialize_doc(updated_org)
+
+
+@router.post("/me/rate-presets")
+async def create_rate_preset(
+    preset: CreateRatePresetRequest,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Create a new rate preset (admin only).
+
+    Args:
+        preset: Rate preset data
+
+    Returns:
+        Created preset with generated ID
+    """
+    import uuid
+
+    org_crud = get_organization_crud()
+    org = org_crud.get_by_id(current_user["organization_id"])
+
+    if not org:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organization not found"
+        )
+
+    # Get existing settings
+    settings = org.get("settings", {})
+    rate_presets = settings.get("rate_presets", [])
+
+    # Create new preset with unique ID
+    new_preset = {
+        "id": str(uuid.uuid4()),
+        "name": preset.name,
+        "fringe": preset.fringe,
+        "oh": preset.oh,
+        "ga": preset.ga,
+        "fee": preset.fee,
+        "smh": preset.smh,
+        "sub_fee": preset.sub_fee,
+        "ga_passthrough": preset.ga_passthrough
+    }
+
+    rate_presets.append(new_preset)
+    settings["rate_presets"] = rate_presets
+
+    # Update organization
+    updated_org = org_crud.update_settings(current_user["organization_id"], settings)
+
+    return new_preset
+
+
+@router.put("/me/rate-presets/{preset_id}")
+async def update_rate_preset(
+    preset_id: str,
+    preset_update: UpdateRatePresetRequest,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Update an existing rate preset (admin only).
+
+    Args:
+        preset_id: Preset ID to update
+        preset_update: Fields to update
+
+    Returns:
+        Updated preset
+    """
+    org_crud = get_organization_crud()
+    org = org_crud.get_by_id(current_user["organization_id"])
+
+    if not org:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organization not found"
+        )
+
+    # Get existing settings
+    settings = org.get("settings", {})
+    rate_presets = settings.get("rate_presets", [])
+
+    # Find preset
+    preset_index = None
+    for i, p in enumerate(rate_presets):
+        if p["id"] == preset_id:
+            preset_index = i
+            break
+
+    if preset_index is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Rate preset not found"
+        )
+
+    # Update preset fields
+    preset = rate_presets[preset_index]
+    if preset_update.name is not None:
+        preset["name"] = preset_update.name
+    if preset_update.fringe is not None:
+        preset["fringe"] = preset_update.fringe
+    if preset_update.oh is not None:
+        preset["oh"] = preset_update.oh
+    if preset_update.ga is not None:
+        preset["ga"] = preset_update.ga
+    if preset_update.fee is not None:
+        preset["fee"] = preset_update.fee
+    if preset_update.smh is not None:
+        preset["smh"] = preset_update.smh
+    if preset_update.sub_fee is not None:
+        preset["sub_fee"] = preset_update.sub_fee
+    if preset_update.ga_passthrough is not None:
+        preset["ga_passthrough"] = preset_update.ga_passthrough
+
+    rate_presets[preset_index] = preset
+    settings["rate_presets"] = rate_presets
+
+    # Update organization
+    updated_org = org_crud.update_settings(current_user["organization_id"], settings)
+
+    return preset
+
+
+@router.delete("/me/rate-presets/{preset_id}")
+async def delete_rate_preset(
+    preset_id: str,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Delete a rate preset (admin only).
+
+    Args:
+        preset_id: Preset ID to delete
+
+    Returns:
+        Success message
+    """
+    org_crud = get_organization_crud()
+    org = org_crud.get_by_id(current_user["organization_id"])
+
+    if not org:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organization not found"
+        )
+
+    # Get existing settings
+    settings = org.get("settings", {})
+    rate_presets = settings.get("rate_presets", [])
+
+    # Find and remove preset
+    preset_found = False
+    for i, p in enumerate(rate_presets):
+        if p["id"] == preset_id:
+            rate_presets.pop(i)
+            preset_found = True
+            break
+
+    if not preset_found:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Rate preset not found"
+        )
+
+    settings["rate_presets"] = rate_presets
+
+    # Update organization
+    org_crud.update_settings(current_user["organization_id"], settings)
+
+    return {"message": "Rate preset deleted successfully", "preset_id": preset_id}
 
 
 @router.delete("/members/{user_id}")
