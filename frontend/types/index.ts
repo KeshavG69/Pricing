@@ -295,9 +295,9 @@ export interface ODCItem {
   id: string;
   category: string;
   description?: string;
-  amount_per_year: Record<string, number>;
-  escalate: boolean;
-  apply_ga_adder: boolean;
+  amount_per_year: Record<string, number>;  // Base amounts per year
+  escalate: boolean;  // Whether to escalate year-over-year
+  // S&MH (Subcontract & Material Handling) is always applied to ODCs
 }
 
 // Advanced Analysis Mode types
