@@ -153,7 +153,29 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     return result;
   }, [primeLaborByYear, subcontractorCostsByYear, rates]);
 
-  // Calculate grand total (includes prime labor, subcontractors, passthrough, and fee)
+  // Calculate ODC costs by year with S&MH markup
+  // Formula: ODC Total = ODC Base × (1 + S&MH Rate)
+  const odcCostsByYear = useMemo(() => {
+    const result: Record<string, number> = {};
+    const smhRate = rates.smh || 0;
+
+    for (let year = 1; year <= totalYears; year++) {
+      const yearStr = year.toString();
+      let odcBase = 0;
+
+      odcs.forEach((odc) => {
+        odcBase += odc.amount_per_year[yearStr] || 0;
+      });
+
+      // Apply S&MH markup to all ODCs
+      result[yearStr] = odcBase * (1 + smhRate);
+    }
+
+    return result;
+  }, [odcs, rates.smh, totalYears]);
+
+  // Calculate grand total (includes prime labor, subcontractors, passthrough, fee, and ODCs)
+  // Formula: Grand Total = Labor CPFF (prime + sub + passthrough + fee) + Total ODCs (with S&MH)
   const grandTotal = useMemo(() => {
     const byYear: { [year: string]: number } = {};
     let total = 0;
@@ -164,6 +186,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
       ...Object.keys(subcontractorCostsByYear),
       ...Object.keys(passthroughByYear),
       ...Object.keys(feeByYear),
+      ...Object.keys(odcCostsByYear),
     ]);
 
     allYears.forEach((year) => {
@@ -171,13 +194,14 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
       const subLabor = subcontractorCostsByYear[year] || 0;
       const passthrough = passthroughByYear[year] || 0;
       const fee = feeByYear[year] || 0;
+      const odc = odcCostsByYear[year] || 0;
 
-      byYear[year] = primeLabor + subLabor + passthrough + fee;
+      byYear[year] = primeLabor + subLabor + passthrough + fee + odc;
       total += byYear[year];
     });
 
     return { byYear, total };
-  }, [primeLaborByYear, subcontractorCostsByYear, passthroughByYear, feeByYear]);
+  }, [primeLaborByYear, subcontractorCostsByYear, passthroughByYear, feeByYear, odcCostsByYear]);
 
   return (
     <div className="space-y-2">
@@ -261,6 +285,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
             subLaborByYear={subcontractorCostsByYear}
             passthroughByYear={passthroughByYear}
             feeByYear={feeByYear}
+            odcByYear={odcCostsByYear}
             totalYears={totalYears}
           />
 
