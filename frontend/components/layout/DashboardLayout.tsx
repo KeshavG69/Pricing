@@ -5,7 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useProposalsStore } from '@/lib/stores/proposalsStore';
-import { FileText, LogOut, Plus, Settings, LayoutGrid, ChevronRight, BarChart3, ChevronLeft, Menu, Clock, ChevronDown, Users, Mail, Building } from 'lucide-react';
+import { FileText, LogOut, Plus, Settings, LayoutGrid, ChevronRight, BarChart3, ChevronLeft, Menu, Clock, ChevronDown, Users, Mail, Building, Building2 } from 'lucide-react';
 import Button from '../ui/Button';
 import RoleBadge from '../ui/RoleBadge';
 import WorkspaceSwitcher from '../workspace/WorkspaceSwitcher';
@@ -104,6 +104,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   const adminNavItems = [
     { href: '/dashboard/settings/organization', label: 'Organization', icon: Building },
+    { href: '/dashboard/company-repository', label: 'Company Repo', icon: Building2 },
     { href: '/dashboard/invitations', label: 'Invitations', icon: Mail },
     { href: '/dashboard/team', label: 'Team', icon: Users },
   ];

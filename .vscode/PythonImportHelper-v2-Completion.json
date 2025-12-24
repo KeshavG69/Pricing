@@ -119,6 +119,14 @@
         "documentation": {}
     },
     {
+        "label": "get_embeddings",
+        "importPath": "client.llm_client",
+        "description": "client.llm_client",
+        "isExtraImport": true,
+        "detail": "client.llm_client",
+        "documentation": {}
+    },
+    {
         "label": "create_custom_retreiver",
         "importPath": "utils.agno_tools",
         "description": "utils.agno_tools",
@@ -132,6 +140,46 @@
         "description": "utils.agno_tools",
         "isExtraImport": true,
         "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_gsa_retriever",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "isExtraImport": true,
+        "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_gsa_rate_tool",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "isExtraImport": true,
+        "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "get_company_repository_crud",
+        "importPath": "utils.company_repository",
+        "description": "utils.company_repository",
+        "isExtraImport": true,
+        "detail": "utils.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "get_company_repository_crud",
+        "importPath": "utils.company_repository",
+        "description": "utils.company_repository",
+        "isExtraImport": true,
+        "detail": "utils.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "get_company_repository_crud",
+        "importPath": "utils.company_repository",
+        "description": "utils.company_repository",
+        "isExtraImport": true,
+        "detail": "utils.company_repository",
         "documentation": {}
     },
     {
@@ -249,6 +297,62 @@
     },
     {
         "label": "Cookie",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "UploadFile",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "File",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Form",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "BackgroundTasks",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
         "importPath": "fastapi",
         "description": "fastapi",
         "isExtraImport": true,
@@ -616,6 +720,78 @@
         "documentation": {}
     },
     {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
         "label": "pricing",
         "importPath": "routers",
         "description": "routers",
@@ -673,6 +849,14 @@
     },
     {
         "label": "soc",
+        "importPath": "routers",
+        "description": "routers",
+        "isExtraImport": true,
+        "detail": "routers",
+        "documentation": {}
+    },
+    {
+        "label": "company_repository",
         "importPath": "routers",
         "description": "routers",
         "isExtraImport": true,
@@ -890,6 +1074,46 @@
         "documentation": {}
     },
     {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Optional",
         "importPath": "typing",
         "description": "typing",
@@ -994,6 +1218,30 @@
         "documentation": {}
     },
     {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Optional",
         "importPath": "typing",
         "description": "typing",
@@ -1019,6 +1267,22 @@
     },
     {
         "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -1242,6 +1506,22 @@
         "documentation": {}
     },
     {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Dict",
         "importPath": "typing",
         "description": "typing",
@@ -1251,6 +1531,14 @@
     },
     {
         "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -1362,6 +1650,14 @@
         "documentation": {}
     },
     {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
         "label": "timedelta",
         "importPath": "datetime",
         "description": "datetime",
@@ -1386,7 +1682,31 @@
         "documentation": {}
     },
     {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
         "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
         "isExtraImport": true,
@@ -1455,6 +1775,14 @@
         "description": "dotenv",
         "isExtraImport": true,
         "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
         "documentation": {}
     },
     {
@@ -1692,6 +2020,22 @@
         "documentation": {}
     },
     {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
         "label": "HTTPBearer",
         "importPath": "fastapi.security",
         "description": "fastapi.security",
@@ -1820,6 +2164,14 @@
         "documentation": {}
     },
     {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
         "label": "is_token_blacklisted",
         "importPath": "auth.blacklist",
         "description": "auth.blacklist",
@@ -1853,6 +2205,38 @@
     },
     {
         "label": "EmailStr",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
         "importPath": "pydantic",
         "description": "pydantic",
         "isExtraImport": true,
@@ -2084,6 +2468,102 @@
         "description": "openpyxl.utils",
         "isExtraImport": true,
         "detail": "openpyxl.utils",
+        "documentation": {}
+    },
+    {
+        "label": "_convert_excel_to_csv",
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "isExtraImport": true,
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "parse_documents_to_dataframe",
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "isExtraImport": true,
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "parse_documents_to_dataframe",
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "isExtraImport": true,
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "extract_with_llamaextract",
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "isExtraImport": true,
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "parse_documents_to_dataframe",
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "isExtraImport": true,
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "parse_documents_to_dataframe",
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "isExtraImport": true,
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "extract_with_llamaextract",
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "isExtraImport": true,
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "parse_documents_to_dataframe",
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "isExtraImport": true,
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "parse_documents_to_dataframe",
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "isExtraImport": true,
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "Pinecone",
+        "importPath": "pinecone",
+        "description": "pinecone",
+        "isExtraImport": true,
+        "detail": "pinecone",
+        "documentation": {}
+    },
+    {
+        "label": "ServerlessSpec",
+        "importPath": "pinecone",
+        "description": "pinecone",
+        "isExtraImport": true,
+        "detail": "pinecone",
+        "documentation": {}
+    },
+    {
+        "label": "PineconeVectorStore",
+        "importPath": "langchain_pinecone",
+        "description": "langchain_pinecone",
+        "isExtraImport": true,
+        "detail": "langchain_pinecone",
         "documentation": {}
     },
     {
@@ -2434,6 +2914,22 @@
         "documentation": {}
     },
     {
+        "label": "require_admin",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
         "label": "get_current_user",
         "importPath": "auth.dependencies",
         "description": "auth.dependencies",
@@ -2460,27 +2956,51 @@
         "documentation": {}
     },
     {
+        "label": "parse_gsa_contract",
+        "importPath": "client.gsa_parser",
+        "description": "client.gsa_parser",
+        "isExtraImport": true,
+        "detail": "client.gsa_parser",
+        "documentation": {}
+    },
+    {
+        "label": "get_idrive_storage",
+        "importPath": "client.idrive_storage",
+        "description": "client.idrive_storage",
+        "isExtraImport": true,
+        "detail": "client.idrive_storage",
+        "documentation": {}
+    },
+    {
+        "label": "get_idrive_storage",
+        "importPath": "client.idrive_storage",
+        "description": "client.idrive_storage",
+        "isExtraImport": true,
+        "detail": "client.idrive_storage",
+        "documentation": {}
+    },
+    {
+        "label": "get_gsa_pinecone_client",
+        "importPath": "client.gsa_pinecone",
+        "description": "client.gsa_pinecone",
+        "isExtraImport": true,
+        "detail": "client.gsa_pinecone",
+        "documentation": {}
+    },
+    {
+        "label": "get_gsa_pinecone_client",
+        "importPath": "client.gsa_pinecone",
+        "description": "client.gsa_pinecone",
+        "isExtraImport": true,
+        "detail": "client.gsa_pinecone",
+        "documentation": {}
+    },
+    {
         "label": "BytesIO",
         "importPath": "io",
         "description": "io",
         "isExtraImport": true,
         "detail": "io",
-        "documentation": {}
-    },
-    {
-        "label": "parse_documents_to_dataframe",
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
-        "isExtraImport": true,
-        "detail": "client.jd_parser",
-        "documentation": {}
-    },
-    {
-        "label": "parse_documents_to_dataframe",
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
-        "isExtraImport": true,
-        "detail": "client.jd_parser",
         "documentation": {}
     },
     {
@@ -2644,11 +3164,19 @@
         "documentation": {}
     },
     {
-        "label": "get_idrive_storage",
-        "importPath": "client.idrive_storage",
-        "description": "client.idrive_storage",
+        "label": "split_multi_year_position",
+        "importPath": "routers.pricing",
+        "description": "routers.pricing",
         "isExtraImport": true,
-        "detail": "client.idrive_storage",
+        "detail": "routers.pricing",
+        "documentation": {}
+    },
+    {
+        "label": "split_multi_year_position",
+        "importPath": "routers.pricing",
+        "description": "routers.pricing",
+        "isExtraImport": true,
+        "detail": "routers.pricing",
         "documentation": {}
     },
     {
@@ -2744,6 +3272,14 @@
     },
     {
         "label": "create_pricing_agent",
+        "importPath": "agent.agent",
+        "description": "agent.agent",
+        "isExtraImport": true,
+        "detail": "agent.agent",
+        "documentation": {}
+    },
+    {
+        "label": "create_gsa_pricing_agent",
         "importPath": "agent.agent",
         "description": "agent.agent",
         "isExtraImport": true,
@@ -3426,6 +3962,69 @@
         "documentation": {}
     },
     {
+        "label": "YearRate",
+        "kind": 6,
+        "importPath": "backend.client.gsa_parser",
+        "description": "backend.client.gsa_parser",
+        "peekOfCode": "class YearRate(BaseModel):\n    \"\"\"Hourly rate for a specific contract year.\"\"\"\n    year: str = Field(description=\"Year number: '1', '2', '3', etc.\")\n    rate: float = Field(description=\"Hourly rate in dollars (e.g., 201.23)\")\nclass LaborCategoryExtract(BaseModel):\n    \"\"\"Labor category from GSA contract.\"\"\"\n    sin: Optional[str] = Field(None, description=\"Special Item Number (e.g., '54151S')\")\n    title: str = Field(description=\"Labor category title (e.g., 'Program Manager Senior')\")\n    description: Optional[str] = Field(None, description=\"Job description\")\n    education: Optional[str] = Field(None, description=\"Minimum education (e.g., 'Bachelors')\")",
+        "detail": "backend.client.gsa_parser",
+        "documentation": {}
+    },
+    {
+        "label": "LaborCategoryExtract",
+        "kind": 6,
+        "importPath": "backend.client.gsa_parser",
+        "description": "backend.client.gsa_parser",
+        "peekOfCode": "class LaborCategoryExtract(BaseModel):\n    \"\"\"Labor category from GSA contract.\"\"\"\n    sin: Optional[str] = Field(None, description=\"Special Item Number (e.g., '54151S')\")\n    title: str = Field(description=\"Labor category title (e.g., 'Program Manager Senior')\")\n    description: Optional[str] = Field(None, description=\"Job description\")\n    education: Optional[str] = Field(None, description=\"Minimum education (e.g., 'Bachelors')\")\n    experience: Optional[str] = Field(None, description=\"Minimum years of experience (e.g., '5')\")\n    rates_per_year: List[YearRate] = Field(\n        description=\"Hourly rates per year: [{'year': '1', 'rate': 201.23}, ...]\"\n    )",
+        "detail": "backend.client.gsa_parser",
+        "documentation": {}
+    },
+    {
+        "label": "GSAContractExtraction",
+        "kind": 6,
+        "importPath": "backend.client.gsa_parser",
+        "description": "backend.client.gsa_parser",
+        "peekOfCode": "class GSAContractExtraction(BaseModel):\n    \"\"\"Extraction schema for GSA contract.\"\"\"\n    contract_number: Optional[str] = Field(None, description=\"GSA contract number\")\n    contract_start_date: Optional[str] = Field(None, description=\"Contract start date\")\n    contract_end_date: Optional[str] = Field(None, description=\"Contract end date\")\n    company_name: Optional[str] = Field(None, description=\"Company name\")\n    labor_categories: List[LaborCategoryExtract] = Field(\n        description=\"All labor categories with rates\"\n    )\n# =====================================================================",
+        "detail": "backend.client.gsa_parser",
+        "documentation": {}
+    },
+    {
+        "label": "parse_gsa_contract",
+        "kind": 2,
+        "importPath": "backend.client.gsa_parser",
+        "description": "backend.client.gsa_parser",
+        "peekOfCode": "def parse_gsa_contract(file_path: str) -> dict:\n    \"\"\"\n    Parse GSA contract and return data for MongoDB storage.\n    Args:\n        file_path: Path to GSA contract (PDF, Excel, or RTF)\n    Returns:\n        Dict with contract_number, dates, labor_categories, needs_date\n    \"\"\"\n    import os\n    api_key = settings.LLAMA_CLOUD_API_KEY",
+        "detail": "backend.client.gsa_parser",
+        "documentation": {}
+    },
+    {
+        "label": "GSAPineconeClient",
+        "kind": 6,
+        "importPath": "backend.client.gsa_pinecone",
+        "description": "backend.client.gsa_pinecone",
+        "peekOfCode": "class GSAPineconeClient:\n    \"\"\"Client for storing and searching GSA labor categories in Pinecone.\"\"\"\n    def __init__(self):\n        self._lock = threading.RLock()\n        self._pc = None\n        self._index = None\n        self._embeddings = None\n    def _get_pinecone(self):\n        \"\"\"Get or create Pinecone client.\"\"\"\n        if self._pc is None:",
+        "detail": "backend.client.gsa_pinecone",
+        "documentation": {}
+    },
+    {
+        "label": "get_gsa_pinecone_client",
+        "kind": 2,
+        "importPath": "backend.client.gsa_pinecone",
+        "description": "backend.client.gsa_pinecone",
+        "peekOfCode": "def get_gsa_pinecone_client() -> GSAPineconeClient:\n    \"\"\"Get or create GSA Pinecone client.\"\"\"\n    global _gsa_pinecone_client\n    with _client_lock:\n        if _gsa_pinecone_client is None:\n            _gsa_pinecone_client = GSAPineconeClient()\n        return _gsa_pinecone_client",
+        "detail": "backend.client.gsa_pinecone",
+        "documentation": {}
+    },
+    {
+        "label": "_client_lock",
+        "kind": 5,
+        "importPath": "backend.client.gsa_pinecone",
+        "description": "backend.client.gsa_pinecone",
+        "peekOfCode": "_client_lock = threading.RLock()\ndef get_gsa_pinecone_client() -> GSAPineconeClient:\n    \"\"\"Get or create GSA Pinecone client.\"\"\"\n    global _gsa_pinecone_client\n    with _client_lock:\n        if _gsa_pinecone_client is None:\n            _gsa_pinecone_client = GSAPineconeClient()\n        return _gsa_pinecone_client",
+        "detail": "backend.client.gsa_pinecone",
+        "documentation": {}
+    },
+    {
         "label": "IDriveStorage",
         "kind": 6,
         "importPath": "backend.client.idrive_storage",
@@ -3529,7 +4128,7 @@
         "kind": 2,
         "importPath": "backend.client.jd_parser",
         "description": "backend.client.jd_parser",
-        "peekOfCode": "def extract_with_llamaextract(file_path: str, mode: str = \"fast\") -> GovernmentProposalExtraction:\n    \"\"\"\n    Extract structured data from document using LlamaExtract API.\n    Supports PDF, CSV, DOCX, and Excel files (xlsx/xls are converted to CSV).\n    Args:\n        file_path: Path to the document file\n        mode: Extraction mode - \"fast\" or \"thorough\"\n    Returns:\n        GovernmentProposalExtraction object with all data\n    Raises:",
+        "peekOfCode": "def extract_with_llamaextract(file_path: str, mode: str = \"premium\") -> GovernmentProposalExtraction:\n    \"\"\"\n    Extract structured data from document using LlamaExtract API.\n    Supports PDF, CSV, DOCX, and Excel files (xlsx/xls are converted to CSV).\n    Args:\n        file_path: Path to the document file\n        mode: Extraction mode - \"premium\" (default, high quality), \"balanced\", \"fast\", or \"multimodal\"\n    Returns:\n        GovernmentProposalExtraction object with all data\n    Raises:",
         "detail": "backend.client.jd_parser",
         "documentation": {}
     },
@@ -3678,6 +4277,33 @@
         "documentation": {}
     },
     {
+        "label": "LaborCategory",
+        "kind": 6,
+        "importPath": "backend.models.company_repository",
+        "description": "backend.models.company_repository",
+        "peekOfCode": "class LaborCategory(BaseModel):\n    \"\"\"Labor category with rates per year.\"\"\"\n    lcat_id: str\n    sin: Optional[str] = None\n    title: str\n    description: Optional[str] = None\n    education: Optional[str] = None\n    experience: Optional[str] = None\n    rates_by_year: Dict[str, float] = Field(default_factory=dict)\nclass CompanyRepositoryCreate(BaseModel):",
+        "detail": "backend.models.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "CompanyRepositoryCreate",
+        "kind": 6,
+        "importPath": "backend.models.company_repository",
+        "description": "backend.models.company_repository",
+        "peekOfCode": "class CompanyRepositoryCreate(BaseModel):\n    \"\"\"Schema for creating company repository entry.\"\"\"\n    name: str\n    contract_number: Optional[str] = None\n    contract_start_date: Optional[str] = None\n    contract_end_date: Optional[str] = None\nclass CompanyRepositoryUpdate(BaseModel):\n    \"\"\"Schema for updating company repository entry.\"\"\"\n    name: Optional[str] = None\n    contract_number: Optional[str] = None",
+        "detail": "backend.models.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "CompanyRepositoryUpdate",
+        "kind": 6,
+        "importPath": "backend.models.company_repository",
+        "description": "backend.models.company_repository",
+        "peekOfCode": "class CompanyRepositoryUpdate(BaseModel):\n    \"\"\"Schema for updating company repository entry.\"\"\"\n    name: Optional[str] = None\n    contract_number: Optional[str] = None\n    contract_start_date: Optional[str] = None\n    contract_end_date: Optional[str] = None\n    status: Optional[str] = None",
+        "detail": "backend.models.company_repository",
+        "documentation": {}
+    },
+    {
         "label": "JobDescription",
         "kind": 6,
         "importPath": "backend.models.job_description",
@@ -3738,6 +4364,33 @@
         "description": "backend.routers.auth",
         "peekOfCode": "router = APIRouter(prefix=\"/auth\", tags=[\"authentication\"])\n@router.post(\"/signup\", response_model=UserResponse)\nasync def signup(user_data: UserSignup):\n    \"\"\"\n    Register a new user\n    Args:\n        user_data: User signup data including firstName, lastName, email, password\n    Returns:\n        UserResponse: Created user information\n    \"\"\"",
         "detail": "backend.routers.auth",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_repo",
+        "kind": 2,
+        "importPath": "backend.routers.company_repository",
+        "description": "backend.routers.company_repository",
+        "peekOfCode": "def serialize_repo(repo: dict) -> dict:\n    \"\"\"Convert ObjectId to string for JSON serialization.\"\"\"\n    if not repo:\n        return repo\n    if \"_id\" in repo:\n        repo[\"id\"] = str(repo[\"_id\"])\n        del repo[\"_id\"]\n    if \"organization_id\" in repo:\n        repo[\"organization_id\"] = str(repo[\"organization_id\"])\n    if \"created_by\" in repo:",
+        "detail": "backend.routers.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.routers.company_repository",
+        "description": "backend.routers.company_repository",
+        "peekOfCode": "router = APIRouter(prefix=\"/api/company-repository\", tags=[\"company-repository\"])\n# LlamaExtract supported formats + Excel and RTF (we convert these)\nALLOWED_EXTENSIONS = [\n    '.pdf', '.csv', '.docx', '.htm', '.html', '.jpeg', '.jpg',\n    '.json', '.md', '.png', '.txt',  # LlamaExtract native\n    '.xlsx', '.xls',  # Converted to CSV\n    '.rtf'  # Converted to TXT\n]\ndef serialize_repo(repo: dict) -> dict:\n    \"\"\"Convert ObjectId to string for JSON serialization.\"\"\"",
+        "detail": "backend.routers.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "ALLOWED_EXTENSIONS",
+        "kind": 5,
+        "importPath": "backend.routers.company_repository",
+        "description": "backend.routers.company_repository",
+        "peekOfCode": "ALLOWED_EXTENSIONS = [\n    '.pdf', '.csv', '.docx', '.htm', '.html', '.jpeg', '.jpg',\n    '.json', '.md', '.png', '.txt',  # LlamaExtract native\n    '.xlsx', '.xls',  # Converted to CSV\n    '.rtf'  # Converted to TXT\n]\ndef serialize_repo(repo: dict) -> dict:\n    \"\"\"Convert ObjectId to string for JSON serialization.\"\"\"\n    if not repo:\n        return repo",
+        "detail": "backend.routers.company_repository",
         "documentation": {}
     },
     {
@@ -3984,6 +4637,15 @@
         "documentation": {}
     },
     {
+        "label": "analyze_pdf",
+        "kind": 2,
+        "importPath": "backend.scripts.analyze_personnel_pdf",
+        "description": "backend.scripts.analyze_personnel_pdf",
+        "peekOfCode": "def analyze_pdf():\n    \"\"\"Analyze Personnel Qualifications PDF in detail.\"\"\"\n    print('Extracting raw data from Personnel Qualifications PDF...')\n    print('='*80)\n    extraction = extract_with_llamaextract('/Users/keshav/Downloads/Personnel Qualifications.pdf', mode='balanced')\n    print(f'\\nDocument Metadata:')\n    print(f'  Location: {extraction.metadata.location}')\n    print(f'  Project: {extraction.metadata.project_name}')\n    print(f'  Base Years: {extraction.metadata.base_years}')\n    print(f'  Option Years: {extraction.metadata.option_years}')",
+        "detail": "backend.scripts.analyze_personnel_pdf",
+        "documentation": {}
+    },
+    {
         "label": "safe_create_index",
         "kind": 2,
         "importPath": "backend.scripts.create_indexes",
@@ -4200,6 +4862,69 @@
         "documentation": {}
     },
     {
+        "label": "print_header",
+        "kind": 2,
+        "importPath": "backend.scripts.test_gsa_flow",
+        "description": "backend.scripts.test_gsa_flow",
+        "peekOfCode": "def print_header(title: str):\n    print(f\"\\n{'='*60}\")\n    print(f\"  {title}\")\n    print(f\"{'='*60}\\n\")\ndef test_gsa_flow():\n    \"\"\"Run all GSA tests in order (synchronous).\"\"\"\n    # =========================================================================\n    # TEST 1: GSA Year Calculation\n    # =========================================================================\n    print_header(\"TEST 1: GSA Year Calculation\")",
+        "detail": "backend.scripts.test_gsa_flow",
+        "documentation": {}
+    },
+    {
+        "label": "test_gsa_flow",
+        "kind": 2,
+        "importPath": "backend.scripts.test_gsa_flow",
+        "description": "backend.scripts.test_gsa_flow",
+        "peekOfCode": "def test_gsa_flow():\n    \"\"\"Run all GSA tests in order (synchronous).\"\"\"\n    # =========================================================================\n    # TEST 1: GSA Year Calculation\n    # =========================================================================\n    print_header(\"TEST 1: GSA Year Calculation\")\n    from utils.agno_tools import calculate_gsa_year\n    test_cases = [\n        (\"2020-01-15\", \"Contract started Jan 2020\"),\n        (\"2023-06-01\", \"Contract started Jun 2023\"),",
+        "detail": "backend.scripts.test_gsa_flow",
+        "documentation": {}
+    },
+    {
+        "label": "TEST_ORG_ID",
+        "kind": 5,
+        "importPath": "backend.scripts.test_gsa_flow",
+        "description": "backend.scripts.test_gsa_flow",
+        "peekOfCode": "TEST_ORG_ID = \"test_org_123\"\nTEST_USER_ID = \"test_user_123\"\n# Mock labor categories (simulate parsed GSA contract data)\nMOCK_LABOR_CATEGORIES = [\n    {\n        \"lcat_id\": \"LC001\",\n        \"title\": \"Program Manager\",\n        \"sin\": \"54151S\",\n        \"education\": \"Bachelor's Degree\",\n        \"experience\": \"10+ years\",",
+        "detail": "backend.scripts.test_gsa_flow",
+        "documentation": {}
+    },
+    {
+        "label": "TEST_USER_ID",
+        "kind": 5,
+        "importPath": "backend.scripts.test_gsa_flow",
+        "description": "backend.scripts.test_gsa_flow",
+        "peekOfCode": "TEST_USER_ID = \"test_user_123\"\n# Mock labor categories (simulate parsed GSA contract data)\nMOCK_LABOR_CATEGORIES = [\n    {\n        \"lcat_id\": \"LC001\",\n        \"title\": \"Program Manager\",\n        \"sin\": \"54151S\",\n        \"education\": \"Bachelor's Degree\",\n        \"experience\": \"10+ years\",\n        \"rates_by_year\": {",
+        "detail": "backend.scripts.test_gsa_flow",
+        "documentation": {}
+    },
+    {
+        "label": "MOCK_LABOR_CATEGORIES",
+        "kind": 5,
+        "importPath": "backend.scripts.test_gsa_flow",
+        "description": "backend.scripts.test_gsa_flow",
+        "peekOfCode": "MOCK_LABOR_CATEGORIES = [\n    {\n        \"lcat_id\": \"LC001\",\n        \"title\": \"Program Manager\",\n        \"sin\": \"54151S\",\n        \"education\": \"Bachelor's Degree\",\n        \"experience\": \"10+ years\",\n        \"rates_by_year\": {\n            \"1\": 185.50,\n            \"2\": 190.25,",
+        "detail": "backend.scripts.test_gsa_flow",
+        "documentation": {}
+    },
+    {
+        "label": "test_raw_extraction",
+        "kind": 2,
+        "importPath": "backend.scripts.test_llamaextract_raw",
+        "description": "backend.scripts.test_llamaextract_raw",
+        "peekOfCode": "def test_raw_extraction():\n    \"\"\"Test raw LlamaExtract output.\"\"\"\n    file_path = \"/Users/keshav/Downloads/SURFLANT Ingestion.xlsx\"\n    print(\"Testing RAW LlamaExtract output (before FTE multiplication)...\")\n    print(\"=\" * 80)\n    # Extract directly\n    extraction = extract_with_llamaextract(file_path, mode=\"balanced\")\n    print(f\"\\nExtracted {len(extraction.positions)} positions\\n\")\n    for idx, position in enumerate(extraction.positions[:5], 1):\n        print(f\"{idx}. {position.labor_category}\")",
+        "detail": "backend.scripts.test_llamaextract_raw",
+        "documentation": {}
+    },
+    {
+        "label": "test_splitting",
+        "kind": 2,
+        "importPath": "backend.scripts.test_splitting",
+        "description": "backend.scripts.test_splitting",
+        "peekOfCode": "def test_splitting():\n    \"\"\"Test that positions split correctly.\"\"\"\n    print('Testing position splitting...')\n    print('='*80)\n    # Test case 1: Senior Infrastructure Design Engineer (5640 hrs = 3 FTEs)\n    position1 = {\n        'labor_category': 'Senior Infrastructure Design Engineer',\n        'hours_per_year': {'1': 5640, '2': 5640, '3': 5640, '4': 5640, '5': 5640},\n        'location': 'Virginia',\n        'soc_code': '151241',",
+        "detail": "backend.scripts.test_splitting",
+        "documentation": {}
+    },
+    {
         "label": "create_custom_retreiver",
         "kind": 2,
         "importPath": "backend.utils.agno_tools",
@@ -4215,6 +4940,69 @@
         "description": "backend.utils.agno_tools",
         "peekOfCode": "def create_wage_tool():\n    \"\"\"\n    Create a custom tool for retrieving wage data from BLS OEWS database.\n    This tool queries MongoDB to fetch wage percentiles (10th, 25th, 50th/median, 75th, 90th)\n    for a given SOC code and geographic area. Data is sourced from the Bureau of Labor Statistics\n    Occupational Employment and Wage Statistics (OEWS) program.\n    Returns:\n        Callable tool function that can be used with agno agents to retrieve wage data\n    Example:\n        >>> wage_tool = create_wage_tool()",
         "detail": "backend.utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "calculate_gsa_year",
+        "kind": 2,
+        "importPath": "backend.utils.agno_tools",
+        "description": "backend.utils.agno_tools",
+        "peekOfCode": "def calculate_gsa_year(contract_start_date: str) -> int:\n    \"\"\"\n    Calculate current GSA contract year based on contract start date.\n    Example:\n        Contract started: January 15, 2020\n        Current date: December 24, 2024\n        Result: Year 5\n    \"\"\"\n    from dateutil import parser as date_parser\n    try:",
+        "detail": "backend.utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_gsa_retriever",
+        "kind": 2,
+        "importPath": "backend.utils.agno_tools",
+        "description": "backend.utils.agno_tools",
+        "peekOfCode": "def create_gsa_retriever(organization_id: str, file_id: str):\n    \"\"\"\n    Create a retriever for GSA labor category search using Pinecone.\n    Args:\n        organization_id: Organization ID to filter results\n        file_id: GSA contract file ID to filter results\n    Returns:\n        Callable retriever function for agno agents\n    \"\"\"\n    pinecone_client = get_gsa_pinecone_client()",
+        "detail": "backend.utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_gsa_rate_tool",
+        "kind": 2,
+        "importPath": "backend.utils.agno_tools",
+        "description": "backend.utils.agno_tools",
+        "peekOfCode": "def create_gsa_rate_tool(organization_id: str, file_id: str, contract_start_date: str):\n    \"\"\"\n    Create a tool for retrieving GSA rates from MongoDB.\n    Args:\n        organization_id: Organization ID\n        file_id: GSA contract file ID\n        contract_start_date: Contract start date for year calculation\n    Returns:\n        Callable tool function for agno agents\n    \"\"\"",
+        "detail": "backend.utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "CompanyRepositoryCRUD",
+        "kind": 6,
+        "importPath": "backend.utils.company_repository",
+        "description": "backend.utils.company_repository",
+        "peekOfCode": "class CompanyRepositoryCRUD:\n    \"\"\"CRUD operations for company_repositories collection.\"\"\"\n    def __init__(self):\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"company_repositories\"]\n        # Create indexes\n        try:\n            self.collection.create_index([(\"organization_id\", 1), (\"created_at\", -1)])\n            self.collection.create_index(\"file_id\", unique=True)",
+        "detail": "backend.utils.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "get_company_repository_crud",
+        "kind": 2,
+        "importPath": "backend.utils.company_repository",
+        "description": "backend.utils.company_repository",
+        "peekOfCode": "def get_company_repository_crud() -> CompanyRepositoryCRUD:\n    \"\"\"Get or create CompanyRepositoryCRUD instance.\"\"\"\n    global _company_repo_crud\n    with _lock:\n        if _company_repo_crud is None:\n            _company_repo_crud = CompanyRepositoryCRUD()\n        return _company_repo_crud",
+        "detail": "backend.utils.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "_company_repo_crud",
+        "kind": 5,
+        "importPath": "backend.utils.company_repository",
+        "description": "backend.utils.company_repository",
+        "peekOfCode": "_company_repo_crud = None\n_lock = threading.RLock()\ndef get_company_repository_crud() -> CompanyRepositoryCRUD:\n    \"\"\"Get or create CompanyRepositoryCRUD instance.\"\"\"\n    global _company_repo_crud\n    with _lock:\n        if _company_repo_crud is None:\n            _company_repo_crud = CompanyRepositoryCRUD()\n        return _company_repo_crud",
+        "detail": "backend.utils.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "_lock",
+        "kind": 5,
+        "importPath": "backend.utils.company_repository",
+        "description": "backend.utils.company_repository",
+        "peekOfCode": "_lock = threading.RLock()\ndef get_company_repository_crud() -> CompanyRepositoryCRUD:\n    \"\"\"Get or create CompanyRepositoryCRUD instance.\"\"\"\n    global _company_repo_crud\n    with _lock:\n        if _company_repo_crud is None:\n            _company_repo_crud = CompanyRepositoryCRUD()\n        return _company_repo_crud",
+        "detail": "backend.utils.company_repository",
         "documentation": {}
     },
     {

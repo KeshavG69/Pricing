@@ -21,7 +21,13 @@ interface ProposalsState {
   // Actions
   fetchProposals: (force?: boolean) => Promise<void>;
   fetchProposal: (id: string) => Promise<void>;
-  uploadDocuments: (files: File[], name: string, solicitationNumber?: string) => Promise<string>;
+  uploadDocuments: (
+    files: File[],
+    name: string,
+    solicitationNumber?: string,
+    wageSourceType?: 'bls' | 'gsa',
+    wageSourceFileId?: string
+  ) => Promise<string>;
   updateProposal: (id: string, updates: ProposalUpdate) => Promise<void>;
   deleteProposal: (id: string) => Promise<void>;
   duplicateProposal: (id: string, newName: string) => Promise<void>;
@@ -136,10 +142,16 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
     }
   },
 
-  uploadDocuments: async (files, name, solicitationNumber) => {
+  uploadDocuments: async (files, name, solicitationNumber, wageSourceType, wageSourceFileId) => {
     try {
       set({ isLoading: true, error: null });
-      const response = await proposalsApi.upload(files, name, solicitationNumber);
+      const response = await proposalsApi.upload(
+        files,
+        name,
+        solicitationNumber,
+        wageSourceType,
+        wageSourceFileId
+      );
 
       // Invalidate proposals list cache (new proposal added)
       const user = useAuthStore.getState().user;

@@ -81,24 +81,29 @@ def serialize_proposal(proposal: dict) -> dict:
 async def process_proposal_documents(
     proposal_id: str,
     user_id: str,
+    organization_id: str,
     file_paths: List[str],
     file_names: List[str],
-    temp_dir: Path
+    temp_dir: Path,
+    wage_source: Dict[str, Any] = None
 ):
     """
     Background task to process uploaded documents.
 
     Updates proposal status as processing progresses.
     Uses singleton ProposalCRUD instance for thread safety.
+
+    Args:
+        wage_source: {"type": "bls"} or {"type": "gsa", "file_id": "..."}
     """
     # Get singleton CRUD instance
     crud = await get_crud()
 
-    try:
-        # Get proposal to fetch organization settings
-        proposal = crud.get_by_id(ObjectId(proposal_id))
-        organization_id = proposal.get("organization_id")
+    # Default to BLS if not specified
+    if wage_source is None:
+        wage_source = {"type": "bls"}
 
+    try:
         # Get organization settings for default rates and escalation rate
         default_escalation_rate = 0.03  # Fallback default
         default_rates = {
@@ -140,8 +145,13 @@ async def process_proposal_documents(
             {"progress": 30, "message": f"Found {len(df)} positions, {len(extracted_odcs)} ODCs. Fetching wage data..."}
         )
 
-        # Step 2: Process with agents
-        final_df = await process_dataframe_with_agents(df, max_workers=10)
+        # Step 2: Process with agents (BLS or GSA based on wage_source)
+        final_df = await process_dataframe_with_agents(
+            df,
+            max_workers=10,
+            wage_source=wage_source,
+            organization_id=organization_id
+        )
 
         crud.update_proposal(
             proposal_id,
@@ -285,6 +295,8 @@ async def upload_proposal_documents(
     files: List[UploadFile] = File(...),
     name: str = Form(...),
     solicitation_number: str = Form(None),
+    wage_source_type: str = Form("bls"),
+    wage_source_file_id: str = Form(None),
     current_user: dict = Depends(get_current_user)
 ):
     """
@@ -294,10 +306,17 @@ async def upload_proposal_documents(
         files: Document files to upload
         name: Proposal name (required)
         solicitation_number: Optional solicitation number
+        wage_source_type: "bls" (default) or "gsa"
+        wage_source_file_id: GSA contract file_id (required if wage_source_type is "gsa")
 
     Returns proposal_id immediately for status polling.
     """
     try:
+        # Build wage source config
+        wage_source = {"type": wage_source_type}
+        if wage_source_type == "gsa" and wage_source_file_id:
+            wage_source["file_id"] = wage_source_file_id
+
         # Initialize services
         storage = get_idrive_storage()
         crud = await get_crud()
@@ -324,7 +343,8 @@ async def upload_proposal_documents(
             "prime_contractor_name": "TBD",  # Frontend will update this from org data
             "documents": [],
             "progress": 0,
-            "message": "Uploading documents..."
+            "message": "Uploading documents...",
+            "wage_source": wage_source
         }
 
         # Use organization-aware creation if user belongs to an organization
@@ -373,9 +393,11 @@ async def upload_proposal_documents(
             process_proposal_documents,
             proposal_id,
             str(current_user["_id"]),
+            str(current_user.get("organization_id")),
             file_paths,
             file_names,
-            temp_dir
+            temp_dir,
+            wage_source
         )
 
         return {

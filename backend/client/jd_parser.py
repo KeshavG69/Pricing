@@ -129,17 +129,64 @@ class PositionExtract(BaseModel):
         description="State name only for this position (e.g., 'Virginia', 'California', 'Texas'). Extract only the state, not city. Use full state name, not abbreviation."
     )
 
+    ftes: Optional[int] = Field(
+        1,
+        description="""Number of full-time equivalents (FTEs) for this position.
+
+        WHEN TO USE: Only extract FTE count if the table has a dedicated FTE/Count column
+        AND the hours columns show per-person hours (not totals).
+
+        WHEN NOT TO USE: If the hours columns show TOTAL hours for all FTEs combined,
+        set ftes=1 (default) and extract total hours in hours_per_year.
+        The backend will automatically split multi-FTE positions based on total hours.
+
+        Examples:
+        - Table shows "FTEs: 4 | Hours: 1920" → Extract ftes=4, hours=1920 (per-person)
+        - Table shows "Base: 3,808 | OY1: 3,808" (no FTE column, total hours) → ftes=1, hours_per_year=[...] (totals)
+        - No FTE column → Default to ftes=1"""
+    )
+
     hours: Optional[int] = Field(
         None,
-        description="Annual hours for single-year contracts (e.g., 1880 for full-time, 940 for part-time). LEGACY FIELD."
+        description="""Annual hours for a SINGLE person in this position (NOT multiplied by FTE count).
+
+        USE THIS FIELD WHEN: The document has a single "Hours" column (not year-by-year columns).
+        DO NOT USE: If the document has separate columns for Base Period, Option Year 1, etc.
+
+        Extract the per-person hours only. Examples:
+        - Table shows "Hours: 1920" → Extract hours=1920 (even if FTEs=4)
+        - Table shows "Annual Hours: 2080" → Extract hours=2080
+        - Table has year columns → Leave hours=None, use hours_per_year instead"""
     )
 
     hours_per_year: Optional[List[YearHours]] = Field(
         None,
-        description="""Hours worked per year in multi-year contracts.
-        Extract as a list where each item has 'year' and 'hours'.
-        Year "1" = Base Period, "2" = Option Year 1, "3" = Option Year 2, etc.
-        Example: [{"year": "1", "hours": 1880}, {"year": "2", "hours": 1880}, {"year": "3", "hours": 0}]"""
+        description="""Hours per year - EXACT values from the table row (TOTAL hours, not per-person).
+
+        ONLY USE THIS FIELD IF: The document has ACTUAL year-by-year hour columns.
+        Look for column headers like: "Base Period", "BY", "Option Year 1", "OY1", "Year 1", "Year 2", etc.
+
+        CRITICAL RULES:
+        1. Each table row = ONE position extraction (even if hours vary by year)
+        2. Extract EXACTLY what's in the table row - don't split into multiple positions
+        3. Extract TOTAL hours shown in each year column (as-is from the table)
+        4. Year "1" = Base Period/Base Year, "2" = Option Year 1, "3" = Option Year 2, etc.
+        5. If document only has single "Hours" column, use 'hours' field instead
+
+        Examples:
+        - Table row: "IT Specialist/Networks | Base: 3,808 | OY1: 3,808 | OY2: 5,712 | OY3: 5,712 | OY4: 5,712"
+          → Extract ONE position with: [{"year": "1", "hours": 3808}, {"year": "2", "hours": 3808}, {"year": "3", "hours": 5712}, {"year": "4", "hours": 5712}, {"year": "5", "hours": 5712}]
+          → Do NOT create multiple positions just because hours change
+
+        - Table row: "Engineer | Base: 1920 | OY1: 1920 | OY2: 1920"
+          → Extract: [{"year": "1", "hours": 1920}, {"year": "2", "hours": 1920}, {"year": "3", "hours": 1920}]
+
+        - Table row: "Specialist | Base: - | OY1: 1904 | OY2: 1904 | OY3: 1904"
+          → Extract: [{"year": "1", "hours": 0}, {"year": "2", "hours": 1904}, {"year": "3", "hours": 1904}, {"year": "4", "hours": 1904}]
+          → "-" or empty means 0 hours
+
+        - Table row with single Hours column: "Analyst | Hours: 1920"
+          → Leave hours_per_year=None, use 'hours' field instead"""
     )
 
 
@@ -223,12 +270,23 @@ def _convert_to_job_description(
     Returns:
         JobDescription object with hours_per_year populated
     """
+    # Get FTE multiplier (default to 1 if not specified)
+    ftes = position.ftes or 1
+
     # Convert hours_per_year from List[YearHours] to dict[str, int]
     hours_per_year_dict = None
 
     if position.hours_per_year:
         # Case 1: LlamaExtract found year columns
-        hours_per_year_dict = {yh.year: yh.hours for yh in position.hours_per_year}
+        # Two scenarios:
+        # A) ftes > 1: Table has FTE column, hours are per-person → multiply by ftes
+        # B) ftes = 1: No FTE column, hours are totals → use as-is
+        if ftes > 1:
+            # Multiply per-person hours by FTE count
+            hours_per_year_dict = {yh.year: yh.hours * ftes for yh in position.hours_per_year}
+        else:
+            # Use total hours as-is
+            hours_per_year_dict = {yh.year: yh.hours for yh in position.hours_per_year}
 
         # If hours_per_year has fewer years than total_years, extend it
         # (e.g., only Base Period extracted but contract has Option Years)
@@ -239,16 +297,18 @@ def _convert_to_job_description(
                     hours_per_year_dict[str(year)] = base_hours
 
     elif position.hours and not position.hours_per_year and doc_metadata.total_years and doc_metadata.total_years > 1:
-        # Case 2: Only total hours + multi-year contract (SeaPort format)
-        # Distribute hours evenly across years
-        # Backend split_multi_year_position() will handle creating multiple people if needed
-        fte_hours = doc_metadata.standard_fte_hours or 1920
+        # Case 2: Single hours field + multi-year contract
+        # The hours field represents annual hours per person
+        # We need to multiply by FTE count and repeat for all years
 
-        hours_per_year_dict = _distribute_hours_across_years(
-            total_hours=position.hours,
-            total_years=doc_metadata.total_years,
-            fte_hours=fte_hours
-        )
+        # Calculate hours per year (all FTEs combined)
+        annual_hours = position.hours * ftes
+
+        # Repeat the same hours for all contract years
+        hours_per_year_dict = {
+            str(year): annual_hours
+            for year in range(1, doc_metadata.total_years + 1)
+        }
 
         # Keep original hours field for backward compatibility
         # Frontend can display total hours if needed
@@ -256,12 +316,15 @@ def _convert_to_job_description(
     # Use doc-level location if position has no location
     location = position.location or doc_metadata.location
 
+    # Multiply legacy hours field by FTE count
+    total_hours = (position.hours * ftes) if position.hours else None
+
     return JobDescription(
         labor_category=position.labor_category,
         description=position.description,
         experience=position.experience,
         location=location,
-        hours=position.hours,
+        hours=total_hours,
         hours_per_year=hours_per_year_dict
     )
 
@@ -373,7 +436,7 @@ def _convert_excel_to_csv(excel_path: str) -> str:
     return temp_csv.name
 
 
-def extract_with_llamaextract(file_path: str, mode: str = "fast") -> GovernmentProposalExtraction:
+def extract_with_llamaextract(file_path: str, mode: str = "premium") -> GovernmentProposalExtraction:
     """
     Extract structured data from document using LlamaExtract API.
 
@@ -381,7 +444,7 @@ def extract_with_llamaextract(file_path: str, mode: str = "fast") -> GovernmentP
 
     Args:
         file_path: Path to the document file
-        mode: Extraction mode - "fast" or "thorough"
+        mode: Extraction mode - "premium" (default, high quality), "balanced", "fast", or "multimodal"
 
     Returns:
         GovernmentProposalExtraction object with all data
@@ -410,7 +473,14 @@ def extract_with_llamaextract(file_path: str, mode: str = "fast") -> GovernmentP
     try:
         extractor = LlamaExtract(api_key=api_key)
 
-        extraction_mode = ExtractMode.FAST if mode == "fast" else ExtractMode.THOROUGH
+        # Map mode string to ExtractMode enum
+        mode_mapping = {
+            "balanced": ExtractMode.BALANCED,
+            "fast": ExtractMode.FAST,
+            "premium": ExtractMode.PREMIUM,
+            "multimodal": ExtractMode.MULTIMODAL
+        }
+        extraction_mode = mode_mapping.get(mode.lower(), ExtractMode.BALANCED)
         config = ExtractConfig(extraction_mode=extraction_mode)
 
         extract_run = extractor.extract(
@@ -464,8 +534,8 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> Dict[str, a
 
         try:
             # Extract everything in one pass using LlamaExtract
-            print(f"  Extracting with LlamaExtract...", end=" ")
-            extraction = extract_with_llamaextract(doc_path, mode="fast")
+            print(f"  Extracting with LlamaExtract (premium mode)...", end=" ")
+            extraction = extract_with_llamaextract(doc_path, mode="premium")
 
             # Convert months_per_year from List[YearMonths] to Dict[str, int]
             months_dict = None
