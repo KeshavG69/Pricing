@@ -194,9 +194,16 @@ def _convert_to_job_description(
     hours_per_year_dict = None
 
     if position.hours_per_year:
-        # Case 1: LlamaExtract found year columns (Personnel Qualifications format)
-        # System already works correctly - use directly
+        # Case 1: LlamaExtract found year columns
         hours_per_year_dict = {yh.year: yh.hours for yh in position.hours_per_year}
+
+        # If hours_per_year has fewer years than total_years, extend it
+        # (e.g., only Base Period extracted but contract has Option Years)
+        if doc_metadata.total_years and len(hours_per_year_dict) < doc_metadata.total_years:
+            base_hours = hours_per_year_dict.get("1", position.hours or 1920)
+            for year in range(1, doc_metadata.total_years + 1):
+                if str(year) not in hours_per_year_dict:
+                    hours_per_year_dict[str(year)] = base_hours
 
     elif position.hours and not position.hours_per_year and doc_metadata.total_years and doc_metadata.total_years > 1:
         # Case 2: Only total hours + multi-year contract (SeaPort format)
