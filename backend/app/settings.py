@@ -29,6 +29,10 @@ class Settings(BaseSettings):
     IDRIVE_E2_SECRET_KEY: str = ""
     IDRIVE_E2_BUCKET: str = ""
 
+    # Pinecone configuration (for GSA labor category search)
+    PINECONE_API_KEY: str = ""
+    PINECONE_INDEX_NAME: str = "gsa-labor-categories"
+
     class Config:
         env_file = ".env"
 

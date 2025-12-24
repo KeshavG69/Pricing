@@ -3,101 +3,160 @@ Pipeline functions for document processing and pricing.
 """
 
 import asyncio
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 import pandas as pd
 import json
 
-from agent.agent import create_pricing_agent
+from agent.agent import create_pricing_agent, create_gsa_pricing_agent
 
 
-async def process_single_row(row_dict: Dict[str, Any], row_index: int) -> Dict[str, Any]:
+async def process_single_row(
+    row_dict: Dict[str, Any],
+    row_index: int,
+    wage_source: Optional[Dict[str, Any]] = None,
+    organization_id: Optional[str] = None
+) -> Dict[str, Any]:
     """
-    Process a single JD row with the pricing agent.
+    Process a single JD row with the pricing agent (BLS or GSA).
 
     Args:
         row_dict: Dictionary with keys: labor_category, description, experience, location, hours
         row_index: Row number (for logging)
+        wage_source: {"type": "bls"} or {"type": "gsa", "file_id": "..."}
+        organization_id: Organization ID (required for GSA)
 
     Returns:
-        Dictionary with original fields plus: soc_code, occupation_name, area,
-        wage_10th, wage_25th, wage_50th, wage_75th, wage_90th
+        Dictionary with original fields plus wage data
     """
     labor_category = row_dict.get("labor_category", "")
     description = row_dict.get("description")
-    location = row_dict.get("location") or "National"  # Default to National if None
+    location = row_dict.get("location") or "National"
 
-    print(f"  [{row_index}] Processing: {labor_category} in {location}")
+    # Default to BLS
+    if wage_source is None:
+        wage_source = {"type": "bls"}
+
+    is_gsa = wage_source.get("type") == "gsa"
+    source_label = "GSA" if is_gsa else "BLS"
+
+    print(f"  [{row_index}] Processing ({source_label}): {labor_category}")
 
     try:
-        # Create pricing agent with description for better SOC matching
-        agent = await create_pricing_agent(
-            labor_category=labor_category,
-            description=description,
-            location=location
-        )
+        if is_gsa:
+            # GSA flow - use GSA agent with Pinecone search
+            file_id = wage_source.get("file_id")
+            agent = await create_gsa_pricing_agent(
+                labor_category=labor_category,
+                description=description,
+                organization_id=organization_id,
+                file_id=file_id
+            )
+            prompt = f"Find GSA labor category and rate for: {labor_category}"
+        else:
+            # BLS flow - use standard pricing agent
+            agent = await create_pricing_agent(
+                labor_category=labor_category,
+                description=description,
+                location=location
+            )
+            prompt = f"Find wage data for {labor_category} in {location}"
 
-        # Run agent to get wage data (using async version)
-        prompt = f"Find wage data for {labor_category} in {location}"
         result = await agent.arun(prompt)
 
-        # Extract wage data from agent response
-        # The wage_tool returns: {soc_code, occupation_name, area, wages: {10th, 25th, 50th, 75th, 90th}}
+        # Extract data from agent response
         if result and hasattr(result, 'content'):
-            wage_data = result.content
+            data = result.content
 
             # Parse string to dict if needed (agno returns tool output as string)
-            if isinstance(wage_data, str):
+            if isinstance(data, str):
                 try:
-                    wage_data = json.loads(wage_data.replace("'", '"'))  # Convert single quotes to double quotes
+                    data = json.loads(data.replace("'", '"'))
                 except json.JSONDecodeError:
-                    # Fallback to eval if JSON parsing fails
-                    wage_data = eval(wage_data)
+                    data = eval(data)
 
-            if isinstance(wage_data, dict):
-                wages = wage_data.get("wages", {})
-                print(f"  [{row_index}] ✓ Found: {wage_data.get('soc_code')} - {wage_data.get('occupation_name')}")
+            if isinstance(data, dict):
+                if is_gsa:
+                    # GSA response: {lcat_id, title, rates_by_year, current_gsa_year, ...}
+                    rates_by_year = data.get("rates_by_year", {})
+                    current_gsa_year = data.get("current_gsa_year", 1)
 
-                # Determine selected wage based on experience
-                experience = row_dict.get("experience")
-                selected_wage = None
-                selected_percentile = None
+                    # Get year 1 rate for display
+                    year1_rate = rates_by_year.get(str(current_gsa_year)) or rates_by_year.get("1")
+                    print(f"  [{row_index}] ✓ Found GSA: {data.get('lcat_id')} - {data.get('title')} (Year {current_gsa_year} rate: ${year1_rate}/hr)")
 
-                if experience is not None and isinstance(experience, (int, float)):
-                    if experience < 3:
-                        selected_wage = wages.get("25th")
-                        selected_percentile = "25th"
-                    elif 3 <= experience < 6:
-                        selected_wage = wages.get("50th")
-                        selected_percentile = "50th"
-                    else:  # experience >= 6
-                        selected_wage = wages.get("75th")
-                        selected_percentile = "75th"
+                    if data.get("error"):
+                        print(f"  [{row_index}] ⚠️ GSA Error: {data.get('error')}")
+
+                    return {
+                        **row_dict,
+                        "wage_source": "gsa",
+                        "gsa_lcat_id": data.get("lcat_id"),
+                        "gsa_title": data.get("title"),
+                        "gsa_sin": data.get("sin"),
+                        "gsa_education": data.get("education"),
+                        "gsa_experience": data.get("experience"),
+                        "gsa_rates_by_year": rates_by_year,
+                        "gsa_current_year": current_gsa_year,
+                        "selected_wage": year1_rate,  # For display, calculation service uses rates_by_year
+                        # No BLS fields for GSA
+                        "BLS Code": None,
+                        "BLS Labour Category Mapping": None,
+                        "BLS Occupation Description": None,
+                        "area": None,
+                        "wage_10th": None,
+                        "wage_25th": None,
+                        "wage_50th": None,
+                        "wage_75th": None,
+                        "wage_90th": None,
+                        "selected_percentile": None,
+                    }
                 else:
-                    # Default to median (50th percentile) if experience not specified
-                    selected_wage = wages.get("50th")
-                    selected_percentile = "50th (default)"
+                    # BLS response: {soc_code, occupation_name, area, wages: {...}}
+                    wages = data.get("wages", {})
+                    print(f"  [{row_index}] ✓ Found BLS: {data.get('soc_code')} - {data.get('occupation_name')}")
 
-                print(f"  [{row_index}] 💰 Selected wage: ${selected_wage} ({selected_percentile} percentile for {experience} years exp)")
+                    # Determine selected wage based on experience
+                    experience = row_dict.get("experience")
+                    selected_wage = None
+                    selected_percentile = None
 
-                return {
-                    **row_dict,  # Original fields (includes parsed description from JD)
-                    "BLS Code": wage_data.get("soc_code"),
-                    "BLS Labour Category Mapping": wage_data.get("occupation_name"),
-                    "BLS Occupation Description": wage_data.get("bls_occupation_description"),
-                    "area": wage_data.get("area"),
-                    "wage_10th": wages.get("10th"),
-                    "wage_25th": wages.get("25th"),
-                    "wage_50th": wages.get("50th"),
-                    "wage_75th": wages.get("75th"),
-                    "wage_90th": wages.get("90th"),
-                    "selected_wage": selected_wage,
-                    "selected_percentile": selected_percentile,
-                }
+                    if experience is not None and isinstance(experience, (int, float)):
+                        if experience < 3:
+                            selected_wage = wages.get("25th")
+                            selected_percentile = "25th"
+                        elif 3 <= experience < 6:
+                            selected_wage = wages.get("50th")
+                            selected_percentile = "50th"
+                        else:
+                            selected_wage = wages.get("75th")
+                            selected_percentile = "75th"
+                    else:
+                        selected_wage = wages.get("50th")
+                        selected_percentile = "50th (default)"
+
+                    print(f"  [{row_index}] 💰 Selected: ${selected_wage} ({selected_percentile})")
+
+                    return {
+                        **row_dict,
+                        "wage_source": "bls",
+                        "BLS Code": data.get("soc_code"),
+                        "BLS Labour Category Mapping": data.get("occupation_name"),
+                        "BLS Occupation Description": data.get("bls_occupation_description"),
+                        "area": data.get("area"),
+                        "wage_10th": wages.get("10th"),
+                        "wage_25th": wages.get("25th"),
+                        "wage_50th": wages.get("50th"),
+                        "wage_75th": wages.get("75th"),
+                        "wage_90th": wages.get("90th"),
+                        "selected_wage": selected_wage,
+                        "selected_percentile": selected_percentile,
+                    }
 
         # If no valid result, return original data with None values
-        print(f"  [{row_index}] ⚠️  No wage data found for {labor_category}")
+        print(f"  [{row_index}] ⚠️  No data found for {labor_category}")
         return {
             **row_dict,
+            "wage_source": wage_source.get("type"),
             "BLS Code": None,
             "BLS Labour Category Mapping": None,
             "BLS Occupation Description": None,
@@ -115,6 +174,7 @@ async def process_single_row(row_dict: Dict[str, Any], row_index: int) -> Dict[s
         print(f"  [{row_index}] ❌ Error processing {labor_category}: {e}")
         return {
             **row_dict,
+            "wage_source": wage_source.get("type") if wage_source else "bls",
             "BLS Code": None,
             "BLS Labour Category Mapping": None,
             "BLS Occupation Description": None,
@@ -131,7 +191,9 @@ async def process_single_row(row_dict: Dict[str, Any], row_index: int) -> Dict[s
 
 async def process_dataframe_with_agents(
     df: pd.DataFrame,
-    max_workers: int = 10
+    max_workers: int = 10,
+    wage_source: Optional[Dict[str, Any]] = None,
+    organization_id: Optional[str] = None
 ) -> pd.DataFrame:
     """
     Process DataFrame with pricing agents in parallel and add wage columns.
@@ -139,12 +201,16 @@ async def process_dataframe_with_agents(
     Args:
         df: Input DataFrame with JD data (labor_category, description, experience, location, hours)
         max_workers: Number of parallel agents (default: 10)
+        wage_source: {"type": "bls"} or {"type": "gsa", "file_id": "..."}
+        organization_id: Organization ID (required for GSA)
 
     Returns:
-        DataFrame with added wage columns (soc_code, occupation_name, area, wage_10th-90th)
+        DataFrame with added wage columns
     """
+    source_type = wage_source.get("type", "bls") if wage_source else "bls"
     print(f"\n{'='*60}")
     print(f"Processing {len(df)} job descriptions")
+    print(f"Wage source: {source_type.upper()}")
     print(f"Parallel workers: {max_workers}")
     print(f"{'='*60}\n")
 
@@ -164,7 +230,7 @@ async def process_dataframe_with_agents(
     async def bounded_process(row, index):
         """Process a single row with semaphore to limit concurrency."""
         async with semaphore:
-            return await process_single_row(row, index)
+            return await process_single_row(row, index, wage_source, organization_id)
 
     # Create all tasks and run them in parallel (limited by semaphore)
     tasks = [bounded_process(row, i + 1) for i, row in enumerate(rows)]

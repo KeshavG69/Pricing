@@ -552,6 +552,112 @@ class Calculator:
         return float(wages_dict[percentile])
 
     @staticmethod
+    def calculate_gsa_rate(
+        gsa_hourly_rate: float,
+        discount_rate: float = 0.0
+    ) -> Dict[str, float]:
+        """
+        Calculate final rate for GSA positions.
+
+        GSA rates are FINAL rates - no indirect rates (fringe, OH, G&A, fee) applied.
+        Only discount can be applied.
+
+        Args:
+            gsa_hourly_rate: GSA contract hourly rate (already final)
+            discount_rate: Optional discount (e.g., 0.10 for 10% off)
+
+        Returns:
+            Dict with:
+                - gsa_rate: Original GSA rate
+                - discount: Discount amount
+                - final_rate: Rate after discount
+
+        Example:
+            >>> Calculator.calculate_gsa_rate(185.50, 0.10)
+            {
+                'gsa_rate': 185.50,
+                'discount': 18.55,
+                'final_rate': 166.95
+            }
+        """
+        discount = round(gsa_hourly_rate * discount_rate, 2)
+        final_rate = round(gsa_hourly_rate - discount, 2)
+
+        return {
+            "gsa_rate": gsa_hourly_rate,
+            "discount": discount,
+            "discount_rate": discount_rate,
+            "final_rate": final_rate,
+            # No indirect rates for GSA
+            "dl_rate": final_rate,
+            "fringe": 0,
+            "oh": 0,
+            "ga": 0,
+            "fee": 0,
+            "fblr": final_rate  # For compatibility - FBLR equals final rate
+        }
+
+    @staticmethod
+    def calculate_gsa_position_years(
+        position_data: Dict[str, Any],
+        total_years: int,
+        discount_rate: float = 0.0
+    ) -> Dict[str, Any]:
+        """
+        Calculate GSA position costs for all years.
+
+        GSA contracts have rates per year built-in (no escalation calculation needed).
+        Just apply optional discount.
+
+        Args:
+            position_data: Dict with:
+                - labor_category: str
+                - gsa_rates_by_year: Dict[str, float] like {"1": 185.50, "2": 190.25, ...}
+                - hours_per_year: Dict[str, int] like {"1": 1880, "2": 1880, ...}
+            total_years: Number of years
+            discount_rate: Optional discount rate
+
+        Returns:
+            Dict with year-by-year breakdown and total cost
+        """
+        results = {}
+        labor_category = position_data.get("labor_category", "")
+        gsa_rates = position_data.get("gsa_rates_by_year", {})
+        hours_per_year = position_data.get("hours_per_year", {})
+
+        for year in range(1, total_years + 1):
+            year_str = str(year)
+            gsa_rate = gsa_rates.get(year_str, 0)
+            hours = hours_per_year.get(year_str, 0)
+
+            # Apply discount
+            rate_calc = Calculator.calculate_gsa_rate(gsa_rate, discount_rate)
+            final_rate = rate_calc["final_rate"]
+            amount = round(final_rate * hours, 2)
+
+            results[f"year_{year}"] = {
+                "gsa_rate": gsa_rate,
+                "discount": rate_calc["discount"],
+                "rate": final_rate,
+                "hours": hours,
+                "amount": amount
+            }
+
+        # Calculate total cost
+        total_cost = sum(
+            year_data["amount"]
+            for year_data in results.values()
+            if isinstance(year_data, dict)
+        )
+
+        return {
+            "labor_category": labor_category,
+            "wage_source": "gsa",
+            **results,
+            "total_cost": round(total_cost, 2)
+        }
+
+    @staticmethod
     def calculate_averaged_fblr(
         base_wage: float,
         hours_per_year: Dict[str, float],
