@@ -291,12 +291,56 @@ def _distribute_hours_across_years(
     return hours_dict
 
 
-def extract_with_llamaextract(pdf_path: str, mode: str = "fast") -> GovernmentProposalExtraction:
+def _convert_excel_to_csv(excel_path: str) -> str:
     """
-    Extract structured data from PDF using LlamaExtract API.
+    Convert Excel file to CSV for LlamaExtract compatibility.
+
+    Handles multiple sheets by combining them into a single CSV with sheet markers.
+    Pandas automatically trims empty columns, solving the "too many columns" issue.
 
     Args:
-        pdf_path: Path to the PDF file
+        excel_path: Path to the Excel file (.xlsx or .xls)
+
+    Returns:
+        Path to the temporary CSV file
+    """
+    import tempfile
+
+    excel_file = pd.ExcelFile(excel_path)
+    sheet_names = excel_file.sheet_names
+
+    print(f"  Found {len(sheet_names)} sheet(s): {sheet_names}")
+
+    temp_csv = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False)
+
+    all_data = []
+    for sheet_name in sheet_names:
+        df = pd.read_excel(excel_file, sheet_name=sheet_name)
+        print(f"    Sheet '{sheet_name}': {df.shape[0]} rows x {df.shape[1]} cols")
+
+        # Add sheet marker if multiple sheets
+        if len(sheet_names) > 1:
+            marker_row = pd.DataFrame([{df.columns[0]: f"=== SHEET: {sheet_name} ==="}])
+            all_data.append(marker_row)
+
+        all_data.append(df)
+
+    if all_data:
+        combined_df = pd.concat(all_data, ignore_index=True)
+        combined_df.to_csv(temp_csv.name, index=False)
+        print(f"  Converted to CSV: {combined_df.shape[0]} rows x {combined_df.shape[1]} cols")
+
+    return temp_csv.name
+
+
+def extract_with_llamaextract(file_path: str, mode: str = "fast") -> GovernmentProposalExtraction:
+    """
+    Extract structured data from document using LlamaExtract API.
+
+    Supports PDF, CSV, DOCX, and Excel files (xlsx/xls are converted to CSV).
+
+    Args:
+        file_path: Path to the document file
         mode: Extraction mode - "fast" or "thorough"
 
     Returns:
@@ -305,7 +349,8 @@ def extract_with_llamaextract(pdf_path: str, mode: str = "fast") -> GovernmentPr
     Raises:
         ValueError: If LLAMA_CLOUD_API_KEY not found or extraction fails
     """
-    # Get API key from settings
+    import os
+
     api_key = settings.LLAMA_CLOUD_API_KEY
     if not api_key:
         raise ValueError(
@@ -313,30 +358,44 @@ def extract_with_llamaextract(pdf_path: str, mode: str = "fast") -> GovernmentPr
             "Please set it in your .env file."
         )
 
-    # Initialize LlamaExtract
-    extractor = LlamaExtract(api_key=api_key)
+    # Check if file is Excel and convert to CSV
+    file_ext = os.path.splitext(file_path)[1].lower()
+    temp_csv_path = None
 
-    # Create config
-    extraction_mode = ExtractMode.FAST if mode == "fast" else ExtractMode.THOROUGH
-    config = ExtractConfig(extraction_mode=extraction_mode)
+    if file_ext in ['.xlsx', '.xls']:
+        print(f"  Converting Excel to CSV...")
+        temp_csv_path = _convert_excel_to_csv(file_path)
+        file_path = temp_csv_path
 
-    # Extract with Pydantic model CLASS
-    extract_run = extractor.extract(
-        GovernmentProposalExtraction,
-        config,
-        pdf_path
-    )
+    try:
+        extractor = LlamaExtract(api_key=api_key)
 
-    # Access the .data property to get the actual extracted data
-    extraction = extract_run.data
+        extraction_mode = ExtractMode.FAST if mode == "fast" else ExtractMode.THOROUGH
+        config = ExtractConfig(extraction_mode=extraction_mode)
 
-    if not isinstance(extraction, GovernmentProposalExtraction):
-        if isinstance(extraction, dict):
-            extraction = GovernmentProposalExtraction(**extraction)
-        else:
-            raise ValueError(f"Unexpected data type from LlamaExtract: {type(extraction)}")
+        extract_run = extractor.extract(
+            GovernmentProposalExtraction,
+            config,
+            file_path
+        )
 
-    return extraction
+        extraction = extract_run.data
+
+        if not isinstance(extraction, GovernmentProposalExtraction):
+            if isinstance(extraction, dict):
+                extraction = GovernmentProposalExtraction(**extraction)
+            else:
+                raise ValueError(f"Unexpected data type from LlamaExtract: {type(extraction)}")
+
+        return extraction
+
+    finally:
+        # Clean up temporary CSV file
+        if temp_csv_path:
+            try:
+                os.unlink(temp_csv_path)
+            except Exception:
+                pass
 
 
 async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFrame:
@@ -344,7 +403,7 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
     Parse multiple documents and extract all job descriptions into a DataFrame using LlamaExtract.
 
     Args:
-        document_paths: List of paths to PDF documents
+        document_paths: List of paths to documents (PDF, Excel, CSV, DOCX)
 
     Returns:
         pandas DataFrame with columns:

@@ -3511,7 +3511,7 @@
         "kind": 2,
         "importPath": "backend.client.jd_parser",
         "description": "backend.client.jd_parser",
-        "peekOfCode": "def extract_with_llamaextract(pdf_path: str, mode: str = \"fast\") -> GovernmentProposalExtraction:\n    \"\"\"\n    Extract structured data from PDF using LlamaExtract API.\n    Args:\n        pdf_path: Path to the PDF file\n        mode: Extraction mode - \"fast\" or \"thorough\"\n    Returns:\n        GovernmentProposalExtraction object with all data\n    Raises:\n        ValueError: If LLAMA_CLOUD_API_KEY not found or extraction fails",
+        "peekOfCode": "def extract_with_llamaextract(file_path: str, mode: str = \"fast\") -> GovernmentProposalExtraction:\n    \"\"\"\n    Extract structured data from document using LlamaExtract API.\n    Supports PDF, CSV, DOCX, and Excel files (xlsx/xls are converted to CSV).\n    Args:\n        file_path: Path to the document file\n        mode: Extraction mode - \"fast\" or \"thorough\"\n    Returns:\n        GovernmentProposalExtraction object with all data\n    Raises:",
         "detail": "backend.client.jd_parser",
         "documentation": {}
     },
