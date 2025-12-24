@@ -15,7 +15,7 @@ import { SalarySelectionModal } from '@/components/pricing/SalarySelectionModal'
 import { SOCSelectionModal } from '@/components/pricing/SOCSelectionModal';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { getAvailablePercentiles } from '@/lib/utils/percentileHelpers';
-import { getEffectiveSalary, getSalaryDisplayLabel, getSalarySelectionCount, isMultiSelectMode } from '@/lib/utils/salaryHelpers';
+import { getEffectiveSalary, getSalaryDisplayLabel, getSalarySelectionCount, isMultiSelectMode, isGSAPosition, getGSARateForYear } from '@/lib/utils/salaryHelpers';
 import Button from '@/components/ui/Button';
 import { usePricingStore } from '@/lib/stores/pricingStore';
 
@@ -26,11 +26,39 @@ const calculateAveragedFBLR = (
   escalationRates: EscalationRates,
   totalYears: number
 ) => {
-  // Get effective salary (supports multi-select averaging)
+  const isGSA = isGSAPosition(position);
+
+  // GSA positions: Calculate averaged GSA rate (no indirect rates)
+  if (isGSA) {
+    let totalAmount = 0;
+    let totalHours = 0;
+
+    for (let year = 1; year <= totalYears; year++) {
+      const yearStr = year.toString();
+      const breakdown = position.breakdown[yearStr];
+      const hoursThisYear = breakdown?.hours || 0;
+      const gsaRate = getGSARateForYear(position, year);
+
+      if (hoursThisYear > 0 && gsaRate > 0) {
+        totalAmount += gsaRate * hoursThisYear;
+        totalHours += hoursThisYear;
+      }
+    }
+
+    if (totalHours === 0) {
+      return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0, isGSA: true };
+    }
+
+    const avgRate = totalAmount / totalHours;
+    // GSA: No indirect rates, FBLR = DL rate
+    return { dlRate: avgRate, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: avgRate, isGSA: true };
+  }
+
+  // BLS positions: Calculate with indirect rates
   const baseWage = getEffectiveSalary(position);
 
   if (baseWage === 0 || totalYears === 0) {
-    return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
+    return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0, isGSA: false };
   }
 
   let totalSalary = 0;
@@ -63,7 +91,7 @@ const calculateAveragedFBLR = (
   }
 
   if (totalHours === 0) {
-    return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
+    return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0, isGSA: false };
   }
 
   // Calculate averaged DL rate
@@ -76,7 +104,7 @@ const calculateAveragedFBLR = (
   const fee = (dlRate + fringe + oh + ga) * rates.fee;
   const fblr = dlRate + fringe + oh + ga + fee;
 
-  return { dlRate, fringe, oh, ga, fee, fblr };
+  return { dlRate, fringe, oh, ga, fee, fblr, isGSA: false };
 };
 
 interface PrimeLaborSectionProps {
@@ -375,15 +403,29 @@ export const PrimeLaborSection = ({
           }
         },
       },
-      // BLS Category - Clickable (position rows only)
+      // Category Title - Show GSA title or BLS category (position rows only)
       {
         key: 'bls_category',
-        name: 'BLS Category',
-        width: 220,
+        name: 'Category Title',
+        width: 240,
         resizable: true,
         renderCell: ({ row }) => {
           if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
+            const isGSA = isGSAPosition(pos);
+
+            if (isGSA) {
+              // GSA: Show GSA title (non-clickable)
+              return (
+                <div className="flex items-center h-full px-2">
+                  <span className="text-xs text-muted-foreground">
+                    {pos.gsa_title || '-'}
+                  </span>
+                </div>
+              );
+            }
+
+            // BLS: Show BLS title (clickable to change SOC)
             return (
               <div
                 className="flex items-center h-full px-2 cursor-pointer hover:bg-muted/50 transition-colors"
@@ -399,15 +441,34 @@ export const PrimeLaborSection = ({
           return <div className="h-full bg-muted/30" />;
         },
       },
-      // BLS Code - Clickable (position rows only)
+      // Category Code - Show GSA lcat_id or BLS code (position rows only)
       {
         key: 'bls_code',
-        name: 'BLS Code',
-        width: 100,
+        name: 'Category Code',
+        width: 140,
         resizable: true,
         renderCell: ({ row }) => {
           if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
+            const isGSA = isGSAPosition(pos);
+
+            if (isGSA) {
+              // GSA: Show GSA badge + lcat_id (non-clickable)
+              return (
+                <div className="flex items-center h-full px-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                      GSA
+                    </span>
+                    <span className="text-muted-foreground text-xs font-mono">
+                      {pos.gsa_lcat_id || '-'}
+                    </span>
+                  </div>
+                </div>
+              );
+            }
+
+            // BLS: Show BLS badge + SOC code (clickable to change)
             return (
               <div
                 className="flex items-center h-full px-2 cursor-pointer hover:bg-muted/50 transition-colors"
@@ -416,7 +477,12 @@ export const PrimeLaborSection = ({
                   setSOCModalOpen(true);
                 }}
               >
-                <span className="text-xs text-muted-foreground">{pos.soc_code || '-'}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                    BLS
+                  </span>
+                  <span className="text-muted-foreground text-xs font-mono">{pos.soc_code || '-'}</span>
+                </div>
               </div>
             );
           }

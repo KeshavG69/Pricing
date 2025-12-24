@@ -215,6 +215,12 @@ export interface JobPosition {
   base_years?: number;
   option_years?: number;
   total_years?: number;
+  // GSA fields
+  wage_source?: 'bls' | 'gsa';
+  gsa_lcat_id?: string;
+  gsa_title?: string;
+  gsa_rates_by_year?: Record<string, number>;
+  gsa_current_year?: number;
 }
 
 // Rates types
@@ -262,6 +268,12 @@ export interface SpreadsheetPosition {
   };
   hours_per_year: Record<string, number>; // {"1": 1880, "2": 1880, ...}
   standard_fte_hours?: number; // Full-time equivalent hours (e.g., 1880, 1920, 2080)
+  // GSA fields
+  wage_source?: 'bls' | 'gsa';
+  gsa_lcat_id?: string;
+  gsa_title?: string;
+  gsa_rates_by_year?: Record<string, number>;
+  gsa_current_year?: number;
   // Calculated fields (from backend)
   fblr?: number;
   yearly_amounts?: Array<{
@@ -339,6 +351,12 @@ export interface AdvancedPosition {
     percentiles: ('10th' | '25th' | '50th' | '75th' | '90th')[]; // Selected percentiles
     custom_amounts: number[]; // Custom salary amounts
   };
+  // GSA fields
+  wage_source?: 'bls' | 'gsa';
+  gsa_lcat_id?: string;
+  gsa_title?: string;
+  gsa_rates_by_year?: Record<string, number>;
+  gsa_current_year?: number;
 
   // Per-year breakdown
   breakdown: {
@@ -540,4 +558,32 @@ export interface WageRefreshResponse {
     selected_wage?: number;
     percentile?: string;
   };
+}
+
+// ============================================================
+// GSA / Company Repository Types
+// ============================================================
+
+export interface GSAContract {
+  id: string;
+  file_id: string;
+  name: string;
+  status: 'processing' | 'active' | 'needs_date' | 'error';
+  contract_number?: string;
+  contract_start_date?: string;
+  contract_end_date?: string;
+  company_name?: string;
+  labor_categories_count: number;
+  created_at: string;
+  updated_at?: string;
+  uploaded_by: string;
+}
+
+export interface GSALaborCategory {
+  lcat_id: string;
+  title: string;
+  sin?: string;
+  education?: string;
+  experience?: string;
+  rates_by_year: Record<string, number>;
 }
