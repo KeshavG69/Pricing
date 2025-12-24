@@ -3475,7 +3475,25 @@
         "kind": 6,
         "importPath": "backend.client.jd_parser",
         "description": "backend.client.jd_parser",
-        "peekOfCode": "class YearMonths(BaseModel):\n    \"\"\"Months for a specific year - used internally for LlamaExtract.\"\"\"\n    year: str = Field(\n        description=\"Year number as string: '1' for Base Period, '2' for Option Year 1, etc.\"\n    )\n    months: int = Field(\n        description=\"Number of months in this year (1-12). Default to 12 if not specified.\"\n    )\nclass PositionExtract(BaseModel):\n    \"\"\"Position model for LlamaExtract - includes List[YearHours].\"\"\"",
+        "peekOfCode": "class YearMonths(BaseModel):\n    \"\"\"Months for a specific year - used internally for LlamaExtract.\"\"\"\n    year: str = Field(\n        description=\"Year number as string: '1' for Base Period, '2' for Option Year 1, etc.\"\n    )\n    months: int = Field(\n        description=\"Number of months in this year (1-12). Default to 12 if not specified.\"\n    )\nclass YearAmount(BaseModel):\n    \"\"\"Dollar amount for a specific year - used for ODCs like travel.\"\"\"",
+        "detail": "backend.client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "YearAmount",
+        "kind": 6,
+        "importPath": "backend.client.jd_parser",
+        "description": "backend.client.jd_parser",
+        "peekOfCode": "class YearAmount(BaseModel):\n    \"\"\"Dollar amount for a specific year - used for ODCs like travel.\"\"\"\n    year: str = Field(\n        description=\"Year number as string: '1' for Base Period, '2' for Option Year 1, etc.\"\n    )\n    amount: float = Field(\n        description=\"Dollar amount for this year (e.g., 299542.60)\"\n    )\nclass ODCExtract(BaseModel):\n    \"\"\"Other Direct Cost item extracted from document.\"\"\"",
+        "detail": "backend.client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "ODCExtract",
+        "kind": 6,
+        "importPath": "backend.client.jd_parser",
+        "description": "backend.client.jd_parser",
+        "peekOfCode": "class ODCExtract(BaseModel):\n    \"\"\"Other Direct Cost item extracted from document.\"\"\"\n    category: str = Field(\n        description=\"ODC category (e.g., 'Travel', 'Materials', 'Equipment', 'Software', 'Supplies')\"\n    )\n    description: Optional[str] = Field(\n        None,\n        description=\"Description of the ODC item (e.g., 'Government Estimated Travel Amount')\"\n    )\n    amount_per_year: List[YearAmount] = Field(",
         "detail": "backend.client.jd_parser",
         "documentation": {}
     },
@@ -3502,7 +3520,7 @@
         "kind": 6,
         "importPath": "backend.client.jd_parser",
         "description": "backend.client.jd_parser",
-        "peekOfCode": "class GovernmentProposalExtraction(BaseModel):\n    \"\"\"Complete extraction schema for LlamaExtract.\"\"\"\n    metadata: DocumentMetadataExtract = Field(\n        description=\"Document-level information extracted from headers, cover page, and overview sections\"\n    )\n    positions: List[PositionExtract] = Field(\n        description=\"All job positions/labor categories found in the document\"\n    )\ndef _convert_to_job_description(\n    position: PositionExtract,",
+        "peekOfCode": "class GovernmentProposalExtraction(BaseModel):\n    \"\"\"Complete extraction schema for LlamaExtract.\"\"\"\n    metadata: DocumentMetadataExtract = Field(\n        description=\"Document-level information extracted from headers, cover page, and overview sections\"\n    )\n    positions: List[PositionExtract] = Field(\n        description=\"All job positions/labor categories found in the document\"\n    )\n    odcs: Optional[List[ODCExtract]] = Field(\n        None,",
         "detail": "backend.client.jd_parser",
         "documentation": {}
     },
@@ -3511,7 +3529,7 @@
         "kind": 2,
         "importPath": "backend.client.jd_parser",
         "description": "backend.client.jd_parser",
-        "peekOfCode": "def extract_with_llamaextract(pdf_path: str, mode: str = \"fast\") -> GovernmentProposalExtraction:\n    \"\"\"\n    Extract structured data from PDF using LlamaExtract API.\n    Args:\n        pdf_path: Path to the PDF file\n        mode: Extraction mode - \"fast\" or \"thorough\"\n    Returns:\n        GovernmentProposalExtraction object with all data\n    Raises:\n        ValueError: If LLAMA_CLOUD_API_KEY not found or extraction fails",
+        "peekOfCode": "def extract_with_llamaextract(file_path: str, mode: str = \"fast\") -> GovernmentProposalExtraction:\n    \"\"\"\n    Extract structured data from document using LlamaExtract API.\n    Supports PDF, CSV, DOCX, and Excel files (xlsx/xls are converted to CSV).\n    Args:\n        file_path: Path to the document file\n        mode: Extraction mode - \"fast\" or \"thorough\"\n    Returns:\n        GovernmentProposalExtraction object with all data\n    Raises:",
         "detail": "backend.client.jd_parser",
         "documentation": {}
     },

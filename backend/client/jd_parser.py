@@ -81,6 +81,32 @@ class YearMonths(BaseModel):
     )
 
 
+class YearAmount(BaseModel):
+    """Dollar amount for a specific year - used for ODCs like travel."""
+    year: str = Field(
+        description="Year number as string: '1' for Base Period, '2' for Option Year 1, etc."
+    )
+    amount: float = Field(
+        description="Dollar amount for this year (e.g., 299542.60)"
+    )
+
+
+class ODCExtract(BaseModel):
+    """Other Direct Cost item extracted from document."""
+    category: str = Field(
+        description="ODC category (e.g., 'Travel', 'Materials', 'Equipment', 'Software', 'Supplies')"
+    )
+    description: Optional[str] = Field(
+        None,
+        description="Description of the ODC item (e.g., 'Government Estimated Travel Amount')"
+    )
+    amount_per_year: List[YearAmount] = Field(
+        description="""Dollar amounts per year.
+        Year "1" = Base Period, "2" = Option Year 1, "3" = Option Year 2, etc.
+        Example: [{"year": "1", "amount": 299542.60}, {"year": "2", "amount": 308528.88}]"""
+    )
+
+
 class PositionExtract(BaseModel):
     """Position model for LlamaExtract - includes List[YearHours]."""
 
@@ -170,6 +196,13 @@ class GovernmentProposalExtraction(BaseModel):
     positions: List[PositionExtract] = Field(
         description="All job positions/labor categories found in the document"
     )
+    odcs: Optional[List[ODCExtract]] = Field(
+        None,
+        description="""Other Direct Costs (ODCs) found in the document.
+        Include Travel, Materials, Equipment, Software, Supplies, etc.
+        Look for sections labeled 'Travel', 'ODCs', 'Other Direct Costs', 'Non-Labor Costs'.
+        Extract amounts per period (Base Period, Option Year 1, etc.)."""
+    )
 
 
 def _convert_to_job_description(
@@ -194,9 +227,16 @@ def _convert_to_job_description(
     hours_per_year_dict = None
 
     if position.hours_per_year:
-        # Case 1: LlamaExtract found year columns (Personnel Qualifications format)
-        # System already works correctly - use directly
+        # Case 1: LlamaExtract found year columns
         hours_per_year_dict = {yh.year: yh.hours for yh in position.hours_per_year}
+
+        # If hours_per_year has fewer years than total_years, extend it
+        # (e.g., only Base Period extracted but contract has Option Years)
+        if doc_metadata.total_years and len(hours_per_year_dict) < doc_metadata.total_years:
+            base_hours = hours_per_year_dict.get("1", position.hours or 1920)
+            for year in range(1, doc_metadata.total_years + 1):
+                if str(year) not in hours_per_year_dict:
+                    hours_per_year_dict[str(year)] = base_hours
 
     elif position.hours and not position.hours_per_year and doc_metadata.total_years and doc_metadata.total_years > 1:
         # Case 2: Only total hours + multi-year contract (SeaPort format)
@@ -291,12 +331,56 @@ def _distribute_hours_across_years(
     return hours_dict
 
 
-def extract_with_llamaextract(pdf_path: str, mode: str = "fast") -> GovernmentProposalExtraction:
+def _convert_excel_to_csv(excel_path: str) -> str:
     """
-    Extract structured data from PDF using LlamaExtract API.
+    Convert Excel file to CSV for LlamaExtract compatibility.
+
+    Handles multiple sheets by combining them into a single CSV with sheet markers.
+    Pandas automatically trims empty columns, solving the "too many columns" issue.
 
     Args:
-        pdf_path: Path to the PDF file
+        excel_path: Path to the Excel file (.xlsx or .xls)
+
+    Returns:
+        Path to the temporary CSV file
+    """
+    import tempfile
+
+    excel_file = pd.ExcelFile(excel_path)
+    sheet_names = excel_file.sheet_names
+
+    print(f"  Found {len(sheet_names)} sheet(s): {sheet_names}")
+
+    temp_csv = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False)
+
+    all_data = []
+    for sheet_name in sheet_names:
+        df = pd.read_excel(excel_file, sheet_name=sheet_name)
+        print(f"    Sheet '{sheet_name}': {df.shape[0]} rows x {df.shape[1]} cols")
+
+        # Add sheet marker if multiple sheets
+        if len(sheet_names) > 1:
+            marker_row = pd.DataFrame([{df.columns[0]: f"=== SHEET: {sheet_name} ==="}])
+            all_data.append(marker_row)
+
+        all_data.append(df)
+
+    if all_data:
+        combined_df = pd.concat(all_data, ignore_index=True)
+        combined_df.to_csv(temp_csv.name, index=False)
+        print(f"  Converted to CSV: {combined_df.shape[0]} rows x {combined_df.shape[1]} cols")
+
+    return temp_csv.name
+
+
+def extract_with_llamaextract(file_path: str, mode: str = "fast") -> GovernmentProposalExtraction:
+    """
+    Extract structured data from document using LlamaExtract API.
+
+    Supports PDF, CSV, DOCX, and Excel files (xlsx/xls are converted to CSV).
+
+    Args:
+        file_path: Path to the document file
         mode: Extraction mode - "fast" or "thorough"
 
     Returns:
@@ -305,7 +389,8 @@ def extract_with_llamaextract(pdf_path: str, mode: str = "fast") -> GovernmentPr
     Raises:
         ValueError: If LLAMA_CLOUD_API_KEY not found or extraction fails
     """
-    # Get API key from settings
+    import os
+
     api_key = settings.LLAMA_CLOUD_API_KEY
     if not api_key:
         raise ValueError(
@@ -313,47 +398,61 @@ def extract_with_llamaextract(pdf_path: str, mode: str = "fast") -> GovernmentPr
             "Please set it in your .env file."
         )
 
-    # Initialize LlamaExtract
-    extractor = LlamaExtract(api_key=api_key)
+    # Check if file is Excel and convert to CSV
+    file_ext = os.path.splitext(file_path)[1].lower()
+    temp_csv_path = None
 
-    # Create config
-    extraction_mode = ExtractMode.FAST if mode == "fast" else ExtractMode.THOROUGH
-    config = ExtractConfig(extraction_mode=extraction_mode)
+    if file_ext in ['.xlsx', '.xls']:
+        print(f"  Converting Excel to CSV...")
+        temp_csv_path = _convert_excel_to_csv(file_path)
+        file_path = temp_csv_path
 
-    # Extract with Pydantic model CLASS
-    extract_run = extractor.extract(
-        GovernmentProposalExtraction,
-        config,
-        pdf_path
-    )
+    try:
+        extractor = LlamaExtract(api_key=api_key)
 
-    # Access the .data property to get the actual extracted data
-    extraction = extract_run.data
+        extraction_mode = ExtractMode.FAST if mode == "fast" else ExtractMode.THOROUGH
+        config = ExtractConfig(extraction_mode=extraction_mode)
 
-    if not isinstance(extraction, GovernmentProposalExtraction):
-        if isinstance(extraction, dict):
-            extraction = GovernmentProposalExtraction(**extraction)
-        else:
-            raise ValueError(f"Unexpected data type from LlamaExtract: {type(extraction)}")
+        extract_run = extractor.extract(
+            GovernmentProposalExtraction,
+            config,
+            file_path
+        )
 
-    return extraction
+        extraction = extract_run.data
+
+        if not isinstance(extraction, GovernmentProposalExtraction):
+            if isinstance(extraction, dict):
+                extraction = GovernmentProposalExtraction(**extraction)
+            else:
+                raise ValueError(f"Unexpected data type from LlamaExtract: {type(extraction)}")
+
+        return extraction
+
+    finally:
+        # Clean up temporary CSV file
+        if temp_csv_path:
+            try:
+                os.unlink(temp_csv_path)
+            except Exception:
+                pass
 
 
-async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFrame:
+async def parse_documents_to_dataframe(document_paths: List[str]) -> Dict[str, any]:
     """
-    Parse multiple documents and extract all job descriptions into a DataFrame using LlamaExtract.
+    Parse multiple documents and extract all job descriptions and ODCs using LlamaExtract.
 
     Args:
-        document_paths: List of paths to PDF documents
+        document_paths: List of paths to documents (PDF, Excel, CSV, DOCX)
 
     Returns:
-        pandas DataFrame with columns:
-        - labor_category, description, experience, location, hours, hours_per_year (job-level)
-        - base_years, option_years, total_years, project_name (document-level, same for all rows)
-        One row per job description found across all documents
+        Dict with:
+        - 'df': pandas DataFrame with positions (labor_category, hours_per_year, etc.)
+        - 'odcs': List of ODC items (travel, materials, etc.) in frontend format
     """
     all_jds: List[JobDescription] = []
     all_metadata_list: List[DocumentMetadata] = []
+    all_odcs: List[Dict] = []
 
     print(f"\n{'='*60}")
     print(f"Parsing {len(document_paths)} document(s) with LlamaExtract")
@@ -404,6 +503,24 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
                 all_jds.append(jd)
                 all_metadata_list.append(doc_metadata)
 
+            # Convert ODCs to frontend format
+            if extraction.odcs:
+                print(f"  ODCs found: {len(extraction.odcs)}")
+                for odc in extraction.odcs:
+                    # Convert amount_per_year from List[YearAmount] to Dict[str, float]
+                    amount_per_year = {
+                        ya.year: ya.amount
+                        for ya in odc.amount_per_year
+                    }
+                    all_odcs.append({
+                        "id": f"odc_{len(all_odcs)}_{hash(odc.category)}",
+                        "category": odc.category,
+                        "description": odc.description,
+                        "amount_per_year": amount_per_year,
+                        "escalate": False  # Already has per-year amounts
+                        # S&MH is always applied to all ODCs
+                    })
+
         except Exception as e:
             print(f"  ❌ Error processing {doc_path}: {e}")
             import traceback
@@ -441,5 +558,13 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
             for jd, metadata in zip(all_jds, all_metadata_list)
         ])
 
-    print(f"✓ Extracted {len(df)} job descriptions\n")
-    return df
+    print(f"✓ Extracted {len(df)} job descriptions")
+    if all_odcs:
+        print(f"✓ Extracted {len(all_odcs)} ODC items\n")
+    else:
+        print()
+
+    return {
+        "df": df,
+        "odcs": all_odcs
+    }
