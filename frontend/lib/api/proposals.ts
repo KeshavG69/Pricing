@@ -31,11 +31,13 @@ export const proposalsApi = {
   },
 
   // Upload documents and create proposal
-  upload: async (files: File[], solicitationNumber?: string): Promise<UploadResponse> => {
+  upload: async (files: File[], name: string, solicitationNumber?: string): Promise<UploadResponse> => {
     const formData = new FormData();
     files.forEach((file) => {
       formData.append('files', file);
     });
+
+    formData.append('name', name);
 
     if (solicitationNumber) {
       formData.append('solicitation_number', solicitationNumber);

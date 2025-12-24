@@ -283,11 +283,17 @@ async def process_proposal_documents(
 async def upload_proposal_documents(
     background_tasks: BackgroundTasks,
     files: List[UploadFile] = File(...),
+    name: str = Form(...),
     solicitation_number: str = Form(None),
     current_user: dict = Depends(get_current_user)
 ):
     """
     Upload documents, store in iDrive e2, and start async processing.
+
+    Args:
+        files: Document files to upload
+        name: Proposal name (required)
+        solicitation_number: Optional solicitation number
 
     Returns proposal_id immediately for status polling.
     """
@@ -313,7 +319,7 @@ async def upload_proposal_documents(
         # Create proposal in MongoDB (status: processing)
         # Note: prime_contractor_name will be set by frontend from organization data
         proposal_data = {
-            "name": f"Proposal {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}",
+            "name": name,
             "solicitation_number": solicitation_number,
             "prime_contractor_name": "TBD",  # Frontend will update this from org data
             "documents": [],

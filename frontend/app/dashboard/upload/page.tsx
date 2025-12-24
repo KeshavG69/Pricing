@@ -17,6 +17,7 @@ export default function UploadPage() {
   const { uploadDocuments, isLoading } = useProposalsStore();
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [proposalName, setProposalName] = useState('');
   const [solicitationNumber, setSolicitationNumber] = useState('');
   const [uploadedProposalId, setUploadedProposalId] = useState<string | null>(null);
 
@@ -49,9 +50,18 @@ export default function UploadPage() {
       return;
     }
 
+    if (!proposalName.trim()) {
+      setError('Please enter a proposal name');
+      return;
+    }
+
     try {
       setError(null);
-      const proposalId = await uploadDocuments(files, solicitationNumber.trim() || undefined);
+      const proposalId = await uploadDocuments(
+        files,
+        proposalName.trim(),
+        solicitationNumber.trim() || undefined
+      );
 
       // Start polling for status (don't redirect immediately)
       setUploadedProposalId(proposalId);
@@ -152,17 +162,30 @@ export default function UploadPage() {
               )}
             </div>
 
-            {/* Solicitation Number Input */}
-            <div className="mt-6">
-              <label className="block text-sm font-medium text-muted-foreground mb-2">
-                Solicitation Number (Optional)
-              </label>
-              <Input
-                type="text"
-                placeholder="e.g., N0017825R3013"
-                value={solicitationNumber}
-                onChange={(e) => setSolicitationNumber(e.target.value)}
-              />
+            {/* Proposal Details */}
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  Proposal Name <span className="text-red-500">*</span>
+                </label>
+                <Input
+                  type="text"
+                  placeholder="e.g., Navy IT Support Services"
+                  value={proposalName}
+                  onChange={(e) => setProposalName(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-muted-foreground mb-2">
+                  Solicitation Number (Optional)
+                </label>
+                <Input
+                  type="text"
+                  placeholder="e.g., N0017825R3013"
+                  value={solicitationNumber}
+                  onChange={(e) => setSolicitationNumber(e.target.value)}
+                />
+              </div>
             </div>
 
             {/* File List */}
@@ -208,7 +231,7 @@ export default function UploadPage() {
                 variant="primary"
                 onClick={handleUpload}
                 isLoading={isLoading}
-                disabled={files.length === 0}
+                disabled={files.length === 0 || !proposalName.trim()}
               >
                 Upload & Process
               </Button>
