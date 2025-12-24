@@ -1,20 +1,86 @@
 import { SpreadsheetPosition, AdvancedPosition } from '@/types';
 
 /**
+ * Check if position uses GSA rates (no indirect rates applied)
+ *
+ * @param position The position to check
+ * @returns True if GSA position, false otherwise
+ */
+export function isGSAPosition(position: SpreadsheetPosition | AdvancedPosition): boolean {
+  return position.wage_source === 'gsa';
+}
+
+/**
+ * Get GSA rate for a specific proposal year, mapping to the correct contract year.
+ *
+ * Contract year mapping:
+ * - Proposal Year 1 → Contract Year (gsa_current_year)
+ * - Proposal Year 2 → Contract Year (gsa_current_year + 1)
+ * - etc.
+ *
+ * @param position The GSA position
+ * @param proposalYear The proposal year (1-based)
+ * @returns The GSA hourly rate for that year, or 0 if not found
+ */
+export function getGSARateForYear(
+  position: SpreadsheetPosition | AdvancedPosition,
+  proposalYear: number
+): number {
+  if (!position.gsa_rates_by_year) {
+    return 0;
+  }
+
+  const currentGsaYear = position.gsa_current_year || 1;
+  const contractYear = currentGsaYear + (proposalYear - 1);
+  const rate = position.gsa_rates_by_year[String(contractYear)];
+
+  if (rate) {
+    return rate;
+  }
+
+  // Fallback: if contract year not found, try to find the nearest available year
+  const availableYears = Object.keys(position.gsa_rates_by_year)
+    .map(Number)
+    .filter((y) => !isNaN(y))
+    .sort((a, b) => a - b);
+
+  if (availableYears.length === 0) {
+    return 0;
+  }
+
+  // Use the last available year if we're past the contract period
+  if (contractYear > Math.max(...availableYears)) {
+    return position.gsa_rates_by_year[String(Math.max(...availableYears))] || 0;
+  }
+
+  // Use the first available year if we're before
+  return position.gsa_rates_by_year[String(Math.min(...availableYears))] || 0;
+}
+
+/**
  * Get the effective salary for a position, supporting multi-salary selection.
  *
- * Priority order:
+ * Priority order (for BLS positions):
  * 1. selected_salaries (averaged) - new multi-select approach
  * 2. custom_salary - legacy single custom amount
  * 3. wage based on percentile - BLS data
  * 4. selected_wage - fallback
  * 5. 0 - no data available
  *
+ * For GSA positions:
+ * Returns the year 1 GSA rate (for display purposes).
+ * Use getGSARateForYear() for actual calculations.
+ *
  * @param position The position to get salary from
- * @returns The effective salary amount
+ * @returns The effective salary amount (hourly for GSA, annual for BLS)
  */
 export function getEffectiveSalary(position: SpreadsheetPosition | AdvancedPosition): number {
-  // New multi-select approach
+  // GSA positions use gsa_rates_by_year (returns hourly rate for year 1)
+  if (isGSAPosition(position)) {
+    return getGSARateForYear(position, 1);
+  }
+
+  // New multi-select approach (BLS)
   if (position.selected_salaries && position.selected_salaries.length > 0) {
     const sum = position.selected_salaries.reduce((acc, salary) => acc + salary, 0);
     return sum / position.selected_salaries.length;
@@ -69,12 +135,17 @@ export function isMultiSelectMode(position: SpreadsheetPosition | AdvancedPositi
 }
 
 /**
- * Get display label for salary (e.g., "Avg (3)" or "75th" or "Custom")
+ * Get display label for salary (e.g., "Avg (3)" or "75th" or "Custom" or "GSA")
  *
  * @param position The position to get label for
  * @returns Display label string
  */
 export function getSalaryDisplayLabel(position: SpreadsheetPosition | AdvancedPosition): string {
+  // GSA positions show "GSA" label
+  if (isGSAPosition(position)) {
+    return 'GSA';
+  }
+
   // Multi-select mode
   if (position.selected_salaries && position.selected_salaries.length > 1) {
     return `Avg (${position.selected_salaries.length})`;

@@ -14,7 +14,7 @@ import { ConvertToSubcontractorModal } from './ConvertToSubcontractorModal';
 import { SalarySelectionModal } from './SalarySelectionModal';
 import { SOCSelectionModal } from './SOCSelectionModal';
 import { getAvailablePercentiles } from '@/lib/utils/percentileHelpers';
-import { getEffectiveSalary, getSalaryDisplayLabel, isMultiSelectMode } from '@/lib/utils/salaryHelpers';
+import { getEffectiveSalary, getSalaryDisplayLabel, isMultiSelectMode, isGSAPosition, getGSARateForYear } from '@/lib/utils/salaryHelpers';
 
 export const PositionsGrid = () => {
   const { positions, totalYears, monthsPerYear, rates, escalationRates, updatePosition, deletePosition, advancedMode } = usePricingStore();
@@ -61,11 +61,38 @@ export const PositionsGrid = () => {
 
   // Calculate averaged FBLR for a position across all contract years with escalation
   const calculateFBLR = (position: SpreadsheetPosition) => {
-    // Get effective salary (supports multi-select averaging)
+    const isGSA = isGSAPosition(position);
+
+    // GSA positions: Calculate averaged GSA rate (no indirect rates)
+    if (isGSA) {
+      let totalAmount = 0;
+      let totalHours = 0;
+
+      for (let year = 1; year <= totalYears; year++) {
+        const yearStr = year.toString();
+        const hoursThisYear = position.hours_per_year[yearStr] || 0;
+        const gsaRate = getGSARateForYear(position, year);
+
+        if (hoursThisYear > 0 && gsaRate > 0) {
+          totalAmount += gsaRate * hoursThisYear;
+          totalHours += hoursThisYear;
+        }
+      }
+
+      if (totalHours === 0) {
+        return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0, isGSA: true };
+      }
+
+      const avgRate = totalAmount / totalHours;
+      // GSA: No indirect rates, FBLR = DL rate
+      return { dlRate: avgRate, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: avgRate, isGSA: true };
+    }
+
+    // BLS positions: Calculate with indirect rates
     const baseWage = getEffectiveSalary(position);
 
     if (baseWage === 0 || totalYears === 0) {
-      return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
+      return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0, isGSA: false };
     }
 
     // Calculate escalated salary for each year
@@ -98,7 +125,7 @@ export const PositionsGrid = () => {
     }
 
     if (totalHours === 0) {
-      return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
+      return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0, isGSA: false };
     }
 
     // Calculate averaged DL rate
@@ -111,7 +138,7 @@ export const PositionsGrid = () => {
     const fee = (dlRate + fringe + oh + ga) * rates.fee;
     const fblr = dlRate + fringe + oh + ga + fee;
 
-    return { dlRate, fringe, oh, ga, fee, fblr };
+    return { dlRate, fringe, oh, ga, fee, fblr, isGSA: false };
   };
 
   // Handle right-click on grid rows (MOVED BEFORE useMemo)
@@ -247,54 +274,104 @@ export const PositionsGrid = () => {
           </div>
         ),
       },
-      // SOC Code - Clickable
+      // Category Code - Show GSA lcat_id or BLS SOC code
       {
         key: 'soc_code',
-        name: 'BLS Code',
-        width: 100,
+        name: 'Category Code',
+        width: 140,
         resizable: true,
-        renderCell: ({ row }) => (
-          <div
-            className="flex items-center h-full px-2 cursor-pointer hover:bg-muted/50 transition-colors"
-            onClick={() => {
-              setPositionToEditSOC(row);
-              setSOCModalOpen(true);
-            }}
-          >
-            <span className="text-muted-foreground text-xs">{row.soc_code || '-'}</span>
-          </div>
-        ),
+        renderCell: ({ row }) => {
+          const isGSA = isGSAPosition(row);
+          if (isGSA) {
+            return (
+              <div className="flex items-center h-full px-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                    GSA
+                  </span>
+                  <span className="text-muted-foreground text-xs font-mono">
+                    {row.gsa_lcat_id || '-'}
+                  </span>
+                </div>
+              </div>
+            );
+          }
+          return (
+            <div
+              className="flex items-center h-full px-2 cursor-pointer hover:bg-muted/50 transition-colors"
+              onClick={() => {
+                setPositionToEditSOC(row);
+                setSOCModalOpen(true);
+              }}
+            >
+              <div className="flex items-center gap-1.5">
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                  BLS
+                </span>
+                <span className="text-muted-foreground text-xs font-mono">{row.soc_code || '-'}</span>
+              </div>
+            </div>
+          );
+        },
       },
-      // SOC Title - Clickable
+      // Category Title - Show GSA title or BLS title
       {
         key: 'soc_title',
-        name: 'BLS Labour Category',
-        width: 220,
+        name: 'Category Title',
+        width: 240,
         resizable: true,
-        renderCell: ({ row }) => (
-          <div
-            className="flex items-center h-full px-2 cursor-pointer hover:bg-muted/50 transition-colors"
-            onClick={() => {
-              setPositionToEditSOC(row);
-              setSOCModalOpen(true);
-            }}
-          >
-            <span className="text-muted-foreground text-xs">{row.soc_title || '-'}</span>
-          </div>
-        ),
+        renderCell: ({ row }) => {
+          const isGSA = isGSAPosition(row);
+          if (isGSA) {
+            // GSA: Show GSA title only (no BLS data)
+            return (
+              <div className="flex items-center h-full px-2">
+                <span className="text-muted-foreground text-xs">
+                  {row.gsa_title || '-'}
+                </span>
+              </div>
+            );
+          }
+          // BLS: Show BLS title (clickable to change)
+          return (
+            <div
+              className="flex items-center h-full px-2 cursor-pointer hover:bg-muted/50 transition-colors"
+              onClick={() => {
+                setPositionToEditSOC(row);
+                setSOCModalOpen(true);
+              }}
+            >
+              <span className="text-muted-foreground text-xs">{row.soc_title || '-'}</span>
+            </div>
+          );
+        },
       },
-      // Salary - Click to open modal
+      // Salary / Rate - Click to open modal (different display for GSA vs BLS)
       {
         key: 'salary',
-        name: 'Salary ($)',
+        name: 'Rate / Salary',
         width: 200,
         resizable: true,
         renderCell: ({ row }) => {
-          // Get effective salary and display info
+          const isGSA = isGSAPosition(row);
           const wage = getEffectiveSalary(row);
           const label = getSalaryDisplayLabel(row);
           const isMulti = isMultiSelectMode(row);
 
+          // GSA positions: Show hourly rate (non-editable through salary modal)
+          if (isGSA) {
+            return (
+              <div className="flex items-center justify-end h-full px-2">
+                <div className="flex items-center gap-1">
+                  <span className="font-mono text-sm text-green-700 dark:text-green-300 font-semibold">
+                    ${wage.toFixed(2)}/hr
+                  </span>
+                </div>
+              </div>
+            );
+          }
+
+          // BLS positions: Click to open salary selection modal
           return (
             <div
               className="flex items-center justify-end h-full px-2 cursor-pointer hover:bg-muted/50 transition-colors"

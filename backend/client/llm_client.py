@@ -87,6 +87,7 @@ class LLMClient:
                     id=model,
                     api_key=api_key,
                     base_url=base_url,
+                    temperature=0,  # Deterministic responses for consistent SOC matching
                 )
             return self._chat_llm_agno_cache[cache_key]
 

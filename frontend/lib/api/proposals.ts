@@ -31,14 +31,30 @@ export const proposalsApi = {
   },
 
   // Upload documents and create proposal
-  upload: async (files: File[], solicitationNumber?: string): Promise<UploadResponse> => {
+  upload: async (
+    files: File[],
+    name: string,
+    solicitationNumber?: string,
+    wageSourceType?: 'bls' | 'gsa',
+    wageSourceFileId?: string
+  ): Promise<UploadResponse> => {
     const formData = new FormData();
     files.forEach((file) => {
       formData.append('files', file);
     });
 
+    formData.append('name', name);
+
     if (solicitationNumber) {
       formData.append('solicitation_number', solicitationNumber);
+    }
+
+    // Add wage source parameters for GSA support
+    if (wageSourceType) {
+      formData.append('wage_source_type', wageSourceType);
+    }
+    if (wageSourceFileId) {
+      formData.append('wage_source_file_id', wageSourceFileId);
     }
 
     const response = await apiClient.post<UploadResponse>(

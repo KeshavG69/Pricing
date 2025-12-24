@@ -16,7 +16,7 @@ import {
 import { pricingApi } from '../api/pricing';
 import { proposalsApi } from '../api/proposals';
 import { useOrganizationStore } from './organizationStore';
-import { getEffectiveSalary } from '../utils/salaryHelpers';
+import { getEffectiveSalary, isGSAPosition, getGSARateForYear } from '../utils/salaryHelpers';
 
 interface PricingState {
   // Data
@@ -86,24 +86,36 @@ interface PricingState {
 
 // Helper to map JobPosition to SpreadsheetPosition
 const mapJobToPosition = (job: JobPosition, index: number): SpreadsheetPosition => {
-  // Find first available percentile with a valid wage
+  // Check if this is a GSA position
+  const isGSA = job.wage_source === 'gsa';
+
+  // Find first available percentile with a valid wage (for BLS positions)
   let percentile = job.selected_percentile || '50th';
 
-  // Validate that the percentile has a wage value
-  const percentileWage = job[`wage_${percentile}` as keyof JobPosition];
-  if (percentileWage == null) {
-    // Fallback: find first non-null percentile
-    const fallbacks = ['50th', '75th', '25th', '90th', '10th'] as const;
-    for (const p of fallbacks) {
-      if (job[`wage_${p}` as keyof JobPosition] != null) {
-        percentile = p;
-        break;
+  // Validate that the percentile has a wage value (BLS only)
+  if (!isGSA) {
+    const percentileWage = job[`wage_${percentile}` as keyof JobPosition];
+    if (percentileWage == null) {
+      // Fallback: find first non-null percentile
+      const fallbacks = ['50th', '75th', '25th', '90th', '10th'] as const;
+      for (const p of fallbacks) {
+        if (job[`wage_${p}` as keyof JobPosition] != null) {
+          percentile = p;
+          break;
+        }
       }
     }
   }
 
-  // Calculate selected_wage from the determined percentile
-  const selectedWage = job[`wage_${percentile}` as keyof JobPosition] as number | undefined;
+  // Calculate selected_wage from the determined percentile (BLS) or GSA rate (GSA)
+  let selectedWage: number | undefined;
+  if (isGSA && job.gsa_rates_by_year) {
+    // For GSA, use the first year's rate for display
+    const currentYear = job.gsa_current_year || 1;
+    selectedWage = job.gsa_rates_by_year[String(currentYear)];
+  } else {
+    selectedWage = job[`wage_${percentile}` as keyof JobPosition] as number | undefined;
+  }
 
   return {
     id: `pos_${index}_${Date.now()}`,
@@ -118,10 +130,16 @@ const mapJobToPosition = (job: JobPosition, index: number): SpreadsheetPosition 
     wage_50th: job.wage_50th,
     wage_75th: job.wage_75th,
     wage_90th: job.wage_90th,
-    selected_wage: selectedWage, // Use the wage from the determined percentile
+    selected_wage: selectedWage,
     hours_per_year: job.hours_per_year || { '1': job.hours || 1880 },
     yearly_amounts: [],
     total_amount: 0,
+    // GSA-specific fields
+    wage_source: job.wage_source,
+    gsa_lcat_id: job.gsa_lcat_id,
+    gsa_title: job.gsa_title,
+    gsa_rates_by_year: job.gsa_rates_by_year,
+    gsa_current_year: job.gsa_current_year,
   };
 };
 
@@ -227,45 +245,72 @@ export const usePricingStore = create<PricingState>((set, get) => {
     // Convert each SpreadsheetPosition to AdvancedPosition
     const advanced = state.positions.map((pos) => {
       const breakdown: AdvancedPosition['breakdown'] = {};
+      const isGSA = isGSAPosition(pos);
 
       // For each year, create detailed breakdown
       Object.entries(pos.hours_per_year).forEach(([year, hours]) => {
-        // Use getEffectiveSalary to handle multi-select averaging
-        const wage = getEffectiveSalary(pos);
-        const dlRate = hours > 0 ? wage / hours : 0;
-        const dlAmount = dlRate * hours;
+        const yearNum = parseInt(year, 10);
 
-        const fringe = dlRate * state.rates.fringe;
-        const fringeAmount = fringe * hours;
+        if (isGSA) {
+          // GSA positions: Use GSA rate directly, NO indirect rates
+          const gsaRate = getGSARateForYear(pos, yearNum);
+          const dlAmount = gsaRate * hours;
 
-        const oh = (dlRate + fringe) * state.rates.oh;
-        const ohAmount = oh * hours;
+          breakdown[year] = {
+            hours,
+            wage: gsaRate, // GSA rate is already hourly
+            dlRate: gsaRate,
+            dlAmount,
+            fringe: 0,
+            fringeAmount: 0,
+            oh: 0,
+            ohAmount: 0,
+            ga: 0,
+            gaAmount: 0,
+            fee: 0,
+            feeAmount: 0,
+            fblr: gsaRate, // FBLR equals GSA rate (no indirect costs)
+            totalAmount: dlAmount,
+          };
+        } else {
+          // BLS positions: Calculate with indirect rates
+          // Use getEffectiveSalary to handle multi-select averaging
+          const wage = getEffectiveSalary(pos);
+          const dlRate = hours > 0 ? wage / hours : 0;
+          const dlAmount = dlRate * hours;
 
-        const ga = (dlRate + fringe + oh) * state.rates.ga;
-        const gaAmount = ga * hours;
+          const fringe = dlRate * state.rates.fringe;
+          const fringeAmount = fringe * hours;
 
-        const fee = (dlRate + fringe + oh + ga) * state.rates.fee;
-        const feeAmount = fee * hours;
+          const oh = (dlRate + fringe) * state.rates.oh;
+          const ohAmount = oh * hours;
 
-        const fblr = dlRate + fringe + oh + ga + fee;
-        const totalAmount = fblr * hours;
+          const ga = (dlRate + fringe + oh) * state.rates.ga;
+          const gaAmount = ga * hours;
 
-        breakdown[year] = {
-          hours,
-          wage,
-          dlRate,
-          dlAmount,
-          fringe,
-          fringeAmount,
-          oh,
-          ohAmount,
-          ga,
-          gaAmount,
-          fee,
-          feeAmount,
-          fblr,
-          totalAmount,
-        };
+          const fee = (dlRate + fringe + oh + ga) * state.rates.fee;
+          const feeAmount = fee * hours;
+
+          const fblr = dlRate + fringe + oh + ga + fee;
+          const totalAmount = fblr * hours;
+
+          breakdown[year] = {
+            hours,
+            wage,
+            dlRate,
+            dlAmount,
+            fringe,
+            fringeAmount,
+            oh,
+            ohAmount,
+            ga,
+            gaAmount,
+            fee,
+            feeAmount,
+            fblr,
+            totalAmount,
+          };
+        }
       });
 
       return {
@@ -893,10 +938,37 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
           // Helper to calculate averaged FBLR
           const calculateAveragedFBLR = (p: SpreadsheetPosition) => {
-            // Use getEffectiveSalary to handle multi-select averaging
+            const isGSA = isGSAPosition(p);
+
+            // GSA positions: Calculate averaged GSA rate across years (no indirect rates)
+            if (isGSA) {
+              let totalAmount = 0;
+              let totalHours = 0;
+
+              for (let year = 1; year <= state.totalYears; year++) {
+                const yearStr = year.toString();
+                const hoursThisYear = p.hours_per_year[yearStr] || 0;
+                const gsaRate = getGSARateForYear(p, year);
+
+                if (hoursThisYear > 0 && gsaRate > 0) {
+                  totalAmount += gsaRate * hoursThisYear;
+                  totalHours += hoursThisYear;
+                }
+              }
+
+              if (totalHours === 0) {
+                return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0, isGSA: true };
+              }
+
+              const avgRate = totalAmount / totalHours;
+              // GSA: No indirect rates, FBLR = DL rate
+              return { dlRate: avgRate, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: avgRate, isGSA: true };
+            }
+
+            // BLS positions: Use existing calculation with indirect rates
             const baseWage = getEffectiveSalary(p);
             if (baseWage === 0 || state.totalYears === 0) {
-              return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
+              return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0, isGSA: false };
             }
 
             let totalSalary = 0;
@@ -929,7 +1001,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
             }
 
             if (totalHours === 0) {
-              return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
+              return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0, isGSA: false };
             }
 
             const dlRate = totalSalary / totalHours;
@@ -939,27 +1011,37 @@ export const usePricingStore = create<PricingState>((set, get) => {
             const fee = (dlRate + fringe + oh + ga) * state.rates.fee;
             const fblr = dlRate + fringe + oh + ga + fee;
 
-            return { dlRate, fringe, oh, ga, fee, fblr };
+            return { dlRate, fringe, oh, ga, fee, fblr, isGSA: false };
           };
 
           // Prepare data for Excel
           const excelData = state.positions.map(p => {
             const averaged = calculateAveragedFBLR(p);
+            const isGSA = isGSAPosition(p);
 
             const row: any = {
               'Labor Category': p.labor_category,
+              'Rate Source': isGSA ? 'GSA' : 'BLS',
               'Experience (yrs)': p.experience ?? '-',
               'Location': p.location ?? '-',
-              'BLS Code': p.soc_code ?? '-',
-              'BLS Category': p.soc_title ?? '-',
-              'Percentile': p.percentile,
-              'Wage 10th': p.wage_10th ?? 0,
-              'Wage 25th': p.wage_25th ?? 0,
-              'Wage 50th': p.wage_50th ?? 0,
-              'Wage 75th': p.wage_75th ?? 0,
-              'Wage 90th': p.wage_90th ?? 0,
-              'Selected Wage': getEffectiveSalary(p),
             };
+
+            // Add source-specific columns
+            if (isGSA) {
+              row['GSA LCAT ID'] = p.gsa_lcat_id ?? '-';
+              row['GSA Title'] = p.gsa_title ?? '-';
+              row['GSA Rate ($/hr)'] = getEffectiveSalary(p);
+            } else {
+              row['BLS Code'] = p.soc_code ?? '-';
+              row['BLS Category'] = p.soc_title ?? '-';
+              row['Percentile'] = p.percentile;
+              row['Wage 10th'] = p.wage_10th ?? 0;
+              row['Wage 25th'] = p.wage_25th ?? 0;
+              row['Wage 50th'] = p.wage_50th ?? 0;
+              row['Wage 75th'] = p.wage_75th ?? 0;
+              row['Wage 90th'] = p.wage_90th ?? 0;
+              row['Selected Wage'] = getEffectiveSalary(p);
+            }
 
             // Add year columns dynamically
             for (let i = 1; i <= state.totalYears; i++) {
@@ -969,10 +1051,13 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
             // Add averaged rate columns
             row['Averaged DL Rate ($/hr)'] = averaged.dlRate.toFixed(2);
-            row['Averaged Fringe ($/hr)'] = averaged.fringe.toFixed(2);
-            row['Averaged OH ($/hr)'] = averaged.oh.toFixed(2);
-            row['Averaged G&A ($/hr)'] = averaged.ga.toFixed(2);
-            row['Averaged Fee ($/hr)'] = averaged.fee.toFixed(2);
+            if (!isGSA) {
+              // Only show indirect rate columns for BLS positions
+              row['Averaged Fringe ($/hr)'] = averaged.fringe.toFixed(2);
+              row['Averaged OH ($/hr)'] = averaged.oh.toFixed(2);
+              row['Averaged G&A ($/hr)'] = averaged.ga.toFixed(2);
+              row['Averaged Fee ($/hr)'] = averaged.fee.toFixed(2);
+            }
             row['Averaged Full Burdened Rate ($/hr)'] = averaged.fblr.toFixed(2);
 
             return row;
