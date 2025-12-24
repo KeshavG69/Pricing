@@ -129,13 +129,15 @@ async def process_proposal_documents(
             {"status": "processing", "progress": 0, "message": "Parsing documents..."}
         )
 
-        # Step 1: Parse documents to DataFrame
-        df = await parse_documents_to_dataframe(file_paths)
+        # Step 1: Parse documents to DataFrame and ODCs
+        parse_result = await parse_documents_to_dataframe(file_paths)
+        df = parse_result["df"]
+        extracted_odcs = parse_result.get("odcs", [])
 
         crud.update_proposal(
             proposal_id,
             user_id,
-            {"progress": 30, "message": f"Found {len(df)} positions. Fetching wage data..."}
+            {"progress": 30, "message": f"Found {len(df)} positions, {len(extracted_odcs)} ODCs. Fetching wage data..."}
         )
 
         # Step 2: Process with agents
@@ -233,7 +235,7 @@ async def process_proposal_documents(
             key = f"{year}_to_{year + 1}"
             escalation_rates[key] = default_escalation_rate
 
-        # Update proposal with results
+        # Update proposal with results (including ODCs in spreadsheet_data)
         crud.update_proposal(
             proposal_id,
             user_id,
@@ -250,7 +252,10 @@ async def process_proposal_documents(
                     "fte_hours_threshold": fte_threshold
                 },
                 "rates": default_rates,
-                "escalation_rates": escalation_rates
+                "escalation_rates": escalation_rates,
+                "spreadsheet_data": {
+                    "odcs": extracted_odcs
+                }
             }
         )
 

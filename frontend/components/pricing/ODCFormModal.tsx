@@ -24,7 +24,6 @@ export const ODCFormModal = ({
   const [description, setDescription] = useState<string>('');
   const [amountsByYear, setAmountsByYear] = useState<Record<string, number>>({});
   const [escalate, setEscalate] = useState<boolean>(false);
-  const [applyGAAdder, setApplyGAAdder] = useState<boolean>(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Initialize form with existing ODC data if editing
@@ -34,7 +33,6 @@ export const ODCFormModal = ({
       setDescription(existingODC.description || '');
       setAmountsByYear(existingODC.amount_per_year);
       setEscalate(existingODC.escalate);
-      setApplyGAAdder(existingODC.apply_ga_adder);
     } else {
       // Initialize amounts for all years
       const initialAmounts: Record<string, number> = {};
@@ -83,7 +81,7 @@ export const ODCFormModal = ({
       description: description.trim() || undefined,
       amount_per_year: amountsByYear,
       escalate,
-      apply_ga_adder: applyGAAdder,
+      // S&MH is always applied to all ODCs
     };
 
     onSave(odcData);
@@ -96,7 +94,6 @@ export const ODCFormModal = ({
     setDescription('');
     setAmountsByYear({});
     setEscalate(false);
-    setApplyGAAdder(false);
     setErrors({});
     onClose();
   };
@@ -233,7 +230,7 @@ export const ODCFormModal = ({
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-muted-foreground">
-                Base Total (before escalation/G&amp;A):
+                Base Total (S&amp;MH applied in Grand Total):
               </span>
               <span className="text-lg font-bold text-orange-600">
                 {new Intl.NumberFormat('en-US', {

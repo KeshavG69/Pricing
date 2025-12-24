@@ -81,6 +81,32 @@ class YearMonths(BaseModel):
     )
 
 
+class YearAmount(BaseModel):
+    """Dollar amount for a specific year - used for ODCs like travel."""
+    year: str = Field(
+        description="Year number as string: '1' for Base Period, '2' for Option Year 1, etc."
+    )
+    amount: float = Field(
+        description="Dollar amount for this year (e.g., 299542.60)"
+    )
+
+
+class ODCExtract(BaseModel):
+    """Other Direct Cost item extracted from document."""
+    category: str = Field(
+        description="ODC category (e.g., 'Travel', 'Materials', 'Equipment', 'Software', 'Supplies')"
+    )
+    description: Optional[str] = Field(
+        None,
+        description="Description of the ODC item (e.g., 'Government Estimated Travel Amount')"
+    )
+    amount_per_year: List[YearAmount] = Field(
+        description="""Dollar amounts per year.
+        Year "1" = Base Period, "2" = Option Year 1, "3" = Option Year 2, etc.
+        Example: [{"year": "1", "amount": 299542.60}, {"year": "2", "amount": 308528.88}]"""
+    )
+
+
 class PositionExtract(BaseModel):
     """Position model for LlamaExtract - includes List[YearHours]."""
 
@@ -169,6 +195,13 @@ class GovernmentProposalExtraction(BaseModel):
     )
     positions: List[PositionExtract] = Field(
         description="All job positions/labor categories found in the document"
+    )
+    odcs: Optional[List[ODCExtract]] = Field(
+        None,
+        description="""Other Direct Costs (ODCs) found in the document.
+        Include Travel, Materials, Equipment, Software, Supplies, etc.
+        Look for sections labeled 'Travel', 'ODCs', 'Other Direct Costs', 'Non-Labor Costs'.
+        Extract amounts per period (Base Period, Option Year 1, etc.)."""
     )
 
 
@@ -405,21 +438,21 @@ def extract_with_llamaextract(file_path: str, mode: str = "fast") -> GovernmentP
                 pass
 
 
-async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFrame:
+async def parse_documents_to_dataframe(document_paths: List[str]) -> Dict[str, any]:
     """
-    Parse multiple documents and extract all job descriptions into a DataFrame using LlamaExtract.
+    Parse multiple documents and extract all job descriptions and ODCs using LlamaExtract.
 
     Args:
         document_paths: List of paths to documents (PDF, Excel, CSV, DOCX)
 
     Returns:
-        pandas DataFrame with columns:
-        - labor_category, description, experience, location, hours, hours_per_year (job-level)
-        - base_years, option_years, total_years, project_name (document-level, same for all rows)
-        One row per job description found across all documents
+        Dict with:
+        - 'df': pandas DataFrame with positions (labor_category, hours_per_year, etc.)
+        - 'odcs': List of ODC items (travel, materials, etc.) in frontend format
     """
     all_jds: List[JobDescription] = []
     all_metadata_list: List[DocumentMetadata] = []
+    all_odcs: List[Dict] = []
 
     print(f"\n{'='*60}")
     print(f"Parsing {len(document_paths)} document(s) with LlamaExtract")
@@ -470,6 +503,24 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
                 all_jds.append(jd)
                 all_metadata_list.append(doc_metadata)
 
+            # Convert ODCs to frontend format
+            if extraction.odcs:
+                print(f"  ODCs found: {len(extraction.odcs)}")
+                for odc in extraction.odcs:
+                    # Convert amount_per_year from List[YearAmount] to Dict[str, float]
+                    amount_per_year = {
+                        ya.year: ya.amount
+                        for ya in odc.amount_per_year
+                    }
+                    all_odcs.append({
+                        "id": f"odc_{len(all_odcs)}_{hash(odc.category)}",
+                        "category": odc.category,
+                        "description": odc.description,
+                        "amount_per_year": amount_per_year,
+                        "escalate": False  # Already has per-year amounts
+                        # S&MH is always applied to all ODCs
+                    })
+
         except Exception as e:
             print(f"  ❌ Error processing {doc_path}: {e}")
             import traceback
@@ -507,5 +558,13 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
             for jd, metadata in zip(all_jds, all_metadata_list)
         ])
 
-    print(f"✓ Extracted {len(df)} job descriptions\n")
-    return df
+    print(f"✓ Extracted {len(df)} job descriptions")
+    if all_odcs:
+        print(f"✓ Extracted {len(all_odcs)} ODC items\n")
+    else:
+        print()
+
+    return {
+        "df": df,
+        "odcs": all_odcs
+    }

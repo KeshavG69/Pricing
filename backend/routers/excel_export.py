@@ -211,8 +211,10 @@ async def generate_excel_from_documents(
                 f.write(content)
             file_paths.append(str(file_path))
 
-        # Step 1: Parse documents to DataFrame
-        df = await parse_documents_to_dataframe(file_paths)
+        # Step 1: Parse documents to DataFrame and ODCs
+        parse_result = await parse_documents_to_dataframe(file_paths)
+        df = parse_result["df"]
+        # extracted_odcs = parse_result.get("odcs", [])  # TODO: Use in Excel export
 
         if len(df) == 0:
             raise HTTPException(

@@ -20,7 +20,6 @@ interface ODCRow {
   category: string;
   description?: string;
   escalate: boolean;
-  applyGAAdder: boolean;
   amountsByYear: Record<string, number>;
   type: 'odc' | 'total';
   originalODC?: ODCItem;
@@ -73,7 +72,6 @@ export const ODCSection = ({
       category: odc.category,
       description: odc.description,
       escalate: odc.escalate,
-      applyGAAdder: odc.apply_ga_adder,
       amountsByYear: odc.amount_per_year,
       type: 'odc',
       originalODC: odc,
@@ -84,7 +82,6 @@ export const ODCSection = ({
       id: 'total',
       category: 'Total ODCs',
       escalate: false,
-      applyGAAdder: false,
       amountsByYear: odcTotalsByYear,
       type: 'total',
     });
