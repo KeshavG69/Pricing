@@ -92,7 +92,9 @@ export const TravelFormModal = ({
   };
 
   const handleAmountChange = (year: string, value: string) => {
-    const numValue = parseFloat(value) || 0;
+    // If empty string, set to 0
+    // Otherwise parse the number (parseFloat will return NaN for invalid input, fallback to 0)
+    const numValue = value === '' ? 0 : (parseFloat(value) || 0);
     setAmountsByYear((prev) => ({
       ...prev,
       [year]: numValue,
@@ -171,7 +173,8 @@ export const TravelFormModal = ({
                         type="number"
                         min="0"
                         step="0.01"
-                        value={amountsByYear[year] || 0}
+                        value={amountsByYear[year] === 0 ? '' : amountsByYear[year]}
+                        placeholder="0"
                         onChange={(e) => handleAmountChange(year, e.target.value)}
                         className="w-full pl-7 pr-3 py-2 bg-background border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                       />

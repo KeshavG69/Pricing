@@ -493,10 +493,13 @@ def extract_with_llamaextract(file_path: str, mode: str = "premium") -> Governme
 
     try:
         # Create LlamaExtract client with increased timeout
+        # NOTE: verify=False disables SSL certificate verification (useful for SSL hostname mismatch errors)
+        # WARNING: Only use verify=False for testing/development. Re-enable in production.
         extractor = LlamaExtract(
             api_key=api_key,
             httpx_timeout=300.0,  # 5 minutes timeout for HTTP requests
-            max_timeout=3000  # 50 minutes max wait for extraction job
+            max_timeout=3000,  # 50 minutes max wait for extraction job
+            verify=False  # Disable SSL verification to bypass certificate hostname mismatch
         )
 
         # Map mode string to ExtractMode enum

@@ -337,6 +337,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
       <TravelSection
         travel={travel}
         totalYears={totalYears}
+        gaRate={rates.ga}
         onAdd={handleAddTravel}
         onEdit={handleEditTravel}
         onDelete={deleteTravel}
@@ -346,6 +347,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
       <ODCSection
         odcs={odcs}
         totalYears={totalYears}
+        smhRate={rates.smh || 0}
         onAdd={handleAddODC}
         onEdit={handleEditODC}
         onDelete={deleteODC}

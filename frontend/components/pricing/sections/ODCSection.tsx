@@ -10,6 +10,7 @@ import styles from './PrimeLaborSection.module.css';
 interface ODCSectionProps {
   odcs: ODCItem[];
   totalYears: number;
+  smhRate: number; // S&MH rate to apply to ODCs
   onAdd: () => void;
   onEdit: (odc: ODCItem) => void;
   onDelete: (id: string) => void;
@@ -21,13 +22,14 @@ interface ODCRow {
   description?: string;
   escalate: boolean;
   amountsByYear: Record<string, number>;
-  type: 'odc' | 'total';
+  type: 'odc' | 'subtotal' | 'smh' | 'total';
   originalODC?: ODCItem;
 }
 
 export const ODCSection = ({
   odcs,
   totalYears,
+  smhRate,
   onAdd,
   onEdit,
   onDelete,
@@ -44,8 +46,8 @@ export const ODCSection = ({
     }).format(value);
   };
 
-  // Calculate ODC totals by year (before escalation/GA)
-  const odcTotalsByYear = useMemo(() => {
+  // Calculate ODC totals by year (before S&MH)
+  const odcSubtotalsByYear = useMemo(() => {
     const result: Record<string, number> = {};
 
     for (let year = 1; year <= totalYears; year++) {
@@ -60,12 +62,38 @@ export const ODCSection = ({
     return result;
   }, [odcs, totalYears]);
 
-  // Calculate grand total
-  const grandTotal = useMemo(() => {
-    return Object.values(odcTotalsByYear).reduce((sum, val) => sum + val, 0);
-  }, [odcTotalsByYear]);
+  // Calculate S&MH amounts by year
+  const smhAmountsByYear = useMemo(() => {
+    const result: Record<string, number> = {};
+    Object.entries(odcSubtotalsByYear).forEach(([year, amount]) => {
+      result[year] = amount * smhRate;
+    });
+    return result;
+  }, [odcSubtotalsByYear, smhRate]);
 
-  // Create rows (ODC items + total row)
+  // Calculate total with S&MH by year
+  const totalWithSMHByYear = useMemo(() => {
+    const result: Record<string, number> = {};
+    Object.entries(odcSubtotalsByYear).forEach(([year, amount]) => {
+      result[year] = amount + smhAmountsByYear[year];
+    });
+    return result;
+  }, [odcSubtotalsByYear, smhAmountsByYear]);
+
+  // Calculate grand totals
+  const subtotalGrandTotal = useMemo(() => {
+    return Object.values(odcSubtotalsByYear).reduce((sum, val) => sum + val, 0);
+  }, [odcSubtotalsByYear]);
+
+  const smhGrandTotal = useMemo(() => {
+    return Object.values(smhAmountsByYear).reduce((sum, val) => sum + val, 0);
+  }, [smhAmountsByYear]);
+
+  const grandTotal = useMemo(() => {
+    return subtotalGrandTotal + smhGrandTotal;
+  }, [subtotalGrandTotal, smhGrandTotal]);
+
+  // Create rows (ODC items + subtotal + S&MH + total)
   const rows = useMemo<ODCRow[]>(() => {
     const odcRows: ODCRow[] = odcs.map((odc) => ({
       id: odc.id,
@@ -77,17 +105,35 @@ export const ODCSection = ({
       originalODC: odc,
     }));
 
-    // Add total row
+    // Add subtotal row (base amounts)
+    odcRows.push({
+      id: 'subtotal',
+      category: 'Subtotal ODCs (Base)',
+      escalate: false,
+      amountsByYear: odcSubtotalsByYear,
+      type: 'subtotal',
+    });
+
+    // Add S&MH row
+    odcRows.push({
+      id: 'smh',
+      category: `S&MH (${(smhRate * 100).toFixed(2)}%)`,
+      escalate: false,
+      amountsByYear: smhAmountsByYear,
+      type: 'smh',
+    });
+
+    // Add total row with S&MH
     odcRows.push({
       id: 'total',
-      category: 'Total ODCs',
+      category: 'Total ODCs (with S&MH)',
       escalate: false,
-      amountsByYear: odcTotalsByYear,
+      amountsByYear: totalWithSMHByYear,
       type: 'total',
     });
 
     return odcRows;
-  }, [odcs, odcTotalsByYear]);
+  }, [odcs, odcSubtotalsByYear, smhAmountsByYear, totalWithSMHByYear, smhRate]);
 
   // Generate columns dynamically
   const columns = useMemo<Column<ODCRow>[]>(() => {
@@ -100,10 +146,17 @@ export const ODCSection = ({
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => (
-          <div className="flex items-center h-full px-2">
+          <div className={`flex items-center h-full px-2 ${
+            row.type === 'subtotal' ? 'bg-gray-50 border-t-2 border-gray-300' :
+            row.type === 'smh' ? 'bg-purple-50' :
+            row.type === 'total' ? 'bg-orange-100 border-t-2 border-orange-300 border-b-2' : ''
+          }`}>
             <span
               className={`font-semibold ${
-                row.type === 'total' ? 'text-orange-600 text-lg' : 'text-foreground'
+                row.type === 'total' ? 'text-orange-700 text-lg font-bold' :
+                row.type === 'subtotal' ? 'text-gray-700 font-bold' :
+                row.type === 'smh' ? 'text-purple-700 font-bold' :
+                'text-foreground'
               }`}
             >
               {row.category}
@@ -118,7 +171,13 @@ export const ODCSection = ({
         width: 250,
         resizable: true,
         renderCell: ({ row }) => {
-          if (row.type === 'total') return <div className="h-full" />;
+          if (row.type !== 'odc') return (
+            <div className={`h-full ${
+              row.type === 'subtotal' ? 'bg-gray-50 border-t-2 border-gray-300' :
+              row.type === 'smh' ? 'bg-purple-50' :
+              row.type === 'total' ? 'bg-orange-100 border-t-2 border-orange-300 border-b-2' : ''
+            }`} />
+          );
 
           return (
             <div className="flex items-center h-full px-2">
@@ -156,14 +215,17 @@ export const ODCSection = ({
           return (
             <div
               className={`flex items-center justify-end h-full px-2 ${
-                row.type === 'total' ? 'bg-orange-50' : ''
+                row.type === 'subtotal' ? 'bg-gray-50 border-t-2 border-gray-300' :
+                row.type === 'smh' ? 'bg-purple-50' :
+                row.type === 'total' ? 'bg-orange-100 border-t-2 border-orange-300 border-b-2' : ''
               }`}
             >
               <span
                 className={
-                  row.type === 'total'
-                    ? 'text-orange-600 font-bold'
-                    : 'text-amber-600 font-semibold'
+                  row.type === 'total' ? 'text-orange-700 font-bold text-lg' :
+                  row.type === 'subtotal' ? 'text-gray-700 font-bold' :
+                  row.type === 'smh' ? 'text-purple-700 font-bold' :
+                  'text-amber-600 font-semibold'
                 }
               >
                 {formatCurrency(value)}
@@ -190,14 +252,17 @@ export const ODCSection = ({
         return (
           <div
             className={`flex items-center justify-end h-full px-2 ${
-              row.type === 'total' ? 'bg-orange-100' : ''
+              row.type === 'subtotal' ? 'bg-gray-50 border-t-2 border-gray-300' :
+              row.type === 'smh' ? 'bg-purple-50' :
+              row.type === 'total' ? 'bg-orange-100 border-t-2 border-orange-300 border-b-2' : ''
             }`}
           >
             <span
               className={
-                row.type === 'total'
-                  ? 'text-orange-600 font-bold text-lg'
-                  : 'text-amber-600 font-semibold'
+                row.type === 'total' ? 'text-orange-700 font-bold text-lg' :
+                row.type === 'subtotal' ? 'text-gray-700 font-bold' :
+                row.type === 'smh' ? 'text-purple-700 font-bold' :
+                'text-amber-600 font-semibold'
               }
             >
               {formatCurrency(total)}
@@ -214,7 +279,7 @@ export const ODCSection = ({
       width: 100,
       resizable: false,
       renderCell: ({ row }) => {
-        if (row.type === 'total') return <div className="h-full" />;
+        if (row.type !== 'odc') return <div className="h-full" />;
 
         return (
           <div className="flex items-center justify-center h-full gap-2">
