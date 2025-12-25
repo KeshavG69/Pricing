@@ -15,6 +15,7 @@ interface GrandTotalSectionProps {
   subLaborByYear?: Record<string, number>;
   passthroughByYear?: Record<string, number>;
   feeByYear?: Record<string, number>;
+  travelByYear?: Record<string, number>;
   odcByYear?: Record<string, number>;
   totalYears: number;
 }
@@ -22,7 +23,7 @@ interface GrandTotalSectionProps {
 interface GrandTotalRow {
   id: string;
   label: string;
-  type: 'prime' | 'sub' | 'passthrough' | 'fee' | 'odc' | 'total';
+  type: 'prime' | 'sub' | 'passthrough' | 'fee' | 'travel' | 'odc' | 'total';
 }
 
 export const GrandTotalSection = ({
@@ -31,6 +32,7 @@ export const GrandTotalSection = ({
   subLaborByYear = {},
   passthroughByYear = {},
   feeByYear = {},
+  travelByYear = {},
   odcByYear = {},
   totalYears,
 }: GrandTotalSectionProps) => {
@@ -50,10 +52,11 @@ export const GrandTotalSection = ({
     const subTotal = Object.values(subLaborByYear).reduce((sum, val) => sum + val, 0);
     const passthroughTotal = Object.values(passthroughByYear).reduce((sum, val) => sum + val, 0);
     const feeTotal = Object.values(feeByYear).reduce((sum, val) => sum + val, 0);
+    const travelTotal = Object.values(travelByYear).reduce((sum, val) => sum + val, 0);
     const odcTotal = Object.values(odcByYear).reduce((sum, val) => sum + val, 0);
 
-    return { primeTotal, subTotal, passthroughTotal, feeTotal, odcTotal };
-  }, [primeLaborByYear, subLaborByYear, passthroughByYear, feeByYear, odcByYear]);
+    return { primeTotal, subTotal, passthroughTotal, feeTotal, travelTotal, odcTotal };
+  }, [primeLaborByYear, subLaborByYear, passthroughByYear, feeByYear, travelByYear, odcByYear]);
 
   // Create breakdown rows
   const rows = useMemo<GrandTotalRow[]>(() => [
@@ -61,6 +64,7 @@ export const GrandTotalSection = ({
     { id: 'sub', label: 'Subcontractor Labor', type: 'sub' },
     { id: 'passthrough', label: 'Passthrough (S&MH + G&A)', type: 'passthrough' },
     { id: 'fee', label: 'Fee (Profit)', type: 'fee' },
+    { id: 'travel', label: 'Travel (with G&A)', type: 'travel' },
     { id: 'odc', label: 'ODCs (with S&MH)', type: 'odc' },
     { id: 'grand_total', label: 'Grand Total Contract Value', type: 'total' },
   ], []);
@@ -84,9 +88,13 @@ export const GrandTotalSection = ({
             ? 'text-purple-600'
             : row.type === 'passthrough'
             ? 'text-blue-600'
+            : row.type === 'fee'
+            ? 'text-amber-600'
+            : row.type === 'travel'
+            ? 'text-sky-600'
             : row.type === 'odc'
             ? 'text-orange-600'
-            : 'text-amber-600';
+            : 'text-gray-600';
 
           return (
             <div className="flex items-center h-full px-2">
@@ -134,6 +142,11 @@ export const GrandTotalSection = ({
               value = feeByYear[yearStr] || 0;
               bgClass = 'bg-amber-50/50';
               textClass = 'text-amber-600';
+              break;
+            case 'travel':
+              value = travelByYear[yearStr] || 0;
+              bgClass = 'bg-sky-50/50';
+              textClass = 'text-sky-600';
               break;
             case 'odc':
               value = odcByYear[yearStr] || 0;
@@ -190,6 +203,11 @@ export const GrandTotalSection = ({
             value = totals.feeTotal;
             bgClass = 'bg-amber-50';
             textClass = 'text-amber-600 font-semibold';
+            break;
+          case 'travel':
+            value = totals.travelTotal;
+            bgClass = 'bg-sky-50';
+            textClass = 'text-sky-600 font-semibold';
             break;
           case 'odc':
             value = totals.odcTotal;

@@ -238,104 +238,263 @@ class Calculator:
         }
 
     @staticmethod
+    def calculate_travel_years(
+        travel_data: Dict[str, Any],
+        ga_rate: float,
+        escalation_rates: Dict[str, float],
+        total_years: int,
+        escalate: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Calculate Travel costs for all years with G&A Rate.
+
+        Travel is a separate category from ODCs, uses G&A Rate (same as labor),
+        and NO FEE is applied (fees only on labor).
+
+        Args:
+            travel_data: Dict with travel data. Supports two formats:
+                - New format (pre-calculated per year):
+                    - description: str (e.g., "Airfare", "Per Diem")
+                    - amount_per_year: dict (e.g., {"1": 5000, "2": 5150, ...})
+                - Old format (base amount + escalation):
+                    - description: str
+                    - amount_year_1: float (base amount for Year 1)
+            ga_rate: G&A rate (e.g., 0.2243 for 22.43%)
+            escalation_rates: Dict like {"1_to_2": 0.0272, "2_to_3": 0.0299, ...}
+            total_years: Number of years
+            escalate: Whether to escalate travel year-over-year (default False)
+
+        Returns:
+            Dict with:
+                - description: str
+                - year_1, year_2, ... year_N: Each with {base, ga, total}
+                - total_cost: float (sum of all years)
+
+        Example:
+            >>> travel = {
+            ...     "description": "Government Travel",
+            ...     "amount_per_year": {"1": 10000, "2": 10272}
+            ... }
+            >>> Calculator.calculate_travel_years(
+            ...     travel, 0.2243, {}, 2
+            ... )
+            {
+                'description': 'Government Travel',
+                'year_1': {'base': 10000, 'ga': 2243, 'total': 12243},
+                'year_2': {'base': 10272, 'ga': 2304, 'total': 12576},
+                'total_cost': 24819
+            }
+        """
+        results = {}
+        description = travel_data.get("description", "Travel")
+
+        # Check if frontend sent pre-calculated amounts (new format)
+        if "amount_per_year" in travel_data:
+            # Use pre-calculated amounts from frontend
+            amounts_per_year_dict = travel_data["amount_per_year"]
+
+            # Build results for each year with G&A (NO FEE)
+            for year in range(1, total_years + 1):
+                year_amount = float(amounts_per_year_dict.get(str(year), 0))
+
+                # Apply G&A Rate (NO FEE - fees are only on labor)
+                ga_overhead = round(year_amount * ga_rate, 2)
+                total = round(year_amount + ga_overhead, 2)
+
+                results[f"year_{year}"] = {
+                    "base": year_amount,
+                    "ga": ga_overhead,
+                    "total": total
+                }
+        else:
+            # Old format: calculate from base amount with escalation
+            base_amount = float(travel_data.get("amount_year_1", 0))
+
+            # Calculate amounts for each year based on escalate flag
+            if escalate:
+                # Escalating travel - apply escalation rates year-over-year
+                amounts_per_year = [base_amount]
+                current = base_amount
+                for year in range(2, total_years + 1):
+                    key = f"{year-1}_to_{year}"
+                    esc_rate = escalation_rates.get(key, 0.0)
+                    current = current * (1 + esc_rate)
+                    amounts_per_year.append(round(current, 2))
+            else:
+                # Fixed travel - same amount for all years
+                amounts_per_year = [base_amount] * total_years
+
+            # Build results for each year with G&A (NO FEE)
+            for year in range(1, total_years + 1):
+                year_amount = amounts_per_year[year - 1]
+
+                # Apply G&A Rate (NO FEE - fees are only on labor)
+                ga_overhead = round(year_amount * ga_rate, 2)
+                total = round(year_amount + ga_overhead, 2)
+
+                results[f"year_{year}"] = {
+                    "base": year_amount,
+                    "ga": ga_overhead,
+                    "total": total
+                }
+
+        # Calculate total cost across all years
+        total_cost = sum(
+            year_data["total"]
+            for year_data in results.values()
+            if isinstance(year_data, dict)
+        )
+
+        return {
+            "description": description,
+            **results,
+            "total_cost": round(total_cost, 2)
+        }
+
+    @staticmethod
     def calculate_odc_years(
         odc_data: Dict[str, Any],
         ga_adder_rate: float,
         escalation_rates: Dict[str, float],
         total_years: int,
         apply_adder: bool = True,
-        escalate: bool = False
+        escalate: bool = False,
+        ga_rate: float = None,
+        smh_rate: float = None
     ) -> Dict[str, Any]:
         """
-        Calculate ODC (Other Direct Costs) for all years with optional G&A adder.
+        Calculate ODC (Other Direct Costs) for all years with SMH Rate.
 
-        ODCs include travel, materials, equipment, etc.
-        G&A adder covers administrative overhead for processing these costs.
+        ODCs include materials, equipment, software, supplies, etc. (NOT Travel - Travel is separate).
+        SMH (Subcontract & Material Handling) Rate covers logistics/handling overhead.
 
         ODCs can be either fixed (same amount all years) or escalating (increases with inflation).
 
         Args:
-            odc_data: Dict with:
-                - category: str (e.g., "Travel", "Materials")
-                - description: str (optional)
-                - amount_year_1: float (base amount for Year 1)
-            ga_adder_rate: G&A rate for ODCs (e.g., 0.2212 for 22.12%)
+            odc_data: Dict with category and amount data. Supports two formats:
+                - New format (pre-calculated per year):
+                    - category: str (e.g., "Materials", "Equipment")
+                    - description: str (optional)
+                    - amount_per_year: dict (e.g., {"1": 5000, "2": 5150, ...})
+                - Old format (base amount + escalation):
+                    - category: str (e.g., "Materials", "Equipment")
+                    - description: str (optional)
+                    - amount_year_1: float (base amount for Year 1)
+            ga_adder_rate: Legacy G&A adder rate (for backward compatibility)
             escalation_rates: Dict like {"1_to_2": 0.0272, "2_to_3": 0.0299, ...}
             total_years: Number of years
-            apply_adder: Whether to apply G&A adder (default True)
+            apply_adder: Whether to apply overhead (default True)
             escalate: Whether to escalate ODC year-over-year (default False - most ODCs stay fixed)
+            ga_rate: NOT USED for ODCs (only for Travel which is now separate)
+            smh_rate: SMH Rate for ODCs (e.g., 0.065 for 6.5%)
 
         Returns:
             Dict with:
                 - category: str
-                - year_1, year_2, ... year_N: Each with {base, ga_adder, total}
+                - year_1, year_2, ... year_N: Each with {base, smh, total}
                 - total_cost: float (sum of all years)
 
-        Example (Fixed ODC - Travel):
-            >>> odc = {
-            ...     "category": "Travel",
-            ...     "amount_year_1": 5000
-            ... }
-            >>> Calculator.calculate_odc_years(
-            ...     odc, 0.2212, {"1_to_2": 0.03}, 2, True, escalate=False
-            ... )
-            {
-                'category': 'Travel',
-                'year_1': {'base': 5000, 'ga_adder': 1106, 'total': 6106},
-                'year_2': {'base': 5000, 'ga_adder': 1106, 'total': 6106},
-                'total_cost': 12212
-            }
-
-        Example (Escalating ODC - Equipment):
+        Example (Fixed ODC - Equipment):
             >>> odc = {
             ...     "category": "Equipment",
-            ...     "amount_year_1": 5000
+            ...     "amount_per_year": {"1": 5000, "2": 5000}
             ... }
             >>> Calculator.calculate_odc_years(
-            ...     odc, 0.2212, {"1_to_2": 0.03}, 2, True, escalate=True
+            ...     odc, 0, {}, 2, True, smh_rate=0.065
             ... )
             {
                 'category': 'Equipment',
-                'year_1': {'base': 5000, 'ga_adder': 1106, 'total': 6106},
-                'year_2': {'base': 5150, 'ga_adder': 1139, 'total': 6289},
-                'total_cost': 12395
+                'year_1': {'base': 5000, 'smh': 325, 'total': 5325},
+                'year_2': {'base': 5000, 'smh': 325, 'total': 5325},
+                'total_cost': 10650
+            }
+
+        Example (Escalating ODC - Materials):
+            >>> odc = {
+            ...     "category": "Materials",
+            ...     "amount_per_year": {"1": 5000, "2": 5150}
+            ... }
+            >>> Calculator.calculate_odc_years(
+            ...     odc, 0, {}, 2, True, smh_rate=0.065
+            ... )
+            {
+                'category': 'Materials',
+                'year_1': {'base': 5000, 'smh': 325, 'total': 5325},
+                'year_2': {'base': 5150, 'smh': 335, 'total': 5485},
+                'total_cost': 10810
             }
         """
         results = {}
         category = odc_data["category"]
-        base_amount = float(odc_data["amount_year_1"])
 
-        # Calculate amounts for each year based on escalate flag
-        if escalate:
-            # Escalating ODC - apply escalation rates year-over-year
-            amounts_per_year = [base_amount]
-            current = base_amount
-            for year in range(2, total_years + 1):
-                key = f"{year-1}_to_{year}"
-                esc_rate = escalation_rates.get(key, 0.0)
-                current = current * (1 + esc_rate)
-                amounts_per_year.append(round(current, 2))
+        # ODCs use SMH Rate (Subcontract & Material Handling)
+        # Travel is now completely separate and not handled by this method
+        if smh_rate is not None:
+            overhead_rate = smh_rate  # SMH Rate for ODCs (Equipment, Materials, etc.)
+            overhead_label = "smh"
         else:
-            # Fixed ODC - same amount for all years
-            amounts_per_year = [base_amount] * total_years
+            # Backward compatibility: use ga_adder_rate if smh_rate not provided
+            overhead_rate = ga_adder_rate
+            overhead_label = "ga_adder"
 
-        # Build results for each year with G&A adder
-        for year in range(1, total_years + 1):
-            year_amount = amounts_per_year[year - 1]
+        # Check if frontend sent pre-calculated amounts (new format)
+        if "amount_per_year" in odc_data:
+            # Use pre-calculated amounts from frontend (what user sees in UI)
+            amounts_per_year_dict = odc_data["amount_per_year"]
 
-            # Calculate G&A adder if applicable
-            if apply_adder:
-                ga_adder = round(year_amount * ga_adder_rate, 2)
+            # Build results for each year with SMH overhead (NO FEE - fees are only on labor)
+            for year in range(1, total_years + 1):
+                # Use pre-calculated amount for this year
+                year_amount = float(amounts_per_year_dict.get(str(year), 0))
+
+                # Calculate SMH overhead (NO FEE - fees are only on labor)
+                if apply_adder:
+                    overhead = round(year_amount * overhead_rate, 2)
+                else:
+                    overhead = 0.0
+
+                total = round(year_amount + overhead, 2)
+
+                results[f"year_{year}"] = {
+                    "base": year_amount,
+                    overhead_label: overhead,
+                    "total": total
+                }
+        else:
+            # Old format: calculate from base amount with escalation
+            base_amount = float(odc_data["amount_year_1"])
+
+            # Calculate amounts for each year based on escalate flag
+            if escalate:
+                # Escalating ODC - apply escalation rates year-over-year
+                amounts_per_year = [base_amount]
+                current = base_amount
+                for year in range(2, total_years + 1):
+                    key = f"{year-1}_to_{year}"
+                    esc_rate = escalation_rates.get(key, 0.0)
+                    current = current * (1 + esc_rate)
+                    amounts_per_year.append(round(current, 2))
             else:
-                ga_adder = 0.0
+                # Fixed ODC - same amount for all years
+                amounts_per_year = [base_amount] * total_years
 
-            total = round(year_amount + ga_adder, 2)
+            # Build results for each year with SMH overhead (NO FEE - fees are only on labor)
+            for year in range(1, total_years + 1):
+                year_amount = amounts_per_year[year - 1]
 
-            results[f"year_{year}"] = {
-                "base": year_amount,
-                "ga_adder": ga_adder,
-                "total": total
-            }
+                # Calculate SMH overhead (NO FEE - fees are only on labor)
+                if apply_adder:
+                    overhead = round(year_amount * overhead_rate, 2)
+                else:
+                    overhead = 0.0
+
+                total = round(year_amount + overhead, 2)
+
+                results[f"year_{year}"] = {
+                    "base": year_amount,
+                    overhead_label: overhead,
+                    "total": total
+                }
 
         # Calculate total cost across all years
         total_cost = sum(
