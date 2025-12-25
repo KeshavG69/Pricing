@@ -303,13 +303,21 @@ export interface Subcontractor {
   positions: SubcontractorPosition[];
 }
 
-export interface ODCItem {
+export interface TravelItem {
   id: string;
-  category: string;
   description?: string;
   amount_per_year: Record<string, number>;  // Base amounts per year
   escalate: boolean;  // Whether to escalate year-over-year
-  // S&MH (Subcontract & Material Handling) is always applied to ODCs
+  // G&A Rate is applied to Travel (same as labor), NOT S&MH
+}
+
+export interface ODCItem {
+  id: string;
+  category: string;  // Materials, Equipment, Software, Supplies (NOT Travel)
+  description?: string;
+  amount_per_year: Record<string, number>;  // Base amounts per year
+  escalate: boolean;  // Whether to escalate year-over-year
+  // S&MH (Subcontract & Material Handling) is applied to ODCs, NOT G&A
 }
 
 // Advanced Analysis Mode types
@@ -483,6 +491,7 @@ export interface ProjectConfig {
   };
   ga_adder_rate: number;
   subcontractors: Subcontractor[];
+  travel: TravelItem[];
   odcs: ODCItem[];
   include_rate_table?: boolean;
 }

@@ -3,6 +3,7 @@ import { debounce } from 'lodash-es';
 import {
   SpreadsheetPosition,
   Subcontractor,
+  TravelItem,
   ODCItem,
   IndirectRates,
   EscalationRates,
@@ -27,6 +28,7 @@ interface PricingState {
   dcaaContact: string;
   positions: SpreadsheetPosition[];
   subcontractors: Subcontractor[];
+  travel: TravelItem[];
   odcs: ODCItem[];
   rates: IndirectRates;
   escalationRates: EscalationRates;
@@ -60,6 +62,9 @@ interface PricingState {
   addSubcontractor: (subcontractor: Omit<Subcontractor, 'id'>) => void;
   deleteSubcontractor: (id: string) => void;
   convertToSubcontractor: (data: ConversionData) => Promise<void>;
+  addTravel: (travel: Omit<TravelItem, 'id'>) => void;
+  updateTravel: (id: string, updates: Partial<TravelItem>) => void;
+  deleteTravel: (id: string) => void;
   addODC: (odc: Omit<ODCItem, 'id'>) => void;
   updateODC: (id: string, updates: Partial<ODCItem>) => void;
   deleteODC: (id: string) => void;
@@ -462,6 +467,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         spreadsheet_data: {
           positions: state.positions,
           subcontractors: state.subcontractors,
+          travel: state.travel,
           odcs: state.odcs,
           rates: state.rates,
           escalation_rates: state.escalationRates,
@@ -507,6 +513,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
     dcaaContact: '',
     positions: [],
     subcontractors: [],
+    travel: [],
     odcs: [],
     rates: {} as IndirectRates,  // Will be populated from backend (org settings)
     escalationRates: {} as EscalationRates,  // Will be populated from backend (org settings)
@@ -589,6 +596,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           dcaaContact: proposal.dcaa_contact || '',
           positions,
           subcontractors: proposal.spreadsheet_data?.subcontractors || [],
+          travel: proposal.spreadsheet_data?.travel || [],
           odcs: proposal.spreadsheet_data?.odcs || [],
           rates: proposal.spreadsheet_data?.rates || proposal.rates,  // Try spreadsheet_data first, fallback to org defaults
           escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Try spreadsheet_data first
@@ -610,6 +618,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           dcaaContact: proposal.dcaa_contact || '',
           positions,
           subcontractors: proposal.spreadsheet_data?.subcontractors || [],
+          travel: proposal.spreadsheet_data?.travel || [],
           odcs: proposal.spreadsheet_data?.odcs || [],
           rates: proposal.spreadsheet_data?.rates || proposal.rates,  // Try spreadsheet_data first, fallback to org defaults
           escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Try spreadsheet_data first
@@ -792,6 +801,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
             spreadsheet_data: {
               positions: get().positions,
               subcontractors: get().subcontractors,
+              travel: get().travel,
               odcs: get().odcs,
               rates: get().rates,
               escalation_rates: get().escalationRates,
@@ -822,6 +832,31 @@ export const usePricingStore = create<PricingState>((set, get) => {
           console.error('❌ Failed to save/refresh proposal:', error);
         }
       }
+    },
+
+    addTravel: (travel) => {
+      const id = `travel_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      set((state) => ({
+        travel: [...state.travel, { ...travel, id }],
+        isDirty: true,
+      }));
+      debouncedAutoSave();
+    },
+
+    updateTravel: (id, updates) => {
+      set((state) => ({
+        travel: state.travel.map((t) => (t.id === id ? { ...t, ...updates } : t)),
+        isDirty: true,
+      }));
+      debouncedAutoSave();
+    },
+
+    deleteTravel: (id) => {
+      set((state) => ({
+        travel: state.travel.filter((t) => t.id !== id),
+        isDirty: true,
+      }));
+      debouncedAutoSave();
     },
 
     addODC: (odc) => {
@@ -1134,6 +1169,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
                 return laborCat;
               })
             })),
+            travel: state.travel,
             odcs: state.odcs,
             include_rate_table: true,
           },
@@ -1322,6 +1358,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         dcaaContact: '',
         positions: [],
         subcontractors: [],
+        travel: [],
         odcs: [],
         rates: {} as IndirectRates,  // Will be populated from backend (org settings)
         escalationRates: {} as EscalationRates,  // Will be populated from backend (org settings)

@@ -134,15 +134,16 @@ async def process_proposal_documents(
             {"status": "processing", "progress": 0, "message": "Parsing documents..."}
         )
 
-        # Step 1: Parse documents to DataFrame and ODCs
+        # Step 1: Parse documents to DataFrame, Travel, and ODCs
         parse_result = await parse_documents_to_dataframe(file_paths)
         df = parse_result["df"]
+        extracted_travel = parse_result.get("travel", [])
         extracted_odcs = parse_result.get("odcs", [])
 
         crud.update_proposal(
             proposal_id,
             user_id,
-            {"progress": 30, "message": f"Found {len(df)} positions, {len(extracted_odcs)} ODCs. Fetching wage data..."}
+            {"progress": 30, "message": f"Found {len(df)} positions, {len(extracted_travel)} Travel items, {len(extracted_odcs)} ODCs. Fetching wage data..."}
         )
 
         # Step 2: Process with agents (BLS or GSA based on wage_source)
@@ -245,7 +246,7 @@ async def process_proposal_documents(
             key = f"{year}_to_{year + 1}"
             escalation_rates[key] = default_escalation_rate
 
-        # Update proposal with results (including ODCs in spreadsheet_data)
+        # Update proposal with results (including Travel and ODCs in spreadsheet_data)
         crud.update_proposal(
             proposal_id,
             user_id,
@@ -264,6 +265,7 @@ async def process_proposal_documents(
                 "rates": default_rates,
                 "escalation_rates": escalation_rates,
                 "spreadsheet_data": {
+                    "travel": extracted_travel,
                     "odcs": extracted_odcs
                 }
             }

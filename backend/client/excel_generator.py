@@ -124,15 +124,29 @@ class ExcelGenerator:
             total_years
         )
 
-        # ODC section
-        current_row = self._write_odc_section(
-            self.ws,
-            project_data['odcs'],
-            project_data['ga_adder_rate'],
-            project_data['escalation_rates'],
-            current_row,
-            total_years
-        )
+        # Travel section (SEPARATE from ODCs) - uses G&A Rate
+        if 'travel' in project_data and project_data['travel']:
+            current_row = self._write_travel_section(
+                self.ws,
+                project_data['travel'],
+                project_data.get('indirect_rates', {}).get('ga', 0),
+                project_data['escalation_rates'],
+                current_row,
+                total_years
+            )
+
+        # ODC section (materials, equipment, etc.) - uses SMH Rate
+        if 'odcs' in project_data and project_data['odcs']:
+            current_row = self._write_odc_section(
+                self.ws,
+                project_data['odcs'],
+                project_data['ga_adder_rate'],
+                project_data['escalation_rates'],
+                current_row,
+                total_years,
+                ga_rate=project_data.get('indirect_rates', {}).get('ga'),
+                smh_rate=project_data.get('passthrough_rates', {}).get('smh')
+            )
 
         # Apply formatting
         self._apply_formatting(self.ws, total_years)
@@ -759,6 +773,104 @@ class ExcelGenerator:
 
         return current_row
 
+    def _write_travel_section(
+        self,
+        ws,
+        travel: List[Dict],
+        ga_rate: float,
+        escalation_rates: Dict[str, float],
+        start_row: int,
+        total_years: int
+    ) -> int:
+        """
+        Write Travel section - SEPARATE from ODCs.
+
+        Travel uses G&A Rate (same as labor), NO FEE applied.
+
+        Args:
+            ws: Worksheet
+            travel: List of travel data dicts
+            ga_rate: G&A rate to apply to travel (from indirect_rates)
+            escalation_rates: Year-over-year escalation rates
+            start_row: Starting row number
+            total_years: Total years in contract
+
+        Returns:
+            Next available row number
+        """
+        current_row = start_row
+
+        # Section header
+        ws.cell(current_row, 1, "Travel")
+        current_row += 1
+
+        travel_start_row = current_row
+
+        # Process each travel item
+        for travel_item in travel:
+            # Use Calculator to get year-by-year costs
+            results = Calculator.calculate_travel_years(
+                travel_data=travel_item,
+                ga_rate=ga_rate,
+                escalation_rates=escalation_rates,
+                total_years=total_years,
+                escalate=travel_item.get('escalate', False)
+            )
+
+            # Write travel description
+            description = results.get('description', 'Travel')
+            ws.cell(current_row, 1, description)
+
+            # Build year cell references
+            year_amount_cells = []
+            for year in range(1, total_years + 1):
+                year_key = f"year_{year}"
+                year_data = results[year_key]
+
+                # Base amount in column (year * 2)
+                base_col = year * 2
+                ws.cell(current_row, base_col, year_data['base'])
+
+                # G&A in column (year * 2 + 1)
+                ga_col = year * 2 + 1
+                ws.cell(current_row, ga_col, year_data['ga'])
+
+                # Store cell reference for total column
+                year_amount_cells.append(f"{self._get_column_letter(base_col)}{current_row}")
+                year_amount_cells.append(f"{self._get_column_letter(ga_col)}{current_row}")
+
+            # Total column (last column)
+            total_col = (total_years * 2) + 2
+            total_formula = f"=SUM({','.join(year_amount_cells)})"
+            ws.cell(current_row, total_col, total_formula)
+
+            current_row += 1
+
+        # Total Travel row
+        ws.cell(current_row, 1, "Total Travel")
+
+        # Sum each year column
+        for year in range(1, total_years + 1):
+            base_col = year * 2
+            ga_col = year * 2 + 1
+
+            # Base column formula
+            base_formula = f"=SUM({self._get_column_letter(base_col)}{travel_start_row}:{self._get_column_letter(base_col)}{current_row-1})"
+            ws.cell(current_row, base_col, base_formula)
+
+            # G&A column formula
+            ga_formula = f"=SUM({self._get_column_letter(ga_col)}{travel_start_row}:{self._get_column_letter(ga_col)}{current_row-1})"
+            ws.cell(current_row, ga_col, ga_formula)
+
+        # Total Travel cost (all years)
+        total_col = (total_years * 2) + 2
+        total_formula = f"=SUM({self._get_column_letter(total_col)}{travel_start_row}:{self._get_column_letter(total_col)}{current_row-1})"
+        ws.cell(current_row, total_col, total_formula)
+
+        current_row += 2
+
+        return current_row
+
     def _write_odc_section(
         self,
         ws,
@@ -766,7 +878,9 @@ class ExcelGenerator:
         ga_adder_rate: float,
         escalation_rates: Dict[str, float],
         start_row: int,
-        total_years: int
+        total_years: int,
+        ga_rate: float = None,
+        smh_rate: float = None
     ) -> int:
         """
         Write Other Direct Costs (ODCs) section.
@@ -774,17 +888,19 @@ class ExcelGenerator:
         ODCs include travel, materials, equipment, etc.
         Each ODC can be:
         - Fixed (same amount all years) or Escalating (increases with inflation)
-        - With or without G&A adder
+        - With or without overhead (G&A for Travel, SMH for ODCs)
 
         Uses Calculator.calculate_odc_years() for calculations.
 
         Args:
             ws: Worksheet
             odcs: List of ODC data dicts
-            ga_adder_rate: G&A rate to apply to ODCs
+            ga_adder_rate: G&A rate to apply to ODCs (legacy, for backward compatibility)
             escalation_rates: Year-over-year escalation rates
             start_row: Starting row number
             total_years: Total years in contract
+            ga_rate: G&A Rate for Travel category (from indirect_rates)
+            smh_rate: SMH Rate for ODC categories (from passthrough_rates)
 
         Returns:
             Next available row number
@@ -806,7 +922,9 @@ class ExcelGenerator:
                 escalation_rates=escalation_rates,
                 total_years=total_years,
                 apply_adder=odc.get('apply_adder', True),
-                escalate=odc.get('escalate', False)
+                escalate=odc.get('escalate', False),
+                ga_rate=ga_rate,
+                smh_rate=smh_rate
             )
 
             # Write ODC category
