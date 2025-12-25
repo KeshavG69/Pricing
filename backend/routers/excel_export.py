@@ -65,10 +65,16 @@ class ProjectConfig(BaseModel):
         description="List of subcontractor data with labor categories and rates"
     )
 
-    # Other Direct Costs
+    # Travel (SEPARATE from ODCs) - uses G&A Rate, NO FEE
+    travel: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="List of Travel items with description, amount_per_year, and escalate flag. Uses G&A Rate."
+    )
+
+    # Other Direct Costs (materials, equipment, etc.) - uses SMH Rate, NO FEE
     odcs: List[Dict[str, Any]] = Field(
         default_factory=list,
-        description="List of ODCs with category, amount, escalate flag, and apply_adder flag"
+        description="List of ODCs (NOT Travel) with category, amount, escalate flag, and apply_adder flag. Uses SMH Rate."
     )
 
     # Optional settings

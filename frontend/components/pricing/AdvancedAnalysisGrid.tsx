@@ -2,12 +2,14 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { usePricingStore } from '@/lib/stores/pricingStore';
-import { ODCItem } from '@/types';
+import { TravelItem, ODCItem } from '@/types';
 import PrimeLaborSection from './sections/PrimeLaborSection';
 import PrimeLaborAggregatesSection from './sections/PrimeLaborAggregatesSection';
 import PassthroughSection from './sections/PassthroughSection';
 import FeeSection from './sections/FeeSection';
+import TravelSection from './sections/TravelSection';
 import ODCSection from './sections/ODCSection';
+import TravelFormModal from './TravelFormModal';
 import ODCFormModal from './ODCFormModal';
 import RatesReferencePanel from './RatesReferencePanel';
 import GrandTotalSection from './sections/GrandTotalSection';
@@ -20,6 +22,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
   const {
     positionsAdvanced,
     subcontractors,
+    travel,
     odcs,
     rates,
     escalationRates,
@@ -32,6 +35,9 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     addManualOverride,
     updateAdvancedPosition,
     deletePosition,
+    addTravel,
+    updateTravel,
+    deleteTravel,
     addODC,
     updateODC,
     deleteODC,
@@ -47,6 +53,10 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     totalOH: aggregates.totalOH,
     totalGA: aggregates.totalGA
   });
+
+  // Travel modal state
+  const [isTravelModalOpen, setIsTravelModalOpen] = useState(false);
+  const [editingTravel, setEditingTravel] = useState<TravelItem | null>(null);
 
   // ODC modal state
   const [isODCModalOpen, setIsODCModalOpen] = useState(false);
@@ -72,6 +82,37 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     },
     [deletePosition]
   );
+
+  // Handle Travel modal operations
+  const handleAddTravel = useCallback(() => {
+    setEditingTravel(null);
+    setIsTravelModalOpen(true);
+  }, []);
+
+  const handleEditTravel = useCallback((travel: TravelItem) => {
+    setEditingTravel(travel);
+    setIsTravelModalOpen(true);
+  }, []);
+
+  const handleSaveTravel = useCallback(
+    (travelData: Omit<TravelItem, 'id'>) => {
+      if (editingTravel) {
+        // Update existing Travel
+        updateTravel(editingTravel.id, travelData);
+      } else {
+        // Add new Travel
+        addTravel(travelData);
+      }
+      setIsTravelModalOpen(false);
+      setEditingTravel(null);
+    },
+    [editingTravel, addTravel, updateTravel]
+  );
+
+  const handleCloseTravelModal = useCallback(() => {
+    setIsTravelModalOpen(false);
+    setEditingTravel(null);
+  }, []);
 
   // Handle ODC modal operations
   const handleAddODC = useCallback(() => {
@@ -153,6 +194,27 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     return result;
   }, [primeLaborByYear, subcontractorCostsByYear, rates]);
 
+  // Calculate Travel costs by year with G&A markup
+  // Formula: Travel Total = Travel Base × (1 + G&A Rate)
+  const travelCostsByYear = useMemo(() => {
+    const result: Record<string, number> = {};
+    const gaRate = rates.ga || 0;
+
+    for (let year = 1; year <= totalYears; year++) {
+      const yearStr = year.toString();
+      let travelBase = 0;
+
+      travel.forEach((item) => {
+        travelBase += item.amount_per_year[yearStr] || 0;
+      });
+
+      // Apply G&A markup to all Travel
+      result[yearStr] = travelBase * (1 + gaRate);
+    }
+
+    return result;
+  }, [travel, rates.ga, totalYears]);
+
   // Calculate ODC costs by year with S&MH markup
   // Formula: ODC Total = ODC Base × (1 + S&MH Rate)
   const odcCostsByYear = useMemo(() => {
@@ -174,8 +236,8 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     return result;
   }, [odcs, rates.smh, totalYears]);
 
-  // Calculate grand total (includes prime labor, subcontractors, passthrough, fee, and ODCs)
-  // Formula: Grand Total = Labor CPFF (prime + sub + passthrough + fee) + Total ODCs (with S&MH)
+  // Calculate grand total (includes prime labor, subcontractors, passthrough, fee, Travel, and ODCs)
+  // Formula: Grand Total = Labor CPFF (prime + sub + passthrough + fee) + Total Travel (with G&A) + Total ODCs (with S&MH)
   const grandTotal = useMemo(() => {
     const byYear: { [year: string]: number } = {};
     let total = 0;
@@ -186,6 +248,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
       ...Object.keys(subcontractorCostsByYear),
       ...Object.keys(passthroughByYear),
       ...Object.keys(feeByYear),
+      ...Object.keys(travelCostsByYear),
       ...Object.keys(odcCostsByYear),
     ]);
 
@@ -194,14 +257,15 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
       const subLabor = subcontractorCostsByYear[year] || 0;
       const passthrough = passthroughByYear[year] || 0;
       const fee = feeByYear[year] || 0;
+      const travelCost = travelCostsByYear[year] || 0;
       const odc = odcCostsByYear[year] || 0;
 
-      byYear[year] = primeLabor + subLabor + passthrough + fee + odc;
+      byYear[year] = primeLabor + subLabor + passthrough + fee + travelCost + odc;
       total += byYear[year];
     });
 
     return { byYear, total };
-  }, [primeLaborByYear, subcontractorCostsByYear, passthroughByYear, feeByYear, odcCostsByYear]);
+  }, [primeLaborByYear, subcontractorCostsByYear, passthroughByYear, feeByYear, travelCostsByYear, odcCostsByYear]);
 
   return (
     <div className="space-y-2">
@@ -269,7 +333,16 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
         totalYears={totalYears}
       />
 
-      {/* ODC Section */}
+      {/* Travel Section - SEPARATE from ODCs, uses G&A Rate */}
+      <TravelSection
+        travel={travel}
+        totalYears={totalYears}
+        onAdd={handleAddTravel}
+        onEdit={handleEditTravel}
+        onDelete={deleteTravel}
+      />
+
+      {/* ODC Section - Materials, Equipment, etc., uses SMH Rate */}
       <ODCSection
         odcs={odcs}
         totalYears={totalYears}
@@ -285,9 +358,19 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
             subLaborByYear={subcontractorCostsByYear}
             passthroughByYear={passthroughByYear}
             feeByYear={feeByYear}
+            travelByYear={travelCostsByYear}
             odcByYear={odcCostsByYear}
             totalYears={totalYears}
           />
+
+      {/* Travel Form Modal */}
+      <TravelFormModal
+        isOpen={isTravelModalOpen}
+        onClose={handleCloseTravelModal}
+        onSave={handleSaveTravel}
+        totalYears={totalYears}
+        existingTravel={editingTravel}
+      />
 
       {/* ODC Form Modal */}
       <ODCFormModal
