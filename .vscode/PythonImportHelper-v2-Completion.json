@@ -792,6 +792,14 @@
         "documentation": {}
     },
     {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
         "label": "pricing",
         "importPath": "routers",
         "description": "routers",
@@ -2543,6 +2551,14 @@
         "documentation": {}
     },
     {
+        "label": "parse_documents_to_dataframe",
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "isExtraImport": true,
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
         "label": "Pinecone",
         "importPath": "pinecone",
         "description": "pinecone",
@@ -4083,7 +4099,16 @@
         "kind": 6,
         "importPath": "backend.client.jd_parser",
         "description": "backend.client.jd_parser",
-        "peekOfCode": "class YearAmount(BaseModel):\n    \"\"\"Dollar amount for a specific year - used for ODCs like travel.\"\"\"\n    year: str = Field(\n        description=\"Year number as string: '1' for Base Period, '2' for Option Year 1, etc.\"\n    )\n    amount: float = Field(\n        description=\"Dollar amount for this year (e.g., 299542.60)\"\n    )\nclass ODCExtract(BaseModel):\n    \"\"\"Other Direct Cost item extracted from document.\"\"\"",
+        "peekOfCode": "class YearAmount(BaseModel):\n    \"\"\"Dollar amount for a specific year - used for ODCs like travel.\"\"\"\n    year: str = Field(\n        description=\"Year number as string: '1' for Base Period, '2' for Option Year 1, etc.\"\n    )\n    amount: float = Field(\n        description=\"Dollar amount for this year (e.g., 299542.60)\"\n    )\nclass TravelExtract(BaseModel):\n    \"\"\"Travel cost item extracted from document - SEPARATE from ODCs.\"\"\"",
+        "detail": "backend.client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "TravelExtract",
+        "kind": 6,
+        "importPath": "backend.client.jd_parser",
+        "description": "backend.client.jd_parser",
+        "peekOfCode": "class TravelExtract(BaseModel):\n    \"\"\"Travel cost item extracted from document - SEPARATE from ODCs.\"\"\"\n    description: Optional[str] = Field(\n        None,\n        description=\"Description of the travel item (e.g., 'Government Estimated Travel Amount', 'Airfare', 'Per Diem')\"\n    )\n    amount_per_year: List[YearAmount] = Field(\n        description=\"\"\"Dollar amounts per year.\n        Year \"1\" = Base Period, \"2\" = Option Year 1, \"3\" = Option Year 2, etc.\n        Example: [{\"year\": \"1\", \"amount\": 299542.60}, {\"year\": \"2\", \"amount\": 308528.88}]\"\"\"",
         "detail": "backend.client.jd_parser",
         "documentation": {}
     },
@@ -4092,7 +4117,7 @@
         "kind": 6,
         "importPath": "backend.client.jd_parser",
         "description": "backend.client.jd_parser",
-        "peekOfCode": "class ODCExtract(BaseModel):\n    \"\"\"Other Direct Cost item extracted from document.\"\"\"\n    category: str = Field(\n        description=\"ODC category (e.g., 'Travel', 'Materials', 'Equipment', 'Software', 'Supplies')\"\n    )\n    description: Optional[str] = Field(\n        None,\n        description=\"Description of the ODC item (e.g., 'Government Estimated Travel Amount')\"\n    )\n    amount_per_year: List[YearAmount] = Field(",
+        "peekOfCode": "class ODCExtract(BaseModel):\n    \"\"\"Other Direct Cost item extracted from document - DOES NOT include Travel.\"\"\"\n    category: str = Field(\n        description=\"ODC category (e.g., 'Materials', 'Equipment', 'Software', 'Supplies'). DO NOT use 'Travel' - that has its own section.\"\n    )\n    description: Optional[str] = Field(\n        None,\n        description=\"Description of the ODC item\"\n    )\n    amount_per_year: List[YearAmount] = Field(",
         "detail": "backend.client.jd_parser",
         "documentation": {}
     },
@@ -4119,7 +4144,7 @@
         "kind": 6,
         "importPath": "backend.client.jd_parser",
         "description": "backend.client.jd_parser",
-        "peekOfCode": "class GovernmentProposalExtraction(BaseModel):\n    \"\"\"Complete extraction schema for LlamaExtract.\"\"\"\n    metadata: DocumentMetadataExtract = Field(\n        description=\"Document-level information extracted from headers, cover page, and overview sections\"\n    )\n    positions: List[PositionExtract] = Field(\n        description=\"All job positions/labor categories found in the document\"\n    )\n    odcs: Optional[List[ODCExtract]] = Field(\n        None,",
+        "peekOfCode": "class GovernmentProposalExtraction(BaseModel):\n    \"\"\"Complete extraction schema for LlamaExtract.\"\"\"\n    metadata: DocumentMetadataExtract = Field(\n        description=\"Document-level information extracted from headers, cover page, and overview sections\"\n    )\n    positions: List[PositionExtract] = Field(\n        description=\"All job positions/labor categories found in the document\"\n    )\n    travel: Optional[List[TravelExtract]] = Field(\n        None,",
         "detail": "backend.client.jd_parser",
         "documentation": {}
     },

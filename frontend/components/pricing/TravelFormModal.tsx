@@ -1,38 +1,34 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { ODCItem } from '@/types';
+import { TravelItem } from '@/types';
 
-interface ODCFormModalProps {
+interface TravelFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (odc: Omit<ODCItem, 'id'>) => void;
+  onSave: (travel: Omit<TravelItem, 'id'>) => void;
   totalYears: number;
-  existingODC?: ODCItem | null;
+  existingTravel?: TravelItem | null;
 }
 
-const ODC_CATEGORIES = ['Travel', 'Materials', 'Equipment', 'Other'] as const;
-
-export const ODCFormModal = ({
+export const TravelFormModal = ({
   isOpen,
   onClose,
   onSave,
   totalYears,
-  existingODC = null,
-}: ODCFormModalProps) => {
-  const [category, setCategory] = useState<string>('Travel');
+  existingTravel = null,
+}: TravelFormModalProps) => {
   const [description, setDescription] = useState<string>('');
   const [amountsByYear, setAmountsByYear] = useState<Record<string, number>>({});
   const [escalate, setEscalate] = useState<boolean>(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  // Initialize form with existing ODC data if editing
+  // Initialize form with existing travel data if editing
   useEffect(() => {
-    if (existingODC) {
-      setCategory(existingODC.category);
-      setDescription(existingODC.description || '');
-      setAmountsByYear(existingODC.amount_per_year);
-      setEscalate(existingODC.escalate);
+    if (existingTravel) {
+      setDescription(existingTravel.description || '');
+      setAmountsByYear(existingTravel.amount_per_year);
+      setEscalate(existingTravel.escalate);
     } else {
       // Initialize amounts for all years
       const initialAmounts: Record<string, number> = {};
@@ -41,7 +37,7 @@ export const ODCFormModal = ({
       }
       setAmountsByYear(initialAmounts);
     }
-  }, [existingODC, totalYears, isOpen]);
+  }, [existingTravel, totalYears, isOpen]);
 
   // Calculate total cost
   const totalCost = useMemo(() => {
@@ -52,9 +48,9 @@ export const ODCFormModal = ({
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
 
-    // Category "Other" requires description
-    if (category === 'Other' && !description.trim()) {
-      newErrors.description = 'Description is required for "Other" category';
+    // Description is optional but recommended
+    if (!description.trim()) {
+      newErrors.description = 'Description is recommended for Travel items';
     }
 
     // Check if at least one year has amount > 0
@@ -76,21 +72,18 @@ export const ODCFormModal = ({
   const handleSave = () => {
     if (!validate()) return;
 
-    const odcData: Omit<ODCItem, 'id'> = {
-      category,
+    const travelData: Omit<TravelItem, 'id'> = {
       description: description.trim() || undefined,
       amount_per_year: amountsByYear,
       escalate,
-      // S&MH is always applied to all ODCs
     };
 
-    onSave(odcData);
+    onSave(travelData);
     handleClose();
   };
 
   const handleClose = () => {
     // Reset form
-    setCategory('Travel');
     setDescription('');
     setAmountsByYear({});
     setEscalate(false);
@@ -116,7 +109,7 @@ export const ODCFormModal = ({
         {/* Header */}
         <div className="sticky top-0 bg-card border-b border-border px-6 py-4 flex items-center justify-between">
           <h2 className="text-lg font-bold text-foreground">
-            {existingODC ? 'Edit' : 'Add'} Other Direct Cost
+            {existingTravel ? 'Edit' : 'Add'} Travel
           </h2>
           <button
             onClick={handleClose}
@@ -140,38 +133,20 @@ export const ODCFormModal = ({
 
         {/* Body */}
         <div className="p-6 space-y-6">
-          {/* Category */}
-          <div>
-            <label className="block text-sm font-medium text-muted-foreground mb-2">
-              Category *
-            </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3 py-2 bg-background border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              {ODC_CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
-          </div>
-
           {/* Description */}
           <div>
             <label className="block text-sm font-medium text-muted-foreground mb-2">
-              Description {category === 'Other' && '*'}
+              Description
             </label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter description..."
+              placeholder="e.g., Airfare, Per Diem, Government Estimated Travel..."
               rows={3}
               className="w-full px-3 py-2 bg-background border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring resize-none"
             />
             {errors.description && (
-              <p className="mt-1 text-sm text-red-600">{errors.description}</p>
+              <p className="mt-1 text-sm text-yellow-600">{errors.description}</p>
             )}
           </div>
 
@@ -230,12 +205,12 @@ export const ODCFormModal = ({
           </div>
 
           {/* Total cost display */}
-          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-muted-foreground">
-                Base Total (S&amp;MH applied in Grand Total):
+                Base Total (G&amp;A applied in Grand Total):
               </span>
-              <span className="text-lg font-bold text-orange-600">
+              <span className="text-lg font-bold text-blue-600">
                 {new Intl.NumberFormat('en-US', {
                   style: 'currency',
                   currency: 'USD',
@@ -257,7 +232,7 @@ export const ODCFormModal = ({
             onClick={handleSave}
             className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-md transition-colors"
           >
-            {existingODC ? 'Save Changes' : 'Add ODC'}
+            {existingTravel ? 'Save Changes' : 'Add Travel'}
           </button>
         </div>
       </div>
@@ -265,4 +240,4 @@ export const ODCFormModal = ({
   );
 };
 
-export default ODCFormModal;
+export default TravelFormModal;

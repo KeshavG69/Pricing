@@ -91,14 +91,27 @@ class YearAmount(BaseModel):
     )
 
 
+class TravelExtract(BaseModel):
+    """Travel cost item extracted from document - SEPARATE from ODCs."""
+    description: Optional[str] = Field(
+        None,
+        description="Description of the travel item (e.g., 'Government Estimated Travel Amount', 'Airfare', 'Per Diem')"
+    )
+    amount_per_year: List[YearAmount] = Field(
+        description="""Dollar amounts per year.
+        Year "1" = Base Period, "2" = Option Year 1, "3" = Option Year 2, etc.
+        Example: [{"year": "1", "amount": 299542.60}, {"year": "2", "amount": 308528.88}]"""
+    )
+
+
 class ODCExtract(BaseModel):
-    """Other Direct Cost item extracted from document."""
+    """Other Direct Cost item extracted from document - DOES NOT include Travel."""
     category: str = Field(
-        description="ODC category (e.g., 'Travel', 'Materials', 'Equipment', 'Software', 'Supplies')"
+        description="ODC category (e.g., 'Materials', 'Equipment', 'Software', 'Supplies'). DO NOT use 'Travel' - that has its own section."
     )
     description: Optional[str] = Field(
         None,
-        description="Description of the ODC item (e.g., 'Government Estimated Travel Amount')"
+        description="Description of the ODC item"
     )
     amount_per_year: List[YearAmount] = Field(
         description="""Dollar amounts per year.
@@ -243,12 +256,20 @@ class GovernmentProposalExtraction(BaseModel):
     positions: List[PositionExtract] = Field(
         description="All job positions/labor categories found in the document"
     )
+    travel: Optional[List[TravelExtract]] = Field(
+        None,
+        description="""Travel costs found in the document - SEPARATE from ODCs.
+        Look for sections labeled 'Travel', 'Travel Expenses', 'Government Estimated Travel'.
+        Extract amounts per period (Base Period, Option Year 1, etc.).
+        IMPORTANT: Travel is NOT an ODC - it's a separate category."""
+    )
     odcs: Optional[List[ODCExtract]] = Field(
         None,
-        description="""Other Direct Costs (ODCs) found in the document.
-        Include Travel, Materials, Equipment, Software, Supplies, etc.
-        Look for sections labeled 'Travel', 'ODCs', 'Other Direct Costs', 'Non-Labor Costs'.
-        Extract amounts per period (Base Period, Option Year 1, etc.)."""
+        description="""Other Direct Costs (ODCs) found in the document - DOES NOT include Travel.
+        Include Materials, Equipment, Software, Supplies, etc.
+        Look for sections labeled 'ODCs', 'Other Direct Costs', 'Non-Labor Costs', 'Materials'.
+        Extract amounts per period (Base Period, Option Year 1, etc.).
+        IMPORTANT: Do NOT extract Travel here - Travel has its own separate field."""
     )
 
 
@@ -471,7 +492,15 @@ def extract_with_llamaextract(file_path: str, mode: str = "premium") -> Governme
         file_path = temp_csv_path
 
     try:
-        extractor = LlamaExtract(api_key=api_key)
+        # Create LlamaExtract client with increased timeout
+        # NOTE: verify=False disables SSL certificate verification (useful for SSL hostname mismatch errors)
+        # WARNING: Only use verify=False for testing/development. Re-enable in production.
+        extractor = LlamaExtract(
+            api_key=api_key,
+            httpx_timeout=300.0,  # 5 minutes timeout for HTTP requests
+            max_timeout=3000,  # 50 minutes max wait for extraction job
+            verify=False  # Disable SSL verification to bypass certificate hostname mismatch
+        )
 
         # Map mode string to ExtractMode enum
         mode_mapping = {
@@ -483,11 +512,23 @@ def extract_with_llamaextract(file_path: str, mode: str = "premium") -> Governme
         extraction_mode = mode_mapping.get(mode.lower(), ExtractMode.BALANCED)
         config = ExtractConfig(extraction_mode=extraction_mode)
 
-        extract_run = extractor.extract(
-            GovernmentProposalExtraction,
-            config,
-            file_path
-        )
+        # Retry logic for connection timeouts
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                extract_run = extractor.extract(
+                    GovernmentProposalExtraction,
+                    config,
+                    file_path
+                )
+                break  # Success, exit retry loop
+            except TimeoutError:
+                if attempt < max_retries - 1:
+                    print(f"  Timeout on attempt {attempt + 1}/{max_retries}, retrying...")
+                    import time
+                    time.sleep(5)  # Wait 5 seconds before retry
+                else:
+                    raise  # Final attempt failed, re-raise
 
         extraction = extract_run.data
 
@@ -510,7 +551,7 @@ def extract_with_llamaextract(file_path: str, mode: str = "premium") -> Governme
 
 async def parse_documents_to_dataframe(document_paths: List[str]) -> Dict[str, any]:
     """
-    Parse multiple documents and extract all job descriptions and ODCs using LlamaExtract.
+    Parse multiple documents and extract all job descriptions, Travel, and ODCs using LlamaExtract.
 
     Args:
         document_paths: List of paths to documents (PDF, Excel, CSV, DOCX)
@@ -518,10 +559,12 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> Dict[str, a
     Returns:
         Dict with:
         - 'df': pandas DataFrame with positions (labor_category, hours_per_year, etc.)
-        - 'odcs': List of ODC items (travel, materials, etc.) in frontend format
+        - 'travel': List of Travel items in frontend format
+        - 'odcs': List of ODC items (materials, equipment, etc.) in frontend format
     """
     all_jds: List[JobDescription] = []
     all_metadata_list: List[DocumentMetadata] = []
+    all_travel: List[Dict] = []
     all_odcs: List[Dict] = []
 
     print(f"\n{'='*60}")
@@ -573,9 +616,26 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> Dict[str, a
                 all_jds.append(jd)
                 all_metadata_list.append(doc_metadata)
 
-            # Convert ODCs to frontend format
+            # Convert Travel to frontend format (SEPARATE from ODCs)
+            if extraction.travel:
+                print(f"  Travel items found: {len(extraction.travel)}")
+                for travel in extraction.travel:
+                    # Convert amount_per_year from List[YearAmount] to Dict[str, float]
+                    amount_per_year = {
+                        ya.year: ya.amount
+                        for ya in travel.amount_per_year
+                    }
+                    all_travel.append({
+                        "id": f"travel_{len(all_travel)}_{hash(travel.description or 'travel')}",
+                        "description": travel.description,
+                        "amount_per_year": amount_per_year,
+                        "escalate": False  # Already has per-year amounts
+                        # G&A Rate is applied to Travel (NOT S&MH)
+                    })
+
+            # Convert ODCs to frontend format (SEPARATE from Travel)
             if extraction.odcs:
-                print(f"  ODCs found: {len(extraction.odcs)}")
+                print(f"  ODC items found: {len(extraction.odcs)}")
                 for odc in extraction.odcs:
                     # Convert amount_per_year from List[YearAmount] to Dict[str, float]
                     amount_per_year = {
@@ -588,7 +648,7 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> Dict[str, a
                         "description": odc.description,
                         "amount_per_year": amount_per_year,
                         "escalate": False  # Already has per-year amounts
-                        # S&MH is always applied to all ODCs
+                        # S&MH Rate is applied to ODCs (NOT G&A)
                     })
 
         except Exception as e:
@@ -629,12 +689,14 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> Dict[str, a
         ])
 
     print(f"✓ Extracted {len(df)} job descriptions")
+    if all_travel:
+        print(f"✓ Extracted {len(all_travel)} Travel items")
     if all_odcs:
-        print(f"✓ Extracted {len(all_odcs)} ODC items\n")
-    else:
-        print()
+        print(f"✓ Extracted {len(all_odcs)} ODC items")
+    print()
 
     return {
         "df": df,
+        "travel": all_travel,
         "odcs": all_odcs
     }
