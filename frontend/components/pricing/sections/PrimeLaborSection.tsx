@@ -238,6 +238,52 @@ export const PrimeLaborSection = ({
     return items;
   }, [onDeletePosition, onUpdatePosition, isAdvancedMode]);
 
+  // Calculate column totals for subtotal row
+  const columnTotals = useMemo(() => {
+    const totals: any = {
+      totalHours: 0,
+      totalAmount: 0,
+      avgDL: 0,
+      avgFringe: 0,
+      avgOH: 0,
+      avgGA: 0,
+      avgFee: 0,
+      avgFBLR: 0,
+      byYear: {} as Record<string, { hours: number; amount: number; rate: number }>,
+    };
+
+    positions.forEach((pos) => {
+      // Sum total hours and total amount
+      totals.totalHours += pos.total_hours;
+      totals.totalAmount += pos.total_amount;
+
+      // Sum averaged FBLR components
+      const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
+      totals.avgDL += calc.dlRate;
+      totals.avgFringe += calc.fringe;
+      totals.avgOH += calc.oh;
+      totals.avgGA += calc.ga;
+      totals.avgFee += calc.fee;
+      totals.avgFBLR += calc.fblr;
+
+      // Sum per-year hours, amounts, and rates
+      for (let year = 1; year <= totalYears; year++) {
+        const yearStr = year.toString();
+        const breakdown = pos.breakdown[yearStr];
+        if (!totals.byYear[yearStr]) {
+          totals.byYear[yearStr] = { hours: 0, amount: 0, rate: 0 };
+        }
+        if (breakdown) {
+          totals.byYear[yearStr].hours += breakdown.hours;
+          totals.byYear[yearStr].amount += breakdown.totalAmount;
+          totals.byYear[yearStr].rate += breakdown.fblr;
+        }
+      }
+    });
+
+    return totals;
+  }, [positions, rates, escalationRates, totalYears]);
+
   // Transform positions to grid rows with breakdown rows
   const gridRows = useMemo<GridRow[]>(() => {
     const rows: GridRow[] = [];
@@ -288,8 +334,15 @@ export const PrimeLaborSection = ({
       }
     });
 
+    // Add subtotal row at the end
+    rows.push({
+      type: 'subtotal',
+      positionId: 'subtotal',
+      data: columnTotals as any,
+    });
+
     return rows;
-  }, [positions, expandedPositions, rates, escalationRates, totalYears]);
+  }, [positions, expandedPositions, rates, escalationRates, totalYears, columnTotals]);
 
   // Get cell styling for manual overrides
   const getCellClassName = (positionId: string, year: string, field: string) => {
@@ -337,6 +390,10 @@ export const PrimeLaborSection = ({
         resizable: false,
         frozen: true,
         renderCell: ({ row }) => {
+          // Subtotal row - show styled empty cell
+          if (row.type === 'subtotal') {
+            return <div className="h-full bg-blue-50 border-t-2 border-blue-200" />;
+          }
           // Only show actions for position rows, not breakdown rows
           if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
@@ -366,7 +423,16 @@ export const PrimeLaborSection = ({
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => {
-          if (row.type === 'position') {
+          if (row.type === 'subtotal') {
+            // Subtotal row
+            return (
+              <div className="flex items-center h-full px-2 bg-blue-50 border-t-2 border-blue-200">
+                <span className="font-bold text-blue-700 text-sm">
+                  Prime Labor Subtotals
+                </span>
+              </div>
+            );
+          } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             const isExpanded = row.isExpanded;
             return (
@@ -410,7 +476,9 @@ export const PrimeLaborSection = ({
         width: 240,
         resizable: true,
         renderCell: ({ row }) => {
-          if (row.type === 'position') {
+          if (row.type === 'subtotal') {
+            return <div className="h-full bg-blue-50 border-t-2 border-blue-200" />;
+          } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             const isGSA = isGSAPosition(pos);
 
@@ -448,7 +516,9 @@ export const PrimeLaborSection = ({
         width: 140,
         resizable: true,
         renderCell: ({ row }) => {
-          if (row.type === 'position') {
+          if (row.type === 'subtotal') {
+            return <div className="h-full bg-blue-50 border-t-2 border-blue-200" />;
+          } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             const isGSA = isGSAPosition(pos);
 
@@ -496,7 +566,9 @@ export const PrimeLaborSection = ({
         width: 180,
         resizable: true,
         renderCell: ({ row }) => {
-          if (row.type === 'position') {
+          if (row.type === 'subtotal') {
+            return <div className="h-full bg-blue-50 border-t-2 border-blue-200" />;
+          } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             const wage = getEffectiveSalary(pos);
             const label = getSalaryDisplayLabel(pos);
@@ -547,46 +619,6 @@ export const PrimeLaborSection = ({
           return <div className="h-full bg-muted/30" />;
         },
       },
-      // Total Hours
-      {
-        key: 'total_hours',
-        name: 'Total Hours',
-        width: 120,
-        resizable: true,
-        renderCell: ({ row }) => {
-          if (row.type === 'position') {
-            const pos = row.data as AdvancedPosition;
-            return (
-              <div className="flex items-center justify-end h-full px-2">
-                <span className="text-foreground">
-                  {pos.total_hours.toLocaleString()}
-                </span>
-              </div>
-            );
-          }
-          return <div className="h-full bg-muted/30" />;
-        },
-      },
-      // Total Amount
-      {
-        key: 'total_amount',
-        name: 'Total Amount',
-        width: 150,
-        resizable: true,
-        renderCell: ({ row }) => {
-          if (row.type === 'position') {
-            const pos = row.data as AdvancedPosition;
-            return (
-              <div className="flex items-center justify-end h-full px-2 bg-emerald-500/10">
-                <span className="text-emerald-600 font-bold">
-                  {formatCurrency(pos.total_amount)}
-                </span>
-              </div>
-            );
-          }
-          return <div className="h-full bg-muted/30" />;
-        },
-      },
     ];
 
     // Add year-based columns (Rate, Hours, Amount triplets)
@@ -601,6 +633,19 @@ export const PrimeLaborSection = ({
         width: 120,
         resizable: true,
         renderCell: ({ row }) => {
+          // Subtotal row - show sum of rates for this year
+          if (row.type === 'subtotal') {
+            const totals = row.data as any;
+            const rateTotal = totals.byYear[yearStr]?.rate || 0;
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-blue-50 border-t-2 border-blue-200">
+                <span className="text-blue-700 font-bold">
+                  {formatCurrency(rateTotal)}
+                </span>
+              </div>
+            );
+          }
+
           const pos = row.data as AdvancedPosition;
           const breakdown = pos.breakdown[yearStr];
           if (!breakdown) return <div className="h-full" />;
@@ -655,7 +700,18 @@ export const PrimeLaborSection = ({
         width: 100,
         resizable: true,
         renderCell: ({ row }) => {
-          if (row.type === 'position') {
+          if (row.type === 'subtotal') {
+            // Subtotal row - show sum of hours for this year
+            const totals = row.data as any;
+            const yearTotal = totals.byYear[yearStr]?.hours || 0;
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-blue-50 border-t-2 border-blue-200">
+                <span className="text-blue-700 font-bold">
+                  {yearTotal.toLocaleString()}
+                </span>
+              </div>
+            );
+          } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             const breakdown = pos.breakdown[yearStr];
             if (!breakdown) return <div className="h-full" />;
@@ -679,6 +735,19 @@ export const PrimeLaborSection = ({
         width: 130,
         resizable: true,
         renderCell: ({ row }) => {
+          if (row.type === 'subtotal') {
+            // Subtotal row - show sum of amounts for this year
+            const totals = row.data as any;
+            const yearTotal = totals.byYear[yearStr]?.amount || 0;
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-blue-50 border-t-2 border-blue-200">
+                <span className="text-blue-700 font-bold">
+                  {formatCurrency(yearTotal)}
+                </span>
+              </div>
+            );
+          }
+
           const pos = row.data as AdvancedPosition;
           const breakdown = pos.breakdown[yearStr];
           if (!breakdown) return <div className="h-full" />;
@@ -735,7 +804,16 @@ export const PrimeLaborSection = ({
         width: 130,
         frozen: false,
         renderCell: ({ row }) => {
-          if (row.type === 'position') {
+          if (row.type === 'subtotal') {
+            const totals = row.data as any;
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-blue-50 border-t-2 border-blue-200">
+                <span className="text-blue-700 font-bold">
+                  ${totals.avgDL.toFixed(2)}
+                </span>
+              </div>
+            );
+          } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
             return (
@@ -754,7 +832,16 @@ export const PrimeLaborSection = ({
         name: 'Avg\nFringe ($/hr)',
         width: 120,
         renderCell: ({ row }) => {
-          if (row.type === 'position') {
+          if (row.type === 'subtotal') {
+            const totals = row.data as any;
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-blue-50 border-t-2 border-blue-200">
+                <span className="text-blue-700 font-bold">
+                  ${totals.avgFringe.toFixed(2)}
+                </span>
+              </div>
+            );
+          } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
             return (
@@ -773,7 +860,16 @@ export const PrimeLaborSection = ({
         name: 'Avg\nOH ($/hr)',
         width: 110,
         renderCell: ({ row }) => {
-          if (row.type === 'position') {
+          if (row.type === 'subtotal') {
+            const totals = row.data as any;
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-blue-50 border-t-2 border-blue-200">
+                <span className="text-blue-700 font-bold">
+                  ${totals.avgOH.toFixed(2)}
+                </span>
+              </div>
+            );
+          } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
             return (
@@ -792,7 +888,16 @@ export const PrimeLaborSection = ({
         name: 'Avg\nG&A ($/hr)',
         width: 110,
         renderCell: ({ row }) => {
-          if (row.type === 'position') {
+          if (row.type === 'subtotal') {
+            const totals = row.data as any;
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-blue-50 border-t-2 border-blue-200">
+                <span className="text-blue-700 font-bold">
+                  ${totals.avgGA.toFixed(2)}
+                </span>
+              </div>
+            );
+          } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
             return (
@@ -811,7 +916,16 @@ export const PrimeLaborSection = ({
         name: 'Avg\nFee ($/hr)',
         width: 110,
         renderCell: ({ row }) => {
-          if (row.type === 'position') {
+          if (row.type === 'subtotal') {
+            const totals = row.data as any;
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-blue-50 border-t-2 border-blue-200">
+                <span className="text-blue-700 font-bold">
+                  ${totals.avgFee.toFixed(2)}
+                </span>
+              </div>
+            );
+          } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
             return (
@@ -830,7 +944,16 @@ export const PrimeLaborSection = ({
         name: 'Avg\nFBLR ($/hr)',
         width: 130,
         renderCell: ({ row }) => {
-          if (row.type === 'position') {
+          if (row.type === 'subtotal') {
+            const totals = row.data as any;
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-blue-50 border-t-2 border-blue-200">
+                <span className="text-blue-700 font-bold">
+                  ${totals.avgFBLR.toFixed(2)}
+                </span>
+              </div>
+            );
+          } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
             return (
@@ -842,6 +965,66 @@ export const PrimeLaborSection = ({
             );
           }
           return <div />;
+        },
+      }
+    );
+
+    // Add Total Hours and Total Amount at the rightest corner
+    cols.push(
+      {
+        key: 'total_hours',
+        name: 'Total Hours',
+        width: 120,
+        resizable: true,
+        renderCell: ({ row }) => {
+          if (row.type === 'subtotal') {
+            const totals = row.data as any;
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-blue-50 border-t-2 border-blue-200">
+                <span className="text-blue-700 font-bold text-base">
+                  {totals.totalHours.toLocaleString()}
+                </span>
+              </div>
+            );
+          } else if (row.type === 'position') {
+            const pos = row.data as AdvancedPosition;
+            return (
+              <div className="flex items-center justify-end h-full px-2">
+                <span className="text-foreground font-semibold">
+                  {pos.total_hours.toLocaleString()}
+                </span>
+              </div>
+            );
+          }
+          return <div className="h-full bg-muted/30" />;
+        },
+      },
+      {
+        key: 'total_amount',
+        name: 'Total Amount',
+        width: 150,
+        resizable: true,
+        renderCell: ({ row }) => {
+          if (row.type === 'subtotal') {
+            const totals = row.data as any;
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-blue-50 border-t-2 border-blue-200">
+                <span className="text-blue-700 font-bold text-base">
+                  {formatCurrency(totals.totalAmount)}
+                </span>
+              </div>
+            );
+          } else if (row.type === 'position') {
+            const pos = row.data as AdvancedPosition;
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-emerald-500/10">
+                <span className="text-emerald-600 font-bold">
+                  {formatCurrency(pos.total_amount)}
+                </span>
+              </div>
+            );
+          }
+          return <div className="h-full bg-muted/30" />;
         },
       }
     );
