@@ -3,7 +3,6 @@
 import { useMemo } from 'react';
 import { usePricingStore } from '@/lib/stores/pricingStore';
 import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
-
 // Metric Card Component
 function MetricCard({
   title,
@@ -64,8 +63,9 @@ export default function OverviewTab() {
   const {
     proposalName,
     solicitationNumber,
-    aggregates,
+    positions,
     subcontractors,
+    travel,
     odcs,
     rates,
     escalationRates,
@@ -74,12 +74,62 @@ export default function OverviewTab() {
 
   // Calculate all costs with FBLR breakdown
   const costMetrics = useMemo(() => {
-    // Prime labor components (from aggregates - already calculated)
-    const directLaborTotal = aggregates.totalDL;
-    const fringeTotal = aggregates.totalFringe;
-    const ohTotal = aggregates.totalOH;
-    const gaTotal = aggregates.totalGA;
-    const primeLaborTotal = aggregates.totalFBLR;
+    // Calculate prime labor components directly from positions and current rates
+    let directLaborTotal = 0;
+    let fringeTotal = 0;
+    let ohTotal = 0;
+    let gaTotal = 0;
+    let primeLaborTotal = 0;
+
+    positions.forEach((pos) => {
+      // Get base wage
+      const baseWage = pos.wage_source === 'gsa'
+        ? (pos.gsa_rates_by_year?.['1'] || 0)
+        : (pos.selected_wage || 0);
+
+      Object.entries(pos.hours_per_year).forEach(([yearStr, hours]) => {
+        const yearNum = parseInt(yearStr);
+
+        // Calculate wage with escalation
+        let wage = baseWage;
+        if (pos.wage_source === 'gsa' && pos.gsa_rates_by_year) {
+          // GSA positions have rates per year
+          wage = pos.gsa_rates_by_year[yearStr] || baseWage;
+        } else {
+          // BLS positions use escalation
+          for (let y = 1; y < yearNum; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = escalationRates[escKey] || 0;
+            wage *= (1 + escRate);
+          }
+        }
+
+        const dlRate = wage / (hours || 2080);
+        const dlAmount = dlRate * hours;
+
+        const fringe = dlRate * rates.fringe;
+        const fringeAmount = fringe * hours;
+
+        const oh = (dlRate + fringe) * rates.oh;
+        const ohAmount = oh * hours;
+
+        const ga = (dlRate + fringe + oh) * rates.ga;
+        const gaAmount = ga * hours;
+
+        const fee = (dlRate + fringe + oh + ga) * rates.fee;
+        const feeAmount = fee * hours;
+
+        const fblr = dlRate + fringe + oh + ga + fee;
+        const totalAmount = fblr * hours;
+
+        directLaborTotal += dlAmount;
+        fringeTotal += fringeAmount;
+        ohTotal += ohAmount;
+        gaTotal += gaAmount;
+        primeLaborTotal += totalAmount;
+      });
+    });
+
 
     // Subcontractor costs
     let subcontractorTotal = 0;
@@ -99,6 +149,14 @@ export default function OverviewTab() {
     const subFee = subcontractorTotal * (rates.sub_fee || 0);
     const feeTotal = primeFee + subFee;
 
+    // Travel costs (separate from ODCs)
+    let travelTotal = 0;
+    travel.forEach((travelItem) => {
+      Object.values(travelItem.amount_per_year).forEach((amount) => {
+        travelTotal += amount;
+      });
+    });
+
     // ODC costs
     let odcTotal = 0;
     odcs.forEach((odc) => {
@@ -108,7 +166,7 @@ export default function OverviewTab() {
     });
 
     // Grand total
-    const grandTotal = primeLaborTotal + subcontractorTotal + passthroughTotal + feeTotal + odcTotal;
+    const grandTotal = primeLaborTotal + subcontractorTotal + passthroughTotal + feeTotal + travelTotal + odcTotal;
 
     return {
       directLaborTotal,
@@ -119,10 +177,11 @@ export default function OverviewTab() {
       subcontractorTotal,
       passthroughTotal,
       feeTotal,
+      travelTotal,
       odcTotal,
       grandTotal,
     };
-  }, [aggregates, subcontractors, odcs, rates]);
+  }, [positions, subcontractors, travel, odcs, rates, escalationRates]);
 
   // Calculate year-by-year breakdown
   const yearBreakdown = useMemo(() => {
@@ -134,6 +193,7 @@ export default function OverviewTab() {
       subcontractor: number;
       passthrough: number;
       fee: number;
+      travel: number;
       odc: number;
       total: number;
     }> = {};
@@ -148,19 +208,51 @@ export default function OverviewTab() {
         subcontractor: 0,
         passthrough: 0,
         fee: 0,
+        travel: 0,
         odc: 0,
         total: 0,
       };
     }
 
-    // Prime labor components by year (DL, Fringe, OH, G&A)
-    Object.entries(aggregates.byYear).forEach(([year, yearData]) => {
-      if (breakdown[year]) {
-        breakdown[year].directLabor = yearData.dl;
-        breakdown[year].fringe = yearData.fringe;
-        breakdown[year].oh = yearData.oh;
-        breakdown[year].ga = yearData.ga;
-      }
+    // Prime labor components by year (DL, Fringe, OH, G&A) - calculate directly from positions
+    positions.forEach((pos) => {
+      const baseWage = pos.wage_source === 'gsa'
+        ? (pos.gsa_rates_by_year?.['1'] || 0)
+        : (pos.selected_wage || 0);
+
+      Object.entries(pos.hours_per_year).forEach(([yearStr, hours]) => {
+        const yearNum = parseInt(yearStr);
+        if (!breakdown[yearStr]) return;
+
+        // Calculate wage with escalation
+        let wage = baseWage;
+        if (pos.wage_source === 'gsa' && pos.gsa_rates_by_year) {
+          wage = pos.gsa_rates_by_year[yearStr] || baseWage;
+        } else {
+          for (let y = 1; y < yearNum; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = escalationRates[escKey] || 0;
+            wage *= (1 + escRate);
+          }
+        }
+
+        const dlRate = wage / (hours || 2080);
+        const dlAmount = dlRate * hours;
+
+        const fringe = dlRate * rates.fringe;
+        const fringeAmount = fringe * hours;
+
+        const oh = (dlRate + fringe) * rates.oh;
+        const ohAmount = oh * hours;
+
+        const ga = (dlRate + fringe + oh) * rates.ga;
+        const gaAmount = ga * hours;
+
+        breakdown[yearStr].directLabor += dlAmount;
+        breakdown[yearStr].fringe += fringeAmount;
+        breakdown[yearStr].oh += ohAmount;
+        breakdown[yearStr].ga += gaAmount;
+      });
     });
 
     // Subcontractor by year
@@ -189,6 +281,15 @@ export default function OverviewTab() {
       breakdown[year].fee = primeFee + subFee;
     });
 
+    // Travel by year
+    travel.forEach((travelItem) => {
+      Object.entries(travelItem.amount_per_year).forEach(([year, amount]) => {
+        if (breakdown[year]) {
+          breakdown[year].travel += amount;
+        }
+      });
+    });
+
     // ODC by year
     odcs.forEach((odc) => {
       Object.entries(odc.amount_per_year).forEach(([year, amount]) => {
@@ -202,11 +303,11 @@ export default function OverviewTab() {
     Object.keys(breakdown).forEach((year) => {
       const data = breakdown[year];
       const primeLabor = data.directLabor + data.fringe + data.oh + data.ga;
-      data.total = primeLabor + data.subcontractor + data.passthrough + data.fee + data.odc;
+      data.total = primeLabor + data.subcontractor + data.passthrough + data.fee + data.travel + data.odc;
     });
 
     return breakdown;
-  }, [aggregates, subcontractors, odcs, rates, totalYears]);
+  }, [positions, subcontractors, travel, odcs, rates, escalationRates, totalYears]);
 
   const formatCurrency = (value: number) => {
     return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -268,44 +369,52 @@ export default function OverviewTab() {
             label="Fringe"
             amount={costMetrics.fringeTotal}
             percentage={(costMetrics.fringeTotal / costMetrics.grandTotal) * 100}
-            color="bg-blue-600"
+            color="bg-violet-600"
           />
           <CostBreakdownBar
             label="Overhead (OH)"
             amount={costMetrics.ohTotal}
             percentage={(costMetrics.ohTotal / costMetrics.grandTotal) * 100}
-            color="bg-blue-600"
+            color="bg-pink-600"
           />
           <CostBreakdownBar
             label="G&A"
             amount={costMetrics.gaTotal}
             percentage={(costMetrics.gaTotal / costMetrics.grandTotal) * 100}
-            color="bg-blue-600"
+            color="bg-amber-600"
           />
           <CostBreakdownBar
             label="Subcontractor Labor"
             amount={costMetrics.subcontractorTotal}
             percentage={(costMetrics.subcontractorTotal / costMetrics.grandTotal) * 100}
-            color="bg-blue-600"
+            color="bg-emerald-600"
           />
           <CostBreakdownBar
             label="Passthrough (S&MH + G&A on Subs)"
             amount={costMetrics.passthroughTotal}
             percentage={(costMetrics.passthroughTotal / costMetrics.grandTotal) * 100}
-            color="bg-blue-600"
+            color="bg-cyan-600"
           />
           <CostBreakdownBar
             label="Fee"
             amount={costMetrics.feeTotal}
             percentage={(costMetrics.feeTotal / costMetrics.grandTotal) * 100}
-            color="bg-blue-600"
+            color="bg-red-600"
           />
+          {costMetrics.travelTotal > 0 && (
+            <CostBreakdownBar
+              label="Travel"
+              amount={costMetrics.travelTotal}
+              percentage={(costMetrics.travelTotal / costMetrics.grandTotal) * 100}
+              color="bg-teal-600"
+            />
+          )}
           {costMetrics.odcTotal > 0 && (
             <CostBreakdownBar
-              label="ODC & Travel"
+              label="Other Direct Costs (ODC)"
               amount={costMetrics.odcTotal}
               percentage={(costMetrics.odcTotal / costMetrics.grandTotal) * 100}
-              color="bg-blue-600"
+              color="bg-orange-600"
             />
           )}
         </CardContent>
@@ -329,6 +438,9 @@ export default function OverviewTab() {
                   <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">Subcontractors</th>
                   <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">Passthrough</th>
                   <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">Fee</th>
+                  {costMetrics.travelTotal > 0 && (
+                    <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">Travel</th>
+                  )}
                   {costMetrics.odcTotal > 0 && (
                     <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">ODC</th>
                   )}
@@ -360,6 +472,11 @@ export default function OverviewTab() {
                     <td className="py-3 px-4 text-sm text-right text-muted-foreground">
                       {formatCurrency(data.fee)}
                     </td>
+                    {costMetrics.travelTotal > 0 && (
+                      <td className="py-3 px-4 text-sm text-right text-muted-foreground">
+                        {formatCurrency(data.travel)}
+                      </td>
+                    )}
                     {costMetrics.odcTotal > 0 && (
                       <td className="py-3 px-4 text-sm text-right text-muted-foreground">
                         {formatCurrency(data.odc)}
@@ -394,6 +511,11 @@ export default function OverviewTab() {
                   <td className="py-3 px-4 text-sm text-right text-foreground">
                     {formatCurrency(costMetrics.feeTotal)}
                   </td>
+                  {costMetrics.travelTotal > 0 && (
+                    <td className="py-3 px-4 text-sm text-right text-foreground">
+                      {formatCurrency(costMetrics.travelTotal)}
+                    </td>
+                  )}
                   {costMetrics.odcTotal > 0 && (
                     <td className="py-3 px-4 text-sm text-right text-foreground">
                       {formatCurrency(costMetrics.odcTotal)}
