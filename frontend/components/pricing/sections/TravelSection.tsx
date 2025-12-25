@@ -10,6 +10,7 @@ import styles from './PrimeLaborSection.module.css';
 interface TravelSectionProps {
   travel: TravelItem[];
   totalYears: number;
+  gaRate: number; // G&A rate to apply to travel
   onAdd: () => void;
   onEdit: (travel: TravelItem) => void;
   onDelete: (id: string) => void;
@@ -20,13 +21,14 @@ interface TravelRow {
   description?: string;
   escalate: boolean;
   amountsByYear: Record<string, number>;
-  type: 'travel' | 'total';
+  type: 'travel' | 'subtotal' | 'ga' | 'total';
   originalTravel?: TravelItem;
 }
 
 export const TravelSection = ({
   travel,
   totalYears,
+  gaRate,
   onAdd,
   onEdit,
   onDelete,
@@ -44,7 +46,7 @@ export const TravelSection = ({
   };
 
   // Calculate Travel totals by year (before G&A)
-  const travelTotalsByYear = useMemo(() => {
+  const travelSubtotalsByYear = useMemo(() => {
     const result: Record<string, number> = {};
 
     for (let year = 1; year <= totalYears; year++) {
@@ -59,12 +61,38 @@ export const TravelSection = ({
     return result;
   }, [travel, totalYears]);
 
-  // Calculate grand total
-  const grandTotal = useMemo(() => {
-    return Object.values(travelTotalsByYear).reduce((sum, val) => sum + val, 0);
-  }, [travelTotalsByYear]);
+  // Calculate G&A amounts by year
+  const gaAmountsByYear = useMemo(() => {
+    const result: Record<string, number> = {};
+    Object.entries(travelSubtotalsByYear).forEach(([year, amount]) => {
+      result[year] = amount * gaRate;
+    });
+    return result;
+  }, [travelSubtotalsByYear, gaRate]);
 
-  // Create rows (Travel items + total row)
+  // Calculate total with G&A by year
+  const totalWithGAByYear = useMemo(() => {
+    const result: Record<string, number> = {};
+    Object.entries(travelSubtotalsByYear).forEach(([year, amount]) => {
+      result[year] = amount + gaAmountsByYear[year];
+    });
+    return result;
+  }, [travelSubtotalsByYear, gaAmountsByYear]);
+
+  // Calculate grand totals
+  const subtotalGrandTotal = useMemo(() => {
+    return Object.values(travelSubtotalsByYear).reduce((sum, val) => sum + val, 0);
+  }, [travelSubtotalsByYear]);
+
+  const gaGrandTotal = useMemo(() => {
+    return Object.values(gaAmountsByYear).reduce((sum, val) => sum + val, 0);
+  }, [gaAmountsByYear]);
+
+  const grandTotal = useMemo(() => {
+    return subtotalGrandTotal + gaGrandTotal;
+  }, [subtotalGrandTotal, gaGrandTotal]);
+
+  // Create rows (Travel items + subtotal + G&A + total)
   const rows = useMemo<TravelRow[]>(() => {
     const travelRows: TravelRow[] = travel.map((item) => ({
       id: item.id,
@@ -75,17 +103,35 @@ export const TravelSection = ({
       originalTravel: item,
     }));
 
-    // Add total row
+    // Add subtotal row (base amounts)
+    travelRows.push({
+      id: 'subtotal',
+      description: 'Subtotal Travel (Base)',
+      escalate: false,
+      amountsByYear: travelSubtotalsByYear,
+      type: 'subtotal',
+    });
+
+    // Add G&A row
+    travelRows.push({
+      id: 'ga',
+      description: `G&A (${(gaRate * 100).toFixed(2)}%)`,
+      escalate: false,
+      amountsByYear: gaAmountsByYear,
+      type: 'ga',
+    });
+
+    // Add total row with G&A
     travelRows.push({
       id: 'total',
-      description: 'Total Travel',
+      description: 'Total Travel (with G&A)',
       escalate: false,
-      amountsByYear: travelTotalsByYear,
+      amountsByYear: totalWithGAByYear,
       type: 'total',
     });
 
     return travelRows;
-  }, [travel, travelTotalsByYear]);
+  }, [travel, travelSubtotalsByYear, gaAmountsByYear, totalWithGAByYear, gaRate]);
 
   // Generate columns dynamically
   const columns = useMemo<Column<TravelRow>[]>(() => {
@@ -98,11 +144,18 @@ export const TravelSection = ({
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => (
-          <div className="flex items-center h-full px-2">
+          <div className={`flex items-center h-full px-2 ${
+            row.type === 'subtotal' ? 'bg-gray-50 border-t-2 border-gray-300' :
+            row.type === 'ga' ? 'bg-green-50' :
+            row.type === 'total' ? 'bg-blue-100 border-t-2 border-blue-300 border-b-2' : ''
+          }`}>
             <div className="flex flex-col gap-1">
               <span
                 className={`${
-                  row.type === 'total' ? 'text-blue-600 text-lg font-bold' : 'font-semibold text-foreground'
+                  row.type === 'total' ? 'text-blue-700 text-lg font-bold' :
+                  row.type === 'subtotal' ? 'text-gray-700 font-bold' :
+                  row.type === 'ga' ? 'text-green-700 font-bold' :
+                  'font-semibold text-foreground'
                 }`}
               >
                 {row.description || 'Travel'}
@@ -136,14 +189,17 @@ export const TravelSection = ({
           return (
             <div
               className={`flex items-center justify-end h-full px-2 ${
-                row.type === 'total' ? 'bg-blue-50' : ''
+                row.type === 'subtotal' ? 'bg-gray-50 border-t-2 border-gray-300' :
+                row.type === 'ga' ? 'bg-green-50' :
+                row.type === 'total' ? 'bg-blue-100 border-t-2 border-blue-300 border-b-2' : ''
               }`}
             >
               <span
                 className={
-                  row.type === 'total'
-                    ? 'text-blue-600 font-bold'
-                    : 'text-blue-600 font-semibold'
+                  row.type === 'total' ? 'text-blue-700 font-bold text-lg' :
+                  row.type === 'subtotal' ? 'text-gray-700 font-bold' :
+                  row.type === 'ga' ? 'text-green-700 font-bold' :
+                  'text-blue-600 font-semibold'
                 }
               >
                 {formatCurrency(value)}
@@ -170,14 +226,17 @@ export const TravelSection = ({
         return (
           <div
             className={`flex items-center justify-end h-full px-2 ${
-              row.type === 'total' ? 'bg-blue-100' : ''
+              row.type === 'subtotal' ? 'bg-gray-50 border-t-2 border-gray-300' :
+              row.type === 'ga' ? 'bg-green-50' :
+              row.type === 'total' ? 'bg-blue-100 border-t-2 border-blue-300 border-b-2' : ''
             }`}
           >
             <span
               className={
-                row.type === 'total'
-                  ? 'text-blue-600 font-bold text-lg'
-                  : 'text-blue-600 font-semibold'
+                row.type === 'total' ? 'text-blue-700 font-bold text-lg' :
+                row.type === 'subtotal' ? 'text-gray-700 font-bold' :
+                row.type === 'ga' ? 'text-green-700 font-bold' :
+                'text-blue-600 font-semibold'
               }
             >
               {formatCurrency(total)}
@@ -194,7 +253,7 @@ export const TravelSection = ({
       width: 100,
       resizable: false,
       renderCell: ({ row }) => {
-        if (row.type === 'total') return <div className="h-full" />;
+        if (row.type !== 'travel') return <div className="h-full" />;
 
         return (
           <div className="flex items-center justify-center h-full gap-2">

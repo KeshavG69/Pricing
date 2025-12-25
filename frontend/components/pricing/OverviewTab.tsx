@@ -149,19 +149,21 @@ export default function OverviewTab() {
     const subFee = subcontractorTotal * (rates.sub_fee || 0);
     const feeTotal = primeFee + subFee;
 
-    // Travel costs (separate from ODCs)
+    // Travel costs (separate from ODCs) - Apply G&A rate
     let travelTotal = 0;
     travel.forEach((travelItem) => {
       Object.values(travelItem.amount_per_year).forEach((amount) => {
-        travelTotal += amount;
+        const travelWithGA = amount * (1 + rates.ga);
+        travelTotal += travelWithGA;
       });
     });
 
-    // ODC costs
+    // ODC costs - Apply S&MH rate
     let odcTotal = 0;
     odcs.forEach((odc) => {
       Object.values(odc.amount_per_year).forEach((amount) => {
-        odcTotal += amount;
+        const odcWithSMH = amount * (1 + (rates.smh || 0));
+        odcTotal += odcWithSMH;
       });
     });
 
@@ -281,20 +283,22 @@ export default function OverviewTab() {
       breakdown[year].fee = primeFee + subFee;
     });
 
-    // Travel by year
+    // Travel by year - Apply G&A rate
     travel.forEach((travelItem) => {
       Object.entries(travelItem.amount_per_year).forEach(([year, amount]) => {
         if (breakdown[year]) {
-          breakdown[year].travel += amount;
+          const travelWithGA = amount * (1 + rates.ga);
+          breakdown[year].travel += travelWithGA;
         }
       });
     });
 
-    // ODC by year
+    // ODC by year - Apply S&MH rate
     odcs.forEach((odc) => {
       Object.entries(odc.amount_per_year).forEach(([year, amount]) => {
         if (breakdown[year]) {
-          breakdown[year].odc += amount;
+          const odcWithSMH = amount * (1 + (rates.smh || 0));
+          breakdown[year].odc += odcWithSMH;
         }
       });
     });
@@ -369,44 +373,44 @@ export default function OverviewTab() {
             label="Fringe"
             amount={costMetrics.fringeTotal}
             percentage={(costMetrics.fringeTotal / costMetrics.grandTotal) * 100}
-            color="bg-violet-600"
+            color="bg-blue-600"
           />
           <CostBreakdownBar
             label="Overhead (OH)"
             amount={costMetrics.ohTotal}
             percentage={(costMetrics.ohTotal / costMetrics.grandTotal) * 100}
-            color="bg-pink-600"
+            color="bg-blue-600"
           />
           <CostBreakdownBar
             label="G&A"
             amount={costMetrics.gaTotal}
             percentage={(costMetrics.gaTotal / costMetrics.grandTotal) * 100}
-            color="bg-amber-600"
+            color="bg-blue-600"
           />
           <CostBreakdownBar
             label="Subcontractor Labor"
             amount={costMetrics.subcontractorTotal}
             percentage={(costMetrics.subcontractorTotal / costMetrics.grandTotal) * 100}
-            color="bg-emerald-600"
+            color="bg-blue-600"
           />
           <CostBreakdownBar
             label="Passthrough (S&MH + G&A on Subs)"
             amount={costMetrics.passthroughTotal}
             percentage={(costMetrics.passthroughTotal / costMetrics.grandTotal) * 100}
-            color="bg-cyan-600"
+            color="bg-blue-600"
           />
           <CostBreakdownBar
             label="Fee"
             amount={costMetrics.feeTotal}
             percentage={(costMetrics.feeTotal / costMetrics.grandTotal) * 100}
-            color="bg-red-600"
+            color="bg-blue-600"
           />
           {costMetrics.travelTotal > 0 && (
             <CostBreakdownBar
               label="Travel"
               amount={costMetrics.travelTotal}
               percentage={(costMetrics.travelTotal / costMetrics.grandTotal) * 100}
-              color="bg-teal-600"
+              color="bg-blue-600"
             />
           )}
           {costMetrics.odcTotal > 0 && (
@@ -414,7 +418,7 @@ export default function OverviewTab() {
               label="Other Direct Costs (ODC)"
               amount={costMetrics.odcTotal}
               percentage={(costMetrics.odcTotal / costMetrics.grandTotal) * 100}
-              color="bg-orange-600"
+              color="bg-blue-600"
             />
           )}
         </CardContent>
