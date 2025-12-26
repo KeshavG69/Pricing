@@ -315,7 +315,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
           const fee = (dlRate + fringe + oh + ga) * state.rates.fee;
           const feeAmount = fee * hours;
 
-          // FBLR = DL + Fringe + OH + G&A (WITHOUT Fee per Excel formulas)
+          // FBLR excludes fee - fee is calculated separately in Fee Section
+          // This matches government cost proposal format (Intprepix)
           const fblr = dlRate + fringe + oh + ga;
           const totalAmount = fblr * hours;
 

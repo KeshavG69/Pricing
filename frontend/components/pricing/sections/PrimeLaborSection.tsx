@@ -97,12 +97,14 @@ const calculateAveragedFBLR = (
   // Calculate averaged DL rate
   const dlRate = totalSalary / totalHours;
 
-  // Apply FBLR cascade (WITHOUT Fee per Excel formulas)
+  // Apply FBLR cascade
   const fringe = dlRate * rates.fringe;
   const oh = (dlRate + fringe) * rates.oh;
   const ga = (dlRate + fringe + oh) * rates.ga;
+  // Fee is calculated separately in Fee Section (not included in FBLR)
+  // This matches government cost proposal format (Intprepix)
   const fee = (dlRate + fringe + oh + ga) * rates.fee;
-  const fblr = dlRate + fringe + oh + ga;  // FBLR without fee
+  const fblr = dlRate + fringe + oh + ga;
 
   return { dlRate, fringe, oh, ga, fee, fblr, isGSA: false };
 };
@@ -336,13 +338,9 @@ export const PrimeLaborSection = ({
             positionId: pos.id,
             breakdownType: 'ga',
             data: pos,
-          },
-          {
-            type: 'breakdown',
-            positionId: pos.id,
-            breakdownType: 'fee',
-            data: pos,
           }
+          // Fee row removed - fee is calculated separately in Fee Section
+          // This matches government cost proposal format (Intprepix)
         );
       }
     });
