@@ -243,12 +243,15 @@ export const usePricingStore = create<PricingState>((set, get) => {
   const performTransformToAdvanced = () => {
     const state = get();
 
-    console.log('[TRANSFORM] Starting transformation with rates:', {
+    console.log('[TRANSFORM] ========== TRANSFORM START ==========');
+    console.log('[TRANSFORM] Current rates:', {
       fringe: state.rates.fringe,
       oh: state.rates.oh,
       ga: state.rates.ga,
       fee: state.rates.fee
     });
+    console.log('[TRANSFORM] Positions to transform:', state.positions.length);
+    console.log('[TRANSFORM] Escalation rates:', state.escalationRates);
 
     // Convert each SpreadsheetPosition to AdvancedPosition
     const advanced = state.positions.map((pos) => {
@@ -381,22 +384,28 @@ export const usePricingStore = create<PricingState>((set, get) => {
       });
     });
 
-    console.log('[TRANSFORM] Setting positionsAdvanced:', advanced.length, 'positions');
-    console.log('[TRANSFORM] Setting aggregates:', {
+    console.log('[TRANSFORM] Calculated positions count:', advanced.length);
+    console.log('[TRANSFORM] Sample position breakdown (first pos, year 1):', advanced[0]?.breakdown['1']);
+    console.log('[TRANSFORM] Aggregates calculated:', {
+      totalDL: aggregates.totalDL,
       totalFringe: aggregates.totalFringe,
       totalOH: aggregates.totalOH,
-      totalGA: aggregates.totalGA
+      totalGA: aggregates.totalGA,
+      totalFBLR: aggregates.totalFBLR
     });
 
     // Increment version to force React re-render
     const newVersion = state.advancedModeVersion + 1;
+    console.log('[TRANSFORM] Setting new version:', newVersion);
+
     set({
       positionsAdvanced: advanced,
       aggregates,
       advancedModeVersion: newVersion
     });
 
-    console.log('[TRANSFORM] State updated with version', newVersion, '- should trigger re-render');
+    console.log('[TRANSFORM] State updated - should trigger re-render');
+    console.log('[TRANSFORM] ========== TRANSFORM END ==========');
   };
 
 
@@ -441,10 +450,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
         isDirty: true,
       });
 
-      // If in advanced mode, transform to update detailed view
-      if (get().advancedMode) {
-        performTransformToAdvanced();
-      }
+      // Always transform to update detailed view (used by both initial and advanced mode)
+      performTransformToAdvanced();
 
       console.log('Calculations updated');
 
@@ -868,11 +875,9 @@ export const usePricingStore = create<PricingState>((set, get) => {
           // Reload pricing data with fresh proposal
           await get().loadProposal(state.proposalId, freshProposal);
 
-          // 11. If in advanced mode, retransform the positions
-          if (get().advancedMode) {
-            console.log('🔄 Retransforming to advanced mode...');
-            performTransformToAdvanced();
-          }
+          // 11. Always retransform the positions (used by both initial and advanced mode)
+          console.log('🔄 Retransforming positions...');
+          performTransformToAdvanced();
 
           console.log('✅ Pricing data refreshed - subcontractor now visible!');
         } catch (error) {
@@ -934,18 +939,27 @@ export const usePricingStore = create<PricingState>((set, get) => {
     updateRates: (rates) => {
       const state = get();
 
+      console.log('[STORE] updateRates called with:', rates);
+      console.log('[STORE] Current rates before update:', state.rates);
+      console.log('[STORE] Advanced mode:', state.advancedMode);
+
       // Update rates
+      const newRates = { ...state.rates, ...rates };
+      console.log('[STORE] New rates after merge:', newRates);
+
       set({
-        rates: { ...state.rates, ...rates },
+        rates: newRates,
       });
 
-      // If in advanced mode, immediately transform (synchronous, no async wrapper)
-      if (state.advancedMode) {
-        console.log('[RATES] Immediately transforming (synchronous)...');
-        performTransformToAdvanced();
-      }
+      console.log('[STORE] Rates updated in store');
+
+      // ALWAYS transform when rates change (used by both initial and advanced mode)
+      console.log('[STORE] Calling performTransformToAdvanced (needed for table display)');
+      performTransformToAdvanced();
+      console.log('[STORE] Transform completed');
 
       // Still trigger API recalculation in background
+      console.log('[STORE] Calling debouncedRecalculate');
       debouncedRecalculate();
     },
 
@@ -957,11 +971,10 @@ export const usePricingStore = create<PricingState>((set, get) => {
         escalationRates: { ...state.escalationRates, ...rates },
       });
 
-      // If in advanced mode, immediately transform (synchronous, no async wrapper)
-      if (state.advancedMode) {
-        console.log('[RATES] Immediately transforming (synchronous)...');
-        performTransformToAdvanced();
-      }
+      // ALWAYS transform when escalation rates change (used by both initial and advanced mode)
+      console.log('[RATES] Calling performTransformToAdvanced (needed for table display)');
+      performTransformToAdvanced();
+      console.log('[RATES] Transform completed');
 
       // Still trigger API recalculation in background
       debouncedRecalculate();

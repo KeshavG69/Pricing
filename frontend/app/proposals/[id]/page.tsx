@@ -15,7 +15,7 @@ import RateTableView from '@/components/pricing/RateTableView';
 import PricingTabs from '@/components/pricing/PricingTabs';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { SubcontractorSection } from '@/components/pricing/SubcontractorSection';
-import { Loader2, CheckCircle, AlertCircle, ArrowLeft, Plus, Download, Pencil, Check, X } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowLeft, Plus, Download, Pencil, Check, X } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
 
 export default function ProposalPage() {
@@ -300,55 +300,13 @@ export default function ProposalPage() {
   };
 
   const renderPricingWorkspace = () => (
-    <div className="space-y-6">
-      {/* Success message with Advanced Analysis button */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                <CheckCircle className="w-6 h-6 text-emerald-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-base font-bold text-foreground mb-1">
-                  Processing Complete!
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {positions.length} job position{positions.length !== 1 ? 's' : ''} extracted - view and edit data below
-                </p>
-              </div>
-            </div>
-            {!advancedMode && (
-              <Button
-                variant="primary"
-                onClick={handleAdvancedAnalysis}
-                disabled={isRecalculating}
-              >
-                {isRecalculating ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Calculating...
-                  </>
-                ) : (
-                  'Advanced Analysis'
-                )}
-              </Button>
-            )}
-            {advancedMode && (
-              <div className="text-sm text-emerald-600 font-semibold">
-                ✓ Advanced Mode Active
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
+    <div className="space-y-2">
       {/* Pricing Workspace - Both initial and advanced show tabs */}
       <Card>
-        <CardHeader>
-          <CardTitle>{advancedMode ? 'Advanced Analysis' : 'Initial Analysis'}</CardTitle>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base">{advancedMode ? 'Advanced Analysis' : 'Initial Analysis'}</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-2">
           {/* Tab Navigation - mode determines which tabs are shown */}
           <PricingTabs
             activeTab={activeTab}
@@ -358,10 +316,10 @@ export default function ProposalPage() {
           />
 
           {/* Tab Content */}
-          <div className="mt-6">
-            {activeTab === 'overview' && <OverviewTab />}
+          <div className="mt-4">
+            {activeTab === 'overview' && <OverviewTab key={`${rates.fringe}-${rates.oh}-${rates.ga}-${rates.fee}`} />}
             {activeTab === 'main' && (
-              <div className="overflow-y-auto" style={{ maxHeight: '800px' }}>
+              <div>
                 <AdvancedAnalysisGrid isAdvancedMode={advancedMode} />
               </div>
             )}
@@ -389,7 +347,7 @@ export default function ProposalPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-[1800px] mx-auto">
+      <div className="w-full px-4">
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             {/* Proposal Name with Inline Edit */}
@@ -550,21 +508,40 @@ export default function ProposalPage() {
               )}
             </div>
           </div>
-          {/* Export Excel button - only show in advanced mode */}
-          {currentProposal.status === 'completed' && advancedMode && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                // Pass current prime contractor name to export
-                exportToExcel({
-                  primeContractorName: currentProposal?.prime_contractor_name || 'TBD'
-                });
-              }}
-              disabled={isRecalculating}
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export to Excel
-            </Button>
+          {/* Advanced Analysis or Export Excel button */}
+          {currentProposal.status === 'completed' && (
+            <>
+              {!advancedMode ? (
+                <Button
+                  variant="primary"
+                  onClick={handleAdvancedAnalysis}
+                  disabled={isRecalculating}
+                >
+                  {isRecalculating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Calculating...
+                    </>
+                  ) : (
+                    'Advanced Analysis'
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    // Pass current prime contractor name to export
+                    exportToExcel({
+                      primeContractorName: currentProposal?.prime_contractor_name || 'TBD'
+                    });
+                  }}
+                  disabled={isRecalculating}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Export to Excel
+                </Button>
+              )}
+            </>
           )}
         </div>
 

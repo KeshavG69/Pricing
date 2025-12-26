@@ -136,13 +136,24 @@ export const PrimeLaborSection = ({
   onUpdatePosition,
   isAdvancedMode = true, // Default to true for backwards compatibility
 }: PrimeLaborSectionProps) => {
+  // Create a version string that changes when rates change to force re-render
+  const ratesVersion = useMemo(() => {
+    return `${rates.fringe}-${rates.oh}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}`;
+  }, [rates, escalationRates]);
+
   // Debug: Log when component re-renders
-  console.log('[PrimeLaborSection] Re-render with', positions.length, 'positions, rates:', {
+  console.log('[PrimeLaborSection] ========== RENDER START ==========');
+  console.log('[PrimeLaborSection] Positions count:', positions.length);
+  console.log('[PrimeLaborSection] Rates received:', {
     fringe: rates.fringe,
     oh: rates.oh,
     ga: rates.ga,
     fee: rates.fee
   });
+  console.log('[PrimeLaborSection] Escalation rates:', escalationRates);
+  console.log('[PrimeLaborSection] Rates version (key):', ratesVersion);
+  console.log('[PrimeLaborSection] Sample position breakdown (first position):', positions[0]?.breakdown);
+  console.log('[PrimeLaborSection] ========== RENDER END ==========');
 
   // Context menu state
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; position: AdvancedPosition; columnKey?: string } | null>(null);
@@ -1079,10 +1090,11 @@ export const PrimeLaborSection = ({
       </div>
 
       <div
-        className="overflow-auto border border-border rounded-lg transition-all duration-200"
-        style={{ height: Math.min(Math.max(gridRows.length * 45 + 50, 200), 800) }}
+        className="border border-border rounded-lg transition-all duration-200"
+        style={{ height: Math.max(gridRows.length * 45 + 50, 200) }}
       >
         <DataGrid
+          key={`${rates.fringe}-${rates.oh}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}`}
           columns={columns}
           rows={gridRows}
           rowKeyGetter={(row) => `${row.positionId}_${row.type}_${row.breakdownType || ''}`}
