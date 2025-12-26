@@ -547,7 +547,7 @@ export const PositionsGrid = () => {
     );
 
     return cols;
-  }, [totalYears, rates, updatePosition, deletePosition, handleContextMenu]);
+  }, [totalYears, monthsPerYear, rates, escalationRates, updatePosition, deletePosition, handleContextMenu]);
 
   if (positions.length === 0) {
     return (
@@ -576,6 +576,7 @@ export const PositionsGrid = () => {
         }}
       >
         <DataGrid
+          key={`${rates.fringe}-${rates.oh}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}`}
           columns={columns}
           rows={positions}
           onRowsChange={handleRowsChange}

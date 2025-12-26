@@ -340,9 +340,9 @@ export default function OverviewTab() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       {/* Proposal Info */}
-      <div className="mb-4">
+      <div className="mb-2">
         <h2 className="text-sm font-bold text-foreground">{proposalName}</h2>
         {solicitationNumber && (
           <p className="text-xs text-muted-foreground mt-1">
