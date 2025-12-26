@@ -100,8 +100,8 @@ export const PositionsGrid = () => {
     let totalHours = 0;
     let currentYearWage = baseWage;
 
-    // Get FTE hours for this position (fallback to 1880)
-    const fteHours = position.standard_fte_hours || 1880;
+    // Get FTE hours for this position (always provided by jd_parser)
+    const fteHours = position.standard_fte_hours!;
 
     for (let year = 1; year <= totalYears; year++) {
       const yearStr = year.toString();

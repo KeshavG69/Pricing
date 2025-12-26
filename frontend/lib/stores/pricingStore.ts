@@ -5,6 +5,7 @@ import {
   Subcontractor,
   TravelItem,
   ODCItem,
+  Extension,
   IndirectRates,
   EscalationRates,
   JobPosition,
@@ -30,6 +31,7 @@ interface PricingState {
   subcontractors: Subcontractor[];
   travel: TravelItem[];
   odcs: ODCItem[];
+  extensions: Extension[];  // Extension periods beyond regular contract years
   rates: IndirectRates;
   escalationRates: EscalationRates;
 
@@ -137,6 +139,7 @@ const mapJobToPosition = (job: JobPosition, index: number): SpreadsheetPosition 
     wage_90th: job.wage_90th,
     selected_wage: selectedWage,
     hours_per_year: job.hours_per_year || { '1': job.hours || 1880 },
+    standard_fte_hours: job.standard_fte_hours,
     yearly_amounts: [],
     total_amount: 0,
     // GSA-specific fields
@@ -278,10 +281,23 @@ export const usePricingStore = create<PricingState>((set, get) => {
             totalAmount: dlAmount,
           };
         } else {
-          // BLS positions: Calculate with indirect rates
+          // BLS positions: Calculate with indirect rates and escalation
           // Use getEffectiveSalary to handle multi-select averaging
-          const wage = getEffectiveSalary(pos);
-          const dlRate = hours > 0 ? wage / hours : 0;
+          const baseWage = getEffectiveSalary(pos);
+
+          // Apply compound escalation for years after year 1
+          let wage = baseWage;
+          for (let y = 1; y < yearNum; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = state.escalationRates[escKey] || 0;
+            wage *= (1 + escRate);
+          }
+
+          // IMPORTANT: Calculate hourly rate using STANDARD FTE hours from contract, not actual hours
+          // This ensures consistent hourly rate for partial years (like 6-month extensions)
+          // Each contract defines its own standard FTE hours (1880, 1920, 2080, etc.)
+          const standardFTEHours = pos.standard_fte_hours!; // Always provided by jd_parser
+          const dlRate = wage / standardFTEHours;
           const dlAmount = dlRate * hours;
 
           const fringe = dlRate * state.rates.fringe;
@@ -296,7 +312,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
           const fee = (dlRate + fringe + oh + ga) * state.rates.fee;
           const feeAmount = fee * hours;
 
-          const fblr = dlRate + fringe + oh + ga + fee;
+          // FBLR = DL + Fringe + OH + G&A (WITHOUT Fee per Excel formulas)
+          const fblr = dlRate + fringe + oh + ga;
           const totalAmount = fblr * hours;
 
           breakdown[year] = {
@@ -469,6 +486,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           subcontractors: state.subcontractors,
           travel: state.travel,
           odcs: state.odcs,
+          extensions: state.extensions,
           rates: state.rates,
           escalation_rates: state.escalationRates,
           months_per_year: state.monthsPerYear,
@@ -515,6 +533,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
     subcontractors: [],
     travel: [],
     odcs: [],
+    extensions: [],
     rates: {} as IndirectRates,  // Will be populated from backend (org settings)
     escalationRates: {} as EscalationRates,  // Will be populated from backend (org settings)
     totalYears: 1,
@@ -562,14 +581,39 @@ export const usePricingStore = create<PricingState>((set, get) => {
         // Extract positions from jobs or spreadsheet_data
         let positions: SpreadsheetPosition[] = [];
 
+        // Get standard FTE hours from metadata (contract-level setting)
+        const standardFteHours = proposal.metadata?.fte_hours_threshold;
+
         if (proposal.spreadsheet_data?.positions) {
           positions = proposal.spreadsheet_data.positions;
+          // Apply standard_fte_hours from metadata to all positions
+          if (standardFteHours) {
+            positions = positions.map((pos) => ({
+              ...pos,
+              standard_fte_hours: standardFteHours
+            }));
+          }
         } else if (proposal.jobs && proposal.jobs.length > 0) {
-          positions = proposal.jobs.map((job, index) => mapJobToPosition(job, index));
+          positions = proposal.jobs.map((job, index) => {
+            const mappedPos = mapJobToPosition(job, index);
+            // Apply standard_fte_hours from metadata if not in job
+            if (standardFteHours && !mappedPos.standard_fte_hours) {
+              mappedPos.standard_fte_hours = standardFteHours;
+            }
+            return mappedPos;
+          });
         }
 
         // Generate default months if not provided
-        const totalYears = proposal.metadata?.total_years || 1;
+        let totalYears = proposal.metadata?.total_years || 1;
+
+        // If there are extensions, calculate actual total including them
+        const extensionsArray = proposal.spreadsheet_data?.extensions || [];
+        if (extensionsArray.length > 0) {
+          const maxExtensionYear = Math.max(...extensionsArray.map((ext: any) => ext.year));
+          totalYears = Math.max(totalYears, maxExtensionYear);
+        }
+
         const defaultMonthsPerYear: Record<string, number> = {};
         for (let i = 1; i <= totalYears; i++) {
           defaultMonthsPerYear[i.toString()] = 12;
@@ -598,6 +642,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           subcontractors: proposal.spreadsheet_data?.subcontractors || [],
           travel: proposal.spreadsheet_data?.travel || [],
           odcs: proposal.spreadsheet_data?.odcs || [],
+          extensions: proposal.spreadsheet_data?.extensions || [],
           rates: proposal.spreadsheet_data?.rates || proposal.rates,  // Try spreadsheet_data first, fallback to org defaults
           escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Try spreadsheet_data first
           totalYears,
@@ -620,6 +665,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           subcontractors: proposal.spreadsheet_data?.subcontractors || [],
           travel: proposal.spreadsheet_data?.travel || [],
           odcs: proposal.spreadsheet_data?.odcs || [],
+          extensions: proposal.spreadsheet_data?.extensions || [],
           rates: proposal.spreadsheet_data?.rates || proposal.rates,  // Try spreadsheet_data first, fallback to org defaults
           escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Try spreadsheet_data first
           totalYears,
@@ -803,6 +849,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
               subcontractors: get().subcontractors,
               travel: get().travel,
               odcs: get().odcs,
+              extensions: get().extensions,
               rates: get().rates,
               escalation_rates: get().escalationRates,
               months_per_year: get().monthsPerYear,
@@ -1009,7 +1056,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
             let totalSalary = 0;
             let totalHours = 0;
             let currentYearWage = baseWage;
-            const fteHours = p.standard_fte_hours || 1880;
+            const fteHours = p.standard_fte_hours!;
 
             for (let year = 1; year <= state.totalYears; year++) {
               const yearStr = year.toString();
@@ -1127,7 +1174,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
             wage_50th: p.wage_50th,
             wage_75th: p.wage_75th,
             wage_90th: p.wage_90th,
-            standard_fte_hours: p.standard_fte_hours || 1880,
+            standard_fte_hours: p.standard_fte_hours!,
           })),
           project_config: {
             solicitation_number: state.solicitationNumber || '',
@@ -1360,6 +1407,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         subcontractors: [],
         travel: [],
         odcs: [],
+        extensions: [],
         rates: {} as IndirectRates,  // Will be populated from backend (org settings)
         escalationRates: {} as EscalationRates,  // Will be populated from backend (org settings)
         totalYears: 1,

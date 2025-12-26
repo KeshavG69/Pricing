@@ -16,6 +16,7 @@ interface RatesReferencePanelProps {
   onUpdateRates: (rates: Partial<IndirectRates>) => void;
   onUpdateEscalationRates: (rates: Partial<EscalationRates>) => void;
   onRecalculate?: () => Promise<void>;
+  extensions?: Array<{ year: number; label: string }>;
 }
 
 export const RatesReferencePanel = ({
@@ -27,6 +28,7 @@ export const RatesReferencePanel = ({
   onUpdateRates,
   onUpdateEscalationRates,
   onRecalculate,
+  extensions = [],
 }: RatesReferencePanelProps) => {
   const toast = useToast();
   const { organization, fetchOrganization } = useOrganizationStore();
@@ -89,8 +91,17 @@ export const RatesReferencePanel = ({
   // Get escalation rate label
   const getEscalationLabel = (fromYear: number, toYear: number) => {
     if (fromYear === 0) return 'Base Period';
-    if (fromYear === 1 && toYear === 2) return 'Base → Option 1';
-    return `Option ${fromYear - 1} → ${toYear - 1}`;
+
+    // Check if toYear is an extension
+    const toExtension = extensions.find(ext => ext.year === toYear);
+
+    // Format fromYear label
+    const fromLabel = fromYear === 1 ? 'Base' : `Option ${fromYear - 1}`;
+
+    // Format toYear label
+    const toLabel = toExtension ? toExtension.label : (toYear === 2 ? 'Option 1' : `Option ${toYear - 1}`);
+
+    return `${fromLabel} → ${toLabel}`;
   };
 
   // Update rate handlers

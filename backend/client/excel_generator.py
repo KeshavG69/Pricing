@@ -210,8 +210,9 @@ class ExcelGenerator:
         # Row 7: Year column headers (DYNAMIC)
         ws.cell(7, 4, "Total for All Years")  # Column D
 
-        # Get months_per_year
+        # Get months_per_year and extensions
         months_per_year = project_data.get('months_per_year', {})
+        extensions = project_data.get('extensions', [])
 
         # Base Period - starts at column 7 (G) to align with Rate column
         col_offset = 7  # Column G
@@ -230,6 +231,12 @@ class ExcelGenerator:
                 option_label += f" ({option_months} mo)"
             ws.cell(7, col_offset, option_label)
 
+        # Extension periods (after regular years)
+        for extension in extensions:
+            col_offset += 3  # Each extension takes 3 columns
+            extension_label = extension.get('label', f"{extension.get('duration_months', 6)} Month Extension")
+            ws.cell(7, col_offset, extension_label)
+
         # Row 8: Sub-headers (also dynamic)
         ws.cell(8, 1, "Cost Elements")
         ws.cell(8, 2, "Company Labor Category")
@@ -246,8 +253,16 @@ class ExcelGenerator:
             ws.cell(8, col_offset + 2, "Amount")
             col_offset += 3
 
-        # Averaged FBLR columns (after all year columns)
-        avg_fblr_start_col = 7 + (total_years * 3)
+        # For each extension: Rate, Hours, Amount
+        for extension in extensions:
+            ws.cell(8, col_offset, "Rate")
+            ws.cell(8, col_offset + 1, "Hours")
+            ws.cell(8, col_offset + 2, "Amount")
+            col_offset += 3
+
+        # Averaged FBLR columns (after all year columns + extensions)
+        num_extensions = len(extensions)
+        avg_fblr_start_col = 7 + (total_years * 3) + (num_extensions * 3)
         ws.cell(7, avg_fblr_start_col, "Averaged FBLR")
         # Merge cells for averaged FBLR header (spans 6 columns)
         ws.merge_cells(

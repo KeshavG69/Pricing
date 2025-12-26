@@ -3,13 +3,14 @@
 import { useMemo, useState } from 'react';
 import { DataGrid } from 'react-data-grid';
 import type { Column } from 'react-data-grid';
-import { TravelItem } from '@/types';
+import { TravelItem, Extension } from '@/types';
 import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
 
 interface TravelSectionProps {
   travel: TravelItem[];
   totalYears: number;
+  extensions: Extension[];  // Extension periods beyond regular years
   gaRate: number; // G&A rate to apply to travel
   onAdd: () => void;
   onEdit: (travel: TravelItem) => void;
@@ -28,6 +29,7 @@ interface TravelRow {
 export const TravelSection = ({
   travel,
   totalYears,
+  extensions,
   gaRate,
   onAdd,
   onEdit,
@@ -173,10 +175,15 @@ export const TravelSection = ({
       },
     ];
 
-    // Add year columns
+    // Add year columns (including extensions)
     for (let year = 1; year <= totalYears; year++) {
       const yearStr = year.toString();
-      const label = year === 1 ? 'Base Period' : `Option Year ${year - 1}`;
+
+      // Check if this year is an extension
+      const extension = extensions.find(ext => ext.year === year);
+      const label = extension
+        ? extension.label
+        : (year === 1 ? 'Base Period' : `Option Year ${year - 1}`);
 
       cols.push({
         key: `year${year}`,
@@ -301,7 +308,7 @@ export const TravelSection = ({
     });
 
     return cols;
-  }, [totalYears, onEdit]);
+  }, [totalYears, extensions, onEdit]);
 
   const handleConfirmDelete = (id: string) => {
     onDelete(id);

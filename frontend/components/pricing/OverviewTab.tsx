@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { usePricingStore } from '@/lib/stores/pricingStore';
+import { getEffectiveSalary, isGSAPosition, getGSARateForYear } from '@/lib/utils/salaryHelpers';
 import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 // Metric Card Component
 function MetricCard({
@@ -70,6 +71,7 @@ export default function OverviewTab() {
     rates,
     escalationRates,
     totalYears,
+    extensions,
   } = usePricingStore();
 
   // Calculate all costs with FBLR breakdown
@@ -82,51 +84,57 @@ export default function OverviewTab() {
     let primeLaborTotal = 0;
 
     positions.forEach((pos) => {
-      // Get base wage
-      const baseWage = pos.wage_source === 'gsa'
-        ? (pos.gsa_rates_by_year?.['1'] || 0)
-        : (pos.selected_wage || 0);
+      const isGSA = isGSAPosition(pos);
 
       Object.entries(pos.hours_per_year).forEach(([yearStr, hours]) => {
         const yearNum = parseInt(yearStr);
 
-        // Calculate wage with escalation
-        let wage = baseWage;
-        if (pos.wage_source === 'gsa' && pos.gsa_rates_by_year) {
-          // GSA positions have rates per year
-          wage = pos.gsa_rates_by_year[yearStr] || baseWage;
+        if (isGSA) {
+          // GSA positions: Use GSA rate directly, NO indirect rates
+          // GSA rates are "fully burdened" and already include all indirect costs
+          const gsaRate = getGSARateForYear(pos, yearNum);
+          const dlAmount = gsaRate * hours;
+
+          directLaborTotal += dlAmount;
+          primeLaborTotal += dlAmount;
+          // No fringe, OH, G&A for GSA positions
         } else {
-          // BLS positions use escalation
+          // BLS positions: Calculate with indirect rates and escalation
+          // Use getEffectiveSalary to handle multi-select wage averaging
+          const baseWage = getEffectiveSalary(pos);
+
+          // Apply compound escalation for years after year 1
+          let wage = baseWage;
           for (let y = 1; y < yearNum; y++) {
             const escKey = `${y}_to_${y + 1}`;
             const escRate = escalationRates[escKey] || 0;
             wage *= (1 + escRate);
           }
+
+          // IMPORTANT: Calculate hourly rate using STANDARD FTE hours from contract, not actual hours
+          // This ensures consistent hourly rate for partial years (like 6-month extensions)
+          const dlRate = wage / pos.standard_fte_hours!;
+          const dlAmount = dlRate * hours;
+
+          const fringe = dlRate * rates.fringe;
+          const fringeAmount = fringe * hours;
+
+          const oh = (dlRate + fringe) * rates.oh;
+          const ohAmount = oh * hours;
+
+          const ga = (dlRate + fringe + oh) * rates.ga;
+          const gaAmount = ga * hours;
+
+          // FBLR = DL + Fringe + OH + G&A (WITHOUT Fee, per Excel formulas)
+          const fblr = dlRate + fringe + oh + ga;
+          const totalAmount = fblr * hours;
+
+          directLaborTotal += dlAmount;
+          fringeTotal += fringeAmount;
+          ohTotal += ohAmount;
+          gaTotal += gaAmount;
+          primeLaborTotal += totalAmount;
         }
-
-        const dlRate = wage / (hours || 2080);
-        const dlAmount = dlRate * hours;
-
-        const fringe = dlRate * rates.fringe;
-        const fringeAmount = fringe * hours;
-
-        const oh = (dlRate + fringe) * rates.oh;
-        const ohAmount = oh * hours;
-
-        const ga = (dlRate + fringe + oh) * rates.ga;
-        const gaAmount = ga * hours;
-
-        const fee = (dlRate + fringe + oh + ga) * rates.fee;
-        const feeAmount = fee * hours;
-
-        const fblr = dlRate + fringe + oh + ga + fee;
-        const totalAmount = fblr * hours;
-
-        directLaborTotal += dlAmount;
-        fringeTotal += fringeAmount;
-        ohTotal += ohAmount;
-        gaTotal += gaAmount;
-        primeLaborTotal += totalAmount;
       });
     });
 
@@ -144,7 +152,8 @@ export default function OverviewTab() {
     // Passthrough costs (S&MH + G&A on sub labor)
     const passthroughTotal = subcontractorTotal * ((rates.smh || 0) + (rates.ga_passthrough || 0));
 
-    // Fee costs (separate for prime vs sub)
+    // Fee calculation (separate from FBLR per Excel formulas)
+    // Fee is applied to Prime Labor total (DL+Fringe+OH+G&A) and Sub Labor total
     const primeFee = primeLaborTotal * rates.fee;
     const subFee = subcontractorTotal * (rates.sub_fee || 0);
     const feeTotal = primeFee + subFee;
@@ -167,8 +176,8 @@ export default function OverviewTab() {
       });
     });
 
-    // Grand total
-    const grandTotal = primeLaborTotal + subcontractorTotal + passthroughTotal + feeTotal + travelTotal + odcTotal;
+    // Grand total (per Excel: Prime Labor + Fee + Sub + Passthrough + Travel + ODCs)
+    const grandTotal = primeLaborTotal + feeTotal + subcontractorTotal + passthroughTotal + travelTotal + odcTotal;
 
     return {
       directLaborTotal,
@@ -218,42 +227,51 @@ export default function OverviewTab() {
 
     // Prime labor components by year (DL, Fringe, OH, G&A) - calculate directly from positions
     positions.forEach((pos) => {
-      const baseWage = pos.wage_source === 'gsa'
-        ? (pos.gsa_rates_by_year?.['1'] || 0)
-        : (pos.selected_wage || 0);
+      const isGSA = pos.wage_source === 'gsa';
 
       Object.entries(pos.hours_per_year).forEach(([yearStr, hours]) => {
         const yearNum = parseInt(yearStr);
         if (!breakdown[yearStr]) return;
 
-        // Calculate wage with escalation
-        let wage = baseWage;
-        if (pos.wage_source === 'gsa' && pos.gsa_rates_by_year) {
-          wage = pos.gsa_rates_by_year[yearStr] || baseWage;
+        if (isGSA) {
+          // GSA positions: Use GSA rate directly, NO indirect rates
+          const gsaRate = pos.gsa_rates_by_year?.[yearStr] || 0;
+          const dlAmount = gsaRate * hours;
+
+          breakdown[yearStr].directLabor += dlAmount;
+          // No fringe, OH, G&A for GSA positions
         } else {
+          // BLS positions: Calculate with indirect rates and escalation
+          // Use getEffectiveSalary to handle multi-select wage averaging
+          const baseWage = getEffectiveSalary(pos);
+
+          // Apply compound escalation for years after year 1
+          let wage = baseWage;
           for (let y = 1; y < yearNum; y++) {
             const escKey = `${y}_to_${y + 1}`;
             const escRate = escalationRates[escKey] || 0;
             wage *= (1 + escRate);
           }
+
+          // IMPORTANT: Calculate hourly rate using STANDARD FTE hours from contract, not actual hours
+          // This ensures consistent hourly rate for partial years (like 6-month extensions)
+          const dlRate = wage / pos.standard_fte_hours!;
+          const dlAmount = dlRate * hours;
+
+          const fringe = dlRate * rates.fringe;
+          const fringeAmount = fringe * hours;
+
+          const oh = (dlRate + fringe) * rates.oh;
+          const ohAmount = oh * hours;
+
+          const ga = (dlRate + fringe + oh) * rates.ga;
+          const gaAmount = ga * hours;
+
+          breakdown[yearStr].directLabor += dlAmount;
+          breakdown[yearStr].fringe += fringeAmount;
+          breakdown[yearStr].oh += ohAmount;
+          breakdown[yearStr].ga += gaAmount;
         }
-
-        const dlRate = wage / (hours || 2080);
-        const dlAmount = dlRate * hours;
-
-        const fringe = dlRate * rates.fringe;
-        const fringeAmount = fringe * hours;
-
-        const oh = (dlRate + fringe) * rates.oh;
-        const ohAmount = oh * hours;
-
-        const ga = (dlRate + fringe + oh) * rates.ga;
-        const gaAmount = ga * hours;
-
-        breakdown[yearStr].directLabor += dlAmount;
-        breakdown[yearStr].fringe += fringeAmount;
-        breakdown[yearStr].oh += ohAmount;
-        breakdown[yearStr].ga += gaAmount;
       });
     });
 
@@ -452,9 +470,16 @@ export default function OverviewTab() {
                 </tr>
               </thead>
               <tbody>
-                {Object.entries(yearBreakdown).map(([year, data]) => (
-                  <tr key={year} className="border-b border-border hover:bg-muted/20">
-                    <td className="py-3 px-4 text-sm font-medium text-foreground">Year {year}</td>
+                {Object.entries(yearBreakdown).map(([year, data]) => {
+                  const yearNum = parseInt(year);
+                  const extension = extensions.find(ext => ext.year === yearNum);
+                  const yearLabel = extension
+                    ? extension.label
+                    : (yearNum === 1 ? 'Base Period' : `Option Year ${yearNum - 1}`);
+
+                  return (
+                    <tr key={year} className="border-b border-border hover:bg-muted/20">
+                      <td className="py-3 px-4 text-sm font-medium text-foreground">{yearLabel}</td>
                     <td className="py-3 px-4 text-sm text-right text-muted-foreground">
                       {formatCurrency(data.directLabor)}
                     </td>
@@ -490,7 +515,8 @@ export default function OverviewTab() {
                       {formatCurrency(data.total)}
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
                 {/* Total Row */}
                 <tr className="bg-muted/50 font-semibold">
                   <td className="py-3 px-4 text-sm text-foreground">Total</td>

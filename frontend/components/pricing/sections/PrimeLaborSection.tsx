@@ -5,7 +5,7 @@ import { DataGrid } from 'react-data-grid';
 import type { Column } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
-import { AdvancedPosition, IndirectRates, EscalationRates, GridRow, BreakdownType, ContextMenuItem } from '@/types';
+import { AdvancedPosition, IndirectRates, EscalationRates, Extension, GridRow, BreakdownType, ContextMenuItem } from '@/types';
 import { ChevronDown, ChevronRight, Trash2, MoreVertical, Plus } from 'lucide-react';
 import { ContextMenu } from '@/components/ui/ContextMenu';
 import { SalaryContextMenu } from '@/components/pricing/SalaryContextMenu';
@@ -65,8 +65,8 @@ const calculateAveragedFBLR = (
   let totalHours = 0;
   let currentYearWage = baseWage;
 
-  // Get FTE hours (fallback to 1880)
-  const fteHours = position.standard_fte_hours || 1880;
+  // Get FTE hours (always provided by jd_parser)
+  const fteHours = position.standard_fte_hours!;
 
   for (let year = 1; year <= totalYears; year++) {
     const yearStr = year.toString();
@@ -97,12 +97,12 @@ const calculateAveragedFBLR = (
   // Calculate averaged DL rate
   const dlRate = totalSalary / totalHours;
 
-  // Apply FBLR cascade
+  // Apply FBLR cascade (WITHOUT Fee per Excel formulas)
   const fringe = dlRate * rates.fringe;
   const oh = (dlRate + fringe) * rates.oh;
   const ga = (dlRate + fringe + oh) * rates.ga;
   const fee = (dlRate + fringe + oh + ga) * rates.fee;
-  const fblr = dlRate + fringe + oh + ga + fee;
+  const fblr = dlRate + fringe + oh + ga;  // FBLR without fee
 
   return { dlRate, fringe, oh, ga, fee, fblr, isGSA: false };
 };
@@ -112,6 +112,7 @@ interface PrimeLaborSectionProps {
   rates: IndirectRates;
   escalationRates: EscalationRates;
   totalYears: number;
+  extensions: Extension[];  // Extension periods beyond regular years
   expandedPositions: Set<string>;
   manualOverrides: Map<string, Set<string>>;
   onToggleExpand: (positionId: string) => void;
@@ -126,6 +127,7 @@ export const PrimeLaborSection = ({
   rates,
   escalationRates,
   totalYears,
+  extensions,
   expandedPositions,
   manualOverrides,
   onToggleExpand,
@@ -624,7 +626,12 @@ export const PrimeLaborSection = ({
     // Add year-based columns (Rate, Hours, Amount triplets)
     for (let year = 1; year <= totalYears; year++) {
       const yearStr = year.toString();
-      const label = year === 1 ? 'Base Period' : `Option Year ${year - 1}`;
+
+      // Check if this year is an extension
+      const extension = extensions.find(ext => ext.year === year);
+      const label = extension
+        ? extension.label
+        : (year === 1 ? 'Base Period' : `Option Year ${year - 1}`);
 
       // Rate column
       cols.push({

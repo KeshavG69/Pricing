@@ -695,8 +695,111 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> Dict[str, a
         print(f"✓ Extracted {len(all_odcs)} ODC items")
     print()
 
+    # Detect and extract extension periods
+    # Extensions are years beyond the regular contract period (base + options)
+    extensions = []
+    total_years_from_metadata = df['total_years'].iloc[0] if not df.empty and 'total_years' in df.columns else 0
+
+    if total_years_from_metadata > 0:
+        # Collect all years that have data
+        years_with_data = set()
+
+        # Check travel items
+        for travel in all_travel:
+            if travel.get("amount_per_year"):
+                for year_str in travel["amount_per_year"].keys():
+                    if year_str.isdigit():
+                        years_with_data.add(int(year_str))
+
+        # Check ODC items
+        for odc in all_odcs:
+            if odc.get("amount_per_year"):
+                for year_str in odc["amount_per_year"].keys():
+                    if year_str.isdigit():
+                        years_with_data.add(int(year_str))
+
+        # Check position hours_per_year
+        for jd in all_jds:
+            if jd.hours_per_year:
+                for year_str in jd.hours_per_year.keys():
+                    if year_str.isdigit():
+                        years_with_data.add(int(year_str))
+
+        # Find extension years (years beyond total_years)
+        extension_years = sorted([y for y in years_with_data if y > total_years_from_metadata])
+
+        if extension_years:
+            print(f"⚠️  Detected extension periods beyond year {total_years_from_metadata}: {extension_years}")
+
+            for ext_year in extension_years:
+                ext_year_str = str(ext_year)
+
+                # Try to determine duration from description or default to 6 months
+                duration_months = 6  # Default
+                description_parts = []
+
+                # Check travel descriptions for duration hints
+                for travel in all_travel:
+                    if ext_year_str in travel.get("amount_per_year", {}):
+                        desc = travel.get("description", "")
+                        if desc and "month" in desc.lower():
+                            description_parts.append(desc)
+                            # Try to extract month count (e.g., "6-Month" -> 6)
+                            import re
+                            month_match = re.search(r'(\d+)[\s-]*month', desc, re.IGNORECASE)
+                            if month_match:
+                                duration_months = int(month_match.group(1))
+
+                # Create extension entry
+                extension = {
+                    "year": ext_year,
+                    "label": f"{duration_months} Month Extension" if duration_months != 12 else "12 Month Extension",
+                    "duration_months": duration_months,
+                    "description": " / ".join(description_parts) if description_parts else f"Extension Period {ext_year}"
+                }
+                extensions.append(extension)
+                print(f"   Extension {ext_year}: {extension['label']}")
+
+    # Add extension hours to positions and update months_per_year
+    if extensions and not df.empty:
+        print(f"\n⚙️  Adding extension hours to positions...")
+
+        # Get the standard FTE hours (default to 1920 if not set)
+        standard_fte_hours = df['standard_fte_hours'].iloc[0] if 'standard_fte_hours' in df.columns else 1920
+
+        # Update months_per_year for each extension
+        for ext in extensions:
+            ext_year = ext['year']
+            ext_months = ext['duration_months']
+
+            # Update months_per_year column for all rows
+            for idx in df.index:
+                months_dict = df.at[idx, 'months_per_year']
+                if months_dict is None:
+                    months_dict = {}
+                    df.at[idx, 'months_per_year'] = months_dict
+
+                # Add extension month duration
+                months_dict[str(ext_year)] = ext_months
+                df.at[idx, 'months_per_year'] = months_dict
+
+            # Calculate prorated hours for extension period
+            # For 6 months: (6/12) * standard_fte_hours = 960 hours
+            prorated_hours = int((ext_months / 12) * standard_fte_hours)
+
+            print(f"   Year {ext_year} ({ext_months} months): Adding {prorated_hours} hours to each position")
+
+            # Add extension year hours to each position's hours_per_year
+            for idx in df.index:
+                hours_per_year = df.loc[idx, 'hours_per_year']
+                if hours_per_year and isinstance(hours_per_year, dict):
+                    # Add prorated hours for extension year
+                    hours_per_year[str(ext_year)] = prorated_hours
+                    df.at[idx, 'hours_per_year'] = hours_per_year
+
     return {
         "df": df,
         "travel": all_travel,
-        "odcs": all_odcs
+        "odcs": all_odcs,
+        "extensions": extensions  # New field
     }
