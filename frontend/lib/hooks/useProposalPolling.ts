@@ -32,8 +32,14 @@ export function useProposalPolling(proposalId: string | null, interval = 10000) 
           setIsPolling(false);
         }
       } catch (err: any) {
-        setError(err.response?.data?.detail || err.message || 'Failed to fetch status');
-        setIsPolling(false);
+        // Only stop polling and show error if it's from backend
+        // Network errors are silently ignored - we continue polling
+        if (err.response) {
+          // Backend error (4xx, 5xx) - stop polling and show error
+          setError('backend: ' + (err.response?.data?.detail || 'Failed to fetch status'));
+          setIsPolling(false);
+        }
+        // Network errors (timeout, connection) - keep polling
       }
     };
 
@@ -52,9 +58,16 @@ export function useProposalPolling(proposalId: string | null, interval = 10000) 
           setIsPolling(false);
         }
       } catch (err: any) {
-        setError(err.response?.data?.detail || err.message || 'Failed to fetch status');
-        clearInterval(pollInterval);
-        setIsPolling(false);
+        // Only stop polling and show error if it's from backend
+        // Network errors are silently ignored - we continue polling
+        if (err.response) {
+          // Backend error (4xx, 5xx) - stop polling and show error
+          setError('backend: ' + (err.response?.data?.detail || 'Failed to fetch status'));
+          clearInterval(pollInterval);
+          setIsPolling(false);
+        }
+        // Network errors (timeout, connection) - keep polling
+        // This ensures we keep trying even if there's a temporary network issue
       }
     }, interval);
 
