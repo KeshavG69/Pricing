@@ -269,11 +269,11 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
   }, [primeLaborByYear, subcontractorCostsByYear, passthroughByYear, feeByYear, travelCostsByYear, odcCostsByYear]);
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-1">
       {/* Header with mode indicator - only show in advanced mode */}
       {isAdvancedMode && (
-        <div className="flex justify-end items-center mb-2 px-6">
-          <div className="text-xs font-medium text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 flex items-center">
+        <div className="flex justify-end items-center mb-1 px-6">
+          <div className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 flex items-center">
             <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-2 animate-pulse" />
             Advanced Mode Active
           </div>
@@ -295,6 +295,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
 
       {/* Prime Labor Section */}
       <PrimeLaborSection
+        key={`${rates.fringe}-${rates.oh}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}`}
         positions={positionsAdvanced}
         rates={rates}
         escalationRates={escalationRates}
@@ -339,27 +340,31 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
         extensions={extensions}
       />
 
-      {/* Travel Section - SEPARATE from ODCs, uses G&A Rate */}
-      <TravelSection
-        travel={travel}
-        totalYears={totalYears}
-        extensions={extensions}
-        gaRate={rates.ga}
-        onAdd={handleAddTravel}
-        onEdit={handleEditTravel}
-        onDelete={deleteTravel}
-      />
+      {/* Travel Section - SEPARATE from ODCs, uses G&A Rate - Only show if travel items exist */}
+      {travel.length > 0 && (
+        <TravelSection
+          travel={travel}
+          totalYears={totalYears}
+          extensions={extensions}
+          gaRate={rates.ga}
+          onAdd={handleAddTravel}
+          onEdit={handleEditTravel}
+          onDelete={deleteTravel}
+        />
+      )}
 
-      {/* ODC Section - Materials, Equipment, etc., uses SMH Rate */}
-      <ODCSection
-        odcs={odcs}
-        totalYears={totalYears}
-        extensions={extensions}
-        smhRate={rates.smh || 0}
-        onAdd={handleAddODC}
-        onEdit={handleEditODC}
-        onDelete={deleteODC}
-      />
+      {/* ODC Section - Materials, Equipment, etc., uses SMH Rate - Only show if ODC items exist */}
+      {odcs.length > 0 && (
+        <ODCSection
+          odcs={odcs}
+          totalYears={totalYears}
+          extensions={extensions}
+          smhRate={rates.smh || 0}
+          onAdd={handleAddODC}
+          onEdit={handleEditODC}
+          onDelete={deleteODC}
+        />
+      )}
 
           {/* Grand Total */}
           <GrandTotalSection
