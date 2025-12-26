@@ -134,11 +134,12 @@ async def process_proposal_documents(
             {"status": "processing", "progress": 0, "message": "Parsing documents..."}
         )
 
-        # Step 1: Parse documents to DataFrame, Travel, and ODCs
+        # Step 1: Parse documents to DataFrame, Travel, ODCs, and Extensions
         parse_result = await parse_documents_to_dataframe(file_paths)
         df = parse_result["df"]
         extracted_travel = parse_result.get("travel", [])
         extracted_odcs = parse_result.get("odcs", [])
+        extracted_extensions = parse_result.get("extensions", [])
 
         crud.update_proposal(
             proposal_id,
@@ -266,7 +267,8 @@ async def process_proposal_documents(
                 "escalation_rates": escalation_rates,
                 "spreadsheet_data": {
                     "travel": extracted_travel,
-                    "odcs": extracted_odcs
+                    "odcs": extracted_odcs,
+                    "extensions": extracted_extensions
                 }
             }
         )

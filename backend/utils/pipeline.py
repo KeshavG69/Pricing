@@ -433,7 +433,9 @@ def build_project_data_from_dataframe(
         'subcontractors': subcontractors,
         'passthrough_rates': project_config['passthrough_rates'],
         'fee_rates': project_config['fee_rates'],
+        'travel': project_config.get('travel', []),
         'odcs': project_config.get('odcs', []),
+        'extensions': project_config.get('extensions', []),
         'ga_adder_rate': project_config['ga_adder_rate']
     }
 

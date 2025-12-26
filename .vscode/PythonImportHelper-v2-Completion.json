@@ -2559,6 +2559,14 @@
         "documentation": {}
     },
     {
+        "label": "parse_documents_to_dataframe",
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "isExtraImport": true,
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
         "label": "Pinecone",
         "importPath": "pinecone",
         "description": "pinecone",
@@ -3955,7 +3963,7 @@
         "kind": 6,
         "importPath": "backend.client.calculation_service",
         "description": "backend.client.calculation_service",
-        "peekOfCode": "class Calculator:\n    \"\"\"\n    Pure calculation methods for multi-year pricing.\n    All methods are static - no state maintained.\n    \"\"\"\n    @staticmethod\n    def calculate_fblr(\n        annual_wage: float,\n        hours: int,\n        fringe_rate: float,",
+        "peekOfCode": "class Calculator:\n    \"\"\"\n    Pure calculation methods for multi-year pricing.\n    All methods are static - no state maintained.\n    \"\"\"\n    @staticmethod\n    def calculate_fblr(\n        annual_wage: float,\n        standard_fte_hours: int,\n        fringe_rate: float,",
         "detail": "backend.client.calculation_service",
         "documentation": {}
     },

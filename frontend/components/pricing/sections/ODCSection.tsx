@@ -3,13 +3,14 @@
 import { useMemo, useState } from 'react';
 import { DataGrid } from 'react-data-grid';
 import type { Column } from 'react-data-grid';
-import { ODCItem } from '@/types';
+import { ODCItem, Extension } from '@/types';
 import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
 
 interface ODCSectionProps {
   odcs: ODCItem[];
   totalYears: number;
+  extensions: Extension[];  // Extension periods beyond regular years
   smhRate: number; // S&MH rate to apply to ODCs
   onAdd: () => void;
   onEdit: (odc: ODCItem) => void;
@@ -29,6 +30,7 @@ interface ODCRow {
 export const ODCSection = ({
   odcs,
   totalYears,
+  extensions,
   smhRate,
   onAdd,
   onEdit,
@@ -199,10 +201,15 @@ export const ODCSection = ({
       },
     ];
 
-    // Add year columns
+    // Add year columns (including extensions)
     for (let year = 1; year <= totalYears; year++) {
       const yearStr = year.toString();
-      const label = year === 1 ? 'Base Period' : `Option Year ${year - 1}`;
+
+      // Check if this year is an extension
+      const extension = extensions.find(ext => ext.year === year);
+      const label = extension
+        ? extension.label
+        : (year === 1 ? 'Base Period' : `Option Year ${year - 1}`);
 
       cols.push({
         key: `year${year}`,
@@ -327,7 +334,7 @@ export const ODCSection = ({
     });
 
     return cols;
-  }, [totalYears, onEdit]);
+  }, [totalYears, extensions, onEdit]);
 
   const handleConfirmDelete = (id: string) => {
     onDelete(id);
