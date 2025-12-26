@@ -24,6 +24,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     subcontractors,
     travel,
     odcs,
+    extensions,
     rates,
     escalationRates,
     totalYears,
@@ -177,7 +178,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     return result;
   }, [subcontractorCostsByYear, rates]);
 
-  // Calculate fee costs by year
+  // Calculate fee costs by year (per Excel: Fee applied to Prime Labor + Sub Labor separately)
   const feeByYear = useMemo(() => {
     const result: Record<string, number> = {};
     const allYears = new Set([
@@ -289,6 +290,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
         onUpdateRates={updateRates}
         onUpdateEscalationRates={updateEscalationRates}
         onRecalculate={recalculate}
+        extensions={extensions}
       />
 
       {/* Prime Labor Section */}
@@ -297,6 +299,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
         rates={rates}
         escalationRates={escalationRates}
         totalYears={totalYears}
+        extensions={extensions}
         expandedPositions={expandedPositions}
         manualOverrides={manualOverrides}
         onToggleExpand={togglePositionExpansion}
@@ -310,6 +313,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
       <PrimeLaborAggregatesSection
         aggregates={aggregates}
         totalYears={totalYears}
+        extensions={extensions}
       />
 
       {/* Passthrough Section */}
@@ -320,6 +324,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
           ga_passthrough: rates.ga_passthrough || 0,
         }}
         totalYears={totalYears}
+        extensions={extensions}
       />
 
       {/* Fee Section */}
@@ -331,12 +336,14 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
           sub_labor: rates.sub_fee || 0,
         }}
         totalYears={totalYears}
+        extensions={extensions}
       />
 
       {/* Travel Section - SEPARATE from ODCs, uses G&A Rate */}
       <TravelSection
         travel={travel}
         totalYears={totalYears}
+        extensions={extensions}
         gaRate={rates.ga}
         onAdd={handleAddTravel}
         onEdit={handleEditTravel}
@@ -347,6 +354,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
       <ODCSection
         odcs={odcs}
         totalYears={totalYears}
+        extensions={extensions}
         smhRate={rates.smh || 0}
         onAdd={handleAddODC}
         onEdit={handleEditODC}
@@ -363,6 +371,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
             travelByYear={travelCostsByYear}
             odcByYear={odcCostsByYear}
             totalYears={totalYears}
+            extensions={extensions}
           />
 
       {/* Travel Form Modal */}

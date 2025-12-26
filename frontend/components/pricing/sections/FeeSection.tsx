@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { DataGrid } from 'react-data-grid';
 import type { Column } from 'react-data-grid';
+import type { Extension } from '@/types';
 import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
 
@@ -11,6 +12,7 @@ interface FeeSectionProps {
   subLaborByYear: Record<string, number>;
   feeRates: { prime_labor: number; sub_labor: number };
   totalYears: number;
+  extensions?: Extension[];
 }
 
 interface FeeRow {
@@ -25,6 +27,7 @@ export const FeeSection = ({
   subLaborByYear,
   feeRates,
   totalYears,
+  extensions = [],
 }: FeeSectionProps) => {
   // Format currency
   const formatCurrency = (value: number) => {
@@ -143,10 +146,15 @@ export const FeeSection = ({
       },
     ];
 
-    // Add year-based columns
+    // Add year-based columns (including extensions)
     for (let year = 1; year <= totalYears; year++) {
       const yearStr = year.toString();
-      const label = year === 1 ? 'Base Period' : `Option Year ${year - 1}`;
+
+      // Check if this year is an extension
+      const extension = extensions.find(ext => ext.year === year);
+      const label = extension
+        ? extension.label
+        : (year === 1 ? 'Base Period' : `Option Year ${year - 1}`);
 
       cols.push({
         key: `year${year}`,
@@ -213,7 +221,7 @@ export const FeeSection = ({
     });
 
     return cols;
-  }, [totalYears, feeByYear, totals]);
+  }, [totalYears, extensions, feeByYear, totals]);
 
   return (
     <div className="space-y-4">

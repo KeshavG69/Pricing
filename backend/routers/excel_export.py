@@ -77,6 +77,12 @@ class ProjectConfig(BaseModel):
         description="List of ODCs (NOT Travel) with category, amount, escalate flag, and apply_adder flag. Uses SMH Rate."
     )
 
+    # Extension periods (beyond regular contract years)
+    extensions: List[Dict[str, Any]] = Field(
+        default_factory=list,
+        description="List of extension periods with year, label, and duration_months"
+    )
+
     # Optional settings
     include_rate_table: bool = Field(
         default=True,
@@ -217,10 +223,12 @@ async def generate_excel_from_documents(
                 f.write(content)
             file_paths.append(str(file_path))
 
-        # Step 1: Parse documents to DataFrame and ODCs
+        # Step 1: Parse documents to DataFrame, Travel, ODCs, and Extensions
         parse_result = await parse_documents_to_dataframe(file_paths)
         df = parse_result["df"]
-        # extracted_odcs = parse_result.get("odcs", [])  # TODO: Use in Excel export
+        extracted_travel = parse_result.get("travel", [])
+        extracted_odcs = parse_result.get("odcs", [])
+        extracted_extensions = parse_result.get("extensions", [])
 
         if len(df) == 0:
             raise HTTPException(
@@ -264,7 +272,9 @@ async def generate_excel_from_documents(
             },
             'ga_adder_rate': 0.2212,
             'subcontractors': [],
-            'odcs': []
+            'travel': extracted_travel,
+            'odcs': extracted_odcs,
+            'extensions': extracted_extensions
         }
 
         # Step 4: Build project data structure

@@ -216,11 +216,14 @@ async def recalculate_spreadsheet(request: Dict[str, Any]):
             for year in range(1, total_years + 1):
                 hours_per_year[str(year)] = pos.get(f"year{year}_hours", 1880)
 
+            # Get standard FTE hours from position (provided by jd_parser)
+            standard_fte_hours = pos.get("standard_fte_hours", 1880)
+
             # Calculate Year 1 FBLR
             year_1_hours = hours_per_year.get("1", 1880)
 
-            # Skip positions with invalid wages or zero hours (prevents division by zero)
-            if base_wage <= 0 or year_1_hours <= 0:
+            # Skip positions with invalid wages
+            if base_wage <= 0:
                 results.append({
                     "id": pos.get("id"),
                     "years": [],
@@ -230,7 +233,7 @@ async def recalculate_spreadsheet(request: Dict[str, Any]):
                 continue
             fblr_breakdown = Calculator.calculate_fblr(
                 annual_wage=base_wage,
-                hours=year_1_hours,
+                standard_fte_hours=standard_fte_hours,  # Use standard FTE hours, not actual year hours
                 fringe_rate=rates.get("fringe", 0.247),
                 oh_rate=rates.get("oh", 0.0711),
                 ga_rate=rates.get("ga", 0.2243)
