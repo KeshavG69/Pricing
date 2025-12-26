@@ -147,6 +147,7 @@ export interface ProposalMetadata {
   total_years?: number;
   total_jobs?: number;
   months_per_year?: Record<string, number>;
+  fte_hours_threshold?: number;
 }
 
 export interface Proposal {
@@ -203,6 +204,7 @@ export interface JobPosition {
   location?: string;
   hours?: number;
   hours_per_year?: Record<string, number>;
+  standard_fte_hours?: number;  // Standard full-time hours from contract
   soc_code?: string;
   soc_title?: string;
   bls_occupation_description?: string;
@@ -318,6 +320,14 @@ export interface ODCItem {
   amount_per_year: Record<string, number>;  // Base amounts per year
   escalate: boolean;  // Whether to escalate year-over-year
   // S&MH (Subcontract & Material Handling) is applied to ODCs, NOT G&A
+}
+
+// Extension periods (beyond regular contract years)
+export interface Extension {
+  year: number;  // Year number (e.g., 6 if extension is after 5 regular years)
+  label: string;  // Display label (e.g., "6 Month Extension", "12 Month Extension")
+  duration_months: number;  // Duration in months (e.g., 6, 12)
+  description?: string;  // Optional description
 }
 
 // Advanced Analysis Mode types

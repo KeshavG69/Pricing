@@ -22,7 +22,7 @@ class Calculator:
     @staticmethod
     def calculate_fblr(
         annual_wage: float,
-        hours: int,
+        standard_fte_hours: int,
         fringe_rate: float,
         oh_rate: float,
         ga_rate: float
@@ -31,15 +31,18 @@ class Calculator:
         Calculate Fully Burdened Labor Rate from annual wage.
 
         Applies wrap rates in sequence:
-        1. DL (Direct Labor) = annual_wage / hours
+        1. DL (Direct Labor) = annual_wage / standard_fte_hours
         2. Fringe = DL × fringe_rate
         3. OH (Overhead) = (DL + Fringe) × oh_rate
         4. G&A (General & Administrative) = (DL + Fringe + OH) × ga_rate
         5. FBLR = DL + Fringe + OH + G&A
 
+        IMPORTANT: Uses STANDARD FTE hours from contract to calculate hourly rate.
+        This ensures consistent rate across all periods, including partial years (extensions).
+
         Args:
             annual_wage: Annual salary in dollars
-            hours: Annual hours (e.g., 1880 for full-time)
+            standard_fte_hours: Standard full-time hours from contract (e.g., 1880, 1920, 2080)
             fringe_rate: Fringe benefits rate (e.g., 0.247 for 24.7%)
             oh_rate: Overhead rate (e.g., 0.0711 for 7.11%)
             ga_rate: G&A rate (e.g., 0.2243 for 22.43%)
@@ -62,8 +65,8 @@ class Calculator:
                 'fblr': 100.02
             }
         """
-        # Step 1: Calculate direct labor hourly rate
-        dl_rate = round(annual_wage / hours, 2)
+        # Step 1: Calculate direct labor hourly rate using STANDARD FTE hours
+        dl_rate = round(annual_wage / standard_fte_hours, 2)
 
         # Step 2: Apply wrap rates (each applies to cumulative subtotal)
         fringe = round(dl_rate * fringe_rate, 2)
@@ -177,28 +180,19 @@ class Calculator:
         base_wage = float(position_data["base_annual_wage"])
         hours_per_year = position_data["hours_per_year"]
 
-        # Year 1: Calculate base FBLR
+        # Get standard FTE hours from contract (always provided by jd_parser)
+        standard_fte_hours = position_data.get("standard_fte_hours", 1880)
+
+        # Year 1: Calculate base FBLR using STANDARD FTE hours
         year_1_hours = hours_per_year.get("1", 0)
-        if year_1_hours > 0:
-            fblr_breakdown = Calculator.calculate_fblr(
-                base_wage,
-                year_1_hours,
-                indirect_rates["fringe"],
-                indirect_rates["oh"],
-                indirect_rates["ga"]
-            )
-            base_fblr = fblr_breakdown["fblr"]
-        else:
-            # No hours in Year 1, still need FBLR for future years
-            # Use default 1880 hours for calculation only
-            fblr_breakdown = Calculator.calculate_fblr(
-                base_wage,
-                1880,
-                indirect_rates["fringe"],
-                indirect_rates["oh"],
-                indirect_rates["ga"]
-            )
-            base_fblr = fblr_breakdown["fblr"]
+        fblr_breakdown = Calculator.calculate_fblr(
+            base_wage,
+            standard_fte_hours,  # Use standard FTE hours, not actual year hours
+            indirect_rates["fringe"],
+            indirect_rates["oh"],
+            indirect_rates["ga"]
+        )
+        base_fblr = fblr_breakdown["fblr"]
 
         results["year_1"] = {
             "rate": base_fblr,
