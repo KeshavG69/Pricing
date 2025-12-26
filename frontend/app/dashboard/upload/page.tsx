@@ -93,7 +93,14 @@ export default function UploadPage() {
       // Start polling for status (don't redirect immediately)
       setUploadedProposalId(proposalId);
     } catch (err: any) {
-      setError(err.message || 'Upload failed. Please try again.');
+      // Only show errors from backend, ignore network/timeout errors
+      // Network errors don't have a response from the server
+      if (err.response) {
+        // This is a backend error (4xx, 5xx) - show it to the user
+        setError(err.response?.data?.detail || err.message || 'Upload failed. Please try again.');
+      }
+      // Silently ignore network errors (timeout, connection issues)
+      // The backend will continue processing and we'll poll for status
     }
   };
 
@@ -104,9 +111,11 @@ export default function UploadPage() {
     }
   }, [status, uploadedProposalId, router]);
 
-  // Show polling error if it occurs
+  // Show polling error only if it's from backend (not network errors)
+  // Network errors during polling are silently ignored - we keep polling
   useEffect(() => {
-    if (pollingError) {
+    if (pollingError && pollingError.includes('backend')) {
+      // Only show explicit backend errors
       setError(pollingError);
     }
   }, [pollingError]);

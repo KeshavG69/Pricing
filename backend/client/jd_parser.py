@@ -783,19 +783,37 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> Dict[str, a
                 months_dict[str(ext_year)] = ext_months
                 df.at[idx, 'months_per_year'] = months_dict
 
-            # Calculate prorated hours for extension period
-            # For 6 months: (6/12) * standard_fte_hours = 960 hours
-            prorated_hours = int((ext_months / 12) * standard_fte_hours)
+            # Calculate prorated hours PER FTE for extension period
+            # For 6 months: (6/12) * standard_fte_hours = 960 hours per FTE
+            prorated_hours_per_fte = int((ext_months / 12) * standard_fte_hours)
 
-            print(f"   Year {ext_year} ({ext_months} months): Adding {prorated_hours} hours to each position")
+            print(f"   Year {ext_year} ({ext_months} months): {prorated_hours_per_fte} hours per FTE")
 
             # Add extension year hours to each position's hours_per_year
+            # IMPORTANT: Calculate total extension hours based on max FTEs in the position
             for idx in df.index:
                 hours_per_year = df.loc[idx, 'hours_per_year']
                 if hours_per_year and isinstance(hours_per_year, dict):
-                    # Add prorated hours for extension year
-                    hours_per_year[str(ext_year)] = prorated_hours
+                    # Find max hours across non-extension years to determine FTE count
+                    max_hours_in_position = 0
+                    for year_key, year_hours in hours_per_year.items():
+                        # Skip extension years (already processed or current one)
+                        if int(year_key) > total_years_from_metadata:
+                            continue
+                        if year_hours and year_hours > max_hours_in_position:
+                            max_hours_in_position = year_hours
+
+                    # Calculate number of FTEs in this position
+                    num_ftes = max(1, int(max_hours_in_position / standard_fte_hours + 0.5))
+
+                    # Total extension hours = prorated hours per FTE × number of FTEs
+                    total_extension_hours = prorated_hours_per_fte * num_ftes
+
+                    hours_per_year[str(ext_year)] = total_extension_hours
                     df.at[idx, 'hours_per_year'] = hours_per_year
+
+                    if num_ftes > 1:
+                        print(f"      Position {idx}: {num_ftes} FTEs × {prorated_hours_per_fte} = {total_extension_hours} hours")
 
     return {
         "df": df,
