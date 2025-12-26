@@ -97,8 +97,8 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
       {/* New Proposal Button */}
       <div className="p-4 border-b border-border">
         <Link href="/dashboard/upload">
-          <Button variant="primary" fullWidth className="shadow-md shadow-primary/10">
-            <Plus className="w-4 h-4 mr-2" />
+          <Button variant="primary" fullWidth className="shadow-md shadow-primary/10 hover-lift transition-all duration-300">
+            <Plus className="w-4 h-4 mr-2 transition-transform duration-200 group-hover:rotate-90" />
             New Proposal
           </Button>
         </Link>
@@ -124,10 +124,10 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
                   <Link key={proposal.id} href={`/proposals/${proposal.id}`}>
                     <div
                       onClick={onMobileClose}
-                      className={`group relative px-3 py-2.5 rounded-lg transition-all duration-200 cursor-pointer ${
+                      className={`group relative px-3 py-2.5 rounded-lg transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:shadow-md ${
                         isActive
-                          ? 'bg-primary/10 border-l-2 border-primary'
-                          : 'hover:bg-muted border-l-2 border-transparent'
+                          ? 'bg-primary/10 border-l-2 border-primary shadow-sm'
+                          : 'hover:bg-muted/50 border-l-2 border-transparent'
                       }`}
                     >
                       <div className="flex items-start justify-between gap-2 mb-1.5">
@@ -174,13 +174,13 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
           onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
           className="w-full group"
         >
-          <div className="flex items-center space-x-3 px-2 py-2 rounded-lg hover:bg-muted transition-colors">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border border-border text-primary font-semibold">
+          <div className="flex items-center space-x-3 px-2 py-2 rounded-lg hover:bg-muted transition-all duration-300 hover:scale-[1.02]">
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border border-border text-primary font-semibold transition-all duration-300 group-hover:scale-110 group-hover:shadow-md">
               {user.firstName[0]}{user.lastName[0]}
             </div>
             <div className="flex-1 min-w-0 text-left">
               <div className="flex items-center gap-2 mb-0.5">
-                <p className="text-sm font-medium text-foreground truncate">
+                <p className="text-sm font-medium text-foreground truncate transition-colors duration-200 group-hover:text-primary">
                   {user.firstName} {user.lastName}
                 </p>
                 <RoleBadge role={user.role} size="sm" />
@@ -188,7 +188,7 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
               <p className="text-xs text-muted-foreground truncate">{user.email}</p>
             </div>
             <ChevronRight
-              className={`w-4 h-4 text-muted-foreground transition-transform ${
+              className={`w-4 h-4 text-muted-foreground transition-all duration-300 ${
                 isProfileMenuOpen ? 'rotate-90' : ''
               }`}
             />
@@ -197,14 +197,14 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
 
         {/* Dropdown menu */}
         {isProfileMenuOpen && (
-          <div className="absolute bottom-full mb-2 left-4 right-4 bg-card border border-border rounded-lg shadow-lg py-1 z-50">
+          <div className="absolute bottom-full mb-2 left-4 right-4 bg-card border border-border rounded-lg shadow-2xl py-1 z-50 animate-scale-in">
             <Link href="/dashboard/settings">
               <button
                 onClick={() => {
                   setIsProfileMenuOpen(false);
                   onMobileClose();
                 }}
-                className="w-full flex items-center px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                className="w-full flex items-center px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 hover:translate-x-1"
               >
                 <Settings className="w-4 h-4 mr-3" />
                 <span>Settings</span>
@@ -216,7 +216,7 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
                 setIsProfileMenuOpen(false);
                 handleLogout();
               }}
-              className="w-full flex items-center px-4 py-2.5 text-sm text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-colors"
+              className="w-full flex items-center px-4 py-2.5 text-sm text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-all duration-200 hover:translate-x-1"
             >
               <LogOut className="w-4 h-4 mr-3" />
               <span>Logout</span>
@@ -232,7 +232,7 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
       {/* Mobile backdrop */}
       {isMobileOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/50 z-40 md:hidden animate-fade-in"
           onClick={onMobileClose}
         />
       )}
@@ -240,9 +240,9 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
       {/* Sidebar */}
       <aside
         className={`
-          fixed top-16 bottom-0 left-0 w-72 bg-card border-r border-border z-40
-          flex flex-col
-          transition-transform duration-300 ease-in-out
+          fixed top-16 bottom-0 left-0 w-72 bg-card/95 backdrop-blur-md border-r border-border z-40
+          flex flex-col shadow-2xl
+          transition-transform duration-500 ease-out
           ${isMobileOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
       >
