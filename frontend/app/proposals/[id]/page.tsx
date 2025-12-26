@@ -15,7 +15,7 @@ import RateTableView from '@/components/pricing/RateTableView';
 import PricingTabs from '@/components/pricing/PricingTabs';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { SubcontractorSection } from '@/components/pricing/SubcontractorSection';
-import { Loader2, AlertCircle, ArrowLeft, Plus, Download, Pencil, Check, X } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowLeft, Plus, Download } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
 
 export default function ProposalPage() {
@@ -135,14 +135,32 @@ export default function ProposalPage() {
     if (!currentProposal) return;
 
     setIsSaving(true);
+    const oldSolicitation = currentProposal.solicitation_number;
+
     try {
+      // Optimistically update local state immediately
+      const { setCurrentProposal } = useProposalsStore.getState();
+      setCurrentProposal({
+        ...currentProposal,
+        solicitation_number: editedSolicitation.trim() || undefined,
+      });
+
+      setIsEditingSolicitation(false);
+
+      // Save to MongoDB in background (no page refresh)
       await proposalsApi.update(currentProposal.id, {
         solicitation_number: editedSolicitation.trim() || undefined
       });
-      await fetchProposal(proposalId);
-      setIsEditingSolicitation(false);
     } catch (error) {
       console.error('Failed to update solicitation number:', error);
+      toast.error('Failed to update solicitation number');
+      // Revert on error
+      const { setCurrentProposal } = useProposalsStore.getState();
+      setCurrentProposal({
+        ...currentProposal,
+        solicitation_number: oldSolicitation,
+      });
+      setEditedSolicitation(oldSolicitation || '');
     } finally {
       setIsSaving(false);
     }
@@ -166,16 +184,36 @@ export default function ProposalPage() {
     }
 
     setIsSaving(true);
+    const oldName = currentProposal?.name;
+
     try {
+      // Optimistically update local state immediately
+      if (currentProposal) {
+        const { setCurrentProposal } = useProposalsStore.getState();
+        setCurrentProposal({
+          ...currentProposal,
+          name: editedName.trim(),
+        });
+      }
+
+      setIsEditingName(false);
+
+      // Save to MongoDB in background (no page refresh)
       await proposalsApi.update(proposalId, {
         name: editedName.trim(),
       });
-      await fetchProposal(proposalId);
-      setIsEditingName(false);
-      toast.success('Proposal name updated successfully');
     } catch (error) {
       console.error('Failed to update proposal name:', error);
       toast.error('Failed to update proposal name');
+      // Revert on error
+      if (currentProposal && oldName) {
+        const { setCurrentProposal } = useProposalsStore.getState();
+        setCurrentProposal({
+          ...currentProposal,
+          name: oldName,
+        });
+        setEditedName(oldName);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -192,21 +230,36 @@ export default function ProposalPage() {
   };
 
   const handleSavePrimeContractor = async () => {
+    if (!currentProposal) return;
+
     setIsSaving(true);
+    const oldPrimeContractor = currentProposal.prime_contractor_name;
+    const updatedName = editedPrimeContractor.trim() || 'TBD';
+
     try {
-      const updatedName = editedPrimeContractor.trim() || 'TBD';
+      // Optimistically update local state immediately
+      const { setCurrentProposal } = useProposalsStore.getState();
+      setCurrentProposal({
+        ...currentProposal,
+        prime_contractor_name: updatedName,
+      });
+
+      setIsEditingPrimeContractor(false);
+
+      // Save to MongoDB in background (no page refresh)
       await proposalsApi.update(proposalId, {
         prime_contractor_name: updatedName
       });
-
-      // Reload proposal data
-      await fetchProposal(proposalId);
-
-      setIsEditingPrimeContractor(false);
-      toast.success('Prime contractor name updated');
     } catch (error) {
       console.error('Failed to update prime contractor name:', error);
       toast.error('Failed to update prime contractor name');
+      // Revert on error
+      const { setCurrentProposal } = useProposalsStore.getState();
+      setCurrentProposal({
+        ...currentProposal,
+        prime_contractor_name: oldPrimeContractor,
+      });
+      setEditedPrimeContractor(oldPrimeContractor || '');
     } finally {
       setIsSaving(false);
     }
@@ -353,158 +406,97 @@ export default function ProposalPage() {
             {/* Proposal Name with Inline Edit */}
             <div className="flex items-center gap-2 mb-2">
               {!isEditingName ? (
-                <>
-                  <h1 className="text-lg font-bold text-foreground">
-                    {currentProposal.name}
-                  </h1>
-                  <button
-                    onClick={handleStartEditName}
-                    className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-                    title="Edit proposal name"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                </>
-              ) : (
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleSaveProposalName();
-                  }}
-                  className="flex items-center gap-2"
+                <h1
+                  className="text-lg font-bold text-foreground cursor-text hover:bg-muted/30 px-2 py-1 rounded transition-colors"
+                  onDoubleClick={handleStartEditName}
+                  title="Double-click to edit"
                 >
-                  <Input
-                    type="text"
-                    value={editedName}
-                    onChange={(e) => setEditedName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Escape') {
-                        handleCancelEditName();
-                      }
-                    }}
-                    placeholder="Enter proposal name"
-                    className="w-96"
-                    autoFocus
-                  />
-                  <button
-                    type="submit"
-                    disabled={isSaving}
-                    className="p-2 text-green-600 hover:text-green-700 disabled:opacity-50 hover:bg-green-50 rounded transition-colors"
-                    title="Save"
-                  >
-                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCancelEditName}
-                    disabled={isSaving}
-                    className="p-2 text-red-600 hover:text-red-700 disabled:opacity-50 hover:bg-red-50 rounded transition-colors"
-                    title="Cancel"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </form>
+                  {currentProposal.name}
+                </h1>
+              ) : (
+                <Input
+                  type="text"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  onBlur={handleSaveProposalName}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      handleCancelEditName();
+                    }
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSaveProposalName();
+                    }
+                  }}
+                  placeholder="Enter proposal name"
+                  className="w-96"
+                  autoFocus
+                />
               )}
             </div>
             {/* Solicitation Number with Inline Edit */}
             <div className="flex items-center gap-2">
               {!isEditingSolicitation ? (
-                <>
-                  <p className="text-sm text-muted-foreground">
-                    {currentProposal.solicitation_number || 'No solicitation number'}
-                  </p>
-                  <button
-                    onClick={handleStartEdit}
-                    className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-                    title="Edit solicitation number"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                </>
+                <p
+                  className="text-sm text-muted-foreground cursor-text hover:bg-muted/30 px-2 py-1 rounded transition-colors"
+                  onDoubleClick={handleStartEdit}
+                  title="Double-click to edit"
+                >
+                  {currentProposal.solicitation_number || 'No solicitation number'}
+                </p>
               ) : (
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="text"
-                    value={editedSolicitation}
-                    onChange={(e) => setEditedSolicitation(e.target.value)}
-                    placeholder="Enter solicitation number"
-                    className="w-64"
-                    autoFocus
-                  />
-                  <button
-                    onClick={handleSaveSolicitation}
-                    disabled={isSaving}
-                    className="p-1 text-green-600 hover:text-green-700 disabled:opacity-50"
-                    title="Save"
-                  >
-                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  </button>
-                  <button
-                    onClick={handleCancelEdit}
-                    disabled={isSaving}
-                    className="p-1 text-red-600 hover:text-red-700 disabled:opacity-50"
-                    title="Cancel"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
+                <Input
+                  type="text"
+                  value={editedSolicitation}
+                  onChange={(e) => setEditedSolicitation(e.target.value)}
+                  onBlur={handleSaveSolicitation}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      handleCancelEdit();
+                    }
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSaveSolicitation();
+                    }
+                  }}
+                  placeholder="Enter solicitation number"
+                  className="w-64"
+                  autoFocus
+                />
               )}
             </div>
             {/* Prime Contractor with Inline Edit */}
             <div className="flex items-center gap-2 mt-1">
               {!isEditingPrimeContractor ? (
-                <>
-                  <p className="text-sm text-muted-foreground">
-                    Prime Contractor: {currentProposal.prime_contractor_name || 'Not specified'}
-                  </p>
-                  <button
-                    onClick={handleStartEditPrimeContractor}
-                    className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-                    title="Edit prime contractor name"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                </>
-              ) : (
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleSavePrimeContractor();
-                  }}
-                  className="flex items-center gap-2"
+                <p
+                  className="text-sm text-muted-foreground cursor-text hover:bg-muted/30 px-2 py-1 rounded transition-colors"
+                  onDoubleClick={handleStartEditPrimeContractor}
+                  title="Double-click to edit"
                 >
-                  <span className="text-sm text-muted-foreground"> Prime Contractor Name:</span>
+                  Prime Contractor: {currentProposal.prime_contractor_name || 'Not specified'}
+                </p>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Prime Contractor:</span>
                   <Input
                     type="text"
                     value={editedPrimeContractor}
                     onChange={(e) => setEditedPrimeContractor(e.target.value)}
+                    onBlur={handleSavePrimeContractor}
                     onKeyDown={(e) => {
                       if (e.key === 'Escape') {
                         handleCancelEditPrimeContractor();
+                      }
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSavePrimeContractor();
                       }
                     }}
                     placeholder="Enter prime contractor name"
                     className="w-64"
                     autoFocus
                   />
-                  <button
-                    type="submit"
-                    disabled={isSaving}
-                    className="p-1 text-green-600 hover:text-green-700 disabled:opacity-50 hover:bg-green-50 rounded transition-colors"
-                    title="Save"
-                  >
-                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCancelEditPrimeContractor}
-                    disabled={isSaving}
-                    className="p-1 text-red-600 hover:text-red-700 disabled:opacity-50 hover:bg-red-50 rounded transition-colors"
-                    title="Cancel"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </form>
+                </div>
               )}
             </div>
           </div>
