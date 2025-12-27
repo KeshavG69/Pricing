@@ -67,9 +67,33 @@ export const useCompanyRepositoryStore = create<CompanyRepositoryState>((set, ge
 
   fetchContract: async (fileId: string) => {
     try {
+      const user = useAuthStore.getState().user;
+      const orgId = user?.organization_id;
+
+      // Check cache first
+      if (orgId) {
+        const cacheKey = `company-repo:${orgId}:contract:${fileId}`;
+        const cached = cacheManager.get<GSAContract & { labor_categories: GSALaborCategory[] }>(cacheKey);
+
+        if (cached && !cached.isExpired) {
+          console.log('[COMPANY_REPO] Using cached contract details');
+          set({ selectedContract: cached.data, isLoading: false });
+          return;
+        }
+      }
+
       set({ isLoading: true, error: null });
       const contract = await companyRepositoryApi.get(fileId);
       set({ selectedContract: contract, isLoading: false });
+
+      // Cache the contract details
+      if (orgId) {
+        cacheManager.set(
+          `company-repo:${orgId}:contract:${fileId}`,
+          contract,
+          10 * 60 * 1000 // 10 minutes
+        );
+      }
     } catch (error: any) {
       set({
         error: error.response?.data?.detail || 'Failed to fetch contract',
@@ -154,12 +178,69 @@ export const useCompanyRepositoryStore = create<CompanyRepositoryState>((set, ge
   pollStatus: async (fileId: string) => {
     const status = await companyRepositoryApi.getStatus(fileId);
 
-    // Update contract in list if status changed
-    set((state) => ({
-      contracts: state.contracts.map((c) =>
-        c.file_id === fileId ? { ...c, status: status.status as GSAContract['status'] } : c
-      ),
-    }));
+    // If status is no longer processing, fetch full details to update metadata
+    if (status.status !== 'processing') {
+      try {
+        const user = useAuthStore.getState().user;
+        const orgId = user?.organization_id;
+
+        // Fetch full contract details
+        const fullContract = await companyRepositoryApi.get(fileId);
+
+        // Update contract in list with full metadata
+        set((state) => ({
+          contracts: state.contracts.map((c) =>
+            c.file_id === fileId
+              ? {
+                  ...c,
+                  status: status.status as GSAContract['status'],
+                  labor_categories_count: status.labor_category_count || c.labor_categories_count,
+                  contract_number: fullContract.contract_number,
+                  company_name: fullContract.company_name,
+                  contract_start_date: fullContract.contract_start_date,
+                  contract_end_date: fullContract.contract_end_date,
+                }
+              : c
+          ),
+        }));
+
+        // Cache the full contract details
+        if (orgId) {
+          cacheManager.set(
+            `company-repo:${orgId}:contract:${fileId}`,
+            fullContract,
+            10 * 60 * 1000 // 10 minutes
+          );
+        }
+      } catch (error) {
+        console.error('[COMPANY_REPO] Failed to fetch full contract details:', error);
+        // Still update status even if full fetch fails
+        set((state) => ({
+          contracts: state.contracts.map((c) =>
+            c.file_id === fileId
+              ? {
+                  ...c,
+                  status: status.status as GSAContract['status'],
+                  labor_categories_count: status.labor_category_count || c.labor_categories_count,
+                }
+              : c
+          ),
+        }));
+      }
+    } else {
+      // Still processing, just update status and count
+      set((state) => ({
+        contracts: state.contracts.map((c) =>
+          c.file_id === fileId
+            ? {
+                ...c,
+                status: status.status as GSAContract['status'],
+                labor_categories_count: status.labor_category_count || c.labor_categories_count,
+              }
+            : c
+        ),
+      }));
+    }
 
     // Return the updated contract
     const contract = get().contracts.find((c) => c.file_id === fileId);

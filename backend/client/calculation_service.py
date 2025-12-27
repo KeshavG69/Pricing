@@ -66,25 +66,27 @@ class Calculator:
             }
         """
         # Step 1: Calculate direct labor hourly rate using STANDARD FTE hours
-        dl_rate = round(annual_wage / standard_fte_hours, 2)
+        # Use 6 decimal places for precision (Rate × Hours = exact salary)
+        dl_rate = round(annual_wage / standard_fte_hours, 6)
 
         # Step 2: Apply wrap rates (each applies to cumulative subtotal)
-        fringe = round(dl_rate * fringe_rate, 2)
+        # Keep full precision for internal calculations
+        fringe = dl_rate * fringe_rate
         subtotal_1 = dl_rate + fringe
 
-        oh = round(subtotal_1 * oh_rate, 2)
+        oh = subtotal_1 * oh_rate
         subtotal_2 = subtotal_1 + oh
 
-        ga = round(subtotal_2 * ga_rate, 2)
+        ga = subtotal_2 * ga_rate
 
-        fblr = round(subtotal_2 + ga, 2)
+        fblr = subtotal_2 + ga
 
         return {
             "dl_rate": dl_rate,
-            "fringe": fringe,
-            "oh": oh,
-            "ga": ga,
-            "fblr": fblr
+            "fringe": round(fringe, 6),
+            "oh": round(oh, 6),
+            "ga": round(ga, 6),
+            "fblr": round(fblr, 6)
         }
 
     @staticmethod
@@ -193,27 +195,36 @@ class Calculator:
             indirect_rates["ga"]
         )
         base_fblr = fblr_breakdown["fblr"]
+        base_dl_rate = fblr_breakdown["dl_rate"]
 
         results["year_1"] = {
-            "rate": base_fblr,
+            "dl_rate": base_dl_rate,  # Direct Labor rate (for Excel indirect cost calculation)
+            "rate": base_fblr,  # FBLR (for display/totals)
             "hours": year_1_hours,
             "amount": round(base_fblr * year_1_hours, 2)
         }
 
         # Years 2-N: Escalate rate and calculate amount
         for year in range(2, total_years + 1):
-            escalated_rate = Calculator.calculate_year_rate(
+            escalated_fblr = Calculator.calculate_year_rate(
                 base_fblr,
+                escalation_rates,
+                from_year=1,
+                to_year=year
+            )
+            escalated_dl_rate = Calculator.calculate_year_rate(
+                base_dl_rate,
                 escalation_rates,
                 from_year=1,
                 to_year=year
             )
 
             hours = hours_per_year.get(str(year), 0)
-            amount = round(escalated_rate * hours, 2)
+            amount = round(escalated_fblr * hours, 2)
 
             results[f"year_{year}"] = {
-                "rate": escalated_rate,
+                "dl_rate": escalated_dl_rate,  # Direct Labor rate (for Excel)
+                "rate": escalated_fblr,  # FBLR
                 "hours": hours,
                 "amount": amount
             }
