@@ -1,20 +1,22 @@
 """GSA Contract parsing using LlamaExtract API."""
 
+import re
 from typing import List, Optional
 from pydantic import BaseModel, Field
 import json
+from functools import lru_cache
 
-from app.settings import settings
 from client.jd_parser import _convert_excel_to_csv
 from client.llm_client import get_chat_llm
+from client.llama_client import get_llama_extract
+from app.settings import settings
 
 try:
-    from llama_cloud_services import LlamaExtract
     from llama_cloud import ExtractConfig, ExtractMode
 except ImportError:
     raise ImportError(
-        "llama-cloud-services not installed. "
-        "Run: pip install llama-cloud-services"
+        "llama-cloud not installed. "
+        "Run: pip install llama-cloud"
     )
 
 
@@ -42,6 +44,10 @@ class GSAContractMetadata(BaseModel):
     company_name: Optional[str] = Field(
         None,
         description="Contractor/company name"
+    )
+    year_columns: Optional[List[str]] = Field(
+        None,
+        description="List of year column headers from the rate table (e.g., ['Year 6', 'Year 7', 'Year 8', 'Year 9', 'Year 10'] or ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'])"
     )
 
 
@@ -202,131 +208,181 @@ def _extract_and_chunk_by_file_type(file_path: str) -> List[str]:
         return chunks
 
     # =========================================================================
-    # TXT/RTF: Chunk by character count (4000 chars per chunk)
+    # TXT/RTF: Simple character-based chunking
     # =========================================================================
     else:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             full_text = f.read()
 
-        chunks = _chunk_text(full_text, chunk_size=4000)
+        chunks = _chunk_text_simple(full_text, chunk_size=4000)
         print(f"     [TXT] Created {len(chunks)} chunks from {len(full_text):,} characters")
         return chunks
 
 
-def _chunk_text(text: str, chunk_size: int = 4000) -> List[str]:
+def _chunk_text_simple(text: str, chunk_size: int = 4000) -> List[str]:
     """
-    Split text into chunks by character count.
+    Split text into chunks by character count (no overlap).
 
     Args:
         text: Full text content
-        chunk_size: Max characters per chunk
+        chunk_size: Max characters per chunk (default 4000)
 
     Returns:
         List of text chunks
     """
+    if len(text) <= chunk_size:
+        return [text] if text.strip() else []
+
     chunks = []
     lines = text.split('\n')
-    current_chunk = []
+
+    # Build chunks (no overlap)
+    current_chunk_lines = []
     current_size = 0
 
     for line in lines:
         line_size = len(line) + 1  # +1 for newline
-        if current_size + line_size > chunk_size and current_chunk:
-            chunks.append('\n'.join(current_chunk))
-            current_chunk = [line]
+
+        if current_size + line_size > chunk_size and current_chunk_lines:
+            # Save current chunk
+            chunks.append('\n'.join(current_chunk_lines))
+
+            # Start new chunk
+            current_chunk_lines = [line]
             current_size = line_size
         else:
-            current_chunk.append(line)
+            current_chunk_lines.append(line)
             current_size += line_size
 
-    if current_chunk:
-        chunks.append('\n'.join(current_chunk))
+    if current_chunk_lines:
+        chunks.append('\n'.join(current_chunk_lines))
 
     return chunks
 
 
-def _extract_labor_categories_with_llm(text_chunk: str, chunk_index: int) -> List[dict]:
+def _extract_labor_categories_with_llm(text_chunk: str, chunk_index: int, year_columns: Optional[List[str]] = None) -> List[dict]:
     """
     Extract labor categories from a text chunk using GPT-4.
 
     Args:
         text_chunk: Text content from a page/chunk
         chunk_index: Index of the chunk (for debugging)
+        year_columns: List of year column headers extracted from metadata (e.g., ['Year 6', 'Year 7', ...])
 
     Returns:
         List of labor category dicts
     """
     llm = get_chat_llm()
 
-    prompt = f"""You are extracting labor categories from a GSA contract rate schedule.
+    # Build year context from metadata
+    if year_columns and len(year_columns) > 0:
+        year_nums = []
+        for col in year_columns:
+            # Extract number from "Year 6" -> "6"
+            match = re.search(r'\d+', col)
+            if match:
+                year_nums.append(match.group())
 
-CRITICAL INSTRUCTIONS:
-1. ONLY extract rows that have BOTH:
-   - A job title (e.g., "Software Engineer III", "Database Administrator - Senior")
-   - Actual hourly rates in dollars (e.g., $125.50, $185.75)
+        year_context = f"""
+🎯 IMPORTANT: This document has the following year columns: {', '.join(year_columns)}
+You MUST use these exact year numbers as keys in rates_by_year: {', '.join(year_nums)}
+"""
+    else:
+        year_context = """
+Look at the table header row to find the year columns (e.g., "Year 1", "Year 6", etc.)
+Use the EXACT year numbers from the headers as keys in rates_by_year.
+"""
 
-2. DO NOT extract:
-   - SIN descriptions without rates (e.g., "Engineering Services - SIN 54151S")
-   - Service category headers
-   - Table of contents
-   - Any row without dollar amounts
+    prompt = f"""Extract labor categories from this GSA contract rate schedule.
+{year_context}
+EXTRACTION RULES:
+1. ONLY extract rows with BOTH a job title AND dollar rates
+2. DO NOT extract SIN descriptions, headers, or rows without rates
 
-3. For each labor category, extract:
-   - title: Job title/position name (REQUIRED)
-   - sin: SIN code or CLIN (if present)
-   - education: Education requirement (if present)
-   - experience: Years of experience (if present)
-   - rates_by_year: Dict of year -> rate (e.g., {{"1": 125.50, "2": 129.06}})
+FIELDS TO EXTRACT:
+- title: Job title/position name (REQUIRED)
+- sin: SIN code if present (e.g., "541330ENG", "541611")
+- description: Job description or responsibilities. Look carefully for:
+  * Text paragraphs below or near the job title
+  * Duty statements or role descriptions
+  * Any text explaining what this position does
+  * If NO description text exists, omit this field or set to null
+- experience: Years of experience required. Look for:
+  * Dedicated "Experience" column in the table
+  * Text like "5 years", "3-5 years minimum", "10+ years", "Entry Level", "Senior Level"
+  * Words in the title like "Senior" (implies 5+ years), "Junior" (1-3 years), "Lead" (7+ years)
+  * Roman numerals: "I" = Entry, "II" = 2-4 years, "III" = 5-7 years, "IV" = 8+ years
+  * If NO experience info exists, omit this field or set to null
+- rates_by_year: Dict with year numbers as keys and hourly rates as values (REQUIRED)
 
-4. Return ONLY valid JSON array of objects. Example:
+IMPORTANT: Only include description/experience if you actually find relevant text. Don't make up or infer information.
+
+OUTPUT FORMAT (with data found):
 [
   {{
-    "title": "Software Engineer III",
-    "sin": "54151S",
-    "education": "Bachelors",
-    "experience": "5",
-    "rates_by_year": {{"1": 125.50, "2": 129.06, "3": 132.71}}
-  }},
+    "title": "Administrative Specialist - Senior",
+    "sin": "541330ENG",
+    "description": "Provides administrative support including scheduling and document management.",
+    "experience": "5+ years",
+    "rates_by_year": {{"6": 36.49, "7": 37.19, "8": 37.89, "9": 38.61, "10": 39.35}}
+  }}
+]
+
+OUTPUT FORMAT (if description/experience not found):
+[
   {{
-    "title": "Project Manager Senior",
-    "sin": "54151S",
-    "education": "Masters",
-    "experience": "10",
-    "rates_by_year": {{"1": 185.75, "2": 190.98}}
+    "title": "Software Engineer II",
+    "sin": "541511",
+    "experience": "2-4 years",
+    "rates_by_year": {{"6": 85.00, "7": 86.50}}
   }}
 ]
 
 TEXT CHUNK:
 {text_chunk}
 
-Return ONLY the JSON array, no other text:"""
+Return ONLY valid JSON array:"""
 
-    try:
-        response = llm.invoke(prompt)
-        response_text = response.content.strip()
+    max_retries = 2
+    for attempt in range(max_retries):
+        try:
+            response = llm.invoke(prompt)
+            response_text = response.content.strip()
 
-        # Remove markdown code blocks if present
-        if response_text.startswith('```'):
-            response_text = response_text.split('```')[1]
-            if response_text.startswith('json'):
-                response_text = response_text[4:]
-            response_text = response_text.strip()
+            # Remove markdown code blocks if present
+            if response_text.startswith('```'):
+                response_text = response_text.split('```')[1]
+                if response_text.startswith('json'):
+                    response_text = response_text[4:]
+                response_text = response_text.strip()
 
-        # Parse JSON
-        labor_categories = json.loads(response_text)
+            # Parse JSON
+            labor_categories = json.loads(response_text)
 
-        if not isinstance(labor_categories, list):
-            labor_categories = [labor_categories]
+            if not isinstance(labor_categories, list):
+                labor_categories = [labor_categories]
 
-        print(f"     Chunk {chunk_index + 1}: Extracted {len(labor_categories)} labor categories")
-        return labor_categories
+            print(f"     Chunk {chunk_index + 1}: Extracted {len(labor_categories)} labor categories")
+            return labor_categories
 
-    except json.JSONDecodeError as e:
-        print(f"     ⚠️  Chunk {chunk_index + 1}: JSON parse error: {e}")
-        return []
-    except Exception as e:
-        print(f"     ⚠️  Chunk {chunk_index + 1}: Extraction error: {e}")
-        return []
+        except json.JSONDecodeError as e:
+            if attempt < max_retries - 1:
+                print(f"     ⚠️  Chunk {chunk_index + 1}: JSON parse error (attempt {attempt + 1}/{max_retries}): {e}")
+                print(f"     🔄 Retrying chunk {chunk_index + 1}...")
+                continue
+            else:
+                print(f"     ❌ Chunk {chunk_index + 1}: JSON parse error after {max_retries} attempts: {e}")
+                return []
+        except Exception as e:
+            if attempt < max_retries - 1:
+                print(f"     ⚠️  Chunk {chunk_index + 1}: Extraction error (attempt {attempt + 1}/{max_retries}): {e}")
+                print(f"     🔄 Retrying chunk {chunk_index + 1}...")
+                continue
+            else:
+                print(f"     ❌ Chunk {chunk_index + 1}: Extraction error after {max_retries} attempts: {e}")
+                return []
+
+    return []
 
 
 # =====================================================================
@@ -345,10 +401,6 @@ def parse_gsa_contract(file_path: str) -> dict:
     """
     import os
 
-    api_key = settings.LLAMA_CLOUD_API_KEY
-    if not api_key:
-        raise ValueError("LLAMA_CLOUD_API_KEY not found")
-
     file_ext = os.path.splitext(file_path)[1].lower()
     temp_file_path = None
 
@@ -365,23 +417,17 @@ def parse_gsa_contract(file_path: str) -> dict:
         file_path = temp_file_path
 
     try:
-        import concurrent.futures
-
-        # Development SSL workaround
-        disable_ssl = os.getenv("DISABLE_SSL_VERIFY", "false").lower() == "true"
-
-        if disable_ssl:
-            print("  ⚠️ SSL verification disabled (development mode)")
-            extractor = LlamaExtract(api_key=api_key, verify=False)
-        else:
-            extractor = LlamaExtract(api_key=api_key)
+        # Get singleton LlamaExtract instance
+        extractor = get_llama_extract()
 
         # ========================================================================
-        # PARALLEL EXTRACTION
+        # PARALLEL STEP 1: Metadata + Chunking (in parallel)
         # ========================================================================
-        print("  🚀 Starting parallel extraction:")
-        print("     Task 1: LlamaExtract → Document metadata")
-        print("     Task 2: GPT-4 Chunking → Labor categories")
+        import concurrent.futures as cf
+
+        print("  🚀 Starting parallel preparation:")
+        print("     Task 1: LlamaExtract → Document metadata (including year columns)")
+        print("     Task 2: Chonkie TableChunker → Table-aware chunking")
 
         def extract_metadata():
             """Extract metadata using LlamaExtract."""
@@ -395,32 +441,58 @@ def parse_gsa_contract(file_path: str) -> dict:
             metadata = metadata_run.data
             if isinstance(metadata, dict):
                 metadata = GSAContractMetadata(**metadata)
+
             print(f"     [Metadata] ✓ Complete")
+            if metadata.year_columns:
+                print(f"     [Metadata] Year columns found: {metadata.year_columns}")
+            else:
+                print(f"     [Metadata] ⚠️ No year columns detected")
+
             return metadata
 
-        def extract_labor_categories_llm():
-            """Extract labor categories using intelligent chunking + GPT-4 with parallel processing."""
-            import concurrent.futures as cf
-            import threading
+        def extract_and_chunk():
+            """Extract and chunk text based on file type."""
+            print("     [Chunking] Starting...")
+            chunks = _extract_and_chunk_by_file_type(file_path)
+            print(f"     [Chunking] ✓ Complete: {len(chunks)} chunks created")
+            return chunks
+
+        # Run metadata extraction and chunking in parallel
+        with cf.ThreadPoolExecutor(max_workers=2) as executor:
+            metadata_future = executor.submit(extract_metadata)
+            chunks_future = executor.submit(extract_and_chunk)
+
+            # Wait for both to complete
+            metadata = metadata_future.result()
+            chunks = chunks_future.result()
+
+        year_columns = metadata.year_columns or []
+
+        # ========================================================================
+        # STEP 2: Extract labor categories using chunks + year context
+        # ========================================================================
+        print("     Step 2: GPT-4 → Labor category extraction")
+
+        def extract_labor_categories_llm(chunks: List[str], year_cols: List[str]):
+            """Extract labor categories using chunked text + GPT-4 with parallel processing."""
+            import concurrent.futures as chunk_cf
+            import threading as chunk_threading
 
             print("     [Labor] Starting...")
-
-            # Extract and chunk based on file type (PDF→pages, DOCX→paragraphs, CSV→rows, TXT→chars)
-            chunks = _extract_and_chunk_by_file_type(file_path)
 
             # Thread-safe storage
             all_labor_categories = []
             seen_titles = set()
-            lock = threading.Lock()
+            lock = chunk_threading.Lock()
 
             def process_chunk(args):
                 """Process a single chunk and return categories."""
                 chunk_idx, chunk_text = args
-                return chunk_idx, _extract_labor_categories_with_llm(chunk_text, chunk_idx)
+                return chunk_idx, _extract_labor_categories_with_llm(chunk_text, chunk_idx, year_cols)
 
-            # Process chunks in parallel (5 at a time using semaphore pattern)
+            # Process chunks in parallel (5 at a time)
             print(f"     [Labor] Processing {len(chunks)} chunks (5 parallel)...")
-            with cf.ThreadPoolExecutor(max_workers=5) as chunk_executor:
+            with chunk_cf.ThreadPoolExecutor(max_workers=5) as chunk_executor:
                 # Submit all chunks
                 futures = {
                     chunk_executor.submit(process_chunk, (i, chunk)): i
@@ -428,8 +500,8 @@ def parse_gsa_contract(file_path: str) -> dict:
                 }
 
                 # Collect results as they complete
-                for future in cf.as_completed(futures):
-                    chunk_idx, chunk_categories = future.result()
+                for future in chunk_cf.as_completed(futures):
+                    _, chunk_categories = future.result()
 
                     # Thread-safe deduplication
                     with lock:
@@ -447,7 +519,6 @@ def parse_gsa_contract(file_path: str) -> dict:
                                     "sin": cat.get('sin'),
                                     "title": title,
                                     "description": cat.get('description'),
-                                    "education": cat.get('education'),
                                     "experience": cat.get('experience'),
                                     "rates_by_year": rates_by_year
                                 })
@@ -455,14 +526,7 @@ def parse_gsa_contract(file_path: str) -> dict:
             print(f"     [Labor] ✓ Complete: {len(all_labor_categories)} categories")
             return all_labor_categories
 
-        # Run both tasks in parallel
-        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
-            metadata_future = executor.submit(extract_metadata)
-            labor_future = executor.submit(extract_labor_categories_llm)
-
-            # Wait for both to complete
-            metadata = metadata_future.result()
-            labor_categories = labor_future.result()
+        labor_categories = extract_labor_categories_llm(chunks, year_columns)
 
         # ========================================================================
         # RESULTS SUMMARY

@@ -86,6 +86,7 @@ class LLMClient:
                 self._chat_llm_agno_cache[cache_key] = OpenAIChat(
                     id=model,
                     api_key=api_key,
+                    max_tokens=10000,
                     base_url=base_url,
                     temperature=0,  # Deterministic responses for consistent SOC matching
                 )

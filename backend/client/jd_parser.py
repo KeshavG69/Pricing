@@ -6,16 +6,14 @@ import pandas as pd
 from pydantic import BaseModel, Field
 
 from models.job_description import JobDescription
-from app.settings import settings
+from client.llama_client import get_llama_extract
 
-# Import LlamaExtract
 try:
-    from llama_cloud_services import LlamaExtract
     from llama_cloud import ExtractConfig, ExtractMode
 except ImportError:
     raise ImportError(
-        "llama-cloud-services not installed. "
-        "Run: pip install llama-cloud-services"
+        "llama-cloud not installed. "
+        "Run: pip install llama-cloud"
     )
 
 
@@ -475,13 +473,6 @@ def extract_with_llamaextract(file_path: str, mode: str = "premium") -> Governme
     """
     import os
 
-    api_key = settings.LLAMA_CLOUD_API_KEY
-    if not api_key:
-        raise ValueError(
-            "LLAMA_CLOUD_API_KEY not found in settings. "
-            "Please set it in your .env file."
-        )
-
     # Check if file is Excel and convert to CSV
     file_ext = os.path.splitext(file_path)[1].lower()
     temp_csv_path = None
@@ -492,15 +483,8 @@ def extract_with_llamaextract(file_path: str, mode: str = "premium") -> Governme
         file_path = temp_csv_path
 
     try:
-        # Create LlamaExtract client with increased timeout
-        # NOTE: verify=False disables SSL certificate verification (useful for SSL hostname mismatch errors)
-        # WARNING: Only use verify=False for testing/development. Re-enable in production.
-        extractor = LlamaExtract(
-            api_key=api_key,
-            httpx_timeout=300.0,  # 5 minutes timeout for HTTP requests
-            max_timeout=3000,  # 50 minutes max wait for extraction job
-            verify=False  # Disable SSL verification to bypass certificate hostname mismatch
-        )
+        # Get singleton LlamaExtract client
+        extractor = get_llama_extract()
 
         # Map mode string to ExtractMode enum
         mode_mapping = {

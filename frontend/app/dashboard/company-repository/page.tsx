@@ -4,7 +4,6 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useCompanyRepositoryStore } from '@/lib/stores/companyRepositoryStore';
-import { companyRepositoryApi } from '@/lib/api/companyRepository';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Card, { CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -24,6 +23,7 @@ export default function CompanyRepositoryPage() {
     isUploading,
     error,
     fetchContracts,
+    fetchContract,
     uploadContract,
     updateStartDate,
     deleteContract,
@@ -70,29 +70,32 @@ export default function CompanyRepositoryPage() {
 
     const interval = setInterval(async () => {
       for (const contract of processingContracts) {
-        if (!pollingIds.has(contract.file_id)) {
-          setPollingIds((prev) => new Set(prev).add(contract.file_id));
-          try {
-            const updated = await pollStatus(contract.file_id);
-            if (updated.status !== 'processing') {
-              setPollingIds((prev) => {
-                const next = new Set(prev);
-                next.delete(contract.file_id);
-                return next;
-              });
-              if (updated.status === 'active') {
-                toast.success(`Contract "${contract.name}" is ready!`);
-              } else if (updated.status === 'needs_date') {
-                toast.info(`Contract "${contract.name}" needs a start date.`);
-              }
+        // Skip if already polling this contract (prevent duplicate requests)
+        if (pollingIds.has(contract.file_id)) continue;
+
+        setPollingIds((prev) => new Set(prev).add(contract.file_id));
+        try {
+          const updated = await pollStatus(contract.file_id);
+          // Always remove from polling set after request completes
+          setPollingIds((prev) => {
+            const next = new Set(prev);
+            next.delete(contract.file_id);
+            return next;
+          });
+
+          if (updated.status !== 'processing') {
+            if (updated.status === 'active') {
+              toast.success(`Contract "${contract.name}" is ready!`);
+            } else if (updated.status === 'needs_date') {
+              toast.info(`Contract "${contract.name}" needs a start date.`);
             }
-          } catch (e) {
-            setPollingIds((prev) => {
-              const next = new Set(prev);
-              next.delete(contract.file_id);
-              return next;
-            });
           }
+        } catch (e) {
+          setPollingIds((prev) => {
+            const next = new Set(prev);
+            next.delete(contract.file_id);
+            return next;
+          });
         }
       }
     }, 5000);
@@ -157,11 +160,15 @@ export default function CompanyRepositoryPage() {
       return;
     }
 
-    // Fetch full contract details including labor_categories
+    // Fetch full contract details including labor_categories (with caching)
     try {
       setIsLoadingDetails(true);
-      const fullContract = await companyRepositoryApi.get(contract.file_id);
-      setExpandedContract(fullContract);
+      await fetchContract(contract.file_id);
+      // Get the contract from selectedContract in store
+      const fullContract = useCompanyRepositoryStore.getState().selectedContract;
+      if (fullContract) {
+        setExpandedContract(fullContract);
+      }
     } catch (e) {
       toast.error('Failed to load contract details');
     } finally {
@@ -169,14 +176,34 @@ export default function CompanyRepositoryPage() {
     }
   };
 
-  // Get year columns from labor categories
-  const getYearColumns = (laborCategories: GSALaborCategory[] | undefined) => {
+  // Get year columns from labor categories with actual calendar years
+  const getYearColumns = (laborCategories: GSALaborCategory[] | undefined, contract: GSAContract) => {
     if (!laborCategories || laborCategories.length === 0) return [];
+
+    // Get all years that have data
     const years = new Set<string>();
     laborCategories.forEach((lc) => {
-      Object.keys(lc.rates_by_year || {}).forEach((year) => years.add(year));
+      Object.keys(lc.rates_by_year || {}).forEach((year) => {
+        // Only include years that have actual rate values
+        if (lc.rates_by_year?.[year]) {
+          years.add(year);
+        }
+      });
     });
-    return Array.from(years).sort((a, b) => parseInt(a) - parseInt(b));
+
+    // Sort years numerically
+    const sortedYears = Array.from(years).sort((a, b) => parseInt(a) - parseInt(b));
+
+    // Calculate actual calendar years based on contract start date
+    const currentYear = new Date().getFullYear();
+    const contractStartYear = contract.contract_start_date
+      ? new Date(contract.contract_start_date).getFullYear()
+      : currentYear;
+
+    return sortedYears.map((yearNum) => ({
+      yearNum,
+      displayYear: contractStartYear + parseInt(yearNum) - 1
+    }));
   };
 
   const getStatusBadge = (status: GSAContract['status']) => {
@@ -323,7 +350,11 @@ export default function CompanyRepositoryPage() {
                               {contract.company_name && (
                                 <span>Company: {contract.company_name}</span>
                               )}
-                              <span>{contract.labor_categories_count} labor categories</span>
+                              {contract.status !== 'processing' && (
+                                <span className="text-base font-bold text-foreground">
+                                  {contract.labor_categories_count} Labour categories
+                                </span>
+                              )}
                             </div>
                             {contract.contract_start_date && (
                               <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
@@ -376,9 +407,9 @@ export default function CompanyRepositoryPage() {
                                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">SIN</th>
                                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">Education</th>
                                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">Experience</th>
-                                  {getYearColumns(expandedContract.labor_categories).map((year) => (
-                                    <th key={year} className="text-right py-2 px-3 font-medium text-muted-foreground">
-                                      Year {year}
+                                  {getYearColumns(expandedContract.labor_categories, contract).map(({ yearNum, displayYear }) => (
+                                    <th key={yearNum} className="text-right py-2 px-3 font-medium text-muted-foreground">
+                                      {displayYear}
                                     </th>
                                   ))}
                                 </tr>
@@ -393,10 +424,10 @@ export default function CompanyRepositoryPage() {
                                     <td className="py-2 px-3 text-muted-foreground">{lc.sin || '-'}</td>
                                     <td className="py-2 px-3 text-muted-foreground">{lc.education || '-'}</td>
                                     <td className="py-2 px-3 text-muted-foreground">{lc.experience || '-'}</td>
-                                    {getYearColumns(expandedContract.labor_categories).map((year) => (
-                                      <td key={year} className="py-2 px-3 text-right text-foreground font-mono">
-                                        {lc.rates_by_year?.[year]
-                                          ? `$${lc.rates_by_year[year].toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                    {getYearColumns(expandedContract.labor_categories, contract).map(({ yearNum }) => (
+                                      <td key={yearNum} className="py-2 px-3 text-right text-foreground font-mono">
+                                        {lc.rates_by_year?.[yearNum]
+                                          ? `$${lc.rates_by_year[yearNum].toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
                                           : '-'}
                                       </td>
                                     ))}
