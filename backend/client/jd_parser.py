@@ -562,6 +562,8 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> Dict[str, a
         - 'travel': List of Travel items in frontend format
         - 'odcs': List of ODC items (materials, equipment, etc.) in frontend format
     """
+    import asyncio
+
     all_jds: List[JobDescription] = []
     all_metadata_list: List[DocumentMetadata] = []
     all_travel: List[Dict] = []
@@ -577,8 +579,9 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> Dict[str, a
 
         try:
             # Extract everything in one pass using LlamaExtract
+            # Run in thread to avoid blocking event loop
             print(f"  Extracting with LlamaExtract (premium mode)...", end=" ")
-            extraction = extract_with_llamaextract(doc_path, mode="premium")
+            extraction = await asyncio.to_thread(extract_with_llamaextract, doc_path, "premium")
 
             # Convert months_per_year from List[YearMonths] to Dict[str, int]
             months_dict = None

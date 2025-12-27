@@ -16,13 +16,8 @@ class CompanyRepositoryCRUD:
         self.db = mongodb.get_database()
         self.collection = self.db["company_repositories"]
 
-        # Create indexes
-        try:
-            self.collection.create_index([("organization_id", 1), ("created_at", -1)])
-            self.collection.create_index("file_id", unique=True)
-            self.collection.create_index("status")
-        except Exception:
-            pass
+        # Note: Indexes are managed by scripts/create_indexes.py
+        # Run: uv run python scripts/create_indexes.py
 
     def create(self, organization_id: str, user_id: str, data: dict) -> dict:
         """Create new company repository entry."""

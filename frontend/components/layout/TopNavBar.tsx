@@ -16,7 +16,7 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutGrid },
     { href: '/dashboard/proposals', label: 'Proposals', icon: FileText },
-    { href: '/dashboard/company-repository', label: 'Company Repo', icon: Building2 },
+    { href: '/dashboard/company-repository', label: 'Company Rates', icon: Building2 },
   ];
 
   const adminNavItems = [

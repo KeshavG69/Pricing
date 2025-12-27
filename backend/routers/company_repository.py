@@ -10,6 +10,8 @@ from pathlib import Path
 import tempfile
 import shutil
 from datetime import datetime
+from functools import lru_cache
+import time
 
 from auth.dependencies import get_current_user, require_admin
 from utils.company_repository import get_company_repository_crud
@@ -18,6 +20,17 @@ from client.idrive_storage import get_idrive_storage
 from client.gsa_pinecone import get_gsa_pinecone_client
 
 router = APIRouter(prefix="/api/company-repository", tags=["company-repository"])
+
+# Simple cache for list endpoint (5 second TTL)
+_list_cache = {}
+_cache_ttl = 5  # seconds
+
+
+def invalidate_list_cache(org_id: str):
+    """Invalidate list cache for an organization."""
+    cache_key = f"list_{org_id}"
+    if cache_key in _list_cache:
+        del _list_cache[cache_key]
 
 # LlamaExtract supported formats + Excel and RTF (we convert these)
 ALLOWED_EXTENSIONS = [
@@ -29,21 +42,36 @@ ALLOWED_EXTENSIONS = [
 
 
 def serialize_repo(repo: dict) -> dict:
-    """Convert ObjectId to string for JSON serialization."""
+    """
+    Convert ObjectId to string for JSON serialization.
+    Optimized to minimize dict operations.
+    """
     if not repo:
         return repo
 
-    if "_id" in repo:
-        repo["id"] = str(repo["_id"])
-        del repo["_id"]
+    # Create new dict with transformed fields (avoid multiple iterations)
+    result = {}
 
-    if "organization_id" in repo:
-        repo["organization_id"] = str(repo["organization_id"])
+    for key, value in repo.items():
+        if key == "_id":
+            result["id"] = str(value)
+        elif key == "organization_id":
+            result["organization_id"] = str(value)
+        elif key == "created_by":
+            result["uploaded_by"] = str(value)
+        elif key == "labor_category_count":
+            result["labor_categories_count"] = value
+        else:
+            result[key] = value
 
-    if "created_by" in repo:
-        repo["created_by"] = str(repo["created_by"])
+    # Add labor_categories_count if missing
+    if "labor_categories_count" not in result:
+        if "labor_categories" in result:
+            result["labor_categories_count"] = len(result["labor_categories"])
+        else:
+            result["labor_categories_count"] = 0
 
-    return repo
+    return result
 
 
 # ============================================================================
@@ -60,8 +88,8 @@ async def process_gsa_contract(file_id: str, organization_id: str, file_path: st
     crud = get_company_repository_crud()
 
     try:
-        # Parse the GSA contract
-        result = parse_gsa_contract(file_path)
+        # Parse the GSA contract (run in thread to avoid blocking event loop)
+        result = await asyncio.to_thread(parse_gsa_contract, file_path)
 
         # Determine status based on whether date was found
         status = "needs_date" if result["needs_date"] else "active"
@@ -109,9 +137,13 @@ async def process_gsa_contract(file_id: str, organization_id: str, file_path: st
 
         print(f"✓ Processed GSA contract: {file_id}, {len(result['labor_categories'])} labor categories")
 
+        # Invalidate cache so updated status shows immediately
+        invalidate_list_cache(organization_id)
+
     except Exception as e:
         print(f"✗ Error processing GSA contract {file_id}: {e}")
         crud.update_status(file_id, "error", str(e))
+        invalidate_list_cache(organization_id)
         import traceback
         traceback.print_exc()
 
@@ -206,6 +238,9 @@ async def upload_gsa_contract(
             temp_dir
         )
 
+        # Invalidate cache
+        invalidate_list_cache(org_id)
+
         return {
             "file_id": file_id,
             "status": "processing",
@@ -224,12 +259,30 @@ async def upload_gsa_contract(
 async def list_company_repositories(
     current_user: dict = Depends(get_current_user)
 ):
-    """List all GSA contracts for the organization."""
-    crud = get_company_repository_crud()
+    """
+    List all GSA contracts for the organization.
+    Uses 5-second cache for performance.
+    """
     org_id = str(current_user["organization_id"])
 
+    # Check cache
+    cache_key = f"list_{org_id}"
+    now = time.time()
+
+    if cache_key in _list_cache:
+        cached_data, cache_time = _list_cache[cache_key]
+        if now - cache_time < _cache_ttl:
+            return cached_data
+
+    # Cache miss - fetch from database
+    crud = get_company_repository_crud()
     repos = crud.get_by_organization(org_id)
-    return [serialize_repo(r) for r in repos]
+    result = [serialize_repo(r) for r in repos]
+
+    # Update cache
+    _list_cache[cache_key] = (result, now)
+
+    return result
 
 
 @router.get("/{file_id}")
@@ -311,6 +364,9 @@ async def update_company_repository(
     if not result:
         raise HTTPException(status_code=404, detail="GSA contract not found")
 
+    # Invalidate cache
+    invalidate_list_cache(org_id)
+
     return serialize_repo(result)
 
 
@@ -346,5 +402,8 @@ async def delete_company_repository(
     success = crud.delete(file_id, org_id)
     if not success:
         raise HTTPException(status_code=500, detail="Failed to delete")
+
+    # Invalidate cache
+    invalidate_list_cache(org_id)
 
     return {"success": True, "message": "GSA contract deleted"}
