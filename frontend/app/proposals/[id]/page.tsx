@@ -356,10 +356,7 @@ export default function ProposalPage() {
     <div className="space-y-2">
       {/* Pricing Workspace - Both initial and advanced show tabs */}
       <Card>
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base">{advancedMode ? 'Advanced Analysis' : 'Initial Analysis'}</CardTitle>
-        </CardHeader>
-        <CardContent className="pt-2">
+        <CardContent className="pt-4">
           {/* Tab Navigation - mode determines which tabs are shown */}
           <PricingTabs
             activeTab={activeTab}
@@ -400,11 +397,11 @@ export default function ProposalPage() {
 
   return (
     <DashboardLayout>
-      <div className="w-full px-4">
+      <div className="w-full px-6">
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
+          <div className="flex items-center gap-6 flex-wrap mt-2">
             {/* Proposal Name with Inline Edit */}
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2">
               {!isEditingName ? (
                 <h1
                   className="text-lg font-bold text-foreground cursor-text hover:bg-muted/30 px-2 py-1 rounded transition-colors"
@@ -466,7 +463,7 @@ export default function ProposalPage() {
               )}
             </div>
             {/* Prime Contractor with Inline Edit */}
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2">
               {!isEditingPrimeContractor ? (
                 <p
                   className="text-sm text-muted-foreground cursor-text hover:bg-muted/30 px-2 py-1 rounded transition-colors"
@@ -501,40 +498,42 @@ export default function ProposalPage() {
             </div>
           </div>
           {/* Advanced Analysis or Export Excel button */}
-          {currentProposal.status === 'completed' && (
-            <>
-              {!advancedMode ? (
-                <Button
-                  variant="primary"
-                  onClick={handleAdvancedAnalysis}
-                  disabled={isRecalculating}
-                >
-                  {isRecalculating ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Calculating...
-                    </>
-                  ) : (
-                    'Advanced Analysis'
-                  )}
-                </Button>
-              ) : (
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    // Pass current prime contractor name to export
-                    exportToExcel({
-                      primeContractorName: currentProposal?.prime_contractor_name || 'TBD'
-                    });
-                  }}
-                  disabled={isRecalculating}
-                >
-                  <Download className="w-4 h-4 mr-2" />
-                  Export to Excel
-                </Button>
-              )}
-            </>
-          )}
+          <div className="mt-2">
+            {currentProposal.status === 'completed' && (
+              <>
+                {!advancedMode ? (
+                  <Button
+                    variant="primary"
+                    onClick={handleAdvancedAnalysis}
+                    disabled={isRecalculating}
+                  >
+                    {isRecalculating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Calculating...
+                      </>
+                    ) : (
+                      'Advanced Analysis'
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      // Pass current prime contractor name to export
+                      exportToExcel({
+                        primeContractorName: currentProposal?.prime_contractor_name || 'TBD'
+                      });
+                    }}
+                    disabled={isRecalculating}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export to Excel
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
         </div>
 
         {currentProposal.status === 'processing' && renderProcessingView()}
