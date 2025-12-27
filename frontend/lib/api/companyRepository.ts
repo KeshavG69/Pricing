@@ -54,8 +54,18 @@ export const companyRepositoryApi = {
   },
 
   // Check processing status
-  getStatus: async (fileId: string): Promise<{ status: string; progress?: number; message?: string }> => {
-    const response = await apiClient.get<{ status: string; progress?: number; message?: string }>(
+  getStatus: async (fileId: string): Promise<{
+    file_id: string;
+    status: string;
+    error_message: string | null;
+    labor_category_count: number;
+  }> => {
+    const response = await apiClient.get<{
+      file_id: string;
+      status: string;
+      error_message: string | null;
+      labor_category_count: number;
+    }>(
       `/company-repository/${fileId}/status`
     );
     return response.data;

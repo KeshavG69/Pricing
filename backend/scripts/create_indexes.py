@@ -6,6 +6,14 @@ This script creates indexes on:
 2. wage_data collection - for SOC code lookups
 3. areas collection - for area name searches
 4. occupations collection - for occupation code lookups
+5. users collection - for authentication and organization queries
+6. organizations collection - for org lookups
+7. invitations collection - for invitation validation
+8. token_blacklist collection - for JWT logout
+9. company_repositories collection - for GSA contract queries
+
+Run this script to create all indexes:
+    uv run python scripts/create_indexes.py
 """
 
 import os
@@ -250,6 +258,54 @@ def create_indexes():
         print("   ⚠ Already exists: created_at (TTL)")
 
     # =====================================================================
+    # COMPANY_REPOSITORIES COLLECTION (GSA Contracts)
+    # =====================================================================
+    print("\n9. COMPANY_REPOSITORIES Collection:")
+    company_repositories = db.company_repositories
+
+    # Primary query: list contracts by organization (sorted by creation date)
+    if safe_create_index(company_repositories, [("organization_id", ASCENDING), ("created_at", DESCENDING)], "org_created_at_index"):
+        print("   ✓ Created: organization_id + created_at")
+    else:
+        print("   ⚠ Already exists: organization_id + created_at")
+
+    # Unique file_id for lookups
+    if safe_create_index(company_repositories, "file_id", "file_id_unique_index", unique=True):
+        print("   ✓ Created: file_id (unique)")
+    else:
+        print("   ⚠ Already exists: file_id (unique)")
+
+    # Filter by status within organization
+    if safe_create_index(company_repositories, [("organization_id", ASCENDING), ("status", ASCENDING)], "org_status_index"):
+        print("   ✓ Created: organization_id + status")
+    else:
+        print("   ⚠ Already exists: organization_id + status")
+
+    # Search by contract number
+    if safe_create_index(company_repositories, [("organization_id", ASCENDING), ("contract_number", ASCENDING)], "org_contract_number_index"):
+        print("   ✓ Created: organization_id + contract_number")
+    else:
+        print("   ⚠ Already exists: organization_id + contract_number")
+
+    # Search by company name
+    if safe_create_index(company_repositories, [("organization_id", ASCENDING), ("company_name", ASCENDING)], "org_company_name_index"):
+        print("   ✓ Created: organization_id + company_name")
+    else:
+        print("   ⚠ Already exists: organization_id + company_name")
+
+    # Text search index for contract name, company name, and contract number
+    if safe_create_index(company_repositories, [("name", "text"), ("company_name", "text"), ("contract_number", "text")], "text_search_index"):
+        print("   ✓ Created: text search (name, company_name, contract_number)")
+    else:
+        print("   ⚠ Already exists: text search")
+
+    # Sort by last modified
+    if safe_create_index(company_repositories, [("organization_id", ASCENDING), ("updated_at", DESCENDING)], "org_updated_at_index"):
+        print("   ✓ Created: organization_id + updated_at")
+    else:
+        print("   ⚠ Already exists: organization_id + updated_at")
+
+    # =====================================================================
     # SUMMARY
     # =====================================================================
     print("\n" + "=" * 60)
@@ -257,7 +313,7 @@ def create_indexes():
     print("=" * 60)
 
     # List all indexes per collection
-    collections = ["proposals", "wage_data", "areas", "occupations", "users", "organizations", "invitations", "token_blacklist"]
+    collections = ["proposals", "wage_data", "areas", "occupations", "users", "organizations", "invitations", "token_blacklist", "company_repositories"]
     for coll_name in collections:
         coll = db[coll_name]
         indexes = list(coll.list_indexes())

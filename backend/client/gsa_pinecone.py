@@ -91,15 +91,24 @@ class GSAPineconeClient:
 
                 texts.append(text)
                 ids.append(f"{organization_id}_{file_id}_{lcat['lcat_id']}")
-                metadatas.append({
+
+                # Build metadata, filtering out None values (Pinecone doesn't accept null)
+                metadata = {
                     "organization_id": organization_id,
                     "file_id": file_id,
                     "lcat_id": lcat["lcat_id"],
-                    "title": title,
-                    "sin": lcat.get("sin", ""),
-                    "education": lcat.get("education", ""),
-                    "experience": lcat.get("experience", "")
-                })
+                    "title": title or ""
+                }
+
+                # Only add optional fields if they have non-None values
+                if lcat.get("sin"):
+                    metadata["sin"] = lcat["sin"]
+                if lcat.get("education"):
+                    metadata["education"] = lcat["education"]
+                if lcat.get("experience"):
+                    metadata["experience"] = lcat["experience"]
+
+                metadatas.append(metadata)
 
             # Use LangChain PineconeVectorStore to add documents
             print(f"  Storing {len(texts)} labor categories in Pinecone...")
