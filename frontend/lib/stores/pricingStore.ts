@@ -317,6 +317,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
           // FBLR excludes fee - fee is calculated separately in Fee Section
           // This matches government cost proposal format (Intprepix)
+
           const fblr = dlRate + fringe + oh + ga;
           const totalAmount = fblr * hours;
 
@@ -1176,20 +1177,24 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
         // Split rates object into backend-expected structure
         const payload = {
-          jobs: state.positions.map((p) => ({
-            labor_category: p.labor_category,
-            soc_code: p.soc_code,
-            soc_title: p.soc_title,  // Add BLS Category name for Excel export
-            hours_per_year: p.hours_per_year,
-            selected_wage: getEffectiveSalary(p),
-            percentile: p.percentile,
-            wage_10th: p.wage_10th,
-            wage_25th: p.wage_25th,
-            wage_50th: p.wage_50th,
-            wage_75th: p.wage_75th,
-            wage_90th: p.wage_90th,
-            standard_fte_hours: p.standard_fte_hours!,
-          })),
+          jobs: state.positions.map((p) => {
+            const effectiveSalary = getEffectiveSalary(p);
+            console.log(`[EXPORT] Position "${p.labor_category}": selected_wage=${effectiveSalary}, percentile=${p.percentile}, wage_${p.percentile}=${p[`wage_${p.percentile}` as keyof typeof p]}, selected_salaries=${p.selected_salaries?.join(',') || 'none'}`);
+            return {
+              labor_category: p.labor_category,
+              soc_code: p.soc_code,
+              soc_title: p.soc_title,  // Add BLS Category name for Excel export
+              hours_per_year: p.hours_per_year,
+              selected_wage: effectiveSalary,
+              percentile: p.percentile,
+              wage_10th: p.wage_10th,
+              wage_25th: p.wage_25th,
+              wage_50th: p.wage_50th,
+              wage_75th: p.wage_75th,
+              wage_90th: p.wage_90th,
+              standard_fte_hours: p.standard_fte_hours!,
+            };
+          }),
           project_config: {
             solicitation_number: state.solicitationNumber || '',
             prime_contractor_name: primeContractorName,
@@ -1232,9 +1237,18 @@ export const usePricingStore = create<PricingState>((set, get) => {
             })),
             travel: state.travel,
             odcs: state.odcs,
+            extensions: state.extensions,
             include_rate_table: true,
           },
         };
+
+        console.log('[EXPORT] Rates being sent:', {
+          indirect_rates: payload.project_config.indirect_rates,
+          fee_rates: payload.project_config.fee_rates,
+          escalation_rates: payload.project_config.escalation_rates,
+        });
+        console.log('[EXPORT] Travel items:', payload.project_config.travel);
+        console.log('[EXPORT] ODC items:', payload.project_config.odcs);
 
         const blob = await pricingApi.exportToExcel(payload as any);
 

@@ -148,6 +148,18 @@ class ExcelGenerator:
                 smh_rate=project_data.get('passthrough_rates', {}).get('smh')
             )
 
+        # Grand Total section (CPFF + Travel + ODCs)
+        has_travel = 'travel' in project_data and project_data['travel']
+        has_odcs = 'odcs' in project_data and project_data['odcs']
+        if has_travel or has_odcs:
+            current_row = self._write_grand_total_section(
+                self.ws,
+                current_row,
+                total_years,
+                has_travel,
+                has_odcs
+            )
+
         # Apply formatting
         self._apply_formatting(self.ws, total_years)
 
@@ -220,8 +232,9 @@ class ExcelGenerator:
         base_label = f"Base Period ({base_months} mo)" if base_months != 12 else "Base Period"
         ws.cell(7, col_offset, base_label)
 
-        # Option Years
-        option_years = total_years - project_data['base_years']
+        # Option Years (exclude extension years from count)
+        num_extensions = len(extensions)
+        option_years = total_years - project_data['base_years'] - num_extensions
         for year_num in range(1, option_years + 1):
             col_offset += 3  # Each year takes 3 columns
             year_key = str(year_num + project_data['base_years'])
@@ -246,6 +259,7 @@ class ExcelGenerator:
         ws.cell(8, 6, "Amount")
 
         # For each year: Rate, Hours, Amount
+        # Note: total_years already includes extension years, so we iterate over all of them
         col_offset = 7
         for year in range(1, total_years + 1):
             ws.cell(8, col_offset, "Rate")
@@ -253,16 +267,9 @@ class ExcelGenerator:
             ws.cell(8, col_offset + 2, "Amount")
             col_offset += 3
 
-        # For each extension: Rate, Hours, Amount
-        for extension in extensions:
-            ws.cell(8, col_offset, "Rate")
-            ws.cell(8, col_offset + 1, "Hours")
-            ws.cell(8, col_offset + 2, "Amount")
-            col_offset += 3
-
-        # Averaged FBLR columns (after all year columns + extensions)
-        num_extensions = len(extensions)
-        avg_fblr_start_col = 7 + (total_years * 3) + (num_extensions * 3)
+        # Averaged FBLR columns (after all year columns)
+        # Note: extensions are already included in total_years, don't double-count
+        avg_fblr_start_col = 7 + (total_years * 3)
         ws.cell(7, avg_fblr_start_col, "Averaged FBLR")
         # Merge cells for averaged FBLR header (spans 6 columns)
         ws.merge_cells(
@@ -408,8 +415,8 @@ class ExcelGenerator:
                 year_data = results[f'year_{year}']
                 col_offset = self._calculate_column_offset(year)
 
-                # Rate
-                ws.cell(current_row, col_offset, year_data['rate'])
+                # Rate - Use DL rate (not FBLR) so indirect cost rows calculate correctly
+                ws.cell(current_row, col_offset, year_data['dl_rate'])
 
                 # Hours
                 ws.cell(current_row, col_offset + 1, year_data['hours'])
@@ -420,7 +427,9 @@ class ExcelGenerator:
                 ws.cell(current_row, col_offset + 2, f"={rate_cell}*{hours_cell}")
 
             # Averaged FBLR calculation
-            base_wage = position.get(f"wage_{position['percentile']}", 0)
+            # Use base_annual_wage (which comes from selected_wage in the frontend)
+            # NOT wage_{percentile} which may be different from the user's custom salary
+            base_wage = position.get('base_annual_wage', position.get(f"wage_{position['percentile']}", 0))
             hours_per_year = position.get('hours_per_year', {})
             standard_fte_hours = position.get('standard_fte_hours', 1880)
 
@@ -529,6 +538,7 @@ class ExcelGenerator:
         current_row += 1
 
         # Total Prime Labor (DL + Fringe + OH + G&A)
+        self.row_trackers['prime_labor_total_row'] = current_row
         ws.cell(current_row, 1, "Total Prime Labor Cost (FBLR)")
         for year in range(1, total_years + 1):
             col_offset = self._calculate_column_offset(year)
@@ -756,8 +766,28 @@ class ExcelGenerator:
         """
         current_row = start_row
 
-        # Total Labor Cost row
+        # Get row references from tracker
+        prime_labor_total_row = self.row_trackers.get('prime_labor_total_row')
+        sub_labor_total_row = self.row_trackers.get('sub_labor_total')
+        prime_fee_rate_cell = self.row_trackers.get('prime_fee_rate_cell')
+        sub_fee_rate_cell = self.row_trackers.get('sub_fee_rate_cell')
+
+        # Total Labor Cost row (sum of prime + sub)
+        total_labor_row = current_row
         ws.cell(current_row, 1, "Total Labor Cost (Prime and Subcontractor Labor)")
+        # Add formulas for each year
+        for year in range(1, total_years + 1):
+            col_offset = self._calculate_column_offset(year)
+            amount_col = get_column_letter(col_offset + 2)
+            if prime_labor_total_row and sub_labor_total_row:
+                ws.cell(current_row, col_offset + 2, f"={amount_col}{prime_labor_total_row}+{amount_col}{sub_labor_total_row}")
+            elif prime_labor_total_row:
+                ws.cell(current_row, col_offset + 2, f"={amount_col}{prime_labor_total_row}")
+        # Total column
+        if prime_labor_total_row and sub_labor_total_row:
+            ws.cell(current_row, 6, f"=F{prime_labor_total_row}+F{sub_labor_total_row}")
+        elif prime_labor_total_row:
+            ws.cell(current_row, 6, f"=F{prime_labor_total_row}")
         current_row += 2
 
         # Fixed Fee section header
@@ -765,25 +795,60 @@ class ExcelGenerator:
         current_row += 1
 
         # Prime contractor fee for prime labor
+        prime_fee_row = current_row
         ws.cell(current_row, 1, "Prime Contractor Fee for Prime Contractor Labor")
-
-        prime_fee_rate = fee_rates['prime_labor']  # Required, no default
-        ws.cell(current_row, 6, prime_fee_rate)  # Show rate
+        prime_fee_rate = fee_rates['prime_labor']
+        ws.cell(current_row, 5, prime_fee_rate)  # Show rate in column E
+        # Calculate fee for each year
+        if prime_labor_total_row and prime_fee_rate_cell:
+            for year in range(1, total_years + 1):
+                col_offset = self._calculate_column_offset(year)
+                amount_col = get_column_letter(col_offset + 2)
+                ws.cell(current_row, col_offset + 2, f"={amount_col}{prime_labor_total_row}*${prime_fee_rate_cell}")
+            ws.cell(current_row, 6, f"=F{prime_labor_total_row}*${prime_fee_rate_cell}")
         current_row += 1
 
         # Prime contractor fee for subcontractor labor
+        sub_fee_row = current_row
         ws.cell(current_row, 1, "Prime Contractor Fee for Subcontractor Labor *")
-
-        sub_fee_rate = fee_rates['sub_labor']  # Required, no default
-        ws.cell(current_row, 6, sub_fee_rate)  # Show rate
+        sub_fee_rate = fee_rates['sub_labor']
+        ws.cell(current_row, 5, sub_fee_rate)  # Show rate in column E
+        # Calculate fee for each year (only if subcontractors exist)
+        if sub_labor_total_row and sub_fee_rate_cell:
+            for year in range(1, total_years + 1):
+                col_offset = self._calculate_column_offset(year)
+                amount_col = get_column_letter(col_offset + 2)
+                ws.cell(current_row, col_offset + 2, f"={amount_col}{sub_labor_total_row}*${sub_fee_rate_cell}")
+            ws.cell(current_row, 6, f"=F{sub_labor_total_row}*${sub_fee_rate_cell}")
         current_row += 1
 
         # Total Fee row
+        total_fee_row = current_row
         ws.cell(current_row, 1, "Total Fee (for Prime and Subcontractor Labor)")
+        for year in range(1, total_years + 1):
+            col_offset = self._calculate_column_offset(year)
+            amount_col = get_column_letter(col_offset + 2)
+            if sub_labor_total_row:
+                ws.cell(current_row, col_offset + 2, f"={amount_col}{prime_fee_row}+{amount_col}{sub_fee_row}")
+            else:
+                ws.cell(current_row, col_offset + 2, f"={amount_col}{prime_fee_row}")
+        if sub_labor_total_row:
+            ws.cell(current_row, 6, f"=F{prime_fee_row}+F{sub_fee_row}")
+        else:
+            ws.cell(current_row, 6, f"=F{prime_fee_row}")
         current_row += 2
 
         # Total Labor Cost Plus Fixed Fee (CPFF)
         ws.cell(current_row, 1, "Total Labor Cost Plus Fixed Fee (CPFF)")
+        for year in range(1, total_years + 1):
+            col_offset = self._calculate_column_offset(year)
+            amount_col = get_column_letter(col_offset + 2)
+            ws.cell(current_row, col_offset + 2, f"={amount_col}{total_labor_row}+{amount_col}{total_fee_row}")
+        ws.cell(current_row, 6, f"=F{total_labor_row}+F{total_fee_row}")
+
+        # Track CPFF row for Grand Total calculation
+        self.row_trackers['cpff_row'] = current_row
+
         current_row += 2
 
         return current_row
@@ -851,8 +916,8 @@ class ExcelGenerator:
                 ws.cell(current_row, ga_col, year_data['ga'])
 
                 # Store cell reference for total column
-                year_amount_cells.append(f"{self._get_column_letter(base_col)}{current_row}")
-                year_amount_cells.append(f"{self._get_column_letter(ga_col)}{current_row}")
+                year_amount_cells.append(f"{get_column_letter(base_col)}{current_row}")
+                year_amount_cells.append(f"{get_column_letter(ga_col)}{current_row}")
 
             # Total column (last column)
             total_col = (total_years * 2) + 2
@@ -870,17 +935,20 @@ class ExcelGenerator:
             ga_col = year * 2 + 1
 
             # Base column formula
-            base_formula = f"=SUM({self._get_column_letter(base_col)}{travel_start_row}:{self._get_column_letter(base_col)}{current_row-1})"
+            base_formula = f"=SUM({get_column_letter(base_col)}{travel_start_row}:{get_column_letter(base_col)}{current_row-1})"
             ws.cell(current_row, base_col, base_formula)
 
             # G&A column formula
-            ga_formula = f"=SUM({self._get_column_letter(ga_col)}{travel_start_row}:{self._get_column_letter(ga_col)}{current_row-1})"
+            ga_formula = f"=SUM({get_column_letter(ga_col)}{travel_start_row}:{get_column_letter(ga_col)}{current_row-1})"
             ws.cell(current_row, ga_col, ga_formula)
 
         # Total Travel cost (all years)
         total_col = (total_years * 2) + 2
-        total_formula = f"=SUM({self._get_column_letter(total_col)}{travel_start_row}:{self._get_column_letter(total_col)}{current_row-1})"
+        total_formula = f"=SUM({get_column_letter(total_col)}{travel_start_row}:{get_column_letter(total_col)}{current_row-1})"
         ws.cell(current_row, total_col, total_formula)
+
+        # Track Total Travel row for Grand Total calculation
+        self.row_trackers['total_travel_row'] = current_row
 
         current_row += 2
 
@@ -968,9 +1036,79 @@ class ExcelGenerator:
         ws.cell(current_row, 5, f"=SUM(E{odc_start_row}:E{current_row-1})")
         current_row += 2
 
-        # GRAND TOTAL
-        ws.cell(current_row, 1, "GRAND TOTAL (Labor + Fee + ODCs)")
-        current_row += 1
+        # Track Total ODC row for Grand Total calculation
+        self.row_trackers['total_odc_row'] = current_row - 2  # Points to "Total Other Direct Costs" row
+
+        return current_row
+
+    def _write_grand_total_section(
+        self,
+        ws,
+        start_row: int,
+        total_years: int,
+        has_travel: bool,
+        has_odcs: bool
+    ) -> int:
+        """
+        Write Grand Total section combining CPFF + Travel + ODCs.
+
+        Args:
+            ws: Worksheet object
+            start_row: Row to start writing
+            total_years: Number of contract years
+            has_travel: Whether travel section exists
+            has_odcs: Whether ODC section exists
+
+        Returns:
+            Next available row number
+        """
+        current_row = start_row
+
+        # GRAND TOTAL CONTRACT VALUE
+        ws.cell(current_row, 1, "GRAND TOTAL CONTRACT VALUE")
+
+        # Get row references
+        cpff_row = self.row_trackers.get('cpff_row')
+        travel_row = self.row_trackers.get('total_travel_row')
+        odc_row = self.row_trackers.get('total_odc_row')
+
+        # Build formula components
+        # For Total Amount column (F)
+        formula_parts = []
+        if cpff_row:
+            formula_parts.append(f"F{cpff_row}")
+        if has_travel and travel_row:
+            # Travel total is in a different column structure - need to sum base + G&A for all years
+            # Actually, let's reference the sum of all travel columns
+            travel_total_col = (total_years * 2) + 2  # Total column in travel section
+            formula_parts.append(f"{get_column_letter(travel_total_col)}{travel_row}")
+        if has_odcs and odc_row:
+            formula_parts.append(f"E{odc_row}")
+
+        if formula_parts:
+            ws.cell(current_row, 6, f"={'+'.join(formula_parts)}")
+
+        # Year-by-year Grand Total
+        for year in range(1, total_years + 1):
+            col_offset = self._calculate_column_offset(year)
+            amount_col = col_offset + 2  # Amount column for this year
+
+            year_formula_parts = []
+            if cpff_row:
+                year_formula_parts.append(f"{get_column_letter(amount_col)}{cpff_row}")
+            if has_travel and travel_row:
+                # Travel has base + G&A columns for each year
+                travel_base_col = year * 2
+                travel_ga_col = year * 2 + 1
+                year_formula_parts.append(f"{get_column_letter(travel_base_col)}{travel_row}+{get_column_letter(travel_ga_col)}{travel_row}")
+            if has_odcs and odc_row:
+                # ODC structure - need to check column layout
+                year_formula_parts.append(f"{get_column_letter(amount_col)}{odc_row}")
+
+            if year_formula_parts:
+                ws.cell(current_row, amount_col, f"={'+'.join(year_formula_parts)}")
+
+        current_row += 2
 
         return current_row
 
