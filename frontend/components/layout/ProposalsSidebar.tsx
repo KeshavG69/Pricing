@@ -141,9 +141,9 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
                         {isActive && <ChevronRight className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />}
                       </div>
 
-                      {proposal.solicitationNumber && (
+                      {proposal.solicitation_number && (
                         <p className="text-xs text-muted-foreground mb-1.5 truncate">
-                          {proposal.solicitationNumber}
+                          {proposal.solicitation_number}
                         </p>
                       )}
 
