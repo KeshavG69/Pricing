@@ -580,7 +580,7 @@ export interface WageRefreshResponse {
 }
 
 // ============================================================
-// GSA / Company Repository Types
+// GSA / Company Rates Types
 // ============================================================
 
 export interface GSAContract {
@@ -593,6 +593,7 @@ export interface GSAContract {
   contract_end_date?: string;
   company_name?: string;
   labor_categories_count: number;
+  labor_categories?: GSALaborCategory[];
   created_at: string;
   updated_at?: string;
   uploaded_by: string;

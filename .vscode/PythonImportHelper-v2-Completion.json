@@ -111,6 +111,14 @@
         "documentation": {}
     },
     {
+        "label": "get_chat_llm",
+        "importPath": "client.llm_client",
+        "description": "client.llm_client",
+        "isExtraImport": true,
+        "detail": "client.llm_client",
+        "documentation": {}
+    },
+    {
         "label": "get_embeddings",
         "importPath": "client.llm_client",
         "description": "client.llm_client",
@@ -653,6 +661,14 @@
         "description": "fastapi.responses",
         "isExtraImport": true,
         "detail": "fastapi.responses",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
         "documentation": {}
     },
     {
@@ -2980,7 +2996,55 @@
         "documentation": {}
     },
     {
+        "label": "lru_cache",
+        "importPath": "functools",
+        "description": "functools",
+        "isExtraImport": true,
+        "detail": "functools",
+        "documentation": {}
+    },
+    {
+        "label": "lru_cache",
+        "importPath": "functools",
+        "description": "functools",
+        "isExtraImport": true,
+        "detail": "functools",
+        "documentation": {}
+    },
+    {
         "label": "parse_gsa_contract",
+        "importPath": "client.gsa_parser",
+        "description": "client.gsa_parser",
+        "isExtraImport": true,
+        "detail": "client.gsa_parser",
+        "documentation": {}
+    },
+    {
+        "label": "_convert_rtf_to_txt",
+        "importPath": "client.gsa_parser",
+        "description": "client.gsa_parser",
+        "isExtraImport": true,
+        "detail": "client.gsa_parser",
+        "documentation": {}
+    },
+    {
+        "label": "_convert_excel_to_csv",
+        "importPath": "client.gsa_parser",
+        "description": "client.gsa_parser",
+        "isExtraImport": true,
+        "detail": "client.gsa_parser",
+        "documentation": {}
+    },
+    {
+        "label": "_extract_and_chunk_by_file_type",
+        "importPath": "client.gsa_parser",
+        "description": "client.gsa_parser",
+        "isExtraImport": true,
+        "detail": "client.gsa_parser",
+        "documentation": {}
+    },
+    {
+        "label": "_extract_labor_categories_with_llm",
         "importPath": "client.gsa_parser",
         "description": "client.gsa_parser",
         "isExtraImport": true,
@@ -3210,14 +3274,6 @@
         "importPath": "re",
         "description": "re",
         "detail": "re",
-        "documentation": {}
-    },
-    {
-        "label": "lru_cache",
-        "importPath": "functools",
-        "description": "functools",
-        "isExtraImport": true,
-        "detail": "functools",
         "documentation": {}
     },
     {
@@ -3986,29 +4042,11 @@
         "documentation": {}
     },
     {
-        "label": "YearRate",
+        "label": "GSAContractMetadata",
         "kind": 6,
         "importPath": "backend.client.gsa_parser",
         "description": "backend.client.gsa_parser",
-        "peekOfCode": "class YearRate(BaseModel):\n    \"\"\"Hourly rate for a specific contract year.\"\"\"\n    year: str = Field(description=\"Year number: '1', '2', '3', etc.\")\n    rate: float = Field(description=\"Hourly rate in dollars (e.g., 201.23)\")\nclass LaborCategoryExtract(BaseModel):\n    \"\"\"Labor category from GSA contract.\"\"\"\n    sin: Optional[str] = Field(None, description=\"Special Item Number (e.g., '54151S')\")\n    title: str = Field(description=\"Labor category title (e.g., 'Program Manager Senior')\")\n    description: Optional[str] = Field(None, description=\"Job description\")\n    education: Optional[str] = Field(None, description=\"Minimum education (e.g., 'Bachelors')\")",
-        "detail": "backend.client.gsa_parser",
-        "documentation": {}
-    },
-    {
-        "label": "LaborCategoryExtract",
-        "kind": 6,
-        "importPath": "backend.client.gsa_parser",
-        "description": "backend.client.gsa_parser",
-        "peekOfCode": "class LaborCategoryExtract(BaseModel):\n    \"\"\"Labor category from GSA contract.\"\"\"\n    sin: Optional[str] = Field(None, description=\"Special Item Number (e.g., '54151S')\")\n    title: str = Field(description=\"Labor category title (e.g., 'Program Manager Senior')\")\n    description: Optional[str] = Field(None, description=\"Job description\")\n    education: Optional[str] = Field(None, description=\"Minimum education (e.g., 'Bachelors')\")\n    experience: Optional[str] = Field(None, description=\"Minimum years of experience (e.g., '5')\")\n    rates_per_year: List[YearRate] = Field(\n        description=\"Hourly rates per year: [{'year': '1', 'rate': 201.23}, ...]\"\n    )",
-        "detail": "backend.client.gsa_parser",
-        "documentation": {}
-    },
-    {
-        "label": "GSAContractExtraction",
-        "kind": 6,
-        "importPath": "backend.client.gsa_parser",
-        "description": "backend.client.gsa_parser",
-        "peekOfCode": "class GSAContractExtraction(BaseModel):\n    \"\"\"Extraction schema for GSA contract.\"\"\"\n    contract_number: Optional[str] = Field(None, description=\"GSA contract number\")\n    contract_start_date: Optional[str] = Field(None, description=\"Contract start date\")\n    contract_end_date: Optional[str] = Field(None, description=\"Contract end date\")\n    company_name: Optional[str] = Field(None, description=\"Company name\")\n    labor_categories: List[LaborCategoryExtract] = Field(\n        description=\"All labor categories with rates\"\n    )\n# =====================================================================",
+        "peekOfCode": "class GSAContractMetadata(BaseModel):\n    \"\"\"\n    Metadata extraction for GSA contract (contract number, dates, company name).\n    Labor categories are extracted separately using GPT-4 with intelligent chunking.\n    \"\"\"\n    contract_number: Optional[str] = Field(\n        None,\n        description=\"GSA contract number (e.g., 'GS-35F-0119Y', '47QRCA25DS242', '47QTCA20D003R')\"\n    )\n    contract_start_date: Optional[str] = Field(",
         "detail": "backend.client.gsa_parser",
         "documentation": {}
     },
@@ -4400,11 +4438,20 @@
         "documentation": {}
     },
     {
+        "label": "invalidate_list_cache",
+        "kind": 2,
+        "importPath": "backend.routers.company_repository",
+        "description": "backend.routers.company_repository",
+        "peekOfCode": "def invalidate_list_cache(org_id: str):\n    \"\"\"Invalidate list cache for an organization.\"\"\"\n    cache_key = f\"list_{org_id}\"\n    if cache_key in _list_cache:\n        del _list_cache[cache_key]\n# LlamaExtract supported formats + Excel and RTF (we convert these)\nALLOWED_EXTENSIONS = [\n    '.pdf', '.csv', '.docx', '.htm', '.html', '.jpeg', '.jpg',\n    '.json', '.md', '.png', '.txt',  # LlamaExtract native\n    '.xlsx', '.xls',  # Converted to CSV",
+        "detail": "backend.routers.company_repository",
+        "documentation": {}
+    },
+    {
         "label": "serialize_repo",
         "kind": 2,
         "importPath": "backend.routers.company_repository",
         "description": "backend.routers.company_repository",
-        "peekOfCode": "def serialize_repo(repo: dict) -> dict:\n    \"\"\"Convert ObjectId to string for JSON serialization.\"\"\"\n    if not repo:\n        return repo\n    if \"_id\" in repo:\n        repo[\"id\"] = str(repo[\"_id\"])\n        del repo[\"_id\"]\n    if \"organization_id\" in repo:\n        repo[\"organization_id\"] = str(repo[\"organization_id\"])\n    if \"created_by\" in repo:",
+        "peekOfCode": "def serialize_repo(repo: dict) -> dict:\n    \"\"\"\n    Convert ObjectId to string for JSON serialization.\n    Optimized to minimize dict operations.\n    \"\"\"\n    if not repo:\n        return repo\n    # Create new dict with transformed fields (avoid multiple iterations)\n    result = {}\n    for key, value in repo.items():",
         "detail": "backend.routers.company_repository",
         "documentation": {}
     },
@@ -4413,7 +4460,25 @@
         "kind": 5,
         "importPath": "backend.routers.company_repository",
         "description": "backend.routers.company_repository",
-        "peekOfCode": "router = APIRouter(prefix=\"/api/company-repository\", tags=[\"company-repository\"])\n# LlamaExtract supported formats + Excel and RTF (we convert these)\nALLOWED_EXTENSIONS = [\n    '.pdf', '.csv', '.docx', '.htm', '.html', '.jpeg', '.jpg',\n    '.json', '.md', '.png', '.txt',  # LlamaExtract native\n    '.xlsx', '.xls',  # Converted to CSV\n    '.rtf'  # Converted to TXT\n]\ndef serialize_repo(repo: dict) -> dict:\n    \"\"\"Convert ObjectId to string for JSON serialization.\"\"\"",
+        "peekOfCode": "router = APIRouter(prefix=\"/api/company-repository\", tags=[\"company-repository\"])\n# Simple cache for list endpoint (5 second TTL)\n_list_cache = {}\n_cache_ttl = 5  # seconds\ndef invalidate_list_cache(org_id: str):\n    \"\"\"Invalidate list cache for an organization.\"\"\"\n    cache_key = f\"list_{org_id}\"\n    if cache_key in _list_cache:\n        del _list_cache[cache_key]\n# LlamaExtract supported formats + Excel and RTF (we convert these)",
+        "detail": "backend.routers.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "_list_cache",
+        "kind": 5,
+        "importPath": "backend.routers.company_repository",
+        "description": "backend.routers.company_repository",
+        "peekOfCode": "_list_cache = {}\n_cache_ttl = 5  # seconds\ndef invalidate_list_cache(org_id: str):\n    \"\"\"Invalidate list cache for an organization.\"\"\"\n    cache_key = f\"list_{org_id}\"\n    if cache_key in _list_cache:\n        del _list_cache[cache_key]\n# LlamaExtract supported formats + Excel and RTF (we convert these)\nALLOWED_EXTENSIONS = [\n    '.pdf', '.csv', '.docx', '.htm', '.html', '.jpeg', '.jpg',",
+        "detail": "backend.routers.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "_cache_ttl",
+        "kind": 5,
+        "importPath": "backend.routers.company_repository",
+        "description": "backend.routers.company_repository",
+        "peekOfCode": "_cache_ttl = 5  # seconds\ndef invalidate_list_cache(org_id: str):\n    \"\"\"Invalidate list cache for an organization.\"\"\"\n    cache_key = f\"list_{org_id}\"\n    if cache_key in _list_cache:\n        del _list_cache[cache_key]\n# LlamaExtract supported formats + Excel and RTF (we convert these)\nALLOWED_EXTENSIONS = [\n    '.pdf', '.csv', '.docx', '.htm', '.html', '.jpeg', '.jpg',\n    '.json', '.md', '.png', '.txt',  # LlamaExtract native",
         "detail": "backend.routers.company_repository",
         "documentation": {}
     },
@@ -4422,7 +4487,7 @@
         "kind": 5,
         "importPath": "backend.routers.company_repository",
         "description": "backend.routers.company_repository",
-        "peekOfCode": "ALLOWED_EXTENSIONS = [\n    '.pdf', '.csv', '.docx', '.htm', '.html', '.jpeg', '.jpg',\n    '.json', '.md', '.png', '.txt',  # LlamaExtract native\n    '.xlsx', '.xls',  # Converted to CSV\n    '.rtf'  # Converted to TXT\n]\ndef serialize_repo(repo: dict) -> dict:\n    \"\"\"Convert ObjectId to string for JSON serialization.\"\"\"\n    if not repo:\n        return repo",
+        "peekOfCode": "ALLOWED_EXTENSIONS = [\n    '.pdf', '.csv', '.docx', '.htm', '.html', '.jpeg', '.jpg',\n    '.json', '.md', '.png', '.txt',  # LlamaExtract native\n    '.xlsx', '.xls',  # Converted to CSV\n    '.rtf'  # Converted to TXT\n]\ndef serialize_repo(repo: dict) -> dict:\n    \"\"\"\n    Convert ObjectId to string for JSON serialization.\n    Optimized to minimize dict operations.",
         "detail": "backend.routers.company_repository",
         "documentation": {}
     },
@@ -5007,7 +5072,7 @@
         "kind": 6,
         "importPath": "backend.utils.company_repository",
         "description": "backend.utils.company_repository",
-        "peekOfCode": "class CompanyRepositoryCRUD:\n    \"\"\"CRUD operations for company_repositories collection.\"\"\"\n    def __init__(self):\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"company_repositories\"]\n        # Create indexes\n        try:\n            self.collection.create_index([(\"organization_id\", 1), (\"created_at\", -1)])\n            self.collection.create_index(\"file_id\", unique=True)",
+        "peekOfCode": "class CompanyRepositoryCRUD:\n    \"\"\"CRUD operations for company_repositories collection.\"\"\"\n    def __init__(self):\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"company_repositories\"]\n        # Note: Indexes are managed by scripts/create_indexes.py\n        # Run: uv run python scripts/create_indexes.py\n    def create(self, organization_id: str, user_id: str, data: dict) -> dict:\n        \"\"\"Create new company repository entry.\"\"\"",
         "detail": "backend.utils.company_repository",
         "documentation": {}
     },
@@ -5171,6 +5236,15 @@
         "description": "backend.utils.proposals",
         "peekOfCode": "_lock = threading.RLock()\ndef get_proposal_crud() -> ProposalCRUD:\n    \"\"\"\n    Get or create ProposalCRUD instance (singleton pattern)\n    Returns:\n        ProposalCRUD instance\n    \"\"\"\n    global _proposal_crud\n    with _lock:\n        if _proposal_crud is None:",
         "detail": "backend.utils.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "test_extraction",
+        "kind": 2,
+        "importPath": "backend.test_gsa_llm_extraction",
+        "description": "backend.test_gsa_llm_extraction",
+        "peekOfCode": "def test_extraction(file_path: str):\n    \"\"\"Test GSA contract extraction.\"\"\"\n    print(f\"\\n{'='*80}\")\n    print(f\"Testing GSA Contract Extraction (Intelligent Chunking)\")\n    print(f\"{'='*80}\")\n    print(f\"File: {file_path}\\n\")\n    # Step 1: Convert files if needed\n    file_ext = Path(file_path).suffix.lower()\n    temp_file = None\n    if file_ext == '.rtf':",
+        "detail": "backend.test_gsa_llm_extraction",
         "documentation": {}
     },
     {

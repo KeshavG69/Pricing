@@ -4,15 +4,16 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useCompanyRepositoryStore } from '@/lib/stores/companyRepositoryStore';
+import { companyRepositoryApi } from '@/lib/api/companyRepository';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Card, { CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Dialog from '@/components/ui/Dialog';
-import { Building2, Upload, Trash2, Calendar, FileText, CheckCircle, AlertCircle, Clock, RefreshCw } from 'lucide-react';
+import { Building2, Upload, Trash2, Calendar, FileText, CheckCircle, AlertCircle, Clock, RefreshCw, ChevronDown, ChevronRight } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
 import { isAdmin } from '@/lib/utils/permissions';
-import { GSAContract } from '@/types';
+import { GSAContract, GSALaborCategory } from '@/types';
 
 export default function CompanyRepositoryPage() {
   const router = useRouter();
@@ -44,6 +45,10 @@ export default function CompanyRepositoryPage() {
 
   // Polling for processing contracts
   const [pollingIds, setPollingIds] = useState<Set<string>>(new Set());
+
+  // Expanded contract state (stores full contract data with labor_categories)
+  const [expandedContract, setExpandedContract] = useState<GSAContract | null>(null);
+  const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
   useEffect(() => {
     // Redirect non-admins
@@ -145,6 +150,35 @@ export default function CompanyRepositoryPage() {
     }
   };
 
+  const handleToggleExpand = async (contract: GSAContract) => {
+    // If already expanded, collapse
+    if (expandedContract?.file_id === contract.file_id) {
+      setExpandedContract(null);
+      return;
+    }
+
+    // Fetch full contract details including labor_categories
+    try {
+      setIsLoadingDetails(true);
+      const fullContract = await companyRepositoryApi.get(contract.file_id);
+      setExpandedContract(fullContract);
+    } catch (e) {
+      toast.error('Failed to load contract details');
+    } finally {
+      setIsLoadingDetails(false);
+    }
+  };
+
+  // Get year columns from labor categories
+  const getYearColumns = (laborCategories: GSALaborCategory[] | undefined) => {
+    if (!laborCategories || laborCategories.length === 0) return [];
+    const years = new Set<string>();
+    laborCategories.forEach((lc) => {
+      Object.keys(lc.rates_by_year || {}).forEach((year) => years.add(year));
+    });
+    return Array.from(years).sort((a, b) => parseInt(a) - parseInt(b));
+  };
+
   const getStatusBadge = (status: GSAContract['status']) => {
     switch (status) {
       case 'active':
@@ -197,7 +231,7 @@ export default function CompanyRepositoryPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Company Repository</h1>
+            <h1 className="text-3xl font-bold text-foreground mb-2">Company Rates</h1>
             <p className="text-muted-foreground">
               Upload and manage GSA contracts for rate lookups
             </p>
@@ -256,58 +290,124 @@ export default function CompanyRepositoryPage() {
                 {contracts.map((contract) => (
                   <div
                     key={contract.file_id}
-                    className="border border-border rounded-lg p-4 hover:bg-muted/30 transition-colors"
+                    className="border border-border rounded-lg overflow-hidden"
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex items-start gap-3">
-                        <div className="p-2 bg-primary/10 rounded-lg">
-                          <FileText className="w-5 h-5 text-primary" />
-                        </div>
-                        <div>
-                          <h4 className="font-medium text-foreground">{contract.name}</h4>
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-muted-foreground">
-                            {contract.contract_number && (
-                              <span>Contract: {contract.contract_number}</span>
-                            )}
-                            {contract.company_name && (
-                              <span>Company: {contract.company_name}</span>
-                            )}
-                            <span>{contract.labor_categories_count} labor categories</span>
-                          </div>
-                          {contract.contract_start_date && (
-                            <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
-                              <Calendar className="w-3 h-3" />
-                              Start: {new Date(contract.contract_start_date).toLocaleDateString()}
-                            </div>
+                    <div className="p-4 hover:bg-muted/30 transition-colors">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex items-start gap-3">
+                          {/* Expand/Collapse Button */}
+                          {contract.status === 'active' && contract.labor_categories_count > 0 && (
+                            <button
+                              onClick={() => handleToggleExpand(contract)}
+                              className="p-2 hover:bg-muted rounded-lg transition-colors mt-0.5"
+                              disabled={isLoadingDetails}
+                            >
+                              {isLoadingDetails && expandedContract?.file_id === contract.file_id ? (
+                                <RefreshCw className="w-4 h-4 animate-spin text-muted-foreground" />
+                              ) : expandedContract?.file_id === contract.file_id ? (
+                                <ChevronDown className="w-4 h-4 text-muted-foreground" />
+                              ) : (
+                                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                              )}
+                            </button>
                           )}
+                          <div className="p-2 bg-primary/10 rounded-lg">
+                            <FileText className="w-5 h-5 text-primary" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-foreground">{contract.name}</h4>
+                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-muted-foreground">
+                              {contract.contract_number && (
+                                <span>Contract: {contract.contract_number}</span>
+                              )}
+                              {contract.company_name && (
+                                <span>Company: {contract.company_name}</span>
+                              )}
+                              <span>{contract.labor_categories_count} labor categories</span>
+                            </div>
+                            {contract.contract_start_date && (
+                              <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
+                                <Calendar className="w-3 h-3" />
+                                Start: {new Date(contract.contract_start_date).toLocaleDateString()}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {getStatusBadge(contract.status)}
-                        {contract.status === 'needs_date' && (
+                        <div className="flex items-center gap-2">
+                          {getStatusBadge(contract.status)}
+                          {contract.status === 'needs_date' && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedContract(contract);
+                                setStartDate(contract.contract_start_date || '');
+                                setShowDateDialog(true);
+                              }}
+                            >
+                              <Calendar className="w-3 h-3 mr-1" />
+                              Set Date
+                            </Button>
+                          )}
                           <Button
-                            variant="outline"
+                            variant="ghost"
                             size="sm"
-                            onClick={() => {
-                              setSelectedContract(contract);
-                              setStartDate(contract.contract_start_date || '');
-                              setShowDateDialog(true);
-                            }}
+                            onClick={() => handleDelete(contract)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
                           >
-                            <Calendar className="w-3 h-3 mr-1" />
-                            Set Date
+                            <Trash2 className="w-4 h-4" />
                           </Button>
-                        )}
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDelete(contract)}
-                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        </div>
                       </div>
                     </div>
+
+                    {/* Expanded Labor Categories Table */}
+                    {expandedContract?.file_id === contract.file_id && expandedContract.labor_categories && (
+                      <div className="border-t border-border bg-muted/20">
+                        <div className="p-4">
+                          <h5 className="text-sm font-medium text-foreground mb-3">
+                            Labor Categories ({expandedContract.labor_categories.length})
+                          </h5>
+                          <div className="overflow-x-auto">
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr className="border-b border-border">
+                                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Title</th>
+                                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">SIN</th>
+                                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Education</th>
+                                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Experience</th>
+                                  {getYearColumns(expandedContract.labor_categories).map((year) => (
+                                    <th key={year} className="text-right py-2 px-3 font-medium text-muted-foreground">
+                                      Year {year}
+                                    </th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {expandedContract.labor_categories.map((lc, index) => (
+                                  <tr
+                                    key={lc.lcat_id || index}
+                                    className="border-b border-border/50 last:border-0 hover:bg-muted/30"
+                                  >
+                                    <td className="py-2 px-3 text-foreground">{lc.title}</td>
+                                    <td className="py-2 px-3 text-muted-foreground">{lc.sin || '-'}</td>
+                                    <td className="py-2 px-3 text-muted-foreground">{lc.education || '-'}</td>
+                                    <td className="py-2 px-3 text-muted-foreground">{lc.experience || '-'}</td>
+                                    {getYearColumns(expandedContract.labor_categories).map((year) => (
+                                      <td key={year} className="py-2 px-3 text-right text-foreground font-mono">
+                                        {lc.rates_by_year?.[year]
+                                          ? `$${lc.rates_by_year[year].toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                          : '-'}
+                                      </td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
