@@ -62,8 +62,6 @@ function CostBreakdownBar({
 
 export default function OverviewTab() {
   const {
-    proposalName,
-    solicitationNumber,
     positions,
     subcontractors,
     travel,
@@ -341,16 +339,6 @@ export default function OverviewTab() {
 
   return (
     <div className="space-y-3">
-      {/* Proposal Info */}
-      <div className="mb-2">
-        <h2 className="text-sm font-bold text-foreground">{proposalName}</h2>
-        {solicitationNumber && (
-          <p className="text-xs text-muted-foreground mt-1">
-            Solicitation: {solicitationNumber}
-          </p>
-        )}
-      </div>
-
       {/* Cost Metrics Row */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard

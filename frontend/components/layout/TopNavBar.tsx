@@ -2,7 +2,7 @@
 
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { BarChart3, LayoutGrid, FileText, Building, Building2, Mail, Users, Menu, ChevronDown } from 'lucide-react';
+import { BarChart3, LayoutGrid, FileText, Building, Building2, Menu, ChevronDown } from 'lucide-react';
 import { isAdmin } from '@/lib/utils/permissions';
 
 interface TopNavBarProps {
@@ -21,8 +21,6 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
 
   const adminNavItems = [
     { href: '/dashboard/settings/organization', label: 'Organization', icon: Building },
-    { href: '/dashboard/invitations', label: 'Invitations', icon: Mail },
-    { href: '/dashboard/team', label: 'Team', icon: Users },
   ];
 
   return (
