@@ -282,7 +282,7 @@ export default function CompanyRepositoryPage() {
             className="shadow-md shadow-primary/10"
           >
             <Upload className="w-4 h-4 mr-2" />
-            Upload Contract
+            Upload a New Contract
           </Button>
         </div>
 
@@ -322,7 +322,7 @@ export default function CompanyRepositoryPage() {
                 </p>
                 <Button variant="outline" onClick={() => setShowUploadDialog(true)}>
                   <Upload className="w-4 h-4 mr-2" />
-                  Upload Contract
+                  Upload a New Contract
                 </Button>
               </div>
             ) : (
