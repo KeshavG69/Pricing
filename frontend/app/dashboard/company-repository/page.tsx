@@ -254,12 +254,12 @@ export default function CompanyRepositoryPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 max-w-5xl mx-auto">
+      <div className="space-y-2 max-w-5xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-2">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Company Rates</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-3xl font-bold text-foreground mb-1">Company Rates</h1>
+            <p className="text-muted-foreground pl-1">
               Upload and manage GSA contracts for rate lookups
             </p>
           </div>
