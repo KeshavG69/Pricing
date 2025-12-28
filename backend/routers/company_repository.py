@@ -217,6 +217,10 @@ async def upload_gsa_contract(
         mongodb = get_mongodb_client()
         db = mongodb.get_database()
 
+        # Store URL with expiration timestamp (7 days from now)
+        from datetime import timezone
+        url_expires_at = datetime.now(timezone.utc).timestamp() + 604800  # 7 days
+
         db["company_repositories"].update_one(
             {"file_id": file_id},
             {"$set": {
@@ -224,7 +228,8 @@ async def upload_gsa_contract(
                     "filename": file.filename,
                     "file_size": file.size,
                     "idrive_key": idrive_key,
-                    "idrive_url": idrive_url
+                    "idrive_url": idrive_url,
+                    "idrive_url_expires_at": url_expires_at
                 }
             }}
         )
@@ -368,6 +373,82 @@ async def update_company_repository(
     invalidate_list_cache(org_id)
 
     return serialize_repo(result)
+
+
+@router.get("/{file_id}/document-url")
+async def get_contract_document_url(
+    file_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get a presigned URL to view/download the original GSA contract document.
+
+    Returns cached presigned URL if still valid (7 days), otherwise generates new one.
+    URLs are cached in MongoDB to avoid regenerating on every request.
+    """
+    crud = get_company_repository_crud()
+    org_id = str(current_user["organization_id"])
+
+    repo = crud.get_by_file_id(file_id, org_id)
+    if not repo:
+        raise HTTPException(status_code=404, detail="GSA contract not found")
+
+    # Check if file has an iDrive key
+    original_file = repo.get("original_file", {})
+    idrive_key = original_file.get("idrive_key")
+
+    if not idrive_key:
+        raise HTTPException(
+            status_code=404,
+            detail="Original document not found in storage"
+        )
+
+    # Check if we have a cached URL that's still valid
+    from datetime import timezone
+    cached_url = original_file.get("idrive_url")
+    url_expires_at = original_file.get("idrive_url_expires_at")
+    current_timestamp = datetime.now(timezone.utc).timestamp()
+
+    # If cached URL exists and is still valid (not expired), return it
+    if cached_url and url_expires_at and url_expires_at > current_timestamp:
+        time_remaining = int(url_expires_at - current_timestamp)
+        return {
+            "url": cached_url,
+            "filename": original_file.get("filename", "contract.pdf"),
+            "expires_in": time_remaining,
+            "cached": True
+        }
+
+    # Otherwise, generate fresh presigned URL and cache it
+    try:
+        storage = get_idrive_storage()
+        presigned_url = storage.get_presigned_url(idrive_key)
+        new_expires_at = current_timestamp + 604800  # 7 days from now
+
+        # Update MongoDB with new cached URL
+        from auth.database import get_mongodb_client
+        mongodb = get_mongodb_client()
+        db = mongodb.get_database()
+
+        db["company_repositories"].update_one(
+            {"file_id": file_id},
+            {"$set": {
+                "original_file.idrive_url": presigned_url,
+                "original_file.idrive_url_expires_at": new_expires_at
+            }}
+        )
+
+        return {
+            "url": presigned_url,
+            "filename": original_file.get("filename", "contract.pdf"),
+            "expires_in": 604800,
+            "cached": False
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate document URL: {str(e)}"
+        )
 
 
 @router.delete("/{file_id}")
