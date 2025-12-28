@@ -15,14 +15,17 @@ import RateTableView from '@/components/pricing/RateTableView';
 import PricingTabs from '@/components/pricing/PricingTabs';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { SubcontractorSection } from '@/components/pricing/SubcontractorSection';
-import { Loader2, AlertCircle, ArrowLeft, Plus, Download } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowLeft, Plus, Download, Share2 } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
+import { ShareOrInviteModal } from '@/components/proposals/ShareOrInviteModal';
+import { useAuthStore } from '@/lib/stores/authStore';
 
 export default function ProposalPage() {
   const params = useParams();
   const router = useRouter();
   const proposalId = params.id as string;
   const toast = useToast();
+  const { user } = useAuthStore();
 
   const { currentProposal, fetchProposal, isLoading } = useProposalsStore();
   const {
@@ -54,6 +57,7 @@ export default function ProposalPage() {
   const [editedPrimeContractor, setEditedPrimeContractor] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [addPositionModalOpen, setAddPositionModalOpen] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
 
   useEffect(() => {
     if (proposalId) {
@@ -497,8 +501,19 @@ export default function ProposalPage() {
               )}
             </div>
           </div>
-          {/* Advanced Analysis or Export Excel button */}
-          <div className="mt-2">
+          {/* Action buttons */}
+          <div className="mt-2 flex items-center gap-2">
+            {/* Share button (admin only) */}
+            {currentProposal.status === 'completed' && user?.role === 'admin' && (
+              <Button
+                variant="outline"
+                onClick={() => setShareModalOpen(true)}
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
+              </Button>
+            )}
+            {/* Advanced Analysis or Export Excel button */}
             {currentProposal.status === 'completed' && (
               <>
                 {!advancedMode ? (
@@ -551,6 +566,14 @@ export default function ProposalPage() {
           addPosition(positionData);
           setAddPositionModalOpen(false);
         }}
+      />
+
+      {/* Share/Invite Modal */}
+      <ShareOrInviteModal
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        proposalId={proposalId}
+        proposalName={currentProposal?.name || ''}
       />
     </DashboardLayout>
   );

@@ -112,6 +112,7 @@ export interface Invitation {
 export interface InviteUserRequest {
   email: string;
   role: 'admin' | 'user';
+  proposal_ids?: string[];
 }
 
 export interface AcceptInvitationRequest {
