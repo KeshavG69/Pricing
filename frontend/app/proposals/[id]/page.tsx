@@ -15,6 +15,7 @@ import RateTableView from '@/components/pricing/RateTableView';
 import PricingTabs from '@/components/pricing/PricingTabs';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { SubcontractorSection } from '@/components/pricing/SubcontractorSection';
+import { AdvancedAnalysisModal, SubcontractorInfo } from '@/components/pricing/AdvancedAnalysisModal';
 import { Loader2, AlertCircle, ArrowLeft, Plus, Download, Share2 } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
 import { ShareOrInviteModal } from '@/components/proposals/ShareOrInviteModal';
@@ -43,6 +44,8 @@ export default function ProposalPage() {
     disableAdvancedMode,
     transformToAdvanced,
     advancedMode,
+    subcontractorConfigured,
+    preCreateSubcontractors,
     activeTab,
     setActiveTab,
     exportToExcel,
@@ -59,6 +62,7 @@ export default function ProposalPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [addPositionModalOpen, setAddPositionModalOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [advancedModalOpen, setAdvancedModalOpen] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
 
   useEffect(() => {
@@ -374,13 +378,38 @@ export default function ProposalPage() {
   };
 
   const handleAdvancedAnalysis = async () => {
-    // Transform basic positions to advanced format
+    // Check if first time (subcontractors not yet configured)
+    if (!subcontractorConfigured) {
+      // Show questionnaire modal first
+      setAdvancedModalOpen(true);
+      return;
+    }
+
+    // Already configured - proceed directly to advanced mode
     transformToAdvanced();
-
-    // Enable advanced mode
     enableAdvancedMode();
+    await recalculate();
+  };
 
-    // Call recalculate API
+  const handleAdvancedModalSubmit = async (subs: SubcontractorInfo[], agreeTargetRates: boolean) => {
+    // Pre-create subcontractors if any were specified
+    if (subs.length > 0) {
+      preCreateSubcontractors(subs);
+
+      // Auto-allocate workshare % from eligible positions (excludes key positions like PM, FA)
+      // This runs after preCreateSubcontractors so subcontractors have worksharePercent
+      await usePricingStore.getState().autoAllocateWorkshare();
+    } else {
+      // Mark as configured even if no subs (user clicked Skip or Continue with 0 subs)
+      usePricingStore.setState({ subcontractorConfigured: true });
+    }
+
+    // Close modal
+    setAdvancedModalOpen(false);
+
+    // Now proceed to advanced mode
+    transformToAdvanced();
+    enableAdvancedMode();
     await recalculate();
   };
 
@@ -609,6 +638,13 @@ export default function ProposalPage() {
         onClose={() => setShareModalOpen(false)}
         proposalId={proposalId}
         proposalName={currentProposal?.name || ''}
+      />
+
+      {/* Advanced Analysis Questionnaire Modal */}
+      <AdvancedAnalysisModal
+        open={advancedModalOpen}
+        onClose={() => setAdvancedModalOpen(false)}
+        onSubmit={handleAdvancedModalSubmit}
       />
     </DashboardLayout>
   );

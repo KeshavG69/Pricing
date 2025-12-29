@@ -48,6 +48,7 @@ interface PricingState {
 
   // Advanced mode state
   advancedMode: boolean;
+  subcontractorConfigured: boolean;  // Track if questionnaire was completed
   positionsAdvanced: AdvancedPosition[];
   expandedPositions: Set<string>;
   manualOverrides: Map<string, Set<string>>;
@@ -90,7 +91,64 @@ interface PricingState {
   recalculateAdvanced: () => Promise<void>;
   toggleRatesReference: () => void;
   setActiveTab: (tab: 'overview' | 'main' | 'subcontractors' | 'rate-table') => void;
+  preCreateSubcontractors: (subs: { name: string; worksharePercent: number }[]) => void;
+  autoAllocateWorkshare: () => Promise<void>;
 }
+
+// Helper to check if a position is a key position (cannot be auto-allocated to subcontractors)
+// Uses fuzzy matching for PM/FA variations
+const isKeyPosition = (position: SpreadsheetPosition): boolean => {
+  // Check if LLM flagged it as key during document parsing
+  if (position.is_key_position) {
+    return true;
+  }
+
+  // Fallback: fuzzy check labor category for PM/FA variations (case-insensitive)
+  const lc = position.labor_category.toLowerCase();
+
+  // Program Manager variations: PM, Prog Manager, Program Mgr, etc.
+  const pmPatterns = [
+    'program manager',
+    'program mgr',
+    'prog manager',
+    'prog mgr',
+    'programme manager',  // British spelling
+    /\bpm\b/,  // "PM" as standalone word (e.g., "Senior PM", "PM III")
+    /\bp\.?m\.?\b/,  // "P.M." or "P.M"
+  ];
+
+  // Financial Analyst variations: FA, Finance Analyst, etc.
+  const faPatterns = [
+    'financial analyst',
+    'finance analyst',
+    'financial anlyst',  // Common typo
+    /\bfa\b/,  // "FA" as standalone word
+    /\bf\.?a\.?\b/,  // "F.A." or "F.A"
+  ];
+
+  // Check PM patterns
+  for (const pattern of pmPatterns) {
+    if (typeof pattern === 'string') {
+      if (lc.includes(pattern)) return true;
+    } else {
+      if (pattern.test(lc)) return true;
+    }
+  }
+
+  // Check FA patterns
+  for (const pattern of faPatterns) {
+    if (typeof pattern === 'string') {
+      if (lc.includes(pattern)) return true;
+    } else {
+      if (pattern.test(lc)) return true;
+    }
+  }
+
+  return false;
+};
+
+// Export for use in UI components
+export { isKeyPosition };
 
 // Helper to map JobPosition to SpreadsheetPosition
 const mapJobToPosition = (job: JobPosition, index: number): SpreadsheetPosition => {
@@ -149,6 +207,8 @@ const mapJobToPosition = (job: JobPosition, index: number): SpreadsheetPosition 
     gsa_title: job.gsa_title,
     gsa_rates_by_year: job.gsa_rates_by_year,
     gsa_current_year: job.gsa_current_year,
+    // Key position flag
+    is_key_position: job.is_key_position,
   };
 };
 
@@ -558,6 +618,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
     // Advanced mode initial state
     advancedMode: false,
+    subcontractorConfigured: false,
     positionsAdvanced: [],
     expandedPositions: new Set<string>(),
     manualOverrides: new Map<string, Set<string>>(),
@@ -1429,6 +1490,173 @@ export const usePricingStore = create<PricingState>((set, get) => {
       set({ activeTab: tab });
     },
 
+    preCreateSubcontractors: (subs) => {
+      console.log('[STORE] Pre-creating subcontractors:', subs);
+
+      // Create subcontractor objects with empty positions array
+      const newSubcontractors: Subcontractor[] = subs.map((sub) => ({
+        id: `sub_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        name: sub.name,
+        positions: [],
+        // Store workshare percent as metadata (optional, for future use)
+        worksharePercent: sub.worksharePercent,
+      } as Subcontractor));
+
+      set((state) => ({
+        subcontractors: [...state.subcontractors, ...newSubcontractors],
+        subcontractorConfigured: true,
+        isDirty: true,
+      }));
+
+      console.log('[STORE] Subcontractors pre-created:', newSubcontractors);
+
+      // Trigger auto-save
+      debouncedAutoSave();
+    },
+
+    autoAllocateWorkshare: async () => {
+      const state = get();
+      console.log('[AUTO-ALLOCATE] Starting workshare allocation...');
+
+      // Filter subcontractors that have worksharePercent > 0
+      const subsWithWorkshare = state.subcontractors.filter(
+        (s: any) => s.worksharePercent && s.worksharePercent > 0
+      );
+
+      if (subsWithWorkshare.length === 0) {
+        console.log('[AUTO-ALLOCATE] No subcontractors with workshare % found');
+        return;
+      }
+
+      // Get IDs of eligible positions (exclude key positions)
+      const eligiblePositionIds = state.positions
+        .filter((pos) => !isKeyPosition(pos))
+        .map((pos) => pos.id);
+      const keyPositions = state.positions.filter((pos) => isKeyPosition(pos));
+
+      console.log('[AUTO-ALLOCATE] Key positions excluded:', keyPositions.map(p => p.labor_category));
+      console.log('[AUTO-ALLOCATE] Eligible positions:', eligiblePositionIds.length);
+      console.log('[AUTO-ALLOCATE] Subcontractors with workshare:', subsWithWorkshare.map((s: any) => `${s.name}: ${s.worksharePercent}%`));
+
+      // Build all allocations - use mutable copies that get updated as we go
+      const updatedSubcontractors = [...state.subcontractors];
+      const updatedPositions = state.positions.map(p => ({ ...p, hours_per_year: { ...p.hours_per_year } }));
+
+      // IMPORTANT: Store ORIGINAL hours for each eligible position (before ANY allocation)
+      // Each sub gets % of ORIGINAL hours, not cascading from remaining
+      const originalHours = new Map<string, Record<string, number>>();
+      eligiblePositionIds.forEach(posId => {
+        const pos = state.positions.find(p => p.id === posId);
+        if (pos) {
+          originalHours.set(posId, { ...pos.hours_per_year });
+        }
+      });
+
+      for (const sub of subsWithWorkshare) {
+        const worksharePercent = (sub as any).worksharePercent / 100; // Convert to decimal
+        const subIndex = updatedSubcontractors.findIndex(s => s.id === sub.id);
+
+        for (const posId of eligiblePositionIds) {
+          const posIndex = updatedPositions.findIndex(p => p.id === posId);
+          if (posIndex === -1) continue;
+
+          const currentPosition = updatedPositions[posIndex];
+
+          // Get ORIGINAL hours for this position (before any sub took hours)
+          const origHours = originalHours.get(posId);
+          if (!origHours) continue;
+
+          // Calculate allocation based on ORIGINAL hours (NOT current reduced hours)
+          // This ensures 10% + 10% = 20% taken from original, prime gets 80%
+          const hoursAllocation: Record<string, number> = {};
+          const remainingHours: Record<string, number> = {};
+          let hasAllocation = false;
+
+          // Debug: Log what hours we're actually using
+          console.log(`[DEBUG] Position "${currentPosition.labor_category}" for ${sub.name}:`, {
+            original_hours: origHours,
+            current_hours: currentPosition.hours_per_year,
+            worksharePercent: worksharePercent
+          });
+
+          Object.entries(origHours).forEach(([year, originalYearHours]) => {
+            const allocatedHours = Math.floor(originalYearHours * worksharePercent);
+            const currentHours = currentPosition.hours_per_year[year] || 0;
+            console.log(`[DEBUG] Year ${year}: ${originalYearHours} original * ${worksharePercent} = ${allocatedHours} allocated (current prime has ${currentHours})`);
+            if (allocatedHours > 0) {
+              hoursAllocation[year] = allocatedHours;
+              hasAllocation = true;
+            }
+            // Reduce from current hours (already reduced by previous subs)
+            remainingHours[year] = currentHours - allocatedHours;
+          });
+
+          if (!hasAllocation) continue;
+
+          // Calculate subcontractor rate (use position's base hourly rate)
+          const effectiveSalary = getEffectiveSalary(currentPosition);
+          const fteHours = currentPosition.standard_fte_hours || 1920;
+          const subRate = effectiveSalary / fteHours;
+
+          // Create subcontractor position
+          const subPosition: SubcontractorPosition = {
+            labor_category: currentPosition.labor_category,
+            rate: subRate,
+            hours_per_year: hoursAllocation,
+          };
+
+          // Add to subcontractor
+          if (subIndex !== -1) {
+            updatedSubcontractors[subIndex] = {
+              ...updatedSubcontractors[subIndex],
+              positions: [...updatedSubcontractors[subIndex].positions, subPosition],
+            };
+          }
+
+          // Update prime position with remaining hours (reduces for next subcontractor)
+          updatedPositions[posIndex] = {
+            ...currentPosition,
+            hours_per_year: remainingHours,
+          };
+
+          console.log(`[AUTO-ALLOCATE] ${currentPosition.labor_category} -> ${sub.name}: ${JSON.stringify(hoursAllocation)} hours @ $${subRate.toFixed(2)}/hr (remaining: ${JSON.stringify(remainingHours)})`);
+        }
+      }
+
+      // Update state in batch
+      set({
+        positions: updatedPositions,
+        subcontractors: updatedSubcontractors,
+        isDirty: true,
+      });
+
+      console.log('[AUTO-ALLOCATE] Allocation complete, triggering save...');
+
+      // Save to backend
+      if (state.proposalId) {
+        try {
+          await proposalsApi.update(state.proposalId, {
+            spreadsheet_data: {
+              positions: updatedPositions,
+              subcontractors: updatedSubcontractors,
+              travel: state.travel,
+              odcs: state.odcs,
+              extensions: state.extensions,
+              rates: state.rates,
+              escalation_rates: state.escalationRates,
+              months_per_year: state.monthsPerYear,
+            },
+          });
+          console.log('[AUTO-ALLOCATE] Saved to backend successfully');
+
+          // Invalidate cache
+          proposalCache.delete(state.proposalId);
+        } catch (error) {
+          console.error('[AUTO-ALLOCATE] Failed to save:', error);
+        }
+      }
+    },
+
     reset: () => {
       set({
         proposalId: null,
@@ -1453,6 +1681,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         error: null,
         // Reset advanced mode state
         advancedMode: false,
+        subcontractorConfigured: false,
         positionsAdvanced: [],
         expandedPositions: new Set<string>(),
         manualOverrides: new Map<string, Set<string>>(),

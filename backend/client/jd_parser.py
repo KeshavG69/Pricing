@@ -200,6 +200,18 @@ class PositionExtract(BaseModel):
           → Leave hours_per_year=None, use 'hours' field instead"""
     )
 
+    is_key_position: Optional[bool] = Field(
+        False,
+        description="""True if this is a key position/key personnel that cannot be subcontracted.
+
+        Look for indicators such as:
+        - Position listed under 'Key Personnel', 'Key Positions', or 'Required Personnel' sections
+        - Position explicitly marked as 'key', 'critical', or 'essential' in the document
+        - Position mentioned in contract requirements as non-subcontractable
+
+        Default to False if there's no indication the position is key."""
+    )
+
 
 class DocumentMetadataExtract(BaseModel):
     """Document metadata for LlamaExtract."""
@@ -344,7 +356,8 @@ def _convert_to_job_description(
         experience=position.experience,
         location=location,
         hours=total_hours,
-        hours_per_year=hours_per_year_dict
+        hours_per_year=hours_per_year_dict,
+        is_key_position=position.is_key_position or False
     )
 
 
@@ -653,7 +666,7 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> Dict[str, a
         # Create empty DataFrame with correct columns
         df = pd.DataFrame(columns=[
             "labor_category", "description", "experience", "location", "hours", "hours_per_year",
-            "base_years", "option_years", "total_years", "project_name", "standard_fte_hours", "months_per_year"
+            "is_key_position", "base_years", "option_years", "total_years", "project_name", "standard_fte_hours", "months_per_year"
         ])
     else:
         df = pd.DataFrame([
@@ -664,6 +677,7 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> Dict[str, a
                 "location": jd.location,
                 "hours": jd.hours,
                 "hours_per_year": jd.hours_per_year,
+                "is_key_position": jd.is_key_position or False,
                 # Document-level metadata (same for all jobs from same document)
                 "base_years": metadata.base_years,
                 "option_years": metadata.option_years,
