@@ -97,7 +97,7 @@ interface PricingState {
 
 // Helper to check if a position is a key position (cannot be auto-allocated to subcontractors)
 // Uses fuzzy matching for PM/FA variations
-const isKeyPosition = (position: SpreadsheetPosition): boolean => {
+const isKeyPosition = (position: { is_key_position?: boolean; labor_category: string }): boolean => {
   // Check if LLM flagged it as key during document parsing
   if (position.is_key_position) {
     return true;
