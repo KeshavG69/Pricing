@@ -689,6 +689,9 @@ async def get_proposal(
             detail="Proposal not found"
         )
 
+    # Check for timeout on stuck processing proposals (marks as error if >30 min)
+    proposal = crud.check_for_timeout(proposal)
+
     # Check if user has access (owner, admin, or shared)
     if not can_access_proposal(proposal, current_user):
         raise HTTPException(
@@ -930,6 +933,109 @@ async def mark_proposal_downloaded(
     return {
         "message": "Proposal marked as downloaded",
         "excel_downloaded": True
+    }
+
+
+@router.post("/{proposal_id}/retry")
+async def retry_proposal_processing(
+    proposal_id: str,
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Retry processing for a stuck or failed proposal.
+    Re-downloads documents from iDrive and re-runs processing.
+    """
+    crud = await get_crud()
+    storage = get_idrive_storage()
+
+    # Get user's organization and role for access control
+    organization_id = current_user.get("organization_id")
+    role = current_user.get("role")
+
+    # Get proposal with access control
+    proposal = crud.get_proposal(
+        proposal_id,
+        str(current_user["_id"]),
+        organization_id=organization_id,
+        role=role
+    )
+
+    if not proposal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Proposal not found"
+        )
+
+    # Only allow retry for processing/error status
+    if proposal.get("status") not in ["processing", "error"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Can only retry proposals in processing or error state"
+        )
+
+    # Get documents from iDrive
+    documents = proposal.get("documents", [])
+    if not documents:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No documents found. The original files were not saved. Please create a new proposal and upload the documents again."
+        )
+
+    # Create temp directory and download files from iDrive
+    temp_dir = Path(tempfile.mkdtemp())
+    file_paths = []
+    file_names = []
+
+    try:
+        for doc in documents:
+            idrive_key = doc.get("idrive_key")
+            filename = doc.get("filename")
+            if idrive_key and filename:
+                file_path = temp_dir / filename
+                storage.download_document(idrive_key, str(file_path))
+                file_paths.append(str(file_path))
+                file_names.append(filename)
+    except Exception as e:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve documents from storage: {str(e)}"
+        )
+
+    if not file_paths:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Could not retrieve any documents for reprocessing"
+        )
+
+    # Reset status to processing
+    crud.update_proposal(
+        proposal_id,
+        str(current_user["_id"]),
+        {
+            "status": "processing",
+            "progress": 0,
+            "message": "Retrying processing..."
+        }
+    )
+
+    # Start background processing
+    background_tasks.add_task(
+        process_proposal_documents,
+        proposal_id,
+        str(current_user["_id"]),
+        str(current_user.get("organization_id")),
+        file_paths,
+        file_names,
+        temp_dir,
+        proposal.get("wage_source")
+    )
+
+    return {
+        "status": "processing",
+        "message": "Retry initiated. Processing restarted."
     }
 
 

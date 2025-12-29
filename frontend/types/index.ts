@@ -112,6 +112,7 @@ export interface Invitation {
 export interface InviteUserRequest {
   email: string;
   role: 'admin' | 'user';
+  proposal_ids?: string[];
 }
 
 export interface AcceptInvitationRequest {
@@ -223,6 +224,8 @@ export interface JobPosition {
   gsa_title?: string;
   gsa_rates_by_year?: Record<string, number>;
   gsa_current_year?: number;
+  // Key position flag (cannot be auto-allocated to subcontractors)
+  is_key_position?: boolean;
 }
 
 // Rates types
@@ -276,6 +279,8 @@ export interface SpreadsheetPosition {
   gsa_title?: string;
   gsa_rates_by_year?: Record<string, number>;
   gsa_current_year?: number;
+  // Key position flag (cannot be auto-allocated to subcontractors)
+  is_key_position?: boolean;
   // Calculated fields (from backend)
   fblr?: number;
   yearly_amounts?: Array<{
@@ -375,6 +380,8 @@ export interface AdvancedPosition {
   gsa_title?: string;
   gsa_rates_by_year?: Record<string, number>;
   gsa_current_year?: number;
+  // Key position flag (cannot be auto-allocated to subcontractors)
+  is_key_position?: boolean;
 
   // Per-year breakdown
   breakdown: {
