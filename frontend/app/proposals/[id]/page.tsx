@@ -40,6 +40,7 @@ export default function ProposalPage() {
     recalculate,
     isRecalculating,
     enableAdvancedMode,
+    disableAdvancedMode,
     transformToAdvanced,
     advancedMode,
     activeTab,
@@ -58,6 +59,7 @@ export default function ProposalPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [addPositionModalOpen, setAddPositionModalOpen] = useState(false);
   const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   useEffect(() => {
     if (proposalId) {
@@ -279,6 +281,21 @@ export default function ProposalPage() {
     setIsEditingPrimeContractor(true);
   };
 
+  const handleRetryProcessing = async () => {
+    setIsRetrying(true);
+    try {
+      await proposalsApi.retry(proposalId);
+      // Refresh proposal to get updated status (should be "processing")
+      await fetchProposal(proposalId);
+      toast.success('Processing restarted');
+    } catch (error: any) {
+      console.error('Retry failed:', error);
+      toast.error(error?.response?.data?.detail || 'Failed to retry processing');
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
   if (isLoading || !currentProposal) {
     return (
       <DashboardLayout>
@@ -332,8 +349,19 @@ export default function ProposalPage() {
             <Button variant="outline" onClick={() => router.push('/dashboard')}>
               Back to Dashboard
             </Button>
-            <Button variant="primary" onClick={() => router.push('/dashboard/upload')}>
-              Try Again
+            <Button
+              variant="primary"
+              onClick={handleRetryProcessing}
+              disabled={isRetrying}
+            >
+              {isRetrying ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Retrying...
+                </>
+              ) : (
+                'Retry Processing'
+              )}
             </Button>
           </div>
         </div>
@@ -391,10 +419,17 @@ export default function ProposalPage() {
 
       {/* Back button */}
       <div>
-        <Button variant="outline" onClick={() => router.push('/dashboard')}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Button>
+        {advancedMode ? (
+          <Button variant="outline" onClick={disableAdvancedMode}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Initial Analysis
+          </Button>
+        ) : (
+          <Button variant="outline" onClick={() => router.push('/dashboard')}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        )}
       </div>
     </div>
   );

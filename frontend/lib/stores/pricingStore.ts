@@ -81,6 +81,7 @@ interface PricingState {
 
   // Advanced mode actions
   enableAdvancedMode: () => void;
+  disableAdvancedMode: () => void;
   transformToAdvanced: () => void;
   updateAdvancedPosition: (id: string, updates: Partial<AdvancedPosition>) => void;
   togglePositionExpansion: (id: string) => void;
@@ -1281,6 +1282,10 @@ export const usePricingStore = create<PricingState>((set, get) => {
     // Advanced mode actions
     enableAdvancedMode: () => {
       set({ advancedMode: true });
+    },
+
+    disableAdvancedMode: () => {
+      set({ advancedMode: false });
     },
 
     transformToAdvanced: () => {

@@ -4,12 +4,18 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
-import { Plus, LogOut, Settings, ChevronRight, X } from 'lucide-react';
+import { Plus, LogOut, Settings, ChevronRight, X, MoreVertical, Pencil, Trash2, Share2 } from 'lucide-react';
 import { useProposalsStore } from '@/lib/stores/proposalsStore';
 import { useAuthStore } from '@/lib/stores/authStore';
+import { proposalsApi } from '@/lib/api/proposals';
 import WorkspaceSwitcher from '../workspace/WorkspaceSwitcher';
 import RoleBadge from '../ui/RoleBadge';
 import Button from '../ui/Button';
+import { Dialog } from '../ui/Dialog';
+import { ConfirmDialog } from '../ui/ConfirmDialog';
+import Input from '../ui/Input';
+import { useToast } from '@/lib/hooks/useToast';
+import { ShareOrInviteModal } from '../proposals/ShareOrInviteModal';
 
 interface ProposalsSidebarProps {
   isMobileOpen: boolean;
@@ -45,9 +51,30 @@ const getStatusLabel = (status: string) => {
 export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: ProposalsSidebarProps) {
   const router = useRouter();
   const pathname = usePathname();
+  const toast = useToast();
   const { user, logout } = useAuthStore();
-  const { proposals, fetchProposals } = useProposalsStore();
+  const { proposals, fetchProposals, deleteProposal } = useProposalsStore();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+
+  // Three-dots menu state
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+
+  // Rename modal state
+  const [renameModalOpen, setRenameModalOpen] = useState(false);
+  const [renameProposalId, setRenameProposalId] = useState<string | null>(null);
+  const [renameValue, setRenameValue] = useState('');
+  const [isRenaming, setIsRenaming] = useState(false);
+
+  // Delete confirmation state
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [deleteProposalId, setDeleteProposalId] = useState<string | null>(null);
+  const [deleteProposalName, setDeleteProposalName] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  // Share modal state
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [shareProposalId, setShareProposalId] = useState<string | null>(null);
+  const [shareProposalName, setShareProposalName] = useState('');
 
   // Fetch proposals on mount
   useEffect(() => {
@@ -64,20 +91,87 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
       if (isProfileMenuOpen && !target.closest('.profile-menu-container')) {
         setIsProfileMenuOpen(false);
       }
+      // Close three-dots menu when clicking outside
+      if (openMenuId && !target.closest('.proposal-menu-container')) {
+        setOpenMenuId(null);
+      }
     };
 
-    if (isProfileMenuOpen) {
+    if (isProfileMenuOpen || openMenuId) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isProfileMenuOpen]);
+  }, [isProfileMenuOpen, openMenuId]);
 
   const handleLogout = async () => {
     await logout();
     router.push('/');
+  };
+
+  // Open rename modal
+  const handleOpenRename = (proposalId: string, currentName: string) => {
+    setRenameProposalId(proposalId);
+    setRenameValue(currentName);
+    setRenameModalOpen(true);
+    setOpenMenuId(null);
+  };
+
+  // Handle rename submit
+  const handleRename = async () => {
+    if (!renameProposalId || !renameValue.trim()) return;
+
+    setIsRenaming(true);
+    try {
+      await proposalsApi.update(renameProposalId, { name: renameValue.trim() });
+      await fetchProposals();
+      setRenameModalOpen(false);
+      toast.success('Proposal renamed');
+    } catch (error) {
+      console.error('Failed to rename proposal:', error);
+      toast.error('Failed to rename proposal');
+    } finally {
+      setIsRenaming(false);
+    }
+  };
+
+  // Open delete confirmation
+  const handleOpenDelete = (proposalId: string, proposalName: string) => {
+    setDeleteProposalId(proposalId);
+    setDeleteProposalName(proposalName);
+    setDeleteDialogOpen(true);
+    setOpenMenuId(null);
+  };
+
+  // Open share modal
+  const handleOpenShare = (proposalId: string, proposalName: string) => {
+    setShareProposalId(proposalId);
+    setShareProposalName(proposalName);
+    setShareModalOpen(true);
+    setOpenMenuId(null);
+  };
+
+  // Handle delete confirm
+  const handleDelete = async () => {
+    if (!deleteProposalId) return;
+
+    setIsDeleting(true);
+    try {
+      await deleteProposal(deleteProposalId);
+      setDeleteDialogOpen(false);
+      toast.success('Proposal deleted');
+      // If we're on the deleted proposal's page, redirect to dashboard
+      if (pathname === `/proposals/${deleteProposalId}`) {
+        router.push('/dashboard');
+      }
+    } catch (error) {
+      console.error('Failed to delete proposal:', error);
+      toast.error('Failed to delete proposal');
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   if (!user) return null;
@@ -120,47 +214,89 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
             <div className="space-y-2">
               {sortedProposals.map((proposal) => {
                 const isActive = pathname === `/proposals/${proposal.id}`;
+                const isMenuOpen = openMenuId === proposal.id;
                 return (
-                  <Link key={proposal.id} href={`/proposals/${proposal.id}`}>
-                    <div
-                      onClick={onMobileClose}
-                      className={`group relative px-3 py-2.5 rounded-lg transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:shadow-md ${
-                        isActive
-                          ? 'bg-primary/10 border-l-2 border-primary shadow-sm'
-                          : 'hover:bg-muted/50 border-l-2 border-transparent'
-                      }`}
-                    >
-                      <div className="flex items-start justify-between gap-2 mb-1.5">
-                        <h4
-                          className={`text-sm font-medium truncate flex-1 ${
-                            isActive ? 'text-primary' : 'text-foreground'
-                          }`}
-                        >
-                          {proposal.name}
-                        </h4>
-                        {isActive && <ChevronRight className="w-4 h-4 text-primary flex-shrink-0 mt-0.5" />}
-                      </div>
+                  <div key={proposal.id} className="relative proposal-menu-container">
+                    <Link href={`/proposals/${proposal.id}`}>
+                      <div
+                        onClick={onMobileClose}
+                        className={`group relative px-3 py-2.5 rounded-lg transition-all duration-300 cursor-pointer hover:scale-[1.02] hover:shadow-md ${
+                          isActive
+                            ? 'bg-primary/10 border-l-2 border-primary shadow-sm'
+                            : 'hover:bg-muted/50 border-l-2 border-transparent'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-1.5">
+                          <h4
+                            className={`text-sm font-medium truncate flex-1 ${
+                              isActive ? 'text-primary' : 'text-foreground'
+                            }`}
+                          >
+                            {proposal.name}
+                          </h4>
+                          {/* Three-dots menu button */}
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setOpenMenuId(isMenuOpen ? null : proposal.id);
+                            }}
+                            className="p-1 rounded hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                          >
+                            <MoreVertical className="w-4 h-4 text-muted-foreground" />
+                          </button>
+                        </div>
 
-                      {proposal.solicitation_number && (
-                        <p className="text-xs text-muted-foreground mb-1.5 truncate">
-                          {proposal.solicitation_number}
-                        </p>
-                      )}
+                        {proposal.solicitation_number && (
+                          <p className="text-xs text-muted-foreground mb-1.5 truncate">
+                            {proposal.solicitation_number}
+                          </p>
+                        )}
 
-                      <div className="flex items-center justify-between gap-2">
-                        <span
-                          className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${getStatusColor(
-                            proposal.status
-                          )}`}
-                        >
-                          {getStatusLabel(proposal.status)}
-                        </span>
-                        <span className="text-[10px] text-muted-foreground">
-                          {formatDistanceToNow(new Date(proposal.createdAt), { addSuffix: true })}
-                        </span>
+                        <div className="flex items-center justify-between gap-2">
+                          <span
+                            className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${getStatusColor(
+                              proposal.status
+                            )}`}
+                          >
+                            {getStatusLabel(proposal.status)}
+                          </span>
+                          <span className="text-[10px] text-muted-foreground">
+                            {formatDistanceToNow(new Date(proposal.createdAt), { addSuffix: true })}
+                          </span>
+                        </div>
                       </div>
-                    </div>
-                  </Link>
+                    </Link>
+
+                    {/* Dropdown menu */}
+                    {isMenuOpen && (
+                      <div className="absolute right-2 top-8 z-50 bg-card border border-border rounded-lg shadow-lg py-1 min-w-[140px]">
+                        <button
+                          onClick={() => handleOpenRename(proposal.id, proposal.name)}
+                          className="w-full flex items-center px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                        >
+                          <Pencil className="w-4 h-4 mr-2" />
+                          Rename
+                        </button>
+                        {user?.role === 'admin' && (
+                          <button
+                            onClick={() => handleOpenShare(proposal.id, proposal.name)}
+                            className="w-full flex items-center px-3 py-2 text-sm text-foreground hover:bg-muted transition-colors"
+                          >
+                            <Share2 className="w-4 h-4 mr-2" />
+                            Share
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleOpenDelete(proposal.id, proposal.name)}
+                          className="w-full flex items-center px-3 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -257,6 +393,60 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
 
         {sidebarContent}
       </aside>
+
+      {/* Rename Modal */}
+      <Dialog
+        isOpen={renameModalOpen}
+        onClose={() => setRenameModalOpen(false)}
+        title="Rename Proposal"
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => setRenameModalOpen(false)} disabled={isRenaming}>
+              Cancel
+            </Button>
+            <Button variant="primary" onClick={handleRename} isLoading={isRenaming}>
+              Rename
+            </Button>
+          </>
+        }
+      >
+        <Input
+          type="text"
+          value={renameValue}
+          onChange={(e) => setRenameValue(e.target.value)}
+          placeholder="Enter new name"
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              handleRename();
+            }
+          }}
+          autoFocus
+        />
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteDialogOpen}
+        onClose={() => setDeleteDialogOpen(false)}
+        onConfirm={handleDelete}
+        title="Delete Proposal"
+        message={`Are you sure you want to delete "${deleteProposalName}"? This action cannot be undone.`}
+        confirmText="Delete"
+        confirmVariant="danger"
+        isLoading={isDeleting}
+      />
+
+      {/* Share Modal */}
+      {shareProposalId && (
+        <ShareOrInviteModal
+          isOpen={shareModalOpen}
+          onClose={() => setShareModalOpen(false)}
+          proposalId={shareProposalId}
+          proposalName={shareProposalName}
+        />
+      )}
     </>
   );
 }
