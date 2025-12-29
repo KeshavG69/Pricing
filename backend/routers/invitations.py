@@ -10,10 +10,11 @@ from typing import List
 from auth.dependencies import get_current_user, require_admin
 from utils.helpers import serialize_doc, serialize_docs
 from utils.invitations import get_invitation_crud
-from auth.crud import get_user_crud
+from auth.crud import get_user_crud, UserCRUD
+from auth.models import UserSignup
 from auth.utils import create_access_token
 from auth.refresh_token import create_refresh_token
-from datetime import timedelta
+from datetime import timedelta, datetime
 
 
 router = APIRouter(prefix="/api/invitations", tags=["invitations"])
@@ -23,12 +24,14 @@ class InviteUserRequest(BaseModel):
     """Request body for sending invitation"""
     email: EmailStr = Field(..., description="Email address to invite")
     role: str = Field(..., description="Role for new user (admin or user)")
+    proposal_ids: List[str] = Field(default=[], description="Proposal IDs to grant access to upon acceptance")
 
     class Config:
         schema_extra = {
             "example": {
                 "email": "colleague@example.com",
-                "role": "user"
+                "role": "user",
+                "proposal_ids": []
             }
         }
 
@@ -86,7 +89,8 @@ async def send_invitation(
             org_id=current_user["organization_id"],
             email=invite_data.email,
             role=invite_data.role,
-            invited_by=current_user["_id"]
+            invited_by=current_user["_id"],
+            proposal_ids=invite_data.proposal_ids
         )
 
         # Remove token_hash from response (security)
@@ -318,33 +322,51 @@ async def accept_invitation(accept_data: AcceptInvitationRequest):
 
             # Check if already in organizations array
             organizations = existing_user.get("organizations", [])
-            already_member = any(
-                org["organization_id"] == invitation["organization_id"]
-                for org in organizations
-            )
+            existing_org_entry = None
+            for org in organizations:
+                if org["organization_id"] == invitation["organization_id"]:
+                    existing_org_entry = org
+                    break
 
-            if already_member:
-                raise ValueError("You are already a member of this organization")
-
-            # Add new organization membership to array
-            new_org = {
-                "organization_id": invitation["organization_id"],
-                "role": invitation["role"],
-                "status": "active",
-                "joinedAt": datetime.utcnow()
-            }
-
-            # Add to organizations array and set as current organization
-            user_crud.collection.update_one(
-                {"_id": existing_user["_id"]},
-                {
-                    "$push": {"organizations": new_org},
-                    "$set": {
-                        "current_organization_id": invitation["organization_id"],
-                        "updatedAt": datetime.utcnow()
-                    }
+            if existing_org_entry:
+                if existing_org_entry.get("status") != "removed":
+                    # Already an active member
+                    raise ValueError("You are already a member of this organization")
+                else:
+                    # Was removed - reactivate membership
+                    user_crud.collection.update_one(
+                        {
+                            "_id": existing_user["_id"],
+                            "organizations.organization_id": invitation["organization_id"]
+                        },
+                        {
+                            "$set": {
+                                "organizations.$.status": "active",
+                                "organizations.$.role": invitation["role"],
+                                "organizations.$.joinedAt": datetime.utcnow(),
+                                "current_organization_id": invitation["organization_id"],
+                                "updatedAt": datetime.utcnow()
+                            }
+                        }
+                    )
+            else:
+                # New organization membership - add to array
+                new_org = {
+                    "organization_id": invitation["organization_id"],
+                    "role": invitation["role"],
+                    "status": "active",
+                    "joinedAt": datetime.utcnow()
                 }
-            )
+                user_crud.collection.update_one(
+                    {"_id": existing_user["_id"]},
+                    {
+                        "$push": {"organizations": new_org},
+                        "$set": {
+                            "current_organization_id": invitation["organization_id"],
+                            "updatedAt": datetime.utcnow()
+                        }
+                    }
+                )
             user = user_crud.collection.find_one({"_id": existing_user["_id"]})
             user_id = existing_user["_id"]
         else:
@@ -355,19 +377,52 @@ async def accept_invitation(accept_data: AcceptInvitationRequest):
                     detail="firstName, lastName, and password are required for new users"
                 )
 
-            # Create new user account
-            user = user_crud.create_user_with_organization(
+            # Step 1: Create user with their own personal org (they are admin of it)
+            user_signup = UserSignup(
+                firstName=accept_data.firstName,
+                lastName=accept_data.lastName,
                 email=invitation["email"],
-                first_name=accept_data.firstName,
-                last_name=accept_data.lastName,
-                password=accept_data.password,
-                organization_id=invitation["organization_id"],
-                role=invitation["role"]
+                password=accept_data.password
             )
-            user_id = user["_id"]
+            user_response = UserCRUD.create_user(user_signup)
+            user_id = user_response.id
+
+            # Step 2: Add user to the INVITED organization
+            invited_org = {
+                "organization_id": invitation["organization_id"],
+                "role": invitation["role"],
+                "status": "active",
+                "joinedAt": datetime.utcnow()
+            }
+            user_crud.collection.update_one(
+                {"_id": user_id},
+                {
+                    "$push": {"organizations": invited_org},
+                    "$set": {"current_organization_id": invitation["organization_id"]}
+                }
+            )
+
+            # Get updated user for response
+            user = user_crud.collection.find_one({"_id": user_id})
 
         # Mark invitation as accepted
         invitation_crud.accept_invitation(accept_data.token, user_id)
+
+        # Grant access to proposals specified in invitation
+        if invitation.get("proposal_ids"):
+            from auth.database import get_mongodb_client
+            mongodb = get_mongodb_client()
+            proposals_collection = mongodb.get_database()["proposals"]
+
+            for proposal_id in invitation["proposal_ids"]:
+                try:
+                    prop_oid = ObjectId(proposal_id)
+                    proposals_collection.update_one(
+                        {"_id": prop_oid, "organization_id": invitation["organization_id"]},
+                        {"$addToSet": {"shared_with": str(user_id)}}
+                    )
+                except Exception as e:
+                    print(f"Warning: Could not grant access to proposal {proposal_id}: {e}")
 
         # Generate authentication tokens
         access_token = create_access_token(

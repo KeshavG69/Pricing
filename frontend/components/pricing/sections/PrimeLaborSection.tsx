@@ -17,7 +17,7 @@ import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { getAvailablePercentiles } from '@/lib/utils/percentileHelpers';
 import { getEffectiveSalary, getSalaryDisplayLabel, getSalarySelectionCount, isMultiSelectMode, isGSAPosition, getGSARateForYear } from '@/lib/utils/salaryHelpers';
 import Button from '@/components/ui/Button';
-import { usePricingStore } from '@/lib/stores/pricingStore';
+import { usePricingStore, isKeyPosition } from '@/lib/stores/pricingStore';
 
 // Calculate averaged FBLR for an advanced position using proportional hourly rates
 const calculateAveragedFBLR = (
@@ -446,6 +446,7 @@ export const PrimeLaborSection = ({
           } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             const isExpanded = row.isExpanded;
+            const isKey = isKeyPosition(pos);
             return (
               <div
                 className="flex items-center h-full px-2"
@@ -466,6 +467,14 @@ export const PrimeLaborSection = ({
                 <span className="font-semibold text-foreground">
                   {pos.labor_category}
                 </span>
+                {isKey && (
+                  <span
+                    className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                    title="Key Position - Protected from auto-allocation to subcontractors"
+                  >
+                    KEY
+                  </span>
+                )}
               </div>
             );
           } else {

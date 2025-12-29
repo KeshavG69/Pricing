@@ -174,7 +174,7 @@ def create_indexes():
     else:
         print("   ⚠ Already exists: google_id (sparse)")
 
-    # Organization-related indexes
+    # Organization-related indexes (legacy single-org)
     if safe_create_index(users, [("organization_id", ASCENDING), ("role", ASCENDING)], "org_role_index"):
         print("   ✓ Created: organization_id + role")
     else:
@@ -184,6 +184,18 @@ def create_indexes():
         print("   ✓ Created: organization_id + status")
     else:
         print("   ⚠ Already exists: organization_id + status")
+
+    # Multi-org support: index on organizations array for $elemMatch queries
+    if safe_create_index(users, "organizations.organization_id", "orgs_array_org_id_index"):
+        print("   ✓ Created: organizations.organization_id (multi-org)")
+    else:
+        print("   ⚠ Already exists: organizations.organization_id")
+
+    # Compound index for invitation membership check
+    if safe_create_index(users, [("email", ASCENDING), ("organizations.organization_id", ASCENDING)], "email_orgs_index"):
+        print("   ✓ Created: email + organizations.organization_id")
+    else:
+        print("   ⚠ Already exists: email + organizations.organization_id")
 
     # =====================================================================
     # ORGANIZATIONS COLLECTION
@@ -232,6 +244,12 @@ def create_indexes():
         print("   ✓ Created: email + status")
     else:
         print("   ⚠ Already exists: email + status")
+
+    # Compound index for duplicate invitation check (org + email + status)
+    if safe_create_index(invitations, [("organization_id", ASCENDING), ("email", ASCENDING), ("status", ASCENDING)], "org_email_status_index"):
+        print("   ✓ Created: organization_id + email + status")
+    else:
+        print("   ⚠ Already exists: organization_id + email + status")
 
     # Expires At (TTL) - auto-delete expired invitations after 30 days
     if safe_create_index(invitations, "expires_at", "expires_at_ttl_index", expireAfterSeconds=2592000):

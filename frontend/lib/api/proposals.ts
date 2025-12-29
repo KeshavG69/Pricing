@@ -192,4 +192,10 @@ export const proposalsApi = {
     const response = await apiClient.post(`/proposals/${proposalId}/mark-downloaded`);
     return response.data;
   },
+
+  // Retry processing for stuck/failed proposal
+  retry: async (proposalId: string): Promise<{ status: string; message: string }> => {
+    const response = await apiClient.post(`/proposals/${proposalId}/retry`);
+    return response.data;
+  },
 };

@@ -9,10 +9,11 @@ import Card, { CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Dialog from '@/components/ui/Dialog';
-import { Building2, Upload, Trash2, Calendar, FileText, CheckCircle, AlertCircle, Clock, RefreshCw, ChevronDown, ChevronRight } from 'lucide-react';
+import { Building2, Upload, Trash2, Calendar, FileText, CheckCircle, AlertCircle, Clock, RefreshCw, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
 import { isAdmin } from '@/lib/utils/permissions';
 import { GSAContract, GSALaborCategory } from '@/types';
+import apiClient from '@/lib/api/client';
 
 export default function CompanyRepositoryPage() {
   const router = useRouter();
@@ -176,6 +177,18 @@ export default function CompanyRepositoryPage() {
     }
   };
 
+  const handleViewContract = async (contract: GSAContract) => {
+    try {
+      const response = await apiClient.get(`/company-repository/${contract.file_id}/document-url`);
+      if (response.data.url) {
+        window.open(response.data.url, '_blank');
+      }
+    } catch (error) {
+      toast.error('Failed to get document link');
+      console.error('Error fetching document URL:', error);
+    }
+  };
+
   // Get year columns from labor categories with actual calendar years
   const getYearColumns = (laborCategories: GSALaborCategory[] | undefined, contract: GSAContract) => {
     if (!laborCategories || laborCategories.length === 0) return [];
@@ -254,12 +267,12 @@ export default function CompanyRepositoryPage() {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6 max-w-5xl mx-auto">
+      <div className="space-y-2 max-w-5xl mx-auto">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-2">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Company Rates</h1>
-            <p className="text-muted-foreground">
+            <h1 className="text-3xl font-bold text-foreground mb-1">Company Rates</h1>
+            <p className="text-muted-foreground pl-1">
               Upload and manage GSA contracts for rate lookups
             </p>
           </div>
@@ -269,7 +282,7 @@ export default function CompanyRepositoryPage() {
             className="shadow-md shadow-primary/10"
           >
             <Upload className="w-4 h-4 mr-2" />
-            Upload Contract
+            Upload a New Contract
           </Button>
         </div>
 
@@ -309,7 +322,7 @@ export default function CompanyRepositoryPage() {
                 </p>
                 <Button variant="outline" onClick={() => setShowUploadDialog(true)}>
                   <Upload className="w-4 h-4 mr-2" />
-                  Upload Contract
+                  Upload a New Contract
                 </Button>
               </div>
             ) : (
@@ -342,7 +355,13 @@ export default function CompanyRepositoryPage() {
                             <FileText className="w-5 h-5 text-primary" />
                           </div>
                           <div>
-                            <h4 className="font-medium text-foreground">{contract.name}</h4>
+                            <h4
+                              className="font-medium text-foreground cursor-pointer hover:text-primary hover:underline transition-colors"
+                              onClick={() => handleViewContract(contract)}
+                              title="Click to view contract"
+                            >
+                              {contract.name}
+                            </h4>
                             <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-1 text-sm text-muted-foreground">
                               {contract.contract_number && (
                                 <span>Contract: {contract.contract_number}</span>
@@ -380,6 +399,15 @@ export default function CompanyRepositoryPage() {
                               Set Date
                             </Button>
                           )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleViewContract(contract)}
+                            className="text-primary hover:text-primary/80"
+                            title="View original contract"
+                          >
+                            <ExternalLink className="w-4 h-4" />
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
