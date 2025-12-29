@@ -616,6 +616,35 @@ class ProposalCRUD:
 
         return result.modified_count > 0
 
+    def check_for_timeout(self, proposal: dict) -> dict:
+        """
+        Check if proposal is stuck in processing for >30 min and mark as error.
+        """
+        if proposal.get("status") != "processing":
+            return proposal
+
+        created_at = proposal.get("created_at")
+        if not created_at:
+            return proposal
+
+        # 30 minute timeout
+        elapsed = (datetime.utcnow() - created_at).total_seconds()
+        if elapsed < 30 * 60:
+            return proposal  # Still within timeout
+
+        # Timed out - mark as error
+        self.collection.update_one(
+            {"_id": proposal["_id"]},
+            {"$set": {
+                "status": "error",
+                "message": "Processing timed out. Click 'Retry Processing' to try again.",
+                "updated_at": datetime.utcnow()
+            }}
+        )
+        proposal["status"] = "error"
+        proposal["message"] = "Processing timed out. Click 'Retry Processing' to try again."
+        return proposal
+
 
 # Global singleton instance
 _proposal_crud = None

@@ -103,6 +103,18 @@ class IDriveStorage:
                 print(f"Error generating pre-signed URL for {object_key}: {e}")
                 raise
 
+    def download_document(self, object_key: str, local_path: str) -> bool:
+        """
+        Download a document from iDrive e2 to local path.
+        """
+        with self._lock:
+            try:
+                self.s3.download_file(self.bucket, object_key, local_path)
+                return True
+            except ClientError as e:
+                print(f"Error downloading {object_key}: {e}")
+                raise
+
     def delete_document(self, object_key: str) -> bool:
         """
         Delete a document from iDrive e2 storage (thread-safe).

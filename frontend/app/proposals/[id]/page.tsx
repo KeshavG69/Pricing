@@ -15,14 +15,18 @@ import RateTableView from '@/components/pricing/RateTableView';
 import PricingTabs from '@/components/pricing/PricingTabs';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { SubcontractorSection } from '@/components/pricing/SubcontractorSection';
-import { Loader2, AlertCircle, ArrowLeft, Plus, Download } from 'lucide-react';
+import { AdvancedAnalysisModal, SubcontractorInfo } from '@/components/pricing/AdvancedAnalysisModal';
+import { Loader2, AlertCircle, ArrowLeft, Plus, Download, Share2 } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
+import { ShareOrInviteModal } from '@/components/proposals/ShareOrInviteModal';
+import { useAuthStore } from '@/lib/stores/authStore';
 
 export default function ProposalPage() {
   const params = useParams();
   const router = useRouter();
   const proposalId = params.id as string;
   const toast = useToast();
+  const { user } = useAuthStore();
 
   const { currentProposal, fetchProposal, isLoading } = useProposalsStore();
   const {
@@ -37,8 +41,11 @@ export default function ProposalPage() {
     recalculate,
     isRecalculating,
     enableAdvancedMode,
+    disableAdvancedMode,
     transformToAdvanced,
     advancedMode,
+    subcontractorConfigured,
+    preCreateSubcontractors,
     activeTab,
     setActiveTab,
     exportToExcel,
@@ -54,6 +61,9 @@ export default function ProposalPage() {
   const [editedPrimeContractor, setEditedPrimeContractor] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [addPositionModalOpen, setAddPositionModalOpen] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [advancedModalOpen, setAdvancedModalOpen] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   useEffect(() => {
     if (proposalId) {
@@ -275,6 +285,21 @@ export default function ProposalPage() {
     setIsEditingPrimeContractor(true);
   };
 
+  const handleRetryProcessing = async () => {
+    setIsRetrying(true);
+    try {
+      await proposalsApi.retry(proposalId);
+      // Refresh proposal to get updated status (should be "processing")
+      await fetchProposal(proposalId);
+      toast.success('Processing restarted');
+    } catch (error: any) {
+      console.error('Retry failed:', error);
+      toast.error(error?.response?.data?.detail || 'Failed to retry processing');
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
   if (isLoading || !currentProposal) {
     return (
       <DashboardLayout>
@@ -328,8 +353,19 @@ export default function ProposalPage() {
             <Button variant="outline" onClick={() => router.push('/dashboard')}>
               Back to Dashboard
             </Button>
-            <Button variant="primary" onClick={() => router.push('/dashboard/upload')}>
-              Try Again
+            <Button
+              variant="primary"
+              onClick={handleRetryProcessing}
+              disabled={isRetrying}
+            >
+              {isRetrying ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Retrying...
+                </>
+              ) : (
+                'Retry Processing'
+              )}
             </Button>
           </div>
         </div>
@@ -342,13 +378,38 @@ export default function ProposalPage() {
   };
 
   const handleAdvancedAnalysis = async () => {
-    // Transform basic positions to advanced format
+    // Check if first time (subcontractors not yet configured)
+    if (!subcontractorConfigured) {
+      // Show questionnaire modal first
+      setAdvancedModalOpen(true);
+      return;
+    }
+
+    // Already configured - proceed directly to advanced mode
     transformToAdvanced();
-
-    // Enable advanced mode
     enableAdvancedMode();
+    await recalculate();
+  };
 
-    // Call recalculate API
+  const handleAdvancedModalSubmit = async (subs: SubcontractorInfo[], agreeTargetRates: boolean) => {
+    // Pre-create subcontractors if any were specified
+    if (subs.length > 0) {
+      preCreateSubcontractors(subs);
+
+      // Auto-allocate workshare % from eligible positions (excludes key positions like PM, FA)
+      // This runs after preCreateSubcontractors so subcontractors have worksharePercent
+      await usePricingStore.getState().autoAllocateWorkshare();
+    } else {
+      // Mark as configured even if no subs (user clicked Skip or Continue with 0 subs)
+      usePricingStore.setState({ subcontractorConfigured: true });
+    }
+
+    // Close modal
+    setAdvancedModalOpen(false);
+
+    // Now proceed to advanced mode
+    transformToAdvanced();
+    enableAdvancedMode();
     await recalculate();
   };
 
@@ -387,10 +448,17 @@ export default function ProposalPage() {
 
       {/* Back button */}
       <div>
-        <Button variant="outline" onClick={() => router.push('/dashboard')}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Button>
+        {advancedMode ? (
+          <Button variant="outline" onClick={disableAdvancedMode}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Initial Analysis
+          </Button>
+        ) : (
+          <Button variant="outline" onClick={() => router.push('/dashboard')}>
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Back to Dashboard
+          </Button>
+        )}
       </div>
     </div>
   );
@@ -497,8 +565,19 @@ export default function ProposalPage() {
               )}
             </div>
           </div>
-          {/* Advanced Analysis or Export Excel button */}
-          <div className="mt-2">
+          {/* Action buttons */}
+          <div className="mt-2 flex items-center gap-2">
+            {/* Share button (admin only) */}
+            {currentProposal.status === 'completed' && user?.role === 'admin' && (
+              <Button
+                variant="outline"
+                onClick={() => setShareModalOpen(true)}
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
+              </Button>
+            )}
+            {/* Advanced Analysis or Export Excel button */}
             {currentProposal.status === 'completed' && (
               <>
                 {!advancedMode ? (
@@ -551,6 +630,21 @@ export default function ProposalPage() {
           addPosition(positionData);
           setAddPositionModalOpen(false);
         }}
+      />
+
+      {/* Share/Invite Modal */}
+      <ShareOrInviteModal
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        proposalId={proposalId}
+        proposalName={currentProposal?.name || ''}
+      />
+
+      {/* Advanced Analysis Questionnaire Modal */}
+      <AdvancedAnalysisModal
+        open={advancedModalOpen}
+        onClose={() => setAdvancedModalOpen(false)}
+        onSubmit={handleAdvancedModalSubmit}
       />
     </DashboardLayout>
   );

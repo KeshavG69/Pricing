@@ -30,6 +30,10 @@ class JobDescription(BaseModel):
         None,
         description='Hours worked per year in multi-year contract. Format: {"1": 1880, "2": 1880, "3": 0, "4": 1880, "5": 1880}. Year keys are strings. If not specified in document, will use hours field for all years. None if not specified.'
     )
+    is_key_position: Optional[bool] = Field(
+        False,
+        description="True if this is a key position that cannot be subcontracted (e.g., key personnel, program manager)."
+    )
 
 
 class JobDescriptionList(BaseModel):
