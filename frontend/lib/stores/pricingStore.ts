@@ -55,7 +55,7 @@ interface PricingState {
   aggregates: Aggregates;
   ratesReferenceExpanded: boolean;
   advancedModeVersion: number; // Force re-render counter
-  activeTab: 'overview' | 'main' | 'subcontractors' | 'rate-table';
+  activeTab: 'files' | 'overview' | 'main' | 'subcontractors' | 'rate-table';
 
   // Actions
   loadProposal: (proposalId: string, existingProposal?: Proposal) => Promise<void>;
@@ -90,7 +90,7 @@ interface PricingState {
   clearManualOverrides: (positionId?: string) => void;
   recalculateAdvanced: () => Promise<void>;
   toggleRatesReference: () => void;
-  setActiveTab: (tab: 'overview' | 'main' | 'subcontractors' | 'rate-table') => void;
+  setActiveTab: (tab: 'files' | 'overview' | 'main' | 'subcontractors' | 'rate-table') => void;
   preCreateSubcontractors: (subs: { name: string; worksharePercent: number }[]) => void;
   autoAllocateWorkshare: () => Promise<void>;
 }
@@ -376,10 +376,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
           const fee = (dlRate + fringe + oh + ga) * state.rates.fee;
           const feeAmount = fee * hours;
 
-          // FBLR excludes fee - fee is calculated separately in Fee Section
-          // This matches government cost proposal format (Intprepix)
-
-          const fblr = dlRate + fringe + oh + ga;
+          // FBLR includes fee for UI display
+          const fblr = dlRate + fringe + oh + ga + fee;
           const totalAmount = fblr * hours;
 
           breakdown[year] = {
@@ -415,6 +413,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
       totalFringe: 0,
       totalOH: 0,
       totalGA: 0,
+      totalFee: 0,
       totalFBLR: 0,
       byYear: {},
     };
@@ -427,6 +426,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
             fringe: 0,
             oh: 0,
             ga: 0,
+            fee: 0,
             fblr: 0,
             totalAmount: 0,
           };
@@ -436,6 +436,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         aggregates.byYear[year].fringe += breakdown.fringeAmount;
         aggregates.byYear[year].oh += breakdown.ohAmount;
         aggregates.byYear[year].ga += breakdown.gaAmount;
+        aggregates.byYear[year].fee += breakdown.feeAmount;
         aggregates.byYear[year].fblr += breakdown.totalAmount;
         aggregates.byYear[year].totalAmount += breakdown.totalAmount;
 
@@ -443,6 +444,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         aggregates.totalFringe += breakdown.fringeAmount;
         aggregates.totalOH += breakdown.ohAmount;
         aggregates.totalGA += breakdown.gaAmount;
+        aggregates.totalFee += breakdown.feeAmount;
         aggregates.totalFBLR += breakdown.totalAmount;
       });
     });
@@ -560,6 +562,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
           rates: state.rates,
           escalation_rates: state.escalationRates,
           months_per_year: state.monthsPerYear,
+          subcontractor_configured: state.subcontractorConfigured,
+          advanced_mode: state.advancedMode,
         },
       });
 
@@ -627,12 +631,13 @@ export const usePricingStore = create<PricingState>((set, get) => {
       totalFringe: 0,
       totalOH: 0,
       totalGA: 0,
+      totalFee: 0,
       totalFBLR: 0,
       byYear: {},
     },
     ratesReferenceExpanded: false,
     advancedModeVersion: 0,
-    activeTab: 'overview',
+    activeTab: 'files',
 
     loadProposal: async (proposalId, existingProposal) => {
       try {
@@ -703,6 +708,10 @@ export const usePricingStore = create<PricingState>((set, get) => {
           }
         }
 
+        // Load subcontractor configuration state
+        const subcontractorConfigured = proposal.spreadsheet_data?.subcontractor_configured || false;
+        const advancedMode = proposal.spreadsheet_data?.advanced_mode || false;
+
         set({
           proposalId,
           proposalName: proposal.name,
@@ -723,6 +732,9 @@ export const usePricingStore = create<PricingState>((set, get) => {
           isDirty: false,
           lastSaved: null,
           error: null,
+          // Restore advanced mode state
+          subcontractorConfigured,
+          advancedMode,
         });
 
         // Cache the loaded state for faster future access
@@ -746,7 +758,15 @@ export const usePricingStore = create<PricingState>((set, get) => {
           isDirty: false,
           lastSaved: null,
           error: null,
+          subcontractorConfigured,
+          advancedMode,
         });
+
+        // If proposal was saved in advanced mode, restore the advanced view
+        if (advancedMode) {
+          console.log('[LOAD] Restoring advanced mode view...');
+          performTransformToAdvanced();
+        }
 
         // NOTE: Don't auto-recalculate on initial load
         // The spreadsheet shows editable data, but FBLR calculations
@@ -924,6 +944,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
               rates: get().rates,
               escalation_rates: get().escalationRates,
               months_per_year: get().monthsPerYear,
+              subcontractor_configured: get().subcontractorConfigured,
+              advanced_mode: get().advancedMode,
             },
           });
           console.log('✅ Proposal saved successfully');
@@ -1542,15 +1564,27 @@ export const usePricingStore = create<PricingState>((set, get) => {
       const updatedSubcontractors = [...state.subcontractors];
       const updatedPositions = state.positions.map(p => ({ ...p, hours_per_year: { ...p.hours_per_year } }));
 
-      // IMPORTANT: Store ORIGINAL hours for each eligible position (before ANY allocation)
-      // Each sub gets % of ORIGINAL hours, not cascading from remaining
-      const originalHours = new Map<string, Record<string, number>>();
-      eligiblePositionIds.forEach(posId => {
-        const pos = state.positions.find(p => p.id === posId);
-        if (pos) {
-          originalHours.set(posId, { ...pos.hours_per_year });
+      // IMPORTANT: Clear existing positions for subcontractors with workshare before re-allocating
+      // This prevents duplicate positions if autoAllocateWorkshare is called multiple times
+      for (const sub of subsWithWorkshare) {
+        const subIndex = updatedSubcontractors.findIndex(s => s.id === sub.id);
+        if (subIndex !== -1) {
+          const existingCount = updatedSubcontractors[subIndex].positions.length;
+          updatedSubcontractors[subIndex] = {
+            ...updatedSubcontractors[subIndex],
+            positions: [], // Clear existing positions
+          };
+          console.log(`[AUTO-ALLOCATE] Cleared ${existingCount} existing positions for ${sub.name}`);
         }
-      });
+      }
+
+      // Calculate total workshare percentage to determine prime's share
+      const totalWorksharePercent = subsWithWorkshare.reduce(
+        (sum, s: any) => sum + (s.worksharePercent || 0), 0
+      ) / 100;
+      const primeSharePercent = 1 - totalWorksharePercent;
+
+      console.log(`[AUTO-ALLOCATE] Total workshare: ${totalWorksharePercent * 100}%, Prime share: ${primeSharePercent * 100}%`);
 
       for (const sub of subsWithWorkshare) {
         const worksharePercent = (sub as any).worksharePercent / 100; // Convert to decimal
@@ -1562,40 +1596,31 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
           const currentPosition = updatedPositions[posIndex];
 
-          // Get ORIGINAL hours for this position (before any sub took hours)
-          const origHours = originalHours.get(posId);
-          if (!origHours) continue;
+          // Use FTE hours as the base for allocation (not current hours which may be reduced)
+          const fteHours = currentPosition.standard_fte_hours || 1920;
 
-          // Calculate allocation based on ORIGINAL hours (NOT current reduced hours)
-          // This ensures 10% + 10% = 20% taken from original, prime gets 80%
+          // Calculate allocation based on FTE hours
+          // Each subcontractor gets: FTE * worksharePercent for each active year
           const hoursAllocation: Record<string, number> = {};
-          const remainingHours: Record<string, number> = {};
           let hasAllocation = false;
 
-          // Debug: Log what hours we're actually using
-          console.log(`[DEBUG] Position "${currentPosition.labor_category}" for ${sub.name}:`, {
-            original_hours: origHours,
-            current_hours: currentPosition.hours_per_year,
-            worksharePercent: worksharePercent
-          });
+          // Get active years from the position's hours_per_year
+          const activeYears = Object.keys(currentPosition.hours_per_year).filter(
+            year => (currentPosition.hours_per_year[year] || 0) > 0
+          );
 
-          Object.entries(origHours).forEach(([year, originalYearHours]) => {
-            const allocatedHours = Math.floor(originalYearHours * worksharePercent);
-            const currentHours = currentPosition.hours_per_year[year] || 0;
-            console.log(`[DEBUG] Year ${year}: ${originalYearHours} original * ${worksharePercent} = ${allocatedHours} allocated (current prime has ${currentHours})`);
+          activeYears.forEach((year) => {
+            const allocatedHours = Math.floor(fteHours * worksharePercent);
             if (allocatedHours > 0) {
               hoursAllocation[year] = allocatedHours;
               hasAllocation = true;
             }
-            // Reduce from current hours (already reduced by previous subs)
-            remainingHours[year] = currentHours - allocatedHours;
           });
 
           if (!hasAllocation) continue;
 
           // Calculate subcontractor rate (use position's base hourly rate)
           const effectiveSalary = getEffectiveSalary(currentPosition);
-          const fteHours = currentPosition.standard_fte_hours || 1920;
           const subRate = effectiveSalary / fteHours;
 
           // Create subcontractor position
@@ -1613,14 +1638,36 @@ export const usePricingStore = create<PricingState>((set, get) => {
             };
           }
 
-          // Update prime position with remaining hours (reduces for next subcontractor)
-          updatedPositions[posIndex] = {
-            ...currentPosition,
-            hours_per_year: remainingHours,
-          };
-
-          console.log(`[AUTO-ALLOCATE] ${currentPosition.labor_category} -> ${sub.name}: ${JSON.stringify(hoursAllocation)} hours @ $${subRate.toFixed(2)}/hr (remaining: ${JSON.stringify(remainingHours)})`);
+          console.log(`[AUTO-ALLOCATE] ${currentPosition.labor_category} -> ${sub.name}: ${JSON.stringify(hoursAllocation)} hours @ $${subRate.toFixed(2)}/hr`);
         }
+      }
+
+      // Now update prime positions: set hours to FTE * primeSharePercent for each active year
+      for (const posId of eligiblePositionIds) {
+        const posIndex = updatedPositions.findIndex(p => p.id === posId);
+        if (posIndex === -1) continue;
+
+        const currentPosition = updatedPositions[posIndex];
+        const fteHours = currentPosition.standard_fte_hours || 1920;
+        const primeHours = Math.floor(fteHours * primeSharePercent);
+
+        const updatedHoursPerYear: Record<string, number> = {};
+
+        // Only set hours for years that were originally active
+        Object.keys(currentPosition.hours_per_year).forEach((year) => {
+          if ((currentPosition.hours_per_year[year] || 0) > 0) {
+            updatedHoursPerYear[year] = primeHours;
+          } else {
+            updatedHoursPerYear[year] = 0;
+          }
+        });
+
+        updatedPositions[posIndex] = {
+          ...currentPosition,
+          hours_per_year: updatedHoursPerYear,
+        };
+
+        console.log(`[AUTO-ALLOCATE] Prime ${currentPosition.labor_category}: ${primeHours} hours/year (${primeSharePercent * 100}% of ${fteHours} FTE)`);
       }
 
       // Update state in batch
@@ -1645,6 +1692,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
               rates: state.rates,
               escalation_rates: state.escalationRates,
               months_per_year: state.monthsPerYear,
+              subcontractor_configured: state.subcontractorConfigured,
+              advanced_mode: state.advancedMode,
             },
           });
           console.log('[AUTO-ALLOCATE] Saved to backend successfully');
@@ -1690,13 +1739,19 @@ export const usePricingStore = create<PricingState>((set, get) => {
           totalFringe: 0,
           totalOH: 0,
           totalGA: 0,
+          totalFee: 0,
           totalFBLR: 0,
           byYear: {},
         },
         ratesReferenceExpanded: false,
         advancedModeVersion: 0,
-        activeTab: 'overview',
+        activeTab: 'files',
       });
     },
   };
 });
+
+// Expose store to window for debugging (dev only)
+if (typeof window !== 'undefined') {
+  (window as any).pricingStore = usePricingStore;
+}

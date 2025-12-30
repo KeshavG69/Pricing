@@ -16,7 +16,7 @@ interface PrimeLaborAggregatesSectionProps {
 interface AggregateRow {
   id: string;
   label: string;
-  type: 'dl' | 'fringe' | 'oh' | 'ga' | 'fblr';
+  type: 'dl' | 'fringe' | 'oh' | 'ga' | 'fee' | 'fblr';
 }
 
 export const PrimeLaborAggregatesSection = ({
@@ -40,6 +40,7 @@ export const PrimeLaborAggregatesSection = ({
     { id: 'fringe', label: 'Total Fringe', type: 'fringe' },
     { id: 'oh', label: 'Total Overhead', type: 'oh' },
     { id: 'ga', label: 'Total G&A', type: 'ga' },
+    { id: 'fee', label: 'Total Fee', type: 'fee' },
     { id: 'fblr', label: 'Total Prime Labor (FBLR)', type: 'fblr' },
   ], []);
 
@@ -96,6 +97,9 @@ export const PrimeLaborAggregatesSection = ({
             case 'ga':
               value = yearData.ga;
               break;
+            case 'fee':
+              value = yearData.fee;
+              break;
             case 'fblr':
               value = yearData.totalAmount;
               break;
@@ -133,6 +137,9 @@ export const PrimeLaborAggregatesSection = ({
             break;
           case 'ga':
             value = aggregates.totalGA;
+            break;
+          case 'fee':
+            value = aggregates.totalFee;
             break;
           case 'fblr':
             value = aggregates.totalFBLR;

@@ -39,6 +39,9 @@ class OrganizationCRUD:
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),
             "status": "active",
+            # Stripe billing fields (set when admin adds payment method)
+            "stripe_customer_id": None,
+            "default_payment_method_id": None,
             "settings": {
                 "default_rates": {
                     "fringe": 0.247,

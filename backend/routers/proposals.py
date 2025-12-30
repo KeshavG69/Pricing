@@ -28,6 +28,10 @@ from utils.pipeline import process_dataframe_with_agents
 # Position splitting
 from routers.pricing import split_position_by_hours, split_multi_year_position
 
+# Billing
+from client.stripe_client import get_stripe_service, ChargeType
+from utils.billing_crud import get_billing_crud
+
 # Storage
 from client.idrive_storage import get_idrive_storage
 
@@ -120,7 +124,7 @@ async def process_proposal_documents(
         if organization_id:
             from utils.organizations import get_organization_crud
             org_crud = get_organization_crud()
-            org = org_crud.get_by_id(organization_id)
+            org = org_crud.get_by_id(ObjectId(organization_id))
             if org and "settings" in org:
                 settings = org.get("settings", {})
                 default_escalation_rate = settings.get("default_escalation_rate", 0.03)
@@ -247,6 +251,72 @@ async def process_proposal_documents(
             key = f"{year}_to_{year + 1}"
             escalation_rates[key] = default_escalation_rate
 
+        # Charge for basic proposal (if payment method configured)
+        billing_status = "unpaid"
+        billing_message = None
+
+        try:
+            stripe_service = get_stripe_service()
+            billing_crud = get_billing_crud()
+
+            if stripe_service.is_configured and org and org.get("stripe_customer_id") and org.get("default_payment_method_id"):
+                # Check if already charged (idempotent)
+                if not billing_crud.is_proposal_charged(proposal_id, "basic"):
+                    # Get proposal name for description
+                    proposal_doc = crud.get_by_id(ObjectId(proposal_id))
+                    proposal_name = proposal_doc.get("name", "Untitled") if proposal_doc else "Untitled"
+
+                    # Create billing record
+                    amount_cents = stripe_service.get_price(ChargeType.BASIC)
+                    billing_id = billing_crud.create_billing_record(
+                        organization_id=str(org["_id"]),
+                        proposal_id=proposal_id,
+                        charge_type="basic",
+                        amount_cents=amount_cents,
+                        description=f"PriceIQ Basic: {proposal_name[:50]}",
+                        triggered_by_user_id=user_id,
+                        status="pending"
+                    )
+
+                    # Charge
+                    result = stripe_service.charge_for_proposal(
+                        customer_id=org["stripe_customer_id"],
+                        payment_method_id=org["default_payment_method_id"],
+                        charge_type=ChargeType.BASIC,
+                        proposal_id=proposal_id,
+                        proposal_name=proposal_name,
+                        organization_id=str(org["_id"])
+                    )
+
+                    if result["success"]:
+                        billing_status = "paid"
+                        billing_crud.collection.update_one(
+                            {"_id": ObjectId(billing_id)},
+                            {"$set": {
+                                "stripe_payment_intent_id": result["payment_intent_id"],
+                                "status": "succeeded",
+                                "updated_at": datetime.utcnow()
+                            }}
+                        )
+                    else:
+                        billing_status = "failed"
+                        billing_message = result.get("error", "Payment failed")
+                        billing_crud.collection.update_one(
+                            {"_id": ObjectId(billing_id)},
+                            {"$set": {
+                                "status": "failed",
+                                "error_message": billing_message,
+                                "updated_at": datetime.utcnow()
+                            }}
+                        )
+                else:
+                    billing_status = "paid"  # Already charged
+        except Exception as billing_error:
+            import traceback
+            traceback.print_exc()
+            billing_message = f"Billing error: {str(billing_error)}"
+            # Don't fail the whole proposal processing for billing errors
+
         # Update proposal with results (including Travel and ODCs in spreadsheet_data)
         crud.update_proposal(
             proposal_id,
@@ -254,7 +324,8 @@ async def process_proposal_documents(
             {
                 "status": "completed",
                 "progress": 100,
-                "message": "Processing complete",
+                "message": billing_message or "Processing complete",
+                "billing_status": billing_status,
                 "jobs": cleaned_jobs,
                 "metadata": {
                     "total_jobs": len(cleaned_jobs),
@@ -1449,15 +1520,15 @@ async def refresh_document_urls(
     updated_documents = []
 
     for doc in documents:
-        object_key = doc.get("object_key")
-        if object_key:
+        storage_key = doc.get("idrive_key")
+        if storage_key:
             try:
                 # Generate fresh pre-signed URL (7 days)
-                fresh_url = idrive.get_presigned_url(object_key)
-                updated_doc = {**doc, "url": fresh_url}
+                fresh_url = idrive.get_presigned_url(storage_key)
+                updated_doc = {**doc, "idrive_url": fresh_url}
                 updated_documents.append(updated_doc)
             except Exception as e:
-                print(f"Error refreshing URL for {object_key}: {e}")
+                print(f"Error refreshing URL for {storage_key}: {e}")
                 # Keep old URL if refresh fails
                 updated_documents.append(doc)
         else:
