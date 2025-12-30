@@ -466,8 +466,8 @@ export default function CompanyRepositoryPage() {
     }
   };
 
-  // Show loading state
-  if (!user || !isAdmin(user)) {
+  // Show loading state while checking auth
+  if (!user) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center min-h-[400px]">
@@ -476,6 +476,8 @@ export default function CompanyRepositoryPage() {
       </DashboardLayout>
     );
   }
+
+  const userIsAdmin = isAdmin(user);
 
   return (
     <DashboardLayout>
@@ -488,14 +490,16 @@ export default function CompanyRepositoryPage() {
               Upload and manage GSA contracts for rate lookups
             </p>
           </div>
-          <Button
-            variant="primary"
-            onClick={() => setShowUploadDialog(true)}
-            className="shadow-md shadow-primary/10"
-          >
-            <Upload className="w-4 h-4 mr-2" />
-            Upload a New Contract
-          </Button>
+          {userIsAdmin && (
+            <Button
+              variant="primary"
+              onClick={() => setShowUploadDialog(true)}
+              className="shadow-md shadow-primary/10"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Upload a New Contract
+            </Button>
+          )}
         </div>
 
         {/* Error Banner */}
@@ -530,12 +534,14 @@ export default function CompanyRepositoryPage() {
                 <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">No contracts uploaded</h3>
                 <p className="text-muted-foreground mb-4">
-                  Upload a GSA rate schedule to get started
+                  {userIsAdmin ? 'Upload a GSA rate schedule to get started' : 'No GSA contracts available yet'}
                 </p>
-                <Button variant="outline" onClick={() => setShowUploadDialog(true)}>
-                  <Upload className="w-4 h-4 mr-2" />
-                  Upload a New Contract
-                </Button>
+                {userIsAdmin && (
+                  <Button variant="outline" onClick={() => setShowUploadDialog(true)}>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload a New Contract
+                  </Button>
+                )}
               </div>
             ) : (
               <div className="space-y-4">
@@ -597,7 +603,7 @@ export default function CompanyRepositoryPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           {getStatusBadge(contract.status)}
-                          {contract.status === 'needs_date' && (
+                          {userIsAdmin && contract.status === 'needs_date' && (
                             <Button
                               variant="outline"
                               size="sm"
@@ -620,14 +626,16 @@ export default function CompanyRepositoryPage() {
                           >
                             <ExternalLink className="w-4 h-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDelete(contract)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          {userIsAdmin && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDelete(contract)}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -640,7 +648,7 @@ export default function CompanyRepositoryPage() {
                             <h5 className="text-sm font-medium text-foreground">
                               Labor Categories ({expandedContract.labor_categories.length})
                             </h5>
-                            {user && isAdmin(user) && (
+                            {userIsAdmin && (
                               <button
                                 onClick={() => setShowCreatePresetDialog(true)}
                                 className="flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm hover:bg-primary/90 transition-colors"
@@ -707,7 +715,7 @@ export default function CompanyRepositoryPage() {
                   Reusable rate templates that can be quickly applied in pricing workspaces
                 </CardDescription>
               </div>
-              {user && isAdmin(user) && (
+              {userIsAdmin && (
                 <button
                   onClick={() => setShowManualPresetDialog(true)}
                   className="flex items-center justify-center w-10 h-10 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground transition-colors"
@@ -728,7 +736,7 @@ export default function CompanyRepositoryPage() {
                   >
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-medium text-foreground">{preset.name}</h4>
-                      {user && isAdmin(user) && (
+                      {userIsAdmin && (
                         <div className="flex gap-3">
                           <button
                             onClick={() => handleEditPreset(preset)}
@@ -785,7 +793,7 @@ export default function CompanyRepositoryPage() {
             ) : (
               <div className="text-center py-8 text-muted-foreground">
                 <p>No rate presets created yet.</p>
-                {user && isAdmin(user) && (
+                {userIsAdmin && (
                   <p className="text-sm mt-1">Click the + button above to create your first preset.</p>
                 )}
               </div>
@@ -794,7 +802,7 @@ export default function CompanyRepositoryPage() {
         </Card>
 
         {/* Additional Settings */}
-        {user && isAdmin(user) && (
+        {userIsAdmin && (
           <Card>
             <CardHeader>
               <div className="flex items-center justify-between">

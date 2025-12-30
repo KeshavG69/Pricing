@@ -7,6 +7,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useProposalsStore } from '@/lib/stores/proposalsStore';
 import { useCompanyRepositoryStore } from '@/lib/stores/companyRepositoryStore';
 import { useAuthStore } from '@/lib/stores/authStore';
+import { useBillingStore } from '@/lib/stores/billingStore';
 import { useProposalPolling } from '@/lib/hooks/useProposalPolling';
 import Button from '@/components/ui/Button';
 import Card, { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
@@ -20,6 +21,7 @@ export default function UploadPage() {
   const { uploadDocuments, isLoading } = useProposalsStore();
   const { user } = useAuthStore();
   const { contracts, fetchContracts } = useCompanyRepositoryStore();
+  const { status: billingStatus, fetchBillingStatus, setShowPaymentRequiredModal } = useBillingStore();
   const [files, setFiles] = useState<File[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [proposalName, setProposalName] = useState('');
@@ -29,6 +31,20 @@ export default function UploadPage() {
   // Wage source state
   const [wageSourceType, setWageSourceType] = useState<'bls' | 'gsa'>('bls');
   const [selectedGsaContract, setSelectedGsaContract] = useState<string | null>(null);
+
+  // Fetch billing status on mount
+  useEffect(() => {
+    if (user) {
+      fetchBillingStatus();
+    }
+  }, [user, fetchBillingStatus]);
+
+  // Show payment required modal if no payment method configured
+  useEffect(() => {
+    if (billingStatus && billingStatus.stripe_configured && !billingStatus.has_payment_method) {
+      setShowPaymentRequiredModal(true);
+    }
+  }, [billingStatus, setShowPaymentRequiredModal]);
 
   // Fetch GSA contracts if admin
   useEffect(() => {
@@ -64,6 +80,12 @@ export default function UploadPage() {
   };
 
   const handleUpload = async () => {
+    // Check billing status first - block if no payment method
+    if (billingStatus?.stripe_configured && !billingStatus?.has_payment_method) {
+      setShowPaymentRequiredModal(true);
+      return;
+    }
+
     if (files.length === 0) {
       setError('Please select at least one file');
       return;

@@ -103,7 +103,7 @@ class UserCRUD:
             return None
 
         return UserResponse(
-            id=user_doc["_id"],
+            id=str(user_doc["_id"]),
             firstName=user_doc["firstName"],
             lastName=user_doc["lastName"],
             email=user_doc["email"],
@@ -123,7 +123,7 @@ class UserCRUD:
             return None
 
         return UserResponse(
-            id=user_doc["_id"],
+            id=str(user_doc["_id"]),
             firstName=user_doc["firstName"],
             lastName=user_doc["lastName"],
             email=user_doc["email"],
@@ -143,7 +143,7 @@ class UserCRUD:
             return None
 
         return UserResponse(
-            id=user_doc["_id"],
+            id=str(user_doc["_id"]),
             firstName=user_doc["firstName"],
             lastName=user_doc["lastName"],
             email=user_doc["email"],
@@ -184,7 +184,7 @@ class UserCRUD:
             )
 
             return UserResponse(
-                id=existing_user["_id"],
+                id=str(existing_user["_id"]),
                 firstName=existing_user.get("firstName", google_profile.given_name),
                 lastName=existing_user.get("lastName", google_profile.family_name),
                 email=google_profile.email,

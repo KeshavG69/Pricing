@@ -1,9 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useOrganizationStore } from '@/lib/stores/organizationStore';
+import { useBillingStore } from '@/lib/stores/billingStore';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Card, { CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -12,16 +13,34 @@ import Dialog from '@/components/ui/Dialog';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import RoleBadge from '@/components/ui/RoleBadge';
 import StatusBadge from '@/components/ui/StatusBadge';
-import { Building, Save, Info, Users, Mail, Plus, Trash2, Clock, CheckCircle, UserX } from 'lucide-react';
+import { StripeProvider } from '@/components/billing/StripeProvider';
+import { PaymentMethodForm } from '@/components/billing/PaymentMethodForm';
+import {
+  Building,
+  Save,
+  Info,
+  Users,
+  Mail,
+  Plus,
+  Trash2,
+  Clock,
+  CheckCircle,
+  UserX,
+  CreditCard,
+  DollarSign,
+  Receipt,
+  AlertCircle,
+} from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
 import { isAdmin, canRemoveUser, getUserDisplayName, getUserInitials } from '@/lib/utils/permissions';
 import { OrganizationSettings, InviteUserRequest } from '@/types';
 import apiClient from '@/lib/api/client';
 
-type TabType = 'settings' | 'team';
+type TabType = 'settings' | 'team' | 'billing';
 
 export default function OrganizationPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuthStore();
   const {
     organization,
@@ -36,10 +55,30 @@ export default function OrganizationPage() {
     revokeInvitation,
     isLoading
   } = useOrganizationStore();
+  const {
+    status: billingStatus,
+    paymentMethods,
+    billingHistory,
+    billingStats,
+    setupIntentClientSecret,
+    isLoadingStatus: isLoadingBillingStatus,
+    isLoadingPaymentMethods,
+    isLoadingHistory,
+    isCreatingSetupIntent,
+    fetchBillingStatus,
+    fetchPaymentMethods,
+    fetchBillingHistory,
+    fetchBillingStats,
+    createSetupIntent,
+    removePaymentMethod,
+  } = useBillingStore();
   const toast = useToast();
 
-  // Tab state
-  const [activeTab, setActiveTab] = useState<TabType>('settings');
+  // Tab state - read initial value from URL
+  const tabFromUrl = searchParams.get('tab') as TabType | null;
+  const [activeTab, setActiveTab] = useState<TabType>(
+    tabFromUrl && ['settings', 'team', 'billing'].includes(tabFromUrl) ? tabFromUrl : 'settings'
+  );
 
   // Settings form state
   const [settings, setSettings] = useState<OrganizationSettings | null>(null);
@@ -67,6 +106,12 @@ export default function OrganizationPage() {
   const [orgNameInput, setOrgNameInput] = useState('');
   const [isSavingOrgName, setIsSavingOrgName] = useState(false);
 
+  // Billing state
+  const [showAddCard, setShowAddCard] = useState(false);
+  const [deleteCardConfirmOpen, setDeleteCardConfirmOpen] = useState(false);
+  const [cardToDelete, setCardToDelete] = useState<{ id: string; last4: string } | null>(null);
+  const [isDeletingCard, setIsDeletingCard] = useState(false);
+
   useEffect(() => {
     // Redirect non-admins
     if (user && !isAdmin(user)) {
@@ -79,8 +124,13 @@ export default function OrganizationPage() {
       fetchOrganization();
       fetchMembers();
       fetchInvitations();
+      // Fetch billing data
+      fetchBillingStatus();
+      fetchPaymentMethods();
+      fetchBillingHistory();
+      fetchBillingStats();
     }
-  }, [user, router, fetchOrganization, fetchMembers, fetchInvitations]);
+  }, [user, router, fetchOrganization, fetchMembers, fetchInvitations, fetchBillingStatus, fetchPaymentMethods, fetchBillingHistory, fetchBillingStats]);
 
   useEffect(() => {
     if (organization?.settings) {
@@ -208,6 +258,42 @@ export default function OrganizationPage() {
     }
   };
 
+  // Billing handlers
+  const handleAddCard = async () => {
+    const clientSecret = await createSetupIntent();
+    if (clientSecret) {
+      setShowAddCard(true);
+    }
+  };
+
+  const handleCardAdded = () => {
+    setShowAddCard(false);
+    toast.success('Payment method added successfully');
+  };
+
+  const handleDeleteCardClick = (id: string, last4: string) => {
+    setCardToDelete({ id, last4 });
+    setDeleteCardConfirmOpen(true);
+  };
+
+  const handleDeleteCardConfirm = async () => {
+    if (!cardToDelete) return;
+
+    setIsDeletingCard(true);
+    try {
+      const success = await removePaymentMethod(cardToDelete.id);
+      if (success) {
+        toast.success('Payment method removed');
+      }
+    } catch {
+      toast.error('Failed to remove payment method');
+    } finally {
+      setIsDeletingCard(false);
+      setDeleteCardConfirmOpen(false);
+      setCardToDelete(null);
+    }
+  };
+
   // Helpers
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('en-US', {
@@ -215,6 +301,23 @@ export default function OrganizationPage() {
       day: 'numeric',
       year: 'numeric',
     });
+  };
+
+  const formatDateTime = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const formatCurrency = (cents: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(cents / 100);
   };
 
   // Show loading state
@@ -263,6 +366,17 @@ export default function OrganizationPage() {
               Send Invitation
             </Button>
           )}
+          {activeTab === 'billing' && !showAddCard && (
+            <Button
+              variant="primary"
+              onClick={handleAddCard}
+              isLoading={isCreatingSetupIntent}
+              className="shadow-md shadow-primary/10"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Payment Method
+            </Button>
+          )}
         </div>
 
         {/* Tabs */}
@@ -289,6 +403,17 @@ export default function OrganizationPage() {
             >
               <Users className="w-4 h-4 inline-block mr-2" />
               Team ({members.length + pendingInvitations.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('billing')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'billing'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+              }`}
+            >
+              <CreditCard className="w-4 h-4 inline-block mr-2" />
+              Billing
             </button>
           </nav>
         </div>
@@ -583,6 +708,286 @@ export default function OrganizationPage() {
             </Card>
           </div>
         )}
+
+        {/* Billing Tab */}
+        {activeTab === 'billing' && (
+          <div className="space-y-6">
+            {/* Stats Cards */}
+            <div className="grid md:grid-cols-3 gap-6">
+              <Card className="hover-card">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                      <DollarSign className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <span className="text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">
+                      Total Spent
+                    </span>
+                  </div>
+                  <p className="text-3xl font-bold text-foreground mb-1">
+                    {formatCurrency(billingStats?.successful_amount_cents || 0)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Lifetime</p>
+                </CardContent>
+              </Card>
+
+              <Card className="hover-card">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                      <Receipt className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <span className="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded-full">
+                      Transactions
+                    </span>
+                  </div>
+                  <p className="text-3xl font-bold text-foreground mb-1">
+                    {billingStats?.successful_charges || 0}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Successful charges</p>
+                </CardContent>
+              </Card>
+
+              <Card className="hover-card">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                      <CreditCard className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <span className="text-xs font-medium text-purple-700 bg-purple-100 px-2 py-1 rounded-full">
+                      Status
+                    </span>
+                  </div>
+                  <p className="text-3xl font-bold text-foreground mb-1">
+                    {billingStatus?.has_payment_method ? 'Active' : 'Inactive'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {paymentMethods.length} payment method{paymentMethods.length !== 1 ? 's' : ''}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Add Card Form */}
+            {showAddCard && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Add Payment Method</CardTitle>
+                  <CardDescription>
+                    Enter your card details. Your information is encrypted and secure.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <StripeProvider clientSecret={setupIntentClientSecret || undefined}>
+                    <PaymentMethodForm
+                      onSuccess={handleCardAdded}
+                      onCancel={() => setShowAddCard(false)}
+                    />
+                  </StripeProvider>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Payment Methods */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment Methods</CardTitle>
+                <CardDescription>
+                  Cards saved for automatic billing
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoadingPaymentMethods ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Loading payment methods...
+                  </div>
+                ) : paymentMethods.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+                      <CreditCard className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-medium text-foreground mb-2">No payment methods</h3>
+                    <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                      Add a payment method to enable proposal creation.
+                    </p>
+                    <Button variant="primary" onClick={handleAddCard} isLoading={isCreatingSetupIntent}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Payment Method
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {paymentMethods.map((method) => (
+                      <div
+                        key={method.id}
+                        className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/30 transition-colors"
+                      >
+                        <div className="flex items-center gap-4">
+                          <CreditCard className="w-8 h-8 text-muted-foreground" />
+                          <div>
+                            <p className="font-medium text-foreground capitalize">
+                              {method.brand} •••• {method.last4}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Expires {method.exp_month}/{method.exp_year}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {method.is_default && (
+                            <span className="flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">
+                              <CheckCircle className="w-3 h-3" />
+                              Default
+                            </span>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteCardClick(method.id, method.last4)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Billing History */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Billing History</CardTitle>
+                <CardDescription>
+                  Recent transactions and charges
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                {isLoadingHistory ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Loading history...
+                  </div>
+                ) : billingHistory.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Receipt className="w-8 h-8 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-muted-foreground">No billing history yet</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-muted/50 border-b border-border">
+                        <tr>
+                          <th className="text-left py-3 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Description
+                          </th>
+                          <th className="text-left py-3 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Type
+                          </th>
+                          <th className="text-left py-3 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Amount
+                          </th>
+                          <th className="text-left py-3 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="text-left py-3 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Date
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {billingHistory.map((record) => (
+                          <tr key={record.id} className="hover:bg-muted/30 transition-colors">
+                            <td className="py-4 px-6">
+                              <p className="text-sm font-medium text-foreground">
+                                {record.description}
+                              </p>
+                            </td>
+                            <td className="py-4 px-6">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                record.charge_type === 'basic'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-purple-100 text-purple-800'
+                              }`}>
+                                {record.charge_type === 'basic' ? 'Basic' : 'Advanced'}
+                              </span>
+                            </td>
+                            <td className="py-4 px-6">
+                              <span className="text-sm font-medium text-foreground">
+                                {formatCurrency(record.amount_cents)}
+                              </span>
+                            </td>
+                            <td className="py-4 px-6">
+                              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                record.status === 'succeeded'
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : record.status === 'pending'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {record.status === 'succeeded' && <CheckCircle className="w-3 h-3" />}
+                                {record.status === 'failed' && <AlertCircle className="w-3 h-3" />}
+                                {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+                              </span>
+                            </td>
+                            <td className="py-4 px-6">
+                              <span className="text-sm text-muted-foreground">
+                                {formatDateTime(record.created_at)}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Pricing Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Pricing</CardTitle>
+                <CardDescription>
+                  Current pricing for proposal processing
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="p-4 border border-border rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <Receipt className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">Basic Proposal</p>
+                        <p className="text-2xl font-bold text-primary">$5.00</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Document processing with SOC matching and wage data lookup
+                    </p>
+                  </div>
+                  <div className="p-4 border border-border rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                        <Receipt className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">Advanced Analysis</p>
+                        <p className="text-2xl font-bold text-primary">$10.00</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Deep competitive analysis and pricing recommendations
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
 
       {/* Delete Team Member Confirmation Dialog */}
@@ -656,7 +1061,7 @@ export default function OrganizationPage() {
                   name="role"
                   value="user"
                   checked={inviteRole === 'user'}
-                  onChange={(e) => setInviteRole('user')}
+                  onChange={() => setInviteRole('user')}
                   className="mr-3"
                 />
                 <div className="flex-1">
@@ -676,7 +1081,7 @@ export default function OrganizationPage() {
                   name="role"
                   value="admin"
                   checked={inviteRole === 'admin'}
-                  onChange={(e) => setInviteRole('admin')}
+                  onChange={() => setInviteRole('admin')}
                   className="mr-3"
                 />
                 <div className="flex-1">
@@ -704,6 +1109,18 @@ export default function OrganizationPage() {
         confirmText="Revoke"
         confirmVariant="danger"
         isLoading={isRevoking}
+      />
+
+      {/* Delete Card Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteCardConfirmOpen}
+        onClose={() => setDeleteCardConfirmOpen(false)}
+        onConfirm={handleDeleteCardConfirm}
+        title="Remove Payment Method?"
+        message={`Are you sure you want to remove the card ending in ${cardToDelete?.last4}? You'll need to add a new payment method to continue creating proposals.`}
+        confirmText="Remove"
+        confirmVariant="danger"
+        isLoading={isDeletingCard}
       />
     </DashboardLayout>
   );
