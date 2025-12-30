@@ -15,7 +15,7 @@ export interface SubcontractorInfo {
 interface AdvancedAnalysisModalProps {
   open: boolean;
   onClose: () => void;
-  onSubmit: (subs: SubcontractorInfo[], agreeTargetRates: boolean) => void;
+  onSubmit: (subs: SubcontractorInfo[]) => void;
 }
 
 export const AdvancedAnalysisModal = ({
@@ -25,7 +25,6 @@ export const AdvancedAnalysisModal = ({
 }: AdvancedAnalysisModalProps) => {
   const [numSubs, setNumSubs] = useState<number>(0);
   const [subs, setSubs] = useState<SubcontractorInfo[]>([]);
-  const [agreeTargetRates, setAgreeTargetRates] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Update subs array when numSubs changes
@@ -48,7 +47,6 @@ export const AdvancedAnalysisModal = ({
     if (open) {
       setNumSubs(0);
       setSubs([]);
-      setAgreeTargetRates(false);
       setErrors({});
     }
   }, [open]);
@@ -95,20 +93,19 @@ export const AdvancedAnalysisModal = ({
 
     // Filter out empty subs and submit
     const validSubs = subs.filter(sub => sub.name.trim());
-    onSubmit(validSubs, agreeTargetRates);
+    onSubmit(validSubs);
     handleClose();
   };
 
   const handleSkip = () => {
     // Skip without adding subs - proceed to advanced mode directly
-    onSubmit([], agreeTargetRates);
+    onSubmit([]);
     handleClose();
   };
 
   const handleClose = () => {
     setNumSubs(0);
     setSubs([]);
-    setAgreeTargetRates(false);
     setErrors({});
     onClose();
   };
@@ -257,26 +254,6 @@ export const AdvancedAnalysisModal = ({
             )}
           </Card>
         )}
-
-        {/* Target Rates Agreement */}
-        <Card className="p-4">
-          <label className="flex items-start gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={agreeTargetRates}
-              onChange={(e) => setAgreeTargetRates(e.target.checked)}
-              className="mt-1 w-4 h-4 rounded border-input text-primary focus:ring-primary"
-            />
-            <div>
-              <span className="text-sm font-medium text-foreground">
-                Agree to Target Rates
-              </span>
-              <p className="text-xs text-muted-foreground mt-1">
-                I confirm that the rates and calculations will be used for proposal purposes.
-              </p>
-            </div>
-          </label>
-        </Card>
       </div>
     </Dialog>
   );

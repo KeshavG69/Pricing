@@ -1542,15 +1542,27 @@ export const usePricingStore = create<PricingState>((set, get) => {
       const updatedSubcontractors = [...state.subcontractors];
       const updatedPositions = state.positions.map(p => ({ ...p, hours_per_year: { ...p.hours_per_year } }));
 
-      // IMPORTANT: Store ORIGINAL hours for each eligible position (before ANY allocation)
-      // Each sub gets % of ORIGINAL hours, not cascading from remaining
-      const originalHours = new Map<string, Record<string, number>>();
-      eligiblePositionIds.forEach(posId => {
-        const pos = state.positions.find(p => p.id === posId);
-        if (pos) {
-          originalHours.set(posId, { ...pos.hours_per_year });
+      // IMPORTANT: Clear existing positions for subcontractors with workshare before re-allocating
+      // This prevents duplicate positions if autoAllocateWorkshare is called multiple times
+      for (const sub of subsWithWorkshare) {
+        const subIndex = updatedSubcontractors.findIndex(s => s.id === sub.id);
+        if (subIndex !== -1) {
+          const existingCount = updatedSubcontractors[subIndex].positions.length;
+          updatedSubcontractors[subIndex] = {
+            ...updatedSubcontractors[subIndex],
+            positions: [], // Clear existing positions
+          };
+          console.log(`[AUTO-ALLOCATE] Cleared ${existingCount} existing positions for ${sub.name}`);
         }
-      });
+      }
+
+      // Calculate total workshare percentage to determine prime's share
+      const totalWorksharePercent = subsWithWorkshare.reduce(
+        (sum, s: any) => sum + (s.worksharePercent || 0), 0
+      ) / 100;
+      const primeSharePercent = 1 - totalWorksharePercent;
+
+      console.log(`[AUTO-ALLOCATE] Total workshare: ${totalWorksharePercent * 100}%, Prime share: ${primeSharePercent * 100}%`);
 
       for (const sub of subsWithWorkshare) {
         const worksharePercent = (sub as any).worksharePercent / 100; // Convert to decimal
@@ -1562,40 +1574,31 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
           const currentPosition = updatedPositions[posIndex];
 
-          // Get ORIGINAL hours for this position (before any sub took hours)
-          const origHours = originalHours.get(posId);
-          if (!origHours) continue;
+          // Use FTE hours as the base for allocation (not current hours which may be reduced)
+          const fteHours = currentPosition.standard_fte_hours || 1920;
 
-          // Calculate allocation based on ORIGINAL hours (NOT current reduced hours)
-          // This ensures 10% + 10% = 20% taken from original, prime gets 80%
+          // Calculate allocation based on FTE hours
+          // Each subcontractor gets: FTE * worksharePercent for each active year
           const hoursAllocation: Record<string, number> = {};
-          const remainingHours: Record<string, number> = {};
           let hasAllocation = false;
 
-          // Debug: Log what hours we're actually using
-          console.log(`[DEBUG] Position "${currentPosition.labor_category}" for ${sub.name}:`, {
-            original_hours: origHours,
-            current_hours: currentPosition.hours_per_year,
-            worksharePercent: worksharePercent
-          });
+          // Get active years from the position's hours_per_year
+          const activeYears = Object.keys(currentPosition.hours_per_year).filter(
+            year => (currentPosition.hours_per_year[year] || 0) > 0
+          );
 
-          Object.entries(origHours).forEach(([year, originalYearHours]) => {
-            const allocatedHours = Math.floor(originalYearHours * worksharePercent);
-            const currentHours = currentPosition.hours_per_year[year] || 0;
-            console.log(`[DEBUG] Year ${year}: ${originalYearHours} original * ${worksharePercent} = ${allocatedHours} allocated (current prime has ${currentHours})`);
+          activeYears.forEach((year) => {
+            const allocatedHours = Math.floor(fteHours * worksharePercent);
             if (allocatedHours > 0) {
               hoursAllocation[year] = allocatedHours;
               hasAllocation = true;
             }
-            // Reduce from current hours (already reduced by previous subs)
-            remainingHours[year] = currentHours - allocatedHours;
           });
 
           if (!hasAllocation) continue;
 
           // Calculate subcontractor rate (use position's base hourly rate)
           const effectiveSalary = getEffectiveSalary(currentPosition);
-          const fteHours = currentPosition.standard_fte_hours || 1920;
           const subRate = effectiveSalary / fteHours;
 
           // Create subcontractor position
@@ -1613,14 +1616,36 @@ export const usePricingStore = create<PricingState>((set, get) => {
             };
           }
 
-          // Update prime position with remaining hours (reduces for next subcontractor)
-          updatedPositions[posIndex] = {
-            ...currentPosition,
-            hours_per_year: remainingHours,
-          };
-
-          console.log(`[AUTO-ALLOCATE] ${currentPosition.labor_category} -> ${sub.name}: ${JSON.stringify(hoursAllocation)} hours @ $${subRate.toFixed(2)}/hr (remaining: ${JSON.stringify(remainingHours)})`);
+          console.log(`[AUTO-ALLOCATE] ${currentPosition.labor_category} -> ${sub.name}: ${JSON.stringify(hoursAllocation)} hours @ $${subRate.toFixed(2)}/hr`);
         }
+      }
+
+      // Now update prime positions: set hours to FTE * primeSharePercent for each active year
+      for (const posId of eligiblePositionIds) {
+        const posIndex = updatedPositions.findIndex(p => p.id === posId);
+        if (posIndex === -1) continue;
+
+        const currentPosition = updatedPositions[posIndex];
+        const fteHours = currentPosition.standard_fte_hours || 1920;
+        const primeHours = Math.floor(fteHours * primeSharePercent);
+
+        const updatedHoursPerYear: Record<string, number> = {};
+
+        // Only set hours for years that were originally active
+        Object.keys(currentPosition.hours_per_year).forEach((year) => {
+          if ((currentPosition.hours_per_year[year] || 0) > 0) {
+            updatedHoursPerYear[year] = primeHours;
+          } else {
+            updatedHoursPerYear[year] = 0;
+          }
+        });
+
+        updatedPositions[posIndex] = {
+          ...currentPosition,
+          hours_per_year: updatedHoursPerYear,
+        };
+
+        console.log(`[AUTO-ALLOCATE] Prime ${currentPosition.labor_category}: ${primeHours} hours/year (${primeSharePercent * 100}% of ${fteHours} FTE)`);
       }
 
       // Update state in batch
@@ -1700,3 +1725,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
     },
   };
 });
+
+// Expose store to window for debugging (dev only)
+if (typeof window !== 'undefined') {
+  (window as any).pricingStore = usePricingStore;
+}

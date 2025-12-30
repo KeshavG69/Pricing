@@ -391,7 +391,7 @@ export default function ProposalPage() {
     await recalculate();
   };
 
-  const handleAdvancedModalSubmit = async (subs: SubcontractorInfo[], agreeTargetRates: boolean) => {
+  const handleAdvancedModalSubmit = async (subs: SubcontractorInfo[]) => {
     // Pre-create subcontractors if any were specified
     if (subs.length > 0) {
       preCreateSubcontractors(subs);
