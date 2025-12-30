@@ -13,6 +13,7 @@ import AdvancedAnalysisGrid from '@/components/pricing/AdvancedAnalysisGrid';
 import OverviewTab from '@/components/pricing/OverviewTab';
 import RateTableView from '@/components/pricing/RateTableView';
 import PricingTabs from '@/components/pricing/PricingTabs';
+import FilesTab from '@/components/pricing/FilesTab';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { SubcontractorSection } from '@/components/pricing/SubcontractorSection';
 import { AdvancedAnalysisModal, SubcontractorInfo } from '@/components/pricing/AdvancedAnalysisModal';
@@ -423,11 +424,19 @@ export default function ProposalPage() {
             activeTab={activeTab}
             onTabChange={setActiveTab}
             hasSubcontractors={subcontractors.length > 0}
+            hasFiles={(currentProposal?.documents?.length ?? 0) > 0}
             mode={advancedMode ? 'advanced' : 'initial'}
           />
 
           {/* Tab Content */}
           <div className="mt-4">
+            {activeTab === 'files' && (
+              <FilesTab
+                documents={currentProposal?.documents || []}
+                proposalId={proposalId}
+                onRefreshUrls={() => fetchProposal(proposalId)}
+              />
+            )}
             {activeTab === 'overview' && <OverviewTab key={`${rates.fringe}-${rates.oh}-${rates.ga}-${rates.fee}`} />}
             {activeTab === 'main' && (
               <div>

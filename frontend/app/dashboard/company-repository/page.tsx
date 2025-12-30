@@ -75,6 +75,9 @@ export default function CompanyRepositoryPage() {
   // Edit preset dialog state
   const [showEditPresetDialog, setShowEditPresetDialog] = useState(false);
   const [editingPreset, setEditingPreset] = useState<{ id: string; name: string } | null>(null);
+
+  // Text modal state (for viewing full description/experience)
+  const [textModal, setTextModal] = useState<{ title: string; content: string } | null>(null);
   const [editPresetName, setEditPresetName] = useState('');
   const [editPresetRates, setEditPresetRates] = useState({
     fringe: 0,
@@ -664,7 +667,7 @@ export default function CompanyRepositoryPage() {
                                 <tr className="border-b border-border">
                                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">Title</th>
                                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">SIN</th>
-                                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Education</th>
+                                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Description</th>
                                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">Experience</th>
                                   {getYearColumns(expandedContract.labor_categories, contract).map(({ yearNum, displayYear }) => (
                                     <th key={yearNum} className="text-right py-2 px-3 font-medium text-muted-foreground">
@@ -681,8 +684,20 @@ export default function CompanyRepositoryPage() {
                                   >
                                     <td className="py-2 px-3 text-foreground">{lc.title}</td>
                                     <td className="py-2 px-3 text-muted-foreground">{lc.sin || '-'}</td>
-                                    <td className="py-2 px-3 text-muted-foreground">{lc.education || '-'}</td>
-                                    <td className="py-2 px-3 text-muted-foreground">{lc.experience || '-'}</td>
+                                    <td
+                                      className="py-2 px-3 text-muted-foreground max-w-[200px] truncate cursor-pointer hover:bg-muted/50"
+                                      title={lc.description || '-'}
+                                      onDoubleClick={() => lc.description && setTextModal({ title: `${lc.title} - Description`, content: lc.description })}
+                                    >
+                                      {lc.description || '-'}
+                                    </td>
+                                    <td
+                                      className="py-2 px-3 text-muted-foreground max-w-[200px] truncate cursor-pointer hover:bg-muted/50"
+                                      title={lc.experience || '-'}
+                                      onDoubleClick={() => lc.experience && setTextModal({ title: `${lc.title} - Experience`, content: lc.experience })}
+                                    >
+                                      {lc.experience || '-'}
+                                    </td>
                                     {getYearColumns(expandedContract.labor_categories, contract).map(({ yearNum }) => (
                                       <td key={yearNum} className="py-2 px-3 text-right text-foreground font-mono">
                                         {lc.rates_by_year?.[yearNum]
@@ -1292,6 +1307,17 @@ export default function CompanyRepositoryPage() {
               />
             </div>
           </div>
+        </div>
+      </Dialog>
+
+      {/* Text View Modal (for full description/experience) */}
+      <Dialog
+        isOpen={!!textModal}
+        onClose={() => setTextModal(null)}
+        title={textModal?.title || ''}
+      >
+        <div className="whitespace-pre-wrap text-sm text-foreground">
+          {textModal?.content}
         </div>
       </Dialog>
     </DashboardLayout>

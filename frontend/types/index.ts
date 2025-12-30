@@ -613,5 +613,6 @@ export interface GSALaborCategory {
   sin?: string;
   education?: string;
   experience?: string;
+  description?: string;
   rates_by_year: Record<string, number>;
 }

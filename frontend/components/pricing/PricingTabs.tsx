@@ -1,9 +1,14 @@
 'use client';
 
+import { FileText, BarChart3, Calculator, Building2, Table } from 'lucide-react';
+
+export type PricingTabType = 'files' | 'overview' | 'main' | 'subcontractors' | 'rate-table';
+
 interface PricingTabsProps {
-  activeTab: 'overview' | 'main' | 'subcontractors' | 'rate-table';
-  onTabChange: (tab: 'overview' | 'main' | 'subcontractors' | 'rate-table') => void;
+  activeTab: PricingTabType;
+  onTabChange: (tab: PricingTabType) => void;
   hasSubcontractors: boolean;
+  hasFiles?: boolean;
   mode?: 'initial' | 'advanced'; // initial = only Overview + Pricing Workspace, advanced = all tabs
 }
 
@@ -11,69 +16,41 @@ export const PricingTabs = ({
   activeTab,
   onTabChange,
   hasSubcontractors,
+  hasFiles = true,
   mode = 'advanced', // default to advanced for backwards compatibility
 }: PricingTabsProps) => {
   const tabs = [
     {
+      id: 'files' as const,
+      label: 'Source Files',
+      description: 'Uploaded documents',
+      icon: <FileText className="w-5 h-5" />,
+      hidden: !hasFiles,
+    },
+    {
       id: 'overview' as const,
       label: 'Overview',
       description: 'Cost analytics & summary',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-          />
-        </svg>
-      ),
+      icon: <BarChart3 className="w-5 h-5" />,
     },
     {
       id: 'main' as const,
       label: 'Pricing Workspace',
       description: 'Detailed cost proposal spreadsheet',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-          />
-        </svg>
-      ),
+      icon: <Calculator className="w-5 h-5" />,
     },
     {
       id: 'rate-table' as const,
       label: 'Target Rate Table for Subs',
       description: 'Subcontractor fee/MH markup calculations',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-          />
-        </svg>
-      ),
+      icon: <Table className="w-5 h-5" />,
       hidden: mode === 'initial' || !hasSubcontractors, // Hide in initial mode or when no subcontractors
     },
     {
       id: 'subcontractors' as const,
       label: 'Subcontractor Labor',
       description: 'Subcontractor positions & costs',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-          />
-        </svg>
-      ),
+      icon: <Building2 className="w-5 h-5" />,
       hidden: mode === 'initial' || !hasSubcontractors, // Hide in initial mode or when no subcontractors
     },
   ];

@@ -55,7 +55,7 @@ interface PricingState {
   aggregates: Aggregates;
   ratesReferenceExpanded: boolean;
   advancedModeVersion: number; // Force re-render counter
-  activeTab: 'overview' | 'main' | 'subcontractors' | 'rate-table';
+  activeTab: 'files' | 'overview' | 'main' | 'subcontractors' | 'rate-table';
 
   // Actions
   loadProposal: (proposalId: string, existingProposal?: Proposal) => Promise<void>;
@@ -90,7 +90,7 @@ interface PricingState {
   clearManualOverrides: (positionId?: string) => void;
   recalculateAdvanced: () => Promise<void>;
   toggleRatesReference: () => void;
-  setActiveTab: (tab: 'overview' | 'main' | 'subcontractors' | 'rate-table') => void;
+  setActiveTab: (tab: 'files' | 'overview' | 'main' | 'subcontractors' | 'rate-table') => void;
   preCreateSubcontractors: (subs: { name: string; worksharePercent: number }[]) => void;
   autoAllocateWorkshare: () => Promise<void>;
 }
@@ -634,7 +634,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
     },
     ratesReferenceExpanded: false,
     advancedModeVersion: 0,
-    activeTab: 'overview',
+    activeTab: 'files',
 
     loadProposal: async (proposalId, existingProposal) => {
       try {
@@ -1741,7 +1741,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         },
         ratesReferenceExpanded: false,
         advancedModeVersion: 0,
-        activeTab: 'overview',
+        activeTab: 'files',
       });
     },
   };

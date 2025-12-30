@@ -198,4 +198,10 @@ export const proposalsApi = {
     const response = await apiClient.post(`/proposals/${proposalId}/retry`);
     return response.data;
   },
+
+  // Refresh document URLs (pre-signed URLs expire after 7 days)
+  refreshDocumentUrls: async (proposalId: string): Promise<Proposal> => {
+    const response = await apiClient.post<Proposal>(`/proposals/${proposalId}/refresh-urls`);
+    return response.data;
+  },
 };
