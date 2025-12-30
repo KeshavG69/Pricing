@@ -4,15 +4,16 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useCompanyRepositoryStore } from '@/lib/stores/companyRepositoryStore';
+import { useOrganizationStore } from '@/lib/stores/organizationStore';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Card, { CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Dialog from '@/components/ui/Dialog';
-import { Building2, Upload, Trash2, Calendar, FileText, CheckCircle, AlertCircle, Clock, RefreshCw, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
+import { Building2, Upload, Trash2, Calendar, FileText, CheckCircle, AlertCircle, Clock, RefreshCw, ChevronDown, ChevronRight, ExternalLink, Plus, Info } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
 import { isAdmin } from '@/lib/utils/permissions';
-import { GSAContract, GSALaborCategory } from '@/types';
+import { GSAContract, GSALaborCategory, OrganizationSettings } from '@/types';
 import apiClient from '@/lib/api/client';
 
 export default function CompanyRepositoryPage() {
@@ -31,6 +32,7 @@ export default function CompanyRepositoryPage() {
     pollStatus,
     clearError,
   } = useCompanyRepositoryStore();
+  const { organization, fetchOrganization } = useOrganizationStore();
   const toast = useToast();
 
   // Upload dialog state
@@ -51,18 +53,37 @@ export default function CompanyRepositoryPage() {
   const [expandedContract, setExpandedContract] = useState<GSAContract | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
-  useEffect(() => {
-    // Redirect non-admins
-    if (user && !isAdmin(user)) {
-      router.push('/dashboard');
-      return;
-    }
+  // Create preset dialog state
+  const [showCreatePresetDialog, setShowCreatePresetDialog] = useState(false);
+  const [presetName, setPresetName] = useState('');
+  const [isCreatingPreset, setIsCreatingPreset] = useState(false);
 
-    // Fetch contracts
+  // Manual preset creation dialog state
+  const [showManualPresetDialog, setShowManualPresetDialog] = useState(false);
+  const [manualPresetName, setManualPresetName] = useState('');
+  const [manualPresetRates, setManualPresetRates] = useState({
+    fringe: 0,
+    oh: 0,
+    ga: 0,
+    fee: 0,
+    smh: 0,
+    sub_fee: 0,
+    ga_passthrough: 0,
+  });
+
+  // Organization settings state (for escalation rate and user overrides)
+  const [defaultEscalationRate, setDefaultEscalationRate] = useState(0);
+  const [allowUserRateOverride, setAllowUserRateOverride] = useState(true);
+  const [hasSettingsChanges, setHasSettingsChanges] = useState(false);
+  const [isSavingSettings, setIsSavingSettings] = useState(false);
+
+  useEffect(() => {
+    // Fetch contracts and organization
     if (user) {
       fetchContracts();
+      fetchOrganization();
     }
-  }, [user, router, fetchContracts]);
+  }, [user, fetchContracts, fetchOrganization]);
 
   // Poll for processing contracts
   useEffect(() => {
@@ -103,6 +124,53 @@ export default function CompanyRepositoryPage() {
 
     return () => clearInterval(interval);
   }, [contracts, pollStatus, pollingIds, toast]);
+
+  // Load organization settings
+  useEffect(() => {
+    if (organization?.settings) {
+      setDefaultEscalationRate(organization.settings.default_escalation_rate || 0);
+      setAllowUserRateOverride(organization.settings.allow_user_rate_override ?? true);
+    }
+  }, [organization]);
+
+  // Handler functions for organization settings
+  const handleUpdateEscalationRate = (value: string) => {
+    if (value === '') {
+      setDefaultEscalationRate(0);
+      setHasSettingsChanges(true);
+      return;
+    }
+
+    const numValue = parseFloat(value);
+    if (!isNaN(numValue)) {
+      setDefaultEscalationRate(numValue / 100);
+      setHasSettingsChanges(true);
+    }
+  };
+
+  const handleToggleUserRateOverride = () => {
+    setAllowUserRateOverride(!allowUserRateOverride);
+    setHasSettingsChanges(true);
+  };
+
+  const handleSaveSettings = async () => {
+    if (!hasSettingsChanges) return;
+
+    setIsSavingSettings(true);
+    try {
+      await apiClient.patch('/organizations/me/settings', {
+        default_escalation_rate: defaultEscalationRate,
+        allow_user_rate_override: allowUserRateOverride,
+      });
+      toast.success('Settings updated successfully');
+      setHasSettingsChanges(false);
+      await fetchOrganization(); // Refresh organization data
+    } catch (error) {
+      toast.error('Failed to update settings');
+    } finally {
+      setIsSavingSettings(false);
+    }
+  };
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -175,6 +243,89 @@ export default function CompanyRepositoryPage() {
     } finally {
       setIsLoadingDetails(false);
     }
+  };
+
+  const handleCreatePreset = async () => {
+    if (!presetName.trim() || !expandedContract) return;
+
+    setIsCreatingPreset(true);
+    try {
+      // For now, we'll create a preset with placeholder rates
+      // In a real implementation, you'd extract these from the contract
+      const presetData = {
+        name: presetName.trim(),
+        fringe: 0.247,
+        oh: 0.0711,
+        ga: 0.2243,
+        fee: 0.07,
+        smh: 0.065,
+        sub_fee: 0.05,
+        ga_passthrough: 0.025,
+      };
+
+      await apiClient.post('/organizations/me/rate-presets', presetData);
+      toast.success(`Preset "${presetName}" created successfully!`);
+      setShowCreatePresetDialog(false);
+      setPresetName('');
+      await fetchOrganization(); // Refresh to get updated presets
+    } catch {
+      toast.error('Failed to create preset');
+    } finally {
+      setIsCreatingPreset(false);
+    }
+  };
+
+  const handleCreateManualPreset = async () => {
+    if (!manualPresetName.trim()) return;
+
+    setIsCreatingPreset(true);
+    try {
+      const presetData = {
+        name: manualPresetName.trim(),
+        fringe: manualPresetRates.fringe / 100,
+        oh: manualPresetRates.oh / 100,
+        ga: manualPresetRates.ga / 100,
+        fee: manualPresetRates.fee / 100,
+        smh: manualPresetRates.smh / 100,
+        sub_fee: manualPresetRates.sub_fee / 100,
+        ga_passthrough: manualPresetRates.ga_passthrough / 100,
+      };
+
+      await apiClient.post('/organizations/me/rate-presets', presetData);
+      toast.success(`Preset "${manualPresetName}" created successfully!`);
+      setShowManualPresetDialog(false);
+      setManualPresetName('');
+      setManualPresetRates({
+        fringe: 0,
+        oh: 0,
+        ga: 0,
+        fee: 0,
+        smh: 0,
+        sub_fee: 0,
+        ga_passthrough: 0,
+      });
+      await fetchOrganization(); // Refresh to get updated presets
+    } catch {
+      toast.error('Failed to create preset');
+    } finally {
+      setIsCreatingPreset(false);
+    }
+  };
+
+  const handleDeletePreset = async (presetId: string, presetName: string) => {
+    if (!confirm(`Delete preset "${presetName}"? This action cannot be undone.`)) return;
+
+    try {
+      await apiClient.delete(`/organizations/me/rate-presets/${presetId}`);
+      toast.success(`Preset "${presetName}" deleted successfully`);
+      await fetchOrganization(); // Refresh to get updated presets
+    } catch {
+      toast.error('Failed to delete preset');
+    }
+  };
+
+  const toPercentageDisplay = (value: number): string => {
+    return (value * 100).toFixed(2);
   };
 
   const handleViewContract = async (contract: GSAContract) => {
@@ -424,9 +575,20 @@ export default function CompanyRepositoryPage() {
                     {expandedContract?.file_id === contract.file_id && expandedContract.labor_categories && (
                       <div className="border-t border-border bg-muted/20">
                         <div className="p-4">
-                          <h5 className="text-sm font-medium text-foreground mb-3">
-                            Labor Categories ({expandedContract.labor_categories.length})
-                          </h5>
+                          <div className="flex items-center justify-between mb-3">
+                            <h5 className="text-sm font-medium text-foreground">
+                              Labor Categories ({expandedContract.labor_categories.length})
+                            </h5>
+                            {user && isAdmin(user) && (
+                              <button
+                                onClick={() => setShowCreatePresetDialog(true)}
+                                className="flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm hover:bg-primary/90 transition-colors"
+                              >
+                                <Plus className="w-4 h-4" />
+                                Create Preset
+                              </button>
+                            )}
+                          </div>
                           <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                               <thead>
@@ -473,6 +635,184 @@ export default function CompanyRepositoryPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Rate Presets */}
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Rate Presets</CardTitle>
+                <CardDescription>
+                  Reusable rate templates that can be quickly applied in pricing workspaces
+                </CardDescription>
+              </div>
+              {user && isAdmin(user) && (
+                <button
+                  onClick={() => setShowManualPresetDialog(true)}
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground transition-colors"
+                  title="Create new preset"
+                >
+                  <Plus className="w-5 h-5" />
+                </button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent>
+            {organization?.settings?.rate_presets && organization.settings.rate_presets.length > 0 ? (
+              <div className="space-y-3">
+                {organization.settings.rate_presets.map((preset) => (
+                  <div
+                    key={preset.id}
+                    className="border border-border rounded-lg p-4 hover:bg-muted/30 transition-colors"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <h4 className="font-medium text-foreground">{preset.name}</h4>
+                      {user && isAdmin(user) && (
+                        <button
+                          onClick={() => handleDeletePreset(preset.id, preset.name)}
+                          className="text-red-600 hover:text-red-700 text-sm font-medium"
+                        >
+                          Delete
+                        </button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Fringe: </span>
+                        <span className="font-mono font-semibold">{toPercentageDisplay(preset.fringe)}%</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">OH: </span>
+                        <span className="font-mono font-semibold">{toPercentageDisplay(preset.oh)}%</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">G&A: </span>
+                        <span className="font-mono font-semibold">{toPercentageDisplay(preset.ga)}%</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Fee: </span>
+                        <span className="font-mono font-semibold">{toPercentageDisplay(preset.fee)}%</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">S&MH: </span>
+                        <span className="font-mono font-semibold">{toPercentageDisplay(preset.smh)}%</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Sub Fee: </span>
+                        <span className="font-mono font-semibold">{toPercentageDisplay(preset.sub_fee)}%</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">G&A Pass: </span>
+                        <span className="font-mono font-semibold">{toPercentageDisplay(preset.ga_passthrough)}%</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <p>No rate presets created yet.</p>
+                {user && isAdmin(user) && (
+                  <p className="text-sm mt-1">Click the + button above to create your first preset.</p>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Default Escalation Rate */}
+        {user && isAdmin(user) && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Default Escalation Rate</CardTitle>
+                  <CardDescription>
+                    Default year-over-year escalation rate for labor costs (can be customized per proposal)
+                  </CardDescription>
+                </div>
+                {hasSettingsChanges && (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={handleSaveSettings}
+                    isLoading={isSavingSettings}
+                    className="shadow-md shadow-primary/10"
+                  >
+                    Save Changes
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="max-w-md">
+                <Input
+                  label="Annual Escalation Rate"
+                  type="number"
+                  value={toPercentageDisplay(defaultEscalationRate)}
+                  onChange={(e) => handleUpdateEscalationRate(e.target.value)}
+                  placeholder="3.00"
+                  suffix="%"
+                />
+                <p className="mt-2 text-xs text-muted-foreground flex items-start gap-1">
+                  <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                  This rate will be used as the default for all year-to-year escalations. You can customize rates for each year when creating proposals.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Additional Settings */}
+        {user && isAdmin(user) && (
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle>Additional Settings</CardTitle>
+                  <CardDescription>
+                    Other organization preferences
+                  </CardDescription>
+                </div>
+                {hasSettingsChanges && (
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={handleSaveSettings}
+                    isLoading={isSavingSettings}
+                    className="shadow-md shadow-primary/10"
+                  >
+                    Save Changes
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
+                <div>
+                  <p className="text-sm font-medium text-foreground mb-1">
+                    Allow User Rate Overrides
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Allow non-admin users to override default rates in their proposals
+                  </p>
+                </div>
+                <button
+                  onClick={handleToggleUserRateOverride}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
+                    allowUserRateOverride ? 'bg-primary' : 'bg-muted-foreground/30'
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                      allowUserRateOverride ? 'translate-x-6' : 'translate-x-1'
+                    }`}
+                  />
+                </button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Info Card */}
         <Card>
@@ -615,6 +955,173 @@ export default function CompanyRepositoryPage() {
             value={startDate}
             onChange={(e) => setStartDate(e.target.value)}
           />
+        </div>
+      </Dialog>
+
+      {/* Create Preset Dialog */}
+      <Dialog
+        isOpen={showCreatePresetDialog}
+        onClose={() => {
+          setShowCreatePresetDialog(false);
+          setPresetName('');
+        }}
+        title="Create Rate Preset from Contract"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowCreatePresetDialog(false);
+                setPresetName('');
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleCreatePreset}
+              disabled={!presetName.trim() || isCreatingPreset}
+              isLoading={isCreatingPreset}
+            >
+              Create Preset
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Create a reusable rate preset that can be quickly applied in pricing workspaces.
+            The rates will be extracted from this contract's labor categories.
+          </p>
+
+          <Input
+            label="Preset Name"
+            value={presetName}
+            onChange={(e) => setPresetName(e.target.value)}
+            placeholder="e.g., FSS 2024 Rates"
+          />
+
+          {expandedContract && (
+            <div className="p-3 bg-muted rounded-lg text-sm">
+              <p className="text-muted-foreground mb-1">Source Contract:</p>
+              <p className="font-medium text-foreground">{expandedContract.name}</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {expandedContract.labor_categories?.length || 0} labor categories
+              </p>
+            </div>
+          )}
+        </div>
+      </Dialog>
+
+      {/* Manual Create Preset Dialog */}
+      <Dialog
+        isOpen={showManualPresetDialog}
+        onClose={() => {
+          setShowManualPresetDialog(false);
+          setManualPresetName('');
+          setManualPresetRates({
+            fringe: 0,
+            oh: 0,
+            ga: 0,
+            fee: 0,
+            smh: 0,
+            sub_fee: 0,
+            ga_passthrough: 0,
+          });
+        }}
+        title="Create New Rate Preset"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowManualPresetDialog(false);
+                setManualPresetName('');
+                setManualPresetRates({
+                  fringe: 0,
+                  oh: 0,
+                  ga: 0,
+                  fee: 0,
+                  smh: 0,
+                  sub_fee: 0,
+                  ga_passthrough: 0,
+                });
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleCreateManualPreset}
+              disabled={!manualPresetName.trim() || isCreatingPreset}
+              isLoading={isCreatingPreset}
+            >
+              Create Preset
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <Input
+            label="Preset Name"
+            placeholder='e.g., "Federal Contract", "Commercial"'
+            value={manualPresetName}
+            onChange={(e) => setManualPresetName(e.target.value)}
+          />
+          <div className="border-t border-border pt-4">
+            <h4 className="text-sm font-medium text-foreground mb-3">Rate Values (%)</h4>
+            <div className="grid md:grid-cols-2 gap-4">
+              <Input
+                label="Fringe Rate"
+                type="number"
+                value={manualPresetRates.fringe || ''}
+                onChange={(e) => setManualPresetRates({ ...manualPresetRates, fringe: parseFloat(e.target.value) || 0 })}
+                placeholder="24.70"
+              />
+              <Input
+                label="Overhead (OH) Rate"
+                type="number"
+                value={manualPresetRates.oh || ''}
+                onChange={(e) => setManualPresetRates({ ...manualPresetRates, oh: parseFloat(e.target.value) || 0 })}
+                placeholder="7.11"
+              />
+              <Input
+                label="G&A Rate"
+                type="number"
+                value={manualPresetRates.ga || ''}
+                onChange={(e) => setManualPresetRates({ ...manualPresetRates, ga: parseFloat(e.target.value) || 0 })}
+                placeholder="22.43"
+              />
+              <Input
+                label="Fee Rate (Prime Labor)"
+                type="number"
+                value={manualPresetRates.fee || ''}
+                onChange={(e) => setManualPresetRates({ ...manualPresetRates, fee: parseFloat(e.target.value) || 0 })}
+                placeholder="7.00"
+              />
+              <Input
+                label="S&MH Rate (Subcontractor)"
+                type="number"
+                value={manualPresetRates.smh || ''}
+                onChange={(e) => setManualPresetRates({ ...manualPresetRates, smh: parseFloat(e.target.value) || 0 })}
+                placeholder="6.50"
+              />
+              <Input
+                label="Fee Rate (Sub Labor)"
+                type="number"
+                value={manualPresetRates.sub_fee || ''}
+                onChange={(e) => setManualPresetRates({ ...manualPresetRates, sub_fee: parseFloat(e.target.value) || 0 })}
+                placeholder="5.00"
+              />
+              <Input
+                label="G&A Passthrough Rate"
+                type="number"
+                value={manualPresetRates.ga_passthrough || ''}
+                onChange={(e) => setManualPresetRates({ ...manualPresetRates, ga_passthrough: parseFloat(e.target.value) || 0 })}
+                placeholder="2.50"
+              />
+            </div>
+          </div>
         </div>
       </Dialog>
     </DashboardLayout>

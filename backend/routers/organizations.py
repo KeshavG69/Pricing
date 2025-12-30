@@ -58,6 +58,7 @@ class UpdateSettingsRequest(BaseModel):
     """Request body for updating organization settings"""
     model_config = {"extra": "ignore"}
 
+    name: Optional[str] = None
     default_rates: Optional[Dict[str, float]] = None
     default_escalation_rate: Optional[float] = None
     allow_user_rate_override: Optional[bool] = None
@@ -133,10 +134,17 @@ async def update_organization_settings(
             detail="Organization not found"
         )
 
+    # Prepare update data
+    update_data = {}
+
+    # Update organization name if provided
+    if settings_update.name is not None:
+        update_data["name"] = settings_update.name
+
     # Get existing settings
     settings = org.get("settings", {})
 
-    # Update only provided fields
+    # Update only provided fields in settings
     if settings_update.default_rates is not None:
         settings["default_rates"] = {
             **settings.get("default_rates", {}),
@@ -150,6 +158,16 @@ async def update_organization_settings(
         settings["allow_user_rate_override"] = settings_update.allow_user_rate_override
 
     # Update organization
+    if update_data:
+        # If name was updated, use direct update
+        from auth.database import get_mongodb_client
+        mongodb = get_mongodb_client()
+        db = mongodb.get_database()
+        db["organizations"].update_one(
+            {"_id": org["_id"]},
+            {"$set": update_data}
+        )
+
     updated_org = org_crud.update_settings(current_user["organization_id"], settings)
 
     return serialize_doc(updated_org)

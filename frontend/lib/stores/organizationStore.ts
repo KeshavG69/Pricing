@@ -29,7 +29,7 @@ interface OrganizationState {
   sendInvitation: (data: InviteUserRequest) => Promise<void>;
   revokeInvitation: (invitationId: string) => Promise<void>;
   removeMember: (userId: string) => Promise<void>;
-  updateSettings: (settings: Partial<OrganizationSettings>) => Promise<void>;
+  updateSettings: (settings: Partial<OrganizationSettings> & { name?: string }) => Promise<void>;
   clearError: () => void;
 }
 
@@ -269,7 +269,7 @@ export const useOrganizationStore = create<OrganizationState>((set, get) => ({
     }
   },
 
-  updateSettings: async (settings: Partial<OrganizationSettings>) => {
+  updateSettings: async (settings: Partial<OrganizationSettings> & { name?: string }) => {
     try {
       set({ isLoading: true, error: null });
       const organization = await organizationsApi.updateSettings(settings);
