@@ -35,6 +35,10 @@ from auth.database import get_mongodb_client
 
 logger = logging.getLogger(__name__)
 
+# Permanent cache for succeeded billing records (they never change)
+# Key: "{proposal_id}:{charge_type}" -> billing record dict
+_succeeded_billing_cache: Dict[str, Dict[str, Any]] = {}
+
 # Collection name
 BILLING_COLLECTION = "billing"
 
@@ -252,6 +256,8 @@ class BillingCRUD:
         """
         Get the latest billing status for a proposal charge type.
 
+        Uses permanent cache for succeeded payments (they never change).
+
         Args:
             proposal_id: Proposal ID
             charge_type: "basic" or "advanced"
@@ -259,6 +265,13 @@ class BillingCRUD:
         Returns:
             Latest billing record for this charge type, or None
         """
+        cache_key = f"{proposal_id}:{charge_type}"
+
+        # Check cache first (succeeded payments never change)
+        if cache_key in _succeeded_billing_cache:
+            return _succeeded_billing_cache[cache_key]
+
+        # Query DB
         record = self.collection.find_one(
             {
                 "proposal_id": ObjectId(proposal_id),
@@ -268,7 +281,11 @@ class BillingCRUD:
         )
 
         if record:
-            return self._serialize(record)
+            serialized = self._serialize(record)
+            # Cache if succeeded (permanent cache)
+            if serialized.get("status") == "succeeded":
+                _succeeded_billing_cache[cache_key] = serialized
+            return serialized
         return None
 
     def is_proposal_charged(self, proposal_id: str, charge_type: str) -> bool:
@@ -276,6 +293,7 @@ class BillingCRUD:
         Check if a proposal has been successfully charged.
 
         Used to prevent duplicate charges (in addition to idempotency key).
+        Uses permanent cache for succeeded payments (they never change).
 
         Args:
             proposal_id: Proposal ID
@@ -284,13 +302,25 @@ class BillingCRUD:
         Returns:
             True if successfully charged, False otherwise
         """
+        cache_key = f"{proposal_id}:{charge_type}"
+
+        # Check cache first (succeeded payments never change)
+        if cache_key in _succeeded_billing_cache:
+            return True
+
+        # Query DB
         record = self.collection.find_one({
             "proposal_id": ObjectId(proposal_id),
             "charge_type": charge_type,
             "status": "succeeded"
         })
 
-        return record is not None
+        # Cache if succeeded
+        if record:
+            _succeeded_billing_cache[cache_key] = self._serialize(record)
+            return True
+
+        return False
 
     def event_exists(self, stripe_event_id: str) -> bool:
         """

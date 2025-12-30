@@ -146,11 +146,13 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     setEditingODC(null);
   }, []);
 
-  // Calculate prime labor costs by year
+  // Calculate prime labor BASE costs by year (DL + Fringe + OH + G&A, WITHOUT fee)
+  // This is used by FeeSection to calculate fee on the base
   const primeLaborByYear = useMemo(() => {
     const result: Record<string, number> = {};
     Object.entries(aggregates.byYear).forEach(([year, yearData]) => {
-      result[year] = yearData.totalAmount;
+      // Base = DL + Fringe + OH + G&A (fee is calculated separately)
+      result[year] = yearData.dl + yearData.fringe + yearData.oh + yearData.ga;
     });
     return result;
   }, [aggregates]);
@@ -270,16 +272,6 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
 
   return (
     <div className="space-y-1">
-      {/* Header with mode indicator - only show in advanced mode */}
-      {isAdvancedMode && (
-        <div className="flex justify-end items-center mb-1 px-6">
-          <div className="text-xs font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100 flex items-center">
-            <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-2 animate-pulse" />
-            Advanced Mode Active
-          </div>
-        </div>
-      )}
-
       {/* Rates Reference Panel */}
       <RatesReferencePanel
         rates={rates}

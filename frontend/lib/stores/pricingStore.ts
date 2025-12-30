@@ -376,10 +376,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
           const fee = (dlRate + fringe + oh + ga) * state.rates.fee;
           const feeAmount = fee * hours;
 
-          // FBLR excludes fee - fee is calculated separately in Fee Section
-          // This matches government cost proposal format (Intprepix)
-
-          const fblr = dlRate + fringe + oh + ga;
+          // FBLR includes fee for UI display
+          const fblr = dlRate + fringe + oh + ga + fee;
           const totalAmount = fblr * hours;
 
           breakdown[year] = {
@@ -415,6 +413,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
       totalFringe: 0,
       totalOH: 0,
       totalGA: 0,
+      totalFee: 0,
       totalFBLR: 0,
       byYear: {},
     };
@@ -427,6 +426,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
             fringe: 0,
             oh: 0,
             ga: 0,
+            fee: 0,
             fblr: 0,
             totalAmount: 0,
           };
@@ -436,6 +436,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         aggregates.byYear[year].fringe += breakdown.fringeAmount;
         aggregates.byYear[year].oh += breakdown.ohAmount;
         aggregates.byYear[year].ga += breakdown.gaAmount;
+        aggregates.byYear[year].fee += breakdown.feeAmount;
         aggregates.byYear[year].fblr += breakdown.totalAmount;
         aggregates.byYear[year].totalAmount += breakdown.totalAmount;
 
@@ -443,6 +444,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         aggregates.totalFringe += breakdown.fringeAmount;
         aggregates.totalOH += breakdown.ohAmount;
         aggregates.totalGA += breakdown.gaAmount;
+        aggregates.totalFee += breakdown.feeAmount;
         aggregates.totalFBLR += breakdown.totalAmount;
       });
     });
@@ -629,6 +631,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
       totalFringe: 0,
       totalOH: 0,
       totalGA: 0,
+      totalFee: 0,
       totalFBLR: 0,
       byYear: {},
     },
@@ -1736,6 +1739,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           totalFringe: 0,
           totalOH: 0,
           totalGA: 0,
+          totalFee: 0,
           totalFBLR: 0,
           byYear: {},
         },

@@ -2,6 +2,7 @@
 Billing API router for Stripe payments.
 """
 
+import asyncio
 import logging
 from datetime import datetime
 from typing import Optional
@@ -250,24 +251,27 @@ async def charge_for_proposal(data: ChargeRequest, current_user: dict = Depends(
 
     charge_type = ChargeType(data.charge_type)
 
-    # Get org
-    org = org_crud.get_by_id(current_user["organization_id"])
+    # Parallel fetch: org + proposal + billing check (all independent)
+    org, proposal, already_charged = await asyncio.gather(
+        asyncio.to_thread(org_crud.get_by_id, current_user["organization_id"]),
+        asyncio.to_thread(proposal_crud.get_by_id, data.proposal_id),
+        asyncio.to_thread(billing_crud.is_proposal_charged, data.proposal_id, charge_type.value)
+    )
+
     if not org:
         raise HTTPException(404, "Organization not found")
 
     if not org.get("stripe_customer_id") or not org.get("default_payment_method_id"):
         raise HTTPException(402, "No payment method configured. Admin must add a card.")
 
-    # Get proposal
-    proposal = proposal_crud.get_by_id(data.proposal_id)
     if not proposal:
         raise HTTPException(404, "Proposal not found")
 
     if str(proposal.get("organization_id")) != str(org["_id"]):
         raise HTTPException(403, "Proposal does not belong to your organization")
 
-    # Check if already charged (idempotent)
-    if billing_crud.is_proposal_charged(data.proposal_id, charge_type.value):
+    # Check if already charged (idempotent) - use pre-fetched value
+    if already_charged:
         existing = billing_crud.get_proposal_billing_status(data.proposal_id, charge_type.value)
         return {"success": True, "billing_id": existing["id"] if existing else None, "already_charged": True}
 
@@ -296,20 +300,23 @@ async def charge_for_proposal(data: ChargeRequest, current_user: dict = Depends(
     )
 
     if result["success"]:
-        # Update billing record
-        billing_crud.collection.update_one(
-            {"_id": ObjectId(billing_id)},
-            {"$set": {
-                "stripe_payment_intent_id": result["payment_intent_id"],
-                "status": "succeeded",
-                "updated_at": datetime.utcnow()
-            }}
-        )
-
-        # Update proposal
-        proposal_crud.collection.update_one(
-            {"_id": ObjectId(data.proposal_id)},
-            {"$set": {"billing_status": "paid", "updated_at": datetime.utcnow()}}
+        # Parallel update: billing + proposal
+        now = datetime.utcnow()
+        await asyncio.gather(
+            asyncio.to_thread(
+                billing_crud.collection.update_one,
+                {"_id": ObjectId(billing_id)},
+                {"$set": {
+                    "stripe_payment_intent_id": result["payment_intent_id"],
+                    "status": "succeeded",
+                    "updated_at": now
+                }}
+            ),
+            asyncio.to_thread(
+                proposal_crud.collection.update_one,
+                {"_id": ObjectId(data.proposal_id)},
+                {"$set": {"billing_status": "paid", "updated_at": now}}
+            )
         )
 
         return {
@@ -319,15 +326,19 @@ async def charge_for_proposal(data: ChargeRequest, current_user: dict = Depends(
             "amount_cents": amount_cents
         }
     else:
-        # Update billing as failed
-        billing_crud.collection.update_one(
-            {"_id": ObjectId(billing_id)},
-            {"$set": {"status": "failed", "error_message": result.get("error"), "updated_at": datetime.utcnow()}}
-        )
-
-        proposal_crud.collection.update_one(
-            {"_id": ObjectId(data.proposal_id)},
-            {"$set": {"billing_status": "failed", "updated_at": datetime.utcnow()}}
+        # Parallel update on failure
+        now = datetime.utcnow()
+        await asyncio.gather(
+            asyncio.to_thread(
+                billing_crud.collection.update_one,
+                {"_id": ObjectId(billing_id)},
+                {"$set": {"status": "failed", "error_message": result.get("error"), "updated_at": now}}
+            ),
+            asyncio.to_thread(
+                proposal_crud.collection.update_one,
+                {"_id": ObjectId(data.proposal_id)},
+                {"$set": {"billing_status": "failed", "updated_at": now}}
+            )
         )
 
         raise HTTPException(402, result.get("error", "Payment failed"))

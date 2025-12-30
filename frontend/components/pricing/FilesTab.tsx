@@ -10,10 +10,10 @@ import { useToast } from '@/lib/hooks/useToast';
 interface FilesTabProps {
   documents: DocumentInfo[];
   proposalId: string;
-  onRefreshUrls?: () => void;
+  onUrlsRefreshed?: (updatedDocuments: DocumentInfo[]) => void;
 }
 
-export function FilesTab({ documents, proposalId, onRefreshUrls }: FilesTabProps) {
+export function FilesTab({ documents, proposalId, onUrlsRefreshed }: FilesTabProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const toast = useToast();
 
@@ -25,8 +25,17 @@ export function FilesTab({ documents, proposalId, onRefreshUrls }: FilesTabProps
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const formatDate = (dateStr: string) => {
-    return new Date(dateStr).toLocaleDateString('en-US', {
+  const formatDate = (dateStr: string | undefined) => {
+    if (!dateStr) return 'Unknown date';
+
+    // Handle Python datetime format with microseconds (2025-12-29T15:11:09.201000)
+    // Truncate to milliseconds for JS compatibility
+    const normalizedDate = dateStr.replace(/(\.\d{3})\d*/, '$1');
+    const date = new Date(normalizedDate);
+
+    if (isNaN(date.getTime())) return 'Unknown date';
+
+    return date.toLocaleDateString('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
@@ -58,9 +67,9 @@ export function FilesTab({ documents, proposalId, onRefreshUrls }: FilesTabProps
   const handleRefreshUrls = async () => {
     setIsRefreshing(true);
     try {
-      await proposalsApi.refreshDocumentUrls(proposalId);
-      toast.success('Document links refreshed');
-      onRefreshUrls?.();
+      const updatedProposal = await proposalsApi.refreshDocumentUrls(proposalId);
+      toast.success('Download links refreshed');
+      onUrlsRefreshed?.(updatedProposal.documents || []);
     } catch (error) {
       toast.error('Failed to refresh document links');
     } finally {
@@ -113,7 +122,7 @@ export function FilesTab({ documents, proposalId, onRefreshUrls }: FilesTabProps
                 <div className="flex items-center gap-3 text-sm text-muted-foreground">
                   <span>{formatFileSize(doc.file_size)}</span>
                   <span>•</span>
-                  <span>Uploaded {formatDate(doc.uploadDate)}</span>
+                  <span>Uploaded {formatDate((doc as any).upload_date || doc.uploadDate)}</span>
                 </div>
               </div>
             </div>
@@ -142,12 +151,6 @@ export function FilesTab({ documents, proposalId, onRefreshUrls }: FilesTabProps
         ))}
       </div>
 
-      {/* Info Note */}
-      <div className="bg-muted/50 border border-border rounded-lg p-4">
-        <p className="text-sm text-muted-foreground">
-          <strong>Note:</strong> Download links expire after 7 days. Click "Refresh Links" if downloads aren't working.
-        </p>
-      </div>
     </div>
   );
 }

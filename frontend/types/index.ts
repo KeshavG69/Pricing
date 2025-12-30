@@ -139,6 +139,7 @@ export interface DocumentInfo {
   uploadDate: string;
   idrive_url: string;
   idrive_key: string;
+  idrive_url_expires_at?: number; // Unix timestamp (seconds)
   extracted_content?: string;
 }
 
@@ -399,6 +400,7 @@ export interface Aggregates {
   totalFringe: number;
   totalOH: number;
   totalGA: number;
+  totalFee: number;
   totalFBLR: number;
   byYear: {
     [year: string]: {
@@ -406,6 +408,7 @@ export interface Aggregates {
       fringe: number;
       oh: number;
       ga: number;
+      fee: number;
       fblr: number;
       totalAmount: number;
     };

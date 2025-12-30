@@ -6,6 +6,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useProposalsStore } from '@/lib/stores/proposalsStore';
 import { usePricingStore } from '@/lib/stores/pricingStore';
 import { proposalsApi } from '@/lib/api/proposals';
+import { chargeForProposal, getProposalBilling } from '@/lib/api/billing';
 import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -29,7 +30,7 @@ export default function ProposalPage() {
   const toast = useToast();
   const { user } = useAuthStore();
 
-  const { currentProposal, fetchProposal, isLoading } = useProposalsStore();
+  const { currentProposal, fetchProposal, setCurrentProposal, isLoading } = useProposalsStore();
   const {
     loadProposal,
     proposalName,
@@ -65,10 +66,17 @@ export default function ProposalPage() {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [advancedModalOpen, setAdvancedModalOpen] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   useEffect(() => {
     if (proposalId) {
-      fetchProposal(proposalId);
+      fetchProposal(proposalId).then(() => {
+        // Refresh document URLs once after loading proposal
+        proposalsApi.refreshDocumentUrls(proposalId).then((updatedProposal) => {
+          // Update store directly with fresh URLs (no re-fetch needed)
+          setCurrentProposal(updatedProposal);
+        }).catch(err => console.error('Failed to refresh document URLs:', err));
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [proposalId]);
@@ -386,32 +394,92 @@ export default function ProposalPage() {
       return;
     }
 
-    // Already configured - proceed directly to advanced mode
-    transformToAdvanced();
-    enableAdvancedMode();
-    await recalculate();
+    setIsProcessingPayment(true);
+
+    // Check if already paid for advanced analysis
+    try {
+      const billing = await getProposalBilling(proposalId);
+      const advancedBilling = billing.advanced;
+
+      if (advancedBilling && advancedBilling.status === 'succeeded') {
+        // Already paid - skip payment flow
+        toast.success('Advanced mode activated');
+        transformToAdvanced();
+        enableAdvancedMode();
+        await recalculate();
+        return;
+      }
+
+      // Not paid yet - charge for advanced mode
+      const result = await chargeForProposal(proposalId, 'advanced');
+
+      if (result.already_charged) {
+        toast.success('Advanced mode already activated');
+      } else {
+        toast.success('Payment successful! Advanced mode activated');
+      }
+
+      // Proceed to advanced mode
+      transformToAdvanced();
+      enableAdvancedMode();
+      await recalculate();
+    } catch (error: any) {
+      console.error('Payment failed:', error);
+      const errorMsg = error.response?.data?.detail || 'Payment failed. Please check your payment method.';
+      toast.error(errorMsg);
+    } finally {
+      setIsProcessingPayment(false);
+    }
   };
 
   const handleAdvancedModalSubmit = async (subs: SubcontractorInfo[]) => {
-    // Pre-create subcontractors if any were specified
-    if (subs.length > 0) {
-      preCreateSubcontractors(subs);
-
-      // Auto-allocate workshare % from eligible positions (excludes key positions like PM, FA)
-      // This runs after preCreateSubcontractors so subcontractors have worksharePercent
-      await usePricingStore.getState().autoAllocateWorkshare();
-    } else {
-      // Mark as configured even if no subs (user clicked Skip or Continue with 0 subs)
-      usePricingStore.setState({ subcontractorConfigured: true });
-    }
-
-    // Close modal
+    // Close modal first
     setAdvancedModalOpen(false);
+    setIsProcessingPayment(true);
 
-    // Now proceed to advanced mode
-    transformToAdvanced();
-    enableAdvancedMode();
-    await recalculate();
+    // Check if already paid for advanced analysis
+    try {
+      const billing = await getProposalBilling(proposalId);
+      const advancedBilling = billing.advanced;
+
+      if (advancedBilling && advancedBilling.status === 'succeeded') {
+        // Already paid - skip payment flow
+        toast.success('Advanced mode activated');
+      } else {
+        // Not paid yet - charge for advanced mode
+        const result = await chargeForProposal(proposalId, 'advanced');
+
+        if (result.already_charged) {
+          toast.success('Advanced mode already activated');
+        } else {
+          toast.success('Payment successful! Advanced mode activated');
+        }
+      }
+
+      // Pre-create subcontractors if any were specified
+      if (subs.length > 0) {
+        preCreateSubcontractors(subs);
+
+        // Auto-allocate workshare % from eligible positions (excludes key positions like PM, FA)
+        // This runs after preCreateSubcontractors so subcontractors have worksharePercent
+        await usePricingStore.getState().autoAllocateWorkshare();
+      } else {
+        // Mark as configured even if no subs (user clicked Skip or Continue with 0 subs)
+        usePricingStore.setState({ subcontractorConfigured: true });
+      }
+
+      // Now proceed to advanced mode
+      transformToAdvanced();
+      enableAdvancedMode();
+      await recalculate();
+    } catch (error: any) {
+      console.error('Payment failed:', error);
+      const errorMsg = error.response?.data?.detail || 'Payment failed. Please check your payment method.';
+      toast.error(errorMsg);
+      // Don't enable advanced mode if payment fails
+    } finally {
+      setIsProcessingPayment(false);
+    }
   };
 
   const renderPricingWorkspace = () => (
@@ -434,7 +502,11 @@ export default function ProposalPage() {
               <FilesTab
                 documents={currentProposal?.documents || []}
                 proposalId={proposalId}
-                onRefreshUrls={() => fetchProposal(proposalId)}
+                onUrlsRefreshed={(updatedDocs) => {
+                  if (currentProposal) {
+                    setCurrentProposal({ ...currentProposal, documents: updatedDocs });
+                  }
+                }}
               />
             )}
             {activeTab === 'overview' && <OverviewTab key={`${rates.fringe}-${rates.oh}-${rates.ga}-${rates.fee}`} />}
@@ -593,9 +665,14 @@ export default function ProposalPage() {
                   <Button
                     variant="primary"
                     onClick={handleAdvancedAnalysis}
-                    disabled={isRecalculating}
+                    disabled={isRecalculating || isProcessingPayment}
                   >
-                    {isRecalculating ? (
+                    {isProcessingPayment ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Processing Payment...
+                      </>
+                    ) : isRecalculating ? (
                       <>
                         <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                         Calculating...

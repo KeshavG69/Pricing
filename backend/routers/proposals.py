@@ -1520,15 +1520,15 @@ async def refresh_document_urls(
     updated_documents = []
 
     for doc in documents:
-        object_key = doc.get("object_key")
-        if object_key:
+        storage_key = doc.get("idrive_key")
+        if storage_key:
             try:
                 # Generate fresh pre-signed URL (7 days)
-                fresh_url = idrive.get_presigned_url(object_key)
-                updated_doc = {**doc, "url": fresh_url}
+                fresh_url = idrive.get_presigned_url(storage_key)
+                updated_doc = {**doc, "idrive_url": fresh_url}
                 updated_documents.append(updated_doc)
             except Exception as e:
-                print(f"Error refreshing URL for {object_key}: {e}")
+                print(f"Error refreshing URL for {storage_key}: {e}")
                 # Keep old URL if refresh fails
                 updated_documents.append(doc)
         else:

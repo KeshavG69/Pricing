@@ -271,7 +271,7 @@ export default function CompanyRepositoryPage() {
       setPresetName('');
       await fetchOrganization(); // Refresh to get updated presets
     } catch {
-      toast.error('Failed to create preset');
+      toast.error('Failed to create preset');x
     } finally {
       setIsCreatingPreset(false);
     }
