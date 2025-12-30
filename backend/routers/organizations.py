@@ -28,6 +28,7 @@ class RatePreset(BaseModel):
     smh: float = 0.0
     sub_fee: float = 0.0
     ga_passthrough: float = 0.0
+    escalation_rate: float = 0.0
 
 
 class CreateRatePresetRequest(BaseModel):
@@ -40,6 +41,7 @@ class CreateRatePresetRequest(BaseModel):
     smh: float = 0.0
     sub_fee: float = 0.0
     ga_passthrough: float = 0.0
+    escalation_rate: float = 0.0
 
 
 class UpdateRatePresetRequest(BaseModel):
@@ -52,6 +54,7 @@ class UpdateRatePresetRequest(BaseModel):
     smh: Optional[float] = None
     sub_fee: Optional[float] = None
     ga_passthrough: Optional[float] = None
+    escalation_rate: Optional[float] = None
 
 
 class UpdateSettingsRequest(BaseModel):
@@ -212,7 +215,8 @@ async def create_rate_preset(
         "fee": preset.fee,
         "smh": preset.smh,
         "sub_fee": preset.sub_fee,
-        "ga_passthrough": preset.ga_passthrough
+        "ga_passthrough": preset.ga_passthrough,
+        "escalation_rate": preset.escalation_rate
     }
 
     rate_presets.append(new_preset)
@@ -284,6 +288,8 @@ async def update_rate_preset(
         preset["sub_fee"] = preset_update.sub_fee
     if preset_update.ga_passthrough is not None:
         preset["ga_passthrough"] = preset_update.ga_passthrough
+    if preset_update.escalation_rate is not None:
+        preset["escalation_rate"] = preset_update.escalation_rate
 
     rate_presets[preset_index] = preset
     settings["rate_presets"] = rate_presets

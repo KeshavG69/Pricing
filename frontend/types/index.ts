@@ -50,6 +50,7 @@ export interface RatePreset {
   smh: number;
   sub_fee: number;
   ga_passthrough: number;
+  escalation_rate: number;
 }
 
 export interface OrganizationSettings {

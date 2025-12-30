@@ -69,10 +69,25 @@ export default function CompanyRepositoryPage() {
     smh: 0,
     sub_fee: 0,
     ga_passthrough: 0,
+    escalation_rate: 0,
   });
 
-  // Organization settings state (for escalation rate and user overrides)
-  const [defaultEscalationRate, setDefaultEscalationRate] = useState(0);
+  // Edit preset dialog state
+  const [showEditPresetDialog, setShowEditPresetDialog] = useState(false);
+  const [editingPreset, setEditingPreset] = useState<{ id: string; name: string } | null>(null);
+  const [editPresetName, setEditPresetName] = useState('');
+  const [editPresetRates, setEditPresetRates] = useState({
+    fringe: 0,
+    oh: 0,
+    ga: 0,
+    fee: 0,
+    smh: 0,
+    sub_fee: 0,
+    ga_passthrough: 0,
+    escalation_rate: 0,
+  });
+
+  // Organization settings state (for user overrides)
   const [allowUserRateOverride, setAllowUserRateOverride] = useState(true);
   const [hasSettingsChanges, setHasSettingsChanges] = useState(false);
   const [isSavingSettings, setIsSavingSettings] = useState(false);
@@ -128,26 +143,11 @@ export default function CompanyRepositoryPage() {
   // Load organization settings
   useEffect(() => {
     if (organization?.settings) {
-      setDefaultEscalationRate(organization.settings.default_escalation_rate || 0);
       setAllowUserRateOverride(organization.settings.allow_user_rate_override ?? true);
     }
   }, [organization]);
 
   // Handler functions for organization settings
-  const handleUpdateEscalationRate = (value: string) => {
-    if (value === '') {
-      setDefaultEscalationRate(0);
-      setHasSettingsChanges(true);
-      return;
-    }
-
-    const numValue = parseFloat(value);
-    if (!isNaN(numValue)) {
-      setDefaultEscalationRate(numValue / 100);
-      setHasSettingsChanges(true);
-    }
-  };
-
   const handleToggleUserRateOverride = () => {
     setAllowUserRateOverride(!allowUserRateOverride);
     setHasSettingsChanges(true);
@@ -159,7 +159,6 @@ export default function CompanyRepositoryPage() {
     setIsSavingSettings(true);
     try {
       await apiClient.patch('/organizations/me/settings', {
-        default_escalation_rate: defaultEscalationRate,
         allow_user_rate_override: allowUserRateOverride,
       });
       toast.success('Settings updated successfully');
@@ -289,6 +288,7 @@ export default function CompanyRepositoryPage() {
         smh: manualPresetRates.smh / 100,
         sub_fee: manualPresetRates.sub_fee / 100,
         ga_passthrough: manualPresetRates.ga_passthrough / 100,
+        escalation_rate: manualPresetRates.escalation_rate / 100,
       };
 
       await apiClient.post('/organizations/me/rate-presets', presetData);
@@ -303,6 +303,7 @@ export default function CompanyRepositoryPage() {
         smh: 0,
         sub_fee: 0,
         ga_passthrough: 0,
+        escalation_rate: 0,
       });
       await fetchOrganization(); // Refresh to get updated presets
     } catch {
@@ -324,8 +325,68 @@ export default function CompanyRepositoryPage() {
     }
   };
 
+  const handleEditPreset = (preset: any) => {
+    setEditingPreset({ id: preset.id, name: preset.name });
+    setEditPresetName(preset.name);
+    setEditPresetRates({
+      fringe: toPercentageNumber(preset.fringe),
+      oh: toPercentageNumber(preset.oh),
+      ga: toPercentageNumber(preset.ga),
+      fee: toPercentageNumber(preset.fee),
+      smh: toPercentageNumber(preset.smh),
+      sub_fee: toPercentageNumber(preset.sub_fee),
+      ga_passthrough: toPercentageNumber(preset.ga_passthrough),
+      escalation_rate: toPercentageNumber(preset.escalation_rate || 0),
+    });
+    setShowEditPresetDialog(true);
+  };
+
+  const handleUpdatePreset = async () => {
+    if (!editingPreset || !editPresetName.trim()) return;
+
+    setIsCreatingPreset(true);
+    try {
+      const presetData = {
+        name: editPresetName.trim(),
+        fringe: editPresetRates.fringe / 100,
+        oh: editPresetRates.oh / 100,
+        ga: editPresetRates.ga / 100,
+        fee: editPresetRates.fee / 100,
+        smh: editPresetRates.smh / 100,
+        sub_fee: editPresetRates.sub_fee / 100,
+        ga_passthrough: editPresetRates.ga_passthrough / 100,
+        escalation_rate: editPresetRates.escalation_rate / 100,
+      };
+
+      await apiClient.put(`/organizations/me/rate-presets/${editingPreset.id}`, presetData);
+      toast.success(`Preset "${editPresetName}" updated successfully!`);
+      setShowEditPresetDialog(false);
+      setEditingPreset(null);
+      setEditPresetName('');
+      setEditPresetRates({
+        fringe: 0,
+        oh: 0,
+        ga: 0,
+        fee: 0,
+        smh: 0,
+        sub_fee: 0,
+        ga_passthrough: 0,
+        escalation_rate: 0,
+      });
+      await fetchOrganization(); // Refresh to get updated presets
+    } catch {
+      toast.error('Failed to update preset');
+    } finally {
+      setIsCreatingPreset(false);
+    }
+  };
+
   const toPercentageDisplay = (value: number): string => {
     return (value * 100).toFixed(2);
+  };
+
+  const toPercentageNumber = (value: number): number => {
+    return parseFloat((value * 100).toFixed(2));
   };
 
   const handleViewContract = async (contract: GSAContract) => {
@@ -668,12 +729,20 @@ export default function CompanyRepositoryPage() {
                     <div className="flex items-center justify-between mb-3">
                       <h4 className="font-medium text-foreground">{preset.name}</h4>
                       {user && isAdmin(user) && (
-                        <button
-                          onClick={() => handleDeletePreset(preset.id, preset.name)}
-                          className="text-red-600 hover:text-red-700 text-sm font-medium"
-                        >
-                          Delete
-                        </button>
+                        <div className="flex gap-3">
+                          <button
+                            onClick={() => handleEditPreset(preset)}
+                            className="text-primary hover:text-primary/80 text-sm font-medium"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            onClick={() => handleDeletePreset(preset.id, preset.name)}
+                            className="text-red-600 hover:text-red-700 text-sm font-medium"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       )}
                     </div>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
@@ -705,6 +774,10 @@ export default function CompanyRepositoryPage() {
                         <span className="text-muted-foreground">G&A Pass: </span>
                         <span className="font-mono font-semibold">{toPercentageDisplay(preset.ga_passthrough)}%</span>
                       </div>
+                      <div>
+                        <span className="text-muted-foreground">Escalation: </span>
+                        <span className="font-mono font-semibold">{toPercentageDisplay(preset.escalation_rate || 0)}%</span>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -719,49 +792,6 @@ export default function CompanyRepositoryPage() {
             )}
           </CardContent>
         </Card>
-
-        {/* Default Escalation Rate */}
-        {user && isAdmin(user) && (
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Default Escalation Rate</CardTitle>
-                  <CardDescription>
-                    Default year-over-year escalation rate for labor costs (can be customized per proposal)
-                  </CardDescription>
-                </div>
-                {hasSettingsChanges && (
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={handleSaveSettings}
-                    isLoading={isSavingSettings}
-                    className="shadow-md shadow-primary/10"
-                  >
-                    Save Changes
-                  </Button>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="max-w-md">
-                <Input
-                  label="Annual Escalation Rate"
-                  type="number"
-                  value={toPercentageDisplay(defaultEscalationRate)}
-                  onChange={(e) => handleUpdateEscalationRate(e.target.value)}
-                  placeholder="3.00"
-                  suffix="%"
-                />
-                <p className="mt-2 text-xs text-muted-foreground flex items-start gap-1">
-                  <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                  This rate will be used as the default for all year-to-year escalations. You can customize rates for each year when creating proposals.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
 
         {/* Additional Settings */}
         {user && isAdmin(user) && (
@@ -1027,6 +1057,7 @@ export default function CompanyRepositoryPage() {
             smh: 0,
             sub_fee: 0,
             ga_passthrough: 0,
+            escalation_rate: 0,
           });
         }}
         title="Create New Rate Preset"
@@ -1045,6 +1076,7 @@ export default function CompanyRepositoryPage() {
                   smh: 0,
                   sub_fee: 0,
                   ga_passthrough: 0,
+                  escalation_rate: 0,
                 });
               }}
             >
@@ -1119,6 +1151,136 @@ export default function CompanyRepositoryPage() {
                 value={manualPresetRates.ga_passthrough || ''}
                 onChange={(e) => setManualPresetRates({ ...manualPresetRates, ga_passthrough: parseFloat(e.target.value) || 0 })}
                 placeholder="2.50"
+              />
+              <Input
+                label="Escalation Rate"
+                type="number"
+                value={manualPresetRates.escalation_rate || ''}
+                onChange={(e) => setManualPresetRates({ ...manualPresetRates, escalation_rate: parseFloat(e.target.value) || 0 })}
+                placeholder="3.00"
+              />
+            </div>
+          </div>
+        </div>
+      </Dialog>
+
+      {/* Edit Preset Dialog */}
+      <Dialog
+        isOpen={showEditPresetDialog}
+        onClose={() => {
+          setShowEditPresetDialog(false);
+          setEditingPreset(null);
+          setEditPresetName('');
+          setEditPresetRates({
+            fringe: 0,
+            oh: 0,
+            ga: 0,
+            fee: 0,
+            smh: 0,
+            sub_fee: 0,
+            ga_passthrough: 0,
+            escalation_rate: 0,
+          });
+        }}
+        title="Edit Rate Preset"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowEditPresetDialog(false);
+                setEditingPreset(null);
+                setEditPresetName('');
+                setEditPresetRates({
+                  fringe: 0,
+                  oh: 0,
+                  ga: 0,
+                  fee: 0,
+                  smh: 0,
+                  sub_fee: 0,
+                  ga_passthrough: 0,
+                  escalation_rate: 0,
+                });
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleUpdatePreset}
+              disabled={!editPresetName.trim() || isCreatingPreset}
+              isLoading={isCreatingPreset}
+            >
+              Update Preset
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <Input
+            label="Preset Name"
+            placeholder='e.g., "Federal Contract", "Commercial"'
+            value={editPresetName}
+            onChange={(e) => setEditPresetName(e.target.value)}
+          />
+          <div className="border-t border-border pt-4">
+            <h4 className="text-sm font-medium text-foreground mb-3">Rate Values (%)</h4>
+            <div className="grid md:grid-cols-2 gap-4">
+              <Input
+                label="Fringe Rate"
+                type="number"
+                value={editPresetRates.fringe || ''}
+                onChange={(e) => setEditPresetRates({ ...editPresetRates, fringe: parseFloat(e.target.value) || 0 })}
+                placeholder="24.70"
+              />
+              <Input
+                label="Overhead (OH) Rate"
+                type="number"
+                value={editPresetRates.oh || ''}
+                onChange={(e) => setEditPresetRates({ ...editPresetRates, oh: parseFloat(e.target.value) || 0 })}
+                placeholder="7.11"
+              />
+              <Input
+                label="G&A Rate"
+                type="number"
+                value={editPresetRates.ga || ''}
+                onChange={(e) => setEditPresetRates({ ...editPresetRates, ga: parseFloat(e.target.value) || 0 })}
+                placeholder="22.43"
+              />
+              <Input
+                label="Fee Rate (Prime Labor)"
+                type="number"
+                value={editPresetRates.fee || ''}
+                onChange={(e) => setEditPresetRates({ ...editPresetRates, fee: parseFloat(e.target.value) || 0 })}
+                placeholder="7.00"
+              />
+              <Input
+                label="S&MH Rate (Subcontractor)"
+                type="number"
+                value={editPresetRates.smh || ''}
+                onChange={(e) => setEditPresetRates({ ...editPresetRates, smh: parseFloat(e.target.value) || 0 })}
+                placeholder="6.50"
+              />
+              <Input
+                label="Fee Rate (Sub Labor)"
+                type="number"
+                value={editPresetRates.sub_fee || ''}
+                onChange={(e) => setEditPresetRates({ ...editPresetRates, sub_fee: parseFloat(e.target.value) || 0 })}
+                placeholder="5.00"
+              />
+              <Input
+                label="G&A Passthrough Rate"
+                type="number"
+                value={editPresetRates.ga_passthrough || ''}
+                onChange={(e) => setEditPresetRates({ ...editPresetRates, ga_passthrough: parseFloat(e.target.value) || 0 })}
+                placeholder="2.50"
+              />
+              <Input
+                label="Escalation Rate"
+                type="number"
+                value={editPresetRates.escalation_rate || ''}
+                onChange={(e) => setEditPresetRates({ ...editPresetRates, escalation_rate: parseFloat(e.target.value) || 0 })}
+                placeholder="3.00"
               />
             </div>
           </div>
