@@ -560,6 +560,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
           rates: state.rates,
           escalation_rates: state.escalationRates,
           months_per_year: state.monthsPerYear,
+          subcontractor_configured: state.subcontractorConfigured,
+          advanced_mode: state.advancedMode,
         },
       });
 
@@ -703,6 +705,10 @@ export const usePricingStore = create<PricingState>((set, get) => {
           }
         }
 
+        // Load subcontractor configuration state
+        const subcontractorConfigured = proposal.spreadsheet_data?.subcontractor_configured || false;
+        const advancedMode = proposal.spreadsheet_data?.advanced_mode || false;
+
         set({
           proposalId,
           proposalName: proposal.name,
@@ -723,6 +729,9 @@ export const usePricingStore = create<PricingState>((set, get) => {
           isDirty: false,
           lastSaved: null,
           error: null,
+          // Restore advanced mode state
+          subcontractorConfigured,
+          advancedMode,
         });
 
         // Cache the loaded state for faster future access
@@ -746,7 +755,15 @@ export const usePricingStore = create<PricingState>((set, get) => {
           isDirty: false,
           lastSaved: null,
           error: null,
+          subcontractorConfigured,
+          advancedMode,
         });
+
+        // If proposal was saved in advanced mode, restore the advanced view
+        if (advancedMode) {
+          console.log('[LOAD] Restoring advanced mode view...');
+          performTransformToAdvanced();
+        }
 
         // NOTE: Don't auto-recalculate on initial load
         // The spreadsheet shows editable data, but FBLR calculations
@@ -924,6 +941,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
               rates: get().rates,
               escalation_rates: get().escalationRates,
               months_per_year: get().monthsPerYear,
+              subcontractor_configured: get().subcontractorConfigured,
+              advanced_mode: get().advancedMode,
             },
           });
           console.log('✅ Proposal saved successfully');
@@ -1670,6 +1689,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
               rates: state.rates,
               escalation_rates: state.escalationRates,
               months_per_year: state.monthsPerYear,
+              subcontractor_configured: state.subcontractorConfigured,
+              advanced_mode: state.advancedMode,
             },
           });
           console.log('[AUTO-ALLOCATE] Saved to backend successfully');

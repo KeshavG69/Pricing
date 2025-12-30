@@ -45,6 +45,22 @@ export const PricingTabs = ({
       ),
     },
     {
+      id: 'rate-table' as const,
+      label: 'Target Rate Table for Subs',
+      description: 'Subcontractor fee/MH markup calculations',
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            strokeWidth={2}
+            d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+          />
+        </svg>
+      ),
+      hidden: mode === 'initial' || !hasSubcontractors, // Hide in initial mode or when no subcontractors
+    },
+    {
       id: 'subcontractors' as const,
       label: 'Subcontractor Labor',
       description: 'Subcontractor positions & costs',
@@ -55,22 +71,6 @@ export const PricingTabs = ({
             strokeLinejoin="round"
             strokeWidth={2}
             d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
-          />
-        </svg>
-      ),
-      hidden: mode === 'initial' || !hasSubcontractors, // Hide in initial mode or when no subcontractors
-    },
-    {
-      id: 'rate-table' as const,
-      label: 'Rate Table',
-      description: 'Subcontractor fee/MH markup calculations',
-      icon: (
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
           />
         </svg>
       ),
