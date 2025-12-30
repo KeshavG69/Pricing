@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useOrganizationStore } from '@/lib/stores/organizationStore';
@@ -30,6 +30,7 @@ import {
   DollarSign,
   Receipt,
   AlertCircle,
+  Loader2,
 } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
 import { isAdmin, canRemoveUser, getUserDisplayName, getUserInitials } from '@/lib/utils/permissions';
@@ -38,7 +39,22 @@ import apiClient from '@/lib/api/client';
 
 type TabType = 'settings' | 'team' | 'billing';
 
+// Wrapper component to handle Suspense for useSearchParams
 export default function OrganizationPage() {
+  return (
+    <Suspense fallback={
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      </DashboardLayout>
+    }>
+      <OrganizationPageContent />
+    </Suspense>
+  );
+}
+
+function OrganizationPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuthStore();
