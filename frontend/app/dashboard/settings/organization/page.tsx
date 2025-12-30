@@ -71,6 +71,7 @@ export default function OrganizationPage() {
     fetchBillingStats,
     createSetupIntent,
     removePaymentMethod,
+    setAsDefaultPaymentMethod,
   } = useBillingStore();
   const toast = useToast();
 
@@ -111,6 +112,7 @@ export default function OrganizationPage() {
   const [deleteCardConfirmOpen, setDeleteCardConfirmOpen] = useState(false);
   const [cardToDelete, setCardToDelete] = useState<{ id: string; last4: string } | null>(null);
   const [isDeletingCard, setIsDeletingCard] = useState(false);
+  const [settingDefaultCardId, setSettingDefaultCardId] = useState<string | null>(null);
 
   useEffect(() => {
     // Redirect non-admins
@@ -291,6 +293,20 @@ export default function OrganizationPage() {
       setIsDeletingCard(false);
       setDeleteCardConfirmOpen(false);
       setCardToDelete(null);
+    }
+  };
+
+  const handleSetDefaultCard = async (paymentMethodId: string) => {
+    setSettingDefaultCardId(paymentMethodId);
+    try {
+      const success = await setAsDefaultPaymentMethod(paymentMethodId);
+      if (success) {
+        toast.success('Default payment method updated');
+      }
+    } catch {
+      toast.error('Failed to set default payment method');
+    } finally {
+      setSettingDefaultCardId(null);
     }
   };
 
@@ -834,11 +850,24 @@ export default function OrganizationPage() {
                           </div>
                         </div>
                         <div className="flex items-center gap-3">
-                          {method.is_default && (
+                          {method.is_default ? (
                             <span className="flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">
                               <CheckCircle className="w-3 h-3" />
                               Default
                             </span>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSetDefaultCard(method.id)}
+                              disabled={settingDefaultCardId === method.id}
+                              className="text-muted-foreground hover:text-foreground"
+                            >
+                              {settingDefaultCardId === method.id ? (
+                                <span className="animate-spin mr-1">⋯</span>
+                              ) : null}
+                              Set as Default
+                            </Button>
                           )}
                           <Button
                             variant="ghost"

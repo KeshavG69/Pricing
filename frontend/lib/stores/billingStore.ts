@@ -5,6 +5,7 @@ import {
   savePaymentMethod,
   listPaymentMethods,
   deletePaymentMethod,
+  setDefaultPaymentMethod,
   getBillingHistory,
   getBillingStats,
   BillingStatus,
@@ -42,6 +43,7 @@ interface BillingState {
   createSetupIntent: () => Promise<string | null>;
   savePaymentMethod: (paymentMethodId: string) => Promise<boolean>;
   removePaymentMethod: (paymentMethodId: string) => Promise<boolean>;
+  setAsDefaultPaymentMethod: (paymentMethodId: string) => Promise<boolean>;
   fetchBillingHistory: (skip?: number, limit?: number) => Promise<void>;
   fetchBillingStats: () => Promise<void>;
 
@@ -162,6 +164,25 @@ export const useBillingStore = create<BillingState>((set, get) => ({
       console.error('Failed to remove payment method:', error);
       set({
         error: error.response?.data?.detail || 'Failed to remove payment method',
+      });
+      return false;
+    }
+  },
+
+  setAsDefaultPaymentMethod: async (paymentMethodId: string) => {
+    try {
+      set({ error: null });
+      await setDefaultPaymentMethod(paymentMethodId);
+
+      // Refresh status and payment methods
+      await get().fetchBillingStatus();
+      await get().fetchPaymentMethods();
+
+      return true;
+    } catch (error: any) {
+      console.error('Failed to set default payment method:', error);
+      set({
+        error: error.response?.data?.detail || 'Failed to set default payment method',
       });
       return false;
     }

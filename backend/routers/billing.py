@@ -166,6 +166,43 @@ async def delete_payment_method(payment_method_id: str, current_user: dict = Dep
         raise HTTPException(400, f"Failed to remove payment method: {e.message}")
 
 
+class SetDefaultRequest(BaseModel):
+    payment_method_id: str
+
+
+@router.patch("/payment-methods/default")
+async def set_default_payment_method(data: SetDefaultRequest, current_user: dict = Depends(require_admin)):
+    """Set a payment method as default. Admin only."""
+    stripe_service = get_stripe_service()
+
+    if not stripe_service.is_configured:
+        raise HTTPException(503, "Payment service not configured")
+
+    org_crud = get_organization_crud()
+    org = org_crud.get_by_id(current_user["organization_id"])
+
+    if not org:
+        raise HTTPException(404, "Organization not found")
+
+    if not org.get("stripe_customer_id"):
+        raise HTTPException(400, "No Stripe customer configured")
+
+    try:
+        # Update default in Stripe
+        stripe_service.set_default_payment_method(org["stripe_customer_id"], data.payment_method_id)
+
+        # Update default in our database
+        org_crud.collection.update_one(
+            {"_id": org["_id"]},
+            {"$set": {"default_payment_method_id": data.payment_method_id, "updated_at": datetime.utcnow()}}
+        )
+
+        return {"message": "Default payment method updated"}
+
+    except StripeError as e:
+        raise HTTPException(400, f"Failed to set default payment method: {e.message}")
+
+
 # =============================================================================
 # BILLING STATUS
 # =============================================================================

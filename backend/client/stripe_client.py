@@ -348,6 +348,34 @@ class StripeService:
             logger.error(f"Failed to detach payment method: {e}")
             raise StripeError(str(e), code="payment_method_detach_failed")
 
+    def set_default_payment_method(self, customer_id: str, payment_method_id: str) -> bool:
+        """
+        Set a payment method as the default for a customer.
+
+        Args:
+            customer_id: Stripe customer ID
+            payment_method_id: Payment method ID to set as default
+
+        Returns:
+            True if successful
+        """
+        if not self.is_configured:
+            raise StripeError("Stripe not configured", code="not_configured")
+
+        try:
+            stripe.Customer.modify(
+                customer_id,
+                invoice_settings={
+                    "default_payment_method": payment_method_id
+                }
+            )
+            logger.info(f"Set payment method {payment_method_id} as default for customer {customer_id}")
+            return True
+
+        except stripe.error.StripeError as e:
+            logger.error(f"Failed to set default payment method: {e}")
+            raise StripeError(str(e), code="set_default_failed")
+
     # =========================================================================
     # CHARGING (PaymentIntent)
     # =========================================================================

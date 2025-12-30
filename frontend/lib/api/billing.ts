@@ -105,6 +105,17 @@ export async function deletePaymentMethod(paymentMethodId: string): Promise<{ me
 }
 
 /**
+ * Set a payment method as default.
+ * Admin only.
+ */
+export async function setDefaultPaymentMethod(paymentMethodId: string): Promise<{ message: string }> {
+  const response = await apiClient.patch('/billing/payment-methods/default', {
+    payment_method_id: paymentMethodId,
+  });
+  return response.data;
+}
+
+/**
  * Charge for a proposal.
  */
 export async function chargeForProposal(

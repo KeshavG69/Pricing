@@ -11,6 +11,7 @@ This script creates indexes on:
 7. invitations collection - for invitation validation
 8. token_blacklist collection - for JWT logout
 9. company_repositories collection - for GSA contract queries
+10. billing collection - for billing history and payment tracking
 
 Run this script to create all indexes:
     uv run python scripts/create_indexes.py
@@ -324,6 +325,48 @@ def create_indexes():
         print("   ⚠ Already exists: organization_id + updated_at")
 
     # =====================================================================
+    # BILLING COLLECTION
+    # =====================================================================
+    print("\n10. BILLING Collection:")
+    billing = db.billing
+
+    # Composite index for proposal lookups (check if already charged)
+    if safe_create_index(billing, [("proposal_id", ASCENDING), ("charge_type", ASCENDING)], "proposal_charge_lookup"):
+        print("   ✓ Created: proposal_id + charge_type")
+    else:
+        print("   ⚠ Already exists: proposal_id + charge_type")
+
+    # Unique sparse index for webhook idempotency (prevent duplicate processing)
+    if safe_create_index(billing, "stripe_event_id", "stripe_event_idempotency", unique=True, sparse=True):
+        print("   ✓ Created: stripe_event_id (unique, sparse)")
+    else:
+        print("   ⚠ Already exists: stripe_event_id")
+
+    # Index for organization billing history (most common query)
+    if safe_create_index(billing, [("organization_id", ASCENDING), ("created_at", DESCENDING)], "org_billing_history"):
+        print("   ✓ Created: organization_id + created_at")
+    else:
+        print("   ⚠ Already exists: organization_id + created_at")
+
+    # Index for payment intent lookups (webhook handling)
+    if safe_create_index(billing, "stripe_payment_intent_id", "payment_intent_lookup"):
+        print("   ✓ Created: stripe_payment_intent_id")
+    else:
+        print("   ⚠ Already exists: stripe_payment_intent_id")
+
+    # Index for status queries (analytics, filtering)
+    if safe_create_index(billing, [("status", ASCENDING), ("created_at", DESCENDING)], "status_analytics"):
+        print("   ✓ Created: status + created_at")
+    else:
+        print("   ⚠ Already exists: status + created_at")
+
+    # Index for organization stats aggregation
+    if safe_create_index(billing, [("organization_id", ASCENDING), ("status", ASCENDING)], "org_status_index"):
+        print("   ✓ Created: organization_id + status")
+    else:
+        print("   ⚠ Already exists: organization_id + status")
+
+    # =====================================================================
     # SUMMARY
     # =====================================================================
     print("\n" + "=" * 60)
@@ -331,7 +374,7 @@ def create_indexes():
     print("=" * 60)
 
     # List all indexes per collection
-    collections = ["proposals", "wage_data", "areas", "occupations", "users", "organizations", "invitations", "token_blacklist", "company_repositories"]
+    collections = ["proposals", "wage_data", "areas", "occupations", "users", "organizations", "invitations", "token_blacklist", "company_repositories", "billing"]
     for coll_name in collections:
         coll = db[coll_name]
         indexes = list(coll.list_indexes())
