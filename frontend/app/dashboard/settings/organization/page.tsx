@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useOrganizationStore } from '@/lib/stores/organizationStore';
+import { useBillingStore } from '@/lib/stores/billingStore';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Card, { CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -12,16 +13,50 @@ import Dialog from '@/components/ui/Dialog';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import RoleBadge from '@/components/ui/RoleBadge';
 import StatusBadge from '@/components/ui/StatusBadge';
-import { Building, Save, Info, Users, Mail, Plus, Trash2, Clock, CheckCircle, XCircle, UserPlus, UserX, Shield } from 'lucide-react';
+import { StripeProvider } from '@/components/billing/StripeProvider';
+import { PaymentMethodForm } from '@/components/billing/PaymentMethodForm';
+import {
+  Building,
+  Save,
+  Info,
+  Users,
+  Mail,
+  Plus,
+  Trash2,
+  Clock,
+  CheckCircle,
+  UserX,
+  CreditCard,
+  DollarSign,
+  Receipt,
+  AlertCircle,
+  Loader2,
+} from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
 import { isAdmin, canRemoveUser, getUserDisplayName, getUserInitials } from '@/lib/utils/permissions';
 import { OrganizationSettings, InviteUserRequest } from '@/types';
 import apiClient from '@/lib/api/client';
 
-type TabType = 'settings' | 'team' | 'invitations';
+type TabType = 'settings' | 'team' | 'billing';
 
+// Wrapper component to handle Suspense for useSearchParams
 export default function OrganizationPage() {
+  return (
+    <Suspense fallback={
+      <DashboardLayout>
+        <div className="flex items-center justify-center h-64">
+          <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        </div>
+      </DashboardLayout>
+    }>
+      <OrganizationPageContent />
+    </Suspense>
+  );
+}
+
+function OrganizationPageContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user } = useAuthStore();
   const {
     organization,
@@ -36,28 +71,36 @@ export default function OrganizationPage() {
     revokeInvitation,
     isLoading
   } = useOrganizationStore();
+  const {
+    status: billingStatus,
+    paymentMethods,
+    billingHistory,
+    billingStats,
+    setupIntentClientSecret,
+    isLoadingStatus: isLoadingBillingStatus,
+    isLoadingPaymentMethods,
+    isLoadingHistory,
+    isCreatingSetupIntent,
+    fetchBillingStatus,
+    fetchPaymentMethods,
+    fetchBillingHistory,
+    fetchBillingStats,
+    createSetupIntent,
+    removePaymentMethod,
+    setAsDefaultPaymentMethod,
+  } = useBillingStore();
   const toast = useToast();
 
-  // Tab state
-  const [activeTab, setActiveTab] = useState<TabType>('settings');
+  // Tab state - read initial value from URL
+  const tabFromUrl = searchParams.get('tab') as TabType | null;
+  const [activeTab, setActiveTab] = useState<TabType>(
+    tabFromUrl && ['settings', 'team', 'billing'].includes(tabFromUrl) ? tabFromUrl : 'settings'
+  );
 
   // Settings form state
   const [settings, setSettings] = useState<OrganizationSettings | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
-
-  // Preset dialog state
-  const [showPresetDialog, setShowPresetDialog] = useState(false);
-  const [presetName, setPresetName] = useState('');
-  const [presetRates, setPresetRates] = useState({
-    fringe: 0,
-    oh: 0,
-    ga: 0,
-    fee: 0,
-    smh: 0,
-    sub_fee: 0,
-    ga_passthrough: 0,
-  });
 
   // Team - Delete confirmation state
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -75,6 +118,18 @@ export default function OrganizationPage() {
   const [invitationToRevoke, setInvitationToRevoke] = useState<{ id: string; email: string } | null>(null);
   const [isRevoking, setIsRevoking] = useState(false);
 
+  // Organization name editing state
+  const [editingOrgName, setEditingOrgName] = useState(false);
+  const [orgNameInput, setOrgNameInput] = useState('');
+  const [isSavingOrgName, setIsSavingOrgName] = useState(false);
+
+  // Billing state
+  const [showAddCard, setShowAddCard] = useState(false);
+  const [deleteCardConfirmOpen, setDeleteCardConfirmOpen] = useState(false);
+  const [cardToDelete, setCardToDelete] = useState<{ id: string; last4: string } | null>(null);
+  const [isDeletingCard, setIsDeletingCard] = useState(false);
+  const [settingDefaultCardId, setSettingDefaultCardId] = useState<string | null>(null);
+
   useEffect(() => {
     // Redirect non-admins
     if (user && !isAdmin(user)) {
@@ -87,8 +142,13 @@ export default function OrganizationPage() {
       fetchOrganization();
       fetchMembers();
       fetchInvitations();
+      // Fetch billing data
+      fetchBillingStatus();
+      fetchPaymentMethods();
+      fetchBillingHistory();
+      fetchBillingStats();
     }
-  }, [user, router, fetchOrganization, fetchMembers, fetchInvitations]);
+  }, [user, router, fetchOrganization, fetchMembers, fetchInvitations, fetchBillingStatus, fetchPaymentMethods, fetchBillingHistory, fetchBillingStats]);
 
   useEffect(() => {
     if (organization?.settings) {
@@ -117,122 +177,27 @@ export default function OrganizationPage() {
     }
   };
 
-  const updateDefaultRate = (key: string, value: string) => {
-    if (!settings) return;
+  // Organization name handler
+  const handleSaveOrgName = async () => {
+    const trimmedInput = orgNameInput.trim();
 
-    if (value === '') {
-      setSettings({
-        ...settings,
-        default_rates: {
-          ...settings.default_rates,
-          [key]: 0,
-        },
-      });
-      setHasChanges(true);
+    // Don't save if input is empty or unchanged
+    if (!trimmedInput || trimmedInput === organization?.name) {
+      setEditingOrgName(false);
+      setOrgNameInput('');
       return;
     }
 
-    const numValue = parseFloat(value);
-    if (!isNaN(numValue)) {
-      setSettings({
-        ...settings,
-        default_rates: {
-          ...settings.default_rates,
-          [key]: numValue / 100,
-        },
-      });
-      setHasChanges(true);
-    }
-  };
-
-  const updateDefaultEscalationRate = (value: string) => {
-    if (!settings) return;
-
-    if (value === '') {
-      setSettings({
-        ...settings,
-        default_escalation_rate: 0,
-      });
-      setHasChanges(true);
-      return;
-    }
-
-    const numValue = parseFloat(value);
-    if (!isNaN(numValue)) {
-      setSettings({
-        ...settings,
-        default_escalation_rate: numValue / 100,
-      });
-      setHasChanges(true);
-    }
-  };
-
-  const toggleUserRateOverride = () => {
-    if (!settings) return;
-
-    setSettings({
-      ...settings,
-      allow_user_rate_override: !settings.allow_user_rate_override,
-    });
-    setHasChanges(true);
-  };
-
-  const handleCreatePreset = async () => {
-    if (!settings || !presetName.trim()) return;
-
+    setIsSavingOrgName(true);
     try {
-      const response = await apiClient.post('/organizations/me/rate-presets', {
-        name: presetName.trim(),
-        fringe: presetRates.fringe / 100,
-        oh: presetRates.oh / 100,
-        ga: presetRates.ga / 100,
-        fee: presetRates.fee / 100,
-        smh: presetRates.smh / 100,
-        sub_fee: presetRates.sub_fee / 100,
-        ga_passthrough: presetRates.ga_passthrough / 100,
-      });
-
-      setSettings({
-        ...settings,
-        rate_presets: [...(settings.rate_presets || []), response.data],
-      });
-
-      toast.success(`Preset "${presetName}" created successfully`);
-      setShowPresetDialog(false);
-      setPresetName('');
-      setPresetRates({
-        fringe: 0,
-        oh: 0,
-        ga: 0,
-        fee: 0,
-        smh: 0,
-        sub_fee: 0,
-        ga_passthrough: 0,
-      });
-      await fetchOrganization();
-    } catch (error) {
-      console.error('Create preset error:', error);
-      toast.error('Failed to create preset');
-    }
-  };
-
-  const handleDeletePreset = async (presetId: string, presetName: string) => {
-    if (!settings) return;
-    if (!confirm(`Delete preset "${presetName}"? This action cannot be undone.`)) return;
-
-    try {
-      await apiClient.delete(`/organizations/me/rate-presets/${presetId}`);
-
-      setSettings({
-        ...settings,
-        rate_presets: settings.rate_presets?.filter(p => p.id !== presetId) || [],
-      });
-
-      toast.success(`Preset "${presetName}" deleted successfully`);
-      await fetchOrganization();
-    } catch (error) {
-      console.error('Delete preset error:', error);
-      toast.error('Failed to delete preset');
+      await updateSettings({ name: trimmedInput });
+      toast.success('Organization name updated successfully');
+      setEditingOrgName(false);
+      setOrgNameInput('');
+    } catch {
+      toast.error('Failed to update organization name');
+    } finally {
+      setIsSavingOrgName(false);
     }
   };
 
@@ -311,6 +276,56 @@ export default function OrganizationPage() {
     }
   };
 
+  // Billing handlers
+  const handleAddCard = async () => {
+    const clientSecret = await createSetupIntent();
+    if (clientSecret) {
+      setShowAddCard(true);
+    }
+  };
+
+  const handleCardAdded = () => {
+    setShowAddCard(false);
+    toast.success('Payment method added successfully');
+  };
+
+  const handleDeleteCardClick = (id: string, last4: string) => {
+    setCardToDelete({ id, last4 });
+    setDeleteCardConfirmOpen(true);
+  };
+
+  const handleDeleteCardConfirm = async () => {
+    if (!cardToDelete) return;
+
+    setIsDeletingCard(true);
+    try {
+      const success = await removePaymentMethod(cardToDelete.id);
+      if (success) {
+        toast.success('Payment method removed');
+      }
+    } catch {
+      toast.error('Failed to remove payment method');
+    } finally {
+      setIsDeletingCard(false);
+      setDeleteCardConfirmOpen(false);
+      setCardToDelete(null);
+    }
+  };
+
+  const handleSetDefaultCard = async (paymentMethodId: string) => {
+    setSettingDefaultCardId(paymentMethodId);
+    try {
+      const success = await setAsDefaultPaymentMethod(paymentMethodId);
+      if (success) {
+        toast.success('Default payment method updated');
+      }
+    } catch {
+      toast.error('Failed to set default payment method');
+    } finally {
+      setSettingDefaultCardId(null);
+    }
+  };
+
   // Helpers
   const formatDate = (dateStr: string) => {
     return new Date(dateStr).toLocaleDateString('en-US', {
@@ -320,53 +335,21 @@ export default function OrganizationPage() {
     });
   };
 
-  const toPercentageDisplay = (decimal: number): number => {
-    return Math.round(decimal * 10000) / 100;
+  const formatDateTime = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return <Clock className="w-4 h-4 text-blue-500" />;
-      case 'accepted':
-        return <CheckCircle className="w-4 h-4 text-emerald-500" />;
-      case 'expired':
-      case 'revoked':
-        return <XCircle className="w-4 h-4 text-red-500" />;
-      default:
-        return null;
-    }
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case 'pending':
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
-            Pending
-          </span>
-        );
-      case 'accepted':
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
-            Accepted
-          </span>
-        );
-      case 'expired':
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
-            Expired
-          </span>
-        );
-      case 'revoked':
-        return (
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
-            Revoked
-          </span>
-        );
-      default:
-        return null;
-    }
+  const formatCurrency = (cents: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(cents / 100);
   };
 
   // Show loading state
@@ -408,24 +391,22 @@ export default function OrganizationPage() {
           {activeTab === 'team' && (
             <Button
               variant="primary"
-              onClick={() => {
-                setActiveTab('invitations');
-                setInviteModalOpen(true);
-              }}
-              className="shadow-md shadow-primary/10"
-            >
-              <Mail className="w-4 h-4 mr-2" />
-              Invite Members
-            </Button>
-          )}
-          {activeTab === 'invitations' && (
-            <Button
-              variant="primary"
               onClick={() => setInviteModalOpen(true)}
               className="shadow-md shadow-primary/10"
             >
               <Plus className="w-4 h-4 mr-2" />
               Send Invitation
+            </Button>
+          )}
+          {activeTab === 'billing' && !showAddCard && (
+            <Button
+              variant="primary"
+              onClick={handleAddCard}
+              isLoading={isCreatingSetupIntent}
+              className="shadow-md shadow-primary/10"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Payment Method
             </Button>
           )}
         </div>
@@ -453,18 +434,18 @@ export default function OrganizationPage() {
               }`}
             >
               <Users className="w-4 h-4 inline-block mr-2" />
-              Team ({members.length})
+              Team ({members.length + pendingInvitations.length})
             </button>
             <button
-              onClick={() => setActiveTab('invitations')}
+              onClick={() => setActiveTab('billing')}
               className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                activeTab === 'invitations'
+                activeTab === 'billing'
                   ? 'border-primary text-primary'
                   : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
               }`}
             >
-              <Mail className="w-4 h-4 inline-block mr-2" />
-              Invitations ({pendingInvitations.length})
+              <CreditCard className="w-4 h-4 inline-block mr-2" />
+              Billing
             </button>
           </nav>
         </div>
@@ -486,236 +467,41 @@ export default function OrganizationPage() {
                     <label className="block text-sm font-medium text-foreground mb-2">
                       Organization Name
                     </label>
-                    <div className="flex items-center gap-3 px-4 py-3 bg-muted rounded-lg">
-                      <Building className="w-5 h-5 text-muted-foreground" />
-                      <span className="text-sm font-medium text-foreground">{organization.name}</span>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-foreground mb-2">
-                      Subscription Plan
-                    </label>
-                    <div className="flex items-center gap-3 px-4 py-3 bg-muted rounded-lg">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary border border-primary/20">
-                        {organization.subscription.plan.toUpperCase()}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        {organization.subscription.seats} seats
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Default Indirect Rates */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Default Indirect Rates</CardTitle>
-                <CardDescription>
-                  Default rates applied to all new proposals
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <Input
-                    label="Fringe Rate"
-                    type="number"
-                    value={toPercentageDisplay(settings.default_rates.fringe)}
-                    onChange={(e) => updateDefaultRate('fringe', e.target.value)}
-                    placeholder="24.70"
-                    suffix="%"
-                  />
-                  <Input
-                    label="Overhead (OH) Rate"
-                    type="number"
-                    value={toPercentageDisplay(settings.default_rates.oh)}
-                    onChange={(e) => updateDefaultRate('oh', e.target.value)}
-                    placeholder="7.11"
-                    suffix="%"
-                  />
-                  <Input
-                    label="G&A Rate"
-                    type="number"
-                    value={toPercentageDisplay(settings.default_rates.ga)}
-                    onChange={(e) => updateDefaultRate('ga', e.target.value)}
-                    placeholder="22.43"
-                    suffix="%"
-                  />
-                  <Input
-                    label="Fee Rate (Prime Labor)"
-                    type="number"
-                    value={toPercentageDisplay(settings.default_rates.fee)}
-                    onChange={(e) => updateDefaultRate('fee', e.target.value)}
-                    placeholder="7.00"
-                    suffix="%"
-                  />
-                  <Input
-                    label="S&MH Rate (Subcontractor)"
-                    type="number"
-                    value={toPercentageDisplay(settings.default_rates.smh)}
-                    onChange={(e) => updateDefaultRate('smh', e.target.value)}
-                    placeholder="6.50"
-                    suffix="%"
-                  />
-                  <Input
-                    label="Fee Rate (Sub Labor)"
-                    type="number"
-                    value={toPercentageDisplay(settings.default_rates.sub_fee)}
-                    onChange={(e) => updateDefaultRate('sub_fee', e.target.value)}
-                    placeholder="5.00"
-                    suffix="%"
-                  />
-                  <Input
-                    label="G&A Passthrough Rate"
-                    type="number"
-                    value={toPercentageDisplay(settings.default_rates.ga_passthrough)}
-                    onChange={(e) => updateDefaultRate('ga_passthrough', e.target.value)}
-                    placeholder="2.50"
-                    suffix="%"
-                  />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Rate Presets */}
-            <Card>
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div>
-                    <CardTitle>Rate Presets</CardTitle>
-                    <CardDescription>
-                      Create reusable rate templates that can be quickly applied in pricing workspaces
-                    </CardDescription>
-                  </div>
-                  <button
-                    onClick={() => setShowPresetDialog(true)}
-                    className="flex items-center justify-center w-10 h-10 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground transition-colors"
-                    title="Add new preset"
-                  >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                    </svg>
-                  </button>
-                </div>
-              </CardHeader>
-              <CardContent>
-                {settings.rate_presets && settings.rate_presets.length > 0 ? (
-                  <div className="space-y-3">
-                    {settings.rate_presets.map((preset) => (
+                    {!editingOrgName ? (
                       <div
-                        key={preset.id}
-                        className="border border-border rounded-lg p-4 hover:bg-muted/30 transition-colors"
+                        className="flex items-center gap-3 px-4 py-3 bg-muted rounded-lg cursor-pointer hover:bg-muted/80 transition-colors"
+                        onDoubleClick={() => {
+                          if (user && isAdmin(user)) {
+                            setEditingOrgName(true);
+                            setOrgNameInput(organization.name);
+                          }
+                        }}
+                        title={user && isAdmin(user) ? "Double-click to edit" : ""}
                       >
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="font-medium text-foreground">{preset.name}</h4>
-                          <button
-                            onClick={() => handleDeletePreset(preset.id, preset.name)}
-                            className="text-red-600 hover:text-red-700 text-sm font-medium"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
-                          <div>
-                            <span className="text-muted-foreground">Fringe: </span>
-                            <span className="font-mono font-semibold">{toPercentageDisplay(preset.fringe)}%</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">OH: </span>
-                            <span className="font-mono font-semibold">{toPercentageDisplay(preset.oh)}%</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">G&A: </span>
-                            <span className="font-mono font-semibold">{toPercentageDisplay(preset.ga)}%</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Fee: </span>
-                            <span className="font-mono font-semibold">{toPercentageDisplay(preset.fee)}%</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">S&MH: </span>
-                            <span className="font-mono font-semibold">{toPercentageDisplay(preset.smh)}%</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">Sub Fee: </span>
-                            <span className="font-mono font-semibold">{toPercentageDisplay(preset.sub_fee)}%</span>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">G&A Pass: </span>
-                            <span className="font-mono font-semibold">{toPercentageDisplay(preset.ga_passthrough)}%</span>
-                          </div>
-                        </div>
+                        <Building className="w-5 h-5 text-muted-foreground" />
+                        <span className="text-sm font-medium text-foreground flex-1">{organization.name}</span>
                       </div>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-muted-foreground">
-                    <p>No rate presets created yet.</p>
-                    <p className="text-sm mt-1">Click the + button above to create your first preset.</p>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {/* Default Escalation Rate */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Default Escalation Rate</CardTitle>
-                <CardDescription>
-                  Default year-over-year escalation rate for labor costs (can be customized per proposal)
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="max-w-md">
-                  <Input
-                    label="Annual Escalation Rate"
-                    type="number"
-                    value={toPercentageDisplay(settings.default_escalation_rate || 0)}
-                    onChange={(e) => updateDefaultEscalationRate(e.target.value)}
-                    placeholder="3.00"
-                    suffix="%"
-                  />
-                  <p className="mt-2 text-xs text-muted-foreground flex items-start gap-1">
-                    <Info className="w-3 h-3 mt-0.5 flex-shrink-0" />
-                    This rate will be used as the default for all year-to-year escalations. You can customize rates for each year when creating proposals.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Additional Settings */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Additional Settings</CardTitle>
-                <CardDescription>
-                  Other organization preferences
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-6">
-                  <div className="flex items-center justify-between p-4 bg-muted/50 rounded-lg border border-border">
-                    <div>
-                      <p className="text-sm font-medium text-foreground mb-1">
-                        Allow User Rate Overrides
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Allow non-admin users to override default rates in their proposals
-                      </p>
-                    </div>
-                    <button
-                      onClick={toggleUserRateOverride}
-                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 ${
-                        settings.allow_user_rate_override ? 'bg-primary' : 'bg-muted-foreground/30'
-                      }`}
-                    >
-                      <span
-                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                          settings.allow_user_rate_override ? 'translate-x-6' : 'translate-x-1'
-                        }`}
-                      />
-                    </button>
+                    ) : (
+                      <div className="flex items-center gap-3 px-4 py-3 bg-muted rounded-lg">
+                        <Building className="w-5 h-5 text-muted-foreground" />
+                        <Input
+                          value={orgNameInput}
+                          onChange={(e) => setOrgNameInput(e.target.value)}
+                          onBlur={handleSaveOrgName}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleSaveOrgName();
+                            } else if (e.key === 'Escape') {
+                              setEditingOrgName(false);
+                              setOrgNameInput('');
+                            }
+                          }}
+                          placeholder="Enter organization name"
+                          autoFocus
+                          className="flex-1 border-none focus:ring-0 bg-transparent"
+                        />
+                      </div>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -751,8 +537,8 @@ export default function OrganizationPage() {
                     </div>
                     <span className="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded-full">Total</span>
                   </div>
-                  <p className="text-3xl font-bold text-foreground mb-1">{members.length}</p>
-                  <p className="text-sm text-muted-foreground">Team members</p>
+                  <p className="text-3xl font-bold text-foreground mb-1">{members.length + pendingInvitations.length}</p>
+                  <p className="text-sm text-muted-foreground">Members + Invitations</p>
                 </CardContent>
               </Card>
 
@@ -760,12 +546,12 @@ export default function OrganizationPage() {
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                      <Shield className="w-5 h-5 text-emerald-600" />
+                      <CheckCircle className="w-5 h-5 text-emerald-600" />
                     </div>
                     <span className="text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">Active</span>
                   </div>
                   <p className="text-3xl font-bold text-foreground mb-1">
-                    {members.filter((m) => m.status === 'active').length}
+                    {members.length}
                   </p>
                   <p className="text-sm text-muted-foreground">Active members</p>
                 </CardContent>
@@ -774,34 +560,34 @@ export default function OrganizationPage() {
               <Card className="hover-card">
                 <CardContent className="pt-6">
                   <div className="flex items-center justify-between mb-4">
-                    <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                      <Shield className="w-5 h-5 text-purple-600" />
+                    <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                      <Clock className="w-5 h-5 text-orange-600" />
                     </div>
-                    <span className="text-xs font-medium text-purple-700 bg-purple-100 px-2 py-1 rounded-full">Admins</span>
+                    <span className="text-xs font-medium text-orange-700 bg-orange-100 px-2 py-1 rounded-full">Pending</span>
                   </div>
                   <p className="text-3xl font-bold text-foreground mb-1">
-                    {members.filter((m) => m.role === 'admin').length}
+                    {pendingInvitations.length}
                   </p>
-                  <p className="text-sm text-muted-foreground">Admin users</p>
+                  <p className="text-sm text-muted-foreground">Awaiting response</p>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Team Members List */}
+            {/* Team List */}
             <Card>
               <CardHeader>
-                <CardTitle>Team Members</CardTitle>
+                <CardTitle>Team</CardTitle>
                 <CardDescription>
-                  Manage your team members and their roles
+                  Active members and pending invitation requests
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-0">
                 {isLoading ? (
                   <div className="text-center py-12 text-muted-foreground">
                     <Users className="w-8 h-8 mx-auto mb-4 animate-pulse text-muted-foreground/50" />
-                    Loading team members...
+                    Loading team...
                   </div>
-                ) : members.length === 0 ? (
+                ) : members.length === 0 && pendingInvitations.length === 0 ? (
                   <div className="text-center py-16">
                     <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
                       <Users className="w-8 h-8 text-muted-foreground" />
@@ -810,8 +596,8 @@ export default function OrganizationPage() {
                     <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
                       Invite team members to start collaborating on proposals.
                     </p>
-                    <Button variant="primary" onClick={() => { setActiveTab('invitations'); setInviteModalOpen(true); }}>
-                      <Mail className="w-4 h-4 mr-2" />
+                    <Button variant="primary" onClick={() => setInviteModalOpen(true)}>
+                      <Plus className="w-4 h-4 mr-2" />
                       Send Invitation
                     </Button>
                   </div>
@@ -821,7 +607,7 @@ export default function OrganizationPage() {
                       <thead className="bg-muted/50 border-b border-border">
                         <tr>
                           <th className="text-left py-3 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            Member
+                            Name / Email
                           </th>
                           <th className="text-left py-3 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                             Role
@@ -830,7 +616,7 @@ export default function OrganizationPage() {
                             Status
                           </th>
                           <th className="text-left py-3 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            Joined
+                            Date
                           </th>
                           <th className="text-right py-3 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                             Actions
@@ -838,6 +624,7 @@ export default function OrganizationPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-border">
+                        {/* Active Members */}
                         {members.map((member) => {
                           const canRemove = canRemoveUser(user, member, organization?.owner_id);
                           const isCurrentUser = member.id === user.id;
@@ -896,130 +683,22 @@ export default function OrganizationPage() {
                             </tr>
                           );
                         })}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        )}
 
-        {/* Invitations Tab */}
-        {activeTab === 'invitations' && (
-          <div className="space-y-6">
-            {/* Stats */}
-            <div className="grid md:grid-cols-3 gap-6">
-              <Card className="hover-card">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                      <Clock className="w-5 h-5 text-blue-600" />
-                    </div>
-                    <span className="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded-full">Pending</span>
-                  </div>
-                  <p className="text-3xl font-bold text-foreground mb-1">{pendingInvitations.length}</p>
-                  <p className="text-sm text-muted-foreground">Awaiting response</p>
-                </CardContent>
-              </Card>
-
-              <Card className="hover-card">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center">
-                      <CheckCircle className="w-5 h-5 text-emerald-600" />
-                    </div>
-                    <span className="text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">Accepted</span>
-                  </div>
-                  <p className="text-3xl font-bold text-foreground mb-1">
-                    {invitations.filter((inv) => inv.status === 'accepted').length}
-                  </p>
-                  <p className="text-sm text-muted-foreground">Joined successfully</p>
-                </CardContent>
-              </Card>
-
-              <Card className="hover-card">
-                <CardContent className="pt-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
-                      <Mail className="w-5 h-5 text-muted-foreground" />
-                    </div>
-                    <span className="text-xs font-medium text-muted-foreground bg-muted px-2 py-1 rounded-full">Total</span>
-                  </div>
-                  <p className="text-3xl font-bold text-foreground mb-1">{invitations.length}</p>
-                  <p className="text-sm text-muted-foreground">All invitations</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Invitations List */}
-            <Card>
-              <CardHeader>
-                <CardTitle>All Invitations</CardTitle>
-                <CardDescription>
-                  Manage sent invitations and their status
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-0">
-                {isLoading ? (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Mail className="w-8 h-8 mx-auto mb-4 animate-pulse text-muted-foreground/50" />
-                    Loading invitations...
-                  </div>
-                ) : invitations.length === 0 ? (
-                  <div className="text-center py-16">
-                    <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
-                      <Mail className="w-8 h-8 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-lg font-medium text-foreground mb-2">No invitations yet</h3>
-                    <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-                      Start by sending an invitation to a team member.
-                    </p>
-                    <Button variant="primary" onClick={() => setInviteModalOpen(true)}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Send Invitation
-                    </Button>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-muted/50 border-b border-border">
-                        <tr>
-                          <th className="text-left py-3 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            Email
-                          </th>
-                          <th className="text-left py-3 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            Role
-                          </th>
-                          <th className="text-left py-3 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            Status
-                          </th>
-                          <th className="text-left py-3 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            Invited By
-                          </th>
-                          <th className="text-left py-3 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            Expires
-                          </th>
-                          <th className="text-right py-3 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                            Actions
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border">
-                        {invitations.map((invitation) => (
+                        {/* Pending Invitations */}
+                        {pendingInvitations.map((invitation) => (
                           <tr
-                            key={invitation.id}
+                            key={`invite-${invitation.id}`}
                             className="hover:bg-muted/30 transition-colors"
                           >
                             <td className="py-4 px-6">
                               <div className="flex items-center space-x-3">
-                                <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border border-border">
-                                  <Mail className="w-5 h-5 text-primary" />
+                                <div className="h-10 w-10 rounded-full bg-orange-100 flex items-center justify-center border border-orange-200">
+                                  <Mail className="w-5 h-5 text-orange-600" />
                                 </div>
                                 <div>
                                   <p className="text-sm font-medium text-foreground">{invitation.email}</p>
                                   <p className="text-xs text-muted-foreground">
-                                    Sent {formatDate(invitation.createdAt)}
+                                    Invited by {invitation.invited_by_name}
                                   </p>
                                 </div>
                               </div>
@@ -1028,34 +707,27 @@ export default function OrganizationPage() {
                               <RoleBadge role={invitation.role} />
                             </td>
                             <td className="py-4 px-6">
-                              <div className="flex items-center gap-2">
-                                {getStatusIcon(invitation.status)}
-                                {getStatusBadge(invitation.status)}
-                              </div>
-                            </td>
-                            <td className="py-4 px-6">
-                              <span className="text-sm text-muted-foreground">
-                                {invitation.invited_by_name}
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 border border-orange-200">
+                                <Clock className="w-3 h-3" />
+                                Pending
                               </span>
                             </td>
                             <td className="py-4 px-6">
                               <span className="text-sm text-muted-foreground">
-                                {formatDate(invitation.expiresAt)}
+                                {formatDate(invitation.createdAt)}
                               </span>
                             </td>
                             <td className="py-4 px-6">
                               <div className="flex items-center justify-end gap-2">
-                                {invitation.status === 'pending' && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleRevokeClick(invitation.id, invitation.email)}
-                                    className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                                  >
-                                    <Trash2 className="w-4 h-4 mr-1" />
-                                    Revoke
-                                  </Button>
-                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleRevokeClick(invitation.id, invitation.email)}
+                                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-1" />
+                                  Revoke
+                                </Button>
                               </div>
                             </td>
                           </tr>
@@ -1068,132 +740,300 @@ export default function OrganizationPage() {
             </Card>
           </div>
         )}
-      </div>
 
-      {/* Create Preset Dialog */}
-      <Dialog
-        isOpen={showPresetDialog}
-        onClose={() => {
-          setShowPresetDialog(false);
-          setPresetName('');
-          setPresetRates({
-            fringe: 0,
-            oh: 0,
-            ga: 0,
-            fee: 0,
-            smh: 0,
-            sub_fee: 0,
-            ga_passthrough: 0,
-          });
-        }}
-        title="Create New Rate Preset"
-        size="lg"
-        footer={
-          <>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setShowPresetDialog(false);
-                setPresetName('');
-                setPresetRates({
-                  fringe: 0,
-                  oh: 0,
-                  ga: 0,
-                  fee: 0,
-                  smh: 0,
-                  sub_fee: 0,
-                  ga_passthrough: 0,
-                });
-              }}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="primary"
-              onClick={handleCreatePreset}
-              disabled={!presetName.trim()}
-            >
-              Create Preset
-            </Button>
-          </>
-        }
-      >
-        <div className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            Create a reusable rate template that can be quickly applied in pricing workspaces.
-          </p>
+        {/* Billing Tab */}
+        {activeTab === 'billing' && (
+          <div className="space-y-6">
+            {/* Stats Cards */}
+            <div className="grid md:grid-cols-3 gap-6">
+              <Card className="hover-card">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="h-10 w-10 rounded-lg bg-emerald-100 flex items-center justify-center">
+                      <DollarSign className="w-5 h-5 text-emerald-600" />
+                    </div>
+                    <span className="text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">
+                      Total Spent
+                    </span>
+                  </div>
+                  <p className="text-3xl font-bold text-foreground mb-1">
+                    {formatCurrency(billingStats?.successful_amount_cents || 0)}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Lifetime</p>
+                </CardContent>
+              </Card>
 
-          <Input
-            label="Preset Name"
-            placeholder='e.g., "Federal Contract", "Commercial", "Non-Profit"'
-            value={presetName}
-            onChange={(e) => setPresetName(e.target.value)}
-            autoFocus
-          />
+              <Card className="hover-card">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                      <Receipt className="w-5 h-5 text-blue-600" />
+                    </div>
+                    <span className="text-xs font-medium text-blue-700 bg-blue-100 px-2 py-1 rounded-full">
+                      Transactions
+                    </span>
+                  </div>
+                  <p className="text-3xl font-bold text-foreground mb-1">
+                    {billingStats?.successful_charges || 0}
+                  </p>
+                  <p className="text-sm text-muted-foreground">Successful charges</p>
+                </CardContent>
+              </Card>
 
-          <div className="border-t border-border pt-4">
-            <h4 className="text-sm font-medium text-foreground mb-3">Rate Values</h4>
-            <div className="grid md:grid-cols-2 gap-4">
-              <Input
-                label="Fringe Rate"
-                type="number"
-                value={presetRates.fringe || ''}
-                onChange={(e) => setPresetRates({ ...presetRates, fringe: parseFloat(e.target.value) || 0 })}
-                placeholder="24.70"
-                suffix="%"
-              />
-              <Input
-                label="Overhead (OH) Rate"
-                type="number"
-                value={presetRates.oh || ''}
-                onChange={(e) => setPresetRates({ ...presetRates, oh: parseFloat(e.target.value) || 0 })}
-                placeholder="7.11"
-                suffix="%"
-              />
-              <Input
-                label="G&A Rate"
-                type="number"
-                value={presetRates.ga || ''}
-                onChange={(e) => setPresetRates({ ...presetRates, ga: parseFloat(e.target.value) || 0 })}
-                placeholder="22.43"
-                suffix="%"
-              />
-              <Input
-                label="Fee Rate (Prime Labor)"
-                type="number"
-                value={presetRates.fee || ''}
-                onChange={(e) => setPresetRates({ ...presetRates, fee: parseFloat(e.target.value) || 0 })}
-                placeholder="7.00"
-                suffix="%"
-              />
-              <Input
-                label="S&MH Rate (Subcontractor)"
-                type="number"
-                value={presetRates.smh || ''}
-                onChange={(e) => setPresetRates({ ...presetRates, smh: parseFloat(e.target.value) || 0 })}
-                placeholder="6.50"
-                suffix="%"
-              />
-              <Input
-                label="Fee Rate (Sub Labor)"
-                type="number"
-                value={presetRates.sub_fee || ''}
-                onChange={(e) => setPresetRates({ ...presetRates, sub_fee: parseFloat(e.target.value) || 0 })}
-                placeholder="5.00"
-                suffix="%"
-              />
-              <Input
-                label="G&A Passthrough Rate"
-                type="number"
-                value={presetRates.ga_passthrough || ''}
-                onChange={(e) => setPresetRates({ ...presetRates, ga_passthrough: parseFloat(e.target.value) || 0 })}
-                placeholder="2.50"
-                suffix="%"
-              />
+              <Card className="hover-card">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                      <CreditCard className="w-5 h-5 text-purple-600" />
+                    </div>
+                    <span className="text-xs font-medium text-purple-700 bg-purple-100 px-2 py-1 rounded-full">
+                      Status
+                    </span>
+                  </div>
+                  <p className="text-3xl font-bold text-foreground mb-1">
+                    {billingStatus?.has_payment_method ? 'Active' : 'Inactive'}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    {paymentMethods.length} payment method{paymentMethods.length !== 1 ? 's' : ''}
+                  </p>
+                </CardContent>
+              </Card>
             </div>
+
+            {/* Add Card Form */}
+            {showAddCard && (
+              <Card>
+                <CardHeader>
+                  <CardTitle>Add Payment Method</CardTitle>
+                  <CardDescription>
+                    Enter your card details. Your information is encrypted and secure.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <StripeProvider clientSecret={setupIntentClientSecret || undefined}>
+                    <PaymentMethodForm
+                      onSuccess={handleCardAdded}
+                      onCancel={() => setShowAddCard(false)}
+                    />
+                  </StripeProvider>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Payment Methods */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment Methods</CardTitle>
+                <CardDescription>
+                  Cards saved for automatic billing
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {isLoadingPaymentMethods ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Loading payment methods...
+                  </div>
+                ) : paymentMethods.length === 0 ? (
+                  <div className="text-center py-12">
+                    <div className="h-16 w-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-6">
+                      <CreditCard className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-lg font-medium text-foreground mb-2">No payment methods</h3>
+                    <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                      Add a payment method to enable proposal creation.
+                    </p>
+                    <Button variant="primary" onClick={handleAddCard} isLoading={isCreatingSetupIntent}>
+                      <Plus className="w-4 h-4 mr-2" />
+                      Add Payment Method
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {paymentMethods.map((method) => (
+                      <div
+                        key={method.id}
+                        className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/30 transition-colors"
+                      >
+                        <div className="flex items-center gap-4">
+                          <CreditCard className="w-8 h-8 text-muted-foreground" />
+                          <div>
+                            <p className="font-medium text-foreground capitalize">
+                              {method.brand} •••• {method.last4}
+                            </p>
+                            <p className="text-sm text-muted-foreground">
+                              Expires {method.exp_month}/{method.exp_year}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {method.is_default ? (
+                            <span className="flex items-center gap-1 text-xs font-medium text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">
+                              <CheckCircle className="w-3 h-3" />
+                              Default
+                            </span>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleSetDefaultCard(method.id)}
+                              disabled={settingDefaultCardId === method.id}
+                              className="text-muted-foreground hover:text-foreground"
+                            >
+                              {settingDefaultCardId === method.id ? (
+                                <span className="animate-spin mr-1">⋯</span>
+                              ) : null}
+                              Set as Default
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteCardClick(method.id, method.last4)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Billing History */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Billing History</CardTitle>
+                <CardDescription>
+                  Recent transactions and charges
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-0">
+                {isLoadingHistory ? (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Loading history...
+                  </div>
+                ) : billingHistory.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Receipt className="w-8 h-8 mx-auto mb-4 text-muted-foreground" />
+                    <p className="text-muted-foreground">No billing history yet</p>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full">
+                      <thead className="bg-muted/50 border-b border-border">
+                        <tr>
+                          <th className="text-left py-3 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Description
+                          </th>
+                          <th className="text-left py-3 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Type
+                          </th>
+                          <th className="text-left py-3 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Amount
+                          </th>
+                          <th className="text-left py-3 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Status
+                          </th>
+                          <th className="text-left py-3 px-6 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                            Date
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-border">
+                        {billingHistory.map((record) => (
+                          <tr key={record.id} className="hover:bg-muted/30 transition-colors">
+                            <td className="py-4 px-6">
+                              <p className="text-sm font-medium text-foreground">
+                                {record.description}
+                              </p>
+                            </td>
+                            <td className="py-4 px-6">
+                              <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                record.charge_type === 'basic'
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : 'bg-purple-100 text-purple-800'
+                              }`}>
+                                {record.charge_type === 'basic' ? 'Basic' : 'Advanced'}
+                              </span>
+                            </td>
+                            <td className="py-4 px-6">
+                              <span className="text-sm font-medium text-foreground">
+                                {formatCurrency(record.amount_cents)}
+                              </span>
+                            </td>
+                            <td className="py-4 px-6">
+                              <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                                record.status === 'succeeded'
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : record.status === 'pending'
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}>
+                                {record.status === 'succeeded' && <CheckCircle className="w-3 h-3" />}
+                                {record.status === 'failed' && <AlertCircle className="w-3 h-3" />}
+                                {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+                              </span>
+                            </td>
+                            <td className="py-4 px-6">
+                              <span className="text-sm text-muted-foreground">
+                                {formatDateTime(record.created_at)}
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Pricing Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Pricing</CardTitle>
+                <CardDescription>
+                  Current pricing for proposal processing
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="p-4 border border-border rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                        <Receipt className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">Basic Proposal</p>
+                        <p className="text-2xl font-bold text-primary">$5.00</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Document processing with SOC matching and wage data lookup
+                    </p>
+                  </div>
+                  <div className="p-4 border border-border rounded-lg">
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                        <Receipt className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium text-foreground">Advanced Analysis</p>
+                        <p className="text-2xl font-bold text-primary">$10.00</p>
+                      </div>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      Deep competitive analysis and pricing recommendations
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
-        </div>
-      </Dialog>
+        )}
+      </div>
 
       {/* Delete Team Member Confirmation Dialog */}
       <ConfirmDialog
@@ -1235,7 +1075,7 @@ export default function OrganizationPage() {
               isLoading={isSending}
               disabled={!inviteEmail.trim()}
             >
-              <UserPlus className="w-4 h-4 mr-2" />
+              <Mail className="w-4 h-4 mr-2" />
               Send Invitation
             </Button>
           </>
@@ -1266,7 +1106,7 @@ export default function OrganizationPage() {
                   name="role"
                   value="user"
                   checked={inviteRole === 'user'}
-                  onChange={(e) => setInviteRole('user')}
+                  onChange={() => setInviteRole('user')}
                   className="mr-3"
                 />
                 <div className="flex-1">
@@ -1286,7 +1126,7 @@ export default function OrganizationPage() {
                   name="role"
                   value="admin"
                   checked={inviteRole === 'admin'}
-                  onChange={(e) => setInviteRole('admin')}
+                  onChange={() => setInviteRole('admin')}
                   className="mr-3"
                 />
                 <div className="flex-1">
@@ -1314,6 +1154,18 @@ export default function OrganizationPage() {
         confirmText="Revoke"
         confirmVariant="danger"
         isLoading={isRevoking}
+      />
+
+      {/* Delete Card Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deleteCardConfirmOpen}
+        onClose={() => setDeleteCardConfirmOpen(false)}
+        onConfirm={handleDeleteCardConfirm}
+        title="Remove Payment Method?"
+        message={`Are you sure you want to remove the card ending in ${cardToDelete?.last4}? You'll need to add a new payment method to continue creating proposals.`}
+        confirmText="Remove"
+        confirmVariant="danger"
+        isLoading={isDeletingCard}
       />
     </DashboardLayout>
   );

@@ -4,8 +4,10 @@ import { ReactNode, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useProposalsStore } from '@/lib/stores/proposalsStore';
+import { useBillingStore } from '@/lib/stores/billingStore';
 import TopNavBar from './TopNavBar';
 import ProposalsSidebar from './ProposalsSidebar';
+import { AddPaymentPrompt, PaymentRequiredModal } from '@/components/billing';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -15,6 +17,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const { user, isInitializing } = useAuthStore();
   const { fetchProposals } = useProposalsStore();
+  const { fetchBillingStatus } = useBillingStore();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Redirect to login if not authenticated (wait for initialization first)
@@ -28,6 +31,14 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   useEffect(() => {
     if (user) {
       fetchProposals();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.organization_id]);
+
+  // Fetch billing status on mount (shows payment prompt for admins)
+  useEffect(() => {
+    if (user) {
+      fetchBillingStatus();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.organization_id]);
@@ -84,6 +95,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           {children}
         </div>
       </main>
+
+      {/* Billing Modals */}
+      <AddPaymentPrompt />
+      <PaymentRequiredModal />
     </div>
   );
 }

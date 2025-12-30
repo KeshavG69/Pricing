@@ -136,9 +136,8 @@ export const PositionsGrid = () => {
     const oh = (dlRate + fringe) * rates.oh;
     const ga = (dlRate + fringe + oh) * rates.ga;
     const fee = (dlRate + fringe + oh + ga) * rates.fee;
-    // FBLR excludes fee - fee is calculated separately in Fee Section
-    // This matches government cost proposal format (Intprepix)
-    const fblr = dlRate + fringe + oh + ga;
+    // FBLR includes fee for UI display
+    const fblr = dlRate + fringe + oh + ga + fee;
 
     return { dlRate, fringe, oh, ga, fee, fblr, isGSA: false };
   };
