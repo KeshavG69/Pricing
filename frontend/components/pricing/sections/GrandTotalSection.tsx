@@ -61,9 +61,9 @@ export const GrandTotalSection = ({
     return { primeTotal, subTotal, passthroughTotal, feeTotal, travelTotal, odcTotal };
   }, [primeLaborByYear, subLaborByYear, passthroughByYear, feeByYear, travelByYear, odcByYear]);
 
-  // Create breakdown rows (per Excel: FBLR is DL+Fringe+OH+G&A, Fee is separate)
+  // Create breakdown rows - Prime Labor is base (DL+Fringe+OH+G&A), Fee shown separately
   const rows = useMemo<GrandTotalRow[]>(() => [
-    { id: 'prime', label: 'Prime Labor (FBLR)', type: 'prime' },
+    { id: 'prime', label: 'Prime Labor (Base)', type: 'prime' },
     { id: 'sub', label: 'Subcontractor Labor', type: 'sub' },
     { id: 'passthrough', label: 'Passthrough (S&MH + G&A)', type: 'passthrough' },
     { id: 'fee', label: 'Fee (Profit)', type: 'fee' },

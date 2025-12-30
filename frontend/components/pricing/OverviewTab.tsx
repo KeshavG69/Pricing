@@ -79,6 +79,7 @@ export default function OverviewTab() {
     let fringeTotal = 0;
     let ohTotal = 0;
     let gaTotal = 0;
+    let primeFeeTotal = 0;
     let primeLaborTotal = 0;
 
     positions.forEach((pos) => {
@@ -123,8 +124,11 @@ export default function OverviewTab() {
           const ga = (dlRate + fringe + oh) * rates.ga;
           const gaAmount = ga * hours;
 
-          // FBLR = DL + Fringe + OH + G&A (WITHOUT Fee, per Excel formulas)
-          const fblr = dlRate + fringe + oh + ga;
+          const fee = (dlRate + fringe + oh + ga) * rates.fee;
+          const feeAmount = fee * hours;
+
+          // FBLR includes fee for UI display
+          const fblr = dlRate + fringe + oh + ga + fee;
           const totalAmount = fblr * hours;
 
           directLaborTotal += dlAmount;
@@ -132,6 +136,7 @@ export default function OverviewTab() {
           ohTotal += ohAmount;
           gaTotal += gaAmount;
           primeLaborTotal += totalAmount;
+          primeFeeTotal += feeAmount;
         }
       });
     });
@@ -150,11 +155,10 @@ export default function OverviewTab() {
     // Passthrough costs (S&MH + G&A on sub labor)
     const passthroughTotal = subcontractorTotal * ((rates.smh || 0) + (rates.ga_passthrough || 0));
 
-    // Fee calculation (separate from FBLR per Excel formulas)
-    // Fee is applied to Prime Labor total (DL+Fringe+OH+G&A) and Sub Labor total
-    const primeFee = primeLaborTotal * rates.fee;
+    // Fee calculation - primeFeeTotal already accumulated from positions loop
+    // Sub fee is calculated separately
     const subFee = subcontractorTotal * (rates.sub_fee || 0);
-    const feeTotal = primeFee + subFee;
+    const feeTotal = primeFeeTotal + subFee;
 
     // Travel costs (separate from ODCs) - Apply G&A rate
     let travelTotal = 0;
