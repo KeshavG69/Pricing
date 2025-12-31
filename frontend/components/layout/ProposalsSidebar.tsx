@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
-import { Plus, LogOut, Settings, ChevronRight, X, MoreVertical, Pencil, Trash2, Share2 } from 'lucide-react';
+import { Plus, LogOut, Settings, ChevronRight, X, MoreVertical, Pencil, Trash2, Share2, XCircle, CheckCircle, RotateCcw } from 'lucide-react';
 import { useProposalsStore } from '@/lib/stores/proposalsStore';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { proposalsApi } from '@/lib/api/proposals';
@@ -22,12 +22,23 @@ interface ProposalsSidebarProps {
   onMobileClose: () => void;
 }
 
-const getStatusColor = (status: string) => {
+const getStatusColor = (status: string, businessStatus?: string) => {
+  // Business status colors for completed proposals
+  if (status === 'completed' && businessStatus) {
+    switch (businessStatus) {
+      case 'active':
+        return 'bg-blue-100 text-blue-700 border-blue-200';
+      case 'no-bid':
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+      case 'submitted':
+        return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+    }
+  }
+
+  // Technical status colors
   switch (status) {
-    case 'completed':
-      return 'bg-emerald-100 text-emerald-700 border-emerald-200';
     case 'processing':
-      return 'bg-blue-100 text-blue-700 border-blue-200';
+      return 'bg-amber-100 text-amber-700 border-amber-200';
     case 'error':
       return 'bg-red-100 text-red-700 border-red-200';
     default:
@@ -35,16 +46,19 @@ const getStatusColor = (status: string) => {
   }
 };
 
-const getStatusLabel = (status: string) => {
+const getStatusLabel = (status: string, businessStatus?: string) => {
+  if (status === 'completed' && businessStatus) {
+    switch (businessStatus) {
+      case 'active': return 'Active';
+      case 'no-bid': return 'No-Bid';
+      case 'submitted': return 'Submitted';
+    }
+  }
+
   switch (status) {
-    case 'completed':
-      return 'Completed';
-    case 'processing':
-      return 'Processing';
-    case 'error':
-      return 'Error';
-    default:
-      return 'Draft';
+    case 'processing': return 'Processing';
+    case 'error': return 'Error';
+    default: return 'Draft';
   }
 };
 
@@ -174,6 +188,26 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
     }
   };
 
+  // Handle business status change
+  const handleChangeStatus = async (
+    proposalId: string,
+    newStatus: 'active' | 'no-bid' | 'submitted'
+  ) => {
+    setOpenMenuId(null);
+
+    try {
+      await proposalsApi.updateBusinessStatus(proposalId, newStatus);
+      await fetchProposals();
+
+      const label = newStatus === 'no-bid' ? 'No-Bid' :
+                    newStatus === 'submitted' ? 'Submitted' : 'Active';
+      toast.success(`Proposal marked as ${label}`);
+    } catch (error) {
+      console.error('Failed to update status:', error);
+      toast.error('Failed to update proposal status');
+    }
+  };
+
   if (!user) return null;
 
   // Sort proposals by date (most recent first)
@@ -256,10 +290,11 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
                         <div className="flex items-center justify-between gap-2">
                           <span
                             className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium border ${getStatusColor(
-                              proposal.status
+                              proposal.status,
+                              proposal.business_status
                             )}`}
                           >
-                            {getStatusLabel(proposal.status)}
+                            {getStatusLabel(proposal.status, proposal.business_status)}
                           </span>
                           <span className="text-[10px] text-muted-foreground">
                             {formatDistanceToNow(new Date(proposal.createdAt), { addSuffix: true })}
@@ -286,6 +321,40 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
                             <Share2 className="w-4 h-4 mr-2" />
                             Share
                           </button>
+                        )}
+                        {/* Status change actions - only for completed proposals */}
+                        {proposal.status === 'completed' && (
+                          <>
+                            <div className="border-t border-border my-1" />
+                            {proposal.business_status === 'active' && (
+                              <>
+                                <button
+                                  onClick={() => handleChangeStatus(proposal.id, 'no-bid')}
+                                  className="w-full flex items-center px-3 py-2 text-sm hover:bg-muted"
+                                >
+                                  <XCircle className="w-4 h-4 mr-2" />
+                                  Mark as No-Bid
+                                </button>
+                                <button
+                                  onClick={() => handleChangeStatus(proposal.id, 'submitted')}
+                                  className="w-full flex items-center px-3 py-2 text-sm hover:bg-muted"
+                                >
+                                  <CheckCircle className="w-4 h-4 mr-2" />
+                                  Mark as Submitted
+                                </button>
+                              </>
+                            )}
+                            {(proposal.business_status === 'no-bid' ||
+                              proposal.business_status === 'submitted') && (
+                              <button
+                                onClick={() => handleChangeStatus(proposal.id, 'active')}
+                                className="w-full flex items-center px-3 py-2 text-sm hover:bg-muted"
+                              >
+                                <RotateCcw className="w-4 h-4 mr-2" />
+                                Revert to Active
+                              </button>
+                            )}
+                          </>
                         )}
                         <button
                           onClick={() => handleOpenDelete(proposal.id, proposal.name)}

@@ -349,6 +349,74 @@ async def delete_rate_preset(
     return {"message": "Rate preset deleted successfully", "preset_id": preset_id}
 
 
+
+@router.post("/me/rate-presets/{preset_id}/apply-as-default")
+async def apply_preset_as_default(
+    preset_id: str,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Apply a rate preset as the organization's default rates (admin only).
+
+    Copies the preset's rates to the default_rates field.
+
+    Args:
+        preset_id: Preset ID to apply
+
+    Returns:
+        Success message with updated default rates
+    """
+    org_crud = get_organization_crud()
+    org = org_crud.get_by_id(current_user["organization_id"])
+
+    if not org:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organization not found"
+        )
+
+    settings = org.get("settings", {})
+    rate_presets = settings.get("rate_presets", [])
+
+    # Find the preset
+    preset = None
+    for p in rate_presets:
+        if p["id"] == preset_id:
+            preset = p
+            break
+
+    if not preset:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Rate preset not found"
+        )
+
+    # Copy preset values to default_rates
+    settings["default_rates"] = {
+        "fringe": preset.get("fringe", 0),
+        "oh": preset.get("oh", 0),
+        "ga": preset.get("ga", 0),
+        "fee": preset.get("fee", 0),
+        "smh": preset.get("smh", 0),
+        "sub_fee": preset.get("sub_fee", 0),
+        "ga_passthrough": preset.get("ga_passthrough", 0),
+        "ga_adder": preset.get("ga_adder", 0),
+    }
+
+    # Also update default escalation rate if preset has it
+    if preset.get("escalation_rate") is not None:
+        settings["default_escalation_rate"] = preset.get("escalation_rate")
+
+    # Update organization
+    org_crud.update_settings(current_user["organization_id"], settings)
+
+    return {
+        "message": f"Preset '{preset['name']}' applied as default rates",
+        "default_rates": settings["default_rates"],
+        "default_escalation_rate": settings.get("default_escalation_rate")
+    }
+
+
 @router.delete("/members/{user_id}")
 async def remove_organization_member(
     user_id: str,

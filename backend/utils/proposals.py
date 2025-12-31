@@ -43,6 +43,14 @@ class ProposalCRUD:
             self.collection.create_index([("organization_id", 1), ("created_at", -1)])
             self.collection.create_index("shared_with")
 
+            # Business status indexes
+            self.collection.create_index("business_status")
+            self.collection.create_index([
+                ("organization_id", 1),
+                ("business_status", 1),
+                ("created_at", -1)
+            ])
+
         except Exception:
             # Silently ignore index creation errors (indexes may already exist)
             pass
@@ -201,6 +209,35 @@ class ProposalCRUD:
             {"_id": ObjectId(proposal_id), "user_id": user_id},
             projection
         )
+
+    def can_change_business_status(self, proposal_id: str) -> tuple[bool, str]:
+        """
+        Check if a proposal's business status can be changed.
+
+        Args:
+            proposal_id: Proposal's MongoDB ObjectId (as string)
+
+        Returns:
+            Tuple of (can_change: bool, reason: str)
+        """
+        try:
+            proposal = self.collection.find_one(
+                {"_id": ObjectId(proposal_id)},
+                {"status": 1}
+            )
+
+            if not proposal:
+                return False, "Proposal not found"
+
+            status = proposal.get("status")
+            if status == "processing":
+                return False, "Cannot change status while processing"
+            if status == "error":
+                return False, "Proposal has errors"
+
+            return True, ""
+        except Exception:
+            return False, "Invalid proposal ID"
 
     def update_proposal(
         self,
