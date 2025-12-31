@@ -11,8 +11,8 @@ Production-ready implementation with:
 Environment Variables Required:
     STRIPE_SECRET_KEY: Stripe secret key (sk_test_xxx or sk_live_xxx)
     STRIPE_WEBHOOK_SECRET: Webhook signing secret (whsec_xxx)
-    BASIC_PROPOSAL_PRICE_CENTS: Price for basic proposal (default: 500 = $5.00)
-    ADVANCED_ANALYSIS_PRICE_CENTS: Price for advanced analysis (default: 1000 = $10.00)
+    BASIC_PROPOSAL_PRICE_CENTS: Price for basic proposal (default: 10000 = $100.00)
+    ADVANCED_ANALYSIS_PRICE_CENTS: Price for advanced analysis (default: 25000 = $250.00)
 
 Test Cards (only work with sk_test_xxx):
     4242424242424242 - Success
@@ -82,8 +82,8 @@ class StripeService:
 
         # Configurable pricing (in cents)
         self.prices = {
-            ChargeType.BASIC: int(os.getenv("BASIC_PROPOSAL_PRICE_CENTS", 500)),
-            ChargeType.ADVANCED: int(os.getenv("ADVANCED_ANALYSIS_PRICE_CENTS", 1000)),
+            ChargeType.BASIC: int(os.getenv("BASIC_PROPOSAL_PRICE_CENTS", 10000)),
+            ChargeType.ADVANCED: int(os.getenv("ADVANCED_ANALYSIS_PRICE_CENTS", 25000)),
         }
 
     @property

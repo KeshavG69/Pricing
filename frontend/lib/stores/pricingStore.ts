@@ -644,7 +644,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
     },
     ratesReferenceExpanded: false,
     advancedModeVersion: 0,
-    activeTab: 'files',
+    activeTab: 'overview',
 
     loadProposal: async (proposalId, existingProposal) => {
       try {
@@ -1767,7 +1767,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         },
         ratesReferenceExpanded: false,
         advancedModeVersion: 0,
-        activeTab: 'files',
+        activeTab: 'overview',
       });
     },
   };
