@@ -40,6 +40,35 @@ from auth.database import get_mongodb_client
 
 router = APIRouter(prefix="/proposals", tags=["proposals"])
 
+# Document preview cache (in-memory with 7-day TTL)
+import time
+
+class DocumentCache:
+    """Simple in-memory cache for document previews with 7-day TTL."""
+
+    def __init__(self):
+        self._cache = {}  # {idrive_key: (content, content_type, timestamp)}
+        self._ttl = 7 * 24 * 60 * 60  # 7 days in seconds
+
+    def get(self, key: str):
+        """Get cached document if exists and not expired."""
+        if key in self._cache:
+            content, content_type, timestamp = self._cache[key]
+            # Check if expired (7 days)
+            if time.time() - timestamp < self._ttl:
+                return content, content_type
+            else:
+                # Expired, remove from cache
+                del self._cache[key]
+        return None, None
+
+    def set(self, key: str, content: bytes, content_type: str):
+        """Cache document content with 7-day TTL."""
+        self._cache[key] = (content, content_type, time.time())
+
+# Global document cache instance
+document_cache = DocumentCache()
+
 # Get singleton ProposalCRUD instance
 async def get_crud():
     """Get singleton ProposalCRUD instance (async, thread-safe)."""
@@ -638,6 +667,88 @@ async def get_proposal_stats(
             status_code=500,
             detail=f"Failed to get proposal statistics: {str(e)}"
         )
+
+
+@router.get("/document-proxy")
+async def proxy_document(url: str, filename: str = "document"):
+    """
+    Proxy document content for iframe preview.
+
+    Fetches document from provided URL and streams it back
+    without X-Frame-Options header, enabling iframe embedding.
+
+    Note: This endpoint does not require authentication since iframes
+    cannot send Authorization headers. Access is controlled by the
+    presigned URL which expires after 7 days.
+
+    Args:
+        url: IDrive presigned URL to fetch
+        filename: Original filename for Content-Disposition header
+
+    Returns:
+        StreamingResponse with document content
+    """
+    from fastapi.responses import StreamingResponse
+    import httpx
+
+    # Check cache first (using URL as key)
+    cached_content, cached_type = document_cache.get(url)
+    if cached_content:
+        return StreamingResponse(
+            iter([cached_content]),
+            media_type=cached_type,
+            headers={
+                "Content-Disposition": f'inline; filename="{filename}"',
+                "Cache-Control": "private, max-age=604800",
+                "X-Cache": "HIT"
+            }
+        )
+
+    # Fetch document from IDrive and stream back
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.get(url, follow_redirects=True)
+
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=f"Failed to fetch document: HTTP {response.status_code}"
+                )
+
+            content_type = response.headers.get("content-type", "application/octet-stream")
+
+            # Infer content type from filename if generic
+            if content_type in ["binary/octet-stream", "application/octet-stream"]:
+                ext = filename.lower().split(".")[-1] if "." in filename else ""
+                content_types = {
+                    "pdf": "application/pdf",
+                    "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "xls": "application/vnd.ms-excel",
+                    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    "doc": "application/msword",
+                    "csv": "text/csv",
+                    "txt": "text/plain",
+                    "rtf": "application/rtf"
+                }
+                content_type = content_types.get(ext, content_type)
+
+            # Cache for 7 days
+            document_cache.set(url, response.content, content_type)
+
+            return StreamingResponse(
+                iter([response.content]),
+                media_type=content_type,
+                headers={
+                    "Content-Disposition": f'inline; filename="{filename}"',
+                    "Cache-Control": "private, max-age=604800",
+                    "X-Cache": "MISS"
+                }
+            )
+
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail="Document fetch timed out")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to proxy document: {str(e)}")
 
 
 @router.get("")

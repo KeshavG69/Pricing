@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { FileText, Download, ExternalLink, RefreshCw, File, FileSpreadsheet } from 'lucide-react';
+import { FileText, Download, ExternalLink, RefreshCw, File, FileSpreadsheet, Eye, X } from 'lucide-react';
 import Button from '@/components/ui/Button';
 import { DocumentInfo } from '@/types';
 import { proposalsApi } from '@/lib/api/proposals';
@@ -15,6 +15,7 @@ interface FilesTabProps {
 
 export function FilesTab({ documents, proposalId, onUrlsRefreshed }: FilesTabProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [previewDoc, setPreviewDoc] = useState<{ doc: DocumentInfo; index: number } | null>(null);
   const toast = useToast();
 
   const formatFileSize = (bytes: number) => {
@@ -62,6 +63,14 @@ export function FilesTab({ documents, proposalId, onUrlsRefreshed }: FilesTabPro
     } else {
       toast.error('Download link not available');
     }
+  };
+
+  const handlePreview = (doc: DocumentInfo, index: number) => {
+    if (!doc.idrive_url) {
+      toast.error('Preview not available - no document URL');
+      return;
+    }
+    setPreviewDoc({ doc, index });
   };
 
   const handleRefreshUrls = async () => {
@@ -130,6 +139,15 @@ export function FilesTab({ documents, proposalId, onUrlsRefreshed }: FilesTabPro
               <Button
                 variant="outline"
                 size="sm"
+                onClick={() => handlePreview(doc, index)}
+                disabled={!doc.idrive_url}
+              >
+                <Eye className="w-4 h-4 mr-2" />
+                Preview
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
                 onClick={() => handleDownload(doc)}
                 disabled={!doc.idrive_url}
               >
@@ -151,6 +169,56 @@ export function FilesTab({ documents, proposalId, onUrlsRefreshed }: FilesTabPro
         ))}
       </div>
 
+      {/* Preview Modal */}
+      {previewDoc && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setPreviewDoc(null)}
+        >
+          <div
+            className="bg-background rounded-lg shadow-xl w-[90vw] h-[90vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-4 border-b border-border">
+              <div className="flex items-center gap-3">
+                {getFileIcon(previewDoc.doc.filename)}
+                <div>
+                  <h3 className="font-semibold text-foreground">{previewDoc.doc.filename}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {formatFileSize(previewDoc.doc.file_size)}
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleDownload(previewDoc.doc)}
+                >
+                  <Download className="w-4 h-4 mr-2" />
+                  Download
+                </Button>
+                <button
+                  onClick={() => setPreviewDoc(null)}
+                  className="text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="w-6 h-6" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Content - Iframe */}
+            <div className="flex-1 p-4 overflow-hidden">
+              <iframe
+                src={`${process.env.NEXT_PUBLIC_API_URL}/api/proposals/document-proxy?url=${encodeURIComponent(previewDoc.doc.idrive_url)}&filename=${encodeURIComponent(previewDoc.doc.filename)}`}
+                className="w-full h-full border border-border rounded"
+                title={previewDoc.doc.filename}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -5,6 +5,9 @@ import { IndirectRates, EscalationRates, RatePreset } from '@/types';
 import { useToast } from '@/lib/hooks/useToast';
 import { useOrganizationStore } from '@/lib/stores/organizationStore';
 import Input from '@/components/ui/Input';
+import { Dialog } from '@/components/ui/Dialog';
+import Button from '@/components/ui/Button';
+import { Sparkles, ChevronRight } from 'lucide-react';
 
 interface RatesReferencePanelProps {
   rates: IndirectRates;
@@ -40,6 +43,7 @@ export const RatesReferencePanel = ({
   // Preset selector state
   const [selectedPresetId, setSelectedPresetId] = useState<string>('');
   const [appliedPresetName, setAppliedPresetName] = useState<string>('');
+  const [showPresetModal, setShowPresetModal] = useState(false);
 
   // Get rate presets from organization
   const ratePresets = organization?.settings?.rate_presets || [];
@@ -136,13 +140,8 @@ export const RatesReferencePanel = ({
     return rate === 0 ? '' : toPercentageDisplay(rate).toString();
   };
 
-  const handleApplyPreset = async () => {
-    if (!selectedPresetId) {
-      toast.error('Please select a preset first');
-      return;
-    }
-
-    const preset = ratePresets.find(p => p.id === selectedPresetId);
+  const handleApplyPreset = async (presetId: string) => {
+    const preset = ratePresets.find(p => p.id === presetId);
     if (!preset) {
       toast.error('Preset not found');
       return;
@@ -165,6 +164,7 @@ export const RatesReferencePanel = ({
     toast.success(`Applied preset: ${preset.name}`);
     setAppliedPresetName(preset.name);
     setSelectedPresetId(''); // Reset selector
+    setShowPresetModal(false); // Close modal
   };
 
   return (
@@ -211,30 +211,13 @@ export const RatesReferencePanel = ({
         <div className="px-3 pb-1.5 space-y-1.5">
           {/* Rate Preset Selector */}
           {ratePresets.length > 0 && (
-            <div className="flex items-center gap-1.5 pb-1.5 border-b border-border">
-              <label className="text-[10px] font-medium text-foreground whitespace-nowrap">Preset:</label>
-              <select
-                value={selectedPresetId}
-                onChange={(e) => setSelectedPresetId(e.target.value)}
-                className="flex-1 px-1.5 py-0.5 bg-background border border-input rounded text-[10px] text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-              >
-                <option value="">Select...</option>
-                {ratePresets.map(preset => (
-                  <option key={preset.id} value={preset.id}>
-                    {preset.name}
-                  </option>
-                ))}
-              </select>
+            <div className="pb-1.5 border-b border-border">
               <button
-                onClick={handleApplyPreset}
-                disabled={!selectedPresetId}
-                className={`px-2 py-0.5 text-[10px] font-semibold rounded transition-colors ${
-                  selectedPresetId
-                    ? 'bg-blue-600 hover:bg-blue-700 text-white'
-                    : 'bg-muted text-muted-foreground cursor-not-allowed'
-                }`}
+                onClick={() => setShowPresetModal(true)}
+                className="w-full flex items-center justify-between px-3 py-2 bg-gradient-to-r from-blue-50 to-indigo-50 hover:from-blue-100 hover:to-indigo-100 border border-blue-200 rounded-lg transition-all hover:shadow-md group"
               >
-                Apply
+                <span className="text-xs font-semibold text-blue-900">Apply Rate Preset</span>
+                <ChevronRight className="w-4 h-4 text-blue-600 group-hover:translate-x-1 transition-transform" />
               </button>
             </div>
           )}
@@ -337,6 +320,121 @@ export const RatesReferencePanel = ({
           )}
         </div>
       )}
+
+      {/* Rate Preset Modal */}
+      <Dialog
+        isOpen={showPresetModal}
+        onClose={() => setShowPresetModal(false)}
+        title="Apply Rate Preset"
+        size="lg"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Select a rate preset to quickly apply to your proposal. This will update all indirect rates.
+          </p>
+
+          {ratePresets.length === 0 ? (
+            <div className="text-center py-8 text-muted-foreground">
+              <Sparkles className="w-12 h-12 mx-auto mb-3 opacity-50" />
+              <p className="text-sm">No rate presets available</p>
+              <p className="text-xs mt-1">Create presets in Company Rates settings</p>
+            </div>
+          ) : (
+            <div className="grid gap-3 max-h-[60vh] overflow-y-auto">
+              {ratePresets.map((preset) => {
+                const isCurrentlyApplied = appliedPresetName === preset.name;
+                return (
+                  <div
+                    key={preset.id}
+                    className={`border rounded-lg p-4 transition-all hover:shadow-md ${
+                      isCurrentlyApplied
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-border hover:border-blue-300'
+                    }`}
+                  >
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-semibold text-foreground">{preset.name}</h4>
+                        {isCurrentlyApplied && (
+                          <span className="px-2 py-0.5 text-[10px] font-semibold bg-blue-600 text-white rounded-full">
+                            Current
+                          </span>
+                        )}
+                      </div>
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={() => handleApplyPreset(preset.id)}
+                        className="shadow-sm"
+                      >
+                        Apply
+                      </Button>
+                    </div>
+
+                    {/* Rate details grid */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                      <div className="bg-muted/50 rounded px-2 py-1.5">
+                        <div className="text-muted-foreground mb-0.5">Fringe</div>
+                        <div className="font-mono font-semibold text-foreground">
+                          {toPercentageDisplay(preset.fringe)}%
+                        </div>
+                      </div>
+                      <div className="bg-muted/50 rounded px-2 py-1.5">
+                        <div className="text-muted-foreground mb-0.5">OH</div>
+                        <div className="font-mono font-semibold text-foreground">
+                          {toPercentageDisplay(preset.oh)}%
+                        </div>
+                      </div>
+                      <div className="bg-muted/50 rounded px-2 py-1.5">
+                        <div className="text-muted-foreground mb-0.5">G&A</div>
+                        <div className="font-mono font-semibold text-foreground">
+                          {toPercentageDisplay(preset.ga)}%
+                        </div>
+                      </div>
+                      <div className="bg-muted/50 rounded px-2 py-1.5">
+                        <div className="text-muted-foreground mb-0.5">Fee</div>
+                        <div className="font-mono font-semibold text-foreground">
+                          {toPercentageDisplay(preset.fee)}%
+                        </div>
+                      </div>
+                      <div className="bg-muted/50 rounded px-2 py-1.5">
+                        <div className="text-muted-foreground mb-0.5">S&MH</div>
+                        <div className="font-mono font-semibold text-foreground">
+                          {toPercentageDisplay(preset.smh || 0)}%
+                        </div>
+                      </div>
+                      <div className="bg-muted/50 rounded px-2 py-1.5">
+                        <div className="text-muted-foreground mb-0.5">Sub Fee</div>
+                        <div className="font-mono font-semibold text-foreground">
+                          {toPercentageDisplay(preset.sub_fee || 0)}%
+                        </div>
+                      </div>
+                      <div className="bg-muted/50 rounded px-2 py-1.5">
+                        <div className="text-muted-foreground mb-0.5">G&A Pass</div>
+                        <div className="font-mono font-semibold text-foreground">
+                          {toPercentageDisplay(preset.ga_passthrough || 0)}%
+                        </div>
+                      </div>
+                      <div className="bg-muted/50 rounded px-2 py-1.5">
+                        <div className="text-muted-foreground mb-0.5">Escalation</div>
+                        <div className="font-mono font-semibold text-foreground">
+                          {toPercentageDisplay(preset.escalation_rate || 0)}%
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          <div className="flex justify-end pt-3 border-t border-border">
+            <Button variant="outline" onClick={() => setShowPresetModal(false)}>
+              Cancel
+            </Button>
+          </div>
+        </div>
+      </Dialog>
     </div>
   );
 };
