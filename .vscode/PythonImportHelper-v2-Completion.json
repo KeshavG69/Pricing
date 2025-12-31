@@ -5162,7 +5162,7 @@
         "kind": 6,
         "importPath": "backend.routers.organizations",
         "description": "backend.routers.organizations",
-        "peekOfCode": "class UpdateSettingsRequest(BaseModel):\n    \"\"\"Request body for updating organization settings\"\"\"\n    model_config = {\"extra\": \"ignore\"}\n    name: Optional[str] = None\n    default_rates: Optional[Dict[str, float]] = None\n    default_escalation_rate: Optional[float] = None\n    allow_user_rate_override: Optional[bool] = None\n@router.get(\"/me\")\nasync def get_my_organization(current_user: dict = Depends(get_current_user)):\n    \"\"\"",
+        "peekOfCode": "class UpdateSettingsRequest(BaseModel):\n    \"\"\"Request body for updating organization settings\"\"\"\n    model_config = {\"extra\": \"ignore\"}\n    name: Optional[str] = None\n    website: Optional[str] = None\n    address: Optional[str] = None\n    default_rates: Optional[Dict[str, float]] = None\n    default_escalation_rate: Optional[float] = None\n    allow_user_rate_override: Optional[bool] = None\n@router.get(\"/me\")",
         "detail": "backend.routers.organizations",
         "documentation": {}
     },
