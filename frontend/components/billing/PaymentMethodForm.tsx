@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   useStripe,
   useElements,
@@ -41,6 +41,16 @@ export function PaymentMethodForm({ onSuccess, onCancel }: PaymentMethodFormProp
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Fix: Radix Dialog sets pointer-events: none on body, blocking Stripe iframe interaction
+  // Reset pointer-events when this form mounts inside a dialog
+  useEffect(() => {
+    // Small delay to ensure dialog has set its styles first
+    const timer = setTimeout(() => {
+      document.body.style.pointerEvents = '';
+    }, 0);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +109,7 @@ export function PaymentMethodForm({ onSuccess, onCancel }: PaymentMethodFormProp
           Card Number
         </label>
         <div className="relative">
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none z-10">
             <CreditCard className="w-5 h-5" />
           </div>
           <div className="pl-11 pr-4 py-3 border border-border rounded-lg bg-background focus-within:ring-2 focus-within:ring-primary focus-within:border-primary">
@@ -126,7 +136,7 @@ export function PaymentMethodForm({ onSuccess, onCancel }: PaymentMethodFormProp
             <div className="px-4 py-3 border border-border rounded-lg bg-background focus-within:ring-2 focus-within:ring-primary focus-within:border-primary">
               <CardCvcElement options={cardElementOptions} />
             </div>
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
               <Lock className="w-4 h-4" />
             </div>
           </div>

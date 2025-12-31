@@ -8,6 +8,7 @@ import { useBillingStore } from '@/lib/stores/billingStore';
 import { StripeProvider } from './StripeProvider';
 import { PaymentMethodForm } from './PaymentMethodForm';
 import { CreditCard, ShieldAlert, Settings } from 'lucide-react';
+import { pricing } from '@/lib/config';
 
 /**
  * PaymentRequiredModal - Blocks proposal upload if no payment method.
@@ -87,8 +88,8 @@ export function PaymentRequiredModal() {
           <div className="bg-muted/50 rounded-lg p-4">
             <h4 className="font-medium text-sm text-foreground mb-2">Pricing:</h4>
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Basic proposal: <strong>$5.00</strong></li>
-              <li>• Advanced analysis: <strong>$10.00</strong></li>
+              <li>• Basic proposal: <strong>{pricing.basic}</strong></li>
+              <li>• Advanced analysis: <strong>{pricing.advanced}</strong></li>
             </ul>
           </div>
 

@@ -33,6 +33,8 @@ export interface Organization {
   name: string;
   slug: string;
   owner_id: string;
+  website?: string | null;
+  address?: string | null;
   createdAt: string;
   updatedAt: string;
   status: 'active' | 'suspended';

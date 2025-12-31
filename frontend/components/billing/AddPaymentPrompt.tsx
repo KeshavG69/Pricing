@@ -7,6 +7,7 @@ import { useBillingStore } from '@/lib/stores/billingStore';
 import { StripeProvider } from './StripeProvider';
 import { PaymentMethodForm } from './PaymentMethodForm';
 import { CreditCard, AlertCircle } from 'lucide-react';
+import { pricing } from '@/lib/config';
 
 /**
  * AddPaymentPrompt - Shows for admins who haven't configured payment.
@@ -67,7 +68,7 @@ export function AddPaymentPrompt() {
               </h3>
               <p className="text-sm text-muted-foreground">
                 To create proposals, your organization needs a payment method on file.
-                You&apos;ll be charged <strong>$5</strong> per proposal processed.
+                You&apos;ll be charged <strong>{pricing.basic}</strong> per proposal processed.
               </p>
             </div>
           </div>
@@ -75,8 +76,8 @@ export function AddPaymentPrompt() {
           <div className="bg-muted/50 rounded-lg p-4">
             <h4 className="font-medium text-sm text-foreground mb-2">How billing works:</h4>
             <ul className="text-sm text-muted-foreground space-y-1">
-              <li>• Basic proposal processing: $5.00</li>
-              <li>• Advanced analysis: $10.00 (optional)</li>
+              <li>• Basic proposal processing: {pricing.basic}</li>
+              <li>• Advanced analysis: {pricing.advanced} (optional)</li>
               <li>• Charged automatically after processing</li>
               <li>• All organization members can create proposals</li>
             </ul>
