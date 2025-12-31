@@ -39,9 +39,9 @@ export default function UploadPage() {
     }
   }, [user, fetchBillingStatus]);
 
-  // Show payment required modal if no payment method configured
+  // Show payment modal if no payment method on page load
   useEffect(() => {
-    if (billingStatus && billingStatus.stripe_configured && !billingStatus.has_payment_method) {
+    if (billingStatus?.stripe_configured && !billingStatus?.has_payment_method && !billingStatus?.free_proposal_available) {
       setShowPaymentRequiredModal(true);
     }
   }, [billingStatus, setShowPaymentRequiredModal]);
@@ -80,8 +80,8 @@ export default function UploadPage() {
   };
 
   const handleUpload = async () => {
-    // Check billing status first - block if no payment method
-    if (billingStatus?.stripe_configured && !billingStatus?.has_payment_method) {
+    // Check billing status - block if no payment method AND no free proposal available
+    if (billingStatus?.stripe_configured && !billingStatus?.has_payment_method && !billingStatus?.free_proposal_available) {
       setShowPaymentRequiredModal(true);
       return;
     }

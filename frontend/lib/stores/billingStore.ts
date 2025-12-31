@@ -78,10 +78,8 @@ export const useBillingStore = create<BillingState>((set, get) => ({
       const status = await getBillingStatus();
       set({ status, isLoadingStatus: false });
 
-      // If admin and no payment method, show prompt
-      if (status.is_admin && !status.has_payment_method && status.stripe_configured) {
-        set({ showPaymentPrompt: true });
-      }
+      // Don't automatically show prompt - let user initiate action first
+      // Payment modal will show when user tries to create a proposal
 
       return status;
     } catch (error: any) {

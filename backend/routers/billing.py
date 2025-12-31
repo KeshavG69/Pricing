@@ -213,6 +213,7 @@ async def get_billing_status(current_user: dict = Depends(get_current_user)):
     """Check if org has billing configured."""
     stripe_service = get_stripe_service()
     org_crud = get_organization_crud()
+    proposal_crud = get_proposal_crud()
     org = org_crud.get_by_id(current_user["organization_id"])
 
     if not org:
@@ -222,11 +223,17 @@ async def get_billing_status(current_user: dict = Depends(get_current_user)):
         org.get("stripe_customer_id") and org.get("default_payment_method_id")
     )
 
+    # Check if org qualifies for free first proposal
+    proposal_count = proposal_crud.get_org_proposal_count(current_user["organization_id"])
+    free_proposal_available = proposal_count == 0
+
     return {
         "has_payment_method": has_payment_method,
-        "can_create_proposals": has_payment_method,
+        "can_create_proposals": has_payment_method or free_proposal_available,
         "is_admin": current_user.get("role") == "admin",
-        "stripe_configured": stripe_service.is_configured
+        "stripe_configured": stripe_service.is_configured,
+        "free_proposal_available": free_proposal_available,
+        "proposal_count": proposal_count
     }
 
 
@@ -251,18 +258,16 @@ async def charge_for_proposal(data: ChargeRequest, current_user: dict = Depends(
 
     charge_type = ChargeType(data.charge_type)
 
-    # Parallel fetch: org + proposal + billing check (all independent)
-    org, proposal, already_charged = await asyncio.gather(
+    # Parallel fetch: org + proposal + billing check + proposal count (all independent)
+    org, proposal, already_charged, proposal_count = await asyncio.gather(
         asyncio.to_thread(org_crud.get_by_id, current_user["organization_id"]),
         asyncio.to_thread(proposal_crud.get_by_id, data.proposal_id),
-        asyncio.to_thread(billing_crud.is_proposal_charged, data.proposal_id, charge_type.value)
+        asyncio.to_thread(billing_crud.is_proposal_charged, data.proposal_id, charge_type.value),
+        asyncio.to_thread(proposal_crud.get_org_proposal_count, current_user["organization_id"])
     )
 
     if not org:
         raise HTTPException(404, "Organization not found")
-
-    if not org.get("stripe_customer_id") or not org.get("default_payment_method_id"):
-        raise HTTPException(402, "No payment method configured. Admin must add a card.")
 
     if not proposal:
         raise HTTPException(404, "Proposal not found")
@@ -270,14 +275,50 @@ async def charge_for_proposal(data: ChargeRequest, current_user: dict = Depends(
     if str(proposal.get("organization_id")) != str(org["_id"]):
         raise HTTPException(403, "Proposal does not belong to your organization")
 
+    # Check if this is the org's first proposal (free)
+    is_first_proposal = proposal_count == 1 and charge_type == ChargeType.BASIC
+
+    # Only require payment method if not first proposal
+    if not is_first_proposal:
+        if not org.get("stripe_customer_id") or not org.get("default_payment_method_id"):
+            raise HTTPException(402, "No payment method configured. Admin must add a card.")
+
     # Check if already charged (idempotent) - use pre-fetched value
     if already_charged:
         existing = billing_crud.get_proposal_billing_status(data.proposal_id, charge_type.value)
         return {"success": True, "billing_id": existing["id"] if existing else None, "already_charged": True}
 
+    proposal_name = proposal.get("name", "Untitled")
+
+    # Handle free first proposal
+    if is_first_proposal:
+        billing_id = billing_crud.create_billing_record(
+            organization_id=str(org["_id"]),
+            proposal_id=data.proposal_id,
+            charge_type=charge_type.value,
+            amount_cents=0,
+            description=f"PriceIQ {charge_type.value.title()} (Free First Proposal): {proposal_name[:50]}",
+            triggered_by_user_id=str(current_user["_id"]),
+            status="succeeded"
+        )
+
+        # Update proposal billing status
+        now = datetime.utcnow()
+        await asyncio.to_thread(
+            proposal_crud.collection.update_one,
+            {"_id": ObjectId(data.proposal_id)},
+            {"$set": {"billing_status": "paid", "updated_at": now}}
+        )
+
+        return {
+            "success": True,
+            "billing_id": billing_id,
+            "free_proposal": True,
+            "amount_cents": 0
+        }
+
     # Get price and create billing record
     amount_cents = stripe_service.get_price(charge_type)
-    proposal_name = proposal.get("name", "Untitled")
 
     billing_id = billing_crud.create_billing_record(
         organization_id=str(org["_id"]),

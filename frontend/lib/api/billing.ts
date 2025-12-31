@@ -10,6 +10,8 @@ export interface BillingStatus {
   can_create_proposals: boolean;
   is_admin: boolean;
   stripe_configured: boolean;
+  free_proposal_available: boolean;
+  proposal_count: number;
 }
 
 export interface PaymentMethod {
@@ -127,6 +129,7 @@ export async function chargeForProposal(
   payment_intent_id?: string;
   amount_cents?: number;
   already_charged?: boolean;
+  free_proposal?: boolean;
 }> {
   const response = await apiClient.post('/billing/charge', {
     proposal_id: proposalId,

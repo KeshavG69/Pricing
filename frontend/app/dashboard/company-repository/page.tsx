@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useCompanyRepositoryStore } from '@/lib/stores/companyRepositoryStore';
 import { useOrganizationStore } from '@/lib/stores/organizationStore';
+import { cacheManager } from '@/lib/cache';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Card, { CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
@@ -78,6 +79,12 @@ export default function CompanyRepositoryPage() {
 
   // Text modal state (for viewing full description/experience)
   const [textModal, setTextModal] = useState<{ title: string; content: string } | null>(null);
+
+  // Delete confirmation dialog state
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [contractToDelete, setContractToDelete] = useState<GSAContract | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
   const [editPresetName, setEditPresetName] = useState('');
   const [editPresetRates, setEditPresetRates] = useState({
     fringe: 0,
@@ -213,14 +220,24 @@ export default function CompanyRepositoryPage() {
     }
   };
 
-  const handleDelete = async (contract: GSAContract) => {
-    if (!confirm(`Delete "${contract.name}"? This action cannot be undone.`)) return;
+  const handleDeleteClick = (contract: GSAContract) => {
+    setContractToDelete(contract);
+    setShowDeleteDialog(true);
+  };
 
+  const handleConfirmDelete = async () => {
+    if (!contractToDelete) return;
+
+    setIsDeleting(true);
     try {
-      await deleteContract(contract.file_id);
+      await deleteContract(contractToDelete.file_id);
       toast.success('Contract deleted');
+      setShowDeleteDialog(false);
+      setContractToDelete(null);
     } catch (e) {
       toast.error('Failed to delete contract');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -269,7 +286,12 @@ export default function CompanyRepositoryPage() {
       toast.success(`Preset "${presetName}" created successfully!`);
       setShowCreatePresetDialog(false);
       setPresetName('');
-      await fetchOrganization(); // Refresh to get updated presets
+
+      // Invalidate cache and force refresh to get updated presets
+      if (user?.organization_id) {
+        cacheManager.invalidate(`org:${user.organization_id}`);
+      }
+      await fetchOrganization(true);
     } catch {
       toast.error('Failed to create preset');
     } finally {
@@ -308,7 +330,12 @@ export default function CompanyRepositoryPage() {
         ga_passthrough: 0,
         escalation_rate: 0,
       });
-      await fetchOrganization(); // Refresh to get updated presets
+
+      // Invalidate cache and force refresh to get updated presets
+      if (user?.organization_id) {
+        cacheManager.invalidate(`org:${user.organization_id}`);
+      }
+      await fetchOrganization(true);
     } catch {
       toast.error('Failed to create preset');
     } finally {
@@ -322,7 +349,12 @@ export default function CompanyRepositoryPage() {
     try {
       await apiClient.delete(`/organizations/me/rate-presets/${presetId}`);
       toast.success(`Preset "${presetName}" deleted successfully`);
-      await fetchOrganization(); // Refresh to get updated presets
+
+      // Invalidate cache and force refresh to get updated presets
+      if (user?.organization_id) {
+        cacheManager.invalidate(`org:${user.organization_id}`);
+      }
+      await fetchOrganization(true);
     } catch {
       toast.error('Failed to delete preset');
     }
@@ -376,7 +408,12 @@ export default function CompanyRepositoryPage() {
         ga_passthrough: 0,
         escalation_rate: 0,
       });
-      await fetchOrganization(); // Refresh to get updated presets
+
+      // Invalidate cache and force refresh to get updated presets
+      if (user?.organization_id) {
+        cacheManager.invalidate(`org:${user.organization_id}`);
+      }
+      await fetchOrganization(true);
     } catch {
       toast.error('Failed to update preset');
     } finally {
@@ -633,7 +670,7 @@ export default function CompanyRepositoryPage() {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDelete(contract)}
+                              onClick={() => handleDeleteClick(contract)}
                               className="text-red-600 hover:text-red-700 hover:bg-red-50"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -1318,6 +1355,57 @@ export default function CompanyRepositoryPage() {
       >
         <div className="whitespace-pre-wrap text-sm text-foreground">
           {textModal?.content}
+        </div>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog
+        isOpen={showDeleteDialog}
+        onClose={() => {
+          setShowDeleteDialog(false);
+          setContractToDelete(null);
+        }}
+        title="Delete Contract"
+        footer={
+          <>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowDeleteDialog(false);
+                setContractToDelete(null);
+              }}
+              disabled={isDeleting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleConfirmDelete}
+              isLoading={isDeleting}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Delete
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Are you sure you want to delete this contract? This action cannot be undone.
+          </p>
+          {contractToDelete && (
+            <div className="p-3 bg-muted rounded-lg">
+              <p className="font-medium text-foreground">{contractToDelete.name}</p>
+              {contractToDelete.contract_number && (
+                <p className="text-sm text-muted-foreground mt-1">
+                  Contract: {contractToDelete.contract_number}
+                </p>
+              )}
+              <p className="text-sm text-muted-foreground">
+                {contractToDelete.labor_categories_count} labor categories
+              </p>
+            </div>
+          )}
         </div>
       </Dialog>
     </DashboardLayout>
