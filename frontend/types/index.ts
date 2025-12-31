@@ -162,6 +162,7 @@ export interface Proposal {
   prime_contractor_name?: string;
   dcaa_contact?: string;
   status: 'processing' | 'completed' | 'error' | 'draft';
+  business_status?: 'active' | 'no-bid' | 'submitted';  // NEW: business workflow status
   excel_downloaded?: boolean;
   visibility?: 'private' | 'shared';
   shared_with?: string[];
@@ -188,6 +189,7 @@ export interface ProposalUpdate {
   solicitation_number?: string;
   prime_contractor_name?: string;
   status?: string;
+  total_cost?: number;
   rates?: IndirectRates;
   escalation_rates?: EscalationRates;
   spreadsheet_data?: any;
@@ -197,6 +199,25 @@ export interface ProposalStatus {
   status: 'processing' | 'completed' | 'error';
   progress: number;
   message?: string;
+}
+
+export interface BusinessStatusAnalytics {
+  count: number;
+  total_value: number;
+  avg_value: number;
+  avg_age_days: number;
+  contributors_count: number;
+  proposals: Array<{
+    id: string;
+    name: string;
+    solicitation_number?: string;
+    total_cost?: number;
+    business_status?: 'active' | 'no-bid' | 'submitted';  // For tab filtering
+    created_at: string;
+    updated_at: string;
+    user_id: string;
+  }>;
+  has_more: boolean;  // Indicates if more results available via pagination
 }
 
 // Job and wage types

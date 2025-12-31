@@ -178,8 +178,8 @@ export default function OverviewTab() {
       });
     });
 
-    // Grand total (per Excel: Prime Labor + Fee + Sub + Passthrough + Travel + ODCs)
-    const grandTotal = primeLaborTotal + feeTotal + subcontractorTotal + passthroughTotal + travelTotal + odcTotal;
+    // Grand total: primeLaborTotal already includes prime fee (via FBLR), so only add subFee
+    const grandTotal = primeLaborTotal + subFee + subcontractorTotal + passthroughTotal + travelTotal + odcTotal;
 
     return {
       directLaborTotal,

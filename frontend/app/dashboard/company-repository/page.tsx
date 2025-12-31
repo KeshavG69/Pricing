@@ -360,6 +360,21 @@ export default function CompanyRepositoryPage() {
     }
   };
 
+  const handleSetAsDefault = async (presetId: string, presetName: string) => {
+    try {
+      await apiClient.post(`/organizations/me/rate-presets/${presetId}/apply-as-default`);
+      toast.success(`"${presetName}" set as default rates`);
+
+      // Invalidate cache and force refresh
+      if (user?.organization_id) {
+        cacheManager.invalidate(`org:${user.organization_id}`);
+      }
+      await fetchOrganization(true);
+    } catch {
+      toast.error('Failed to set default rates');
+    }
+  };
+
   const handleEditPreset = (preset: any) => {
     setEditingPreset({ id: preset.id, name: preset.name });
     setEditPresetName(preset.name);
@@ -787,9 +802,32 @@ export default function CompanyRepositoryPage() {
                     className="border border-border rounded-lg p-4 hover:bg-muted/30 transition-colors"
                   >
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="font-medium text-foreground">{preset.name}</h4>
+                      <div className="flex items-center gap-2">
+                        <h4 className="font-medium text-foreground">{preset.name}</h4>
+                        {organization?.settings?.default_rates &&
+                          preset.fringe === organization.settings.default_rates.fringe &&
+                          preset.oh === organization.settings.default_rates.oh &&
+                          preset.ga === organization.settings.default_rates.ga &&
+                          preset.fee === organization.settings.default_rates.fee && (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">
+                            Default
+                          </span>
+                        )}
+                      </div>
                       {userIsAdmin && (
                         <div className="flex gap-3">
+                          {!(organization?.settings?.default_rates &&
+                            preset.fringe === organization.settings.default_rates.fringe &&
+                            preset.oh === organization.settings.default_rates.oh &&
+                            preset.ga === organization.settings.default_rates.ga &&
+                            preset.fee === organization.settings.default_rates.fee) && (
+                            <button
+                              onClick={() => handleSetAsDefault(preset.id, preset.name)}
+                              className="text-green-600 hover:text-green-700 text-sm font-medium"
+                            >
+                              Set as Default
+                            </button>
+                          )}
                           <button
                             onClick={() => handleEditPreset(preset)}
                             className="text-primary hover:text-primary/80 text-sm font-medium"
