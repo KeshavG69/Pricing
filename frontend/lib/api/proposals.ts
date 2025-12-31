@@ -5,13 +5,28 @@ import {
   ProposalStatus,
   UploadResponse,
   DocumentInfo,
+  BusinessStatusAnalytics,
 } from '@/types';
 
 export interface ProposalStats {
   total: number;
-  completed: number;
+  active: {
+    count: number;
+    value: number;
+  };
+  analyzed: {           // SUPERSET: Active + No-Bid combined
+    count: number;
+    value: number;
+  };
+  no_bid: {
+    count: number;
+    value: number;
+  };
+  submitted: {
+    count: number;
+    value: number;
+  };
   processing: number;
-  submitted: number;
   error: number;
 }
 
@@ -202,6 +217,32 @@ export const proposalsApi = {
   // Refresh document URLs (pre-signed URLs expire after 7 days)
   refreshDocumentUrls: async (proposalId: string): Promise<Proposal> => {
     const response = await apiClient.post<Proposal>(`/proposals/${proposalId}/refresh-urls`);
+    return response.data;
+  },
+
+  // Update proposal business status (active, no-bid, submitted)
+  updateBusinessStatus: async (
+    proposalId: string,
+    businessStatus: 'active' | 'no-bid' | 'submitted'
+  ): Promise<Proposal> => {
+    const response = await apiClient.patch(
+      `/proposals/${proposalId}/business-status`,
+      null,
+      { params: { business_status: businessStatus } }
+    );
+    return response.data;
+  },
+
+  // Get detailed analytics for specific business status
+  getAnalytics: async (
+    businessStatus: 'active' | 'no-bid' | 'submitted' | 'analyzed',
+    skip: number = 0,
+    limit: number = 100
+  ): Promise<BusinessStatusAnalytics> => {
+    const response = await apiClient.get(
+      `/proposals/analytics/${businessStatus}`,
+      { params: { skip, limit } }
+    );
     return response.data;
   },
 };

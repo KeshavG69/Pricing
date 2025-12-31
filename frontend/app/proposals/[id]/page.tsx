@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useProposalsStore } from '@/lib/stores/proposalsStore';
@@ -67,15 +67,19 @@ export default function ProposalPage() {
   const [advancedModalOpen, setAdvancedModalOpen] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const urlsRefreshedRef = useRef(false);
 
   useEffect(() => {
     if (proposalId) {
       fetchProposal(proposalId).then(() => {
-        // Refresh document URLs once after loading proposal
-        proposalsApi.refreshDocumentUrls(proposalId).then((updatedProposal) => {
-          // Update store directly with fresh URLs (no re-fetch needed)
-          setCurrentProposal(updatedProposal);
-        }).catch(err => console.error('Failed to refresh document URLs:', err));
+        // Refresh document URLs once after loading proposal (prevent duplicate calls)
+        if (!urlsRefreshedRef.current) {
+          urlsRefreshedRef.current = true;
+          proposalsApi.refreshDocumentUrls(proposalId).then((updatedProposal) => {
+            // Update store directly with fresh URLs (no re-fetch needed)
+            setCurrentProposal(updatedProposal);
+          }).catch(err => console.error('Failed to refresh document URLs:', err));
+        }
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

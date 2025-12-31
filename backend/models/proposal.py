@@ -52,6 +52,14 @@ class ProposalUpdate(BaseModel):
         None,
         description="Proposal status (draft, processing, completed, error)"
     )
+    business_status: Optional[str] = Field(
+        None,
+        description="Business workflow status (active, no-bid, submitted)"
+    )
+    total_cost: Optional[float] = Field(
+        None,
+        description="Total cost calculated from all positions"
+    )
     rates: Optional[Dict[str, float]] = Field(
         None,
         description="Indirect rates (fringe, oh, ga, fee, smh, sub_fee, ga_passthrough, ga_adder)"

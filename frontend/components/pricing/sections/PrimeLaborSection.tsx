@@ -1057,18 +1057,7 @@ export const PrimeLaborSection = ({
     return cols;
   }, [totalYears, expandedPositions, manualOverrides, onToggleExpand, onDeletePosition, handleContextMenu, rates, escalationRates]);
 
-  if (positions.length === 0) {
-    return (
-      <div className="flex items-center justify-center h-32 bg-muted/30 rounded-lg border border-border">
-        <div className="text-center">
-          <p className="text-muted-foreground mb-2">No positions yet</p>
-          <p className="text-sm text-muted-foreground">Add positions to get started</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Get store methods (positions for the modal)
+  // Get store methods (positions for the modal) - must be before any early returns
   const { addPosition, positions: basicPositions } = usePricingStore();
 
   // Handle add position - open modal
@@ -1080,6 +1069,17 @@ export const PrimeLaborSection = ({
   const handleModalAddPosition = useCallback((positionData: any) => {
     addPosition(positionData);
   }, [addPosition]);
+
+  if (positions.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-32 bg-muted/30 rounded-lg border border-border">
+        <div className="text-center">
+          <p className="text-muted-foreground mb-2">No positions yet</p>
+          <p className="text-sm text-muted-foreground">Add positions to get started</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-4">

@@ -1,0 +1,1823 @@
+{
+  "contract_number": "47QTCA20D003R",
+  "company_name": "Nexagen Networks, Inc.",
+  "contract_start_date": "2019-12-30",
+  "contract_end_date": "2029-12-29",
+  "needs_date": false,
+  "total_categories": 129,
+  "year_keys": [
+    "9",
+    "8",
+    "6",
+    "10",
+    "7"
+  ],
+  "labor_categories": [
+    {
+      "lcat_id": "lcat_0",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Administrative Specialist - Senior",
+      "description": "Supervises performance of administrative functions. Reviews and edits correspondence\u2028prior to release, submission for signature, or other disposition. Conducts periodic review of files to ensure proper filing of correspondence. Controls use of office facilities. Plans and organizes office operations to include publications and forms administration and office administrative procedures. Writes office SOP, job descriptions, and directives, Determines requirements for office equipment, supplies, and space. May plan layout of office. Creates requisitions, receives, inventories, and may sign hand receipts for office equipment.\u2028\u2028Coordinates administrative activities with other organizational elements and staff sections. Serves as custodian of classified documents. Signs receipts for, logs, inventories, files, and secures classified documents. Prepares documents for destruction or other disposition. Ensures proper accountability of documents based upon degree of classification. Supervises administrative functions and performs duties at preceding level of skill at division, comparable, or higher level headquarters. Will provide technical training and instruction to subordinates and supported units.",
+      "experience": "High School and 5 years of experience. 4 Years of Experience can be substituted for Degree.",
+      "rates_by_year": {
+        "6": 36.49,
+        "7": 37.19,
+        "8": 37.89,
+        "9": 38.61,
+        "10": 39.35
+      }
+    },
+    {
+      "lcat_id": "lcat_1",
+      "sin": "541330ENG",
+      "title": "Administrative Specialist Intermediate",
+      "description": "Individual must demonstrate decision making skills, high level of computer skills, word processing and data entry functions. Individual must be proficient with Excel spreadsheets and formula creation for complex mathematical models.",
+      "experience": "Bachelors degree and 2 years of experience.",
+      "rates_by_year": {
+        "6": 49.85,
+        "7": 50.8,
+        "8": 51.77,
+        "9": 52.76,
+        "10": 53.75
+      }
+    },
+    {
+      "lcat_id": "lcat_2",
+      "sin": "541330ENG",
+      "title": "Budget Analyst Entry",
+      "description": "Assists in the performance of a variety of budgetary functions implementing the organization's budgetary program, policies, and procedures.",
+      "experience": "Bachelors degree and 1 year of experience.",
+      "rates_by_year": {
+        "6": 44.28,
+        "7": 45.13,
+        "8": 45.98,
+        "9": 46.86,
+        "10": 47.75
+      }
+    },
+    {
+      "lcat_id": "lcat_3",
+      "sin": "541330ENG",
+      "title": "Budget Analyst Intermediate",
+      "description": "Performs a variety of budgetary functions implementing the organization's budgetary program, policies, and procedures. Monitors and tracks billings and payments for assigned program. Verifies that billings and payments occur on a timely basis. Takes appropriate follow-up action.",
+      "experience": "Bachelors degree and 2 years of experience.",
+      "rates_by_year": {
+        "6": 70.23,
+        "7": 71.56,
+        "8": 72.92,
+        "9": 74.31,
+        "10": 75.72
+      }
+    },
+    {
+      "lcat_id": "lcat_4",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "CAD Technician",
+      "description": "The CAD technician must have experience in the creation of CAD drawings and documents using CAD technology under the guidance of primary authors and senior staff.",
+      "experience": "Associates degree. 4 Years of Experience can be substituted for Degree.",
+      "rates_by_year": {
+        "6": 36.49,
+        "7": 37.19,
+        "8": 37.89,
+        "9": 38.61,
+        "10": 39.35
+      }
+    },
+    {
+      "lcat_id": "lcat_5",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Computer Engineer - Senior",
+      "description": "Provides professional engineering that requires primarily the application of knowledge to: (1) fundamentals and principles of professional engineering; (2) computer hardware, systems software, and computer system architecture and integration; and (3) mathematics, including calculus, probability, statistics, discrete structures, and modern algebra. Which pertains primarily to the research, design,\u2028development, testing, evaluation, and maintenance of computer hardware and software systems in an integrated\u2028manner.",
+      "experience": "Masters degree and 10 years of experience.",
+      "rates_by_year": {
+        "6": 120.68,
+        "7": 122.97,
+        "8": 125.31,
+        "9": 127.69,
+        "10": 130.12
+      }
+    },
+    {
+      "lcat_id": "lcat_6",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Configuration Analyst",
+      "description": "Work closely with program management, systems engineers, quality managers and representatives, draftsmen and design/manufacturing engineers in a concurrent engineering environment; Develop and administer Configuration Management Plans; Prepare for and conduct major configuration audits.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 51.01,
+        "7": 51.98,
+        "8": 52.97,
+        "9": 53.97,
+        "10": 55.0
+      }
+    },
+    {
+      "lcat_id": "lcat_7",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Configuration Management Technician",
+      "description": "Inputs configuration data into configuration management tools under the guidance\u2028of senior staff. Must be able to maintain records using available software and hardware tools. Administers\u2028Configuration Management Plans and assists in preparation for configuration audits.",
+      "experience": "Associates degree.",
+      "rates_by_year": {
+        "6": 47.3,
+        "7": 48.2,
+        "8": 49.12,
+        "9": 50.06,
+        "10": 51.0
+      }
+    },
+    {
+      "lcat_id": "lcat_8",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Cyber Security Analyst Expert",
+      "description": "Experience in heterogeneous computer networking technology and work in protocol and/or interface standards specification is preferred. Analyzes and resolves INFOSEC technical problems.\u2028\u2028Configures test beds and conducts testing, records and analyzes results, and provides recommendations for improvements for the products/systems under test. Areas of focus include Guard, Firewall, Secure Network Server, format security solutions, Smart Cards, and emerging technologies and future trends. Supports the integration of INFOSEC solutions and technologies into networks with particular attention to protocols, interfaces, and system design. General experience includes system engineering; electrical design, software engineering; program design and implementation; configuration management; or maintenance. Must have knowledge of TCP/IP, information security/authorization profiles, or security administration of Unix or NT network/systems. Must have knowledge of Government security policies and familiarity with security\u2010related technologies and auditing tools. Must be capable of providing security engineering analysis on a variety of information systems. Must be capable of developing security accreditation/certification documentation, and creating and maintaining security policy and procedures. Must be capable of performing security certification engineering analysis, vulnerability assessments, and risk assessments. Must be capable of designing and configuring security tools. Must be capable of developing test procedures, establishing test environments, executing security certification test/demonstrations/evaluations, documenting results, and developing reports, conclusions, and recommendations. Must be capable of conceptualizing and implementing security systems and architectures.",
+      "experience": "PhD and 15 years of experience.",
+      "rates_by_year": {
+        "6": 158.52,
+        "7": 161.53,
+        "8": 164.6,
+        "9": 167.73,
+        "10": 170.91
+      }
+    },
+    {
+      "lcat_id": "lcat_9",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Data Management Technician",
+      "description": "Under general direction, coordinates and conducts research and assessment activities that provide data to support and enhance decision\u2010making, strategic planning, outcomes assessment, accreditation, and external reporting.",
+      "experience": "Associates degree.",
+      "rates_by_year": {
+        "6": 41.63,
+        "7": 42.43,
+        "8": 43.23,
+        "9": 44.06,
+        "10": 44.9
+      }
+    },
+    {
+      "lcat_id": "lcat_10",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Data Manager",
+      "description": "Coordinates and conducts research and assessment activities that provide data to support and enhance decision\u2010making, strategic planning, outcomes assessment, accreditation, and external reporting.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 65.36,
+        "7": 66.6,
+        "8": 67.87,
+        "9": 69.16,
+        "10": 70.47
+      }
+    },
+    {
+      "lcat_id": "lcat_11",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Database Administration Technician",
+      "description": "Works with DBA and client to determine information storage needs, and uses database software to develop a strategy most suited to those needs. Responsible for staying on top of new trends and software. Keeps data secure by managing access, privileges and information migration. May also be responsible for installing and configuring database management software, translating database design and diagnosing database performance issues under supervision.",
+      "experience": "Associates degree.",
+      "rates_by_year": {
+        "6": 39.35,
+        "7": 40.09,
+        "8": 40.86,
+        "9": 41.63,
+        "10": 42.43
+      }
+    },
+    {
+      "lcat_id": "lcat_12",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Database Administrator",
+      "description": "Builds, maintains, administers and supports client databases. Uses specialized software to store and organize data, manages access, privileges and information migration. Also responsible for installing and configuring database management software, translating database design and diagnosing database performance issues and debugging of computer programs.",
+      "experience": "Bachelors degree.",
+      "rates_by_year": {
+        "6": 53.78,
+        "7": 54.8,
+        "8": 55.84,
+        "9": 56.9,
+        "10": 57.97
+      }
+    },
+    {
+      "lcat_id": "lcat_13",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Database Administrator - Senior",
+      "description": "Responsible for the support, monitoring, performance, and documentation of any and all client databases. Develops and proceeds with multi team projects, collaborates with DBAs and provides technical leadership. Monitors applications, prepares consistent reports of the state of the databases that support the applications, and provides suggestions for performance improvement of all database operations.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 97.28,
+        "7": 99.12,
+        "8": 101.01,
+        "9": 102.92,
+        "10": 104.88
+      }
+    },
+    {
+      "lcat_id": "lcat_14",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Database Analyst",
+      "description": "Reviews, evaluates, designs, implements and maintains databases. Identifies data sources, constructs data decomposition diagrams, provides data flow diagrams and documents the process. Writes codes for database access, modifications, and constructions including stored procedures. Has knowledge of commonly\u2010used concepts, practices, and procedures within a particular field. Relies on instructions and pre\u2010 established guidelines to perform the functions of the job. Typically reports to a project leader or manager.",
+      "experience": "Bachelors degree.",
+      "rates_by_year": {
+        "6": 41.63,
+        "7": 42.43,
+        "8": 43.23,
+        "9": 44.06,
+        "10": 44.9
+      }
+    },
+    {
+      "lcat_id": "lcat_15",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Database Architect",
+      "description": "A Database Architect is able to clearly identify goals for data management. Can effectively translate user needs to database design. Has experience in creating database management processes and detailed documentation.",
+      "experience": "Bachelors degree and 2 years of experience.",
+      "rates_by_year": {
+        "6": 78.26,
+        "7": 79.75,
+        "8": 81.26,
+        "9": 82.8,
+        "10": 84.37
+      }
+    },
+    {
+      "lcat_id": "lcat_16",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Database Architect - Senior",
+      "description": "A Senior Database Architect Must have experience in assessing various alternative products, tools, and approaches for data management. Is able to clearly define risks and benefits of various approaches for a given need. Is able to create overarching strategies for design.",
+      "experience": "Masters degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 108.02,
+        "7": 110.08,
+        "8": 112.17,
+        "9": 114.31,
+        "10": 116.48
+      }
+    },
+    {
+      "lcat_id": "lcat_17",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Developer",
+      "description": "A Developer must have experience in analyzing customer needs and developing overall concept and design objectives. The developer must be able to create software in a variety of programming and for a variety of IT software applications. Must have experience in debugging and correcting errors in computer programs.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 84.52,
+        "7": 86.13,
+        "8": 87.76,
+        "9": 89.42,
+        "10": 91.12
+      }
+    },
+    {
+      "lcat_id": "lcat_18",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Developer - Junior",
+      "description": "supervision of senior software development managers. Must have experience in both windows and web development environments. Must be able to write software documentation.",
+      "experience": "Bachelors degree.",
+      "rates_by_year": {
+        "6": 54.5,
+        "7": 55.54,
+        "8": 56.59,
+        "9": 57.67,
+        "10": 58.77
+      }
+    },
+    {
+      "lcat_id": "lcat_19",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Developer - Senior",
+      "description": "A Senior Developer must be able to create logical and functional software code in a variety of languages. Must have experience in understanding and articulating the benefits and risks associated with different coding languages in different functional environments. Must have experience reacting to problems and correcting the program as necessary.",
+      "experience": "Bachelors degree and 8 years of experience.",
+      "rates_by_year": {
+        "6": 96.12,
+        "7": 97.94,
+        "8": 99.81,
+        "9": 101.7,
+        "10": 103.64
+      }
+    },
+    {
+      "lcat_id": "lcat_20",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Electronics Engineer - Junior",
+      "description": "Provides professional engineering that requires primarily application of knowledge to: (1) the physical and engineering sciences and mathematics; (2) electronic phenomena; and (3) the principles, techniques, and practices of electronics engineering. This pertains primarily to electronic circuits, circuit elements, equipment, systems, and associated phenomena concerned with electromagnetic or acoustical wave energy or electrical information for purposes such as communication, computation, sensing, control, measurement, and navigation.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 79.99,
+        "7": 81.51,
+        "8": 83.06,
+        "9": 84.64,
+        "10": 86.26
+      }
+    },
+    {
+      "lcat_id": "lcat_21",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Electronics Engineer - Senior",
+      "description": "Provides professional engineering that requires primarily application of knowledge to: (1) the physical and engineering sciences and mathematics; (2) electronic phenomena; and (3) the principles, techniques, and practices of electronics engineering. This pertains primarily to electronic circuits, circuit elements, equipment, systems, and associated phenomena concerned with electromagnetic or acoustical wave energy or electrical information for purposes such as communication, computation, sensing, control, measurement, and navigation.",
+      "experience": "Bachelors degree and 10 years of experience.",
+      "rates_by_year": {
+        "6": 110.65,
+        "7": 112.76,
+        "8": 114.9,
+        "9": 117.09,
+        "10": 119.31
+      }
+    },
+    {
+      "lcat_id": "lcat_22",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Engineer",
+      "description": "The Engineer has considerable experience in providing highly specialized applications and operational analysis. Experience in planning and supporting network and computing infrastructure. Has knowledge in networking technologies. Is cognizant ,knowledgeable and contributes to all phases of software development with emphasis on the planning, analysis, modeling, simulation, testing, integration, documentation and presentation phases.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 95.54,
+        "7": 97.35,
+        "8": 99.2,
+        "9": 101.09,
+        "10": 103.01
+      }
+    },
+    {
+      "lcat_id": "lcat_23",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Engineering Analyst",
+      "description": "An Engineering Analyst has experience analyzing specific aspects of a given system and/or product's architecture, design, coding, and performance. Is able to identify issues and/or risks and document specific sources.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 50.87,
+        "7": 51.84,
+        "8": 52.83,
+        "9": 53.83,
+        "10": 54.86
+      }
+    },
+    {
+      "lcat_id": "lcat_24",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Engineering Analyst - Senior",
+      "description": "The Senior Engineering Analyst has experience in coordinating with various individuals such as program and project leaders to analyze system and/or product architecture, design, coding, and performance. Is able to identify strategies for addressing requirements, risks, and issues. Is able to conduct trade\u2010off analysis of requirements against fiscal, schedule, and performance issues. Also has demonstrable skills in resolve problems as related to their field.",
+      "experience": "Bachelors degree and 10 years of experience.",
+      "rates_by_year": {
+        "6": 117.72,
+        "7": 119.96,
+        "8": 122.24,
+        "9": 124.56,
+        "10": 126.93
+      }
+    },
+    {
+      "lcat_id": "lcat_25",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Engineering Architecture Analyst - Senior",
+      "description": "A Senior Engineering Architecture Analyst has extensive experience coordinating with program and project leaders to analyze IT system and network architecture. Has the knowledge and skill to\u2028clearly identify strategies for addressing requirements, risks, and issues. Can effectively conduct trade\u2010off analysis of requirements against fiscal, schedule, and performance issues. Is able to quickly resolve issues and create architectural vision.",
+      "experience": "Masters degree and 10 years of experience.",
+      "rates_by_year": {
+        "6": 166.68,
+        "7": 169.84,
+        "8": 173.07,
+        "9": 176.35,
+        "10": 179.71
+      }
+    },
+    {
+      "lcat_id": "lcat_26",
+      "sin": "541330ENG",
+      "title": "Executive Assistant Journeyman",
+      "description": "Provide personal administrative support and assistance to executive staff. This includes: preparing and editing correspondence, communications, presentations, and other documentations; filing and retrieving documents and reference materials; managing and maintaining executives' schedules, appointments and travel arrangements; liaise with internal staff at all levels.",
+      "experience": "Bachelors degree and 3 years of experience.",
+      "rates_by_year": {
+        "6": 72.1,
+        "7": 73.47,
+        "8": 74.87,
+        "9": 76.29,
+        "10": 77.74
+      }
+    },
+    {
+      "lcat_id": "lcat_27",
+      "sin": "541330ENG",
+      "title": "Field Service Representative",
+      "description": "Responsible for the consulting, engineering, and operations activities performed at a particular customer location. Identifies changes in telecommunications, computer, and systems technology and interprets their meaning to senior management and the customer. Provides technical assistance to facilitate planning, design, installation, modification, and operation of an information systems capability. Prepares long and short range plans for application selection, systems development, systems maintenance, production activities\u2028and for necessary support resources. Also responsible for applications systems analysis and programming\u2028activities for a group or section and for feasibility studies, time and cost estimates, and the establishment and implementation of new and revised applications systems and programs. Assists in projecting software and hardware requirements. Assigns personnel to various projects and directs their activities; reviews and evaluates their work and prepares performance reports. Confers with and advises subordinates on\u2028 \u2028administrative policies and procedures, technical problems, priorities and methods. Consults with personnel in other information systems sections to coordinate activities. Prepares activity and progress reports regarding the activities at a particular customer site. Confers and consults with customer personnel regarding performance and scheduling issues.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 85.6,
+        "7": 87.22,
+        "8": 88.88,
+        "9": 90.57,
+        "10": 92.29
+      }
+    },
+    {
+      "lcat_id": "lcat_28",
+      "sin": "541330ENG",
+      "title": "Information Technology Technician Level 5",
+      "description": "Performs analytical, technical, and administrative work in the planning, design, and installation of new and existing personal computer systems, workstations, or servers; diagnoses and resolves problems in response to customer reported incidents; confers with end users to determine types of hardware and software required; installs new hardware and software and maintains existing components; trains end users in the use of equipment and software; performs general maintenance tasks; troubleshoots and resolves issues with computer systems and peripheral equipment located throughout the organization; prepares progress reports for all work performed; evaluates products for compatibility, expandability, and ease of use and support; recommends to management the support or nonsupport of evaluated products Extended mastery of job knowledge to the principles, theories and practices of related specialties; expand knowledge of best practices and incorporate into all work assignments and procedures; evaluate and enhance current practices and efforts to ensure optimal support of diversity; oversee leadership of teams and projects that involve extensive cooperation and coordination. May prepare written and/or verbal presentations or proposals on highly complex issues and deliver to a broad variety of audiences; identify and implement innovative solutions to important, highly complex strategic and/or operational issues which may involve unusual circumstances and incomplete or conflicting data; ensure safe practices and environmental consciousness are exhibited in decisions; work independently on highly complex or strategic assignments; may direct and supervise lower\u2010level staff.",
+      "experience": "Bachelors degree and 12 years of experience.",
+      "rates_by_year": {
+        "6": 116.74,
+        "7": 118.95,
+        "8": 121.21,
+        "9": 123.52,
+        "10": 125.86
+      }
+    },
+    {
+      "lcat_id": "lcat_29",
+      "sin": "541330ENG",
+      "title": "IT Specialist Journeyman",
+      "description": "Provides advanced technical knowledge and analysis of highly specialized applications and operational environment, high-level functional systems analysis, design, integration, documentation, training, and implementation advice on complex problems that require doctorate level knowledge of the subject matter for effective implementation.",
+      "experience": "Bachelors degree and 3 years of experience.",
+      "rates_by_year": {
+        "6": 84.78,
+        "7": 86.39,
+        "8": 88.03,
+        "9": 89.7,
+        "10": 91.41
+      }
+    },
+    {
+      "lcat_id": "lcat_30",
+      "sin": "541330ENG",
+      "title": "Logistician",
+      "description": "Provides technical/logistics expertise in solving logistical and technical problems related to production start\u2010up and on\u2010going production. Influence design of developmental systems to ensure the final product is safe, suitable, sustainable and affordable. Develops sustainment strategies that align with the program office Life Cycle Support Strategy. Conducts Core Logistic Analysis (CLA), Source of Repair Analysis (SORA) , and level of Repair Analysis (LORA). Performs army cataloging activities to acquire nomenclatures, national stock numbers, and Line Item Numbers (LIN).",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 87.55,
+        "7": 89.21,
+        "8": 90.9,
+        "9": 92.62,
+        "10": 94.39
+      }
+    },
+    {
+      "lcat_id": "lcat_31",
+      "sin": "541330ENG",
+      "title": "Logistician Manager",
+      "description": "Provides technical/logistics expertise and guidance in solving logistical and technical problems related to production start\u2010up and on\u2010going production. Interfaces with Program Managers and engineers to understand production schedule requirements and technical aspects of products. Supervises technician production staff and will provide direction and guidance to lower tier technical staff to ensure production schedules and quality of deliverables are maintained. Evaluate production requirements and develop acceptable technical solutions that optimize production processes to ensure manufacturing efforts are within budget and are delivered on time. Daily interface with multiple task Program Managers, engineers, purchasing personnel, Quality Assurance personnel, and clients.",
+      "experience": "Bachelors degree and 10 years of experience.",
+      "rates_by_year": {
+        "6": 127.0,
+        "7": 129.41,
+        "8": 131.87,
+        "9": 134.38,
+        "10": 136.93
+      }
+    },
+    {
+      "lcat_id": "lcat_32",
+      "sin": "541330ENG",
+      "title": "Logistics Engineer",
+      "description": "Translates user requirements and design data into hardware, software, and performance criteria and life cycle support methodologies. Performs system, equipment and software functional and performance analyses, and defines engineering support functions. Ensures quality throughout the project life cycle. Establishes systems and equipment logistic support requirements, including standards for acceptance, functional adequacy, adherence to the design criteria and to applicable maintenance standards. Conducts reviews of program documentation to assure compliance with standards and requirements and adherence to program goals.",
+      "experience": "Bachelors degree and 10 years of experience.",
+      "rates_by_year": {
+        "6": 83.53,
+        "7": 85.12,
+        "8": 86.74,
+        "9": 88.39,
+        "10": 90.08
+      }
+    },
+    {
+      "lcat_id": "lcat_33",
+      "sin": "541330ENG",
+      "title": "Logistics Engineer - Junior",
+      "description": "Translates user requirements and design data into hardware, software, and performance criteria and life cycle support methodologies. Performs system, equipment and software functional and performance analyses, and defines engineering support functions. Ensures quality throughout the project life cycle. Establishes systems and equipment logistic support requirements, including standards for acceptance functional adequacy, adherence to the design criteria and to applicable maintenance standards. Conducts reviews of program documentation to assure compliance with standards and requirements and adherence to program goals.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 72.81,
+        "7": 74.19,
+        "8": 75.6,
+        "9": 77.04,
+        "10": 78.5
+      }
+    },
+    {
+      "lcat_id": "lcat_34",
+      "sin": "541330ENG",
+      "title": "Logistics Management Specialist Journeyman",
+      "description": "Responsible for requirements definition, design, development, implementation and maintenance of automated information systems. Advise and consult to management and team on matters of logistics policy and procedures, logistics automation, system architecture, integration and interfaces. Develop criteria, methods, techniques and procedures as it relates to the software development life cycle. Responsible for schedule development, test criteria, functional descriptions, data dictionary, Keep abreast of logistics literature, policy and guidance and assess system impact as a result of changes in policy and regulations. Conducts functional field assistance visits as necessary. Army Acquisition Corps Level 2 certification in logistics, program management or information technology is highly desired OR recognized industry equivalent professional certification.",
+      "experience": "Bachelors degree and 3 years of experience.",
+      "rates_by_year": {
+        "6": 83.01,
+        "7": 84.59,
+        "8": 86.21,
+        "9": 87.85,
+        "10": 89.52
+      }
+    },
+    {
+      "lcat_id": "lcat_35",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Modeling and Simulation Engineer - Junior",
+      "description": "Establishes and satisfies complex system\u2010wide modeling requirements based upon the analysis of user, policy, regulatory, and resource demands. Supports customers at the highest levels in the development and implementation of doctrine and policies. Provides leadership and guidance in the development, design, and application of solutions implemented by more junior staff members. Coordinates with senior representatives within the customer organization to establish and define programs, resources, and risks. Applies expertise to Government and commercial common user systems, as well as to dedicated special purpose systems requiring specialized modeling features and procedures.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 82.68,
+        "7": 84.25,
+        "8": 85.85,
+        "9": 87.49,
+        "10": 89.15
+      }
+    },
+    {
+      "lcat_id": "lcat_36",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Modeling and Simulation Engineering Expert",
+      "description": "A Modeling and Simulation Engineering expert Must have knowledge of multiple modeling and simulation techniques. Has demonstrated experience in Identifying approaches best suited to unique client requirements. Can clearly define risks and benefits to team to support informed decision\u2010making. Has experience in coordinating internally and externally with customers and teams to identify model requirements, simulation goals, and variables to be applied. Has created modeling and simulation constructs for complex multi network models utilizing multiple systems and scenarios. Has overseen multi event complex modeling and simulation events and documented results and analyzed and presented results to end users. Can refine develop models based on test results.",
+      "experience": "Masters degree and 15 years of experience.",
+      "rates_by_year": {
+        "6": 126.86,
+        "7": 129.27,
+        "8": 131.73,
+        "9": 134.23,
+        "10": 136.78
+      }
+    },
+    {
+      "lcat_id": "lcat_37",
+      "sin": "541330ENG",
+      "title": "Network Administration Technician",
+      "description": "A Network Administration Technician has experience conducting routine system administration tasks, logging data in system administration logs, and operating under the supervision of a System Administrator.",
+      "experience": "Associates degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 47.61,
+        "7": 48.51,
+        "8": 49.43,
+        "9": 50.37,
+        "10": 51.32
+      }
+    },
+    {
+      "lcat_id": "lcat_38",
+      "sin": "541330ENG",
+      "title": "Network Administrator - Senior",
+      "description": "A Senior Network Administrator has the skills of the Network Administrator but is able to work with multiple teams f administrators involving multiple diverse networks at both the enterprise and local level. Has the knowledge to create plans to assure effective management, operations, and maintenance of systems and/or networks. Is cognizant of all agency policies regarding computer access and firewall and network protection technologies and creates the plans to implement.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 80.21,
+        "7": 81.73,
+        "8": 83.28,
+        "9": 84.87,
+        "10": 86.48
+      }
+    },
+    {
+      "lcat_id": "lcat_39",
+      "sin": "541330ENG",
+      "title": "Operations Manager",
+      "description": "Manages activities of an organization's non\u2010manufacturing operations department. Assists in evaluating current and proposed systems and procedures. Recommends changes when necessary and assists in implementation of new processes. Familiar with a variety of the field's concepts, practices, and procedures. Relies on extensive experience and judgment to plan and accomplish goals. Performs a variety of tasks. Leads and directs the work of others. A wide degree of creativity and latitude is expected. Typically reports to a senior manager.",
+      "experience": "Bachelors degree and 6 years of experience.",
+      "rates_by_year": {
+        "6": 70.98,
+        "7": 72.33,
+        "8": 73.7,
+        "9": 75.1,
+        "10": 76.53
+      }
+    },
+    {
+      "lcat_id": "lcat_40",
+      "sin": "541330ENG",
+      "title": "Program Administrator Intermediate",
+      "description": "Performs numerous Program Management and Contract Management functions necessary to support administration of the contract. Functions include responsibility for the preparation of Task Execution Plans, budget estimates, travel requests, overtime requests, certificates of service, and contract status reports. Must be experienced in the administration of a purchasing system and related policies. Must be capable of establishing a competitive bidding system and assuring that purchasing from vendors is at the lowest possible cost consistent with quality and delivery requirements. Requires a thorough knowledge of company procedures as well as working knowledge of Federal Acquisition Regulations/Defense Federal Acquisition Regulations (FARs/DFARs), including Cost Accounting Standards.",
+      "experience": "Bachelors degree and 2 years of experience.",
+      "rates_by_year": {
+        "6": 70.23,
+        "7": 71.56,
+        "8": 72.92,
+        "9": 74.31,
+        "10": 75.72
+      }
+    },
+    {
+      "lcat_id": "lcat_41",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Program Analyst - Junior",
+      "description": "A Junior Program Analyst must have knowledge to be able to gather the appropriate data that will be used to plan, analyze and evaluate the effectiveness of operating programs.",
+      "experience": "Bachelors degree.",
+      "rates_by_year": {
+        "6": 47.92,
+        "7": 48.83,
+        "8": 49.75,
+        "9": 50.7,
+        "10": 51.67
+      }
+    },
+    {
+      "lcat_id": "lcat_42",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Program Manager",
+      "description": "A Program Manager must have experience with diverse IT projects both large and small. Must be well versed in full systems development life cycle, enterprise wide network engineering, strategic information planning, business process reengineering, structure and management practices. Must be able to identify and mitigate risks to the program. Must be able to manage to cost, schedule and performance.",
+      "experience": "Masters degree and 15 years of experience.",
+      "rates_by_year": {
+        "6": 116.19,
+        "7": 118.4,
+        "8": 120.64,
+        "9": 122.94,
+        "10": 125.28
+      }
+    },
+    {
+      "lcat_id": "lcat_43",
+      "sin": "541330ENG",
+      "title": "Program Manager Medium",
+      "description": "Must be capable of planning, coordinating, and directing the activities of administrative, program control, and technical personnel involved in providing services in fulfillment of the contract. Must have a thorough understanding and experience in the complete life-cycle of the software in military systems. Must have knowledge and experience with Department of Defense (DOD)/Army plans, policies, standards, and methods aimed at the acquisition and support of software and computer resources for Army systems. Must be capable of managing and controlling schedules and cost to provide on time, within budget, performance of all aspects of the contractual effort. Must be capable of providing direction for operations and ensuring compliance with all management policies, plans, and procedures. Must be capable of providing recommendations for resolution of technical problems. The Program Manager must at all times be a role model to subordinate employees, be a workforce motivator, and be a provider of constructive criticism. Army Acquisition Corps Level 2 certification in logistics, program management or information technology is highly desired OR recognized industry equivalent professional certification.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 131.68,
+        "7": 134.18,
+        "8": 136.73,
+        "9": 139.32,
+        "10": 141.97
+      }
+    },
+    {
+      "lcat_id": "lcat_44",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Project Analyst",
+      "description": "The Project Analyst must have experience in creating, applying and maintaining tools to track program, project, or task performance data, including cost, schedule, and performance data. Must have experience in the creation of routine and ad hoc reports. Must be able to provide oral and written discussion of analytical findings using narrative and graphic forms.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 78.28,
+        "7": 79.77,
+        "8": 81.28,
+        "9": 82.82,
+        "10": 84.39
+      }
+    },
+    {
+      "lcat_id": "lcat_45",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Project Director",
+      "description": "A Project Director must have experience with diverse IT projects both large and small. Must be well versed in full systems development life cycle, enterprise wide network engineering, strategic information planning, business process reengineering, structure and management practices. Must be able to identify and mitigate risks. Is the overall main contact for all project task orders; much be able to manage and speak to multiple and diverse IT projects.",
+      "experience": "Masters degree and 15 years of experience.",
+      "rates_by_year": {
+        "6": 197.13,
+        "7": 200.88,
+        "8": 204.7,
+        "9": 208.58,
+        "10": 212.54
+      }
+    },
+    {
+      "lcat_id": "lcat_46",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Project Manager",
+      "description": "A Project Manager must have experience managing Information Technology related projects. Must be well versed in life cycle and project management methodologies. Must have experience in tracking costs, schedule and performance progress. Must be able to identify and mitigate risks.",
+      "experience": "Bachelors degree and 10 years of experience.",
+      "rates_by_year": {
+        "6": 190.63,
+        "7": 194.25,
+        "8": 197.93,
+        "9": 201.69,
+        "10": 205.52
+      }
+    },
+    {
+      "lcat_id": "lcat_47",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Quality Assurance Engineer",
+      "description": "Experience in providing development of project Quality Assurance Plans and the implementation of procedures that conforms to the requirements of the contract. Provides an independent assessment of how the project's development process is being implemented relative to the defined process and recommends methods to optimize the organization's process.",
+      "experience": "Bachelors degree and 10 years of experience.",
+      "rates_by_year": {
+        "6": 96.69,
+        "7": 98.52,
+        "8": 100.39,
+        "9": 102.3,
+        "10": 104.24
+      }
+    },
+    {
+      "lcat_id": "lcat_48",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Quality Assurance Technician",
+      "description": "Knowledge should include a basic understanding of and familiarity with Military and DoD quality standards. Specific experience may include: Destructive and/or nondestructive testing; Collection of quality metrics; Execution of quality plans; Prepare and execute quality related tests, collect data , repair appropriate reports; Assist in the conduct of subcontractor Source Inspections.",
+      "experience": "Associates degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 49.31,
+        "7": 50.25,
+        "8": 51.2,
+        "9": 52.18,
+        "10": 53.17
+      }
+    },
+    {
+      "lcat_id": "lcat_49",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "RF Engineer",
+      "description": "Provides technical knowledge and skill in using specialized applications in Radio Frequency. Experienced in the operational environment and using high\u2010level functional systems analysis, design, integration, documentation, and implementation methodologies on complex problems that require in\u2010depth knowledge of the subject matter for effective implementation. Participates as needed in all phases of engineering design and software development with emphasis on the planning, analysis, testing, integration, documentation and presentation phases. Applies principles, methods and knowledge of the functional area of expertise to specific order requirements and in the process uses advanced mathematical principles and methods to arrive at practical, innovative solutions. Designs and prepares technical reports, data bases, studies, and related documentation, makes charts and graphs to record results. Prepares and delivers presentations and briefings as required by the order. Has knowledge of security requirements for specialized information transfer applications and is skilled in preparing technical reports and providing other services required by the order.",
+      "experience": "Bachelors degree and 10 years of experience.",
+      "rates_by_year": {
+        "6": 112.4,
+        "7": 114.54,
+        "8": 116.72,
+        "9": 118.93,
+        "10": 121.19
+      }
+    },
+    {
+      "lcat_id": "lcat_50",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "RF Engineer - Senior",
+      "description": "Provides technical knowledge and skill in using specialized applications in Radio Frequency. Experienced in the operational environment and using high\u2010level functional systems analysis, design, integration, documentation, and implementation methodologies on complex problems that require in\u2010depth knowledge of the subject matter for effective implementation. Participates as needed in all phases of engineering design and software development with emphasis on the planning, analysis, testing, integration, documentation and presentation phases. Applies principles, methods and knowledge of the functional area of expertise to specific order requirements and in the process uses advanced mathematical principles and methods to arrive at practical, innovative solutions. Designs and prepares technical reports, data bases, studies, and related documentation, makes charts and graphs to record results. Prepares and delivers presentations and briefings as required by the order. Has knowledge of security requirements for specialized information transfer applications and is skilled in preparing technical reports and providing other services required by the order.",
+      "experience": "Bachelors degree and 10 years of experience.",
+      "rates_by_year": {
+        "6": 168.53,
+        "7": 171.74,
+        "8": 175.0,
+        "9": 178.33,
+        "10": 181.71
+      }
+    },
+    {
+      "lcat_id": "lcat_51",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Risk Manager - Senior",
+      "description": "A Senior Risk Manager must have extensive experience in the review of program risk data, create overall view of program risk based on individual discrete risk elements; coordinate with program team to identify new creative and strategic approaches for managing risks. Must have experience in briefing senior staff on risk status using routine, ad hoc, written and oral reports. Must have experience in risk treatment by selecting and implementing measures to control and mitigate risks including activities to avoid risks, transfer risks and finance risks; and be able to monitor and review processes to ensure risk and compliance arrangements are in place. They must also have experience in conducting audits of policy and compliance to standards, including liaison with internal and external auditors.",
+      "experience": "Bachelors degree and 10 years of experience.",
+      "rates_by_year": {
+        "6": 87.24,
+        "7": 88.91,
+        "8": 90.6,
+        "9": 92.32,
+        "10": 94.08
+      }
+    },
+    {
+      "lcat_id": "lcat_52",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Security Analyst",
+      "description": "A Security Analyst has experience in the concepts, terms, processes, policy and implementation of information security. Must have experience and knowledge of the latest security measures at all stages of an information system life cycle. Must have the ability to solve complex problems involving a wide variety of information systems. Must be able to understand and differentiate between critical and non\u2010critical systems and networks.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 61.64,
+        "7": 62.81,
+        "8": 64.0,
+        "9": 65.22,
+        "10": 66.46
+      }
+    },
+    {
+      "lcat_id": "lcat_53",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Security Analyst - Senior",
+      "description": "A Senior Security Analyst has experience in managing teams of security analysts. Is able to effectively leverage vast detailed knowledge and familiarity with security discipline. Has thorough knowledge of security principles, concepts, policy and regulations. is able to identify risks in security systems and work with technical experts to resolve security issues. Possess ability to identify key concepts, factors and risks based on conversations and document these in clear and concise narrative or graphic reports.",
+      "experience": "Masters degree and 10 years of experience.",
+      "rates_by_year": {
+        "6": 83.6,
+        "7": 85.19,
+        "8": 86.81,
+        "9": 88.46,
+        "10": 90.15
+      }
+    },
+    {
+      "lcat_id": "lcat_54",
+      "sin": "541330ENG",
+      "title": "Service Desk Support Specialist Intermediate",
+      "description": "Provides support to end users on a variety of issues. Identifies, researches, and resolves technical problems. Responds to telephone calls, email and personnel requests for technical support. Documents, tracks, and monitors the problem to ensure a timely resolution.",
+      "experience": "Bachelors degree and 2 years of experience.",
+      "rates_by_year": {
+        "6": 67.49,
+        "7": 68.77,
+        "8": 70.08,
+        "9": 71.41,
+        "10": 72.77
+      }
+    },
+    {
+      "lcat_id": "lcat_55",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Software Engineer - Junior",
+      "description": "Troubleshoots and develops technical solutions related to software and setup errors for field engineers, technicians, and customers. Creates workaround procedures when standard procedures have failed and ensures issues are resolved in a timely fashion. Escalates urgent problems requiring more in\u2010 depth knowledge to appropriate internal resources. Familiar with standard concepts, practices, and procedures within a particular field. Relies on limited experience and judgment to plan and accomplish goals. Performs a variety of tasks. Works under general supervision. A certain degree of creativity and latitude is required.",
+      "experience": "Bachelors degree.",
+      "rates_by_year": {
+        "6": 59.76,
+        "7": 60.9,
+        "8": 62.06,
+        "9": 63.23,
+        "10": 64.43
+      }
+    },
+    {
+      "lcat_id": "lcat_56",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Software Engineer - Senior",
+      "description": "A Senior Software Engineer has extensive experience and knowledge to design, code, test, debug and document software in a variety of programming languages. Has the knowledge of the latest programming languages and techniques.. Has extensive experience in creating strategies for developing IT systems and applications. Has experience in evaluating alternative approaches and selecting optimal",
+      "experience": "Bachelors degree and 10 years of experience.",
+      "rates_by_year": {
+        "6": 125.72,
+        "7": 128.11,
+        "8": 130.55,
+        "9": 133.03,
+        "10": 135.56
+      }
+    },
+    {
+      "lcat_id": "lcat_57",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Subject Matter Expert",
+      "description": "Ability to handle task specific questions. Support may include physical testing, analyzing data, and interpreting information. Prepare recommendations and solutions for specific areas in question. Provide leadership and direction to team members working on the same project.",
+      "experience": "Masters degree and 10 years of experience.",
+      "rates_by_year": {
+        "6": 122.11,
+        "7": 124.42,
+        "8": 126.79,
+        "9": 129.2,
+        "10": 131.66
+      }
+    },
+    {
+      "lcat_id": "lcat_58",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "System Administration Technician",
+      "description": "A System Administrator Technician must have experience in conducting routine\u2028system administration tasks and logging data in system admin logs. The System Administration technician must operate under the supervision of the System Administrator. for future system upgrades. The system administration technician must have experience in administering patches and corrective action under the direction of the system administrator. Must have experience in interfacing with customers. Reports to senior SA.",
+      "experience": "High School and 3 years of experience.",
+      "rates_by_year": {
+        "6": 46.72,
+        "7": 47.61,
+        "8": 48.51,
+        "9": 49.43,
+        "10": 50.37
+      }
+    },
+    {
+      "lcat_id": "lcat_59",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "System Administrator - Senior",
+      "description": "A Senior System Administrator has the thorough knowledge to create plans to assure\u2028effective management, operations, and maintenance of systems and/or networks. Manages teams of system admins and is able to prioritize work and identify high risk critical problems and dedicate appropriate resources. Has extensive knowledge of a wide variety of systems and networks to include high volume/high availability systems.",
+      "experience": "Bachelors degree and 10 years of experience.",
+      "rates_by_year": {
+        "6": 89.49,
+        "7": 91.19,
+        "8": 92.93,
+        "9": 94.69,
+        "10": 96.49
+      }
+    },
+    {
+      "lcat_id": "lcat_60",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "System Architect",
+      "description": "A System Architect must have experience and understand the relationship between applications, operating systems, hardware and software. Must have experience in creating a network architecture that takes all factors of a network into consideration such as functional requirements, technical\u2028 \u2028considerations, business processes and end users. Must have experience in creating a wide variety of IT system architectures that are beneficial and can be implemented. Must have experience in total system design including networks.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 98.15,
+        "7": 100.01,
+        "8": 101.91,
+        "9": 103.85,
+        "10": 105.82
+      }
+    },
+    {
+      "lcat_id": "lcat_61",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "System Modeling and Simulation Engineer",
+      "description": "A Systems Maintenance Technician has experience in creating and applying\u2028simulation models that allow manipulation of variables as defined by customer using a variety of modeling and simulation tools. Knowledge of software modeling and device characterization, hard and soft modeling development, parametric testing, and measurement automation. Must have experience in the construction of simulations to customer specifications. Must have thorough knowledge of IT systems and networks.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 93.67,
+        "7": 95.46,
+        "8": 97.27,
+        "9": 99.11,
+        "10": 101.0
+      }
+    },
+    {
+      "lcat_id": "lcat_62",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "System Security Administrator",
+      "description": "A System Security Administrator has experience in managing security programs for\u2028products, tools, or programs. Is able to ensure that records are maintained, security updates are promulgated, and staff are properly briefed.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 76.0,
+        "7": 77.44,
+        "8": 78.91,
+        "9": 80.41,
+        "10": 81.94
+      }
+    },
+    {
+      "lcat_id": "lcat_63",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "System/Network Architect",
+      "description": "A Systems/Network Architect has experience in planning goals for system and/or network operations. Is able to clearly translate user needs to system and/or network design. Can create system and/or network management processes and documentation.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 95.61,
+        "7": 97.42,
+        "8": 99.27,
+        "9": 101.16,
+        "10": 103.08
+      }
+    },
+    {
+      "lcat_id": "lcat_64",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Systems Engineer",
+      "description": "A Systems Engineer provides technical support in system architecture, system design, system integration and technical management. Assists in providing technical input to the systems engineering process. Provides requirements analysis. May prepare and present systems assurance reviews. Identifies requirements and deficiencies in hardware and software products. Advises customer in product selection and use, capacity planning operations and performance management.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 95.8,
+        "7": 97.62,
+        "8": 99.48,
+        "9": 101.37,
+        "10": 103.29
+      }
+    },
+    {
+      "lcat_id": "lcat_65",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Systems Engineer - Junior",
+      "description": "A Junior Systems Engineer provides some technical support in system architecture, system design, system integration and technical management. Assists in providing technical input to the systems engineering process. May assist in developing and implementing installation plans. May assist in preparation and presentation of systems assurance reviews. Identifies requirements and deficiencies in hardware and software products.",
+      "experience": "Bachelors degree.",
+      "rates_by_year": {
+        "6": 63.7,
+        "7": 64.91,
+        "8": 66.14,
+        "9": 67.4,
+        "10": 68.68
+      }
+    },
+    {
+      "lcat_id": "lcat_66",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Systems Engineer - Senior",
+      "description": "A Senior Systems Engineer provides technical support in system architecture, system design, system integration and technical management. Assists in providing technical input to the systems engineering process. Leads teams in developing application and technical plans. Guide customers in the installation and use of strategic products through education and guidance, first\u2010use and tuning assistance problem solving and critical situation resolution.",
+      "experience": "Masters degree and 10 years of experience.",
+      "rates_by_year": {
+        "6": 100.09,
+        "7": 101.99,
+        "8": 103.93,
+        "9": 105.9,
+        "10": 107.92
+      }
+    },
+    {
+      "lcat_id": "lcat_67",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Technical Systems Architect Expert",
+      "description": "An Expert Technical Systems Architect has extensive experience in the design and\u2028development of Client Server and Web Enabled Corporate applications including network topology. Must be\u2028well versed in Object Oriented tools and techniques. Must have thorough knowledge of data modeling skills\u2028using automated tools.",
+      "experience": "Masters degree and 10 years of experience.",
+      "rates_by_year": {
+        "6": 130.11,
+        "7": 132.57,
+        "8": 135.09,
+        "9": 137.66,
+        "10": 140.28
+      }
+    },
+    {
+      "lcat_id": "lcat_68",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Technical Writer",
+      "description": "A Technical Writer must have experience in explaining highly technical data and information in simplistic grade school language for end users of complex IT systems and projects. Must be able to use a variety of word processing, spreadsheet, graphics and scheduling tools. Must have experience in being able to gather and convert data into a written narrative.",
+      "experience": "Associates degree and 3 years of experience.",
+      "rates_by_year": {
+        "6": 36.8,
+        "7": 37.49,
+        "8": 38.21,
+        "9": 38.93,
+        "10": 39.67
+      }
+    },
+    {
+      "lcat_id": "lcat_69",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Telecommunications/ Electronics Technician Level I",
+      "description": "Assists telecommunication engineers in the design and analysis of\u2028telecommunication networks. Creates plans and drawings detailing the layout of routers, circuits, cables,\u2028switches, or other telecommunications equipment. Ensures network connectivity for end\u2010users. May evaluate\u2028existing networks and recommend design changes to improve performance. Has knowledge of commonly\u2010used\u2028concepts, practices, and procedures within a particular field. Relies on instructions and pre\u2010established\u2028guidelines to perform the functions of the job. Works under immediate supervision. Typically reports to a\u2028supervisor or manager.",
+      "experience": "High School.",
+      "rates_by_year": {
+        "6": 37.83,
+        "7": 38.55,
+        "8": 39.28,
+        "9": 40.03,
+        "10": 40.79
+      }
+    },
+    {
+      "lcat_id": "lcat_70",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Test Engineer - Junior",
+      "description": "Interacts with other engineering groups to define, document, analyze, perform, and interpret tests for products, systems, components, or modifications. Identifies functional problems and suggests resolutions. Assists in the definition of internal quality control standards and the maintenance of reliability programs. Analyzes test cases and provides regular progress reports. Has knowledge of commonly\u2010used concepts, practices, and procedures within a particular field. Relies on instructions and pre\u2010established guidelines to perform the functions of the job.",
+      "experience": "Bachelors degree.",
+      "rates_by_year": {
+        "6": 50.89,
+        "7": 51.86,
+        "8": 52.85,
+        "9": 53.85,
+        "10": 54.88
+      }
+    },
+    {
+      "lcat_id": "lcat_71",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Test Manager",
+      "description": "A Test Manager must oversee all test events and be able to manage multiple test events defining and staffing these test events with appropriate resources. Must coordinate with developers and functional end users to create test plans and test scripts. Coordinate with test sites and other team participants to plan test events. Approves test reports. Monitors and updates bug reports as needed including bug report closure. Must\u2028have experience with configuring necessary hardware and operating environments as needed to complete assigned testing. Must have technical expertise on specific products, operating systems and\u2028specialized environments. Must have experience in writing or assisting in the development of test plans and test\u2028procedures. Must manage the defect database under the guidance of senior QA engineers.",
+      "experience": "Bachelors degree and 10 years of experience.",
+      "rates_by_year": {
+        "6": 57.36,
+        "7": 58.45,
+        "8": 59.56,
+        "9": 60.69,
+        "10": 61.83
+      }
+    },
+    {
+      "lcat_id": "lcat_72",
+      "sin": "541330ENG, 541420, 541380, 541715",
+      "title": "Test Technician - Senior",
+      "description": "Performs standard testing processes on a variety of equipment and records and analyzes results. Requires knowledge of industry specific tests and testing equipment. May recommend changes in testing methods or equipment changes. Familiar with standard concepts, practices, and procedures within a particular field. Relies on experience and judgment to plan and accomplish goals. Performs a variety of tasks. A certain degree of creativity and latitude is required.",
+      "experience": "Associates degree and 2 years of experience.",
+      "rates_by_year": {
+        "6": 68.87,
+        "7": 70.18,
+        "8": 71.51,
+        "9": 72.87,
+        "10": 74.25
+      }
+    },
+    {
+      "lcat_id": "lcat_73",
+      "sin": "541330ENG",
+      "title": "Trainer - Senior",
+      "description": "A Senior Trainer must have experience in coordinating multiple training programs, conducting live training, including complex IT technical training and utilizing multiple training techniques and tools with various media with multiple student skill levels and class sizes.",
+      "experience": "Bachelors degree and 10 years of experience. 4 Years of Experience can be substituted for Degree.",
+      "rates_by_year": {
+        "6": 73.29,
+        "7": 74.68,
+        "8": 76.1,
+        "9": 77.55,
+        "10": 79.02
+      }
+    },
+    {
+      "lcat_id": "lcat_74",
+      "sin": "541330ENG",
+      "title": "Web Designer",
+      "description": "A Web Designer must have experience in the design of web pages/portals, ensuring that performance, functionality, ease of use, and security factors are given appropriate consideration. Should have experience in working with customers on their requirements and incorporate into the web design. Should have knowledge of a variety of tools and languages such as Flash, Silverlight and other COTS products for the design of complex web pages.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 132.02,
+        "7": 134.53,
+        "8": 137.09,
+        "9": 139.7,
+        "10": 142.35
+      }
+    },
+    {
+      "lcat_id": "lcat_75",
+      "sin": "541330ENG",
+      "title": "Administrative Analyst Senior",
+      "description": "Demonstrate decision making skills, high level of computer skills, word processing and data entry functions. Individual must be proficient with Excel spreadsheets and formula creation for complex mathematical models. This role may serve as lead Analyst, directing and integrating the work of a team of lower-level analysts.",
+      "experience": "Bachelors degree and 4 years of experience.",
+      "rates_by_year": {
+        "6": 80.09,
+        "7": 81.61,
+        "8": 83.16,
+        "9": 84.75,
+        "10": 86.36
+      }
+    },
+    {
+      "lcat_id": "lcat_76",
+      "sin": "541330ENG",
+      "title": "Executive Assistant Senior",
+      "description": "Provides comprehensive administrative support to senior executives within engineering services. This role involves managing complex schedules, coordinating travel arrangements, and organizing high-level meetings and events. Additionally, the Executive Assistant Senior handles sensitive communications, prepares detailed reports, and maintains accurate records and databases.",
+      "experience": "Bachelors degree and 4 years of experience.",
+      "rates_by_year": {
+        "6": 91.13,
+        "7": 92.87,
+        "8": 94.63,
+        "9": 96.42,
+        "10": 98.26
+      }
+    },
+    {
+      "lcat_id": "lcat_77",
+      "sin": "541330ENG",
+      "title": "IT Administrator Intermediate",
+      "description": "Install, configure, troubleshoot, and maintain an organization\u2019s local area network (LAN), wide area network (WAN), data communications network, operating systems, and physical and virtual servers. Perform system monitoring and verify the integrity and availability of hardware, network, and server resources and systems. Review system and application logs and verify completion of scheduled jobs, including system backups. Analyze network and server resource consumption and control user access. Install and upgrade software and maintain software licenses. Assist in network modeling, analysis, planning, and coordination between network and data communications hardware and software. Perform systems management and integration functions, improve existing computer systems, and review computer system capabilities, workflow, and schedule limitations. May provide administrator support as a member of a team.",
+      "experience": "Bachelors degree and 2 years of experience.",
+      "rates_by_year": {
+        "6": 103.94,
+        "7": 105.91,
+        "8": 107.93,
+        "9": 109.98,
+        "10": 112.07
+      }
+    },
+    {
+      "lcat_id": "lcat_78",
+      "sin": "541330ENG",
+      "title": "IT Administrator Journeyman",
+      "description": "Install, configure, troubleshoot, and maintain an organization\u2019s local area network (LAN), wide area network (WAN), data communications network, operating systems, and physical and virtual servers. Perform system monitoring and verify the integrity and availability of hardware, network, and server resources and systems. Review system and application logs and verify completion of scheduled jobs, including system backups. Analyze network and server resource consumption and control user access. Install and upgrade software and maintain software licenses. May assist in network modeling, analysis, planning, and coordination between network and data communications hardware and software. May perform systems management and integration functions, improve existing computer systems, and review computer system capabilities, workflow, and schedule limitations.",
+      "experience": "Bachelors degree and 3 years of experience.",
+      "rates_by_year": {
+        "6": 121.42,
+        "7": 123.73,
+        "8": 126.08,
+        "9": 128.47,
+        "10": 130.91
+      }
+    },
+    {
+      "lcat_id": "lcat_79",
+      "sin": "541330ENG",
+      "title": "IT Specialist Senior",
+      "description": "Provide Information Technology support with technical knowledge and analysis of specialized applications and operational environments. Perform high-level functional systems analysis, design, integration, documentation, training, and provides implementation advice on complex problems that require doctorate level knowledge of the subject matter for effective implementation. This role may serve as lead specialist, directing and integrating the work of a team of lower-level IT support administrators, analysts, and/or specialists.",
+      "experience": "Bachelors degree and 4 years of experience.",
+      "rates_by_year": {
+        "6": 109.85,
+        "7": 111.94,
+        "8": 114.07,
+        "9": 116.23,
+        "10": 118.44
+      }
+    },
+    {
+      "lcat_id": "lcat_80",
+      "sin": "541330ENG",
+      "title": "Logistics Management Specialist Senior",
+      "description": "Analyze and coordinate ongoing logistic functions of a firm or organization. Responsible for the entire life cycle of a product, including acquisition, distribution, internal allocation, delivery, and final disposal of resources. Advise and consult to management and team on matters of logistics policy and procedures, logistics automation, system architecture, integration, and interfaces. Develop criteria, methods, techniques, and procedures as it relates to the product/service life cycle. Responsible for schedule development, test criteria, functional descriptions, data dictionary, keeping abreast of logistics literature, policy and guidance and assess system impact as a result of changes in policy and regulations. Conducts functional field assistance visits and logistics support as necessary. This role may serve as lead specialist, directing and integrating the work of a team of lower-level logisticians and/or specialists.",
+      "experience": "Bachelors degree and 4 years of experience.",
+      "rates_by_year": {
+        "6": 101.41,
+        "7": 103.34,
+        "8": 105.3,
+        "9": 107.3,
+        "10": 109.34
+      }
+    },
+    {
+      "lcat_id": "lcat_81",
+      "sin": "541330ENG",
+      "title": "Network Engineer Journeyman",
+      "description": "Design, optimize, and implement computer and information networks, such as local area networks (LAN), wide area networks (WAN), intranets, extranets, and other data communications networks. Perform network modeling, analysis, and planning, including analysis of capacity needs for network infrastructures. May design network and computer security measures. May research and recommend network and data communications hardware and software. May provide engineer support as a member of a team.",
+      "experience": "Bachelors degree and 3 years of experience.",
+      "rates_by_year": {
+        "6": 132.55,
+        "7": 135.07,
+        "8": 137.64,
+        "9": 140.26,
+        "10": 142.92
+      }
+    },
+    {
+      "lcat_id": "lcat_82",
+      "sin": "541330ENG",
+      "title": "Program Manager Intermediate",
+      "description": "Must be capable of planning, coordinating, and directing the activities of administrative, program control, and technical personnel involved in providing services in fulfillment of the contract. Must have a thorough understanding and experience in the complete life-cycle of the software in military systems. Must have knowledge and experience with Department of Defense (DOD)/Army plans, policies, standards, and methods aimed at the acquisition and support of software and computer resources for Army systems. Must be capable of managing and controlling schedules and costs to provide on time, within budget, performance of all aspects of the contractual effort. Must be capable of providing direction for operations and ensuring compliance with all management policies, plans, and procedures. Must be capable of providing recommendations for resolution of technical problems. The Program Manager must at all times be a role model to subordinate employees, be a workforce motivator, and be a provider of constructive criticism. Army Acquisition Corps Level 2 certification in logistics, program management or information technology is highly desired OR recognized industry equivalent professional certification.",
+      "experience": "Bachelors degree and 2 years of experience.",
+      "rates_by_year": {
+        "6": 132.55,
+        "7": 135.07,
+        "8": 137.64,
+        "9": 140.26,
+        "10": 142.92
+      }
+    },
+    {
+      "lcat_id": "lcat_83",
+      "sin": "541330ENG",
+      "title": "Service Desk Support Specialist Journeyman",
+      "description": "Provide technical support to end users on a variety of issues including the use of computer hardware and software. Identify, research, and resolve technical problems. Respond to telephone calls, email, and personnel requests for technical support. Document, track, and monitor the problem to ensure a timely resolution.",
+      "experience": "Bachelors degree and 3 years of experience.",
+      "rates_by_year": {
+        "6": 76.9,
+        "7": 78.36,
+        "8": 79.85,
+        "9": 81.37,
+        "10": 82.91
+      }
+    },
+    {
+      "lcat_id": "lcat_84",
+      "sin": "541330ENG",
+      "title": "Service Desk Support Specialist Senior",
+      "description": "Provide technical support to end users on a variety of issues including the use of computer hardware and software. Identify, research, and resolve technical problems. Respond to telephone calls, email, and personnel requests for technical support. Document, track, and monitor the problem to ensure a timely resolution. This role may serve as lead specialist, directing and integrating the work of a team of lower-level analysts and/or specialists.",
+      "experience": "Bachelors degree and 4 years of experience.",
+      "rates_by_year": {
+        "6": 88.73,
+        "7": 90.41,
+        "8": 92.12,
+        "9": 93.87,
+        "10": 95.66
+      }
+    },
+    {
+      "lcat_id": "lcat_85",
+      "sin": "541330ENG",
+      "title": "Software Architect Journeyman",
+      "description": "Plan, design, and develop software applications. Work with other professionals to define functional and non-functional requirements for new software applications. Evaluate, identify, and solve software solutions. Document and record aspects of an application or software. Display excellent knowledge of software and application design and architecture. May train and oversee activities as a member of a development team.",
+      "experience": "Bachelors degree and 3 years of experience.",
+      "rates_by_year": {
+        "6": 168.24,
+        "7": 171.44,
+        "8": 174.69,
+        "9": 178.01,
+        "10": 181.39
+      }
+    },
+    {
+      "lcat_id": "lcat_86",
+      "sin": "541330ENG",
+      "title": "Software Developer Journeyman",
+      "description": "Research, design, and develop computer and network software or specialized utility programs. Analyze user needs and develop software solutions, applying principles and techniques of computer science, engineering, and mathematical analysis. Update software or enhance existing software capabilities. May work with computer hardware engineers to integrate hardware and software systems, and develop specifications and performance requirements. May maintain databases within an application area, working individually or coordinating database development as part of a team. May train and oversee activities as a member of a development team.",
+      "experience": "Bachelors degree and 3 years of experience.",
+      "rates_by_year": {
+        "6": 132.24,
+        "7": 134.75,
+        "8": 137.31,
+        "9": 139.92,
+        "10": 142.58
+      }
+    },
+    {
+      "lcat_id": "lcat_87",
+      "sin": "54151S",
+      "title": "Network Engineer Intermediate",
+      "description": "Must be capable of performing network engineering functions including: design, implementation, and optimization. Must have some experience in assessing evolving user needs, translating those needs into network changes through network reconfiguration, hardware and software acquisitions, installation and test. Must have some knowledge in the application of current and emerging network software and hardware technology and protocols. Assist in solving engineering problems (or managing the solution of engineering problems) in the functional area to which assigned.",
+      "experience": "Bachelors degree and 2 years of experience.",
+      "rates_by_year": {
+        "6": 66.51,
+        "7": 67.77,
+        "8": 69.06,
+        "9": 70.37,
+        "10": 71.71
+      }
+    },
+    {
+      "lcat_id": "lcat_88",
+      "sin": "54151S",
+      "title": "Penetration Test",
+      "description": "Conduct formal tests on web-based applications, networks, and other types of computer systems. Complete physical security assessments of servers, computer systems, and networks. Conduct regular security audits from both a logical/theoretical standpoint and a technical/hands-on standpoint. Work on the security of wireless networks, databases, software development, and/or company secrets.",
+      "experience": "Bachelors degree and 3 years of experience.",
+      "rates_by_year": {
+        "6": 89.63,
+        "7": 91.34,
+        "8": 93.07,
+        "9": 94.84,
+        "10": 96.64
+      }
+    },
+    {
+      "lcat_id": "lcat_89",
+      "sin": "54151S",
+      "title": "Security Auditor",
+      "description": "Plans, executes, and leads audit of security systems and creates detailed report outlining findings. Leverages best practices to make recommendations to improve security posture.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 84.65,
+        "7": 86.27,
+        "8": 87.91,
+        "9": 89.58,
+        "10": 91.28
+      }
+    },
+    {
+      "lcat_id": "lcat_90",
+      "sin": "54151S",
+      "title": "Security Engineer",
+      "description": "Plan and carry out security measures to monitor and protect sensitive data and systems from infiltration and attacks. Responsible for applying information assurance expertise and knowledge to either network and/or enterprise security. Is familiar with and able to apply \u201cbest practices\u201d security methodologies. Experienced in managing all major areas of information assurance to include assessment, vulnerability scanning protection, validation, monitoring, and incident handling.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 94.94,
+        "7": 96.75,
+        "8": 98.58,
+        "9": 100.45,
+        "10": 102.36
+      }
+    },
+    {
+      "lcat_id": "lcat_91",
+      "sin": "54151S",
+      "title": "Security Specialist Intermediate",
+      "description": "Must be able to perform routine duties in an industrial security office to obtain security clearance on employees, control employee identification cards and records, maintain lock and key records, and arrange visit authorizations for employees and others to gain access to restricted areas. Must be experienced in interviewing employees to verify accuracy of data completing personnel security questionnaires and related documents, verify proper level of access to be granted to individuals, and contacting other company or Government agencies to follow up clearance or visit authorization requests. Requires knowledge of Government and company security requirements. A minimum of three (3) years of directly related experience is required. Military experience is highly desirable.",
+      "experience": "Bachelors degree and 2 years of experience.",
+      "rates_by_year": {
+        "6": 58.65,
+        "7": 59.77,
+        "8": 60.91,
+        "9": 62.07,
+        "10": 63.24
+      }
+    },
+    {
+      "lcat_id": "lcat_92",
+      "sin": "54151S",
+      "title": "Senior Cyber Security Specialist",
+      "description": "Responsible for developing and enforcing enterprise security policies and procedures. Responsible for developing and maintaining authorization and accreditation documentation, providing education and awareness training, handling security incidents, performing network scans, and ensuring software patch compliancy.",
+      "experience": "Bachelors degree and 3 years of experience.",
+      "rates_by_year": {
+        "6": 61.99,
+        "7": 63.17,
+        "8": 64.37,
+        "9": 65.59,
+        "10": 66.84
+      }
+    },
+    {
+      "lcat_id": "lcat_93",
+      "sin": "54151S",
+      "title": "System Administrator Intermediate",
+      "description": "Must have knowledge of TCP/IP, information security/authorization profiles, or system administration of Unix or Windows networks/systems. Must be capable of managing the servers, which typically involves installing and upgrading the servers, as well as solving any kind of problems with the systems. Must provide the essential software support for the laptops, desktop personal computers, and printers, including the configuration of the hardware devices, testing new software and designing the structure of the network. Must be capable of monitoring the system configuration, including the server event log. Must be capable of testing the operating system software, the networking software and also the computer hardware. Must be capable of monitoring and developing the procedures for backups of the servers.",
+      "experience": "Bachelors degree and 2 years of experience.",
+      "rates_by_year": {
+        "6": 66.05,
+        "7": 67.3,
+        "8": 68.58,
+        "9": 69.88,
+        "10": 71.21
+      }
+    },
+    {
+      "lcat_id": "lcat_94",
+      "sin": "54151S",
+      "title": "System Administrator Journeyman",
+      "description": "Must have knowledge of TCP/IP, information security/authorization profiles, or system administration of Unix or Windows networks/systems. Must be capable of managing the servers, which typically involves installing and upgrading the servers, as well as solving any kind of problems with the systems. Must provide the essential software support for the laptops, desktop personal computers, and printers, including the configuration of the hardware devices, testing new software and designing the structure of the network. Must be capable of monitoring the system configuration, including the server event log. Must be capable of testing the operating system software, the networking software and also the computer hardware. Must be capable of monitoring and developing the procedures for backups of the servers.",
+      "experience": "Bachelors degree and 3 years of experience.",
+      "rates_by_year": {
+        "6": 71.01,
+        "7": 72.36,
+        "8": 73.73,
+        "9": 75.13,
+        "10": 76.56
+      }
+    },
+    {
+      "lcat_id": "lcat_95",
+      "sin": "54151S",
+      "title": "Test Engineer Journeyman",
+      "description": "Defines, documents, analyzes, performs, and interprets developmental tests for new and/or modified products or product components. Investigates and resolves operational problems in conjunction with other engineering and technical personnel. Provides technical support and advice to other engineering groups. Devises and applies testing procedures for parts or sub-assemblies received from outside vendors. Participates in the development, maintenance and refinement of internal quality control and reliability programs.",
+      "experience": "Bachelors degree and 3 years of experience.",
+      "rates_by_year": {
+        "6": 83.56,
+        "7": 85.15,
+        "8": 86.77,
+        "9": 88.42,
+        "10": 90.11
+      }
+    },
+    {
+      "lcat_id": "lcat_96",
+      "sin": "54151S",
+      "title": "Test Engineer Senior",
+      "description": "Defines, documents, analyzes, performs, and interprets developmental tests for new and/or modified products or product components. Investigates and resolves operational problems in conjunction with other engineering and technical personnel. Provides technical support and advice to other engineering groups. Guides and directs lower level personnel on the set-up and performance of tests. Acts as liaison with outside suppliers in establishing or modifying specifications for purchased items. Devises and applies testing procedures for parts or sub-assemblies received from outside vendors. Participates in the development, maintenance and refinement of internal quality control and reliability programs. Test engineer (or similar job title) in the functional area to which assigned.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 83.56,
+        "7": 85.15,
+        "8": 86.77,
+        "9": 88.42,
+        "10": 90.11
+      }
+    },
+    {
+      "lcat_id": "lcat_97",
+      "sin": "54151S",
+      "title": "Web Developer Journeyman",
+      "description": "Responsible for designing, developing, debugging web sites and web based applications utilizing various technologies. Skill to design, develop and manage application databases. Create and maintain all documents during lifecycle of project.",
+      "experience": "Bachelors degree and 3 years of experience.",
+      "rates_by_year": {
+        "6": 83.32,
+        "7": 84.91,
+        "8": 86.52,
+        "9": 88.16,
+        "10": 89.83
+      }
+    },
+    {
+      "lcat_id": "lcat_98",
+      "sin": "54151S",
+      "title": "Web Developer Senior",
+      "description": "Responsible for providing high level guidance and designing, developing, debugging web sites and web based applications utilizing various technologies. Skill to provide high level guidance and to design, develop and manage application databases. Create and maintain all documents during lifecycle of project.",
+      "experience": "Bachelors degree and 5 years of experience.",
+      "rates_by_year": {
+        "6": 97.03,
+        "7": 98.87,
+        "8": 100.75,
+        "9": 102.66,
+        "10": 104.61
+      }
+    },
+    {
+      "lcat_id": "lcat_99",
+      "sin": "54151HACS",
+      "title": "Cyber Security Engineer Intermediate",
+      "description": "Plan, design, implement, upgrade, and monitor security measures for the protection of computer networks/systems, data, and information systems. Ensure appropriate cyber security controls are in place that will safeguard digital files and vital electronic infrastructure. Respond to computer network security breaches and viruses. May analyze or recommend commercially available software/hardware.",
+      "experience": "Bachelors degree and 2 years of experience.",
+      "rates_by_year": {
+        "6": 121.95,
+        "7": 124.27,
+        "8": 126.63,
+        "9": 129.04,
+        "10": 131.49
+      }
+    },
+    {
+      "lcat_id": "lcat_100",
+      "sin": "54151HACS",
+      "title": "Cyber Security Engineer Journeyman",
+      "description": "Plan, design, implement, upgrade, and monitor security measures for the protection of computer networks/systems, data, and information systems. Ensure appropriate cyber security controls are in place that will safeguard digital files and vital electronic infrastructure. Respond to computer network security breaches and viruses. May analyze or recommend commercially available software/hardware.",
+      "experience": "Bachelors degree and 3 years of experience.",
+      "rates_by_year": {
+        "6": 150.41,
+        "7": 153.27,
+        "8": 156.18,
+        "9": 159.15,
+        "10": 162.18
+      }
+    },
+    {
+      "lcat_id": "lcat_101",
+      "sin": "54151HACS",
+      "title": "Cyber Security Engineer Senior",
+      "description": "Plan, design, implement, upgrade, and monitor security measures for the protection of computer networks/systems, data, and information systems. Ensure appropriate cyber security controls are in place that will safeguard digital files and vital electronic infrastructure. Respond to computer network security breaches and viruses. May analyze or recommend commercially available software/hardware. This role may serve as lead engineer, directing and integrating the work of a team of lower-level analysts and/or engineers.",
+      "experience": "Bachelors degree and 4 years of experience.",
+      "rates_by_year": {
+        "6": 154.54,
+        "7": 157.47,
+        "8": 160.46,
+        "9": 163.52,
+        "10": 166.62
+      }
+    },
+    {
+      "lcat_id": "lcat_102",
+      "sin": "54151HACS",
+      "title": "Software Architect Intermediate",
+      "description": "Plan, design, and develop software applications. Work with other professionals to define functional and non-functional requirements for new software applications. Evaluate, identify, and solve software solutions. Document and record aspects of an application or software. Display excellent knowledge of software and application design and architecture.",
+      "experience": "Bachelors degree and 2 years of experience.",
+      "rates_by_year": {
+        "6": 162.22,
+        "7": 165.3,
+        "8": 168.44,
+        "9": 171.65,
+        "10": 174.91
+      }
+    },
+    {
+      "lcat_id": "lcat_103",
+      "sin": "54151S",
+      "title": "DevSecOps Software Engineer Intermediate",
+      "description": "Identify, design, develop, and implement software solutions based on user, application/program, and security requirements. Knowledgeable of full software development life cycle. Document and maintain software functionality. Troubleshoot, debug, and upgrade new and existing software applications and programs. Evaluate user feedback to further optimize software systems.",
+      "experience": "Bachelors degree and 2 years of experience.",
+      "rates_by_year": {
+        "6": 162.22,
+        "7": 165.3,
+        "8": 168.44,
+        "9": 171.65,
+        "10": 174.91
+      }
+    },
+    {
+      "lcat_id": "lcat_104",
+      "sin": "54151S",
+      "title": "DevSecOps Software Engineer Journeyman",
+      "description": "Identify, design, develop, and implement software solutions based on user, application/program, and security requirements. Knowledgeable of full software development life cycle. Document and maintain software functionality. Troubleshoot, debug, and upgrade new and existing software applications and programs. Evaluate user feedback to further optimize software systems. May train and oversee activities as a member of a development team.",
+      "experience": "Bachelors degree and 3 years of experience.",
+      "rates_by_year": {
+        "6": 165.11,
+        "7": 168.24,
+        "8": 171.44,
+        "9": 174.69,
+        "10": 178.01
+      }
+    },
+    {
+      "lcat_id": "lcat_105",
+      "sin": "54151S",
+      "title": "DevSecOps Software Engineer Senior",
+      "description": "Identify, design, develop, and implement software solutions based on user, application/program, and security requirements. Knowledgeable of full software development life cycle. Document and maintain software functionality. Troubleshoot, debug, and upgrade new and existing software applications and programs. Evaluate user feedback to further optimize software systems. May train and oversee activities as a member of a development team. This role may serve as lead engineer, directing and integrating the work of a team of lower-level analysts, developers, and/or engineers.",
+      "experience": "Bachelors degree and 4 years of experience.",
+      "rates_by_year": {
+        "6": 167.07,
+        "7": 170.25,
+        "8": 173.48,
+        "9": 176.78,
+        "10": 180.13
+      }
+    },
+    {
+      "lcat_id": "lcat_106",
+      "sin": "54151S",
+      "title": "IT Administrator Senior",
+      "description": "Install, configure, troubleshoot, and maintain an organization\u2019s local area network (LAN), wide area network (WAN), data communications network, operating systems, and physical and virtual servers. Perform system monitoring and verify the integrity and availability of hardware, network, and server resources and systems. Review system and application logs and verify completion of scheduled jobs, including system backups. Analyze network and server resource consumption and control user access. Install and upgrade software and maintain software licenses. May assist in network modeling, analysis, planning, and coordination between network and data communications hardware and software. May perform systems management and integration functions, improve existing computer systems, and review computer system capabilities, workflow, and schedule limitations. This role may serve as lead administrator, directing and integrating the work of a team of lower-level administrators and/or analysts.",
+      "experience": "Bachelors degree and 4 years of experience.",
+      "rates_by_year": {
+        "6": 150.41,
+        "7": 153.27,
+        "8": 156.18,
+        "9": 159.15,
+        "10": 162.18
+      }
+    },
+    {
+      "lcat_id": "lcat_107",
+      "sin": "54151S",
+      "title": "Network Engineer Senior",
+      "description": "Design, optimize, and implement computer and information networks, such as local area networks (LAN), wide area networks (WAN), intranets, extranets, and other data communications networks. Perform network modeling, analysis, and planning, including analysis of capacity needs for network infrastructures. May design network and computer security measures. May research and recommend network and data communications hardware and software. May provide engineering support as a member of a team. This role may serve as lead engineer, directing and integrating the work of a team of lower-level analysts and/or engineers.",
+      "experience": "Bachelors degree and 4 years of experience.",
+      "rates_by_year": {
+        "6": 162.61,
+        "7": 165.7,
+        "8": 168.85,
+        "9": 172.05,
+        "10": 175.31
+      }
+    },
+    {
+      "lcat_id": "lcat_108",
+      "sin": "54151S",
+      "title": "Program Manager Senior",
+      "description": "Must be capable of planning, coordinating, and directing the activities of administrative, program control, and technical personnel involved in providing services in fulfillment of the contract. Must have a thorough understanding and experience in the complete life-cycle of the software in military systems. Must have knowledge and experience with Department of Defense (DOD)/Army plans, policies, standards, and methods aimed at the acquisition and support of software and computer resources for Army systems. Must be capable of managing and controlling schedules and costs to provide on time, within budget, performance of all aspects of the contractual effort. Must be capable of providing direction for operations and ensuring compliance with all management policies, plans, and procedures. Must be capable of providing recommendations for resolution of technical problems. The Program Manager must at all times be a role model to subordinate employees, be a workforce motivator, and be a provider of constructive criticism. Army Acquisition Corps Level 2 certification in logistics, program management or information technology is highly desired OR recognized industry equivalent professional certification.",
+      "experience": "Bachelors degree and 8 years of experience.",
+      "rates_by_year": {
+        "6": 201.23,
+        "7": 205.05,
+        "8": 208.95,
+        "9": 212.92,
+        "10": 216.97
+      }
+    },
+    {
+      "lcat_id": "lcat_109",
+      "sin": "54151S",
+      "title": "Software Architect Senior",
+      "description": "Plan, design, and develop software applications. Work with other professionals to define functional and non-functional requirements for new software applications. Evaluate, identify, and solve software solutions. Document and record aspects of an application or software. Display excellent knowledge of software and application design and architecture. May train and oversee activities as a member of a development team. This role may serve as lead architect, directing and integrating the work of a team of lower-level analysts, architects, developers, and/or engineers.",
+      "experience": "Bachelors degree and 4 years of experience.",
+      "rates_by_year": {
+        "6": 167.07,
+        "7": 170.25,
+        "8": 173.48,
+        "9": 176.78,
+        "10": 180.13
+      }
+    },
+    {
+      "lcat_id": "lcat_110",
+      "sin": "54151S",
+      "title": "Software Developer Intermediate",
+      "description": "Research, design, and develop computer and network software or specialized utility programs. Analyze user needs and develop software solutions, applying principles and techniques of computer science, engineering, and mathematical analysis. Update software or enhance existing software capabilities. May work with computer hardware engineers to integrate hardware and software systems, and develop specifications and performance requirements. May maintain databases within an application area, working individually or coordinating database development as part of a team.",
+      "experience": "Bachelors degree and 2 years of experience.",
+      "rates_by_year": {
+        "6": 99.52,
+        "7": 101.41,
+        "8": 103.34,
+        "9": 105.3,
+        "10": 107.3
+      }
+    },
+    {
+      "lcat_id": "lcat_111",
+      "sin": "54151S",
+      "title": "Software Developer Senior",
+      "description": "Research, design, and develop computer and network software or specialized utility programs. Analyze user needs and develop software solutions, applying principles and techniques of computer science, engineering, and mathematical analysis. Update software or enhance existing software capabilities. May work with computer hardware engineers to integrate hardware and software systems, and develop specifications and performance requirements. May maintain databases within an application area, working individually or coordinating database development as part of a team. May train and oversee activities as a member of a development team. This role may serve as lead developer, directing and integrating the work of a team of lower-level analysts, developers, and/or engineers.",
+      "experience": "Bachelors degree and 4 years of experience.",
+      "rates_by_year": {
+        "6": 163.31,
+        "7": 166.42,
+        "8": 169.58,
+        "9": 172.81,
+        "10": 176.09
+      }
+    },
+    {
+      "lcat_id": "lcat_112",
+      "sin": "54151S",
+      "title": "Software Quality Assurance Engineer Intermediate",
+      "description": "Analyze, design, develop, and implement test processes, methodologies, and tools to identify issues or defects in software applications/programs. Document software and application defects and report defects to software or web developers. Create and maintain databases of known defects. May participate in software design reviews to provide input on functional requirements, operational characteristics, product designs, and schedules.",
+      "experience": "Bachelors degree and 2 years of experience.",
+      "rates_by_year": {
+        "6": 104.26,
+        "7": 106.25,
+        "8": 108.26,
+        "9": 110.32,
+        "10": 112.41
+      }
+    },
+    {
+      "lcat_id": "lcat_113",
+      "sin": "54151S",
+      "title": "Subject Matter Expert Intermediate",
+      "description": "Apply specialized expertise and knowledge within a subdiscipline to broad, complex assignments. Analyze complex problems, define functional requirements, perform operations research, modeling and process analysis and design. Provide leadership and technical direction utilizing experience in a subject area. May consult and oversee activities as a member of a team.",
+      "experience": "Bachelors degree and 2 years of experience.",
+      "rates_by_year": {
+        "6": 121.66,
+        "7": 123.97,
+        "8": 126.33,
+        "9": 128.73,
+        "10": 131.17
+      }
+    },
+    {
+      "lcat_id": "lcat_114",
+      "sin": "54151S",
+      "title": "Subject Matter Expert Journeyman",
+      "description": "Apply specialized expertise and knowledge within a subdiscipline to broad, complex assignments. Analyze complex problems, define functional requirements, perform operations research, modeling and process analysis and design. Provide leadership and technical direction utilizing experience in a subject area. May consult and oversee activities as a member of a team.",
+      "experience": "Bachelors degree and 3 years of experience.",
+      "rates_by_year": {
+        "6": 162.61,
+        "7": 165.7,
+        "8": 168.85,
+        "9": 172.05,
+        "10": 175.31
+      }
+    },
+    {
+      "lcat_id": "lcat_115",
+      "sin": "54151S",
+      "title": "Subject Matter Expert Senior",
+      "description": "Apply specialized expertise and knowledge within a subdiscipline to broad, complex assignments. Analyze complex problems, define functional requirements, perform operations research, modeling and process analysis and design. Provide leadership and technical direction utilizing experience in a subject area. May consult and oversee activities as a member of a team. This role may serve as lead, directing and integrating the work of a team of lower-level analysts, developers, engineers, and/or specialists.",
+      "experience": "Bachelors degree and 4 years of experience.",
+      "rates_by_year": {
+        "6": 167.76,
+        "7": 170.94,
+        "8": 174.19,
+        "9": 177.49,
+        "10": 180.87
+      }
+    },
+    {
+      "lcat_id": "lcat_116",
+      "sin": "54151S",
+      "title": "Web Design/Developer Senior",
+      "description": "Design, develop and implement websites, web applications, application databases, and interactive web interfaces. Evaluate code to ensure that it is properly structured, meets industry standards, and is compatible with browsers and devices. Optimize website performance, scalability, and server-side code and processes. May develop website infrastructure and integrate websites with other computer applications. This role may serve as lead developer, directing and integrating the work of a team of lower-level analysts, developers, engineers, and/or specialists.",
+      "experience": "Bachelors degree and 4 years of experience.",
+      "rates_by_year": {
+        "6": 113.82,
+        "7": 115.99,
+        "8": 118.2,
+        "9": 120.44,
+        "10": 122.73
+      }
+    },
+    {
+      "lcat_id": "lcat_117",
+      "sin": "518210C",
+      "title": "Cloud Architect Intermediate",
+      "description": "Assists in the design, development, deployment, and maintenance of cloud solution infrastructure. Responsibilities may also include migration of applications and data, and assessment of systems security and solutions development. This role provides support to more senior architects.",
+      "experience": "Associates degree and 2 years of experience.",
+      "rates_by_year": {
+        "6": 139.77,
+        "7": 142.43,
+        "8": 145.14,
+        "9": 147.9,
+        "10": 150.71
+      }
+    },
+    {
+      "lcat_id": "lcat_118",
+      "sin": "518210C",
+      "title": "Cloud Architect Journeyman",
+      "description": "Designs, develops, deploys, and maintains cloud solution infrastructure utilizing past experience. Responsibilities may include migration of applications and data, and assessment of systems security and solutions development. This role may lead projects with some independence.",
+      "experience": "Bachelors degree and 3 years of experience.",
+      "rates_by_year": {
+        "6": 156.27,
+        "7": 159.24,
+        "8": 162.27,
+        "9": 165.35,
+        "10": 168.49
+      }
+    },
+    {
+      "lcat_id": "lcat_119",
+      "sin": "518210C",
+      "title": "Cloud Architect Senior",
+      "description": "Designs, develops, deploys, and maintains cloud solution infrastructure utilizing past experience. Responsibilities may include migration of applications and data, and assessment of systems security and solutions development. This role may serve as project lead, directing and integrating the work of a team of lower-level architects, developers, administrators, and/or engineers.",
+      "experience": "Bachelors degree and 4 years of experience.",
+      "rates_by_year": {
+        "6": 182.75,
+        "7": 186.23,
+        "8": 189.76,
+        "9": 193.37,
+        "10": 197.05
+      }
+    },
+    {
+      "lcat_id": "lcat_120",
+      "sin": "518210C",
+      "title": "Cloud Developer Intermediate",
+      "description": "Assists in the development of applications and services that run on cloud platforms. Designs scalable, secure, and efficient systems that leverage cloud-native tools and infrastructure through writing code, configuring cloud resources, and integrating services such as databases, storage, and APIs. Deploys and maintains the cloud-based applications.",
+      "experience": "Associates degree and 2 years of experience.",
+      "rates_by_year": {
+        "6": 129.55,
+        "7": 132.01,
+        "8": 134.52,
+        "9": 137.08,
+        "10": 139.68
+      }
+    },
+    {
+      "lcat_id": "lcat_121",
+      "sin": "518210C",
+      "title": "Cloud Developer Journeyman",
+      "description": "Develops applications and services that run on cloud platforms utilizing past experience. Designs scalable, secure, and efficient systems that leverage cloud-native tools and infrastructure through writing code, configuring cloud resources, and integrating services such as databases, storage, and APIs. Deploys and maintains the cloud-based applications. This role may lead projects with some independence.",
+      "experience": "Bachelors degree and 3 years of experience.",
+      "rates_by_year": {
+        "6": 146.21,
+        "7": 148.99,
+        "8": 151.82,
+        "9": 154.7,
+        "10": 157.64
+      }
+    },
+    {
+      "lcat_id": "lcat_122",
+      "sin": "518210C",
+      "title": "Cloud Developer Senior",
+      "description": "Develops applications and services that run on cloud platforms utilizing past experience. Designs scalable, secure, and efficient systems that leverage cloud-native tools and infrastructure through writing code, configuring cloud resources, and integrating services such as databases, storage, and APIs. Deploys and maintains the cloud-based applications. This role may serve as project lead, directing and integrating the work of a team of lower-level developers, architects, administrators, and/or engineers.",
+      "experience": "Bachelors degree and 4 years of experience.",
+      "rates_by_year": {
+        "6": 182.51,
+        "7": 185.97,
+        "8": 189.51,
+        "9": 193.11,
+        "10": 196.78
+      }
+    },
+    {
+      "lcat_id": "lcat_123",
+      "sin": "518210C",
+      "title": "Cloud Project Manager Intermediate",
+      "description": "Oversees the planning, execution, and delivery of cloud-based projects on time and within budget. Proposes technical solutions, gathers information for estimates, manages vendor relations, and coordinates project. Coordinates between technical teams and the customer, ensuring that cloud initiatives align with organizational goals.",
+      "experience": "Associates degree and 2 years of experience.",
+      "rates_by_year": {
+        "6": 134.03,
+        "7": 136.57,
+        "8": 139.17,
+        "9": 141.81,
+        "10": 144.5
+      }
+    },
+    {
+      "lcat_id": "lcat_124",
+      "sin": "518210C",
+      "title": "Cloud Project Manager Journeyman",
+      "description": "Oversees the planning, execution, and delivery of cloud-based projects on time and within budget. Proposes technical solutions, gathers information for estimates, manages vendor relations, and coordinates project. Coordinates between technical teams and the customer, ensuring that cloud initiatives align with organizational goals.",
+      "experience": "Bachelors degree and 3 years of experience.",
+      "rates_by_year": {
+        "6": 150.97,
+        "7": 153.84,
+        "8": 156.77,
+        "9": 159.75,
+        "10": 162.78
+      }
+    },
+    {
+      "lcat_id": "lcat_125",
+      "sin": "518210C",
+      "title": "Cloud Project Manager Senior",
+      "description": "Oversees the planning, execution, and delivery of cloud-based projects on time and within budget. Proposes technical solutions, gathers information for estimates, manages vendor relations, and coordinates project. Coordinates between technical teams and the customer, ensuring that cloud initiatives align with organizational goals.",
+      "experience": "Bachelors degree and 4 years of experience.",
+      "rates_by_year": {
+        "6": 182.75,
+        "7": 186.23,
+        "8": 189.76,
+        "9": 193.37,
+        "10": 197.05
+      }
+    },
+    {
+      "lcat_id": "lcat_126",
+      "sin": "518210C",
+      "title": "Cloud Technical Consultant Intermediate",
+      "description": "Conducts comprehensive analysis of user needs to define both functional and cross-functional system requirements. Allocates system functions by identifying essential tasks and mapping their interdependencies. Determines the resources necessary to execute each task effectively. Defines cloud integration requirements to ensure seamless interoperability between enterprise applications and legacy IT systems. Contributes to program and project planning, including milestone development and tracking. Supports business case development by evaluating alternative solutions and assessing their potential business impacts.",
+      "experience": "Associates degree and 2 years of experience.",
+      "rates_by_year": {
+        "6": 138.09,
+        "7": 140.71,
+        "8": 143.38,
+        "9": 146.1,
+        "10": 148.88
+      }
+    },
+    {
+      "lcat_id": "lcat_127",
+      "sin": "518210C",
+      "title": "Cloud Technical Consultant Journeyman",
+      "description": "Conducts comprehensive analysis of user needs to define both functional and cross-functional system requirements. Allocates system functions by identifying essential tasks and mapping their interdependencies. Determines the resources necessary to execute each task effectively. Defines cloud integration requirements to ensure seamless interoperability between enterprise applications and legacy IT systems. Contributes to program and project planning, including milestone development and tracking. Supports business case development by evaluating alternative solutions and assessing their potential business impacts.",
+      "experience": "Bachelors degree and 3 years of experience.",
+      "rates_by_year": {
+        "6": 154.39,
+        "7": 157.32,
+        "8": 160.31,
+        "9": 163.36,
+        "10": 166.46
+      }
+    },
+    {
+      "lcat_id": "lcat_128",
+      "sin": "518210C",
+      "title": "Cloud Technical Consultant Senior",
+      "description": "Conducts comprehensive analysis of user needs to define both functional and cross-functional system requirements. Allocates system functions by identifying essential tasks and mapping their interdependencies. Determines the resources necessary to execute each task effectively. Defines cloud integration requirements to ensure seamless interoperability between enterprise applications and legacy IT systems. Contributes to program and project planning, including milestone development and tracking. Supports business case development by evaluating alternative solutions and assessing their potential business impacts. This role may serve as project lead, directing and integrating the work of a team of lower-level developers, architects, administrators, and/or engineers.",
+      "experience": "Bachelors degree and 4 years of experience.",
+      "rates_by_year": {
+        "6": 182.51,
+        "7": 185.97,
+        "8": 189.51,
+        "9": 193.11,
+        "10": 196.78
+      }
+    }
+  ]
+}
