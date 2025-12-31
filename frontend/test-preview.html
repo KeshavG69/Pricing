@@ -1,0 +1,703 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Preview Tester</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+    }
+    h1 {
+      margin-bottom: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .section {
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    .section h2 {
+      margin-bottom: 15px;
+      color: #555;
+      font-size: 18px;
+    }
+    .file-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 15px;
+    }
+    .file-card {
+      border: 2px dashed #ddd;
+      border-radius: 8px;
+      padding: 20px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .file-card:hover {
+      border-color: #007bff;
+      background: #f8f9ff;
+    }
+    .file-card.dragover {
+      border-color: #28a745;
+      background: #f0fff4;
+    }
+    .file-icon {
+      font-size: 48px;
+      margin-bottom: 10px;
+    }
+    .file-card p {
+      color: #666;
+      font-size: 14px;
+    }
+    .file-card input {
+      display: none;
+    }
+    #preview-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+      padding: 20px;
+    }
+    #preview-modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .modal-content {
+      background: white;
+      border-radius: 12px;
+      width: 90vw;
+      height: 90vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 15px 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .modal-header h3 {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .modal-header .file-info {
+      font-size: 14px;
+      color: #666;
+    }
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      color: #666;
+    }
+    .close-btn:hover {
+      color: #333;
+    }
+    .modal-body {
+      flex: 1;
+      overflow: auto;
+      padding: 20px;
+    }
+    .sheet-tabs {
+      display: flex;
+      border-bottom: 1px solid #ddd;
+      margin-bottom: 15px;
+    }
+    .sheet-tab {
+      padding: 10px 20px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      font-size: 14px;
+      color: #666;
+    }
+    .sheet-tab.active {
+      color: #007bff;
+      border-bottom: 2px solid #007bff;
+    }
+    .preview-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .preview-table th,
+    .preview-table td {
+      border: 1px solid #ddd;
+      padding: 8px 12px;
+      text-align: left;
+      white-space: nowrap;
+    }
+    .preview-table th {
+      background: #f5f5f5;
+      font-weight: 600;
+      position: sticky;
+      top: 0;
+    }
+    .preview-table tr:nth-child(even) {
+      background: #fafafa;
+    }
+    .preview-table tr:hover {
+      background: #f0f7ff;
+    }
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      color: #666;
+    }
+    .loading::before {
+      content: '';
+      width: 30px;
+      height: 30px;
+      border: 3px solid #ddd;
+      border-top-color: #007bff;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-right: 10px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    .error-message {
+      text-align: center;
+      padding: 40px;
+      color: #666;
+    }
+    .error-message .icon {
+      font-size: 64px;
+      margin-bottom: 15px;
+    }
+    .row-info {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 10px;
+    }
+    .pdf-preview {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .unsupported {
+      text-align: center;
+      padding: 60px;
+    }
+    .unsupported .icon {
+      font-size: 80px;
+      color: #ccc;
+      margin-bottom: 20px;
+    }
+    .unsupported h4 {
+      margin-bottom: 10px;
+      color: #333;
+    }
+    .unsupported p {
+      color: #666;
+      margin-bottom: 20px;
+    }
+    .download-btn {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .download-btn:hover {
+      background: #0056b3;
+    }
+    .test-results {
+      margin-top: 20px;
+    }
+    .test-results h3 {
+      margin-bottom: 10px;
+    }
+    #results-log {
+      background: #1e1e1e;
+      color: #d4d4d4;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .log-success { color: #4ec9b0; }
+    .log-error { color: #f14c4c; }
+    .log-info { color: #569cd6; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>File Preview Tester</h1>
+
+    <div class="section">
+      <h2>Drop or Select Files to Test Preview</h2>
+      <div class="file-grid">
+        <div class="file-card" id="xlsx-drop">
+          <div class="file-icon">📊</div>
+          <p><strong>XLSX / XLS</strong></p>
+          <p>Excel spreadsheets</p>
+          <input type="file" accept=".xlsx,.xls" id="xlsx-input">
+        </div>
+
+        <div class="file-card" id="csv-drop">
+          <div class="file-icon">📄</div>
+          <p><strong>CSV</strong></p>
+          <p>Comma-separated values</p>
+          <input type="file" accept=".csv" id="csv-input">
+        </div>
+
+        <div class="file-card" id="txt-drop">
+          <div class="file-icon">📝</div>
+          <p><strong>TXT</strong></p>
+          <p>Plain text files</p>
+          <input type="file" accept=".txt" id="txt-input">
+        </div>
+
+        <div class="file-card" id="rtf-drop">
+          <div class="file-icon">📃</div>
+          <p><strong>RTF</strong></p>
+          <p>Rich text format</p>
+          <input type="file" accept=".rtf" id="rtf-input">
+        </div>
+
+        <div class="file-card" id="pdf-drop">
+          <div class="file-icon">📕</div>
+          <p><strong>PDF</strong></p>
+          <p>PDF documents</p>
+          <input type="file" accept=".pdf" id="pdf-input">
+        </div>
+
+        <div class="file-card" id="other-drop">
+          <div class="file-icon">📁</div>
+          <p><strong>Other</strong></p>
+          <p>Test unsupported types</p>
+          <input type="file" id="other-input">
+        </div>
+      </div>
+    </div>
+
+    <div class="section test-results">
+      <h3>Test Log</h3>
+      <div id="results-log"></div>
+    </div>
+  </div>
+
+  <!-- Preview Modal -->
+  <div id="preview-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>
+          <span id="modal-icon">📄</span>
+          <span>
+            <span id="modal-filename">filename.xlsx</span>
+            <div class="file-info" id="modal-filesize">0 KB</div>
+          </span>
+        </h3>
+        <button class="close-btn" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body" id="modal-body">
+        <!-- Content rendered here -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const MAX_ROWS = 1000;
+    const log = document.getElementById('results-log');
+
+    function addLog(message, type = 'info') {
+      const time = new Date().toLocaleTimeString();
+      const span = document.createElement('div');
+      span.className = `log-${type}`;
+      span.textContent = `[${time}] ${message}`;
+      log.appendChild(span);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function formatFileSize(bytes) {
+      if (bytes === 0) return '0 Bytes';
+      const k = 1024;
+      const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+      const i = Math.floor(Math.log(bytes) / Math.log(k));
+      return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function getFileExtension(filename) {
+      return filename.split('.').pop()?.toLowerCase() || '';
+    }
+
+    function isSpreadsheetFile(filename) {
+      const ext = getFileExtension(filename);
+      return ['xlsx', 'xls', 'csv'].includes(ext);
+    }
+
+    function isPdfFile(filename) {
+      return getFileExtension(filename) === 'pdf';
+    }
+
+    function isTextFile(filename) {
+      const ext = getFileExtension(filename);
+      return ['txt', 'rtf'].includes(ext);
+    }
+
+    // RTF to plain text converter
+    function stripRtf(rtf) {
+      // Remove font table, color table, stylesheet, and other header blocks
+      let text = rtf
+        .replace(/\{\\fonttbl[^{}]*(\{[^{}]*\}[^{}]*)*\}/gi, '')
+        .replace(/\{\\colortbl[^{}]*\}/gi, '')
+        .replace(/\{\\\*\\[^{}]*(\{[^{}]*\}[^{}]*)*\}/gi, '')
+        .replace(/\{\\stylesheet[^{}]*(\{[^{}]*\}[^{}]*)*\}/gi, '')
+        .replace(/\{\\info[^{}]*(\{[^{}]*\}[^{}]*)*\}/gi, '')
+        .replace(/\{\\header[^{}]*(\{[^{}]*\}[^{}]*)*\}/gi, '')
+        .replace(/\{\\footer[^{}]*(\{[^{}]*\}[^{}]*)*\}/gi, '');
+
+      const output = [];
+      let i = 0;
+      let skipGroup = 0;
+
+      while (i < text.length) {
+        const char = text[i];
+
+        if (char === '{') {
+          const ahead = text.slice(i + 1, i + 20);
+          if (ahead.match(/^\\(\*|pict|object|fldinst|bkmk|xe|tc|rxe)/i)) {
+            skipGroup++;
+          }
+          i++;
+        } else if (char === '}') {
+          if (skipGroup > 0) skipGroup--;
+          i++;
+        } else if (skipGroup > 0) {
+          i++;
+        } else if (char === '\\') {
+          const match = text.slice(i).match(/^\\([a-z]+)(-?\d+)?[ ]?/i);
+          if (match) {
+            const word = match[1].toLowerCase();
+            const param = match[2] ? parseInt(match[2]) : null;
+
+            if (word === 'par' || word === 'line') {
+              output.push('\n');
+            } else if (word === 'tab') {
+              output.push('\t');
+            } else if (word === 'u' && param !== null) {
+              output.push(String.fromCharCode(param < 0 ? param + 65536 : param));
+            }
+            i += match[0].length;
+          } else if (text[i + 1] === "'") {
+            const hex = text.slice(i + 2, i + 4);
+            if (/^[0-9a-f]{2}$/i.test(hex)) {
+              output.push(String.fromCharCode(parseInt(hex, 16)));
+              i += 4;
+            } else {
+              i++;
+            }
+          } else if (text[i + 1] === '\\' || text[i + 1] === '{' || text[i + 1] === '}') {
+            output.push(text[i + 1]);
+            i += 2;
+          } else {
+            i++;
+          }
+        } else if (char === '\r' || char === '\n') {
+          i++;
+        } else {
+          output.push(char);
+          i++;
+        }
+      }
+
+      return output.join('')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    }
+
+    function getFileIcon(filename) {
+      const ext = getFileExtension(filename);
+      if (ext === 'pdf') return '📕';
+      if (['xlsx', 'xls'].includes(ext)) return '📊';
+      if (ext === 'csv') return '📄';
+      if (ext === 'txt') return '📝';
+      if (ext === 'rtf') return '📃';
+      return '📁';
+    }
+
+    // Setup drag and drop for each card
+    document.querySelectorAll('.file-card').forEach(card => {
+      const input = card.querySelector('input');
+
+      card.addEventListener('click', () => input.click());
+
+      card.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        card.classList.add('dragover');
+      });
+
+      card.addEventListener('dragleave', () => {
+        card.classList.remove('dragover');
+      });
+
+      card.addEventListener('drop', (e) => {
+        e.preventDefault();
+        card.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file) handleFile(file);
+      });
+
+      input.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) handleFile(file);
+        input.value = ''; // Reset for same file selection
+      });
+    });
+
+    function handleFile(file) {
+      addLog(`Selected file: ${file.name} (${formatFileSize(file.size)})`, 'info');
+
+      document.getElementById('modal-icon').textContent = getFileIcon(file.name);
+      document.getElementById('modal-filename').textContent = file.name;
+      document.getElementById('modal-filesize').textContent = formatFileSize(file.size);
+
+      const modal = document.getElementById('preview-modal');
+      const body = document.getElementById('modal-body');
+
+      modal.classList.add('active');
+      body.innerHTML = '<div class="loading">Loading preview...</div>';
+
+      if (isSpreadsheetFile(file.name)) {
+        renderSpreadsheet(file);
+      } else if (isPdfFile(file.name)) {
+        renderPdf(file);
+      } else if (isTextFile(file.name)) {
+        renderText(file);
+      } else {
+        renderUnsupported(file);
+      }
+    }
+
+    async function renderSpreadsheet(file) {
+      const body = document.getElementById('modal-body');
+      const ext = getFileExtension(file.name);
+
+      try {
+        addLog(`Parsing ${ext.toUpperCase()} file...`, 'info');
+        const startTime = performance.now();
+
+        let workbook;
+        if (ext === 'csv') {
+          const text = await file.text();
+          workbook = XLSX.read(text, { type: 'string' });
+        } else {
+          const arrayBuffer = await file.arrayBuffer();
+          workbook = XLSX.read(arrayBuffer, { type: 'array' });
+        }
+
+        const sheets = workbook.SheetNames.map(name => {
+          const sheet = workbook.Sheets[name];
+          const json = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+          const totalRows = json.length;
+          const headers = Array.isArray(json[0]) ? json[0].map(h => String(h)) : [];
+          const rows = json.slice(1, MAX_ROWS + 1).map(row =>
+            Array.isArray(row) ? row.map(cell => String(cell ?? '')) : []
+          );
+          return { name, headers, rows, totalRows };
+        });
+
+        const parseTime = (performance.now() - startTime).toFixed(2);
+        addLog(`Parsed ${sheets.length} sheet(s) in ${parseTime}ms`, 'success');
+
+        sheets.forEach((sheet, i) => {
+          addLog(`  Sheet "${sheet.name}": ${sheet.totalRows} rows, ${sheet.headers.length} columns`, 'info');
+        });
+
+        renderSheetTabs(sheets);
+      } catch (err) {
+        addLog(`Error parsing file: ${err.message}`, 'error');
+        body.innerHTML = `
+          <div class="error-message">
+            <div class="icon">❌</div>
+            <h4>Failed to load spreadsheet</h4>
+            <p>${err.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    function renderSheetTabs(sheets) {
+      const body = document.getElementById('modal-body');
+      let activeSheet = 0;
+
+      function renderSheet(index) {
+        const sheet = sheets[index];
+        const truncated = sheet.totalRows > MAX_ROWS + 1;
+
+        let html = '';
+
+        // Sheet tabs
+        if (sheets.length > 1) {
+          html += '<div class="sheet-tabs">';
+          sheets.forEach((s, i) => {
+            html += `<button class="sheet-tab ${i === index ? 'active' : ''}" onclick="window.switchSheet(${i})">${s.name}</button>`;
+          });
+          html += '</div>';
+        }
+
+        // Row info
+        if (truncated) {
+          html += `<div class="row-info">Showing ${MAX_ROWS} of ${sheet.totalRows - 1} rows. Download the file to view all data.</div>`;
+        } else {
+          html += `<div class="row-info">${sheet.totalRows - 1} rows, ${sheet.headers.length} columns</div>`;
+        }
+
+        // Table
+        html += '<div style="overflow: auto; flex: 1;"><table class="preview-table"><thead><tr>';
+        sheet.headers.forEach((h, i) => {
+          html += `<th>${h || 'Column ' + (i + 1)}</th>`;
+        });
+        html += '</tr></thead><tbody>';
+
+        sheet.rows.forEach(row => {
+          html += '<tr>';
+          sheet.headers.forEach((_, i) => {
+            html += `<td>${row[i] ?? ''}</td>`;
+          });
+          html += '</tr>';
+        });
+
+        html += '</tbody></table></div>';
+        body.innerHTML = html;
+      }
+
+      window.switchSheet = (index) => {
+        activeSheet = index;
+        renderSheet(index);
+        addLog(`Switched to sheet: ${sheets[index].name}`, 'info');
+      };
+
+      renderSheet(0);
+    }
+
+    function renderPdf(file) {
+      const body = document.getElementById('modal-body');
+      addLog('Rendering PDF preview...', 'info');
+
+      const url = URL.createObjectURL(file);
+      body.innerHTML = `<iframe class="pdf-preview" src="${url}"></iframe>`;
+      addLog('PDF preview loaded', 'success');
+    }
+
+    async function renderText(file) {
+      const body = document.getElementById('modal-body');
+      const ext = getFileExtension(file.name);
+      addLog(`Rendering ${ext.toUpperCase()} preview...`, 'info');
+
+      try {
+        let text = await file.text();
+
+        // Strip RTF formatting if it's an RTF file
+        if (ext === 'rtf' && text.startsWith('{\\rtf')) {
+          text = stripRtf(text);
+          addLog('RTF formatting stripped', 'info');
+        }
+
+        const lines = text.split('\n').length;
+        addLog(`Text file loaded: ${lines} lines, ${text.length} characters`, 'success');
+
+        body.innerHTML = `
+          <div class="row-info">${lines} lines, ${text.length} characters</div>
+          <div style="height: calc(100% - 30px); overflow: auto; border: 1px solid #ddd; border-radius: 6px; background: #fafafa;">
+            <pre style="padding: 15px; margin: 0; font-family: Monaco, Consolas, monospace; font-size: 13px; white-space: pre-wrap; word-break: break-word;">${escapeHtml(text)}</pre>
+          </div>
+        `;
+      } catch (err) {
+        addLog(`Error loading text file: ${err.message}`, 'error');
+        body.innerHTML = `
+          <div class="error-message">
+            <div class="icon">❌</div>
+            <h4>Failed to load text file</h4>
+            <p>${err.message}</p>
+          </div>
+        `;
+      }
+    }
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+
+    function renderUnsupported(file) {
+      const body = document.getElementById('modal-body');
+      const ext = getFileExtension(file.name);
+
+      addLog(`Unsupported file type: .${ext}`, 'error');
+
+      body.innerHTML = `
+        <div class="unsupported">
+          <div class="icon">📁</div>
+          <h4>Preview not available</h4>
+          <p>This file type (.${ext}) cannot be previewed. Please download to view.</p>
+          <button class="download-btn" onclick="downloadFile()">Download File</button>
+        </div>
+      `;
+
+      window.currentFile = file;
+    }
+
+    window.downloadFile = () => {
+      if (window.currentFile) {
+        const url = URL.createObjectURL(window.currentFile);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = window.currentFile.name;
+        a.click();
+        URL.revokeObjectURL(url);
+        addLog(`Downloaded: ${window.currentFile.name}`, 'success');
+      }
+    };
+
+    function closeModal() {
+      document.getElementById('preview-modal').classList.remove('active');
+      addLog('Preview closed', 'info');
+    }
+
+    // Close on escape
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    // Close on backdrop click
+    document.getElementById('preview-modal').addEventListener('click', (e) => {
+      if (e.target.id === 'preview-modal') closeModal();
+    });
+
+    addLog('File Preview Tester ready. Drop or select files to test.', 'success');
+  </script>
+</body>
+</html>

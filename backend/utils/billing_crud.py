@@ -15,7 +15,7 @@ Collection Schema:
         "charge_type": "basic" | "advanced",
         "stripe_payment_intent_id": "pi_xxx",
         "stripe_event_id": "evt_xxx",  # For webhook idempotency
-        "amount_cents": 500,
+        "amount_cents": 10000,
         "currency": "usd",
         "status": "pending" | "succeeded" | "failed",
         "error_message": null | "string",

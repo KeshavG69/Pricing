@@ -62,6 +62,8 @@ class UpdateSettingsRequest(BaseModel):
     model_config = {"extra": "ignore"}
 
     name: Optional[str] = None
+    website: Optional[str] = None
+    address: Optional[str] = None
     default_rates: Optional[Dict[str, float]] = None
     default_escalation_rate: Optional[float] = None
     allow_user_rate_override: Optional[bool] = None
@@ -137,12 +139,20 @@ async def update_organization_settings(
             detail="Organization not found"
         )
 
-    # Prepare update data
+    # Prepare update data for top-level organization fields
     update_data = {}
 
     # Update organization name if provided
     if settings_update.name is not None:
         update_data["name"] = settings_update.name
+
+    # Update website if provided
+    if settings_update.website is not None:
+        update_data["website"] = settings_update.website if settings_update.website else None
+
+    # Update address if provided
+    if settings_update.address is not None:
+        update_data["address"] = settings_update.address if settings_update.address else None
 
     # Get existing settings
     settings = org.get("settings", {})

@@ -36,6 +36,7 @@ import { useToast } from '@/lib/hooks/useToast';
 import { isAdmin, canRemoveUser, getUserDisplayName, getUserInitials } from '@/lib/utils/permissions';
 import { OrganizationSettings, InviteUserRequest } from '@/types';
 import apiClient from '@/lib/api/client';
+import { pricing } from '@/lib/config';
 
 type TabType = 'settings' | 'team' | 'billing';
 
@@ -118,10 +119,14 @@ function OrganizationPageContent() {
   const [invitationToRevoke, setInvitationToRevoke] = useState<{ id: string; email: string } | null>(null);
   const [isRevoking, setIsRevoking] = useState(false);
 
-  // Organization name editing state
+  // Company info editing state
   const [editingOrgName, setEditingOrgName] = useState(false);
   const [orgNameInput, setOrgNameInput] = useState('');
-  const [isSavingOrgName, setIsSavingOrgName] = useState(false);
+  const [editingWebsite, setEditingWebsite] = useState(false);
+  const [websiteInput, setWebsiteInput] = useState('');
+  const [editingAddress, setEditingAddress] = useState(false);
+  const [addressInput, setAddressInput] = useState('');
+  const [isSavingCompanyInfo, setIsSavingCompanyInfo] = useState(false);
 
   // Billing state
   const [showAddCard, setShowAddCard] = useState(false);
@@ -177,7 +182,7 @@ function OrganizationPageContent() {
     }
   };
 
-  // Organization name handler
+  // Company info handlers
   const handleSaveOrgName = async () => {
     const trimmedInput = orgNameInput.trim();
 
@@ -188,16 +193,65 @@ function OrganizationPageContent() {
       return;
     }
 
-    setIsSavingOrgName(true);
+    setIsSavingCompanyInfo(true);
     try {
       await updateSettings({ name: trimmedInput });
-      toast.success('Organization name updated successfully');
+      await fetchOrganization(true);
+      toast.success('Company name updated successfully');
       setEditingOrgName(false);
       setOrgNameInput('');
     } catch {
-      toast.error('Failed to update organization name');
+      toast.error('Failed to update company name');
     } finally {
-      setIsSavingOrgName(false);
+      setIsSavingCompanyInfo(false);
+    }
+  };
+
+  const handleSaveWebsite = async () => {
+    const trimmedInput = websiteInput.trim();
+
+    // Don't save if unchanged
+    if (trimmedInput === (organization?.website || '')) {
+      setEditingWebsite(false);
+      setWebsiteInput('');
+      return;
+    }
+
+    setIsSavingCompanyInfo(true);
+    try {
+      await updateSettings({ website: trimmedInput || null });
+      await fetchOrganization(true);
+      toast.success('Website updated successfully');
+      setEditingWebsite(false);
+      setWebsiteInput('');
+    } catch {
+      toast.error('Failed to update website');
+    } finally {
+      setIsSavingCompanyInfo(false);
+    }
+  };
+
+  const handleSaveAddress = async () => {
+    const trimmedInput = addressInput.trim();
+
+    // Don't save if unchanged
+    if (trimmedInput === (organization?.address || '')) {
+      setEditingAddress(false);
+      setAddressInput('');
+      return;
+    }
+
+    setIsSavingCompanyInfo(true);
+    try {
+      await updateSettings({ address: trimmedInput || null });
+      await fetchOrganization(true);
+      toast.success('Address updated successfully');
+      setEditingAddress(false);
+      setAddressInput('');
+    } catch {
+      toast.error('Failed to update address');
+    } finally {
+      setIsSavingCompanyInfo(false);
     }
   };
 
@@ -376,39 +430,6 @@ function OrganizationPageContent() {
               Manage organization settings, team members, and invitations
             </p>
           </div>
-          {activeTab === 'settings' && (
-            <Button
-              variant="primary"
-              onClick={handleSave}
-              isLoading={isSaving}
-              disabled={!hasChanges}
-              className="shadow-md shadow-primary/10"
-            >
-              <Save className="w-4 h-4 mr-2" />
-              Save Changes
-            </Button>
-          )}
-          {activeTab === 'team' && (
-            <Button
-              variant="primary"
-              onClick={() => setInviteModalOpen(true)}
-              className="shadow-md shadow-primary/10"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Send Invitation
-            </Button>
-          )}
-          {activeTab === 'billing' && !showAddCard && (
-            <Button
-              variant="primary"
-              onClick={handleAddCard}
-              isLoading={isCreatingSetupIntent}
-              className="shadow-md shadow-primary/10"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Payment Method
-            </Button>
-          )}
         </div>
 
         {/* Tabs */}
@@ -453,30 +474,31 @@ function OrganizationPageContent() {
         {/* Settings Tab */}
         {activeTab === 'settings' && (
           <div className="space-y-6">
-            {/* Organization Info */}
+            {/* Company Info */}
             <Card>
               <CardHeader>
-                <CardTitle>Organization Information</CardTitle>
+                <CardTitle>Company Information</CardTitle>
                 <CardDescription>
-                  Basic details about your organization
+                  Basic details about your company
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  {/* Company Name */}
                   <div>
                     <label className="block text-sm font-medium text-foreground mb-2">
-                      Organization Name
+                      Company Name
                     </label>
                     {!editingOrgName ? (
                       <div
                         className="flex items-center gap-3 px-4 py-3 bg-muted rounded-lg cursor-pointer hover:bg-muted/80 transition-colors"
-                        onDoubleClick={() => {
+                        onClick={() => {
                           if (user && isAdmin(user)) {
                             setEditingOrgName(true);
                             setOrgNameInput(organization.name);
                           }
                         }}
-                        title={user && isAdmin(user) ? "Double-click to edit" : ""}
+                        title={user && isAdmin(user) ? "Click to edit" : ""}
                       >
                         <Building className="w-5 h-5 text-muted-foreground" />
                         <span className="text-sm font-medium text-foreground flex-1">{organization.name}</span>
@@ -496,8 +518,109 @@ function OrganizationPageContent() {
                               setOrgNameInput('');
                             }
                           }}
-                          placeholder="Enter organization name"
+                          placeholder="Enter company name"
                           autoFocus
+                          disabled={isSavingCompanyInfo}
+                          className="flex-1 border-none focus:ring-0 bg-transparent"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Website */}
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Website
+                    </label>
+                    {!editingWebsite ? (
+                      <div
+                        className="flex items-center gap-3 px-4 py-3 bg-muted rounded-lg cursor-pointer hover:bg-muted/80 transition-colors"
+                        onClick={() => {
+                          if (user && isAdmin(user)) {
+                            setEditingWebsite(true);
+                            setWebsiteInput(organization.website || '');
+                          }
+                        }}
+                        title={user && isAdmin(user) ? "Click to edit" : ""}
+                      >
+                        <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                        </svg>
+                        <span className={`text-sm flex-1 ${organization.website ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
+                          {organization.website || 'Not set'}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3 px-4 py-3 bg-muted rounded-lg">
+                        <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+                        </svg>
+                        <Input
+                          value={websiteInput}
+                          onChange={(e) => setWebsiteInput(e.target.value)}
+                          onBlur={handleSaveWebsite}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleSaveWebsite();
+                            } else if (e.key === 'Escape') {
+                              setEditingWebsite(false);
+                              setWebsiteInput('');
+                            }
+                          }}
+                          placeholder="https://www.example.com"
+                          autoFocus
+                          disabled={isSavingCompanyInfo}
+                          className="flex-1 border-none focus:ring-0 bg-transparent"
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Address */}
+                  <div>
+                    <label className="block text-sm font-medium text-foreground mb-2">
+                      Address
+                    </label>
+                    {!editingAddress ? (
+                      <div
+                        className="flex items-center gap-3 px-4 py-3 bg-muted rounded-lg cursor-pointer hover:bg-muted/80 transition-colors"
+                        onClick={() => {
+                          if (user && isAdmin(user)) {
+                            setEditingAddress(true);
+                            setAddressInput(organization.address || '');
+                          }
+                        }}
+                        title={user && isAdmin(user) ? "Click to edit" : ""}
+                      >
+                        <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <span className={`text-sm flex-1 ${organization.address ? 'font-medium text-foreground' : 'text-muted-foreground'}`}>
+                          {organization.address || 'Not set'}
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-3 px-4 py-3 bg-muted rounded-lg">
+                        <svg className="w-5 h-5 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                        <Input
+                          value={addressInput}
+                          onChange={(e) => setAddressInput(e.target.value)}
+                          onBlur={handleSaveAddress}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              handleSaveAddress();
+                            } else if (e.key === 'Escape') {
+                              setEditingAddress(false);
+                              setAddressInput('');
+                            }
+                          }}
+                          placeholder="123 Main St, City, State 12345"
+                          autoFocus
+                          disabled={isSavingCompanyInfo}
                           className="flex-1 border-none focus:ring-0 bg-transparent"
                         />
                       </div>
@@ -506,21 +629,6 @@ function OrganizationPageContent() {
                 </div>
               </CardContent>
             </Card>
-
-            {/* Info Banner */}
-            {hasChanges && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg px-4 py-3 flex items-start gap-3">
-                <Info className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-blue-900 mb-1">
-                    You have unsaved changes
-                  </p>
-                  <p className="text-xs text-blue-700">
-                    Click "Save Changes" to apply your updates to the organization settings.
-                  </p>
-                </div>
-              </div>
-            )}
           </div>
         )}
 
@@ -575,11 +683,21 @@ function OrganizationPageContent() {
 
             {/* Team List */}
             <Card>
-              <CardHeader>
-                <CardTitle>Team</CardTitle>
-                <CardDescription>
-                  Active members and pending invitation requests
-                </CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Team</CardTitle>
+                  <CardDescription>
+                    Active members and pending invitation requests
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="primary"
+                  onClick={() => setInviteModalOpen(true)}
+                  className="shadow-md shadow-primary/10"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Send Invitation
+                </Button>
               </CardHeader>
               <CardContent className="p-0">
                 {isLoading ? (
@@ -822,11 +940,24 @@ function OrganizationPageContent() {
 
             {/* Payment Methods */}
             <Card>
-              <CardHeader>
-                <CardTitle>Payment Methods</CardTitle>
-                <CardDescription>
-                  Cards saved for automatic billing
-                </CardDescription>
+              <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                  <CardTitle>Payment Methods</CardTitle>
+                  <CardDescription>
+                    Cards saved for automatic billing
+                  </CardDescription>
+                </div>
+                {!showAddCard && (
+                  <Button
+                    variant="primary"
+                    onClick={handleAddCard}
+                    isLoading={isCreatingSetupIntent}
+                    className="shadow-md shadow-primary/10"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Payment Method
+                  </Button>
+                )}
               </CardHeader>
               <CardContent>
                 {isLoadingPaymentMethods ? (
@@ -839,13 +970,9 @@ function OrganizationPageContent() {
                       <CreditCard className="w-8 h-8 text-muted-foreground" />
                     </div>
                     <h3 className="text-lg font-medium text-foreground mb-2">No payment methods</h3>
-                    <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
+                    <p className="text-muted-foreground max-w-sm mx-auto">
                       Add a payment method to enable proposal creation.
                     </p>
-                    <Button variant="primary" onClick={handleAddCard} isLoading={isCreatingSetupIntent}>
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Payment Method
-                    </Button>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -1007,7 +1134,7 @@ function OrganizationPageContent() {
                       </div>
                       <div>
                         <p className="font-medium text-foreground">Basic Proposal</p>
-                        <p className="text-2xl font-bold text-primary">$5.00</p>
+                        <p className="text-2xl font-bold text-primary">{pricing.basic}</p>
                       </div>
                     </div>
                     <p className="text-sm text-muted-foreground">
@@ -1021,7 +1148,7 @@ function OrganizationPageContent() {
                       </div>
                       <div>
                         <p className="font-medium text-foreground">Advanced Analysis</p>
-                        <p className="text-2xl font-bold text-primary">$10.00</p>
+                        <p className="text-2xl font-bold text-primary">{pricing.advanced}</p>
                       </div>
                     </div>
                     <p className="text-sm text-muted-foreground">

@@ -18,7 +18,7 @@ import FilesTab from '@/components/pricing/FilesTab';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { SubcontractorSection } from '@/components/pricing/SubcontractorSection';
 import { AdvancedAnalysisModal, SubcontractorInfo } from '@/components/pricing/AdvancedAnalysisModal';
-import { Loader2, AlertCircle, ArrowLeft, Plus, Download, Share2 } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowLeft, Plus, Download, Share2, CheckCircle, XCircle, Send, ChevronDown } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
 import { ShareOrInviteModal } from '@/components/proposals/ShareOrInviteModal';
 import { useAuthStore } from '@/lib/stores/authStore';
@@ -67,7 +67,21 @@ export default function ProposalPage() {
   const [advancedModalOpen, setAdvancedModalOpen] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
   const urlsRefreshedRef = useRef(false);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node)) {
+        setStatusDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (proposalId) {
@@ -310,6 +324,45 @@ export default function ProposalPage() {
       toast.error(error?.response?.data?.detail || 'Failed to retry processing');
     } finally {
       setIsRetrying(false);
+    }
+  };
+
+  const handleUpdateBusinessStatus = async (newStatus: 'active' | 'no-bid' | 'submitted') => {
+    if (!currentProposal || currentProposal.business_status === newStatus) {
+      setStatusDropdownOpen(false);
+      return;
+    }
+
+    setStatusDropdownOpen(false);
+    setIsUpdatingStatus(true);
+    const oldStatus = currentProposal.business_status;
+
+    try {
+      // Optimistically update local state
+      setCurrentProposal({
+        ...currentProposal,
+        business_status: newStatus,
+      });
+
+      // Update in backend
+      await proposalsApi.updateBusinessStatus(proposalId, newStatus);
+
+      const statusLabels = {
+        'active': 'Active',
+        'no-bid': 'No-Bid',
+        'submitted': 'Submitted'
+      };
+      toast.success(`Proposal marked as ${statusLabels[newStatus]}`);
+    } catch (error: any) {
+      console.error('Failed to update business status:', error);
+      toast.error(error?.response?.data?.detail || 'Failed to update status');
+      // Revert on error
+      setCurrentProposal({
+        ...currentProposal,
+        business_status: oldStatus,
+      });
+    } finally {
+      setIsUpdatingStatus(false);
     }
   };
 
@@ -652,6 +705,95 @@ export default function ProposalPage() {
           </div>
           {/* Action buttons */}
           <div className="mt-2 flex items-center gap-2">
+            {/* Business Status Dropdown - only show for completed proposals */}
+            {currentProposal.status === 'completed' && (
+              <div className="relative" ref={statusDropdownRef}>
+                <button
+                  onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+                  disabled={isUpdatingStatus}
+                  className={`
+                    inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-all duration-200
+                    ${currentProposal.business_status === 'active'
+                      ? 'bg-blue-50 border-blue-200 text-blue-700'
+                      : currentProposal.business_status === 'no-bid'
+                      ? 'bg-amber-50 border-amber-200 text-amber-700'
+                      : currentProposal.business_status === 'submitted'
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                      : 'bg-background border-border text-foreground'}
+                    hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed
+                  `}
+                >
+                  {isUpdatingStatus ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : currentProposal.business_status === 'active' ? (
+                    <CheckCircle className="w-4 h-4" />
+                  ) : currentProposal.business_status === 'no-bid' ? (
+                    <XCircle className="w-4 h-4" />
+                  ) : currentProposal.business_status === 'submitted' ? (
+                    <Send className="w-4 h-4" />
+                  ) : (
+                    <CheckCircle className="w-4 h-4" />
+                  )}
+                  <span>
+                    {currentProposal.business_status === 'active' ? 'Active' :
+                     currentProposal.business_status === 'no-bid' ? 'No-Bid' :
+                     currentProposal.business_status === 'submitted' ? 'Submitted' : 'Active'}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${statusDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Dropdown Menu */}
+                {statusDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-1 w-44 bg-background border border-border rounded-lg shadow-lg py-1 z-50">
+                    <button
+                      onClick={() => handleUpdateBusinessStatus('active')}
+                      className={`
+                        w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors
+                        ${currentProposal.business_status === 'active'
+                          ? 'bg-blue-50 text-blue-700'
+                          : 'text-foreground hover:bg-muted'}
+                      `}
+                    >
+                      <CheckCircle className={`w-4 h-4 ${currentProposal.business_status === 'active' ? 'text-blue-600' : 'text-muted-foreground'}`} />
+                      <span>Active</span>
+                      {currentProposal.business_status === 'active' && (
+                        <CheckCircle className="w-3.5 h-3.5 ml-auto text-blue-600" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleUpdateBusinessStatus('no-bid')}
+                      className={`
+                        w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors
+                        ${currentProposal.business_status === 'no-bid'
+                          ? 'bg-amber-50 text-amber-700'
+                          : 'text-foreground hover:bg-muted'}
+                      `}
+                    >
+                      <XCircle className={`w-4 h-4 ${currentProposal.business_status === 'no-bid' ? 'text-amber-600' : 'text-muted-foreground'}`} />
+                      <span>No-Bid</span>
+                      {currentProposal.business_status === 'no-bid' && (
+                        <CheckCircle className="w-3.5 h-3.5 ml-auto text-amber-600" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleUpdateBusinessStatus('submitted')}
+                      className={`
+                        w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors
+                        ${currentProposal.business_status === 'submitted'
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : 'text-foreground hover:bg-muted'}
+                      `}
+                    >
+                      <Send className={`w-4 h-4 ${currentProposal.business_status === 'submitted' ? 'text-emerald-600' : 'text-muted-foreground'}`} />
+                      <span>Submitted</span>
+                      {currentProposal.business_status === 'submitted' && (
+                        <CheckCircle className="w-3.5 h-3.5 ml-auto text-emerald-600" />
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
             {/* Share button (admin only) */}
             {currentProposal.status === 'completed' && user?.role === 'admin' && (
               <Button
