@@ -551,8 +551,15 @@ export const usePricingStore = create<PricingState>((set, get) => {
     console.log('💾 Attempting auto-save to MongoDB...');
 
     try {
+      // Calculate total cost from all positions
+      const totalCost = state.positions.reduce((sum, position) => {
+        const positionTotal = position.total_amount || 0;
+        return sum + positionTotal;
+      }, 0);
+
       await proposalsApi.update(state.proposalId, {
         prime_contractor_name: state.primeContractorName,  // Save at proposal level
+        total_cost: totalCost,  // Add total cost calculation
         spreadsheet_data: {
           positions: state.positions,
           subcontractors: state.subcontractors,
@@ -934,7 +941,15 @@ export const usePricingStore = create<PricingState>((set, get) => {
       if (state.proposalId) {
         console.log('💾 Forcing immediate save to MongoDB...');
         try {
+          // Calculate total cost
+          const positions = get().positions;
+          const totalCost = positions.reduce((sum, position) => {
+            const positionTotal = position.total_amount || 0;
+            return sum + positionTotal;
+          }, 0);
+
           await proposalsApi.update(state.proposalId, {
+            total_cost: totalCost,
             spreadsheet_data: {
               positions: get().positions,
               subcontractors: get().subcontractors,
@@ -1682,7 +1697,14 @@ export const usePricingStore = create<PricingState>((set, get) => {
       // Save to backend
       if (state.proposalId) {
         try {
+          // Calculate total cost
+          const totalCost = updatedPositions.reduce((sum, position) => {
+            const positionTotal = position.total_amount || 0;
+            return sum + positionTotal;
+          }, 0);
+
           await proposalsApi.update(state.proposalId, {
+            total_cost: totalCost,
             spreadsheet_data: {
               positions: updatedPositions,
               subcontractors: updatedSubcontractors,

@@ -40,6 +40,35 @@ from auth.database import get_mongodb_client
 
 router = APIRouter(prefix="/proposals", tags=["proposals"])
 
+# Document preview cache (in-memory with 7-day TTL)
+import time
+
+class DocumentCache:
+    """Simple in-memory cache for document previews with 7-day TTL."""
+
+    def __init__(self):
+        self._cache = {}  # {idrive_key: (content, content_type, timestamp)}
+        self._ttl = 7 * 24 * 60 * 60  # 7 days in seconds
+
+    def get(self, key: str):
+        """Get cached document if exists and not expired."""
+        if key in self._cache:
+            content, content_type, timestamp = self._cache[key]
+            # Check if expired (7 days)
+            if time.time() - timestamp < self._ttl:
+                return content, content_type
+            else:
+                # Expired, remove from cache
+                del self._cache[key]
+        return None, None
+
+    def set(self, key: str, content: bytes, content_type: str):
+        """Cache document content with 7-day TTL."""
+        self._cache[key] = (content, content_type, time.time())
+
+# Global document cache instance
+document_cache = DocumentCache()
+
 # Get singleton ProposalCRUD instance
 async def get_crud():
     """Get singleton ProposalCRUD instance (async, thread-safe)."""
@@ -323,6 +352,7 @@ async def process_proposal_documents(
             user_id,
             {
                 "status": "completed",
+                "business_status": "active",  # Auto-assign active status when completed
                 "progress": 100,
                 "message": billing_message or "Processing complete",
                 "billing_status": billing_status,
@@ -540,13 +570,13 @@ async def get_proposal_stats(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Get proposal statistics for the current user.
+    Get proposal statistics for the current user with business status breakdown.
 
     Returns:
-        Statistics including total, completed, processing (not downloaded),
-        submitted (downloaded), and error counts
+        Statistics with count and value for active, analyzed (active+no-bid),
+        no-bid, and submitted proposals, plus processing and error counts.
 
-    Optimized: Uses single aggregation pipeline instead of multiple count queries
+    Optimized: Uses single aggregation pipeline with $facet
     """
     crud = await get_crud()
 
@@ -570,7 +600,7 @@ async def get_proposal_stats(
         else:
             match_query = {"user_id": str(current_user["_id"])}
 
-        # Use aggregation pipeline to get all counts in a single query
+        # Use aggregation pipeline to get all counts and values in a single query
         collection = crud.collection
         pipeline = [
             {"$match": match_query},
@@ -580,29 +610,68 @@ async def get_proposal_stats(
                         {"$match": {"status": "completed"}},
                         {"$count": "count"}
                     ],
-                    "completed": [
+                    "active": [
                         {
                             "$match": {
                                 "status": "completed",
-                                "$or": [
-                                    {"excel_downloaded": {"$exists": False}},
-                                    {"excel_downloaded": False}
-                                ]
+                                "business_status": "active"
                             }
                         },
-                        {"$count": "count"}
+                        {
+                            "$group": {
+                                "_id": None,
+                                "count": {"$sum": 1},
+                                "value": {"$sum": {"$ifNull": ["$total_cost", 0]}}
+                            }
+                        }
                     ],
-                    "processing": [
-                        {"$match": {"status": "processing"}},
-                        {"$count": "count"}
+                    "analyzed": [
+                        {
+                            "$match": {
+                                "status": "completed",
+                                "business_status": {"$in": ["active", "no-bid"]}
+                            }
+                        },
+                        {
+                            "$group": {
+                                "_id": None,
+                                "count": {"$sum": 1},
+                                "value": {"$sum": {"$ifNull": ["$total_cost", 0]}}
+                            }
+                        }
+                    ],
+                    "no_bid": [
+                        {
+                            "$match": {
+                                "status": "completed",
+                                "business_status": "no-bid"
+                            }
+                        },
+                        {
+                            "$group": {
+                                "_id": None,
+                                "count": {"$sum": 1},
+                                "value": {"$sum": {"$ifNull": ["$total_cost", 0]}}
+                            }
+                        }
                     ],
                     "submitted": [
                         {
                             "$match": {
                                 "status": "completed",
-                                "excel_downloaded": True
+                                "business_status": "submitted"
                             }
                         },
+                        {
+                            "$group": {
+                                "_id": None,
+                                "count": {"$sum": 1},
+                                "value": {"$sum": {"$ifNull": ["$total_cost", 0]}}
+                            }
+                        }
+                    ],
+                    "processing": [
+                        {"$match": {"status": "processing"}},
                         {"$count": "count"}
                     ],
                     "error": [
@@ -619,17 +688,33 @@ async def get_proposal_stats(
             stats = result[0]
             return {
                 "total": stats["total"][0]["count"] if stats["total"] else 0,
-                "completed": stats["completed"][0]["count"] if stats["completed"] else 0,
+                "active": {
+                    "count": stats["active"][0]["count"] if stats["active"] else 0,
+                    "value": stats["active"][0]["value"] if stats["active"] else 0
+                },
+                "analyzed": {
+                    "count": stats["analyzed"][0]["count"] if stats["analyzed"] else 0,
+                    "value": stats["analyzed"][0]["value"] if stats["analyzed"] else 0
+                },
+                "no_bid": {
+                    "count": stats["no_bid"][0]["count"] if stats["no_bid"] else 0,
+                    "value": stats["no_bid"][0]["value"] if stats["no_bid"] else 0
+                },
+                "submitted": {
+                    "count": stats["submitted"][0]["count"] if stats["submitted"] else 0,
+                    "value": stats["submitted"][0]["value"] if stats["submitted"] else 0
+                },
                 "processing": stats["processing"][0]["count"] if stats["processing"] else 0,
-                "submitted": stats["submitted"][0]["count"] if stats["submitted"] else 0,
                 "error": stats["error"][0]["count"] if stats["error"] else 0
             }
 
         return {
             "total": 0,
-            "completed": 0,
+            "active": {"count": 0, "value": 0},
+            "analyzed": {"count": 0, "value": 0},
+            "no_bid": {"count": 0, "value": 0},
+            "submitted": {"count": 0, "value": 0},
             "processing": 0,
-            "submitted": 0,
             "error": 0
         }
 
@@ -638,6 +723,245 @@ async def get_proposal_stats(
             status_code=500,
             detail=f"Failed to get proposal statistics: {str(e)}"
         )
+
+
+@router.get("/analytics/{business_status}")
+async def get_business_status_analytics(
+    business_status: str,
+    skip: int = 0,
+    limit: int = 100,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get detailed analytics for proposals with specific business status.
+
+    Supports special "analyzed" status which returns Active + No-Bid combined.
+    Returns all proposals matching the status with pagination support.
+    Frontend will handle client-side filtering and sorting.
+    """
+    # Validate status - "analyzed" is special case for Active + No-Bid
+    if business_status not in ["active", "no-bid", "submitted", "analyzed"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+
+    crud = await get_crud()
+    organization_id = current_user.get("organization_id")
+    role = current_user.get("role")
+
+    # Determine which business_status values to query
+    # "analyzed" queries both "active" and "no-bid" (superset)
+    if business_status == "analyzed":
+        status_match = {"$in": ["active", "no-bid"]}
+    else:
+        status_match = business_status
+
+    # Build base query with org isolation and RBAC
+    if organization_id:
+        if role == "admin":
+            match_query = {
+                "organization_id": organization_id,
+                "status": "completed",
+                "business_status": status_match
+            }
+        else:
+            match_query = {
+                "$or": [
+                    {"user_id": str(current_user["_id"])},
+                    {"shared_with": str(current_user["_id"])}
+                ],
+                "organization_id": organization_id,
+                "status": "completed",
+                "business_status": status_match
+            }
+    else:
+        match_query = {
+            "user_id": str(current_user["_id"]),
+            "status": "completed",
+            "business_status": status_match
+        }
+
+    collection = crud.collection
+
+    # Get summary metrics using aggregation
+    from datetime import datetime
+    pipeline = [
+        {"$match": match_query},
+        {
+            "$facet": {
+                "metrics": [
+                    {
+                        "$group": {
+                            "_id": None,
+                            "count": {"$sum": 1},
+                            "total_value": {"$sum": {"$ifNull": ["$total_cost", 0]}},
+                            "avg_age_ms": {
+                                "$avg": {
+                                    "$subtract": [datetime.utcnow(), "$created_at"]
+                                }
+                            },
+                            "contributors": {"$addToSet": "$user_id"}
+                        }
+                    }
+                ],
+                "proposals": [
+                    {"$sort": {"updated_at": -1}},  # Default sort by updated
+                    {"$skip": skip},
+                    {"$limit": limit},
+                    {
+                        "$project": {
+                            "_id": 1,
+                            "name": 1,
+                            "solicitation_number": 1,
+                            "total_cost": 1,
+                            "business_status": 1,
+                            "created_at": 1,
+                            "updated_at": 1,
+                            "user_id": 1
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+
+    result = list(collection.aggregate(pipeline))
+
+    if not result:
+        return {
+            "count": 0,
+            "total_value": 0,
+            "avg_value": 0,
+            "avg_age_days": 0,
+            "contributors_count": 0,
+            "proposals": [],
+            "has_more": False
+        }
+
+    data = result[0]
+    metrics = data["metrics"][0] if data["metrics"] else None
+
+    if not metrics:
+        return {
+            "count": 0,
+            "total_value": 0,
+            "avg_value": 0,
+            "avg_age_days": 0,
+            "contributors_count": 0,
+            "proposals": [],
+            "has_more": False
+        }
+
+    # Calculate metrics
+    count = metrics["count"]
+    total_value = metrics.get("total_value") or 0
+    avg_value = total_value / count if count > 0 else 0
+    avg_age_ms = metrics.get("avg_age_ms") or 0
+    avg_age_days = (avg_age_ms / (1000 * 60 * 60 * 24)) if avg_age_ms else 0
+
+    # Serialize proposals
+    proposals = []
+    for prop in data["proposals"]:
+        proposals.append({
+            "id": str(prop["_id"]),
+            "name": prop.get("name", "Untitled"),
+            "solicitation_number": prop.get("solicitation_number"),
+            "total_cost": prop.get("total_cost"),
+            "business_status": prop.get("business_status"),  # Include for tab filtering
+            "created_at": prop.get("created_at").isoformat() if prop.get("created_at") else None,
+            "updated_at": prop.get("updated_at").isoformat() if prop.get("updated_at") else None,
+            "user_id": prop.get("user_id")
+        })
+
+    return {
+        "count": count,
+        "total_value": total_value,
+        "avg_value": avg_value,
+        "avg_age_days": round(avg_age_days, 1),
+        "contributors_count": len(metrics.get("contributors", [])),
+        "proposals": proposals,
+        "has_more": len(proposals) == limit  # Indicate if more results available
+    }
+
+
+@router.get("/document-proxy")
+async def proxy_document(url: str, filename: str = "document"):
+    """
+    Proxy document content for iframe preview.
+
+    Fetches document from provided URL and streams it back
+    without X-Frame-Options header, enabling iframe embedding.
+
+    Note: This endpoint does not require authentication since iframes
+    cannot send Authorization headers. Access is controlled by the
+    presigned URL which expires after 7 days.
+
+    Args:
+        url: IDrive presigned URL to fetch
+        filename: Original filename for Content-Disposition header
+
+    Returns:
+        StreamingResponse with document content
+    """
+    from fastapi.responses import StreamingResponse
+    import httpx
+
+    # Check cache first (using URL as key)
+    cached_content, cached_type = document_cache.get(url)
+    if cached_content:
+        return StreamingResponse(
+            iter([cached_content]),
+            media_type=cached_type,
+            headers={
+                "Content-Disposition": f'inline; filename="{filename}"',
+                "Cache-Control": "private, max-age=604800",
+                "X-Cache": "HIT"
+            }
+        )
+
+    # Fetch document from IDrive and stream back
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.get(url, follow_redirects=True)
+
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=f"Failed to fetch document: HTTP {response.status_code}"
+                )
+
+            content_type = response.headers.get("content-type", "application/octet-stream")
+
+            # Infer content type from filename if generic
+            if content_type in ["binary/octet-stream", "application/octet-stream"]:
+                ext = filename.lower().split(".")[-1] if "." in filename else ""
+                content_types = {
+                    "pdf": "application/pdf",
+                    "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "xls": "application/vnd.ms-excel",
+                    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    "doc": "application/msword",
+                    "csv": "text/csv",
+                    "txt": "text/plain",
+                    "rtf": "application/rtf"
+                }
+                content_type = content_types.get(ext, content_type)
+
+            # Cache for 7 days
+            document_cache.set(url, response.content, content_type)
+
+            return StreamingResponse(
+                iter([response.content]),
+                media_type=content_type,
+                headers={
+                    "Content-Disposition": f'inline; filename="{filename}"',
+                    "Cache-Control": "private, max-age=604800",
+                    "X-Cache": "MISS"
+                }
+            )
+
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail="Document fetch timed out")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to proxy document: {str(e)}")
 
 
 @router.get("")
@@ -711,6 +1035,7 @@ async def list_proposals(
             "name": prop.get("name", "Untitled"),
             "solicitation_number": prop.get("solicitation_number"),
             "status": prop.get("status", "draft"),
+            "business_status": prop.get("business_status"),  # NEW: business workflow status
             "createdAt": prop.get("created_at"),  # Convert to camelCase
             "updatedAt": prop.get("updated_at"),  # Convert to camelCase
             "total_cost": prop.get("total_cost")
@@ -728,6 +1053,61 @@ async def list_proposals(
         }
 
     return result
+
+
+@router.patch("/{proposal_id}/business-status")
+async def update_business_status(
+    proposal_id: str,
+    business_status: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Update proposal business status (active, no-bid, submitted).
+
+    All users can change status of their own proposals.
+    Status can only be changed for completed proposals.
+    """
+    # Validate status
+    valid_statuses = ["active", "no-bid", "submitted"]
+    if business_status not in valid_statuses:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid status. Must be: {', '.join(valid_statuses)}"
+        )
+
+    crud = await get_crud()
+    organization_id = current_user.get("organization_id")
+    role = current_user.get("role")
+
+    # Get proposal with access control
+    proposal = crud.get_proposal(
+        proposal_id,
+        str(current_user["_id"]),
+        organization_id=organization_id,
+        role=role
+    )
+
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found")
+
+    # Validate can change status
+    can_change, reason = crud.can_change_business_status(proposal_id)
+    if not can_change:
+        raise HTTPException(status_code=400, detail=reason)
+
+    # Update status
+    updated = crud.update_proposal(
+        proposal_id,
+        str(current_user["_id"]),
+        {"business_status": business_status}
+    )
+
+    if not updated:
+        raise HTTPException(status_code=404, detail="Failed to update proposal")
+
+    # Serialize and return
+    from utils.helpers import serialize_doc
+    return serialize_doc(updated)
 
 
 @router.get("/{proposal_id}")
