@@ -105,6 +105,16 @@ async def get_current_user(
         user["role"] = current_org["role"]
         user["status"] = current_org["status"]
 
+        # Check terms and conditions version
+        user_version = user.get("terms_accepted_version")
+        current_version = config.CURRENT_TERMS_VERSION
+
+        # Add flag to indicate if user needs to accept updated terms
+        if user_version != current_version:
+            user["needs_terms_acceptance"] = True
+        else:
+            user["needs_terms_acceptance"] = False
+
         return user
 
     except jwt.ExpiredSignatureError:

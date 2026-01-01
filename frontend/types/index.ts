@@ -8,6 +8,10 @@ export interface User {
   role: 'admin' | 'user';
   status: 'active' | 'removed' | 'suspended';
   createdAt: string;
+  // Terms and Conditions acceptance
+  terms_accepted_version: string;
+  terms_accepted_at: string;
+  needs_terms_acceptance: boolean;
 }
 
 export interface LoginCredentials {
@@ -20,6 +24,7 @@ export interface SignupData {
   lastName: string;
   email: string;
   password: string;
+  terms_accepted: boolean;
 }
 
 export interface AuthResponse {
