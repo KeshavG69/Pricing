@@ -672,6 +672,38 @@
         "documentation": {}
     },
     {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "status",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
         "label": "CORSMiddleware",
         "importPath": "fastapi.middleware.cors",
         "description": "fastapi.middleware.cors",
@@ -717,14 +749,6 @@
         "description": "fastapi.responses",
         "isExtraImport": true,
         "detail": "fastapi.responses",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
         "documentation": {}
     },
     {
@@ -953,6 +977,14 @@
     },
     {
         "label": "stripe_webhooks",
+        "importPath": "routers",
+        "description": "routers",
+        "isExtraImport": true,
+        "detail": "routers",
+        "documentation": {}
+    },
+    {
+        "label": "terms",
         "importPath": "routers",
         "description": "routers",
         "isExtraImport": true,
@@ -1922,7 +1954,23 @@
         "documentation": {}
     },
     {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
         "label": "timezone",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
         "isExtraImport": true,
@@ -2015,22 +2063,6 @@
         "description": "dotenv",
         "isExtraImport": true,
         "detail": "dotenv",
-        "documentation": {}
-    },
-    {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
-        "isExtraImport": true,
-        "detail": "dotenv",
-        "documentation": {}
-    },
-    {
-        "label": "ObjectId",
-        "importPath": "bson",
-        "description": "bson",
-        "isExtraImport": true,
-        "detail": "bson",
         "documentation": {}
     },
     {
@@ -2244,7 +2276,7 @@
         "documentation": {}
     },
     {
-        "label": "ReturnDocument",
+        "label": "MongoClient",
         "importPath": "pymongo",
         "description": "pymongo",
         "isExtraImport": true,
@@ -2252,7 +2284,7 @@
         "documentation": {}
     },
     {
-        "label": "MongoClient",
+        "label": "ReturnDocument",
         "importPath": "pymongo",
         "description": "pymongo",
         "isExtraImport": true,
@@ -2401,6 +2433,30 @@
         "description": "auth",
         "isExtraImport": true,
         "detail": "auth",
+        "documentation": {}
+    },
+    {
+        "label": "config",
+        "importPath": "auth",
+        "description": "auth",
+        "isExtraImport": true,
+        "detail": "auth",
+        "documentation": {}
+    },
+    {
+        "label": "config",
+        "importPath": "auth",
+        "description": "auth",
+        "isExtraImport": true,
+        "detail": "auth",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
         "documentation": {}
     },
     {
@@ -2833,30 +2889,6 @@
     },
     {
         "label": "extract_with_llamaextract",
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
-        "isExtraImport": true,
-        "detail": "client.jd_parser",
-        "documentation": {}
-    },
-    {
-        "label": "parse_documents_to_dataframe",
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
-        "isExtraImport": true,
-        "detail": "client.jd_parser",
-        "documentation": {}
-    },
-    {
-        "label": "parse_documents_to_dataframe",
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
-        "isExtraImport": true,
-        "detail": "client.jd_parser",
-        "documentation": {}
-    },
-    {
-        "label": "parse_documents_to_dataframe",
         "importPath": "client.jd_parser",
         "description": "client.jd_parser",
         "isExtraImport": true,
@@ -3340,6 +3372,14 @@
         "documentation": {}
     },
     {
+        "label": "get_current_user",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
         "label": "get_stripe_service",
         "importPath": "client.stripe_client",
         "description": "client.stripe_client",
@@ -3499,22 +3539,6 @@
         "description": "client.gsa_parser",
         "isExtraImport": true,
         "detail": "client.gsa_parser",
-        "documentation": {}
-    },
-    {
-        "label": "parse_gsa_contract",
-        "importPath": "client.gsa_parser",
-        "description": "client.gsa_parser",
-        "isExtraImport": true,
-        "detail": "client.gsa_parser",
-        "documentation": {}
-    },
-    {
-        "label": "get_idrive_storage",
-        "importPath": "client.idrive_storage",
-        "description": "client.idrive_storage",
-        "isExtraImport": true,
-        "detail": "client.idrive_storage",
         "documentation": {}
     },
     {
@@ -3808,15 +3832,6 @@
         "documentation": {}
     },
     {
-        "label": "httpx",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "httpx",
-        "description": "httpx",
-        "detail": "httpx",
-        "documentation": {}
-    },
-    {
         "label": "bin_dir",
         "kind": 5,
         "importPath": "backend..venv.bin.activate_this",
@@ -4046,7 +4061,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "FRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "FRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -4055,7 +4070,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "SMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "SMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -4064,7 +4079,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "SMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "SMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -4073,7 +4088,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "SMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "SMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -4082,7 +4097,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "SMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "SMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -4091,7 +4106,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "FROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "FROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -4100,7 +4115,16 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "GOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")",
+        "peekOfCode": "GOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
+        "detail": "backend.auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "CURRENT_TERMS_VERSION",
+        "kind": 5,
+        "importPath": "backend.auth.config",
+        "description": "backend.auth.config",
+        "peekOfCode": "CURRENT_TERMS_VERSION = \"1.0.0\"",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -4244,7 +4268,7 @@
         "kind": 6,
         "importPath": "backend.auth.models",
         "description": "backend.auth.models",
-        "peekOfCode": "class UserSignup(BaseModel):\n    firstName: str\n    lastName: str\n    email: EmailStr\n    password: str\nclass UserLogin(BaseModel):\n    email: EmailStr\n    password: str\nclass UserResponse(BaseModel):\n    id: str",
+        "peekOfCode": "class UserSignup(BaseModel):\n    firstName: str\n    lastName: str\n    email: EmailStr\n    password: str\n    terms_accepted: bool\nclass UserLogin(BaseModel):\n    email: EmailStr\n    password: str\nclass UserResponse(BaseModel):",
         "detail": "backend.auth.models",
         "documentation": {}
     },
@@ -4262,7 +4286,7 @@
         "kind": 6,
         "importPath": "backend.auth.models",
         "description": "backend.auth.models",
-        "peekOfCode": "class UserResponse(BaseModel):\n    id: str\n    firstName: str\n    lastName: str\n    email: str\n    organization_id: Optional[str] = None\n    role: Optional[str] = None\n    status: Optional[str] = None\n    createdAt: datetime\nclass Token(BaseModel):",
+        "peekOfCode": "class UserResponse(BaseModel):\n    id: str\n    firstName: str\n    lastName: str\n    email: str\n    organization_id: Optional[str] = None\n    role: Optional[str] = None\n    status: Optional[str] = None\n    createdAt: datetime\n    # Terms and Conditions",
         "detail": "backend.auth.models",
         "documentation": {}
     },
@@ -4973,7 +4997,7 @@
         "kind": 5,
         "importPath": "backend.routers.auth",
         "description": "backend.routers.auth",
-        "peekOfCode": "router = APIRouter(prefix=\"/auth\", tags=[\"authentication\"])\n@router.post(\"/signup\", response_model=UserResponse)\nasync def signup(user_data: UserSignup):\n    \"\"\"\n    Register a new user\n    Args:\n        user_data: User signup data including firstName, lastName, email, password\n    Returns:\n        UserResponse: Created user information\n    \"\"\"",
+        "peekOfCode": "router = APIRouter(prefix=\"/auth\", tags=[\"authentication\"])\n@router.post(\"/signup\", response_model=UserResponse)\nasync def signup(user_data: UserSignup):\n    \"\"\"\n    Register a new user\n    Args:\n        user_data: User signup data including firstName, lastName, email, password, terms_accepted\n    Returns:\n        UserResponse: Created user information\n    \"\"\"",
         "detail": "backend.routers.auth",
         "documentation": {}
     },
@@ -5365,6 +5389,15 @@
         "documentation": {}
     },
     {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.routers.terms",
+        "description": "backend.routers.terms",
+        "peekOfCode": "router = APIRouter(prefix=\"/api/terms\", tags=[\"terms\"])\n@router.post(\"/accept\")\nasync def accept_terms(current_user: dict = Depends(get_current_user)):\n    \"\"\"\n    Accept current terms version.\n    Requires authentication.\n    Updates user document with current version + timestamp.\n    Args:\n        current_user: Authenticated user from JWT token\n    Returns:",
+        "detail": "backend.routers.terms",
+        "documentation": {}
+    },
+    {
         "label": "SwitchOrganizationRequest",
         "kind": 6,
         "importPath": "backend.routers.workspace",
@@ -5533,6 +5566,15 @@
         "description": "backend.scripts.migrate_business_status",
         "peekOfCode": "def migrate_business_status():\n    \"\"\"\n    Add business_status field to all completed proposals.\n    Sets business_status = \"active\" for all completed proposals that don't have one yet.\n    Also creates necessary database indexes.\n    \"\"\"\n    mongodb_url = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\n    database_name = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\n    client = MongoClient(mongodb_url)\n    db = client.get_database(database_name)",
         "detail": "backend.scripts.migrate_business_status",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_existing_users",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_terms",
+        "description": "backend.scripts.migrate_terms",
+        "peekOfCode": "def migrate_existing_users():\n    \"\"\"\n    Add terms acceptance fields to all existing users.\n    Sets them to current version with createdAt timestamp (grandfathered).\n    \"\"\"\n    print(f\"🚀 Starting terms acceptance migration...\")\n    print(f\"📌 Current terms version: {config.CURRENT_TERMS_VERSION}\")\n    users_collection = get_mongodb_client().get_users_collection()\n    # Find users without terms acceptance fields\n    users_to_migrate = users_collection.count_documents({",
+        "detail": "backend.scripts.migrate_terms",
         "documentation": {}
     },
     {
@@ -5929,159 +5971,6 @@
         "description": "backend.utils.proposals",
         "peekOfCode": "_lock = threading.RLock()\ndef get_proposal_crud() -> ProposalCRUD:\n    \"\"\"\n    Get or create ProposalCRUD instance (singleton pattern)\n    Returns:\n        ProposalCRUD instance\n    \"\"\"\n    global _proposal_crud\n    with _lock:\n        if _proposal_crud is None:",
         "detail": "backend.utils.proposals",
-        "documentation": {}
-    },
-    {
-        "label": "mongodb",
-        "kind": 5,
-        "importPath": "backend.check_mongodb",
-        "description": "backend.check_mongodb",
-        "peekOfCode": "mongodb = get_mongodb_client()\ndb = mongodb.get_database()\n# Find the proposal\nproposal_id = ObjectId(\"6952bf5befd4ee452bc6c3f1\")  # Fresh upload\nproposal = db.proposals.find_one({\"_id\": proposal_id})\nif not proposal:\n    print(f\"Proposal {proposal_id} not found!\")\n    exit(1)\nprint(\"=\" * 80)\nprint(\"CHECKING MONGODB DATA\")",
-        "detail": "backend.check_mongodb",
-        "documentation": {}
-    },
-    {
-        "label": "db",
-        "kind": 5,
-        "importPath": "backend.check_mongodb",
-        "description": "backend.check_mongodb",
-        "peekOfCode": "db = mongodb.get_database()\n# Find the proposal\nproposal_id = ObjectId(\"6952bf5befd4ee452bc6c3f1\")  # Fresh upload\nproposal = db.proposals.find_one({\"_id\": proposal_id})\nif not proposal:\n    print(f\"Proposal {proposal_id} not found!\")\n    exit(1)\nprint(\"=\" * 80)\nprint(\"CHECKING MONGODB DATA\")\nprint(\"=\" * 80)",
-        "detail": "backend.check_mongodb",
-        "documentation": {}
-    },
-    {
-        "label": "proposal_id",
-        "kind": 5,
-        "importPath": "backend.check_mongodb",
-        "description": "backend.check_mongodb",
-        "peekOfCode": "proposal_id = ObjectId(\"6952bf5befd4ee452bc6c3f1\")  # Fresh upload\nproposal = db.proposals.find_one({\"_id\": proposal_id})\nif not proposal:\n    print(f\"Proposal {proposal_id} not found!\")\n    exit(1)\nprint(\"=\" * 80)\nprint(\"CHECKING MONGODB DATA\")\nprint(\"=\" * 80)\n# Check if we have positions or jobs\nif proposal.get(\"spreadsheet_data\", {}).get(\"positions\"):",
-        "detail": "backend.check_mongodb",
-        "documentation": {}
-    },
-    {
-        "label": "proposal",
-        "kind": 5,
-        "importPath": "backend.check_mongodb",
-        "description": "backend.check_mongodb",
-        "peekOfCode": "proposal = db.proposals.find_one({\"_id\": proposal_id})\nif not proposal:\n    print(f\"Proposal {proposal_id} not found!\")\n    exit(1)\nprint(\"=\" * 80)\nprint(\"CHECKING MONGODB DATA\")\nprint(\"=\" * 80)\n# Check if we have positions or jobs\nif proposal.get(\"spreadsheet_data\", {}).get(\"positions\"):\n    positions = proposal[\"spreadsheet_data\"][\"positions\"]",
-        "detail": "backend.check_mongodb",
-        "documentation": {}
-    },
-    {
-        "label": "aiml_positions",
-        "kind": 5,
-        "importPath": "backend.check_mongodb",
-        "description": "backend.check_mongodb",
-        "peekOfCode": "aiml_positions = [p for p in positions if 'Artificial Intelligence' in p.get('labor_category', '')]\nprint(f\"\\n\" + \"=\" * 80)\nprint(f\"AI/ML Analyst: Found {len(aiml_positions)} positions\")\nprint(\"=\" * 80)\nfor i, pos in enumerate(aiml_positions, 1):\n    print(f\"\\nPosition {i}:\")\n    print(f\"  Labor Category: {pos.get('labor_category')}\")\n    print(f\"  hours_per_year: {pos.get('hours_per_year', 'NOT SET')}\")\n    if pos.get('hours_per_year'):\n        total = sum(pos['hours_per_year'].values())",
-        "detail": "backend.check_mongodb",
-        "documentation": {}
-    },
-    {
-        "label": "sysadmin_positions",
-        "kind": 5,
-        "importPath": "backend.check_mongodb",
-        "description": "backend.check_mongodb",
-        "peekOfCode": "sysadmin_positions = [p for p in positions if p.get('labor_category') == 'Systems Administrator (Windows)']\nprint(f\"\\n\" + \"=\" * 80)\nprint(f\"Systems Administrator (Windows): Found {len(sysadmin_positions)} positions\")\nprint(\"=\" * 80)\nif len(sysadmin_positions) > 0:\n    print(f\"\\nShowing first 3 positions:\")\n    for i, pos in enumerate(sysadmin_positions[:3], 1):\n        print(f\"\\n  Position {i}:\")\n        print(f\"    hours_per_year: {pos.get('hours_per_year', 'NOT SET')}\")\n        if pos.get('hours_per_year'):",
-        "detail": "backend.check_mongodb",
-        "documentation": {}
-    },
-    {
-        "label": "subs",
-        "kind": 5,
-        "importPath": "backend.check_mongodb",
-        "description": "backend.check_mongodb",
-        "peekOfCode": "subs = proposal.get(\"spreadsheet_data\", {}).get(\"subcontractors\", [])\nprint(f\"\\n\" + \"=\" * 80)\nprint(f\"SUBCONTRACTORS: {len(subs)} found\")\nprint(\"=\" * 80)\nfor sub in subs:\n    print(f\"\\n{sub.get('name', 'Unknown')}:\")\n    print(f\"  Workshare: {sub.get('worksharePercent', 0)}%\")\n    print(f\"  Positions: {len(sub.get('positions', []))}\")\n    # Check first Systems Admin position\n    sysadmin_sub = [p for p in sub.get('positions', []) if 'Systems Administrator' in p.get('labor_category', '')]",
-        "detail": "backend.check_mongodb",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_URL",
-        "kind": 5,
-        "importPath": "backend.test_document_proxy",
-        "description": "backend.test_document_proxy",
-        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\")\nprint(f\"Database: {MONGODB_DATABASE}\")\n# Connect to MongoDB\nclient = MongoClient(MONGODB_URL)\ndb = client[MONGODB_DATABASE]\nproposals = db[\"proposals\"]\n# Find a proposal with documents that have idrive_key\nproposal = proposals.find_one(\n    {\"documents\": {\"$elemMatch\": {\"idrive_key\": {\"$exists\": True, \"$ne\": None}}}}",
-        "detail": "backend.test_document_proxy",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_DATABASE",
-        "kind": 5,
-        "importPath": "backend.test_document_proxy",
-        "description": "backend.test_document_proxy",
-        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\")\nprint(f\"Database: {MONGODB_DATABASE}\")\n# Connect to MongoDB\nclient = MongoClient(MONGODB_URL)\ndb = client[MONGODB_DATABASE]\nproposals = db[\"proposals\"]\n# Find a proposal with documents that have idrive_key\nproposal = proposals.find_one(\n    {\"documents\": {\"$elemMatch\": {\"idrive_key\": {\"$exists\": True, \"$ne\": None}}}}\n)",
-        "detail": "backend.test_document_proxy",
-        "documentation": {}
-    },
-    {
-        "label": "client",
-        "kind": 5,
-        "importPath": "backend.test_document_proxy",
-        "description": "backend.test_document_proxy",
-        "peekOfCode": "client = MongoClient(MONGODB_URL)\ndb = client[MONGODB_DATABASE]\nproposals = db[\"proposals\"]\n# Find a proposal with documents that have idrive_key\nproposal = proposals.find_one(\n    {\"documents\": {\"$elemMatch\": {\"idrive_key\": {\"$exists\": True, \"$ne\": None}}}}\n)\nif not proposal:\n    print(\"❌ No proposals found with documents that have idrive_key\")\n    exit(1)",
-        "detail": "backend.test_document_proxy",
-        "documentation": {}
-    },
-    {
-        "label": "db",
-        "kind": 5,
-        "importPath": "backend.test_document_proxy",
-        "description": "backend.test_document_proxy",
-        "peekOfCode": "db = client[MONGODB_DATABASE]\nproposals = db[\"proposals\"]\n# Find a proposal with documents that have idrive_key\nproposal = proposals.find_one(\n    {\"documents\": {\"$elemMatch\": {\"idrive_key\": {\"$exists\": True, \"$ne\": None}}}}\n)\nif not proposal:\n    print(\"❌ No proposals found with documents that have idrive_key\")\n    exit(1)\nprint(f\"✅ Found proposal: {proposal.get('name', 'Unnamed')}\")",
-        "detail": "backend.test_document_proxy",
-        "documentation": {}
-    },
-    {
-        "label": "proposals",
-        "kind": 5,
-        "importPath": "backend.test_document_proxy",
-        "description": "backend.test_document_proxy",
-        "peekOfCode": "proposals = db[\"proposals\"]\n# Find a proposal with documents that have idrive_key\nproposal = proposals.find_one(\n    {\"documents\": {\"$elemMatch\": {\"idrive_key\": {\"$exists\": True, \"$ne\": None}}}}\n)\nif not proposal:\n    print(\"❌ No proposals found with documents that have idrive_key\")\n    exit(1)\nprint(f\"✅ Found proposal: {proposal.get('name', 'Unnamed')}\")\n# Get first document with idrive_key",
-        "detail": "backend.test_document_proxy",
-        "documentation": {}
-    },
-    {
-        "label": "proposal",
-        "kind": 5,
-        "importPath": "backend.test_document_proxy",
-        "description": "backend.test_document_proxy",
-        "peekOfCode": "proposal = proposals.find_one(\n    {\"documents\": {\"$elemMatch\": {\"idrive_key\": {\"$exists\": True, \"$ne\": None}}}}\n)\nif not proposal:\n    print(\"❌ No proposals found with documents that have idrive_key\")\n    exit(1)\nprint(f\"✅ Found proposal: {proposal.get('name', 'Unnamed')}\")\n# Get first document with idrive_key\ndoc = None\nfor d in proposal.get(\"documents\", []):",
-        "detail": "backend.test_document_proxy",
-        "documentation": {}
-    },
-    {
-        "label": "doc",
-        "kind": 5,
-        "importPath": "backend.test_document_proxy",
-        "description": "backend.test_document_proxy",
-        "peekOfCode": "doc = None\nfor d in proposal.get(\"documents\", []):\n    if d.get(\"idrive_key\"):\n        doc = d\n        break\nif not doc:\n    print(\"❌ No document with idrive_key found\")\n    exit(1)\nprint(f\"✅ Found document: {doc.get('filename', 'Unknown')}\")\nprint(f\"   IDrive Key: {doc['idrive_key']}\")",
-        "detail": "backend.test_document_proxy",
-        "documentation": {}
-    },
-    {
-        "label": "storage",
-        "kind": 5,
-        "importPath": "backend.test_document_proxy",
-        "description": "backend.test_document_proxy",
-        "peekOfCode": "storage = get_idrive_storage()\nfresh_url = storage.get_presigned_url(doc[\"idrive_key\"])\nprint(f\"   Fresh URL: {fresh_url[:100]}...\")\n# Test fetching the URL via httpx\nprint(\"\\n📡 Testing fetch via httpx...\")\ntry:\n    with httpx.Client(timeout=30.0) as http_client:\n        response = http_client.get(fresh_url, follow_redirects=True)\n        print(f\"   Status: {response.status_code}\")\n        print(f\"   Content-Type: {response.headers.get('content-type', 'N/A')}\")",
-        "detail": "backend.test_document_proxy",
-        "documentation": {}
-    },
-    {
-        "label": "fresh_url",
-        "kind": 5,
-        "importPath": "backend.test_document_proxy",
-        "description": "backend.test_document_proxy",
-        "peekOfCode": "fresh_url = storage.get_presigned_url(doc[\"idrive_key\"])\nprint(f\"   Fresh URL: {fresh_url[:100]}...\")\n# Test fetching the URL via httpx\nprint(\"\\n📡 Testing fetch via httpx...\")\ntry:\n    with httpx.Client(timeout=30.0) as http_client:\n        response = http_client.get(fresh_url, follow_redirects=True)\n        print(f\"   Status: {response.status_code}\")\n        print(f\"   Content-Type: {response.headers.get('content-type', 'N/A')}\")\n        content_length = response.headers.get('content-length', 'N/A')",
-        "detail": "backend.test_document_proxy",
-        "documentation": {}
-    },
-    {
-        "label": "test_full_extraction",
-        "kind": 2,
-        "importPath": "backend.test_gsa_llm_extraction",
-        "description": "backend.test_gsa_llm_extraction",
-        "peekOfCode": "def test_full_extraction(file_path: str):\n    \"\"\"Test the full GSA contract extraction pipeline.\"\"\"\n    print(f\"\\n{'='*80}\")\n    print(f\"Testing GSA Contract Extraction - Full Pipeline\")\n    print(f\"{'='*80}\")\n    print(f\"File: {file_path}\\n\")\n    print(\"Pipeline:\")\n    print(\"  0. ADAPTIVE ROUTING:\")\n    print(\"     • Estimate page count based on file format\")\n    print(\"     • < 50 pages: Full document strategy (90-95% accuracy)\")",
-        "detail": "backend.test_gsa_llm_extraction",
         "documentation": {}
     },
     {

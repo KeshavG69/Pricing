@@ -198,6 +198,17 @@ def create_indexes():
     else:
         print("   ⚠ Already exists: email + organizations.organization_id")
 
+    # Terms and Conditions indexes
+    if safe_create_index(users, "terms_accepted_version", "terms_version_index"):
+        print("   ✓ Created: terms_accepted_version")
+    else:
+        print("   ⚠ Already exists: terms_accepted_version")
+
+    if safe_create_index(users, [("terms_accepted_version", ASCENDING), ("terms_accepted_at", DESCENDING)], "terms_version_date_index"):
+        print("   ✓ Created: terms_accepted_version + terms_accepted_at")
+    else:
+        print("   ⚠ Already exists: terms_accepted_version + terms_accepted_at")
+
     # =====================================================================
     # ORGANIZATIONS COLLECTION
     # =====================================================================
