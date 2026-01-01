@@ -4286,7 +4286,7 @@
         "kind": 6,
         "importPath": "backend.auth.models",
         "description": "backend.auth.models",
-        "peekOfCode": "class UserResponse(BaseModel):\n    id: str\n    firstName: str\n    lastName: str\n    email: str\n    organization_id: Optional[str] = None\n    role: Optional[str] = None\n    status: Optional[str] = None\n    createdAt: datetime\nclass Token(BaseModel):",
+        "peekOfCode": "class UserResponse(BaseModel):\n    id: str\n    firstName: str\n    lastName: str\n    email: str\n    organization_id: Optional[str] = None\n    role: Optional[str] = None\n    status: Optional[str] = None\n    createdAt: datetime\n    # Terms and Conditions",
         "detail": "backend.auth.models",
         "documentation": {}
     },
@@ -5393,7 +5393,7 @@
         "kind": 5,
         "importPath": "backend.routers.terms",
         "description": "backend.routers.terms",
-        "peekOfCode": "router = APIRouter(prefix=\"/api/terms\", tags=[\"terms\"])\n@router.get(\"/current-version\")\nasync def get_current_version():\n    \"\"\"\n    Get the current terms version.\n    Public endpoint - no authentication required.\n    Returns:\n        dict: {\"version\": \"1.0.0\"}\n    \"\"\"\n    return {\"version\": config.CURRENT_TERMS_VERSION}",
+        "peekOfCode": "router = APIRouter(prefix=\"/api/terms\", tags=[\"terms\"])\n@router.post(\"/accept\")\nasync def accept_terms(current_user: dict = Depends(get_current_user)):\n    \"\"\"\n    Accept current terms version.\n    Requires authentication.\n    Updates user document with current version + timestamp.\n    Args:\n        current_user: Authenticated user from JWT token\n    Returns:",
         "detail": "backend.routers.terms",
         "documentation": {}
     },

@@ -8,6 +8,7 @@ import { useBillingStore } from '@/lib/stores/billingStore';
 import TopNavBar from './TopNavBar';
 import ProposalsSidebar from './ProposalsSidebar';
 import { AddPaymentPrompt, PaymentRequiredModal } from '@/components/billing';
+import { TermsBlockingModal } from '@/components/terms/TermsBlockingModal';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -99,6 +100,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Billing Modals */}
       <AddPaymentPrompt />
       <PaymentRequiredModal />
+
+      {/* Terms and Conditions Blocking Modal */}
+      <TermsBlockingModal />
     </div>
   );
 }

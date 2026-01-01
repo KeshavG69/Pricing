@@ -31,6 +31,7 @@ import {
   Receipt,
   AlertCircle,
   Loader2,
+  FileText,
 } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
 import { isAdmin, canRemoveUser, getUserDisplayName, getUserInitials } from '@/lib/utils/permissions';
@@ -38,7 +39,7 @@ import { OrganizationSettings, InviteUserRequest } from '@/types';
 import apiClient from '@/lib/api/client';
 import { pricing } from '@/lib/config';
 
-type TabType = 'settings' | 'team' | 'billing';
+type TabType = 'settings' | 'team' | 'billing' | 'legal';
 
 // Wrapper component to handle Suspense for useSearchParams
 export default function OrganizationPage() {
@@ -95,7 +96,7 @@ function OrganizationPageContent() {
   // Tab state - read initial value from URL
   const tabFromUrl = searchParams.get('tab') as TabType | null;
   const [activeTab, setActiveTab] = useState<TabType>(
-    tabFromUrl && ['settings', 'team', 'billing'].includes(tabFromUrl) ? tabFromUrl : 'settings'
+    tabFromUrl && ['settings', 'team', 'billing', 'legal'].includes(tabFromUrl) ? tabFromUrl : 'settings'
   );
 
   // Settings form state
@@ -467,6 +468,17 @@ function OrganizationPageContent() {
             >
               <CreditCard className="w-4 h-4 inline-block mr-2" />
               Billing
+            </button>
+            <button
+              onClick={() => setActiveTab('legal')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'legal'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+              }`}
+            >
+              <FileText className="w-4 h-4 inline-block mr-2" />
+              Legal
             </button>
           </nav>
         </div>
@@ -1153,6 +1165,138 @@ function OrganizationPageContent() {
                     </div>
                     <p className="text-sm text-muted-foreground">
                       Deep competitive analysis and pricing recommendations
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Legal Tab */}
+        {activeTab === 'legal' && (
+          <div className="space-y-6">
+            {/* Terms Acceptance Status Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Terms and Conditions</CardTitle>
+                <CardDescription>
+                  Your acceptance status and legal documents
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {/* Acceptance Status */}
+                  <div className="flex items-center justify-between p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                        <CheckCircle className="w-5 h-5 text-emerald-600" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-emerald-900">
+                          Terms Accepted
+                        </p>
+                        <p className="text-xs text-emerald-700">
+                          Version {user?.terms_accepted_version || '1.0.0'} • Accepted on{' '}
+                          {user?.terms_accepted_at
+                            ? new Date(user.terms_accepted_at).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric'
+                              })
+                            : 'N/A'}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Legal Documents */}
+                  <div>
+                    <h3 className="text-sm font-semibold text-foreground mb-3">
+                      Legal Documents
+                    </h3>
+                    <div className="space-y-3">
+                      {/* Full Terms */}
+                      <a
+                        href="/legal/terms?tab=terms"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
+                            <FileText className="w-5 h-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                              Full Terms & Conditions
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Complete legal document
+                            </p>
+                          </div>
+                        </div>
+                        <svg className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+
+                      {/* Plain English Summary */}
+                      <a
+                        href="/legal/terms?tab=summary"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                            <Info className="w-5 h-5 text-purple-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                              Plain English Summary
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Easy-to-read overview
+                            </p>
+                          </div>
+                        </div>
+                        <svg className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+
+                      {/* Enterprise Addendum */}
+                      <a
+                        href="/legal/terms?tab=enterprise"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors group"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center">
+                            <Building className="w-5 h-5 text-orange-600" />
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                              Enterprise Addendum
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              For enterprise customers
+                            </p>
+                          </div>
+                        </div>
+                        <svg className="w-5 h-5 text-muted-foreground group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    </div>
+                  </div>
+
+                  {/* Help Text */}
+                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-900">
+                      <strong>Note:</strong> If our Terms and Conditions are updated, you'll be prompted to review and accept the new version before continuing to use PriceIQ.
                     </p>
                   </div>
                 </div>

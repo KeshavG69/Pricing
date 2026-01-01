@@ -119,6 +119,17 @@ async def login(user_data: UserLogin, request: Request):
             ip_address=ip_address
         )
 
+        # Check terms acceptance status
+        from auth import config
+        user_version = user_doc.get("terms_accepted_version")
+        current_version = config.CURRENT_TERMS_VERSION
+        needs_terms_acceptance = (user_version != current_version)
+
+        # Add terms fields to user object
+        user.terms_accepted_version = user_version
+        user.terms_accepted_at = user_doc.get("terms_accepted_at")
+        user.needs_terms_acceptance = needs_terms_acceptance
+
         # Return tokens in response body (not cookies)
         return {
             "access_token": access_token,
@@ -200,6 +211,17 @@ async def google_login(
             ip_address=ip_address
         )
 
+        # Check terms acceptance status
+        from auth import config
+        user_version = user_doc.get("terms_accepted_version")
+        current_version = config.CURRENT_TERMS_VERSION
+        needs_terms_acceptance = (user_version != current_version)
+
+        # Add terms fields to user object
+        user.terms_accepted_version = user_version
+        user.terms_accepted_at = user_doc.get("terms_accepted_at")
+        user.needs_terms_acceptance = needs_terms_acceptance
+
         # Return tokens in response body
         return {
             "access_token": access_token,
@@ -234,7 +256,11 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user_fr
         "organization_id": str(current_user.get("organization_id")) if current_user.get("organization_id") else None,
         "role": current_user.get("role"),
         "status": current_user.get("status"),
-        "created_at": current_user["createdAt"].isoformat() if current_user.get("createdAt") else None
+        "created_at": current_user["createdAt"].isoformat() if current_user.get("createdAt") else None,
+        # Terms and conditions
+        "terms_accepted_version": current_user.get("terms_accepted_version"),
+        "terms_accepted_at": current_user.get("terms_accepted_at").isoformat() if current_user.get("terms_accepted_at") else None,
+        "needs_terms_acceptance": current_user.get("needs_terms_acceptance", False)
     }
 
 

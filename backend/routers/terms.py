@@ -1,7 +1,7 @@
 """
 Terms and Conditions router for PriceIQ.
-Provides version tracking and authenticated acceptance tracking.
-Content is served from frontend for optimal performance.
+Provides authenticated acceptance tracking.
+Version and content are served from frontend for optimal performance.
 """
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -11,19 +11,6 @@ from auth.database import get_mongodb_client
 from auth import config
 
 router = APIRouter(prefix="/api/terms", tags=["terms"])
-
-
-@router.get("/current-version")
-async def get_current_version():
-    """
-    Get the current terms version.
-
-    Public endpoint - no authentication required.
-
-    Returns:
-        dict: {"version": "1.0.0"}
-    """
-    return {"version": config.CURRENT_TERMS_VERSION}
 
 
 @router.post("/accept")
