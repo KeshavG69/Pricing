@@ -18,12 +18,19 @@ export default function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [validationError, setValidationError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
     setValidationError('');
+
+    // Validate terms acceptance
+    if (!termsAccepted) {
+      setValidationError('You must accept the Terms and Conditions');
+      return;
+    }
 
     // Validate passwords match
     if (password !== confirmPassword) {
@@ -38,7 +45,7 @@ export default function SignupPage() {
     }
 
     try {
-      await signup({ firstName, lastName, email, password });
+      await signup({ firstName, lastName, email, password, terms_accepted: termsAccepted });
       router.push('/dashboard');
     } catch (err) {
       console.error('Signup failed:', err);
@@ -125,6 +132,37 @@ export default function SignupPage() {
                 required
                 autoComplete="new-password"
               />
+
+              {/* Terms and Conditions Checkbox */}
+              <div className="flex items-start gap-3 pt-2">
+                <input
+                  type="checkbox"
+                  id="terms"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  className="mt-1 w-4 h-4 text-primary border-gray-300 rounded focus:ring-primary cursor-pointer"
+                />
+                <label htmlFor="terms" className="text-sm text-muted-foreground cursor-pointer">
+                  I agree to the{' '}
+                  <a
+                    href="/legal/terms"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline font-medium"
+                  >
+                    Terms and Conditions
+                  </a>
+                  {' '}and{' '}
+                  <a
+                    href="/legal/privacy"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-primary hover:underline font-medium"
+                  >
+                    Privacy Policy
+                  </a>
+                </label>
+              </div>
 
               <Button
                 type="submit"

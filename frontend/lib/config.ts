@@ -17,6 +17,11 @@ export const config = {
 
   // App
   appName: process.env.NEXT_PUBLIC_APP_NAME || 'PriceIQ',
+
+  // Terms and Conditions
+  terms: {
+    currentVersion: process.env.NEXT_PUBLIC_TERMS_VERSION || '1.0.0',
+  },
 } as const;
 
 /**

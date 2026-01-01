@@ -36,12 +36,20 @@ async def signup(user_data: UserSignup):
     Register a new user
 
     Args:
-        user_data: User signup data including firstName, lastName, email, password
+        user_data: User signup data including firstName, lastName, email, password, terms_accepted
 
     Returns:
         UserResponse: Created user information
     """
     try:
+        # Validate terms acceptance
+        if not user_data.terms_accepted:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You must accept the Terms and Conditions to create an account"
+            )
+
+        # Create user (terms acceptance recorded in CRUD)
         user = UserCRUD.create_user(user_data)
         return user
     except ValueError as e:
@@ -110,6 +118,17 @@ async def login(user_data: UserLogin, request: Request):
             device_info=device_info,
             ip_address=ip_address
         )
+
+        # Check terms acceptance status
+        from auth import config
+        user_version = user_doc.get("terms_accepted_version")
+        current_version = config.CURRENT_TERMS_VERSION
+        needs_terms_acceptance = (user_version != current_version)
+
+        # Add terms fields to user object
+        user.terms_accepted_version = user_version
+        user.terms_accepted_at = user_doc.get("terms_accepted_at")
+        user.needs_terms_acceptance = needs_terms_acceptance
 
         # Return tokens in response body (not cookies)
         return {
@@ -192,6 +211,17 @@ async def google_login(
             ip_address=ip_address
         )
 
+        # Check terms acceptance status
+        from auth import config
+        user_version = user_doc.get("terms_accepted_version")
+        current_version = config.CURRENT_TERMS_VERSION
+        needs_terms_acceptance = (user_version != current_version)
+
+        # Add terms fields to user object
+        user.terms_accepted_version = user_version
+        user.terms_accepted_at = user_doc.get("terms_accepted_at")
+        user.needs_terms_acceptance = needs_terms_acceptance
+
         # Return tokens in response body
         return {
             "access_token": access_token,
@@ -226,7 +256,11 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user_fr
         "organization_id": str(current_user.get("organization_id")) if current_user.get("organization_id") else None,
         "role": current_user.get("role"),
         "status": current_user.get("status"),
-        "created_at": current_user["createdAt"].isoformat() if current_user.get("createdAt") else None
+        "created_at": current_user["createdAt"].isoformat() if current_user.get("createdAt") else None,
+        # Terms and conditions
+        "terms_accepted_version": current_user.get("terms_accepted_version"),
+        "terms_accepted_at": current_user.get("terms_accepted_at").isoformat() if current_user.get("terms_accepted_at") else None,
+        "needs_terms_acceptance": current_user.get("needs_terms_acceptance", False)
     }
 
 
