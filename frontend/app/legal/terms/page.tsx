@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { termsApi } from '@/lib/api/terms';
 import Link from 'next/link';
@@ -12,11 +12,9 @@ import { EnterpriseAddendumContent } from '@/components/terms/content/Enterprise
 type TabType = 'summary' | 'terms' | 'enterprise';
 
 /**
- * Public Terms and Conditions page
- * Accessible without authentication at /legal/terms
- * Shows 3 tabs: Plain English Summary, Full Terms, Enterprise Addendum
+ * Terms page content component
  */
-export default function TermsPage() {
+function TermsPageContent() {
   const searchParams = useSearchParams();
   const tabFromUrl = searchParams.get('tab') as TabType | null;
   const [activeTab, setActiveTab] = useState<TabType>(
@@ -177,5 +175,22 @@ export default function TermsPage() {
         </div>
       </footer>
     </div>
+  );
+}
+
+/**
+ * Public Terms and Conditions page (with Suspense boundary)
+ * Accessible without authentication at /legal/terms
+ * Shows 3 tabs: Plain English Summary, Full Terms, Enterprise Addendum
+ */
+export default function TermsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-muted/30 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    }>
+      <TermsPageContent />
+    </Suspense>
   );
 }
