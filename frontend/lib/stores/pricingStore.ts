@@ -663,11 +663,12 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
         // Extract positions from jobs or spreadsheet_data
         let positions: SpreadsheetPosition[] = [];
+        let positionsFromJobs = false; // Track if we need to save new IDs
 
         // Get standard FTE hours from metadata (contract-level setting)
         const standardFteHours = proposal.metadata?.fte_hours_threshold;
 
-        if (proposal.spreadsheet_data?.positions) {
+        if (proposal.spreadsheet_data?.positions && proposal.spreadsheet_data.positions.length > 0) {
           positions = proposal.spreadsheet_data.positions;
           // Apply standard_fte_hours from metadata to all positions
           if (standardFteHours) {
@@ -685,6 +686,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
             }
             return mappedPos;
           });
+          positionsFromJobs = true; // New temp IDs generated, need to save
         }
 
         // Generate default months if not provided
@@ -773,6 +775,34 @@ export const usePricingStore = create<PricingState>((set, get) => {
         if (advancedMode) {
           console.log('[LOAD] Restoring advanced mode view...');
           performTransformToAdvanced();
+        }
+
+        // If positions came from jobs (not spreadsheet_data), save them immediately
+        // This persists the new IDs so SOC changes and other updates work correctly
+        if (positionsFromJobs && positions.length > 0) {
+          console.log('[LOAD] Positions loaded from jobs, saving to spreadsheet_data immediately...');
+          try {
+            const totalCost = positions.reduce((sum, pos) => sum + (pos.total_amount || 0), 0);
+            await proposalsApi.update(proposalId, {
+              prime_contractor_name: primeContractorName,
+              total_cost: totalCost,
+              spreadsheet_data: {
+                positions,
+                subcontractors: proposal.spreadsheet_data?.subcontractors || [],
+                travel: proposal.spreadsheet_data?.travel || [],
+                odcs: proposal.spreadsheet_data?.odcs || [],
+                extensions: proposal.spreadsheet_data?.extensions || [],
+                rates: proposal.spreadsheet_data?.rates || proposal.rates,
+                escalation_rates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,
+                months_per_year: proposal.metadata?.months_per_year || defaultMonthsPerYear,
+                subcontractor_configured: subcontractorConfigured,
+                advanced_mode: advancedMode,
+              },
+            });
+            console.log('[LOAD] ✅ Positions saved to spreadsheet_data');
+          } catch (saveError) {
+            console.error('[LOAD] ❌ Failed to save positions:', saveError);
+          }
         }
 
         // NOTE: Don't auto-recalculate on initial load

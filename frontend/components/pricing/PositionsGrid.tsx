@@ -9,15 +9,17 @@ import { SpreadsheetPosition } from '@/types';
 import { Trash2, MoreVertical } from 'lucide-react';
 import { ContextMenu, ContextMenuItem } from '@/components/ui/ContextMenu';
 import { SalaryContextMenu } from './SalaryContextMenu';
+import { SOCContextMenu } from './SOCContextMenu';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ConvertToSubcontractorModal } from './ConvertToSubcontractorModal';
 import { SalarySelectionModal } from './SalarySelectionModal';
 import { SOCSelectionModal } from './SOCSelectionModal';
 import { getAvailablePercentiles } from '@/lib/utils/percentileHelpers';
 import { getEffectiveSalary, getSalaryDisplayLabel, isMultiSelectMode, isGSAPosition, getGSARateForYear } from '@/lib/utils/salaryHelpers';
+import apiClient from '@/lib/api/client';
 
 export const PositionsGrid = () => {
-  const { positions, totalYears, monthsPerYear, rates, escalationRates, updatePosition, deletePosition, advancedMode } = usePricingStore();
+  const { positions, totalYears, monthsPerYear, rates, escalationRates, updatePosition, deletePosition, advancedMode, proposalId } = usePricingStore();
 
   // Context menu state
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; position: SpreadsheetPosition; columnKey?: string } | null>(null);
@@ -58,6 +60,29 @@ export const PositionsGrid = () => {
       }
     });
   }, [positions, updatePosition]);
+
+  // Handle SOC code change from context menu
+  const handleSOCChange = useCallback(async (position: SpreadsheetPosition, socCode: string, socTitle: string): Promise<void> => {
+    if (!proposalId) return;
+
+    // Call wage refresh endpoint
+    const response = await apiClient.post(
+      `/proposals/${proposalId}/positions/${position.id}/refresh-wage`,
+      {
+        soc_code: socCode,
+        soc_title: socTitle,
+        location: position.location,
+        experience: position.experience,
+      }
+    );
+
+    // Update position with new SOC + wage data
+    updatePosition(position.id, {
+      soc_code: socCode,
+      soc_title: socTitle,
+      ...response.data.wage_data,
+    });
+  }, [proposalId, updatePosition]);
 
   // Calculate averaged FBLR for a position across all contract years with escalation
   const calculateFBLR = (position: SpreadsheetPosition) => {
@@ -304,6 +329,16 @@ export const PositionsGrid = () => {
                 setPositionToEditSOC(row);
                 setSOCModalOpen(true);
               }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setContextMenu({
+                  x: e.clientX,
+                  y: e.clientY,
+                  position: row,
+                  columnKey: 'soc_code',
+                });
+              }}
             >
               <div className="flex items-center gap-1.5">
                 <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
@@ -340,6 +375,16 @@ export const PositionsGrid = () => {
               onClick={() => {
                 setPositionToEditSOC(row);
                 setSOCModalOpen(true);
+              }}
+              onContextMenu={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setContextMenu({
+                  x: e.clientX,
+                  y: e.clientY,
+                  position: row,
+                  columnKey: 'soc_title',
+                });
               }}
             >
               <span className="text-muted-foreground text-xs">{row.soc_title || '-'}</span>
@@ -604,8 +649,25 @@ export const PositionsGrid = () => {
           }}
         />
       )}
+      {/* SOC Context Menu for Category Code and Category Title columns */}
+      {contextMenu && (contextMenu.columnKey === 'soc_code' || contextMenu.columnKey === 'soc_title') && (
+        <SOCContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          position={contextMenu.position}
+          onClose={() => setContextMenu(null)}
+          onApply={(socCode, socTitle) =>
+            handleSOCChange(contextMenu.position, socCode, socTitle)
+          }
+          onOpenModal={() => {
+            setPositionToEditSOC(contextMenu.position);
+            setSOCModalOpen(true);
+            setContextMenu(null);
+          }}
+        />
+      )}
       {/* Regular Context Menu for other columns */}
-      {contextMenu && contextMenu.columnKey !== 'salary' && (
+      {contextMenu && contextMenu.columnKey !== 'salary' && contextMenu.columnKey !== 'soc_code' && contextMenu.columnKey !== 'soc_title' && (
         <ContextMenu
           x={contextMenu.x}
           y={contextMenu.y}

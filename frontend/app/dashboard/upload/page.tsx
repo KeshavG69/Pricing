@@ -13,6 +13,7 @@ import Button from '@/components/ui/Button';
 import Card, { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import ProcessingLoader from '@/components/ui/ProcessingLoader';
+import ChargeConfirmationModal from '@/components/ui/ChargeConfirmationModal';
 import { Upload, File, X, AlertCircle, Database, Building2 } from 'lucide-react';
 import { isAdmin } from '@/lib/utils/permissions';
 
@@ -31,6 +32,10 @@ export default function UploadPage() {
   // Wage source state
   const [wageSourceType, setWageSourceType] = useState<'bls' | 'gsa'>('bls');
   const [selectedGsaContract, setSelectedGsaContract] = useState<string | null>(null);
+
+  // Charge confirmation modal state
+  const [showChargeConfirmation, setShowChargeConfirmation] = useState(false);
+  const [isProcessingCharge, setIsProcessingCharge] = useState(false);
 
   // Fetch billing status on mount
   useEffect(() => {
@@ -102,6 +107,18 @@ export default function UploadPage() {
       return;
     }
 
+    // Show charge confirmation modal UNLESS it's a free proposal
+    if (billingStatus?.stripe_configured && billingStatus?.has_payment_method && !billingStatus?.free_proposal_available) {
+      setShowChargeConfirmation(true);
+      return;
+    }
+
+    // Free proposal - proceed directly
+    await confirmAndUpload();
+  };
+
+  const confirmAndUpload = async () => {
+    setIsProcessingCharge(true);
     try {
       setError(null);
       const proposalId = await uploadDocuments(
@@ -114,6 +131,7 @@ export default function UploadPage() {
 
       // Start polling for status (don't redirect immediately)
       setUploadedProposalId(proposalId);
+      setShowChargeConfirmation(false);
     } catch (err: any) {
       // Only show errors from backend, ignore network/timeout errors
       // Network errors don't have a response from the server
@@ -123,6 +141,8 @@ export default function UploadPage() {
       }
       // Silently ignore network errors (timeout, connection issues)
       // The backend will continue processing and we'll poll for status
+    } finally {
+      setIsProcessingCharge(false);
     }
   };
 
@@ -429,6 +449,24 @@ export default function UploadPage() {
           </ul>
         </div>
       </div>
+
+      {/* Charge Confirmation Modal */}
+      <ChargeConfirmationModal
+        isOpen={showChargeConfirmation}
+        onClose={() => setShowChargeConfirmation(false)}
+        onConfirm={confirmAndUpload}
+        title="Confirm Proposal Processing"
+        description="This will process your proposal and extract pricing data from the uploaded documents."
+        amount={Number(process.env.NEXT_PUBLIC_BASIC_PROPOSAL_PRICE) || 100}
+        currency="USD"
+        isLoading={isProcessingCharge}
+        features={[
+          'AI-powered document extraction',
+          wageSourceType === 'gsa' ? 'GSA contract rate lookup' : 'BLS wage data matching',
+          'Automatic SOC code assignment',
+          'Fully editable pricing workspace',
+        ]}
+      />
     </DashboardLayout>
   );
 }

@@ -210,8 +210,13 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
 
   if (!user) return null;
 
+  // Filter to only show active proposals (exclude submitted and no-bid)
+  const activeProposals = proposals.filter(
+    (p) => !p.business_status || p.business_status === 'active'
+  );
+
   // Sort proposals by date (most recent first)
-  const sortedProposals = [...proposals].sort(
+  const sortedProposals = [...activeProposals].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
@@ -236,13 +241,13 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
       <div className="flex-1 overflow-y-auto">
         <div className="p-4">
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            Proposals
+            Active Proposals
           </h3>
 
-          {proposals.length === 0 ? (
+          {activeProposals.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <p className="text-sm">No proposals yet</p>
-              <p className="text-xs mt-1">Create your first proposal</p>
+              <p className="text-sm">No active proposals</p>
+              <p className="text-xs mt-1">Create a new proposal</p>
             </div>
           ) : (
             <div className="space-y-2">
