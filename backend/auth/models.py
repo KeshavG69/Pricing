@@ -8,6 +8,7 @@ class UserSignup(BaseModel):
     lastName: str
     email: EmailStr
     password: str
+    terms_accepted: bool
 
 
 class UserLogin(BaseModel):

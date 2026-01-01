@@ -33,3 +33,6 @@ FROM_EMAIL = os.getenv("FROM_EMAIL", "noreply@priceiq.com")
 
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+
+# Terms and Conditions Configuration
+CURRENT_TERMS_VERSION = "1.0.0"

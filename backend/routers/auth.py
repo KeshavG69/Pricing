@@ -36,12 +36,20 @@ async def signup(user_data: UserSignup):
     Register a new user
 
     Args:
-        user_data: User signup data including firstName, lastName, email, password
+        user_data: User signup data including firstName, lastName, email, password, terms_accepted
 
     Returns:
         UserResponse: Created user information
     """
     try:
+        # Validate terms acceptance
+        if not user_data.terms_accepted:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="You must accept the Terms and Conditions to create an account"
+            )
+
+        # Create user (terms acceptance recorded in CRUD)
         user = UserCRUD.create_user(user_data)
         return user
     except ValueError as e:
