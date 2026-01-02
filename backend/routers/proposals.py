@@ -98,11 +98,23 @@ def serialize_proposal(proposal: dict) -> dict:
     if "organization_id" in proposal and proposal["organization_id"]:
         proposal["organization_id"] = str(proposal["organization_id"])
 
-    # Convert snake_case to camelCase for date fields
+    # Convert snake_case to camelCase for date fields and ensure ISO format with timezone
     if "created_at" in proposal:
-        proposal["createdAt"] = proposal.pop("created_at")
+        dt = proposal.pop("created_at")
+        # Ensure timezone-aware ISO format (MongoDB datetimes are UTC)
+        if dt:
+            iso_str = dt.isoformat()
+            proposal["createdAt"] = iso_str if iso_str.endswith('Z') or '+' in iso_str else iso_str + 'Z'
+        else:
+            proposal["createdAt"] = None
     if "updated_at" in proposal:
-        proposal["updatedAt"] = proposal.pop("updated_at")
+        dt = proposal.pop("updated_at")
+        # Ensure timezone-aware ISO format (MongoDB datetimes are UTC)
+        if dt:
+            iso_str = dt.isoformat()
+            proposal["updatedAt"] = iso_str if iso_str.endswith('Z') or '+' in iso_str else iso_str + 'Z'
+        else:
+            proposal["updatedAt"] = None
 
     return proposal
 
@@ -1029,6 +1041,13 @@ async def list_proposals(
     result = []
     for prop in proposals:
         prop["_id"] = str(prop["_id"])
+
+        # Format dates with timezone (MongoDB datetimes are UTC)
+        created_at = prop.get("created_at")
+        updated_at = prop.get("updated_at")
+        created_iso = created_at.isoformat() + 'Z' if created_at else None
+        updated_iso = updated_at.isoformat() + 'Z' if updated_at else None
+
         # Only include summary fields (use camelCase for frontend)
         summary = {
             "id": prop["_id"],
@@ -1036,8 +1055,8 @@ async def list_proposals(
             "solicitation_number": prop.get("solicitation_number"),
             "status": prop.get("status", "draft"),
             "business_status": prop.get("business_status"),  # NEW: business workflow status
-            "createdAt": prop.get("created_at"),  # Convert to camelCase
-            "updatedAt": prop.get("updated_at"),  # Convert to camelCase
+            "createdAt": created_iso,  # ISO format with timezone
+            "updatedAt": updated_iso,  # ISO format with timezone
             "total_cost": prop.get("total_cost")
         }
         result.append(summary)

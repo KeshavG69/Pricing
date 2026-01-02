@@ -1,14 +1,15 @@
 'use client';
 
-import { useMemo, useCallback, useState } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { DataGrid } from 'react-data-grid';
-import type { Column } from 'react-data-grid';
+import type { Column, RenderEditCellProps } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
 import { AdvancedPosition, IndirectRates, EscalationRates, Extension, GridRow, BreakdownType, ContextMenuItem } from '@/types';
 import { ChevronDown, ChevronRight, Trash2, MoreVertical, Plus } from 'lucide-react';
 import { ContextMenu } from '@/components/ui/ContextMenu';
 import { SalaryContextMenu } from '@/components/pricing/SalaryContextMenu';
+import { SOCContextMenu } from '@/components/pricing/SOCContextMenu';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ConvertToSubcontractorModal } from '@/components/pricing/ConvertToSubcontractorModal';
 import { SalarySelectionModal } from '@/components/pricing/SalarySelectionModal';
@@ -18,6 +19,7 @@ import { getAvailablePercentiles } from '@/lib/utils/percentileHelpers';
 import { getEffectiveSalary, getSalaryDisplayLabel, getSalarySelectionCount, isMultiSelectMode, isGSAPosition, getGSARateForYear } from '@/lib/utils/salaryHelpers';
 import Button from '@/components/ui/Button';
 import { usePricingStore, isKeyPosition } from '@/lib/stores/pricingStore';
+import apiClient from '@/lib/api/client';
 
 // Calculate averaged FBLR for an advanced position using proportional hourly rates
 const calculateAveragedFBLR = (
@@ -188,6 +190,32 @@ export const PrimeLaborSection = ({
       position,
     });
   }, []);
+
+  // Get proposalId for SOC changes
+  const proposalId = usePricingStore((state) => state.proposalId);
+
+  // Handle SOC code change from context menu
+  const handleSOCChange = useCallback(async (position: AdvancedPosition, socCode: string, socTitle: string): Promise<void> => {
+    if (!proposalId) return;
+
+    // Call wage refresh endpoint
+    const response = await apiClient.post(
+      `/proposals/${proposalId}/positions/${position.id}/refresh-wage`,
+      {
+        soc_code: socCode,
+        soc_title: socTitle,
+        location: position.location,
+        experience: position.experience,
+      }
+    );
+
+    // Update position with new SOC + wage data
+    onUpdatePosition(position.id, {
+      soc_code: socCode,
+      soc_title: socTitle,
+      ...response.data.wage_data,
+    });
+  }, [proposalId, onUpdatePosition]);
 
   // Context menu items
   const getContextMenuItems = useCallback((position: AdvancedPosition, columnKey?: string): ContextMenuItem[] => {
@@ -521,6 +549,16 @@ export const PrimeLaborSection = ({
                   setPositionToEditSOC(pos);
                   setSOCModalOpen(true);
                 }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setContextMenu({
+                    x: e.clientX,
+                    y: e.clientY,
+                    position: pos,
+                    columnKey: 'bls_category',
+                  });
+                }}
               >
                 <span className="text-xs text-muted-foreground">{pos.soc_title || '-'}</span>
               </div>
@@ -565,6 +603,16 @@ export const PrimeLaborSection = ({
                 onClick={() => {
                   setPositionToEditSOC(pos);
                   setSOCModalOpen(true);
+                }}
+                onContextMenu={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setContextMenu({
+                    x: e.clientX,
+                    y: e.clientY,
+                    position: pos,
+                    columnKey: 'bls_code',
+                  });
                 }}
               >
                 <div className="flex items-center gap-1.5">
@@ -724,6 +772,77 @@ export const PrimeLaborSection = ({
         name: `${label}\nHours`,
         width: 100,
         resizable: true,
+        editable: true, // Always true - we control editability in renderEditCell
+        renderEditCell: (props: RenderEditCellProps<GridRow>) => {
+          // Only allow editing for position rows
+          if (props.row.type !== 'position') {
+            props.onClose(false); // Close immediately without saving
+            return null;
+          }
+
+          const pos = props.row.data as AdvancedPosition;
+          const breakdown = pos.breakdown[yearStr];
+          const currentHours = breakdown?.hours || 0;
+
+          // Create a local input component with state
+          const EditInput = () => {
+            const [inputValue, setInputValue] = React.useState(currentHours.toString());
+
+            const handleSave = () => {
+              // Parse and validate
+              const newHours = parseFloat(inputValue) || 0;
+
+              // Build complete hours_per_year from current breakdown
+              const hoursPerYear: Record<string, number> = {};
+              Object.keys(pos.breakdown).forEach(y => {
+                hoursPerYear[y] = y === yearStr ? newHours : (pos.breakdown[y]?.hours || 0);
+              });
+
+              console.log('[PrimeLaborSection] Directly updating position hours:', {
+                positionId: pos.id,
+                year: yearStr,
+                newHours,
+                hoursPerYear
+              });
+
+              // Directly update position through onUpdatePosition (bypass row change handler)
+              // Note: hours_per_year updates the underlying SpreadsheetPosition, not AdvancedPosition
+              onUpdatePosition(pos.id, { hours_per_year: hoursPerYear } as any);
+
+              // Close the editor
+              props.onClose(true);
+            };
+
+            return (
+              <input
+                type="text"
+                inputMode="decimal"
+                className="w-full h-full px-2 bg-transparent text-foreground outline-none text-right font-mono"
+                value={inputValue}
+                onChange={(e) => {
+                  // Only allow numbers, decimal point, and basic editing
+                  const value = e.target.value;
+                  if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                    setInputValue(value);
+                  }
+                }}
+                onBlur={handleSave}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSave();
+                  } else if (e.key === 'Escape') {
+                    props.onClose(false); // Cancel without saving
+                  }
+                }}
+                autoFocus
+                onFocus={(e) => e.target.select()} // Select all text on focus
+              />
+            );
+          };
+
+          return <EditInput />;
+        },
         renderCell: ({ row }) => {
           if (row.type === 'subtotal') {
             // Subtotal row - show sum of hours for this year
@@ -1070,6 +1189,32 @@ export const PrimeLaborSection = ({
     addPosition(positionData);
   }, [addPosition]);
 
+  // Handle row changes (for inline editing)
+  const handleRowsChange = useCallback((newRows: GridRow[]) => {
+    // Find changed position rows and update through store
+    newRows.forEach((newRow) => {
+      if (newRow.type === 'position') {
+        const oldRow = gridRows.find((r) => r.positionId === newRow.positionId && r.type === 'position');
+        if (oldRow && JSON.stringify(oldRow.data) !== JSON.stringify(newRow.data)) {
+          const updatedPos = newRow.data as any; // Use 'any' since we're adding hours_per_year dynamically
+
+          // Extract the changed fields
+          const changes: any = {};
+
+          // Check if hours_per_year was updated (from hours column editing)
+          if (updatedPos.hours_per_year) {
+            changes.hours_per_year = updatedPos.hours_per_year;
+          }
+
+          if (Object.keys(changes).length > 0) {
+            console.log('[PrimeLaborSection] Updating position with hours change', { id: newRow.positionId, changes });
+            onUpdatePosition(newRow.positionId, changes);
+          }
+        }
+      }
+    });
+  }, [gridRows, onUpdatePosition]);
+
   if (positions.length === 0) {
     return (
       <div className="flex items-center justify-center h-32 bg-muted/30 rounded-lg border border-border">
@@ -1104,6 +1249,7 @@ export const PrimeLaborSection = ({
           key={`${rates.fringe}-${rates.oh}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}`}
           columns={columns}
           rows={gridRows}
+          onRowsChange={handleRowsChange}
           rowKeyGetter={(row) => `${row.positionId}_${row.type}_${row.breakdownType || ''}`}
           className={styles.excelGrid}
           style={{ height: '100%' }}
@@ -1127,8 +1273,25 @@ export const PrimeLaborSection = ({
           }}
         />
       )}
+      {/* SOC Context Menu for Category Code and Category Title columns */}
+      {contextMenu && (contextMenu.columnKey === 'bls_code' || contextMenu.columnKey === 'bls_category') && (
+        <SOCContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          position={contextMenu.position}
+          onClose={() => setContextMenu(null)}
+          onApply={(socCode, socTitle) =>
+            handleSOCChange(contextMenu.position, socCode, socTitle)
+          }
+          onOpenModal={() => {
+            setPositionToEditSOC(contextMenu.position);
+            setSOCModalOpen(true);
+            setContextMenu(null);
+          }}
+        />
+      )}
       {/* Regular Context Menu for other columns */}
-      {contextMenu && contextMenu.columnKey !== 'percentile' && (
+      {contextMenu && contextMenu.columnKey !== 'percentile' && contextMenu.columnKey !== 'bls_code' && contextMenu.columnKey !== 'bls_category' && (
         <ContextMenu
           x={contextMenu.x}
           y={contextMenu.y}

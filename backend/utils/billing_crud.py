@@ -137,7 +137,8 @@ class BillingCRUD:
             "proposal_id": ObjectId(proposal_id),
             "charge_type": charge_type,
             "stripe_payment_intent_id": stripe_payment_intent_id,
-            "stripe_event_id": None,  # Set by webhook
+            # stripe_event_id omitted - sparse index only skips MISSING fields, not null
+            # Webhook adds this field later via update_by_payment_intent()
             "amount_cents": amount_cents,
             "currency": currency,
             "status": status,

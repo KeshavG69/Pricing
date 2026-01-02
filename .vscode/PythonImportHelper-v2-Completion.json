@@ -2066,6 +2066,14 @@
         "documentation": {}
     },
     {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
         "label": "ObjectId",
         "importPath": "bson",
         "description": "bson",
@@ -2229,6 +2237,14 @@
     },
     {
         "label": "DESCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
         "importPath": "pymongo",
         "description": "pymongo",
         "isExtraImport": true,
@@ -5485,6 +5501,33 @@
         "description": "backend.scripts.create_soc_indexes",
         "peekOfCode": "backend_dir = Path(__file__).parent.parent\nsys.path.insert(0, str(backend_dir))\nfrom pymongo import MongoClient\nfrom app.settings import settings\ndef get_mongodb_connection():\n    \"\"\"Get synchronous MongoDB connection for this script.\"\"\"\n    client = MongoClient(\n        settings.MONGODB_URL,\n        serverSelectionTimeoutMS=20000\n    )",
         "detail": "backend.scripts.create_soc_indexes",
+        "documentation": {}
+    },
+    {
+        "label": "fix_index",
+        "kind": 2,
+        "importPath": "backend.scripts.fix_billing_index",
+        "description": "backend.scripts.fix_billing_index",
+        "peekOfCode": "def fix_index():\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    billing = db[\"billing\"]\n    print(f\"Connected to database: {MONGODB_DATABASE}\")\n    # Check existing indexes\n    print(\"\\nExisting indexes on billing collection:\")\n    for idx in billing.list_indexes():\n        print(f\"  - {idx['name']}: {idx.get('key')}, sparse={idx.get('sparse', False)}, unique={idx.get('unique', False)}\")\n    # Drop the old index if it exists",
+        "detail": "backend.scripts.fix_billing_index",
+        "documentation": {}
+    },
+    {
+        "label": "MONGODB_URL",
+        "kind": 5,
+        "importPath": "backend.scripts.fix_billing_index",
+        "description": "backend.scripts.fix_billing_index",
+        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef fix_index():\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    billing = db[\"billing\"]\n    print(f\"Connected to database: {MONGODB_DATABASE}\")\n    # Check existing indexes\n    print(\"\\nExisting indexes on billing collection:\")\n    for idx in billing.list_indexes():",
+        "detail": "backend.scripts.fix_billing_index",
+        "documentation": {}
+    },
+    {
+        "label": "MONGODB_DATABASE",
+        "kind": 5,
+        "importPath": "backend.scripts.fix_billing_index",
+        "description": "backend.scripts.fix_billing_index",
+        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef fix_index():\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    billing = db[\"billing\"]\n    print(f\"Connected to database: {MONGODB_DATABASE}\")\n    # Check existing indexes\n    print(\"\\nExisting indexes on billing collection:\")\n    for idx in billing.list_indexes():\n        print(f\"  - {idx['name']}: {idx.get('key')}, sparse={idx.get('sparse', False)}, unique={idx.get('unique', False)}\")",
+        "detail": "backend.scripts.fix_billing_index",
         "documentation": {}
     },
     {

@@ -18,6 +18,7 @@ import FilesTab from '@/components/pricing/FilesTab';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { SubcontractorSection } from '@/components/pricing/SubcontractorSection';
 import { AdvancedAnalysisModal, SubcontractorInfo } from '@/components/pricing/AdvancedAnalysisModal';
+import ChargeConfirmationModal from '@/components/ui/ChargeConfirmationModal';
 import { Loader2, AlertCircle, ArrowLeft, Plus, Download, Share2, CheckCircle, XCircle, Send, ChevronDown } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
 import { ShareOrInviteModal } from '@/components/proposals/ShareOrInviteModal';
@@ -67,6 +68,7 @@ export default function ProposalPage() {
   const [advancedModalOpen, setAdvancedModalOpen] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [showAdvancedChargeConfirmation, setShowAdvancedChargeConfirmation] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
   const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const statusDropdownRef = useRef<HTMLDivElement>(null);
@@ -444,22 +446,20 @@ export default function ProposalPage() {
   };
 
   const handleAdvancedAnalysis = async () => {
-    // Check if first time (subcontractors not yet configured)
-    if (!subcontractorConfigured) {
-      // Show questionnaire modal first
-      setAdvancedModalOpen(true);
-      return;
-    }
-
-    setIsProcessingPayment(true);
-
     // Check if already paid for advanced analysis
     try {
       const billing = await getProposalBilling(proposalId);
       const advancedBilling = billing.advanced;
 
       if (advancedBilling && advancedBilling.status === 'succeeded') {
-        // Already paid - skip payment flow
+        // Already paid - check if subcontractors configured
+        if (!subcontractorConfigured) {
+          // Show questionnaire modal
+          setAdvancedModalOpen(true);
+          return;
+        }
+
+        // Already paid and configured - activate directly
         toast.success('Advanced mode activated');
         transformToAdvanced();
         enableAdvancedMode();
@@ -467,19 +467,43 @@ export default function ProposalPage() {
         return;
       }
 
-      // Not paid yet - charge for advanced mode
+      // Not paid yet - show charge confirmation modal FIRST
+      setShowAdvancedChargeConfirmation(true);
+    } catch (error: any) {
+      console.error('Failed to check billing:', error);
+      toast.error('Failed to check payment status. Please try again.');
+    }
+  };
+
+  const confirmAndActivateAdvanced = async () => {
+    setIsProcessingPayment(true);
+
+    try {
+      // Charge for advanced mode
       const result = await chargeForProposal(proposalId, 'advanced');
 
       if (result.already_charged) {
         toast.success('Advanced mode already activated');
       } else {
-        toast.success('Payment successful! Advanced mode activated');
+        toast.success('Payment successful!');
       }
 
-      // Proceed to advanced mode
+      // Close charge modal
+      setShowAdvancedChargeConfirmation(false);
+
+      // Check if subcontractors configured
+      if (!subcontractorConfigured) {
+        // Show subcontractor questionnaire modal AFTER payment
+        setIsProcessingPayment(false);
+        setAdvancedModalOpen(true);
+        return;
+      }
+
+      // Already configured - activate directly
       transformToAdvanced();
       enableAdvancedMode();
       await recalculate();
+      toast.success('Advanced mode activated');
     } catch (error: any) {
       console.error('Payment failed:', error);
       const errorMsg = error.response?.data?.detail || 'Payment failed. Please check your payment method.';
@@ -494,46 +518,26 @@ export default function ProposalPage() {
     setAdvancedModalOpen(false);
     setIsProcessingPayment(true);
 
-    // Check if already paid for advanced analysis
     try {
-      const billing = await getProposalBilling(proposalId);
-      const advancedBilling = billing.advanced;
-
-      if (advancedBilling && advancedBilling.status === 'succeeded') {
-        // Already paid - skip payment flow
-        toast.success('Advanced mode activated');
-      } else {
-        // Not paid yet - charge for advanced mode
-        const result = await chargeForProposal(proposalId, 'advanced');
-
-        if (result.already_charged) {
-          toast.success('Advanced mode already activated');
-        } else {
-          toast.success('Payment successful! Advanced mode activated');
-        }
-      }
-
       // Pre-create subcontractors if any were specified
       if (subs.length > 0) {
         preCreateSubcontractors(subs);
 
         // Auto-allocate workshare % from eligible positions (excludes key positions like PM, FA)
-        // This runs after preCreateSubcontractors so subcontractors have worksharePercent
         await usePricingStore.getState().autoAllocateWorkshare();
       } else {
         // Mark as configured even if no subs (user clicked Skip or Continue with 0 subs)
         usePricingStore.setState({ subcontractorConfigured: true });
       }
 
-      // Now proceed to advanced mode
+      // Now proceed to advanced mode (payment already done)
       transformToAdvanced();
       enableAdvancedMode();
       await recalculate();
+      toast.success('Advanced mode activated');
     } catch (error: any) {
-      console.error('Payment failed:', error);
-      const errorMsg = error.response?.data?.detail || 'Payment failed. Please check your payment method.';
-      toast.error(errorMsg);
-      // Don't enable advanced mode if payment fails
+      console.error('Failed to activate advanced mode:', error);
+      toast.error('Failed to activate advanced mode. Please try again.');
     } finally {
       setIsProcessingPayment(false);
     }
@@ -877,6 +881,24 @@ export default function ProposalPage() {
         open={advancedModalOpen}
         onClose={() => setAdvancedModalOpen(false)}
         onSubmit={handleAdvancedModalSubmit}
+      />
+
+      {/* Advanced Mode Charge Confirmation Modal */}
+      <ChargeConfirmationModal
+        isOpen={showAdvancedChargeConfirmation}
+        onClose={() => setShowAdvancedChargeConfirmation(false)}
+        onConfirm={confirmAndActivateAdvanced}
+        title="Confirm Advanced Analysis"
+        description="Unlock advanced features including FBLR breakdown, subcontractor management, and rate table calculations."
+        amount={Number(process.env.NEXT_PUBLIC_ADVANCED_ANALYSIS_PRICE) || 250}
+        currency="USD"
+        isLoading={isProcessingPayment}
+        features={[
+          'Subcontractor labor management',
+          'Automatic workshare allocation',
+          'Target rate table for subcontractors',
+          'Excel export with detailed calculations',
+        ]}
       />
     </DashboardLayout>
   );
