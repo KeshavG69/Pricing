@@ -45,10 +45,22 @@ export function PaymentMethodForm({ onSuccess, onCancel }: PaymentMethodFormProp
   // Fix: Radix Dialog sets pointer-events: none on body, blocking Stripe iframe interaction
   // Reset pointer-events when this form mounts inside a dialog
   useEffect(() => {
-    // Small delay to ensure dialog has set its styles first
+    // Longer delay to ensure dialog has fully rendered
     const timer = setTimeout(() => {
-      document.body.style.pointerEvents = '';
-    }, 0);
+      // Reset pointer-events on body
+      document.body.style.pointerEvents = 'auto';
+
+      // Also reset on any Radix portal containers
+      const portals = document.querySelectorAll('[data-radix-portal]');
+      portals.forEach((portal) => {
+        if (portal instanceof HTMLElement) {
+          portal.style.pointerEvents = 'auto';
+        }
+      });
+
+      console.log('[PaymentMethodForm] Fixed pointer-events for Stripe Elements');
+    }, 100); // Increased delay from 0 to 100ms
+
     return () => clearTimeout(timer);
   }, []);
 
@@ -112,7 +124,7 @@ export function PaymentMethodForm({ onSuccess, onCancel }: PaymentMethodFormProp
           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none z-10">
             <CreditCard className="w-5 h-5" />
           </div>
-          <div className="pl-11 pr-4 py-3 border border-border rounded-lg bg-background focus-within:ring-2 focus-within:ring-primary focus-within:border-primary">
+          <div className="pl-11 pr-4 py-3 border border-border rounded-lg bg-background focus-within:ring-2 focus-within:ring-primary focus-within:border-primary" style={{ pointerEvents: 'auto' }}>
             <CardNumberElement options={cardElementOptions} />
           </div>
         </div>
@@ -124,7 +136,7 @@ export function PaymentMethodForm({ onSuccess, onCancel }: PaymentMethodFormProp
           <label className="block text-sm font-medium text-foreground mb-2">
             Expiry Date
           </label>
-          <div className="px-4 py-3 border border-border rounded-lg bg-background focus-within:ring-2 focus-within:ring-primary focus-within:border-primary">
+          <div className="px-4 py-3 border border-border rounded-lg bg-background focus-within:ring-2 focus-within:ring-primary focus-within:border-primary" style={{ pointerEvents: 'auto' }}>
             <CardExpiryElement options={cardElementOptions} />
           </div>
         </div>
@@ -133,7 +145,7 @@ export function PaymentMethodForm({ onSuccess, onCancel }: PaymentMethodFormProp
             CVC
           </label>
           <div className="relative">
-            <div className="px-4 py-3 border border-border rounded-lg bg-background focus-within:ring-2 focus-within:ring-primary focus-within:border-primary">
+            <div className="px-4 py-3 border border-border rounded-lg bg-background focus-within:ring-2 focus-within:ring-primary focus-within:border-primary" style={{ pointerEvents: 'auto' }}>
               <CardCvcElement options={cardElementOptions} />
             </div>
             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
