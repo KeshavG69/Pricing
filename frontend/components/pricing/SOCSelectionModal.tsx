@@ -17,11 +17,11 @@ interface SOCSelectionModalProps {
   onUpdate: (updates: Partial<SpreadsheetPosition> | Partial<AdvancedPosition>) => void;
 }
 
-// Session storage cache keys
+// Session storage cache keys (shared with SOCContextMenu)
 const CACHE_PREFIX = 'soc_cache_';
 const AI_SUGGESTIONS_CACHE = 'ai_suggestions';
 const BROWSE_ALL_CACHE = 'browse_all';
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const CACHE_DURATION = 25 * 60 * 1000; // 25 minutes
 
 interface CacheEntry<T> {
   data: T;

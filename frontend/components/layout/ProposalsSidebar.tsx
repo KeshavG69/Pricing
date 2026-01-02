@@ -4,12 +4,11 @@ import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
-import { Plus, LogOut, Settings, ChevronRight, X, MoreVertical, Pencil, Trash2, Share2, XCircle, CheckCircle, RotateCcw } from 'lucide-react';
+import { Plus, X, MoreVertical, Pencil, Trash2, Share2, XCircle, CheckCircle, RotateCcw } from 'lucide-react';
 import { useProposalsStore } from '@/lib/stores/proposalsStore';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { proposalsApi } from '@/lib/api/proposals';
 import WorkspaceSwitcher from '../workspace/WorkspaceSwitcher';
-import RoleBadge from '../ui/RoleBadge';
 import Button from '../ui/Button';
 import { Dialog } from '../ui/Dialog';
 import { ConfirmDialog } from '../ui/ConfirmDialog';
@@ -66,9 +65,8 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
   const router = useRouter();
   const pathname = usePathname();
   const toast = useToast();
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const { proposals, fetchProposals, deleteProposal } = useProposalsStore();
-  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   // Three-dots menu state
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -90,40 +88,32 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
   const [shareProposalId, setShareProposalId] = useState<string | null>(null);
   const [shareProposalName, setShareProposalName] = useState('');
 
-  // Fetch proposals on mount
+  // Fetch proposals on mount (force refresh to get latest data)
   useEffect(() => {
     if (user) {
-      fetchProposals();
+      fetchProposals(true); // Force refresh on page load
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.organization_id]);
 
-  // Close profile menu when clicking outside
+  // Close three-dots menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as HTMLElement;
-      if (isProfileMenuOpen && !target.closest('.profile-menu-container')) {
-        setIsProfileMenuOpen(false);
-      }
       // Close three-dots menu when clicking outside
       if (openMenuId && !target.closest('.proposal-menu-container')) {
         setOpenMenuId(null);
       }
     };
 
-    if (isProfileMenuOpen || openMenuId) {
+    if (openMenuId) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isProfileMenuOpen, openMenuId]);
-
-  const handleLogout = async () => {
-    await logout();
-    router.push('/');
-  };
+  }, [openMenuId]);
 
   // Open rename modal
   const handleOpenRename = (proposalId: string, currentName: string) => {
@@ -210,8 +200,13 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
 
   if (!user) return null;
 
+  // Filter to only show active proposals (exclude submitted and no-bid)
+  const activeProposals = proposals.filter(
+    (p) => !p.business_status || p.business_status === 'active'
+  );
+
   // Sort proposals by date (most recent first)
-  const sortedProposals = [...proposals].sort(
+  const sortedProposals = [...activeProposals].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
@@ -236,13 +231,13 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
       <div className="flex-1 overflow-y-auto">
         <div className="p-4">
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
-            Proposals
+            Active Proposals
           </h3>
 
-          {proposals.length === 0 ? (
+          {activeProposals.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <p className="text-sm">No proposals yet</p>
-              <p className="text-xs mt-1">Create your first proposal</p>
+              <p className="text-sm">No active proposals</p>
+              <p className="text-xs mt-1">Create a new proposal</p>
             </div>
           ) : (
             <div className="space-y-2">
@@ -371,63 +366,6 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
             </div>
           )}
         </div>
-      </div>
-
-      {/* User Profile - Bottom Section */}
-      <div className="p-4 border-t border-border bg-muted/30 relative profile-menu-container">
-        <button
-          onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-          className="w-full group"
-        >
-          <div className="flex items-center space-x-3 px-2 py-2 rounded-lg hover:bg-muted transition-all duration-300 hover:scale-[1.02]">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center border border-border text-primary font-semibold transition-all duration-300 group-hover:scale-110 group-hover:shadow-md">
-              {user.firstName[0]}{user.lastName[0]}
-            </div>
-            <div className="flex-1 min-w-0 text-left">
-              <div className="flex items-center gap-2 mb-0.5">
-                <p className="text-sm font-medium text-foreground truncate transition-colors duration-200 group-hover:text-primary">
-                  {user.firstName} {user.lastName}
-                </p>
-                <RoleBadge role={user.role} size="sm" />
-              </div>
-              <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-            </div>
-            <ChevronRight
-              className={`w-4 h-4 text-muted-foreground transition-all duration-300 ${
-                isProfileMenuOpen ? 'rotate-90' : ''
-              }`}
-            />
-          </div>
-        </button>
-
-        {/* Dropdown menu */}
-        {isProfileMenuOpen && (
-          <div className="absolute bottom-full mb-2 left-4 right-4 bg-card border border-border rounded-lg shadow-2xl py-1 z-50 animate-scale-in">
-            <Link href="/dashboard/settings">
-              <button
-                onClick={() => {
-                  setIsProfileMenuOpen(false);
-                  onMobileClose();
-                }}
-                className="w-full flex items-center px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 hover:translate-x-1"
-              >
-                <Settings className="w-4 h-4 mr-3" />
-                <span>Settings</span>
-              </button>
-            </Link>
-            <div className="border-t border-border my-1" />
-            <button
-              onClick={() => {
-                setIsProfileMenuOpen(false);
-                handleLogout();
-              }}
-              className="w-full flex items-center px-4 py-2.5 text-sm text-muted-foreground hover:text-red-600 hover:bg-red-50 transition-all duration-200 hover:translate-x-1"
-            >
-              <LogOut className="w-4 h-4 mr-3" />
-              <span>Logout</span>
-            </button>
-          </div>
-        )}
       </div>
     </>
   );

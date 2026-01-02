@@ -1,9 +1,12 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { BarChart3, LayoutGrid, FileText, Building, Building2, Menu, ChevronDown } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { BarChart3, LayoutGrid, FileText, Building, Building2, Menu, ChevronDown, Settings, LogOut } from 'lucide-react';
 import { isAdmin } from '@/lib/utils/permissions';
+import { useAuthStore } from '@/lib/stores/authStore';
+import RoleBadge from '../ui/RoleBadge';
 
 interface TopNavBarProps {
   user: any;
@@ -12,6 +15,27 @@ interface TopNavBarProps {
 
 export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { logout } = useAuthStore();
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const profileMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close profile menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleLogout = async () => {
+    await logout();
+    router.push('/auth/login');
+  };
 
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutGrid },
@@ -25,7 +49,7 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
 
   return (
     <header className="fixed top-0 left-0 right-0 h-16 bg-card/95 backdrop-blur-md border-b border-border z-50 transition-all duration-300 animate-slide-down">
-      <div className="h-full px-4 sm:px-6 flex items-center justify-between">
+      <div className="h-full px-4 sm:px-6 grid grid-cols-3 items-center">
         {/* Left: Mobile sidebar toggle + Logo */}
         <div className="flex items-center gap-3">
           {/* Mobile sidebar toggle */}
@@ -48,8 +72,8 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
           </Link>
         </div>
 
-        {/* Center/Right: Navigation items */}
-        <nav className="flex items-center gap-1">
+        {/* Center: Navigation items */}
+        <nav className="flex items-center justify-center gap-1">
           {/* Main nav items */}
           {navItems.map((item, index) => {
             const isActive = pathname === item.href;
@@ -128,6 +152,59 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
             </>
           )}
         </nav>
+
+        {/* Right: User Profile Menu */}
+        <div className="flex items-center justify-end">
+          <div ref={profileMenuRef} className="relative">
+          <button
+            onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
+            className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-all duration-200 hover:scale-105 active:scale-95 group"
+          >
+            <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center border border-border text-primary font-semibold text-sm transition-all duration-300 group-hover:scale-110 group-hover:shadow-md">
+              {user.firstName[0]}{user.lastName[0]}
+            </div>
+            <div className="hidden md:block text-left">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium text-foreground truncate max-w-32">
+                  {user.firstName} {user.lastName}
+                </p>
+                <RoleBadge role={user.role} size="sm" />
+              </div>
+            </div>
+            <ChevronDown
+              className={`w-4 h-4 text-muted-foreground transition-all duration-300 ${
+                isProfileMenuOpen ? 'rotate-180' : ''
+              }`}
+            />
+          </button>
+
+          {/* Dropdown menu */}
+          {isProfileMenuOpen && (
+            <div className="absolute top-full right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-2xl py-1 z-50 animate-scale-in">
+              <Link href="/dashboard/settings">
+                <button
+                  onClick={() => setIsProfileMenuOpen(false)}
+                  className="w-full flex items-center px-4 py-2.5 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200 hover:translate-x-1"
+                >
+                  <Settings className="w-4 h-4 mr-3" />
+                  <span>Settings</span>
+                </button>
+              </Link>
+              <div className="border-t border-border my-1" />
+              <button
+                onClick={() => {
+                  setIsProfileMenuOpen(false);
+                  handleLogout();
+                }}
+                className="w-full flex items-center px-4 py-2.5 text-sm text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20 transition-all duration-200 hover:translate-x-1"
+              >
+                <LogOut className="w-4 h-4 mr-3" />
+                <span>Logout</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
       </div>
     </header>
   );
