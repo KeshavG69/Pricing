@@ -34,9 +34,9 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     };
 
     const sizeStyles = {
-      sm: 'text-xs px-3 py-1.5 gap-1.5',
-      md: 'text-sm px-4 py-2 gap-2',
-      lg: 'text-base px-6 py-3 gap-2.5',
+      sm: 'text-sm px-4 py-2.5 gap-2',     // 18px text, taller padding
+      md: 'text-base px-5 py-3 gap-2',     // 16px text (comfortable default)
+      lg: 'text-lg px-6 py-3.5 gap-2.5',   // 20px text
     };
 
     const widthStyles = fullWidth ? 'w-full' : '';

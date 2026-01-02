@@ -270,7 +270,7 @@ export const PositionsGrid = () => {
       {
         key: 'labor_category',
         name: 'Labor Category',
-        width: 280, // Wider for better readability
+        width: 358, // Increased for larger text (+28%)
         resizable: true,
         editable: true,
       },
@@ -278,7 +278,7 @@ export const PositionsGrid = () => {
       {
         key: 'experience',
         name: 'Experience (yrs)',
-        width: 120,
+        width: 155, // Increased for larger text (+29%)
         resizable: true,
         editable: true,
         renderCell: ({ row }) => (
@@ -291,7 +291,7 @@ export const PositionsGrid = () => {
       {
         key: 'location',
         name: 'Location',
-        width: 150,
+        width: 192, // Increased for larger text (+28%)
         resizable: true,
         editable: true,
         renderCell: ({ row }) => (
@@ -304,7 +304,7 @@ export const PositionsGrid = () => {
       {
         key: 'soc_code',
         name: 'Category Code',
-        width: 140,
+        width: 181, // Increased for larger text (+29%)
         resizable: true,
         renderCell: ({ row }) => {
           const isGSA = isGSAPosition(row);
@@ -354,7 +354,7 @@ export const PositionsGrid = () => {
       {
         key: 'soc_title',
         name: 'Category Title',
-        width: 240,
+        width: 307, // Increased for larger text (+28%)
         resizable: true,
         renderCell: ({ row }) => {
           const isGSA = isGSAPosition(row);
@@ -396,7 +396,7 @@ export const PositionsGrid = () => {
       {
         key: 'salary',
         name: 'Rate / Salary',
-        width: 200,
+        width: 256, // Increased for larger text (+28%)
         resizable: true,
         renderCell: ({ row }) => {
           const isGSA = isGSAPosition(row);
@@ -474,7 +474,7 @@ export const PositionsGrid = () => {
       cols.push({
         key: `year${year}_hours`,
         name: year === 1 ? `Base Year\nHours${monthLabel}` : `Option ${year - 1}\nHours${monthLabel}`,
-        width: 120,
+        width: 140, // Increased for larger text (+17%)
         resizable: true,
         editable: true,
         renderEditCell: (props: RenderEditCellProps<SpreadsheetPosition>) => {
@@ -545,7 +545,7 @@ export const PositionsGrid = () => {
       {
         key: 'dl_rate',
         name: 'Averaged\nDL Rate ($/hr)',
-        width: 130,
+        width: 150, // Increased for larger text (+15%)
         resizable: true,
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
@@ -559,7 +559,7 @@ export const PositionsGrid = () => {
       {
         key: 'fringe',
         name: 'Averaged\nFringe ($/hr)',
-        width: 130,
+        width: 150, // Increased for larger text (+15%)
         resizable: true,
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
@@ -573,7 +573,7 @@ export const PositionsGrid = () => {
       {
         key: 'oh',
         name: 'Averaged\nOH ($/hr)',
-        width: 120,
+        width: 138, // Increased for larger text (+15%)
         resizable: true,
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
@@ -587,7 +587,7 @@ export const PositionsGrid = () => {
       {
         key: 'ga',
         name: 'Averaged\nG&A ($/hr)',
-        width: 120,
+        width: 138, // Increased for larger text (+15%)
         resizable: true,
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
@@ -601,7 +601,7 @@ export const PositionsGrid = () => {
       {
         key: 'fee',
         name: 'Averaged\nFee ($/hr)',
-        width: 120,
+        width: 138, // Increased for larger text (+15%)
         resizable: true,
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
@@ -615,7 +615,7 @@ export const PositionsGrid = () => {
       {
         key: 'fblr',
         name: 'Averaged\nFull Burdened Rate ($/hr)',
-        width: 180,
+        width: 207, // Increased for larger text (+15%)
         resizable: true,
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
