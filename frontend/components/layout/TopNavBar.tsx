@@ -89,7 +89,7 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
                   <Icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`} />
-                  <span className="text-lg hidden sm:inline">{item.label}</span>
+                  <span className="text-sm hidden sm:inline">{item.label}</span>
                 </div>
               </Link>
             );
@@ -114,7 +114,7 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
                         style={{ animationDelay: `${(index + 3) * 50}ms` }}
                       >
                         <Icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`} />
-                        <span className="text-lg">{item.label}</span>
+                        <span className="text-sm">{item.label}</span>
                       </div>
                     </Link>
                   );
@@ -127,7 +127,7 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
                   className="flex items-center gap-2 px-4 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-300 font-semibold hover:scale-105 active:scale-95"
                 >
                   <Building className="w-5 h-5" />
-                  <span className="text-lg hidden sm:inline">Admin</span>
+                  <span className="text-sm hidden sm:inline">Admin</span>
                   <ChevronDown className="w-4 h-4 transition-transform duration-300 group-hover:rotate-180" />
                 </button>
 
@@ -138,7 +138,7 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
                     return (
                       <Link key={item.href} href={item.href}>
                         <div
-                          className="flex items-center gap-3 px-4 py-3 text-lg font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200 hover:translate-x-1"
+                          className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200 hover:translate-x-1"
                           style={{ animationDelay: `${index * 30}ms` }}
                         >
                           <Icon className="w-5 h-5" />

@@ -17,12 +17,12 @@ const Input = forwardRef<HTMLInputElement, InputProps>(
 
     // Size-based classes
     const sizeClasses = size === 'sm'
-      ? 'h-10 py-2 text-sm'          // 18px text, taller input
-      : 'h-12 py-3 text-base';       // 16px text, comfortable
+      ? 'h-9 py-1.5 text-sm'         // 16px text
+      : 'h-11 py-2.5 text-base';     // 16px text
 
     const labelClasses = size === 'sm'
-      ? 'text-xs mb-1.5'             // 14px label
-      : 'text-sm mb-2';              // 18px label
+      ? 'text-xs mb-1.5'             // 13px label
+      : 'text-sm mb-2';              // 16px label
 
     const paddingClasses = size === 'sm'
       ? (hasPrefix ? 'pl-5' : 'pl-1.5') + ' ' + (hasSuffix ? 'pr-5' : 'pr-1.5')
