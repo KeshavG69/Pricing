@@ -462,7 +462,7 @@ export const PrimeLaborSection = ({
       {
         key: 'cost_element',
         name: 'Labour Category',
-        width: 320, // Increased for larger text (+28%)
+        width: 280, // Increased for larger text (+12%)
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => {
@@ -525,7 +525,7 @@ export const PrimeLaborSection = ({
       {
         key: 'bls_category',
         name: 'Category Title',
-        width: 307, // Increased for larger text (+28%)
+        width: 269, // Increased for larger text (+12%)
         resizable: true,
         renderCell: ({ row }) => {
           if (row.type === 'subtotal') {
@@ -575,7 +575,7 @@ export const PrimeLaborSection = ({
       {
         key: 'bls_code',
         name: 'Category Code',
-        width: 181, // Increased for larger text (+29%)
+        width: 157, // Increased for larger text (+12%)
         resizable: true,
         renderCell: ({ row }) => {
           if (row.type === 'subtotal') {
@@ -635,7 +635,7 @@ export const PrimeLaborSection = ({
       {
         key: 'percentile',
         name: 'Salary',
-        width: 230, // Increased for larger text (+28%)
+        width: 202, // Increased for larger text (+12%)
         resizable: true,
         renderCell: ({ row }) => {
           if (row.type === 'subtotal') {
@@ -707,7 +707,7 @@ export const PrimeLaborSection = ({
       cols.push({
         key: `year${year}_rate`,
         name: `${label}\nRate ($/hr)`,
-        width: 138, // Increased for larger text (+15%)
+        width: 130, // Increased for larger text (+8%)
         resizable: true,
         renderCell: ({ row }) => {
           // Subtotal row - show sum of rates for this year
@@ -774,7 +774,7 @@ export const PrimeLaborSection = ({
       cols.push({
         key: `year${year}_hours`,
         name: `${label}\nHours`,
-        width: 115, // Increased for larger text (+15%)
+        width: 108, // Increased for larger text (+8%)
         resizable: true,
         editable: true, // Always true - we control editability in renderEditCell
         renderEditCell: (props: RenderEditCellProps<GridRow>) => {
@@ -880,7 +880,7 @@ export const PrimeLaborSection = ({
       cols.push({
         key: `year${year}_amount`,
         name: `${label}\nAmount ($)`,
-        width: 150, // Increased for larger text (+15%)
+        width: 140, // Increased for larger text (+8%)
         resizable: true,
         renderCell: ({ row }) => {
           if (row.type === 'subtotal') {
@@ -949,7 +949,7 @@ export const PrimeLaborSection = ({
       {
         key: 'avg_dl_rate',
         name: 'Avg\nDL Rate ($/hr)',
-        width: 150, // Increased for larger text (+15%)
+        width: 140, // Increased for larger text (+8%)
         frozen: false,
         renderCell: ({ row }) => {
           if (row.type === 'subtotal') {
@@ -978,7 +978,7 @@ export const PrimeLaborSection = ({
       {
         key: 'avg_fringe',
         name: 'Avg\nFringe ($/hr)',
-        width: 138, // Increased for larger text (+15%)
+        width: 130, // Increased for larger text (+8%)
         renderCell: ({ row }) => {
           if (row.type === 'subtotal') {
             const totals = row.data as any;
@@ -1006,7 +1006,7 @@ export const PrimeLaborSection = ({
       {
         key: 'avg_oh',
         name: 'Avg\nOH ($/hr)',
-        width: 127, // Increased for larger text (+15%)
+        width: 119, // Increased for larger text (+8%)
         renderCell: ({ row }) => {
           if (row.type === 'subtotal') {
             const totals = row.data as any;
@@ -1034,7 +1034,7 @@ export const PrimeLaborSection = ({
       {
         key: 'avg_ga',
         name: 'Avg\nG&A ($/hr)',
-        width: 127, // Increased for larger text (+15%)
+        width: 119, // Increased for larger text (+8%)
         renderCell: ({ row }) => {
           if (row.type === 'subtotal') {
             const totals = row.data as any;
@@ -1062,7 +1062,7 @@ export const PrimeLaborSection = ({
       {
         key: 'avg_fee',
         name: 'Avg\nFee ($/hr)',
-        width: 127, // Increased for larger text (+15%)
+        width: 119, // Increased for larger text (+8%)
         renderCell: ({ row }) => {
           if (row.type === 'subtotal') {
             const totals = row.data as any;
@@ -1090,7 +1090,7 @@ export const PrimeLaborSection = ({
       {
         key: 'avg_fblr',
         name: 'Avg\nFBLR ($/hr)',
-        width: 150, // Increased for larger text (+15%)
+        width: 140, // Increased for larger text (+8%)
         renderCell: ({ row }) => {
           if (row.type === 'subtotal') {
             const totals = row.data as any;
@@ -1122,7 +1122,7 @@ export const PrimeLaborSection = ({
       {
         key: 'total_hours',
         name: 'Total Hours',
-        width: 138, // Increased for larger text (+15%)
+        width: 130, // Increased for larger text (+8%)
         resizable: true,
         renderCell: ({ row }) => {
           if (row.type === 'subtotal') {
@@ -1150,7 +1150,7 @@ export const PrimeLaborSection = ({
       {
         key: 'total_amount',
         name: 'Total Amount',
-        width: 173, // Increased for larger text (+15%)
+        width: 162, // Increased for larger text (+8%)
         resizable: true,
         renderCell: ({ row }) => {
           if (row.type === 'subtotal') {
