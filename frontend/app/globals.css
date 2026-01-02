@@ -69,13 +69,13 @@
   
   --font-sans: 'Plus Jakarta Sans', system-ui, sans-serif;
 
-  /* Custom Font Size Scale - Increased for better readability */
-  --font-size-xs: 0.875rem;    /* 14px (was 12px) +17% */
-  --font-size-sm: 1.125rem;    /* 18px (was 14px) +29% */
+  /* Custom Font Size Scale - Minimal increase for readability */
+  --font-size-xs: 0.75rem;     /* 12px (original) */
+  --font-size-sm: 0.875rem;    /* 14px (original) */
   --font-size-base: 1rem;      /* 16px (keep standard) */
-  --font-size-lg: 1.25rem;     /* 20px (slightly increased) */
-  --font-size-xl: 1.5rem;      /* 24px (slightly increased) */
-  --font-size-2xl: 1.875rem;   /* 30px (slightly increased) */
+  --font-size-lg: 1.125rem;    /* 18px */
+  --font-size-xl: 1.25rem;     /* 20px */
+  --font-size-2xl: 1.5rem;     /* 24px */
 
   /* Adjust line heights for larger text */
   --line-height-tight: 1.3;
@@ -270,7 +270,7 @@ body {
 
   border: none;
   border-radius: 0;
-  font-size: 1.125rem; /* 18px (was 0.875rem/14px) - matches text-sm */
+  font-size: 0.875rem; /* 14px (original) - matches text-sm */
   line-height: 1.5;
   font-family: var(--font-sans);
 }
@@ -303,9 +303,9 @@ body {
 
 .rdg-header-cell {
   font-weight: 600;
-  font-size: 0.875rem; /* 14px (was 0.7rem/11.2px) - matches text-xs */
+  font-size: 0.75rem; /* 12px (original) - matches text-xs */
   text-transform: uppercase;
-  letter-spacing: 0.05em; /* Adjusted for larger text */
+  letter-spacing: 0.05em;
   color: var(--muted-foreground);
   border-right: none;
   border-bottom: 1px solid var(--border);

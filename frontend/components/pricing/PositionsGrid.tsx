@@ -270,7 +270,7 @@ export const PositionsGrid = () => {
       {
         key: 'labor_category',
         name: 'Labor Category',
-        width: 358, // Increased for larger text (+28%)
+        width: 314, // Increased for larger text (+12%)
         resizable: true,
         editable: true,
       },
@@ -278,7 +278,7 @@ export const PositionsGrid = () => {
       {
         key: 'experience',
         name: 'Experience (yrs)',
-        width: 155, // Increased for larger text (+29%)
+        width: 134, // Increased for larger text (+12%)
         resizable: true,
         editable: true,
         renderCell: ({ row }) => (
@@ -291,7 +291,7 @@ export const PositionsGrid = () => {
       {
         key: 'location',
         name: 'Location',
-        width: 192, // Increased for larger text (+28%)
+        width: 168, // Increased for larger text (+12%)
         resizable: true,
         editable: true,
         renderCell: ({ row }) => (
@@ -304,7 +304,7 @@ export const PositionsGrid = () => {
       {
         key: 'soc_code',
         name: 'Category Code',
-        width: 181, // Increased for larger text (+29%)
+        width: 157, // Increased for larger text (+12%)
         resizable: true,
         renderCell: ({ row }) => {
           const isGSA = isGSAPosition(row);
@@ -354,7 +354,7 @@ export const PositionsGrid = () => {
       {
         key: 'soc_title',
         name: 'Category Title',
-        width: 307, // Increased for larger text (+28%)
+        width: 269, // Increased for larger text (+12%)
         resizable: true,
         renderCell: ({ row }) => {
           const isGSA = isGSAPosition(row);
@@ -396,7 +396,7 @@ export const PositionsGrid = () => {
       {
         key: 'salary',
         name: 'Rate / Salary',
-        width: 256, // Increased for larger text (+28%)
+        width: 224, // Increased for larger text (+12%)
         resizable: true,
         renderCell: ({ row }) => {
           const isGSA = isGSAPosition(row);
@@ -474,7 +474,7 @@ export const PositionsGrid = () => {
       cols.push({
         key: `year${year}_hours`,
         name: year === 1 ? `Base Year\nHours${monthLabel}` : `Option ${year - 1}\nHours${monthLabel}`,
-        width: 140, // Increased for larger text (+17%)
+        width: 130, // Increased for larger text (+8%)
         resizable: true,
         editable: true,
         renderEditCell: (props: RenderEditCellProps<SpreadsheetPosition>) => {
@@ -545,7 +545,7 @@ export const PositionsGrid = () => {
       {
         key: 'dl_rate',
         name: 'Averaged\nDL Rate ($/hr)',
-        width: 150, // Increased for larger text (+15%)
+        width: 140, // Increased for larger text (+8%)
         resizable: true,
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
@@ -559,7 +559,7 @@ export const PositionsGrid = () => {
       {
         key: 'fringe',
         name: 'Averaged\nFringe ($/hr)',
-        width: 150, // Increased for larger text (+15%)
+        width: 140, // Increased for larger text (+8%)
         resizable: true,
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
@@ -573,7 +573,7 @@ export const PositionsGrid = () => {
       {
         key: 'oh',
         name: 'Averaged\nOH ($/hr)',
-        width: 138, // Increased for larger text (+15%)
+        width: 130, // Increased for larger text (+8%)
         resizable: true,
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
@@ -587,7 +587,7 @@ export const PositionsGrid = () => {
       {
         key: 'ga',
         name: 'Averaged\nG&A ($/hr)',
-        width: 138, // Increased for larger text (+15%)
+        width: 130, // Increased for larger text (+8%)
         resizable: true,
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
@@ -601,7 +601,7 @@ export const PositionsGrid = () => {
       {
         key: 'fee',
         name: 'Averaged\nFee ($/hr)',
-        width: 138, // Increased for larger text (+15%)
+        width: 130, // Increased for larger text (+8%)
         resizable: true,
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
@@ -615,7 +615,7 @@ export const PositionsGrid = () => {
       {
         key: 'fblr',
         name: 'Averaged\nFull Burdened Rate ($/hr)',
-        width: 207, // Increased for larger text (+15%)
+        width: 194, // Increased for larger text (+8%)
         resizable: true,
         renderCell: ({ row }) => {
           const calc = calculateFBLR(row);
