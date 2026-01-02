@@ -481,32 +481,32 @@ export const PrimeLaborSection = ({
             const isKey = isKeyPosition(pos);
             return (
               <div
-                className="flex items-center h-full px-2"
+                className="flex items-center h-full w-full px-2 cursor-pointer hover:bg-muted/30 transition-colors"
+                onClick={() => onToggleExpand(row.positionId)}
                 onContextMenu={(e) => {
                   handleContextMenu(e, pos);
                 }}
               >
-                <button
-                  onClick={() => onToggleExpand(row.positionId)}
-                  className="mr-2 text-muted-foreground hover:text-foreground transition-colors"
-                >
+                <div className="mr-2 text-muted-foreground flex-shrink-0">
                   {isExpanded ? (
                     <ChevronDown className="w-4 h-4" />
                   ) : (
                     <ChevronRight className="w-4 h-4" />
                   )}
-                </button>
-                <span className="font-semibold text-foreground">
+                </div>
+                <span className="font-semibold text-foreground flex-shrink-0">
                   {pos.labor_category}
                 </span>
                 {isKey && (
                   <span
-                    className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200"
+                    className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-amber-100 text-amber-800 dark:bg-amber-900 dark:text-amber-200 flex-shrink-0"
                     title="Key Position - Protected from auto-allocation to subcontractors"
                   >
                     KEY
                   </span>
                 )}
+                {/* Fill remaining space to make entire cell clickable */}
+                <div className="flex-1" />
               </div>
             );
           } else {
@@ -532,24 +532,14 @@ export const PrimeLaborSection = ({
             return <div className="h-full bg-blue-50 border-t-2 border-blue-200" />;
           } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
+            const isExpanded = row.isExpanded;
             const isGSA = isGSAPosition(pos);
 
-            if (isGSA) {
-              // GSA: Show GSA title (non-clickable)
-              return (
-                <div className="flex items-center h-full px-2">
-                  <span className="text-xs text-muted-foreground">
-                    {pos.gsa_title || '-'}
-                  </span>
-                </div>
-              );
-            }
-
-            // BLS: Show BLS title (clickable to change SOC)
             return (
               <div
-                className="flex items-center h-full px-2 cursor-pointer hover:bg-muted/50 transition-colors"
+                className="flex items-center h-full w-full px-2 cursor-pointer hover:bg-muted/30 transition-colors"
                 onClick={() => {
+                  // Open SOC modal for editing
                   setPositionToEditSOC(pos);
                   setSOCModalOpen(true);
                 }}
@@ -564,7 +554,17 @@ export const PrimeLaborSection = ({
                   });
                 }}
               >
-                <span className="text-xs text-muted-foreground">{pos.soc_title || '-'}</span>
+                <div className="mr-2 text-muted-foreground flex-shrink-0">
+                  {isExpanded ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
+                </div>
+                <span className="text-xs text-muted-foreground flex-shrink-0">
+                  {isGSA ? (pos.gsa_title || '-') : (pos.soc_title || '-')}
+                </span>
+                <div className="flex-1" />
               </div>
             );
           }
@@ -582,29 +582,14 @@ export const PrimeLaborSection = ({
             return <div className="h-full bg-blue-50 border-t-2 border-blue-200" />;
           } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
+            const isExpanded = row.isExpanded;
             const isGSA = isGSAPosition(pos);
 
-            if (isGSA) {
-              // GSA: Show GSA badge + lcat_id (non-clickable)
-              return (
-                <div className="flex items-center h-full px-2">
-                  <div className="flex items-center gap-1.5">
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                      GSA
-                    </span>
-                    <span className="text-muted-foreground text-xs font-mono">
-                      {pos.gsa_lcat_id || '-'}
-                    </span>
-                  </div>
-                </div>
-              );
-            }
-
-            // BLS: Show BLS badge + SOC code (clickable to change)
             return (
               <div
-                className="flex items-center h-full px-2 cursor-pointer hover:bg-muted/50 transition-colors"
+                className="flex items-center h-full w-full px-2 cursor-pointer hover:bg-muted/30 transition-colors"
                 onClick={() => {
+                  // Open SOC modal for editing
                   setPositionToEditSOC(pos);
                   setSOCModalOpen(true);
                 }}
@@ -619,19 +604,29 @@ export const PrimeLaborSection = ({
                   });
                 }}
               >
-                <div className="flex items-center gap-1.5">
-                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                    BLS
-                  </span>
-                  <span className="text-muted-foreground text-xs font-mono">{pos.soc_code || '-'}</span>
+                <div className="mr-2 text-muted-foreground flex-shrink-0">
+                  {isExpanded ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
                 </div>
+                <div className="flex items-center gap-1.5 flex-shrink-0">
+                  <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium ${isGSA ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'}`}>
+                    {isGSA ? 'GSA' : 'BLS'}
+                  </span>
+                  <span className="text-muted-foreground text-xs font-mono">
+                    {isGSA ? (pos.gsa_lcat_id || '-') : (pos.soc_code || '-')}
+                  </span>
+                </div>
+                <div className="flex-1" />
               </div>
             );
           }
           return <div className="h-full bg-muted/30" />;
         },
       },
-      // Salary - Click to open modal
+      // Salary - Click to expand/collapse, right-click for context menu
       {
         key: 'percentile',
         name: 'Salary',
@@ -642,13 +637,15 @@ export const PrimeLaborSection = ({
             return <div className="h-full bg-blue-50 border-t-2 border-blue-200" />;
           } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
+            const isExpanded = row.isExpanded;
             const wage = getEffectiveSalary(pos);
             const label = getSalaryDisplayLabel(pos);
             const isMulti = isMultiSelectMode(pos);
             return (
               <div
-                className="flex items-center h-full px-2 cursor-pointer hover:bg-muted/50 transition-colors"
+                className="flex items-center h-full w-full px-2 cursor-pointer hover:bg-muted/30 transition-colors"
                 onClick={() => {
+                  // Open salary modal for editing
                   setPositionToEdit(pos);
                   setSalaryModalOpen(true);
                 }}
@@ -663,28 +660,38 @@ export const PrimeLaborSection = ({
                   });
                 }}
               >
-                {isMulti ? (
-                  // Multi-select - show label + averaged amount
-                  <>
-                    <span className="text-purple-600 dark:text-purple-400 font-semibold">{label}</span>
-                    <span className="ml-2 text-xs px-2 py-0.5 rounded text-purple-600 bg-purple-600/10">
-                      ${wage.toLocaleString()}
+                <div className="mr-2 text-muted-foreground flex-shrink-0">
+                  {isExpanded ? (
+                    <ChevronDown className="w-4 h-4" />
+                  ) : (
+                    <ChevronRight className="w-4 h-4" />
+                  )}
+                </div>
+                <div className="flex items-center flex-shrink-0">
+                  {isMulti ? (
+                    // Multi-select - show label + averaged amount
+                    <>
+                      <span className="text-purple-600 dark:text-purple-400 font-semibold">{label}</span>
+                      <span className="ml-2 text-xs px-2 py-0.5 rounded text-purple-600 bg-purple-600/10">
+                        ${wage.toLocaleString()}
+                      </span>
+                    </>
+                  ) : label === 'Custom' ? (
+                    // Custom salary - only show amount with icon
+                    <span className="text-blue-600 dark:text-blue-400 font-semibold">
+                      ${wage.toLocaleString()} ✎
                     </span>
-                  </>
-                ) : label === 'Custom' ? (
-                  // Custom salary - only show amount with icon
-                  <span className="text-blue-600 dark:text-blue-400 font-semibold">
-                    ${wage.toLocaleString()} ✎
-                  </span>
-                ) : (
-                  // BLS percentile - show percentile + wage
-                  <>
-                    <span className="font-semibold text-foreground">{label}</span>
-                    <span className="ml-2 text-xs px-2 py-0.5 rounded text-primary bg-primary/10">
-                      ${wage.toLocaleString()}
-                    </span>
-                  </>
-                )}
+                  ) : (
+                    // BLS percentile - show percentile + wage
+                    <>
+                      <span className="font-semibold text-foreground">{label}</span>
+                      <span className="ml-2 text-xs px-2 py-0.5 rounded text-primary bg-primary/10">
+                        ${wage.toLocaleString()}
+                      </span>
+                    </>
+                  )}
+                </div>
+                <div className="flex-1" />
               </div>
             );
           }
@@ -1247,7 +1254,7 @@ export const PrimeLaborSection = ({
 
       <div
         className="border border-border rounded-lg transition-all duration-200"
-        style={{ height: Math.max(gridRows.length * 45 + 50, 200) }}
+        style={{ height: 'calc(100vh - 280px)', minHeight: 400 }}
       >
         <DataGrid
           key={`${rates.fringe}-${rates.oh}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}`}
