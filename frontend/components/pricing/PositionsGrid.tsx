@@ -477,23 +477,59 @@ export const PositionsGrid = () => {
         width: 120,
         resizable: true,
         editable: true,
-        renderEditCell: (props: RenderEditCellProps<SpreadsheetPosition>) => (
-          <input
-            type="number"
-            className="w-full h-full px-2 bg-transparent text-foreground outline-none text-right font-mono"
-            value={props.row.hours_per_year[yearStr] || 0}
-            onChange={(e) => {
+        renderEditCell: (props: RenderEditCellProps<SpreadsheetPosition>) => {
+          const EditInput = () => {
+            const [inputValue, setInputValue] = React.useState((props.row.hours_per_year[yearStr] || 0).toString());
+
+            const handleSave = () => {
+              // Parse and validate
               const newHours = { ...props.row.hours_per_year };
-              newHours[yearStr] = parseFloat(e.target.value) || 0;
-              props.onRowChange({
-                ...props.row,
-                hours_per_year: newHours,
+              newHours[yearStr] = parseFloat(inputValue) || 0;
+
+              console.log('[PositionsGrid] Directly updating position hours:', {
+                positionId: props.row.id,
+                year: yearStr,
+                newHours: newHours[yearStr],
+                allHours: newHours
               });
-            }}
-            onBlur={() => props.onClose(true)}
-            autoFocus
-          />
-        ),
+
+              // Directly update position through updatePosition (bypass row change handler)
+              updatePosition(props.row.id, { hours_per_year: newHours });
+
+              // Close the editor
+              props.onClose(true);
+            };
+
+            return (
+              <input
+                type="text"
+                inputMode="decimal"
+                className="w-full h-full px-2 bg-transparent text-foreground outline-none text-right font-mono"
+                value={inputValue}
+                onChange={(e) => {
+                  // Only allow numbers, decimal point, and basic editing
+                  const value = e.target.value;
+                  if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                    setInputValue(value);
+                  }
+                }}
+                onBlur={handleSave}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSave();
+                  } else if (e.key === 'Escape') {
+                    props.onClose(false); // Cancel without saving
+                  }
+                }}
+                autoFocus
+                onFocus={(e) => e.target.select()} // Select all text on focus
+              />
+            );
+          };
+
+          return <EditInput />;
+        },
         renderCell: ({ row }) => (
           <div className="flex items-center justify-end h-full px-2">
             <span className="font-mono">

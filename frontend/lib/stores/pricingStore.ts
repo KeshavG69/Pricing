@@ -816,12 +816,21 @@ export const usePricingStore = create<PricingState>((set, get) => {
     },
 
     updatePosition: (id, updates) => {
+      console.log('[BASIC MODE] Updating position', { id, updates });
+
       set((state) => ({
         positions: state.positions.map((p) =>
           p.id === id ? { ...p, ...updates } : p
         ),
+        isDirty: true, // Set dirty immediately
       }));
+
+      // Trigger recalculate for UI updates
       debouncedRecalculate();
+
+      // Also trigger auto-save directly to ensure persistence
+      console.log('[BASIC MODE] Triggering debouncedAutoSave (will run in 2s)');
+      debouncedAutoSave();
     },
 
     addPosition: (position) => {
