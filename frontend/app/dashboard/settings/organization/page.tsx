@@ -478,7 +478,7 @@ function OrganizationPageContent() {
               }`}
             >
               <FileText className="w-4 h-4 inline-block mr-2" />
-              Legal
+              Terms and Conditions
             </button>
           </nav>
         </div>
@@ -1187,16 +1187,16 @@ function OrganizationPageContent() {
               <CardContent>
                 <div className="space-y-6">
                   {/* Acceptance Status */}
-                  <div className="flex items-center justify-between p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
+                  <div className="flex items-center justify-between p-4 bg-muted/50 border border-border rounded-lg">
                     <div className="flex items-center gap-3">
-                      <div className="h-10 w-10 rounded-full bg-emerald-100 flex items-center justify-center">
+                      <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
                         <CheckCircle className="w-5 h-5 text-emerald-600" />
                       </div>
                       <div>
-                        <p className="text-sm font-semibold text-emerald-900">
+                        <p className="text-sm font-semibold text-foreground">
                           Terms Accepted
                         </p>
-                        <p className="text-xs text-emerald-700">
+                        <p className="text-xs text-muted-foreground">
                           Version {user?.terms_accepted_version || '1.0.0'} • Accepted on{' '}
                           {user?.terms_accepted_at
                             ? new Date(user.terms_accepted_at).toLocaleDateString('en-US', {
@@ -1224,8 +1224,8 @@ function OrganizationPageContent() {
                         className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors group"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-lg bg-blue-100 flex items-center justify-center">
-                            <FileText className="w-5 h-5 text-blue-600" />
+                          <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                            <FileText className="w-5 h-5 text-muted-foreground" />
                           </div>
                           <div>
                             <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
@@ -1249,8 +1249,8 @@ function OrganizationPageContent() {
                         className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors group"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-lg bg-purple-100 flex items-center justify-center">
-                            <Info className="w-5 h-5 text-purple-600" />
+                          <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                            <Info className="w-5 h-5 text-muted-foreground" />
                           </div>
                           <div>
                             <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
@@ -1274,8 +1274,8 @@ function OrganizationPageContent() {
                         className="flex items-center justify-between p-4 border border-border rounded-lg hover:bg-muted/50 transition-colors group"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 rounded-lg bg-orange-100 flex items-center justify-center">
-                            <Building className="w-5 h-5 text-orange-600" />
+                          <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center">
+                            <Building className="w-5 h-5 text-muted-foreground" />
                           </div>
                           <div>
                             <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
@@ -1294,9 +1294,9 @@ function OrganizationPageContent() {
                   </div>
 
                   {/* Help Text */}
-                  <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-sm text-blue-900">
-                      <strong>Note:</strong> If our Terms and Conditions are updated, you'll be prompted to review and accept the new version before continuing to use PriceIQ.
+                  <div className="p-4 bg-muted/30 border border-border rounded-lg">
+                    <p className="text-sm text-muted-foreground">
+                      <strong className="text-foreground">Note:</strong> If our Terms and Conditions are updated, you'll be prompted to review and accept the new version before continuing to use PriceIQ.
                     </p>
                   </div>
                 </div>
