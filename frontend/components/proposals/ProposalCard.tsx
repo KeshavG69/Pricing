@@ -90,7 +90,7 @@ export const ProposalCard = React.memo(
     return (
       <div
         onClick={() => onClick(proposal.id)}
-        className="group flex items-center justify-between p-4 hover:bg-muted/50 transition-all duration-200 cursor-pointer"
+        className="group flex items-center justify-between p-5 hover:bg-muted/50 transition-all duration-200 cursor-pointer"
       >
         <div className="flex items-center space-x-4 flex-1 min-w-0">
           <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center group-hover:bg-muted/80 transition-colors">
