@@ -72,6 +72,15 @@ export const ConvertToSubcontractorModal = ({
     // For SpreadsheetPosition, calculate FBLR
     const spreadsheetPos = position as SpreadsheetPosition;
     const selectedWage = spreadsheetPos[`wage_${spreadsheetPos.percentile}`] || spreadsheetPos.selected_wage || 0;
+
+    // GSA: selected_wage is already hourly rate (use directly as FBLR)
+    // BLS: selected_wage is annual salary (calculate FBLR from DL + overhead)
+    if (spreadsheetPos.wage_source === 'gsa') {
+      // GSA rate is already fully loaded hourly rate
+      return Math.round(selectedWage * 100) / 100;
+    }
+
+    // BLS: Calculate FBLR from annual salary
     const dlRate = selectedWage / totalHours;
     const fringe = dlRate * rates.fringe;
     const oh = (dlRate + fringe) * rates.oh;
@@ -135,8 +144,6 @@ export const ConvertToSubcontractorModal = ({
     const rateNum = parseFloat(customRate);
     if (isNaN(rateNum) || rateNum <= 0) {
       newErrors.rate = 'Rate must be a positive number';
-    } else if (rateNum < 10 || rateNum > 500) {
-      newErrors.rate = 'Rate should be between $10 and $500/hr';
     }
 
     setErrors(newErrors);

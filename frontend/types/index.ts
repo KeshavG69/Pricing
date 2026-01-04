@@ -357,6 +357,7 @@ export interface SubcontractorPosition {
   labor_category: string;
   rate: number;
   hours_per_year: Record<string, number>;
+  original_position_id?: string; // Links to prime position ID this was converted from
 }
 
 export interface Subcontractor {
@@ -477,7 +478,7 @@ export interface Aggregates {
   };
 }
 
-export type GridRowType = 'position' | 'breakdown' | 'subtotal';
+export type GridRowType = 'position' | 'breakdown' | 'subtotal' | 'subcontractor';
 export type BreakdownType = 'dl' | 'fringe' | 'oh' | 'ga' | 'fee';
 
 export interface GridRow {
@@ -486,6 +487,11 @@ export interface GridRow {
   breakdownType?: BreakdownType;
   data: any; // Actual row data
   isExpanded?: boolean;
+  // Subcontractor row fields
+  subcontractorName?: string;
+  subcontractorHours?: Record<string, number>;
+  subcontractorTotalHours?: number;
+  subcontractorRate?: number;
 }
 
 // Context Menu types

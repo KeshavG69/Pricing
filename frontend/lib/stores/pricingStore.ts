@@ -919,6 +919,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         labor_category: position.labor_category,
         rate: data.rate,
         hours_per_year: data.hoursAllocation,
+        original_position_id: position.id, // Link back to prime position
       };
 
       // 3. Add position to subcontractor
@@ -929,13 +930,11 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
       // 4. Calculate remaining hours for prime position
       const remainingHours: Record<string, number> = {};
-      let hasRemainingHours = false;
 
       Object.entries(position.hours_per_year).forEach(([year, hours]) => {
         const allocated = data.hoursAllocation[year] || 0;
         const remaining = hours - allocated;
         remainingHours[year] = remaining;
-        if (remaining > 0) hasRemainingHours = true;
       });
 
       // 5. Update state
@@ -953,16 +952,10 @@ export const usePricingStore = create<PricingState>((set, get) => {
           );
         }
 
-        // Update or remove prime position
-        if (hasRemainingHours) {
-          // Partial conversion - update position with remaining hours
-          newState.positions = state.positions.map((p) =>
-            p.id === position.id ? { ...p, hours_per_year: remainingHours } : p
-          );
-        } else {
-          // Full conversion - remove position
-          newState.positions = state.positions.filter((p) => p.id !== position.id);
-        }
+        // Update prime position with remaining hours (keep even if 0 to show lineage)
+        newState.positions = state.positions.map((p) =>
+          p.id === position.id ? { ...p, hours_per_year: remainingHours } : p
+        );
 
         return newState;
       });

@@ -151,8 +151,9 @@ export const PrimeLaborSection = ({
   onUpdatePosition,
   isAdvancedMode = true, // Default to true for backwards compatibility
 }: PrimeLaborSectionProps) => {
-  // Get wage source from store to determine column names
+  // Get wage source and subcontractors from store
   const wageSource = usePricingStore((state) => state.wageSource);
+  const subcontractors = usePricingStore((state) => state.subcontractors);
   const isGSAProposal = wageSource?.type === 'gsa';
 
   // Create a version string that changes when rates change to force re-render
@@ -342,7 +343,76 @@ export const PrimeLaborSection = ({
     return totals;
   }, [positions, rates, escalationRates, totalYears]);
 
-  // Transform positions to grid rows with breakdown rows
+  // Build order-based position mapping for subcontractors without original_position_id
+  // Groups positions by labor_category and tracks which ones have been matched
+  const getLinkedSubcontractorPositions = useMemo(() => {
+    // Collect all subcontractor positions across all subcontractors
+    const allSubPositions: Array<{
+      subName: string;
+      subPos: typeof subcontractors[0]['positions'][0];
+    }> = [];
+
+    for (const sub of subcontractors) {
+      for (const subPos of sub.positions) {
+        allSubPositions.push({ subName: sub.name, subPos });
+      }
+    }
+
+    // Build mapping: positionId -> linked subcontractor positions
+    const linkedMap = new Map<string, Array<{ subName: string; subPos: typeof allSubPositions[0]['subPos'] }>>();
+
+    // First pass: handle positions with original_position_id (direct 1-to-1 linking)
+    const matchedSubIndices = new Set<number>();
+    allSubPositions.forEach((item, idx) => {
+      if (item.subPos.original_position_id) {
+        const posId = item.subPos.original_position_id;
+        if (!linkedMap.has(posId)) {
+          linkedMap.set(posId, []);
+        }
+        linkedMap.get(posId)!.push(item);
+        matchedSubIndices.add(idx);
+      }
+    });
+
+    // Second pass: order-based fallback for positions without original_position_id
+    // Group prime positions by labor_category with their order
+    const primeByLaborCat = new Map<string, string[]>(); // labor_category -> [positionId, ...]
+    positions.forEach((pos) => {
+      const lc = pos.labor_category;
+      if (!primeByLaborCat.has(lc)) {
+        primeByLaborCat.set(lc, []);
+      }
+      primeByLaborCat.get(lc)!.push(pos.id);
+    });
+
+    // Track how many subs have been assigned to each labor_category
+    const assignedCountByLaborCat = new Map<string, number>();
+
+    allSubPositions.forEach((item, idx) => {
+      if (matchedSubIndices.has(idx)) return; // Already matched by original_position_id
+
+      const lc = item.subPos.labor_category;
+      const primeIds = primeByLaborCat.get(lc);
+      if (!primeIds || primeIds.length === 0) return;
+
+      // Get current assignment count for this labor_category
+      const currentCount = assignedCountByLaborCat.get(lc) || 0;
+
+      // Assign to nth prime position with this labor_category (order-based)
+      const targetPrimeIndex = currentCount % primeIds.length;
+      const targetPrimeId = primeIds[targetPrimeIndex];
+
+      if (!linkedMap.has(targetPrimeId)) {
+        linkedMap.set(targetPrimeId, []);
+      }
+      linkedMap.get(targetPrimeId)!.push(item);
+      assignedCountByLaborCat.set(lc, currentCount + 1);
+    });
+
+    return linkedMap;
+  }, [positions, subcontractors]);
+
+  // Transform positions to grid rows with breakdown rows + subcontractor rows
   const gridRows = useMemo<GridRow[]>(() => {
     const rows: GridRow[] = [];
 
@@ -390,6 +460,23 @@ export const PrimeLaborSection = ({
           }
         );
       }
+
+      // Add subcontractor rows linked to this position
+      const linkedSubs = getLinkedSubcontractorPositions.get(pos.id) || [];
+      for (const { subName, subPos } of linkedSubs) {
+        const totalSubHours = Object.values(subPos.hours_per_year || {})
+          .reduce((a, b) => a + (b || 0), 0);
+
+        rows.push({
+          type: 'subcontractor',
+          positionId: pos.id,
+          data: pos,
+          subcontractorName: subName,
+          subcontractorHours: subPos.hours_per_year,
+          subcontractorTotalHours: totalSubHours,
+          subcontractorRate: subPos.rate,
+        });
+      }
     });
 
     // Add subtotal row at the end
@@ -400,7 +487,7 @@ export const PrimeLaborSection = ({
     });
 
     return rows;
-  }, [positions, expandedPositions, rates, escalationRates, totalYears, columnTotals]);
+  }, [positions, expandedPositions, rates, escalationRates, totalYears, columnTotals, getLinkedSubcontractorPositions]);
 
   // Get cell styling for manual overrides
   const getCellClassName = (positionId: string, year: string, field: string) => {
@@ -451,6 +538,10 @@ export const PrimeLaborSection = ({
           // Subtotal row - show styled empty cell
           if (row.type === 'subtotal') {
             return <div className="h-full bg-blue-50 border-t-2 border-blue-200" />;
+          }
+          // Subcontractor row - show purple styled empty cell
+          if (row.type === 'subcontractor') {
+            return <div className="h-full bg-purple-50/50" />;
           }
           // Only show actions for position rows, not breakdown rows
           if (row.type === 'position') {
@@ -524,6 +615,15 @@ export const PrimeLaborSection = ({
                 <div className="flex-1" />
               </div>
             );
+          } else if (row.type === 'subcontractor') {
+            // Subcontractor row - show subcontractor name with indent
+            return (
+              <div className="flex items-center h-full px-2 pl-10 bg-purple-50/50">
+                <span className="text-sm text-purple-700 font-medium">
+                  ↳ {row.subcontractorName}
+                </span>
+              </div>
+            );
           } else {
             // Breakdown row
             return (
@@ -582,6 +682,8 @@ export const PrimeLaborSection = ({
                 <div className="flex-1" />
               </div>
             );
+          } else if (row.type === 'subcontractor') {
+            return <div className="h-full bg-purple-50/50" />;
           }
           return <div className="h-full bg-muted/30" />;
         },
@@ -637,6 +739,8 @@ export const PrimeLaborSection = ({
                 <div className="flex-1" />
               </div>
             );
+          } else if (row.type === 'subcontractor') {
+            return <div className="h-full bg-purple-50/50" />;
           }
           return <div className="h-full bg-muted/30" />;
         },
@@ -709,6 +813,8 @@ export const PrimeLaborSection = ({
                 <div className="flex-1" />
               </div>
             );
+          } else if (row.type === 'subcontractor') {
+            return <div className="h-full bg-purple-50/50" />;
           }
           return <div className="h-full bg-muted/30" />;
         },
@@ -837,6 +943,8 @@ export const PrimeLaborSection = ({
                 )}
               </div>
             );
+          } else if (row.type === 'subcontractor') {
+            return <div className="h-full bg-purple-50/50" />;
           }
           return <div className="h-full bg-muted/30" />;
         },
@@ -871,6 +979,11 @@ export const PrimeLaborSection = ({
                 </span>
               </div>
             );
+          }
+
+          // Subcontractor row - empty (calculations done separately)
+          if (row.type === 'subcontractor') {
+            return <div className="h-full bg-purple-50/50" />;
           }
 
           const pos = row.data as AdvancedPosition;
@@ -1009,6 +1122,16 @@ export const PrimeLaborSection = ({
                 </span>
               </div>
             );
+          } else if (row.type === 'subcontractor') {
+            // Subcontractor row - show hours for this year
+            const hours = row.subcontractorHours?.[yearStr] || 0;
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-purple-50/50">
+                <span className="text-purple-700 font-medium">
+                  {hours.toLocaleString()}
+                </span>
+              </div>
+            );
           } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             const breakdown = pos.breakdown[yearStr];
@@ -1044,6 +1167,11 @@ export const PrimeLaborSection = ({
                 </span>
               </div>
             );
+          }
+
+          // Subcontractor row - empty (calculations done separately)
+          if (row.type === 'subcontractor') {
+            return <div className="h-full bg-purple-50/50" />;
           }
 
           const pos = row.data as AdvancedPosition;
@@ -1284,6 +1412,14 @@ export const PrimeLaborSection = ({
                 </span>
               </div>
             );
+          } else if (row.type === 'subcontractor') {
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-purple-50/50">
+                <span className="text-purple-700 font-medium">
+                  {(row.subcontractorTotalHours || 0).toLocaleString()}
+                </span>
+              </div>
+            );
           } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             return (
@@ -1312,6 +1448,8 @@ export const PrimeLaborSection = ({
                 </span>
               </div>
             );
+          } else if (row.type === 'subcontractor') {
+            return <div className="h-full bg-purple-50/50" />;
           } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             return (
