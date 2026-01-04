@@ -5,6 +5,7 @@ Handles file upload, parsing, and CRUD operations for company-specific labor rat
 """
 
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, BackgroundTasks, Depends
+from pydantic import BaseModel, Field
 from typing import List, Optional
 from pathlib import Path
 import tempfile
@@ -449,6 +450,94 @@ async def get_contract_document_url(
             status_code=500,
             detail=f"Failed to generate document URL: {str(e)}"
         )
+
+
+# ============================================================================
+# AI SEARCH ENDPOINT
+# ============================================================================
+
+class GSASearchAIRequest(BaseModel):
+    """Request model for AI-powered GSA labor category search."""
+    labor_category: str = Field(..., description="Job title or labor category to search for")
+    description: Optional[str] = Field(None, description="Job description for better matching")
+    top_k: int = Field(5, ge=1, le=20, description="Number of top matches to return")
+
+
+@router.post("/{file_id}/search-ai")
+async def search_gsa_labor_categories_ai(
+    file_id: str,
+    request: GSASearchAIRequest,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    AI-powered GSA labor category search using Pinecone vector search.
+
+    Uses semantic search with OpenAI embeddings to find the most relevant
+    labor categories from the specified GSA contract.
+
+    Args:
+        file_id: GSA contract file ID
+        request: Search request with labor_category, description (optional), and parameters
+        current_user: Authenticated user (from JWT token)
+
+    Returns:
+        Dict with status and list of AI-suggested labor categories with similarity scores
+    """
+    try:
+        org_id = str(current_user["organization_id"])
+
+        # Verify user has access to this GSA contract
+        crud = get_company_repository_crud()
+        repo = crud.get_by_file_id(file_id, org_id)
+        if not repo:
+            raise HTTPException(status_code=404, detail="GSA contract not found")
+
+        # Build search query
+        query = request.labor_category
+        if request.description:
+            query = f"{query}: {request.description}"
+
+        # Search using Pinecone
+        pinecone_client = get_gsa_pinecone_client()
+        results = pinecone_client.search_labor_categories(
+            query=query,
+            organization_id=org_id,
+            file_id=file_id,
+            top_k=request.top_k
+        )
+
+        # Get rates from MongoDB for each matching category
+        labor_categories = repo.get("labor_categories", [])
+        lcat_rates = {lcat["lcat_id"]: lcat.get("rates_by_year", {}) for lcat in labor_categories}
+
+        # Format results with rates
+        suggestions = []
+        for i, match in enumerate(results):
+            suggestions.append({
+                "lcat_id": match["lcat_id"],
+                "title": match["title"],
+                "rates_by_year": lcat_rates.get(match["lcat_id"], {}),
+                "similarity_score": round(match["score"], 4),
+                "is_best_match": i == 0
+            })
+
+        return {
+            "status": "success",
+            "suggestions": suggestions
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        print(f"❌ GSA AI search failed: {e}")
+        import traceback
+        traceback.print_exc()
+
+        return {
+            "status": "success",
+            "suggestions": []
+        }
 
 
 @router.delete("/{file_id}")

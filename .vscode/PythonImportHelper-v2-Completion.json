@@ -2692,6 +2692,22 @@
         "documentation": {}
     },
     {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
         "label": "EmailStr",
         "importPath": "pydantic",
         "description": "pydantic",
@@ -5060,6 +5076,15 @@
         "description": "backend.routers.billing",
         "peekOfCode": "router = APIRouter(prefix=\"/api/billing\", tags=[\"billing\"])\n# =============================================================================\n# REQUEST MODELS (Only what we need)\n# =============================================================================\nclass PaymentMethodRequest(BaseModel):\n    payment_method_id: str\nclass ChargeRequest(BaseModel):\n    proposal_id: str\n    charge_type: str  # \"basic\" or \"advanced\"\n# =============================================================================",
         "detail": "backend.routers.billing",
+        "documentation": {}
+    },
+    {
+        "label": "GSASearchAIRequest",
+        "kind": 6,
+        "importPath": "backend.routers.company_repository",
+        "description": "backend.routers.company_repository",
+        "peekOfCode": "class GSASearchAIRequest(BaseModel):\n    \"\"\"Request model for AI-powered GSA labor category search.\"\"\"\n    labor_category: str = Field(..., description=\"Job title or labor category to search for\")\n    description: Optional[str] = Field(None, description=\"Job description for better matching\")\n    top_k: int = Field(5, ge=1, le=20, description=\"Number of top matches to return\")\n@router.post(\"/{file_id}/search-ai\")\nasync def search_gsa_labor_categories_ai(\n    file_id: str,\n    request: GSASearchAIRequest,\n    current_user: dict = Depends(get_current_user)",
+        "detail": "backend.routers.company_repository",
         "documentation": {}
     },
     {

@@ -1,4 +1,4 @@
-import { SpreadsheetPosition, AdvancedPosition } from '@/types';
+import { SpreadsheetPosition, AdvancedPosition, IndirectRates } from '@/types';
 
 /**
  * Check if position uses GSA rates (no indirect rates applied)
@@ -11,7 +11,76 @@ export function isGSAPosition(position: SpreadsheetPosition | AdvancedPosition):
 }
 
 /**
+ * Reverse engineer GSA rate into FBLR components for display purposes.
+ *
+ * GSA rates are final "fully burdened" rates. To show a breakdown in the UI
+ * (matching the BLS display format), we reverse-calculate what the DL rate
+ * would be if the same indirect rates were applied.
+ *
+ * Forward formula (BLS):
+ *   FBLR = DL × (1 + fringe) × (1 + oh) × (1 + ga) × (1 + fee)
+ *
+ * Reverse formula (GSA):
+ *   DL = GSA_Rate / [(1 + fringe) × (1 + oh) × (1 + ga) × (1 + fee)]
+ *
+ * Then apply the cascade forward to get individual components.
+ *
+ * NOTE: This is PURELY for display/presentation. The actual GSA rate is used
+ * directly in cost calculations without any indirect rates.
+ *
+ * @param gsaRate The GSA hourly rate (final FBLR)
+ * @param rates The indirect rates to use for reverse engineering
+ * @returns Breakdown object with dl_rate, fringe, oh, ga, fee, and fblr
+ */
+export function reverseEngineerGSARate(
+  gsaRate: number,
+  rates: IndirectRates
+): {
+  dlRate: number;
+  fringe: number;
+  oh: number;
+  ga: number;
+  fee: number;
+  fblr: number;
+} {
+  // Calculate the total multiplier from all indirect rates
+  const multiplier =
+    (1 + rates.fringe) *
+    (1 + rates.oh) *
+    (1 + rates.ga) *
+    (1 + rates.fee);
+
+  // Reverse engineer the DL rate
+  const dlRate = gsaRate / multiplier;
+
+  // Apply the BLS cascade forward to get individual components
+  const fringe = dlRate * rates.fringe;
+  const subtotal_1 = dlRate + fringe;
+
+  const oh = subtotal_1 * rates.oh;
+  const subtotal_2 = subtotal_1 + oh;
+
+  const ga = subtotal_2 * rates.ga;
+  const subtotal_3 = subtotal_2 + ga;
+
+  const fee = subtotal_3 * rates.fee;
+
+  const fblr = subtotal_3 + fee;
+
+  return {
+    dlRate,
+    fringe,
+    oh,
+    ga,
+    fee,
+    fblr, // Should approximately equal gsaRate (may have small rounding differences)
+  };
+}
+
+/**
  * Get GSA rate for a specific proposal year, mapping to the correct contract year.
+ *
+ * If a custom rate is set (gsa_custom_rate), it overrides GSA rates for all years.
  *
  * Contract year mapping:
  * - Proposal Year 1 → Contract Year (gsa_current_year)
@@ -26,6 +95,11 @@ export function getGSARateForYear(
   position: SpreadsheetPosition | AdvancedPosition,
   proposalYear: number
 ): number {
+  // Custom rate overrides all years
+  if (position.gsa_custom_rate != null && position.gsa_custom_rate > 0) {
+    return position.gsa_custom_rate;
+  }
+
   if (!position.gsa_rates_by_year) {
     return 0;
   }
@@ -141,8 +215,11 @@ export function isMultiSelectMode(position: SpreadsheetPosition | AdvancedPositi
  * @returns Display label string
  */
 export function getSalaryDisplayLabel(position: SpreadsheetPosition | AdvancedPosition): string {
-  // GSA positions show "GSA" label
+  // GSA positions show "GSA" or "Custom" label
   if (isGSAPosition(position)) {
+    if (position.gsa_custom_rate != null && position.gsa_custom_rate > 0) {
+      return 'Custom';
+    }
     return 'GSA';
   }
 

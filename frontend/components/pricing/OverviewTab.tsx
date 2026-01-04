@@ -2,7 +2,7 @@
 
 import { useMemo } from 'react';
 import { usePricingStore } from '@/lib/stores/pricingStore';
-import { getEffectiveSalary, isGSAPosition, getGSARateForYear } from '@/lib/utils/salaryHelpers';
+import { getEffectiveSalary, isGSAPosition, getGSARateForYear, reverseEngineerGSARate } from '@/lib/utils/salaryHelpers';
 import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 // Metric Card Component
 function MetricCard({
@@ -89,14 +89,25 @@ export default function OverviewTab() {
         const yearNum = parseInt(yearStr);
 
         if (isGSA) {
-          // GSA positions: Use GSA rate directly, NO indirect rates
-          // GSA rates are "fully burdened" and already include all indirect costs
+          // GSA positions: Reverse engineer for DISPLAY purposes
+          // The GSA rate is the final FBLR, but we show it broken down
+          // as if it were calculated with indirect rates (for consistency in overview)
           const gsaRate = getGSARateForYear(pos, yearNum);
-          const dlAmount = gsaRate * hours;
+          const breakdown = reverseEngineerGSARate(gsaRate, rates);
+
+          const dlAmount = breakdown.dlRate * hours;
+          const fringeAmount = breakdown.fringe * hours;
+          const ohAmount = breakdown.oh * hours;
+          const gaAmount = breakdown.ga * hours;
+          const feeAmount = breakdown.fee * hours;
+          const totalAmount = breakdown.fblr * hours;
 
           directLaborTotal += dlAmount;
-          primeLaborTotal += dlAmount;
-          // No fringe, OH, G&A for GSA positions
+          fringeTotal += fringeAmount;
+          ohTotal += ohAmount;
+          gaTotal += gaAmount;
+          primeFeeTotal += feeAmount;
+          primeLaborTotal += totalAmount;
         } else {
           // BLS positions: Calculate with indirect rates and escalation
           // Use getEffectiveSalary to handle multi-select wage averaging
@@ -236,12 +247,19 @@ export default function OverviewTab() {
         if (!breakdown[yearStr]) return;
 
         if (isGSA) {
-          // GSA positions: Use GSA rate directly, NO indirect rates
-          const gsaRate = pos.gsa_rates_by_year?.[yearStr] || 0;
-          const dlAmount = gsaRate * hours;
+          // GSA positions: Reverse engineer for DISPLAY purposes
+          const gsaRate = getGSARateForYear(pos, yearNum);
+          const gsaBreakdown = reverseEngineerGSARate(gsaRate, rates);
+
+          const dlAmount = gsaBreakdown.dlRate * hours;
+          const fringeAmount = gsaBreakdown.fringe * hours;
+          const ohAmount = gsaBreakdown.oh * hours;
+          const gaAmount = gsaBreakdown.ga * hours;
 
           breakdown[yearStr].directLabor += dlAmount;
-          // No fringe, OH, G&A for GSA positions
+          breakdown[yearStr].fringe += fringeAmount;
+          breakdown[yearStr].oh += ohAmount;
+          breakdown[yearStr].ga += gaAmount;
         } else {
           // BLS positions: Calculate with indirect rates and escalation
           // Use getEffectiveSalary to handle multi-select wage averaging

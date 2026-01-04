@@ -160,6 +160,12 @@ export interface ProposalMetadata {
   fte_hours_threshold?: number;
 }
 
+// Wage source configuration for proposals
+export interface WageSource {
+  type: 'bls' | 'gsa';
+  file_id?: string;  // GSA contract file_id (only when type is 'gsa')
+}
+
 export interface Proposal {
   id: string;
   user_id: string;
@@ -184,6 +190,7 @@ export interface Proposal {
   total_cost?: number;
   progress?: number;
   message?: string;
+  wage_source?: WageSource;  // BLS or GSA wage source configuration
 }
 
 export interface ProposalCreate {
@@ -254,6 +261,7 @@ export interface JobPosition {
   gsa_title?: string;
   gsa_rates_by_year?: Record<string, number>;
   gsa_current_year?: number;
+  gsa_custom_rate?: number | null;
   // Key position flag (cannot be auto-allocated to subcontractors)
   is_key_position?: boolean;
 }
@@ -309,6 +317,7 @@ export interface SpreadsheetPosition {
   gsa_title?: string;
   gsa_rates_by_year?: Record<string, number>;
   gsa_current_year?: number;
+  gsa_custom_rate?: number | null;
   // Key position flag (cannot be auto-allocated to subcontractors)
   is_key_position?: boolean;
   // Calculated fields (from backend)
@@ -410,6 +419,7 @@ export interface AdvancedPosition {
   gsa_title?: string;
   gsa_rates_by_year?: Record<string, number>;
   gsa_current_year?: number;
+  gsa_custom_rate?: number | null;
   // Key position flag (cannot be auto-allocated to subcontractors)
   is_key_position?: boolean;
 

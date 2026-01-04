@@ -16,7 +16,7 @@ import { SalarySelectionModal } from '@/components/pricing/SalarySelectionModal'
 import { SOCSelectionModal } from '@/components/pricing/SOCSelectionModal';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { getAvailablePercentiles } from '@/lib/utils/percentileHelpers';
-import { getEffectiveSalary, getSalaryDisplayLabel, getSalarySelectionCount, isMultiSelectMode, isGSAPosition, getGSARateForYear } from '@/lib/utils/salaryHelpers';
+import { getEffectiveSalary, getSalaryDisplayLabel, getSalarySelectionCount, isMultiSelectMode, isGSAPosition, getGSARateForYear, reverseEngineerGSARate } from '@/lib/utils/salaryHelpers';
 import Button from '@/components/ui/Button';
 import { usePricingStore, isKeyPosition } from '@/lib/stores/pricingStore';
 import apiClient from '@/lib/api/client';
@@ -30,7 +30,7 @@ const calculateAveragedFBLR = (
 ) => {
   const isGSA = isGSAPosition(position);
 
-  // GSA positions: Calculate averaged GSA rate (no indirect rates)
+  // GSA positions: Reverse engineer averaged GSA rate for DISPLAY purposes
   if (isGSA) {
     let totalAmount = 0;
     let totalHours = 0;
@@ -51,9 +51,20 @@ const calculateAveragedFBLR = (
       return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0, isGSA: true };
     }
 
-    const avgRate = totalAmount / totalHours;
-    // GSA: No indirect rates, FBLR = DL rate
-    return { dlRate: avgRate, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: avgRate, isGSA: true };
+    const avgGsaRate = totalAmount / totalHours;
+
+    // Reverse engineer the GSA rate to show breakdown (for display consistency)
+    const gsaBreakdown = reverseEngineerGSARate(avgGsaRate, rates);
+
+    return {
+      dlRate: gsaBreakdown.dlRate,
+      fringe: gsaBreakdown.fringe,
+      oh: gsaBreakdown.oh,
+      ga: gsaBreakdown.ga,
+      fee: gsaBreakdown.fee,
+      fblr: gsaBreakdown.fblr,
+      isGSA: true
+    };
   }
 
   // BLS positions: Calculate with indirect rates
@@ -140,6 +151,10 @@ export const PrimeLaborSection = ({
   onUpdatePosition,
   isAdvancedMode = true, // Default to true for backwards compatibility
 }: PrimeLaborSectionProps) => {
+  // Get wage source from store to determine column names
+  const wageSource = usePricingStore((state) => state.wageSource);
+  const isGSAProposal = wageSource?.type === 'gsa';
+
   // Create a version string that changes when rates change to force re-render
   const ratesVersion = useMemo(() => {
     return `${rates.fringe}-${rates.oh}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}`;
@@ -524,7 +539,7 @@ export const PrimeLaborSection = ({
       // Category Title - Show GSA title or BLS category (position rows only)
       {
         key: 'bls_category',
-        name: 'Category Title',
+        name: isGSAProposal ? 'GSA Labour Category' : 'BLS Labour Category',
         width: 269, // Increased for larger text (+12%)
         resizable: true,
         renderCell: ({ row }) => {
@@ -574,7 +589,7 @@ export const PrimeLaborSection = ({
       // Category Code - Show GSA lcat_id or BLS code (position rows only)
       {
         key: 'bls_code',
-        name: 'Category Code',
+        name: isGSAProposal ? 'GSA Category Code' : 'BLS Category Code',
         width: 157, // Increased for larger text (+12%)
         resizable: true,
         renderCell: ({ row }) => {
@@ -1185,7 +1200,7 @@ export const PrimeLaborSection = ({
     );
 
     return cols;
-  }, [totalYears, expandedPositions, manualOverrides, onToggleExpand, onDeletePosition, handleContextMenu, rates, escalationRates]);
+  }, [totalYears, expandedPositions, manualOverrides, onToggleExpand, onDeletePosition, handleContextMenu, rates, escalationRates, isGSAProposal]);
 
   // Get store methods (positions for the modal) - must be before any early returns
   const { addPosition, positions: basicPositions } = usePricingStore();

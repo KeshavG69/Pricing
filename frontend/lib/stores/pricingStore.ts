@@ -14,11 +14,12 @@ import {
   ConversionData,
   SubcontractorPosition,
   Proposal,
+  WageSource,
 } from '@/types';
 import { pricingApi } from '../api/pricing';
 import { proposalsApi } from '../api/proposals';
 import { useOrganizationStore } from './organizationStore';
-import { getEffectiveSalary, isGSAPosition, getGSARateForYear } from '../utils/salaryHelpers';
+import { getEffectiveSalary, isGSAPosition, getGSARateForYear, reverseEngineerGSARate } from '../utils/salaryHelpers';
 
 interface PricingState {
   // Data
@@ -34,6 +35,7 @@ interface PricingState {
   extensions: Extension[];  // Extension periods beyond regular contract years
   rates: IndirectRates;
   escalationRates: EscalationRates;
+  wageSource: WageSource;  // BLS or GSA wage source configuration
 
   // Metadata
   totalYears: number;
@@ -324,25 +326,34 @@ export const usePricingStore = create<PricingState>((set, get) => {
         const yearNum = parseInt(year, 10);
 
         if (isGSA) {
-          // GSA positions: Use GSA rate directly, NO indirect rates
+          // GSA positions: Reverse engineer for DISPLAY purposes
+          // The GSA rate is the final FBLR, but we show it broken down
+          // as if it were calculated with indirect rates (for consistency in UI)
           const gsaRate = getGSARateForYear(pos, yearNum);
-          const dlAmount = gsaRate * hours;
+          const gsaBreakdown = reverseEngineerGSARate(gsaRate, state.rates);
+
+          const dlAmount = gsaBreakdown.dlRate * hours;
+          const fringeAmount = gsaBreakdown.fringe * hours;
+          const ohAmount = gsaBreakdown.oh * hours;
+          const gaAmount = gsaBreakdown.ga * hours;
+          const feeAmount = gsaBreakdown.fee * hours;
+          const totalAmount = gsaBreakdown.fblr * hours;
 
           breakdown[year] = {
             hours,
-            wage: gsaRate, // GSA rate is already hourly
-            dlRate: gsaRate,
+            wage: gsaRate, // Original GSA rate for reference
+            dlRate: gsaBreakdown.dlRate,
             dlAmount,
-            fringe: 0,
-            fringeAmount: 0,
-            oh: 0,
-            ohAmount: 0,
-            ga: 0,
-            gaAmount: 0,
-            fee: 0,
-            feeAmount: 0,
-            fblr: gsaRate, // FBLR equals GSA rate (no indirect costs)
-            totalAmount: dlAmount,
+            fringe: gsaBreakdown.fringe,
+            fringeAmount,
+            oh: gsaBreakdown.oh,
+            ohAmount,
+            ga: gsaBreakdown.ga,
+            gaAmount,
+            fee: gsaBreakdown.fee,
+            feeAmount,
+            fblr: gsaBreakdown.fblr, // Should approximately equal gsaRate
+            totalAmount,
           };
         } else {
           // BLS positions: Calculate with indirect rates and escalation
@@ -617,6 +628,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
     extensions: [],
     rates: {} as IndirectRates,  // Will be populated from backend (org settings)
     escalationRates: {} as EscalationRates,  // Will be populated from backend (org settings)
+    wageSource: { type: 'bls' } as WageSource,  // Default to BLS, updated from proposal
     totalYears: 1,
     baseYears: 1,
     optionYears: 0,
@@ -734,6 +746,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           extensions: proposal.spreadsheet_data?.extensions || [],
           rates: proposal.spreadsheet_data?.rates || proposal.rates,  // Try spreadsheet_data first, fallback to org defaults
           escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Try spreadsheet_data first
+          wageSource: proposal.wage_source || { type: 'bls' },  // Load wage source from proposal
           totalYears,
           baseYears: proposal.metadata?.base_years || 1,
           optionYears: proposal.metadata?.option_years || 0,
@@ -760,6 +773,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           extensions: proposal.spreadsheet_data?.extensions || [],
           rates: proposal.spreadsheet_data?.rates || proposal.rates,  // Try spreadsheet_data first, fallback to org defaults
           escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Try spreadsheet_data first
+          wageSource: proposal.wage_source || { type: 'bls' },  // Cache wage source
           totalYears,
           baseYears: proposal.metadata?.base_years || 1,
           optionYears: proposal.metadata?.option_years || 0,
@@ -1781,6 +1795,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         extensions: [],
         rates: {} as IndirectRates,  // Will be populated from backend (org settings)
         escalationRates: {} as EscalationRates,  // Will be populated from backend (org settings)
+        wageSource: { type: 'bls' } as WageSource,  // Reset to default BLS
         totalYears: 1,
         baseYears: 1,
         optionYears: 0,
