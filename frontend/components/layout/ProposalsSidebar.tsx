@@ -88,10 +88,12 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
   const [shareProposalId, setShareProposalId] = useState<string | null>(null);
   const [shareProposalName, setShareProposalName] = useState('');
 
-  // Fetch proposals on mount (force refresh to get latest data)
+  // Fetch proposals on mount (use cached data if available)
   useEffect(() => {
     if (user) {
-      fetchProposals(true); // Force refresh on page load
+      // Don't force refresh to avoid conflicts with page-level fetches
+      // This will use cached data if available, or fetch if expired
+      fetchProposals(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.organization_id]);
