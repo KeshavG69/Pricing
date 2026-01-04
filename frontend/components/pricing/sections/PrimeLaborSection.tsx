@@ -715,6 +715,134 @@ export const PrimeLaborSection = ({
       },
     ];
 
+    // Add GSA Discount column (only for GSA proposals)
+    if (isGSAProposal) {
+      cols.push({
+        key: 'gsa_discount',
+        name: 'GSA Discount',
+        width: 220,
+        resizable: true,
+        editable: true,
+        renderEditCell: (props: RenderEditCellProps<GridRow>) => {
+          // Only allow editing for position rows
+          if (props.row.type !== 'position') {
+            props.onClose(false);
+            return null;
+          }
+
+          const pos = props.row.data as AdvancedPosition;
+          const isGSA = isGSAPosition(pos);
+
+          if (!isGSA) {
+            props.onClose(false);
+            return null;
+          }
+
+          const currentDiscount = pos.gsa_discount_rate || 0;
+
+          const EditInput = () => {
+            const [inputValue, setInputValue] = React.useState((currentDiscount * 100).toFixed(1));
+
+            const handleSave = () => {
+              const newDiscountPercent = parseFloat(inputValue) || 0;
+              const newDiscountRate = newDiscountPercent / 100;
+
+              console.log('[PrimeLaborSection] Updating GSA discount:', {
+                positionId: pos.id,
+                newDiscountRate
+              });
+
+              onUpdatePosition(pos.id, { gsa_discount_rate: newDiscountRate });
+              props.onClose(true);
+            };
+
+            return (
+              <input
+                type="text"
+                inputMode="decimal"
+                className="w-full h-full px-2 bg-transparent text-foreground outline-none text-right font-mono"
+                value={inputValue}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                    setInputValue(value);
+                  }
+                }}
+                onBlur={handleSave}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSave();
+                  } else if (e.key === 'Escape') {
+                    props.onClose(false);
+                  }
+                }}
+                autoFocus
+                onFocus={(e) => e.target.select()}
+              />
+            );
+          };
+
+          return <EditInput />;
+        },
+        renderCell: ({ row }) => {
+          if (row.type === 'subtotal') {
+            return <div className="h-full bg-blue-50 border-t-2 border-blue-200" />;
+          } else if (row.type === 'position') {
+            const pos = row.data as AdvancedPosition;
+            const isGSA = isGSAPosition(pos);
+
+            if (!isGSA) {
+              return <div className="flex items-center justify-center h-full px-2 text-muted-foreground text-xs">N/A</div>;
+            }
+
+            const suggestedDiscount = pos.suggested_discount_rate || 0;
+            const appliedDiscount = pos.gsa_discount_rate || 0;
+            const blsComparison = pos.bls_comparison_fblr;
+            const rationale = pos.discount_rationale;
+
+            // Get first year GSA rate for comparison display
+            const gsaRate = getGSARateForYear(pos, 1);
+
+            return (
+              <div
+                className="flex flex-col justify-center h-full px-2 space-y-0.5"
+                title={rationale || 'BLS comparison data not available'}
+              >
+                {suggestedDiscount > 0 ? (
+                  <>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Suggested:</span>
+                      <span className="text-amber-600 font-semibold">
+                        {(suggestedDiscount * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Applied:</span>
+                      <span className={appliedDiscount > 0 ? "text-emerald-600 font-semibold" : "text-muted-foreground"}>
+                        {appliedDiscount > 0 ? `${(appliedDiscount * 100).toFixed(1)}%` : '0%'}
+                      </span>
+                    </div>
+                    {blsComparison && (
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                        <span>GSA vs BLS:</span>
+                        <span>${gsaRate.toFixed(2)} / ${blsComparison.toFixed(2)}</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-xs text-muted-foreground text-center">
+                    No discount needed
+                  </div>
+                )}
+              </div>
+            );
+          }
+          return <div className="h-full bg-muted/30" />;
+        },
+      });
+    }
+
     // Add year-based columns (Rate, Hours, Amount triplets)
     for (let year = 1; year <= totalYears; year++) {
       const yearStr = year.toString();

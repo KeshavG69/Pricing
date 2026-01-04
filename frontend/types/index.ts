@@ -262,6 +262,14 @@ export interface JobPosition {
   gsa_rates_by_year?: Record<string, number>;
   gsa_current_year?: number;
   gsa_custom_rate?: number | null;
+  // Discount fields (GSA only)
+  gsa_discount_rate?: number; // User-applied discount (e.g., 0.10 for 10% off)
+  suggested_discount_rate?: number; // Suggested discount based on BLS comparison
+  discount_rationale?: string; // Explanation for suggested discount
+  bls_comparison_fblr?: number; // BLS FBLR used for discount comparison
+  bls_comparison_soc_code?: string; // BLS SOC code for reference
+  bls_comparison_wage?: number; // BLS annual wage used
+  bls_comparison_percentile?: string; // BLS percentile selected
   // Key position flag (cannot be auto-allocated to subcontractors)
   is_key_position?: boolean;
 }
@@ -318,6 +326,14 @@ export interface SpreadsheetPosition {
   gsa_rates_by_year?: Record<string, number>;
   gsa_current_year?: number;
   gsa_custom_rate?: number | null;
+  // Discount fields (GSA only)
+  gsa_discount_rate?: number; // User-applied discount (e.g., 0.10 for 10% off)
+  suggested_discount_rate?: number; // Suggested discount based on BLS comparison
+  discount_rationale?: string; // Explanation for suggested discount
+  bls_comparison_fblr?: number; // BLS FBLR used for discount comparison
+  bls_comparison_soc_code?: string; // BLS SOC code for reference
+  bls_comparison_wage?: number; // BLS annual wage used
+  bls_comparison_percentile?: string; // BLS percentile selected
   // Key position flag (cannot be auto-allocated to subcontractors)
   is_key_position?: boolean;
   // Calculated fields (from backend)
@@ -420,6 +436,14 @@ export interface AdvancedPosition {
   gsa_rates_by_year?: Record<string, number>;
   gsa_current_year?: number;
   gsa_custom_rate?: number | null;
+  // Discount fields (GSA only)
+  gsa_discount_rate?: number;
+  suggested_discount_rate?: number;
+  discount_rationale?: string;
+  bls_comparison_fblr?: number;
+  bls_comparison_soc_code?: string;
+  bls_comparison_wage?: number;
+  bls_comparison_percentile?: string;
   // Key position flag (cannot be auto-allocated to subcontractors)
   is_key_position?: boolean;
 

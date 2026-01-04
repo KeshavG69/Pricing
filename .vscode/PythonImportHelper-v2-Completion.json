@@ -896,6 +896,14 @@
         "documentation": {}
     },
     {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
         "label": "pricing",
         "importPath": "routers",
         "description": "routers",
@@ -2944,6 +2952,14 @@
         "documentation": {}
     },
     {
+        "label": "extract_with_llamaextract",
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "isExtraImport": true,
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
         "label": "get_llama_extract",
         "importPath": "client.llama_client",
         "description": "client.llama_client",
@@ -4714,7 +4730,7 @@
         "kind": 2,
         "importPath": "backend.client.jd_parser",
         "description": "backend.client.jd_parser",
-        "peekOfCode": "def extract_with_llamaextract(file_path: str, mode: str = \"premium\") -> GovernmentProposalExtraction:\n    \"\"\"\n    Extract structured data from document using LlamaExtract API.\n    Supports PDF, CSV, DOCX, and Excel files (xlsx/xls are converted to CSV).\n    Args:\n        file_path: Path to the document file\n        mode: Extraction mode - \"premium\" (default, high quality), \"balanced\", \"fast\", or \"multimodal\"\n    Returns:\n        GovernmentProposalExtraction object with all data\n    Raises:",
+        "peekOfCode": "def extract_with_llamaextract(file_path: str, mode: str = \"premium\") -> GovernmentProposalExtraction:\n    \"\"\"\n    Extract structured data from document using LlamaExtract API.\n    Supports PDF, CSV, DOCX, and Excel files.\n    - DOCX files are converted to text with tables preserved\n    - Excel files are converted to CSV\n    Args:\n        file_path: Path to the document file\n        mode: Extraction mode - \"premium\" (default, high quality), \"balanced\", \"fast\", or \"multimodal\"\n    Returns:",
         "detail": "backend.client.jd_parser",
         "documentation": {}
     },
@@ -5997,6 +6013,24 @@
         "documentation": {}
     },
     {
+        "label": "calculate_bls_fblr_comparison",
+        "kind": 2,
+        "importPath": "backend.utils.pipeline",
+        "description": "backend.utils.pipeline",
+        "peekOfCode": "def calculate_bls_fblr_comparison(\n    bls_wages: Dict[str, float],\n    experience: Optional[float],\n    organization_rates: Dict[str, float],\n    standard_fte_hours: int = 1880\n) -> Optional[Dict[str, Any]]:\n    \"\"\"\n    Calculate BLS FBLR for comparison with GSA rates.\n    Uses the same logic as BLS flow to select wage based on experience,\n    then calculates FBLR using organization's indirect rates (including fee).",
+        "detail": "backend.utils.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "calculate_suggested_discount",
+        "kind": 2,
+        "importPath": "backend.utils.pipeline",
+        "description": "backend.utils.pipeline",
+        "peekOfCode": "def calculate_suggested_discount(\n    gsa_rate: float,\n    bls_fblr: float,\n    bls_selected_wage: float\n) -> Dict[str, Any]:\n    \"\"\"\n    Calculate suggested discount based on GSA vs BLS comparison.\n    Strategy:\n    - If GSA > BLS FBLR: Suggest discount to match BLS exactly\n    - If GSA <= BLS FBLR: No discount needed (already competitive)",
+        "detail": "backend.utils.pipeline",
+        "documentation": {}
+    },
+    {
         "label": "build_project_data_from_dataframe",
         "kind": 2,
         "importPath": "backend.utils.pipeline",
@@ -6039,6 +6073,33 @@
         "description": "backend.utils.proposals",
         "peekOfCode": "_lock = threading.RLock()\ndef get_proposal_crud() -> ProposalCRUD:\n    \"\"\"\n    Get or create ProposalCRUD instance (singleton pattern)\n    Returns:\n        ProposalCRUD instance\n    \"\"\"\n    global _proposal_crud\n    with _lock:\n        if _proposal_crud is None:",
         "detail": "backend.utils.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "convert_pdf_to_docx",
+        "kind": 2,
+        "importPath": "backend.test_pdf_to_word",
+        "description": "backend.test_pdf_to_word",
+        "peekOfCode": "def convert_pdf_to_docx(pdf_path: str, output_docx_path: str) -> bool:\n    \"\"\"\n    Convert PDF to DOCX using pdf2docx library.\n    Install: pip install pdf2docx\n    \"\"\"\n    try:\n        from pdf2docx import Converter\n        print(f\"Converting PDF to DOCX...\")\n        print(f\"  Input:  {pdf_path}\")\n        print(f\"  Output: {output_docx_path}\")",
+        "detail": "backend.test_pdf_to_word",
+        "documentation": {}
+    },
+    {
+        "label": "test_parsing",
+        "kind": 2,
+        "importPath": "backend.test_pdf_to_word",
+        "description": "backend.test_pdf_to_word",
+        "peekOfCode": "def test_parsing(file_path: str, label: str):\n    \"\"\"Test parsing a document and print summary.\"\"\"\n    print(f\"\\n{'='*60}\")\n    print(f\"Testing {label}: {Path(file_path).name}\")\n    print(f\"{'='*60}\")\n    try:\n        extraction = extract_with_llamaextract(file_path, mode=\"premium\")\n        print(f\"\\n✓ Extraction successful!\")\n        print(f\"\\nMetadata:\")\n        print(f\"  Location: {extraction.metadata.location}\")",
+        "detail": "backend.test_pdf_to_word",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "backend.test_pdf_to_word",
+        "description": "backend.test_pdf_to_word",
+        "peekOfCode": "def main():\n    pdf_path = \"/Users/keshav/Downloads/PriceIQ Personnel Qualifications (1) (1).pdf\"\n    # Check if PDF exists\n    if not os.path.exists(pdf_path):\n        print(f\"❌ PDF not found: {pdf_path}\")\n        return\n    # Output DOCX path\n    docx_path = pdf_path.replace(\".pdf\", \"_converted.docx\")\n    print(\"=\"*60)\n    print(\"PDF to DOCX Conversion & Parsing Test\")",
+        "detail": "backend.test_pdf_to_word",
         "documentation": {}
     },
     {

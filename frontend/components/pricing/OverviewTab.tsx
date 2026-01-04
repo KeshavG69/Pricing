@@ -92,7 +92,12 @@ export default function OverviewTab() {
           // GSA positions: Reverse engineer for DISPLAY purposes
           // The GSA rate is the final FBLR, but we show it broken down
           // as if it were calculated with indirect rates (for consistency in overview)
-          const gsaRate = getGSARateForYear(pos, yearNum);
+          const originalGsaRate = getGSARateForYear(pos, yearNum);
+
+          // Apply discount if set by user
+          const discountRate = pos.gsa_discount_rate || 0;
+          const gsaRate = originalGsaRate * (1 - discountRate);
+
           const breakdown = reverseEngineerGSARate(gsaRate, rates);
 
           const dlAmount = breakdown.dlRate * hours;
