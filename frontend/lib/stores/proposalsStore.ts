@@ -84,8 +84,12 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
       // If cache is valid and not forced, use cached data (no fetch)
       if (cached && !cached.isExpired && !force) {
         console.log('[PROPOSALS] ✅ Using cached data (no fetch needed)');
+        // Deduplicate cached data just in case
+        const uniqueCached = Array.from(
+          new Map(cached.data.map((p: Proposal) => [p.id, p])).values()
+        );
         set({
-          proposals: cached.data,
+          proposals: uniqueCached,
           isLoading: false,
           lastFetchedOrgId: orgId,
         });
@@ -105,9 +109,14 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
       // Handle response format: extract proposals array from metadata response
       const freshProposals = Array.isArray(response) ? response : response.proposals;
 
+      // Deduplicate proposals by ID to ensure uniqueness
+      const uniqueProposals = Array.from(
+        new Map(freshProposals.map((p: Proposal) => [p.id, p])).values()
+      );
+
       // Update with fresh data and cache
       set({
-        proposals: freshProposals,
+        proposals: uniqueProposals,
         isLoading: false,
         lastFetchedOrgId: orgId,
       });
@@ -321,10 +330,14 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
         hasMoreData = proposalsArray.length === limit;
       }
 
+      // Deduplicate proposals by ID to prevent duplicates
+      const existingIds = new Set(state.proposals.map((p) => p.id));
+      const uniqueNewProposals = proposalsArray.filter((p) => !existingIds.has(p.id));
+
       set((state) => ({
         proposals:
           append && !sortChanged
-            ? [...state.proposals, ...proposalsArray]
+            ? [...state.proposals, ...uniqueNewProposals]
             : proposalsArray,
         hasMore: hasMoreData,
         currentPage: sortChanged ? 1 : state.currentPage + 1,

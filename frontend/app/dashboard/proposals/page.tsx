@@ -80,10 +80,16 @@ export default function ProposalsPage() {
   const [renameName, setRenameName] = useState('');
   const [isRenaming, setIsRenaming] = useState(false);
 
-  // Load initial data
+  // Load initial data - sidebar already fetches, so only fetch if proposals empty
   useEffect(() => {
+    // Reset pagination state when org changes
     resetPagination();
-    fetchProposalsPaginated(false);
+
+    // Only fetch if proposals haven't been loaded yet
+    // ProposalsSidebar already fetches on mount, so we can reuse that data
+    if (proposals.length === 0 && !isLoading) {
+      fetchProposalsPaginated(false);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.organization_id]);
 
