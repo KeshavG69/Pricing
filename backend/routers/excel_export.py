@@ -41,7 +41,7 @@ class ProjectConfig(BaseModel):
     # Indirect rates for FBLR calculation
     indirect_rates: Dict[str, float] = Field(
         ...,
-        description="Indirect rates: {'fringe': 0.247, 'oh': 0.0711, 'ga': 0.2243}"
+        description="Indirect rates: {'fringe': 0.247, 'oh_onsite': 0.0711, 'oh_offsite': 0.0711, 'ga': 0.2243}"
     )
 
     # Pass-through rates for managing subcontractors
@@ -127,7 +127,7 @@ async def generate_excel_from_data(request: ExcelGenerationRequest):
             "total_years": 6,
             "base_years": 1,
             "escalation_rates": {"1_to_2": 0.0272, ...},
-            "indirect_rates": {"fringe": 0.247, "oh": 0.0711, "ga": 0.2243},
+            "indirect_rates": {"fringe": 0.247, "oh_onsite": 0.0711, "oh_offsite": 0.0711, "ga": 0.2243},
             ...
           }
         }
@@ -259,7 +259,8 @@ async def generate_excel_from_documents(
             'escalation_rates': escalation_rates,
             'indirect_rates': {
                 'fringe': 0.247,
-                'oh': 0.0711,
+                'oh_onsite': 0.0711,
+                'oh_offsite': 0.0711,
                 'ga': 0.2243
             },
             'passthrough_rates': {
@@ -360,7 +361,8 @@ async def get_project_config_template():
             },
             "indirect_rates": {
                 "fringe": 0.247,
-                "oh": 0.0711,
+                "oh_onsite": 0.0711,
+                "oh_offsite": 0.0711,
                 "ga": 0.2243
             },
             "passthrough_rates": {
