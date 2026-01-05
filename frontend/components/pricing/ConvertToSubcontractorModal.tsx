@@ -83,7 +83,11 @@ export const ConvertToSubcontractorModal = ({
     // BLS: Calculate FBLR from annual salary
     const dlRate = selectedWage / totalHours;
     const fringe = dlRate * rates.fringe;
-    const oh = (dlRate + fringe) * rates.oh;
+    // Use appropriate OH rate based on position location_type (default to On-Site)
+    const ohRate = spreadsheetPos.location_type === 'Off-Site'
+      ? (rates.oh_offsite ?? rates.oh_onsite ?? 0.0711)
+      : (rates.oh_onsite ?? rates.oh_offsite ?? 0.0711);
+    const oh = (dlRate + fringe) * ohRate;
     const ga = (dlRate + fringe + oh) * rates.ga;
     const fee = (dlRate + fringe + oh + ga) * rates.fee;
     const fblr = dlRate + fringe + oh + ga + fee;

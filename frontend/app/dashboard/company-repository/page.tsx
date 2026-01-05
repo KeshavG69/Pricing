@@ -376,7 +376,6 @@ export default function CompanyRepositoryPage() {
     ga_passthrough: 0,
     escalation_rate: 0,
   });
-  const [syncManualOHRates, setSyncManualOHRates] = useState(true);
 
   // Edit preset dialog state
   const [showEditPresetDialog, setShowEditPresetDialog] = useState(false);
@@ -408,7 +407,6 @@ export default function CompanyRepositoryPage() {
     ga_passthrough: 0,
     escalation_rate: 0,
   });
-  const [syncEditOHRates, setSyncEditOHRates] = useState(true);
 
   // Organization settings state (for user overrides)
   const [allowUserRateOverride, setAllowUserRateOverride] = useState(true);
@@ -645,7 +643,6 @@ export default function CompanyRepositoryPage() {
         ga_passthrough: 0,
         escalation_rate: 0,
       });
-      setSyncManualOHRates(true);
 
       // Invalidate cache and force refresh to get updated presets
       if (user?.organization_id) {
@@ -710,7 +707,6 @@ export default function CompanyRepositoryPage() {
       ga_passthrough: toPercentageNumber(preset.ga_passthrough),
       escalation_rate: toPercentageNumber(preset.escalation_rate || 0),
     });
-    setSyncEditOHRates(ohOnsite === ohOffsite);
     setShowEditPresetDialog(true);
   };
 
@@ -748,7 +744,6 @@ export default function CompanyRepositoryPage() {
         ga_passthrough: 0,
         escalation_rate: 0,
       });
-      setSyncEditOHRates(true);
 
       // Invalidate cache and force refresh to get updated presets
       if (user?.organization_id) {
@@ -1515,7 +1510,6 @@ export default function CompanyRepositoryPage() {
             ga_passthrough: 0,
             escalation_rate: 0,
           });
-          setSyncManualOHRates(true);
         }}
         title="Create New Rate Preset"
         footer={
@@ -1536,7 +1530,6 @@ export default function CompanyRepositoryPage() {
                   ga_passthrough: 0,
                   escalation_rate: 0,
                 });
-                setSyncManualOHRates(true);
               }}
             >
               Cancel
@@ -1569,47 +1562,20 @@ export default function CompanyRepositoryPage() {
                 onChange={(e) => setManualPresetRates({ ...manualPresetRates, fringe: parseFloat(e.target.value) || 0 })}
                 placeholder="24.70"
               />
-              <div>
-                <Input
-                  label="OH (On-Site) Rate"
-                  type="number"
-                  value={manualPresetRates.oh_onsite || ''}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value) || 0;
-                    setManualPresetRates({
-                      ...manualPresetRates,
-                      oh_onsite: value,
-                      oh_offsite: syncManualOHRates ? value : manualPresetRates.oh_offsite
-                    });
-                  }}
-                  placeholder="7.11"
-                />
-              </div>
-              <div>
-                <Input
-                  label="OH (Off-Site) Rate"
-                  type="number"
-                  value={manualPresetRates.oh_offsite || ''}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value) || 0;
-                    setManualPresetRates({
-                      ...manualPresetRates,
-                      oh_offsite: value,
-                      oh_onsite: syncManualOHRates ? value : manualPresetRates.oh_onsite
-                    });
-                  }}
-                  placeholder="7.11"
-                />
-                <label className="flex items-center gap-2 text-sm mt-2 text-muted-foreground cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={syncManualOHRates}
-                    onChange={(e) => setSyncManualOHRates(e.target.checked)}
-                    className="rounded border-border"
-                  />
-                  <span>Keep On-Site and Off-Site rates the same</span>
-                </label>
-              </div>
+              <Input
+                label="OH (On-Site) Rate"
+                type="number"
+                value={manualPresetRates.oh_onsite || ''}
+                onChange={(e) => setManualPresetRates({ ...manualPresetRates, oh_onsite: parseFloat(e.target.value) || 0 })}
+                placeholder="7.11"
+              />
+              <Input
+                label="OH (Off-Site) Rate"
+                type="number"
+                value={manualPresetRates.oh_offsite || ''}
+                onChange={(e) => setManualPresetRates({ ...manualPresetRates, oh_offsite: parseFloat(e.target.value) || 0 })}
+                placeholder="7.11"
+              />
               <Input
                 label="G&A Rate"
                 type="number"
@@ -1675,7 +1641,6 @@ export default function CompanyRepositoryPage() {
             ga_passthrough: 0,
             escalation_rate: 0,
           });
-          setSyncEditOHRates(true);
         }}
         title="Edit Rate Preset"
         footer={
@@ -1697,7 +1662,6 @@ export default function CompanyRepositoryPage() {
                   ga_passthrough: 0,
                   escalation_rate: 0,
                 });
-                setSyncEditOHRates(true);
               }}
             >
               Cancel
@@ -1730,47 +1694,20 @@ export default function CompanyRepositoryPage() {
                 onChange={(e) => setEditPresetRates({ ...editPresetRates, fringe: parseFloat(e.target.value) || 0 })}
                 placeholder="24.70"
               />
-              <div>
-                <Input
-                  label="OH (On-Site) Rate"
-                  type="number"
-                  value={editPresetRates.oh_onsite || ''}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value) || 0;
-                    setEditPresetRates({
-                      ...editPresetRates,
-                      oh_onsite: value,
-                      oh_offsite: syncEditOHRates ? value : editPresetRates.oh_offsite
-                    });
-                  }}
-                  placeholder="7.11"
-                />
-              </div>
-              <div>
-                <Input
-                  label="OH (Off-Site) Rate"
-                  type="number"
-                  value={editPresetRates.oh_offsite || ''}
-                  onChange={(e) => {
-                    const value = parseFloat(e.target.value) || 0;
-                    setEditPresetRates({
-                      ...editPresetRates,
-                      oh_offsite: value,
-                      oh_onsite: syncEditOHRates ? value : editPresetRates.oh_onsite
-                    });
-                  }}
-                  placeholder="7.11"
-                />
-                <label className="flex items-center gap-2 text-sm mt-2 text-muted-foreground cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={syncEditOHRates}
-                    onChange={(e) => setSyncEditOHRates(e.target.checked)}
-                    className="rounded border-border"
-                  />
-                  <span>Keep On-Site and Off-Site rates the same</span>
-                </label>
-              </div>
+              <Input
+                label="OH (On-Site) Rate"
+                type="number"
+                value={editPresetRates.oh_onsite || ''}
+                onChange={(e) => setEditPresetRates({ ...editPresetRates, oh_onsite: parseFloat(e.target.value) || 0 })}
+                placeholder="7.11"
+              />
+              <Input
+                label="OH (Off-Site) Rate"
+                type="number"
+                value={editPresetRates.oh_offsite || ''}
+                onChange={(e) => setEditPresetRates({ ...editPresetRates, oh_offsite: parseFloat(e.target.value) || 0 })}
+                placeholder="7.11"
+              />
               <Input
                 label="G&A Rate"
                 type="number"

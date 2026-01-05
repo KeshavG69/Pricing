@@ -45,9 +45,6 @@ export const RatesReferencePanel = ({
   const [appliedPresetName, setAppliedPresetName] = useState<string>('');
   const [showPresetModal, setShowPresetModal] = useState(false);
 
-  // OH sync state - sync on-site and off-site rates
-  const [syncOHRates, setSyncOHRates] = useState(rates.oh_onsite === rates.oh_offsite);
-
   // Get rate presets from organization
   const ratePresets = organization?.settings?.rate_presets || [];
 
@@ -243,47 +240,24 @@ export const RatesReferencePanel = ({
               suffix="%"
               size="sm"
             />
-            <div>
-              <Input
-                label="OH (On-Site) Rate"
-                type="number"
-                value={formatRateValue(rates.oh_onsite)}
-                onChange={(e) => {
-                  updateDefaultRate('oh_onsite', e.target.value);
-                  if (syncOHRates) {
-                    updateDefaultRate('oh_offsite', e.target.value);
-                  }
-                }}
-                placeholder="0"
-                suffix="%"
-                size="sm"
-              />
-            </div>
-            <div>
-              <Input
-                label="OH (Off-Site) Rate"
-                type="number"
-                value={formatRateValue(rates.oh_offsite)}
-                onChange={(e) => {
-                  updateDefaultRate('oh_offsite', e.target.value);
-                  if (syncOHRates) {
-                    updateDefaultRate('oh_onsite', e.target.value);
-                  }
-                }}
-                placeholder="0"
-                suffix="%"
-                size="sm"
-              />
-              <label className="flex items-center gap-2 text-sm mt-2 text-muted-foreground cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={syncOHRates}
-                  onChange={(e) => setSyncOHRates(e.target.checked)}
-                  className="rounded border-border"
-                />
-                <span>Keep On-Site and Off-Site rates the same</span>
-              </label>
-            </div>
+            <Input
+              label="OH (On-Site) Rate"
+              type="number"
+              value={formatRateValue(rates.oh_onsite)}
+              onChange={(e) => updateDefaultRate('oh_onsite', e.target.value)}
+              placeholder="0"
+              suffix="%"
+              size="sm"
+            />
+            <Input
+              label="OH (Off-Site) Rate"
+              type="number"
+              value={formatRateValue(rates.oh_offsite)}
+              onChange={(e) => updateDefaultRate('oh_offsite', e.target.value)}
+              placeholder="0"
+              suffix="%"
+              size="sm"
+            />
             <Input
               label="G&A Rate"
               type="number"

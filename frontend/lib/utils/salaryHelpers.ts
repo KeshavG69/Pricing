@@ -7,7 +7,18 @@ import { SpreadsheetPosition, AdvancedPosition, IndirectRates } from '@/types';
  * @returns True if GSA position, false otherwise
  */
 export function isGSAPosition(position: SpreadsheetPosition | AdvancedPosition): boolean {
-  return position.wage_source === 'gsa';
+  // Primary check: explicit wage_source field
+  if (position.wage_source === 'gsa') {
+    return true;
+  }
+
+  // Fallback: Check for GSA-specific data (for backward compatibility)
+  // If position has gsa_rates_by_year and gsa_current_year, treat as GSA
+  if (position.gsa_rates_by_year && Object.keys(position.gsa_rates_by_year).length > 0 && position.gsa_current_year) {
+    return true;
+  }
+
+  return false;
 }
 
 /**
@@ -43,21 +54,30 @@ export function reverseEngineerGSARate(
   fee: number;
   fblr: number;
 } {
+  // For GSA reverse engineering, use oh_onsite as default (with fallbacks)
+  // This is only for display purposes - GSA rates are already fully burdened
+  const ohRate = rates.oh_onsite ?? rates.oh_offsite ?? rates.oh ?? 0.0711;
+
+  console.log(`[REVERSE_ENGINEER_GSA] Input: gsaRate=${gsaRate}, fringe=${rates.fringe}, oh_onsite=${rates.oh_onsite}, oh_offsite=${rates.oh_offsite}, ohRate=${ohRate}, ga=${rates.ga}, fee=${rates.fee}`);
+
   // Calculate the total multiplier from all indirect rates
   const multiplier =
     (1 + rates.fringe) *
-    (1 + rates.oh) *
+    (1 + ohRate) *
     (1 + rates.ga) *
     (1 + rates.fee);
 
+  console.log(`[REVERSE_ENGINEER_GSA] Multiplier: ${multiplier}`);
+
   // Reverse engineer the DL rate
   const dlRate = gsaRate / multiplier;
+  console.log(`[REVERSE_ENGINEER_GSA] DL Rate: ${dlRate}`);
 
   // Apply the BLS cascade forward to get individual components
   const fringe = dlRate * rates.fringe;
   const subtotal_1 = dlRate + fringe;
 
-  const oh = subtotal_1 * rates.oh;
+  const oh = subtotal_1 * ohRate;
   const subtotal_2 = subtotal_1 + oh;
 
   const ga = subtotal_2 * rates.ga;

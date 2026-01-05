@@ -99,14 +99,20 @@ export default function OverviewTab() {
           const discountRate = pos.gsa_discount_rate || 0;
           const gsaRate = originalGsaRate * (1 - discountRate);
 
+          console.log(`[OVERVIEW GSA] ${pos.labor_category} Year ${yearNum}: originalRate=$${originalGsaRate}, discount=${discountRate}, finalRate=$${gsaRate}`);
+          console.log(`[OVERVIEW GSA] Rates for reverse engineer:`, rates);
           const breakdown = reverseEngineerGSARate(gsaRate, rates);
+          console.log(`[OVERVIEW GSA] Breakdown result:`, breakdown);
 
+          // IMPORTANT: For GSA, the breakdown is ONLY for display purposes
+          // The actual cost is ALWAYS gsaRate * hours (independent of indirect rates)
           const dlAmount = breakdown.dlRate * hours;
           const fringeAmount = breakdown.fringe * hours;
           const ohAmount = breakdown.oh * hours;
           const gaAmount = breakdown.ga * hours;
           const feeAmount = breakdown.fee * hours;
-          const totalAmount = breakdown.fblr * hours;
+          // Use GSA rate directly for total (NOT breakdown.fblr)
+          const totalAmount = gsaRate * hours;
 
           directLaborTotal += dlAmount;
           fringeTotal += fringeAmount;
@@ -124,6 +130,11 @@ export default function OverviewTab() {
           // Use getEffectiveSalary to handle multi-select wage averaging
           const baseWage = getEffectiveSalary(pos);
 
+          // Skip if no valid wage or hours
+          if (!baseWage || baseWage === 0 || !pos.standard_fte_hours || pos.standard_fte_hours === 0) {
+            return;
+          }
+
           // Apply compound escalation for years after year 1
           let wage = baseWage;
           for (let y = 1; y < yearNum; y++) {
@@ -134,7 +145,7 @@ export default function OverviewTab() {
 
           // IMPORTANT: Calculate hourly rate using STANDARD FTE hours from contract, not actual hours
           // This ensures consistent hourly rate for partial years (like 6-month extensions)
-          const dlRate = wage / pos.standard_fte_hours!;
+          const dlRate = wage / pos.standard_fte_hours;
           const dlAmount = dlRate * hours;
 
           const fringe = dlRate * rates.fringe;
@@ -144,7 +155,8 @@ export default function OverviewTab() {
           // Fallback: oh_onsite/oh_offsite → oh → 0.0711
           const ohOnsite = rates.oh_onsite !== undefined ? rates.oh_onsite : (rates.oh !== undefined ? rates.oh : 0.0711);
           const ohOffsite = rates.oh_offsite !== undefined ? rates.oh_offsite : (rates.oh !== undefined ? rates.oh : 0.0711);
-          const ohRate = pos.location_type === 'On-Site' ? ohOnsite : ohOffsite;
+          const locType = pos.location_type || 'On-Site';
+          const ohRate = locType === 'On-Site' ? ohOnsite : ohOffsite;
           const oh = (dlRate + fringe) * ohRate;
           const ohAmount = oh * hours;
 
@@ -161,7 +173,8 @@ export default function OverviewTab() {
           directLaborTotal += dlAmount;
           fringeTotal += fringeAmount;
           // Track OH by location type
-          if (pos.location_type === 'On-Site') {
+          console.log(`[OVERVIEW] Position ${pos.labor_category}: location_type="${locType}", ohAmount=$${ohAmount.toFixed(2)}`);
+          if (locType === 'On-Site') {
             ohOnsiteTotal += ohAmount;
           } else {
             ohOffsiteTotal += ohAmount;
@@ -235,6 +248,8 @@ export default function OverviewTab() {
     const breakdown: Record<string, {
       directLabor: number;
       fringe: number;
+      ohOnsite: number;
+      ohOffsite: number;
       oh: number;
       ga: number;
       subcontractor: number;
@@ -296,6 +311,11 @@ export default function OverviewTab() {
           // Use getEffectiveSalary to handle multi-select wage averaging
           const baseWage = getEffectiveSalary(pos);
 
+          // Skip if no valid wage or hours
+          if (!baseWage || baseWage === 0 || !pos.standard_fte_hours || pos.standard_fte_hours === 0) {
+            return;
+          }
+
           // Apply compound escalation for years after year 1
           let wage = baseWage;
           for (let y = 1; y < yearNum; y++) {
@@ -306,7 +326,7 @@ export default function OverviewTab() {
 
           // IMPORTANT: Calculate hourly rate using STANDARD FTE hours from contract, not actual hours
           // This ensures consistent hourly rate for partial years (like 6-month extensions)
-          const dlRate = wage / pos.standard_fte_hours!;
+          const dlRate = wage / pos.standard_fte_hours;
           const dlAmount = dlRate * hours;
 
           const fringe = dlRate * rates.fringe;
@@ -316,7 +336,8 @@ export default function OverviewTab() {
           // Fallback: oh_onsite/oh_offsite → oh → 0.0711
           const ohOnsite = rates.oh_onsite !== undefined ? rates.oh_onsite : (rates.oh !== undefined ? rates.oh : 0.0711);
           const ohOffsite = rates.oh_offsite !== undefined ? rates.oh_offsite : (rates.oh !== undefined ? rates.oh : 0.0711);
-          const ohRate = pos.location_type === 'On-Site' ? ohOnsite : ohOffsite;
+          const locType = pos.location_type || 'On-Site';
+          const ohRate = locType === 'On-Site' ? ohOnsite : ohOffsite;
           const oh = (dlRate + fringe) * ohRate;
           const ohAmount = oh * hours;
 

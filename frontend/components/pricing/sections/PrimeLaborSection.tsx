@@ -164,7 +164,7 @@ export const PrimeLaborSection = ({
 
   // Create a version string that changes when rates change to force re-render
   const ratesVersion = useMemo(() => {
-    return `${rates.fringe}-${rates.oh}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}`;
+    return `${rates.fringe}-${rates.oh_onsite}-${rates.oh_offsite}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}`;
   }, [rates, escalationRates]);
 
   // Debug: Log when component re-renders
@@ -172,7 +172,8 @@ export const PrimeLaborSection = ({
   console.log('[PrimeLaborSection] Positions count:', positions.length);
   console.log('[PrimeLaborSection] Rates received:', {
     fringe: rates.fringe,
-    oh: rates.oh,
+    oh_onsite: rates.oh_onsite,
+    oh_offsite: rates.oh_offsite,
     ga: rates.ga,
     fee: rates.fee
   });
@@ -1606,7 +1607,7 @@ export const PrimeLaborSection = ({
         style={{ height: 'calc(100vh - 280px)', minHeight: 400 }}
       >
         <DataGrid
-          key={`${rates.fringe}-${rates.oh}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}`}
+          key={`${rates.fringe}-${rates.oh_onsite}-${rates.oh_offsite}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}`}
           columns={columns}
           rows={gridRows}
           onRowsChange={handleRowsChange}
