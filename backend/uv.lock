@@ -562,6 +562,20 @@ wheels = [
 ]
 
 [[package]]
+name = "exa-py"
+version = "2.0.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "openai" },
+    { name = "requests" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/50/dc/9de2225cc71aba76b3934d8d41a48342ba7b22bb2f9e31d3ce0b625a6a64/exa_py-2.0.2.tar.gz", hash = "sha256:229210ddaddd3161319226306165605c97faa86c50c3ab8adcb9b7efce0b0f89", size = 43736 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/fe/9f/e6431f33816a11908d34bd6bf326fddb4a8bcfed2c917f18c16598b8c905/exa_py-2.0.2-py3-none-any.whl", hash = "sha256:6b326d558d618dc72a9b048d9228197f6d63dfb890a7d9b6dbdcfdfd63e4040a", size = 56267 },
+]
+
+[[package]]
 name = "faiss-cpu"
 version = "1.13.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1867,6 +1881,7 @@ dependencies = [
     { name = "bcrypt" },
     { name = "boto3" },
     { name = "email-validator" },
+    { name = "exa-py" },
     { name = "faiss-cpu" },
     { name = "fastapi" },
     { name = "google-auth" },
@@ -1902,6 +1917,7 @@ requires-dist = [
     { name = "bcrypt", specifier = ">=4.0.1" },
     { name = "boto3", specifier = ">=1.28.0" },
     { name = "email-validator", specifier = ">=2.0.0" },
+    { name = "exa-py", specifier = ">=2.0.2" },
     { name = "faiss-cpu", specifier = ">=1.13.0" },
     { name = "fastapi", specifier = ">=0.121.2" },
     { name = "google-auth", specifier = ">=2.23.0" },

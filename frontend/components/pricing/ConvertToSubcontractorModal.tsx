@@ -51,7 +51,8 @@ export const ConvertToSubcontractorModal = ({
     return pos.hours_per_year;
   };
 
-  // Calculate suggested rate from FBLR
+  // Calculate suggested BASE RATE by REVERSE CALCULATING from FBLR
+  // FBLR (prime position) becomes Final Billable Rate, then we subtract Fee and S&MH to get Base Rate
   const suggestedRate = useMemo(() => {
     if (!position) return 0;
 
@@ -60,39 +61,47 @@ export const ConvertToSubcontractorModal = ({
 
     if (totalHours === 0) return 0;
 
-    // For AdvancedPosition, we can get FBLR directly from breakdown
+    const feeRate = rates.sub_fee || rates.fee || 0.54;
+    const smhRate = rates.smh || 0.43;
+
+    // For AdvancedPosition, get FBLR from breakdown
     if (isAdvancedPosition(position)) {
-      // Use the FBLR from first year's breakdown
       const firstYear = Object.keys(position.breakdown)[0];
       if (firstYear) {
-        return Math.round(position.breakdown[firstYear].fblr * 100) / 100;
+        const fblr = position.breakdown[firstYear].fblr;
+        // REVERSE: Base = FBLR / ((1 + Fee) × (1 + S&MH))
+        const baseRate = fblr / ((1 + feeRate) * (1 + smhRate));
+        return Math.round(baseRate * 100) / 100;
       }
     }
 
-    // For SpreadsheetPosition, calculate FBLR
+    // For SpreadsheetPosition, calculate FBLR first, then reverse calculate
     const spreadsheetPos = position as SpreadsheetPosition;
     const selectedWage = spreadsheetPos[`wage_${spreadsheetPos.percentile}`] || spreadsheetPos.selected_wage || 0;
 
-    // GSA: selected_wage is already hourly rate (use directly as FBLR)
-    // BLS: selected_wage is annual salary (calculate FBLR from DL + overhead)
+    let fblr = 0;
+
+    // GSA: selected_wage is already FBLR
     if (spreadsheetPos.wage_source === 'gsa') {
-      // GSA rate is already fully loaded hourly rate
-      return Math.round(selectedWage * 100) / 100;
+      fblr = selectedWage;
+    } else {
+      // BLS: Calculate FBLR from annual salary
+      const standard_fte_hours = spreadsheetPos.standard_fte_hours || 1880;
+      const dlRate = selectedWage / standard_fte_hours;
+      const fringe = dlRate * rates.fringe;
+      const ohRate = spreadsheetPos.location_type === 'Off-Site'
+        ? (rates.oh_offsite ?? rates.oh_onsite ?? 0.0711)
+        : (rates.oh_onsite ?? rates.oh_offsite ?? 0.0711);
+      const oh = (dlRate + fringe) * ohRate;
+      const ga = (dlRate + fringe + oh) * rates.ga;
+      const fee = (dlRate + fringe + oh + ga) * rates.fee;
+      fblr = dlRate + fringe + oh + ga + fee;
     }
 
-    // BLS: Calculate FBLR from annual salary
-    const dlRate = selectedWage / totalHours;
-    const fringe = dlRate * rates.fringe;
-    // Use appropriate OH rate based on position location_type (default to On-Site)
-    const ohRate = spreadsheetPos.location_type === 'Off-Site'
-      ? (rates.oh_offsite ?? rates.oh_onsite ?? 0.0711)
-      : (rates.oh_onsite ?? rates.oh_offsite ?? 0.0711);
-    const oh = (dlRate + fringe) * ohRate;
-    const ga = (dlRate + fringe + oh) * rates.ga;
-    const fee = (dlRate + fringe + oh + ga) * rates.fee;
-    const fblr = dlRate + fringe + oh + ga + fee;
+    // REVERSE: Base = FBLR / ((1 + Fee) × (1 + S&MH))
+    const baseRate = fblr / ((1 + feeRate) * (1 + smhRate));
 
-    return Math.round(fblr * 100) / 100; // Round to 2 decimals
+    return Math.round(baseRate * 100) / 100; // Round to 2 decimals
   }, [position, rates]);
 
   // Initialize hours allocation when position changes
@@ -362,7 +371,7 @@ export const ConvertToSubcontractorModal = ({
                 </span>
               </div>
               <p className="text-xs text-muted-foreground mt-2">
-                Based on FBLR calculation (includes all overhead and fees)
+                Calculated by removing Fee and S&MH from prime position FBLR
               </p>
             </div>
 
