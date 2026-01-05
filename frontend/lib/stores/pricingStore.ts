@@ -309,7 +309,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
     console.log('[TRANSFORM] ========== TRANSFORM START ==========');
     console.log('[TRANSFORM] Current rates:', {
       fringe: state.rates.fringe,
-      oh: state.rates.oh,
+      oh_onsite: state.rates.oh_onsite,
+      oh_offsite: state.rates.oh_offsite,
       ga: state.rates.ga,
       fee: state.rates.fee
     });
@@ -329,15 +330,23 @@ export const usePricingStore = create<PricingState>((set, get) => {
           // GSA positions: Reverse engineer for DISPLAY purposes
           // The GSA rate is the final FBLR, but we show it broken down
           // as if it were calculated with indirect rates (for consistency in UI)
-          const gsaRate = getGSARateForYear(pos, yearNum);
+          const originalGsaRate = getGSARateForYear(pos, yearNum);
+
+          // Apply discount if set by user
+          const discountRate = pos.gsa_discount_rate || 0;
+          const gsaRate = originalGsaRate * (1 - discountRate);
+
           const gsaBreakdown = reverseEngineerGSARate(gsaRate, state.rates);
 
+          // IMPORTANT: For GSA, the breakdown is ONLY for display purposes
+          // The actual cost is ALWAYS gsaRate * hours (independent of indirect rates)
           const dlAmount = gsaBreakdown.dlRate * hours;
           const fringeAmount = gsaBreakdown.fringe * hours;
           const ohAmount = gsaBreakdown.oh * hours;
           const gaAmount = gsaBreakdown.ga * hours;
           const feeAmount = gsaBreakdown.fee * hours;
-          const totalAmount = gsaBreakdown.fblr * hours;
+          // Use GSA rate directly for total (NOT gsaBreakdown.fblr)
+          const totalAmount = gsaRate * hours;
 
           breakdown[year] = {
             hours,
@@ -352,13 +361,34 @@ export const usePricingStore = create<PricingState>((set, get) => {
             gaAmount,
             fee: gsaBreakdown.fee,
             feeAmount,
-            fblr: gsaBreakdown.fblr, // Should approximately equal gsaRate
+            fblr: gsaRate, // GSA rate is the true FBLR (not reverse-engineered value)
             totalAmount,
           };
         } else {
           // BLS positions: Calculate with indirect rates and escalation
           // Use getEffectiveSalary to handle multi-select averaging
           const baseWage = getEffectiveSalary(pos);
+
+          // Skip if no valid wage or hours
+          if (!baseWage || baseWage === 0 || !pos.standard_fte_hours || pos.standard_fte_hours === 0) {
+            breakdown[year] = {
+              hours,
+              wage: 0,
+              dlRate: 0,
+              dlAmount: 0,
+              fringe: 0,
+              fringeAmount: 0,
+              oh: 0,
+              ohAmount: 0,
+              ga: 0,
+              gaAmount: 0,
+              fee: 0,
+              feeAmount: 0,
+              fblr: 0,
+              totalAmount: 0,
+            };
+            return;
+          }
 
           // Apply compound escalation for years after year 1
           let wage = baseWage;
@@ -371,14 +401,19 @@ export const usePricingStore = create<PricingState>((set, get) => {
           // IMPORTANT: Calculate hourly rate using STANDARD FTE hours from contract, not actual hours
           // This ensures consistent hourly rate for partial years (like 6-month extensions)
           // Each contract defines its own standard FTE hours (1880, 1920, 2080, etc.)
-          const standardFTEHours = pos.standard_fte_hours!; // Always provided by jd_parser
+          const standardFTEHours = pos.standard_fte_hours;
           const dlRate = wage / standardFTEHours;
           const dlAmount = dlRate * hours;
 
           const fringe = dlRate * state.rates.fringe;
           const fringeAmount = fringe * hours;
 
-          const oh = (dlRate + fringe) * state.rates.oh;
+          // Determine which OH rate to use based on location_type
+          // Fallback: oh_onsite/oh_offsite → oh → 0.0711
+          const ohOnsite = state.rates.oh_onsite !== undefined ? state.rates.oh_onsite : (state.rates.oh !== undefined ? state.rates.oh : 0.0711);
+          const ohOffsite = state.rates.oh_offsite !== undefined ? state.rates.oh_offsite : (state.rates.oh !== undefined ? state.rates.oh : 0.0711);
+          const ohRate = pos.location_type === 'On-Site' ? ohOnsite : ohOffsite;
+          const oh = (dlRate + fringe) * ohRate;
           const ohAmount = oh * hours;
 
           const ga = (dlRate + fringe + oh) * state.rates.ga;
@@ -503,6 +538,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           wage_50th: p.wage_50th,
           wage_75th: p.wage_75th,
           wage_90th: p.wage_90th,
+          location_type: p.location_type || 'On-Site',  // Add location_type for OH rate selection
           ...buildYearHours(p.hours_per_year),
         })),
         rates: state.rates,
@@ -733,6 +769,48 @@ export const usePricingStore = create<PricingState>((set, get) => {
         const subcontractorConfigured = proposal.spreadsheet_data?.subcontractor_configured || false;
         const advancedMode = proposal.spreadsheet_data?.advanced_mode || false;
 
+        // Migrate old 'oh' field to 'oh_onsite' and 'oh_offsite'
+        let rates = proposal.spreadsheet_data?.rates || proposal.rates;
+
+        // Ensure rates object exists
+        if (!rates) {
+          console.log('[MIGRATION] No rates found, creating default rates');
+          rates = {
+            fringe: 0.247,
+            oh_onsite: 0.0711,
+            oh_offsite: 0.0711,
+            ga: 0.2243,
+            fee: 0.08,
+          };
+        } else {
+          // Migrate old 'oh' to new structure
+          if (rates.oh !== undefined && rates.oh !== null && !rates.oh_onsite && !rates.oh_offsite) {
+            console.log('[MIGRATION] Migrating old OH rate to on-site/off-site rates', rates.oh);
+            rates = {
+              ...rates,
+              oh_onsite: rates.oh,
+              oh_offsite: rates.oh,
+            };
+            delete rates.oh;
+          }
+
+          // Ensure oh_onsite and oh_offsite always exist (fallback to defaults)
+          if (rates.oh_onsite === undefined || rates.oh_onsite === null) {
+            console.log('[MIGRATION] Adding missing oh_onsite with default value');
+            rates = {
+              ...rates,
+              oh_onsite: 0.0711,
+            };
+          }
+          if (rates.oh_offsite === undefined || rates.oh_offsite === null) {
+            console.log('[MIGRATION] Adding missing oh_offsite with default value');
+            rates = {
+              ...rates,
+              oh_offsite: 0.0711,
+            };
+          }
+        }
+
         set({
           proposalId,
           proposalName: proposal.name,
@@ -744,7 +822,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           travel: proposal.spreadsheet_data?.travel || [],
           odcs: proposal.spreadsheet_data?.odcs || [],
           extensions: proposal.spreadsheet_data?.extensions || [],
-          rates: proposal.spreadsheet_data?.rates || proposal.rates,  // Try spreadsheet_data first, fallback to org defaults
+          rates: rates,  // Use migrated rates
           escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Try spreadsheet_data first
           wageSource: proposal.wage_source || { type: 'bls' },  // Load wage source from proposal
           totalYears,
@@ -771,7 +849,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           travel: proposal.spreadsheet_data?.travel || [],
           odcs: proposal.spreadsheet_data?.odcs || [],
           extensions: proposal.spreadsheet_data?.extensions || [],
-          rates: proposal.spreadsheet_data?.rates || proposal.rates,  // Try spreadsheet_data first, fallback to org defaults
+          rates: rates,  // Use migrated rates
           escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Try spreadsheet_data first
           wageSource: proposal.wage_source || { type: 'bls' },  // Cache wage source
           totalYears,
@@ -806,7 +884,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
                 travel: proposal.spreadsheet_data?.travel || [],
                 odcs: proposal.spreadsheet_data?.odcs || [],
                 extensions: proposal.spreadsheet_data?.extensions || [],
-                rates: proposal.spreadsheet_data?.rates || proposal.rates,
+                rates: rates,  // Use migrated rates
                 escalation_rates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,
                 months_per_year: proposal.metadata?.months_per_year || defaultMonthsPerYear,
                 subcontractor_configured: subcontractorConfigured,
@@ -830,21 +908,48 @@ export const usePricingStore = create<PricingState>((set, get) => {
     },
 
     updatePosition: (id, updates) => {
-      console.log('[BASIC MODE] Updating position', { id, updates });
+      const state = get();
 
-      set((state) => ({
-        positions: state.positions.map((p) =>
-          p.id === id ? { ...p, ...updates } : p
-        ),
-        isDirty: true, // Set dirty immediately
-      }));
+      if (state.advancedMode) {
+        // In advanced mode, use the advanced update logic
+        console.log('[ADVANCED MODE] Updating position via updatePosition', { id, updates });
 
-      // Trigger recalculate for UI updates
-      debouncedRecalculate();
+        // Update the underlying positions array first (WITHOUT isDirty)
+        set((prevState) => ({
+          positions: prevState.positions.map((p) =>
+            p.id === id ? { ...p, ...updates } : p
+          ),
+        }));
 
-      // Also trigger auto-save directly to ensure persistence
-      console.log('[BASIC MODE] Triggering debouncedAutoSave (will run in 2s)');
-      debouncedAutoSave();
+        // Then retransform to advanced mode to recalculate breakdown
+        console.log('[ADVANCED MODE] Calling transformToAdvanced');
+        performTransformToAdvanced();
+
+        // Set isDirty AFTER transformation to ensure it persists through all state updates
+        console.log('[ADVANCED MODE] Setting isDirty=true');
+        set({ isDirty: true });
+
+        // Trigger auto-save directly (no need to recalculate via API in advanced mode)
+        console.log('[ADVANCED MODE] Triggering debouncedAutoSave (will run in 2s)');
+        debouncedAutoSave();
+      } else {
+        // Basic mode logic
+        console.log('[BASIC MODE] Updating position', { id, updates });
+
+        set((prevState) => ({
+          positions: prevState.positions.map((p) =>
+            p.id === id ? { ...p, ...updates } : p
+          ),
+          isDirty: true, // Set dirty immediately
+        }));
+
+        // Trigger recalculate for UI updates
+        debouncedRecalculate();
+
+        // Also trigger auto-save directly to ensure persistence
+        console.log('[BASIC MODE] Triggering debouncedAutoSave (will run in 2s)');
+        debouncedAutoSave();
+      }
     },
 
     addPosition: (position) => {
@@ -914,6 +1019,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
         labor_category: position.labor_category,
         rate: data.rate,
         hours_per_year: data.hoursAllocation,
+        original_position_id: position.id, // Link back to prime position
+        location_type: position.location_type || 'On-Site', // Inherit from prime position
       };
 
       // 3. Add position to subcontractor
@@ -924,13 +1031,11 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
       // 4. Calculate remaining hours for prime position
       const remainingHours: Record<string, number> = {};
-      let hasRemainingHours = false;
 
       Object.entries(position.hours_per_year).forEach(([year, hours]) => {
         const allocated = data.hoursAllocation[year] || 0;
         const remaining = hours - allocated;
         remainingHours[year] = remaining;
-        if (remaining > 0) hasRemainingHours = true;
       });
 
       // 5. Update state
@@ -948,16 +1053,10 @@ export const usePricingStore = create<PricingState>((set, get) => {
           );
         }
 
-        // Update or remove prime position
-        if (hasRemainingHours) {
-          // Partial conversion - update position with remaining hours
-          newState.positions = state.positions.map((p) =>
-            p.id === position.id ? { ...p, hours_per_year: remainingHours } : p
-          );
-        } else {
-          // Full conversion - remove position
-          newState.positions = state.positions.filter((p) => p.id !== position.id);
-        }
+        // Update prime position with remaining hours (keep even if 0 to show lineage)
+        newState.positions = state.positions.map((p) =>
+          p.id === position.id ? { ...p, hours_per_year: remainingHours } : p
+        );
 
         return newState;
       });
@@ -1103,18 +1202,19 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
       set({
         rates: newRates,
+        isDirty: true, // Mark as dirty to trigger auto-save
       });
 
-      console.log('[STORE] Rates updated in store');
+      console.log('[STORE] Rates updated in store, isDirty set to true');
 
       // ALWAYS transform when rates change (used by both initial and advanced mode)
       console.log('[STORE] Calling performTransformToAdvanced (needed for table display)');
       performTransformToAdvanced();
       console.log('[STORE] Transform completed');
 
-      // Still trigger API recalculation in background
-      console.log('[STORE] Calling debouncedRecalculate');
-      debouncedRecalculate();
+      // Trigger auto-save directly
+      console.log('[STORE] Calling debouncedAutoSave');
+      debouncedAutoSave();
     },
 
     updateEscalationRates: (rates) => {
@@ -1123,6 +1223,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
       // Update escalation rates
       set({
         escalationRates: { ...state.escalationRates, ...rates },
+        isDirty: true, // Mark as dirty to trigger auto-save
       });
 
       // ALWAYS transform when escalation rates change (used by both initial and advanced mode)
@@ -1130,8 +1231,9 @@ export const usePricingStore = create<PricingState>((set, get) => {
       performTransformToAdvanced();
       console.log('[RATES] Transform completed');
 
-      // Still trigger API recalculation in background
-      debouncedRecalculate();
+      // Trigger auto-save directly
+      console.log('[RATES] Calling debouncedAutoSave');
+      debouncedAutoSave();
     },
 
     updateMonthsForYear: (year, months) => {
@@ -1255,7 +1357,11 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
             const dlRate = totalSalary / totalHours;
             const fringe = dlRate * state.rates.fringe;
-            const oh = (dlRate + fringe) * state.rates.oh;
+            // Use appropriate OH rate based on position location_type (default to On-Site)
+            const ohRate = p.location_type === 'Off-Site'
+              ? (state.rates.oh_offsite ?? state.rates.oh_onsite ?? 0.0711)
+              : (state.rates.oh_onsite ?? state.rates.oh_offsite ?? 0.0711);
+            const oh = (dlRate + fringe) * ohRate;
             const ga = (dlRate + fringe + oh) * state.rates.ga;
             const fee = (dlRate + fringe + oh + ga) * state.rates.fee;
             const fblr = dlRate + fringe + oh + ga + fee;
@@ -1345,6 +1451,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
               wage_75th: p.wage_75th,
               wage_90th: p.wage_90th,
               standard_fte_hours: p.standard_fte_hours!,
+              location_type: p.location_type || 'On-Site',  // Add location_type for OH rate selection
             };
           }),
           project_config: {
@@ -1357,7 +1464,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
             escalation_rates: state.escalationRates,
             indirect_rates: {
               fringe: state.rates.fringe,
-              oh: state.rates.oh,
+              oh_onsite: state.rates.oh_onsite,
+              oh_offsite: state.rates.oh_offsite,
               ga: state.rates.ga,
             },
             passthrough_rates: {

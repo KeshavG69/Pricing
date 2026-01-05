@@ -24,8 +24,11 @@ class Calculator:
         annual_wage: float,
         standard_fte_hours: int,
         fringe_rate: float,
-        oh_rate: float,
-        ga_rate: float
+        oh_rate: float = None,
+        ga_rate: float = None,
+        oh_onsite_rate: float = None,
+        oh_offsite_rate: float = None,
+        location_type: str = None
     ) -> Dict[str, float]:
         """
         Calculate Fully Burdened Labor Rate from annual wage.
@@ -33,7 +36,7 @@ class Calculator:
         Applies wrap rates in sequence:
         1. DL (Direct Labor) = annual_wage / standard_fte_hours
         2. Fringe = DL × fringe_rate
-        3. OH (Overhead) = (DL + Fringe) × oh_rate
+        3. OH (Overhead) = (DL + Fringe) × oh_rate (conditional on location_type)
         4. G&A (General & Administrative) = (DL + Fringe + OH) × ga_rate
         5. FBLR = DL + Fringe + OH + G&A
 
@@ -44,8 +47,11 @@ class Calculator:
             annual_wage: Annual salary in dollars
             standard_fte_hours: Standard full-time hours from contract (e.g., 1880, 1920, 2080)
             fringe_rate: Fringe benefits rate (e.g., 0.247 for 24.7%)
-            oh_rate: Overhead rate (e.g., 0.0711 for 7.11%)
+            oh_rate: Overhead rate (DEPRECATED - use oh_onsite_rate/oh_offsite_rate)
             ga_rate: G&A rate (e.g., 0.2243 for 22.43%)
+            oh_onsite_rate: Overhead rate for on-site positions (e.g., 0.0711 for 7.11%)
+            oh_offsite_rate: Overhead rate for off-site positions (e.g., 0.0711 for 7.11%)
+            location_type: Position location ('On-Site' or 'Off-Site')
 
         Returns:
             Dict with:
@@ -56,7 +62,9 @@ class Calculator:
                 - fblr: Fully burdened labor rate (total)
 
         Example:
-            >>> Calculator.calculate_fblr(115000, 1880, 0.247, 0.0711, 0.2243)
+            >>> Calculator.calculate_fblr(115000, 1880, 0.247, oh_onsite_rate=0.0711,
+            ...                           oh_offsite_rate=0.0500, ga_rate=0.2243,
+            ...                           location_type='On-Site')
             {
                 'dl_rate': 61.17,
                 'fringe': 15.11,
@@ -74,8 +82,23 @@ class Calculator:
         fringe = dl_rate * fringe_rate
         subtotal_1 = dl_rate + fringe
 
-        oh = subtotal_1 * oh_rate
+        # Determine which OH rate to use based on location_type
+        if oh_onsite_rate is not None and oh_offsite_rate is not None and location_type:
+            # New system: use conditional OH rate based on location
+            actual_oh_rate = oh_onsite_rate if location_type == 'On-Site' else oh_offsite_rate
+        elif oh_rate is not None:
+            # Backward compatibility: use single oh_rate
+            actual_oh_rate = oh_rate
+        else:
+            # Fallback
+            actual_oh_rate = 0.0711
+
+        oh = subtotal_1 * actual_oh_rate
         subtotal_2 = subtotal_1 + oh
+
+        # Handle ga_rate default
+        if ga_rate is None:
+            ga_rate = 0.2243
 
         ga = subtotal_2 * ga_rate
 
@@ -154,7 +177,8 @@ class Calculator:
             escalation_rates: Dict like {"1_to_2": 0.0272, ...}
             indirect_rates: Dict with:
                 - fringe: float
-                - oh: float
+                - oh_onsite: float (or 'oh' for backward compatibility)
+                - oh_offsite: float (or 'oh' for backward compatibility)
                 - ga: float
             total_years: Number of years (e.g., 5)
 
@@ -187,12 +211,21 @@ class Calculator:
 
         # Year 1: Calculate base FBLR using STANDARD FTE hours
         year_1_hours = hours_per_year.get("1", 0)
+
+        # Support both old and new OH rate formats
+        # Default to on-site rate, fallback to old 'oh' field if present
+        oh_onsite = indirect_rates.get("oh_onsite", indirect_rates.get("oh", 0.0711))
+        oh_offsite = indirect_rates.get("oh_offsite", indirect_rates.get("oh", 0.0711))
+        location_type = position_data.get("location_type", "On-Site")
+
         fblr_breakdown = Calculator.calculate_fblr(
             base_wage,
             standard_fte_hours,  # Use standard FTE hours, not actual year hours
             indirect_rates["fringe"],
-            indirect_rates["oh"],
-            indirect_rates["ga"]
+            oh_onsite_rate=oh_onsite,
+            oh_offsite_rate=oh_offsite,
+            location_type=location_type,
+            ga_rate=indirect_rates["ga"]
         )
         base_fblr = fblr_breakdown["fblr"]
         base_dl_rate = fblr_breakdown["dl_rate"]
@@ -827,12 +860,15 @@ class Calculator:
         hours_per_year: Dict[str, float],
         escalation_rates: Dict[str, float],
         fringe_rate: float,
-        oh_rate: float,
-        ga_rate: float,
-        fee_rate: float,
+        oh_rate: float = None,
+        ga_rate: float = None,
+        fee_rate: float = None,
         standard_fte_hours: float = 1880,
         total_years: int = 1,
-        months_per_year: Optional[Dict[str, int]] = None
+        months_per_year: Optional[Dict[str, int]] = None,
+        oh_onsite_rate: float = None,
+        oh_offsite_rate: float = None,
+        location_type: str = None
     ) -> Dict[str, float]:
         """
         Calculate averaged FBLR using proportional hourly rates with FTE hours.
@@ -848,11 +884,14 @@ class Calculator:
             hours_per_year: Dict of actual hours worked per year (e.g., {"1": 1880, "2": 50})
             escalation_rates: Year-over-year escalation rates (e.g., {"1_to_2": 0.0272})
             fringe_rate: Fringe benefits rate (e.g., 0.247 for 24.7%)
-            oh_rate: Overhead rate (e.g., 0.0711 for 7.11%)
+            oh_rate: Overhead rate (DEPRECATED - use oh_onsite_rate/oh_offsite_rate)
             ga_rate: G&A rate (e.g., 0.2243 for 22.43%)
             fee_rate: Fee/profit rate (e.g., 0.07 for 7%)
             standard_fte_hours: Full-time equivalent hours (default 1880)
             total_years: Total contract years
+            oh_onsite_rate: Overhead rate for on-site positions (e.g., 0.0711 for 7.11%)
+            oh_offsite_rate: Overhead rate for off-site positions (e.g., 0.0711 for 7.11%)
+            location_type: Position location ('On-Site' or 'Off-Site')
 
         Returns:
             Dict with keys: dl_rate, fringe, oh, ga, fee, fblr
@@ -863,11 +902,13 @@ class Calculator:
             ...     hours_per_year={"1": 1880, "2": 50, "3": 0, "4": 0, "5": 0},
             ...     escalation_rates={"1_to_2": 0.0272},
             ...     fringe_rate=0.247,
-            ...     oh_rate=0.0711,
+            ...     oh_onsite_rate=0.0711,
+            ...     oh_offsite_rate=0.0500,
             ...     ga_rate=0.2243,
             ...     fee_rate=0.07,
             ...     standard_fte_hours=1880,
-            ...     total_years=5
+            ...     total_years=5,
+            ...     location_type='On-Site'
             ... )
             {'dl_rate': 59.93, 'fringe': 14.80, ...}
         """
@@ -921,9 +962,26 @@ class Calculator:
         # Calculate averaged DL rate
         dl_rate = total_salary / total_hours
 
+        # Determine which OH rate to use based on location_type
+        if oh_onsite_rate is not None and oh_offsite_rate is not None and location_type:
+            # New system: use conditional OH rate based on location
+            actual_oh_rate = oh_onsite_rate if location_type == 'On-Site' else oh_offsite_rate
+        elif oh_rate is not None:
+            # Backward compatibility: use single oh_rate
+            actual_oh_rate = oh_rate
+        else:
+            # Fallback
+            actual_oh_rate = 0.0711
+
+        # Handle defaults for ga_rate and fee_rate
+        if ga_rate is None:
+            ga_rate = 0.2243
+        if fee_rate is None:
+            fee_rate = 0.07
+
         # Apply FBLR cascade
         fringe = dl_rate * fringe_rate
-        oh = (dl_rate + fringe) * oh_rate
+        oh = (dl_rate + fringe) * actual_oh_rate
         ga = (dl_rate + fringe + oh) * ga_rate
         fee = (dl_rate + fringe + oh + ga) * fee_rate
         fblr = dl_rate + fringe + oh + ga + fee

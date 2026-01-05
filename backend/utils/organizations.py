@@ -45,7 +45,8 @@ class OrganizationCRUD:
             "settings": {
                 "default_rates": {
                     "fringe": 0.247,
-                    "oh": 0.0711,
+                    "oh_onsite": 0.0711,
+                    "oh_offsite": 0.0711,
                     "ga": 0.2243,
                     "fee": 0.07,
                     "smh": 0.065,

@@ -896,6 +896,14 @@
         "documentation": {}
     },
     {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
         "label": "pricing",
         "importPath": "routers",
         "description": "routers",
@@ -2018,6 +2026,14 @@
         "documentation": {}
     },
     {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
         "label": "timedelta",
         "importPath": "datetime",
         "description": "datetime",
@@ -2548,6 +2564,14 @@
         "documentation": {}
     },
     {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
         "label": "requests",
         "importPath": "google.auth.transport",
         "description": "google.auth.transport",
@@ -2937,6 +2961,14 @@
     },
     {
         "label": "parse_documents_to_dataframe",
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "isExtraImport": true,
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
+        "label": "extract_with_llamaextract",
         "importPath": "client.jd_parser",
         "description": "client.jd_parser",
         "isExtraImport": true,
@@ -4714,7 +4746,7 @@
         "kind": 2,
         "importPath": "backend.client.jd_parser",
         "description": "backend.client.jd_parser",
-        "peekOfCode": "def extract_with_llamaextract(file_path: str, mode: str = \"premium\") -> GovernmentProposalExtraction:\n    \"\"\"\n    Extract structured data from document using LlamaExtract API.\n    Supports PDF, CSV, DOCX, and Excel files (xlsx/xls are converted to CSV).\n    Args:\n        file_path: Path to the document file\n        mode: Extraction mode - \"premium\" (default, high quality), \"balanced\", \"fast\", or \"multimodal\"\n    Returns:\n        GovernmentProposalExtraction object with all data\n    Raises:",
+        "peekOfCode": "def extract_with_llamaextract(file_path: str, mode: str = \"premium\") -> GovernmentProposalExtraction:\n    \"\"\"\n    Extract structured data from document using LlamaExtract API.\n    Supports PDF, CSV, DOCX, and Excel files.\n    - DOCX files are converted to text with tables preserved\n    - Excel files are converted to CSV\n    Args:\n        file_path: Path to the document file\n        mode: Extraction mode - \"premium\" (default, high quality), \"balanced\", \"fast\", or \"multimodal\"\n    Returns:",
         "detail": "backend.client.jd_parser",
         "documentation": {}
     },
@@ -5200,7 +5232,7 @@
         "kind": 6,
         "importPath": "backend.routers.organizations",
         "description": "backend.routers.organizations",
-        "peekOfCode": "class RatePreset(BaseModel):\n    \"\"\"Rate preset with name and all rates\"\"\"\n    id: str\n    name: str\n    fringe: float\n    oh: float\n    ga: float\n    fee: float\n    smh: float = 0.0\n    sub_fee: float = 0.0",
+        "peekOfCode": "class RatePreset(BaseModel):\n    \"\"\"Rate preset with name and all rates\"\"\"\n    id: str\n    name: str\n    fringe: float\n    oh_onsite: float\n    oh_offsite: float\n    ga: float\n    fee: float\n    smh: float = 0.0",
         "detail": "backend.routers.organizations",
         "documentation": {}
     },
@@ -5209,7 +5241,7 @@
         "kind": 6,
         "importPath": "backend.routers.organizations",
         "description": "backend.routers.organizations",
-        "peekOfCode": "class CreateRatePresetRequest(BaseModel):\n    \"\"\"Request to create a new rate preset\"\"\"\n    name: str\n    fringe: float\n    oh: float\n    ga: float\n    fee: float\n    smh: float = 0.0\n    sub_fee: float = 0.0\n    ga_passthrough: float = 0.0",
+        "peekOfCode": "class CreateRatePresetRequest(BaseModel):\n    \"\"\"Request to create a new rate preset\"\"\"\n    name: str\n    fringe: float\n    oh_onsite: float\n    oh_offsite: float\n    ga: float\n    fee: float\n    smh: float = 0.0\n    sub_fee: float = 0.0",
         "detail": "backend.routers.organizations",
         "documentation": {}
     },
@@ -5218,7 +5250,7 @@
         "kind": 6,
         "importPath": "backend.routers.organizations",
         "description": "backend.routers.organizations",
-        "peekOfCode": "class UpdateRatePresetRequest(BaseModel):\n    \"\"\"Request to update an existing rate preset\"\"\"\n    name: Optional[str] = None\n    fringe: Optional[float] = None\n    oh: Optional[float] = None\n    ga: Optional[float] = None\n    fee: Optional[float] = None\n    smh: Optional[float] = None\n    sub_fee: Optional[float] = None\n    ga_passthrough: Optional[float] = None",
+        "peekOfCode": "class UpdateRatePresetRequest(BaseModel):\n    \"\"\"Request to update an existing rate preset\"\"\"\n    name: Optional[str] = None\n    fringe: Optional[float] = None\n    oh_onsite: Optional[float] = None\n    oh_offsite: Optional[float] = None\n    ga: Optional[float] = None\n    fee: Optional[float] = None\n    smh: Optional[float] = None\n    sub_fee: Optional[float] = None",
         "detail": "backend.routers.organizations",
         "documentation": {}
     },
@@ -5236,7 +5268,7 @@
         "kind": 5,
         "importPath": "backend.routers.organizations",
         "description": "backend.routers.organizations",
-        "peekOfCode": "router = APIRouter(prefix=\"/api/organizations\", tags=[\"organizations\"])\nclass RatePreset(BaseModel):\n    \"\"\"Rate preset with name and all rates\"\"\"\n    id: str\n    name: str\n    fringe: float\n    oh: float\n    ga: float\n    fee: float\n    smh: float = 0.0",
+        "peekOfCode": "router = APIRouter(prefix=\"/api/organizations\", tags=[\"organizations\"])\nclass RatePreset(BaseModel):\n    \"\"\"Rate preset with name and all rates\"\"\"\n    id: str\n    name: str\n    fringe: float\n    oh_onsite: float\n    oh_offsite: float\n    ga: float\n    fee: float",
         "detail": "backend.routers.organizations",
         "documentation": {}
     },
@@ -5637,6 +5669,42 @@
         "documentation": {}
     },
     {
+        "label": "migrate_organizations",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_oh_rates",
+        "description": "backend.scripts.migrate_oh_rates",
+        "peekOfCode": "def migrate_organizations():\n    \"\"\"Migrate organization default_rates from 'oh' to 'oh_onsite' and 'oh_offsite'\"\"\"\n    print(\"\\n=== Migrating Organizations ===\")\n    mongodb = get_mongodb_client()\n    db = mongodb.get_database()\n    orgs = db[\"organizations\"]\n    # Find organizations with old 'oh' field\n    cursor = orgs.find({\"settings.default_rates.oh\": {\"$exists\": True}})\n    count = 0\n    for org in cursor:",
+        "detail": "backend.scripts.migrate_oh_rates",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_proposals_rates",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_oh_rates",
+        "description": "backend.scripts.migrate_oh_rates",
+        "peekOfCode": "def migrate_proposals_rates():\n    \"\"\"Migrate proposal.rates from 'oh' to 'oh_onsite' and 'oh_offsite'\"\"\"\n    print(\"\\n=== Migrating Proposal Rates ===\")\n    mongodb = get_mongodb_client()\n    db = mongodb.get_database()\n    proposals = db[\"proposals\"]\n    # Find proposals with old 'oh' field in rates\n    cursor = proposals.find({\"rates.oh\": {\"$exists\": True}})\n    count = 0\n    for prop in cursor:",
+        "detail": "backend.scripts.migrate_oh_rates",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_proposals_spreadsheet_data",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_oh_rates",
+        "description": "backend.scripts.migrate_oh_rates",
+        "peekOfCode": "def migrate_proposals_spreadsheet_data():\n    \"\"\"Migrate proposal.spreadsheet_data.rates from 'oh' to 'oh_onsite' and 'oh_offsite'\"\"\"\n    print(\"\\n=== Migrating Proposal Spreadsheet Data Rates ===\")\n    mongodb = get_mongodb_client()\n    db = mongodb.get_database()\n    proposals = db[\"proposals\"]\n    # Find proposals with old 'oh' field in spreadsheet_data.rates\n    cursor = proposals.find({\"spreadsheet_data.rates.oh\": {\"$exists\": True}})\n    count = 0\n    for prop in cursor:",
+        "detail": "backend.scripts.migrate_oh_rates",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_rate_presets",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_oh_rates",
+        "description": "backend.scripts.migrate_oh_rates",
+        "peekOfCode": "def migrate_rate_presets():\n    \"\"\"Migrate rate presets from 'oh' to 'oh_onsite' and 'oh_offsite'\"\"\"\n    print(\"\\n=== Migrating Rate Presets ===\")\n    mongodb = get_mongodb_client()\n    db = mongodb.get_database()\n    orgs = db[\"organizations\"]\n    # Find organizations with rate presets containing old 'oh' field\n    cursor = orgs.find({\"settings.rate_presets\": {\"$exists\": True, \"$ne\": []}})\n    orgs_updated = 0\n    presets_migrated = 0",
+        "detail": "backend.scripts.migrate_oh_rates",
+        "documentation": {}
+    },
+    {
         "label": "migrate_existing_users",
         "kind": 2,
         "importPath": "backend.scripts.migrate_terms",
@@ -5997,6 +6065,24 @@
         "documentation": {}
     },
     {
+        "label": "calculate_bls_fblr_comparison",
+        "kind": 2,
+        "importPath": "backend.utils.pipeline",
+        "description": "backend.utils.pipeline",
+        "peekOfCode": "def calculate_bls_fblr_comparison(\n    bls_wages: Dict[str, float],\n    experience: Optional[float],\n    organization_rates: Dict[str, float],\n    standard_fte_hours: int = 1880,\n    location_type: str = \"On-Site\"\n) -> Optional[Dict[str, Any]]:\n    \"\"\"\n    Calculate BLS FBLR for comparison with GSA rates.\n    Uses the same logic as BLS flow to select wage based on experience,",
+        "detail": "backend.utils.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "calculate_suggested_discount",
+        "kind": 2,
+        "importPath": "backend.utils.pipeline",
+        "description": "backend.utils.pipeline",
+        "peekOfCode": "def calculate_suggested_discount(\n    gsa_rate: float,\n    bls_fblr: float,\n    bls_selected_wage: float\n) -> Dict[str, Any]:\n    \"\"\"\n    Calculate suggested discount based on GSA vs BLS comparison.\n    Strategy:\n    - If GSA > BLS FBLR: Suggest discount to match BLS exactly\n    - If GSA <= BLS FBLR: No discount needed (already competitive)",
+        "detail": "backend.utils.pipeline",
+        "documentation": {}
+    },
+    {
         "label": "build_project_data_from_dataframe",
         "kind": 2,
         "importPath": "backend.utils.pipeline",
@@ -6039,6 +6125,33 @@
         "description": "backend.utils.proposals",
         "peekOfCode": "_lock = threading.RLock()\ndef get_proposal_crud() -> ProposalCRUD:\n    \"\"\"\n    Get or create ProposalCRUD instance (singleton pattern)\n    Returns:\n        ProposalCRUD instance\n    \"\"\"\n    global _proposal_crud\n    with _lock:\n        if _proposal_crud is None:",
         "detail": "backend.utils.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "convert_pdf_to_docx",
+        "kind": 2,
+        "importPath": "backend.test_pdf_to_word",
+        "description": "backend.test_pdf_to_word",
+        "peekOfCode": "def convert_pdf_to_docx(pdf_path: str, output_docx_path: str) -> bool:\n    \"\"\"\n    Convert PDF to DOCX using pdf2docx library.\n    Install: pip install pdf2docx\n    \"\"\"\n    try:\n        from pdf2docx import Converter\n        print(f\"Converting PDF to DOCX...\")\n        print(f\"  Input:  {pdf_path}\")\n        print(f\"  Output: {output_docx_path}\")",
+        "detail": "backend.test_pdf_to_word",
+        "documentation": {}
+    },
+    {
+        "label": "test_parsing",
+        "kind": 2,
+        "importPath": "backend.test_pdf_to_word",
+        "description": "backend.test_pdf_to_word",
+        "peekOfCode": "def test_parsing(file_path: str, label: str):\n    \"\"\"Test parsing a document and print summary.\"\"\"\n    print(f\"\\n{'='*60}\")\n    print(f\"Testing {label}: {Path(file_path).name}\")\n    print(f\"{'='*60}\")\n    try:\n        extraction = extract_with_llamaextract(file_path, mode=\"premium\")\n        print(f\"\\n✓ Extraction successful!\")\n        print(f\"\\nMetadata:\")\n        print(f\"  Location: {extraction.metadata.location}\")",
+        "detail": "backend.test_pdf_to_word",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "backend.test_pdf_to_word",
+        "description": "backend.test_pdf_to_word",
+        "peekOfCode": "def main():\n    pdf_path = \"/Users/keshav/Downloads/PriceIQ Personnel Qualifications (1) (1).pdf\"\n    # Check if PDF exists\n    if not os.path.exists(pdf_path):\n        print(f\"❌ PDF not found: {pdf_path}\")\n        return\n    # Output DOCX path\n    docx_path = pdf_path.replace(\".pdf\", \"_converted.docx\")\n    print(\"=\"*60)\n    print(\"PDF to DOCX Conversion & Parsing Test\")",
+        "detail": "backend.test_pdf_to_word",
         "documentation": {}
     },
     {
