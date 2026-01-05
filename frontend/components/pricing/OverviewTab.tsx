@@ -347,8 +347,8 @@ export default function OverviewTab() {
 
           breakdown[yearStr].directLabor += dlAmount;
           breakdown[yearStr].fringe += fringeAmount;
-          // Track OH by location type
-          if (pos.location_type === 'On-Site') {
+          // Track OH by location type (use locType which has default)
+          if (locType === 'On-Site') {
             breakdown[yearStr].ohOnsite += ohAmount;
           } else {
             breakdown[yearStr].ohOffsite += ohAmount;
@@ -611,7 +611,10 @@ export default function OverviewTab() {
                     {formatCurrency(costMetrics.fringeTotal)}
                   </td>
                   <td className="py-3 px-4 text-sm text-right text-foreground">
-                    {formatCurrency(costMetrics.ohTotal)}
+                    {formatCurrency(costMetrics.ohOnsiteTotal)}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-right text-foreground">
+                    {formatCurrency(costMetrics.ohOffsiteTotal)}
                   </td>
                   <td className="py-3 px-4 text-sm text-right text-foreground">
                     {formatCurrency(costMetrics.gaTotal)}
