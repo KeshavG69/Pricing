@@ -9,7 +9,6 @@ import { AlertCircle, Plus, Trash2, Users } from 'lucide-react';
 
 export interface SubcontractorInfo {
   name: string;
-  worksharePercent: number;
 }
 
 interface AdvancedAnalysisModalProps {
@@ -33,7 +32,7 @@ export const AdvancedAnalysisModal = ({
       // Add new empty subs
       const newSubs = [...subs];
       for (let i = subs.length; i < numSubs; i++) {
-        newSubs.push({ name: '', worksharePercent: 0 });
+        newSubs.push({ name: '' });
       }
       setSubs(newSubs);
     } else if (numSubs < subs.length) {
@@ -51,13 +50,9 @@ export const AdvancedAnalysisModal = ({
     }
   }, [open]);
 
-  const updateSub = (index: number, field: keyof SubcontractorInfo, value: string | number) => {
+  const updateSub = (index: number, field: keyof SubcontractorInfo, value: string) => {
     const newSubs = [...subs];
-    if (field === 'name') {
-      newSubs[index].name = value as string;
-    } else {
-      newSubs[index].worksharePercent = value as number;
-    }
+    newSubs[index].name = value;
     setSubs(newSubs);
     // Clear error for this field
     setErrors({ ...errors, [`sub_${index}_${field}`]: '' });
@@ -72,16 +67,7 @@ export const AdvancedAnalysisModal = ({
         if (!sub.name.trim()) {
           newErrors[`sub_${index}_name`] = 'Name is required';
         }
-        if (sub.worksharePercent < 0 || sub.worksharePercent > 100) {
-          newErrors[`sub_${index}_workshare`] = 'Must be 0-100%';
-        }
       });
-
-      // Check total workshare doesn't exceed 100%
-      const totalWorkshare = subs.reduce((sum, sub) => sum + sub.worksharePercent, 0);
-      if (totalWorkshare > 100) {
-        newErrors.totalWorkshare = `Total workshare (${totalWorkshare}%) exceeds 100%`;
-      }
     }
 
     setErrors(newErrors);
@@ -116,13 +102,11 @@ export const AdvancedAnalysisModal = ({
       onClose={handleClose}
       title="Configure Subcontractors"
       size="lg"
+      hideCloseButton={true}
       footer={
         <>
           <Button variant="ghost" onClick={handleSkip}>
             Skip
-          </Button>
-          <Button variant="outline" onClick={handleClose}>
-            Cancel
           </Button>
           <Button onClick={handleSubmit} variant="primary">
             Continue to Advanced Analysis
@@ -179,79 +163,26 @@ export const AdvancedAnalysisModal = ({
                       Subcontractor {index + 1}
                     </span>
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-xs text-muted-foreground mb-1">
-                        Company Name
-                      </label>
-                      <Input
-                        value={sub.name}
-                        onChange={(e) => updateSub(index, 'name', e.target.value)}
-                        placeholder="e.g., ABC Corp"
-                        className="w-full"
-                      />
-                      {errors[`sub_${index}_name`] && (
-                        <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3" />
-                          {errors[`sub_${index}_name`]}
-                        </p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-xs text-muted-foreground mb-1">
-                        Workshare %
-                      </label>
-                      <div className="flex items-center gap-2">
-                        <Input
-                          type="number"
-                          value={sub.worksharePercent === 0 ? '' : sub.worksharePercent}
-                          onChange={(e) => {
-                            const value = e.target.value === '' ? 0 : parseFloat(e.target.value) || 0;
-                            updateSub(index, 'worksharePercent', value);
-                          }}
-                          className="w-24"
-                          min={0}
-                          max={100}
-                          placeholder="0"
-                        />
-                        <span className="text-sm text-muted-foreground">%</span>
-                      </div>
-                      {errors[`sub_${index}_workshare`] && (
-                        <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
-                          <AlertCircle className="w-3 h-3" />
-                          {errors[`sub_${index}_workshare`]}
-                        </p>
-                      )}
-                    </div>
+                  <div>
+                    <label className="block text-xs text-muted-foreground mb-1">
+                      Company Name
+                    </label>
+                    <Input
+                      value={sub.name}
+                      onChange={(e) => updateSub(index, 'name', e.target.value)}
+                      placeholder="e.g., ABC Corp"
+                      className="w-full"
+                    />
+                    {errors[`sub_${index}_name`] && (
+                      <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
+                        <AlertCircle className="w-3 h-3" />
+                        {errors[`sub_${index}_name`]}
+                      </p>
+                    )}
                   </div>
                 </div>
               ))}
             </div>
-
-            {errors.totalWorkshare && (
-              <p className="text-sm text-red-600 mt-3 flex items-center gap-1">
-                <AlertCircle className="w-4 h-4" />
-                {errors.totalWorkshare}
-              </p>
-            )}
-
-            {/* Total Workshare Summary */}
-            {subs.length > 0 && (
-              <div className="mt-4 pt-3 border-t border-border">
-                <div className="flex justify-between text-sm">
-                  <span className="text-muted-foreground">Total Subcontractor Workshare:</span>
-                  <span className="font-medium">
-                    {subs.reduce((sum, sub) => sum + sub.worksharePercent, 0)}%
-                  </span>
-                </div>
-                <div className="flex justify-between text-sm mt-1">
-                  <span className="text-muted-foreground">Prime Workshare:</span>
-                  <span className="font-medium">
-                    {100 - subs.reduce((sum, sub) => sum + sub.worksharePercent, 0)}%
-                  </span>
-                </div>
-              </div>
-            )}
           </Card>
         )}
       </div>

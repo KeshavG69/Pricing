@@ -66,6 +66,7 @@ interface PricingState {
   deletePosition: (id: string) => void;
   addSubcontractor: (subcontractor: Omit<Subcontractor, 'id'>) => void;
   deleteSubcontractor: (id: string) => void;
+  updateSubcontractorPosition: (subId: string, posIndex: number, updates: Partial<SubcontractorPosition>) => void;
   convertToSubcontractor: (data: ConversionData) => Promise<void>;
   addTravel: (travel: Omit<TravelItem, 'id'>) => void;
   updateTravel: (id: string, updates: Partial<TravelItem>) => void;
@@ -93,7 +94,7 @@ interface PricingState {
   recalculateAdvanced: () => Promise<void>;
   toggleRatesReference: () => void;
   setActiveTab: (tab: 'files' | 'overview' | 'main' | 'subcontractors' | 'rate-table') => void;
-  preCreateSubcontractors: (subs: { name: string; worksharePercent: number }[]) => void;
+  preCreateSubcontractors: (subs: { name: string }[]) => void;
   autoAllocateWorkshare: () => Promise<void>;
 }
 
@@ -984,6 +985,21 @@ export const usePricingStore = create<PricingState>((set, get) => {
       debouncedAutoSave();
     },
 
+    updateSubcontractorPosition: (subId, posIndex, updates) => {
+      set((state) => ({
+        subcontractors: state.subcontractors.map((sub) => {
+          if (sub.id === subId && sub.positions[posIndex]) {
+            const updatedPositions = [...sub.positions];
+            updatedPositions[posIndex] = { ...updatedPositions[posIndex], ...updates };
+            return { ...sub, positions: updatedPositions };
+          }
+          return sub;
+        }),
+        isDirty: true,
+      }));
+      debouncedAutoSave();
+    },
+
     convertToSubcontractor: async (data) => {
       console.log('🔄 Converting to subcontractor:', data);
       const state = get();
@@ -1696,8 +1712,6 @@ export const usePricingStore = create<PricingState>((set, get) => {
         id: `sub_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         name: sub.name,
         positions: [],
-        // Store workshare percent as metadata (optional, for future use)
-        worksharePercent: sub.worksharePercent,
       } as Subcontractor));
 
       set((state) => ({
