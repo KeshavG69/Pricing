@@ -70,6 +70,7 @@ export default function OverviewTab() {
     escalationRates,
     totalYears,
     extensions,
+    advancedModeVersion,
   } = usePricingStore();
 
   // Calculate all costs with FBLR breakdown
@@ -77,7 +78,8 @@ export default function OverviewTab() {
     // Calculate prime labor components directly from positions and current rates
     let directLaborTotal = 0;
     let fringeTotal = 0;
-    let ohTotal = 0;
+    let ohOnsiteTotal = 0;
+    let ohOffsiteTotal = 0;
     let gaTotal = 0;
     let primeFeeTotal = 0;
     let primeLaborTotal = 0;
@@ -92,19 +94,35 @@ export default function OverviewTab() {
           // GSA positions: Reverse engineer for DISPLAY purposes
           // The GSA rate is the final FBLR, but we show it broken down
           // as if it were calculated with indirect rates (for consistency in overview)
-          const gsaRate = getGSARateForYear(pos, yearNum);
-          const breakdown = reverseEngineerGSARate(gsaRate, rates);
+          const originalGsaRate = getGSARateForYear(pos, yearNum);
 
+          // Apply discount if set by user
+          const discountRate = pos.gsa_discount_rate || 0;
+          const gsaRate = originalGsaRate * (1 - discountRate);
+
+          console.log(`[OVERVIEW GSA] ${pos.labor_category} Year ${yearNum}: originalRate=$${originalGsaRate}, discount=${discountRate}, finalRate=$${gsaRate}`);
+          console.log(`[OVERVIEW GSA] Rates for reverse engineer:`, rates);
+          const breakdown = reverseEngineerGSARate(gsaRate, rates);
+          console.log(`[OVERVIEW GSA] Breakdown result:`, breakdown);
+
+          // IMPORTANT: For GSA, the breakdown is ONLY for display purposes
+          // The actual cost is ALWAYS gsaRate * hours (independent of indirect rates)
           const dlAmount = breakdown.dlRate * hours;
           const fringeAmount = breakdown.fringe * hours;
           const ohAmount = breakdown.oh * hours;
           const gaAmount = breakdown.ga * hours;
           const feeAmount = breakdown.fee * hours;
-          const totalAmount = breakdown.fblr * hours;
+          // Use GSA rate directly for total (NOT breakdown.fblr)
+          const totalAmount = gsaRate * hours;
 
           directLaborTotal += dlAmount;
           fringeTotal += fringeAmount;
-          ohTotal += ohAmount;
+          // Track OH by location type (default to On-Site for GSA positions)
+          if (pos.location_type === 'Off-Site') {
+            ohOffsiteTotal += ohAmount;
+          } else {
+            ohOnsiteTotal += ohAmount;
+          }
           gaTotal += gaAmount;
           primeFeeTotal += feeAmount;
           primeLaborTotal += totalAmount;
@@ -112,6 +130,11 @@ export default function OverviewTab() {
           // BLS positions: Calculate with indirect rates and escalation
           // Use getEffectiveSalary to handle multi-select wage averaging
           const baseWage = getEffectiveSalary(pos);
+
+          // Skip if no valid wage or hours
+          if (!baseWage || baseWage === 0 || !pos.standard_fte_hours || pos.standard_fte_hours === 0) {
+            return;
+          }
 
           // Apply compound escalation for years after year 1
           let wage = baseWage;
@@ -123,13 +146,19 @@ export default function OverviewTab() {
 
           // IMPORTANT: Calculate hourly rate using STANDARD FTE hours from contract, not actual hours
           // This ensures consistent hourly rate for partial years (like 6-month extensions)
-          const dlRate = wage / pos.standard_fte_hours!;
+          const dlRate = wage / pos.standard_fte_hours;
           const dlAmount = dlRate * hours;
 
           const fringe = dlRate * rates.fringe;
           const fringeAmount = fringe * hours;
 
-          const oh = (dlRate + fringe) * rates.oh;
+          // Determine which OH rate to use based on location_type
+          // Fallback: oh_onsite/oh_offsite → oh → 0.0711
+          const ohOnsite = rates.oh_onsite !== undefined ? rates.oh_onsite : (rates.oh !== undefined ? rates.oh : 0.0711);
+          const ohOffsite = rates.oh_offsite !== undefined ? rates.oh_offsite : (rates.oh !== undefined ? rates.oh : 0.0711);
+          const locType = pos.location_type || 'On-Site';
+          const ohRate = locType === 'On-Site' ? ohOnsite : ohOffsite;
+          const oh = (dlRate + fringe) * ohRate;
           const ohAmount = oh * hours;
 
           const ga = (dlRate + fringe + oh) * rates.ga;
@@ -144,7 +173,13 @@ export default function OverviewTab() {
 
           directLaborTotal += dlAmount;
           fringeTotal += fringeAmount;
-          ohTotal += ohAmount;
+          // Track OH by location type
+          console.log(`[OVERVIEW] Position ${pos.labor_category}: location_type="${locType}", ohAmount=$${ohAmount.toFixed(2)}`);
+          if (locType === 'On-Site') {
+            ohOnsiteTotal += ohAmount;
+          } else {
+            ohOffsiteTotal += ohAmount;
+          }
           gaTotal += gaAmount;
           primeLaborTotal += totalAmount;
           primeFeeTotal += feeAmount;
@@ -195,7 +230,9 @@ export default function OverviewTab() {
     return {
       directLaborTotal,
       fringeTotal,
-      ohTotal,
+      ohOnsiteTotal,
+      ohOffsiteTotal,
+      ohTotal: ohOnsiteTotal + ohOffsiteTotal,
       gaTotal,
       primeLaborTotal,
       subcontractorTotal,
@@ -205,13 +242,15 @@ export default function OverviewTab() {
       odcTotal,
       grandTotal,
     };
-  }, [positions, subcontractors, travel, odcs, rates, escalationRates]);
+  }, [positions, subcontractors, travel, odcs, rates, escalationRates, advancedModeVersion]);
 
   // Calculate year-by-year breakdown
   const yearBreakdown = useMemo(() => {
     const breakdown: Record<string, {
       directLabor: number;
       fringe: number;
+      ohOnsite: number;
+      ohOffsite: number;
       oh: number;
       ga: number;
       subcontractor: number;
@@ -227,7 +266,9 @@ export default function OverviewTab() {
       breakdown[i] = {
         directLabor: 0,
         fringe: 0,
-        oh: 0,
+        ohOnsite: 0,
+        ohOffsite: 0,
+        oh: 0,  // Combined OH total
         ga: 0,
         subcontractor: 0,
         passthrough: 0,
@@ -258,12 +299,23 @@ export default function OverviewTab() {
 
           breakdown[yearStr].directLabor += dlAmount;
           breakdown[yearStr].fringe += fringeAmount;
+          // Track OH by location type (default to On-Site for GSA positions)
+          if (pos.location_type === 'Off-Site') {
+            breakdown[yearStr].ohOffsite += ohAmount;
+          } else {
+            breakdown[yearStr].ohOnsite += ohAmount;
+          }
           breakdown[yearStr].oh += ohAmount;
           breakdown[yearStr].ga += gaAmount;
         } else {
           // BLS positions: Calculate with indirect rates and escalation
           // Use getEffectiveSalary to handle multi-select wage averaging
           const baseWage = getEffectiveSalary(pos);
+
+          // Skip if no valid wage or hours
+          if (!baseWage || baseWage === 0 || !pos.standard_fte_hours || pos.standard_fte_hours === 0) {
+            return;
+          }
 
           // Apply compound escalation for years after year 1
           let wage = baseWage;
@@ -275,13 +327,19 @@ export default function OverviewTab() {
 
           // IMPORTANT: Calculate hourly rate using STANDARD FTE hours from contract, not actual hours
           // This ensures consistent hourly rate for partial years (like 6-month extensions)
-          const dlRate = wage / pos.standard_fte_hours!;
+          const dlRate = wage / pos.standard_fte_hours;
           const dlAmount = dlRate * hours;
 
           const fringe = dlRate * rates.fringe;
           const fringeAmount = fringe * hours;
 
-          const oh = (dlRate + fringe) * rates.oh;
+          // Determine which OH rate to use based on location_type
+          // Fallback: oh_onsite/oh_offsite → oh → 0.0711
+          const ohOnsite = rates.oh_onsite !== undefined ? rates.oh_onsite : (rates.oh !== undefined ? rates.oh : 0.0711);
+          const ohOffsite = rates.oh_offsite !== undefined ? rates.oh_offsite : (rates.oh !== undefined ? rates.oh : 0.0711);
+          const locType = pos.location_type || 'On-Site';
+          const ohRate = locType === 'On-Site' ? ohOnsite : ohOffsite;
+          const oh = (dlRate + fringe) * ohRate;
           const ohAmount = oh * hours;
 
           const ga = (dlRate + fringe + oh) * rates.ga;
@@ -289,6 +347,12 @@ export default function OverviewTab() {
 
           breakdown[yearStr].directLabor += dlAmount;
           breakdown[yearStr].fringe += fringeAmount;
+          // Track OH by location type
+          if (pos.location_type === 'On-Site') {
+            breakdown[yearStr].ohOnsite += ohAmount;
+          } else {
+            breakdown[yearStr].ohOffsite += ohAmount;
+          }
           breakdown[yearStr].oh += ohAmount;
           breakdown[yearStr].ga += gaAmount;
         }
@@ -349,7 +413,7 @@ export default function OverviewTab() {
     });
 
     return breakdown;
-  }, [positions, subcontractors, travel, odcs, rates, escalationRates, totalYears]);
+  }, [positions, subcontractors, travel, odcs, rates, escalationRates, totalYears, advancedModeVersion]);
 
   const formatCurrency = (value: number) => {
     return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -404,10 +468,16 @@ export default function OverviewTab() {
             color="bg-blue-600"
           />
           <CostBreakdownBar
-            label="Overhead (OH)"
-            amount={costMetrics.ohTotal}
-            percentage={(costMetrics.ohTotal / costMetrics.grandTotal) * 100}
+            label="Overhead (OH On-Site)"
+            amount={costMetrics.ohOnsiteTotal}
+            percentage={(costMetrics.ohOnsiteTotal / costMetrics.grandTotal) * 100}
             color="bg-blue-600"
+          />
+          <CostBreakdownBar
+            label="Overhead (OH Off-Site)"
+            amount={costMetrics.ohOffsiteTotal}
+            percentage={(costMetrics.ohOffsiteTotal / costMetrics.grandTotal) * 100}
+            color="bg-blue-500"
           />
           <CostBreakdownBar
             label="G&A"
@@ -465,7 +535,8 @@ export default function OverviewTab() {
                   <th className="text-left py-3 px-4 text-sm font-semibold text-foreground">Year</th>
                   <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">Direct Labor</th>
                   <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">Fringe</th>
-                  <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">OH</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">OH On-Site</th>
+                  <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">OH Off-Site</th>
                   <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">G&A</th>
                   <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">Subcontractors</th>
                   <th className="text-right py-3 px-4 text-sm font-semibold text-foreground">Passthrough</th>
@@ -497,7 +568,10 @@ export default function OverviewTab() {
                       {formatCurrency(data.fringe)}
                     </td>
                     <td className="py-3 px-4 text-sm text-right text-muted-foreground">
-                      {formatCurrency(data.oh)}
+                      {formatCurrency(data.ohOnsite)}
+                    </td>
+                    <td className="py-3 px-4 text-sm text-right text-muted-foreground">
+                      {formatCurrency(data.ohOffsite)}
                     </td>
                     <td className="py-3 px-4 text-sm text-right text-muted-foreground">
                       {formatCurrency(data.ga)}
@@ -589,9 +663,15 @@ export default function OverviewTab() {
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-2 px-3 bg-muted/30 rounded">
-                  <span className="text-sm text-muted-foreground">Overhead (OH):</span>
+                  <span className="text-sm text-muted-foreground">OH (On-Site):</span>
                   <span className="text-sm font-medium text-foreground">
-                    {formatPercentage(rates.oh)}
+                    {formatPercentage(rates.oh_onsite)}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center py-2 px-3 bg-muted/30 rounded">
+                  <span className="text-sm text-muted-foreground">OH (Off-Site):</span>
+                  <span className="text-sm font-medium text-foreground">
+                    {formatPercentage(rates.oh_offsite)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-2 px-3 bg-muted/30 rounded">

@@ -153,7 +153,8 @@ async def process_proposal_documents(
         default_escalation_rate = 0.03  # Fallback default
         default_rates = {
             "fringe": 0.247,
-            "oh": 0.0711,
+            "oh_onsite": 0.0711,
+            "oh_offsite": 0.0711,
             "ga": 0.2243,
             "fee": 0.07,
             "smh": 0.065,
@@ -192,12 +193,35 @@ async def process_proposal_documents(
             {"progress": 30, "message": f"Found {len(df)} positions, {len(extracted_travel)} Travel items, {len(extracted_odcs)} ODCs. Fetching wage data..."}
         )
 
+        # NEW: Fetch organization rates for BLS comparison (if GSA mode)
+        organization_rates = None
+        if wage_source.get("type") == "gsa":
+            try:
+                from utils.organizations import get_organization_crud
+                org_crud = get_organization_crud()
+                org = org_crud.get_by_id(ObjectId(organization_id))
+
+                if org and org.get("settings"):
+                    default_rates = org["settings"].get("default_rates", {})
+                    organization_rates = {
+                        "fringe": default_rates.get("fringe", 0.247),
+                        "oh_onsite": default_rates.get("oh_onsite", default_rates.get("oh", 0.0711)),
+                        "oh_offsite": default_rates.get("oh_offsite", default_rates.get("oh", 0.0711)),
+                        "ga": default_rates.get("ga", 0.2243),
+                        "fee": default_rates.get("fee", 0.07)
+                    }
+                    print(f"📊 Using organization rates for BLS comparison: Fringe={organization_rates['fringe']}, OH On-Site={organization_rates['oh_onsite']}, OH Off-Site={organization_rates['oh_offsite']}, G&A={organization_rates['ga']}, Fee={organization_rates['fee']}")
+            except Exception as e:
+                print(f"⚠️ Failed to fetch organization rates for BLS comparison: {e}")
+                # Continue without rates - no discount suggestions will be generated
+
         # Step 2: Process with agents (BLS or GSA based on wage_source)
         final_df = await process_dataframe_with_agents(
             df,
             max_workers=10,
             wage_source=wage_source,
-            organization_id=organization_id
+            organization_id=organization_id,
+            organization_rates=organization_rates  # NEW: Pass rates for BLS comparison
         )
 
         crud.update_proposal(

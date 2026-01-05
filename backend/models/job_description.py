@@ -34,6 +34,10 @@ class JobDescription(BaseModel):
         False,
         description="True if this is a key position that cannot be subcontracted (e.g., key personnel, program manager)."
     )
+    location_type: Optional[str] = Field(
+        "On-Site",
+        description="Work location type: 'On-Site' or 'Off-Site'. Defaults to 'On-Site'."
+    )
 
 
 class JobDescriptionList(BaseModel):

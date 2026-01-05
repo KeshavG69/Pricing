@@ -212,6 +212,24 @@ class PositionExtract(BaseModel):
         Default to False if there's no indication the position is key."""
     )
 
+    location_type: Optional[str] = Field(
+        "On-Site",
+        description="""Work location type: 'On-Site' or 'Off-Site'.
+
+        DETECTION LOGIC:
+        1. Compare this position's location (state) with the contract/document location (from metadata)
+        2. If position location matches contract location → 'On-Site'
+        3. If position location differs from contract location → 'Off-Site'
+        4. If position location is not specified → 'On-Site' (default)
+
+        Examples:
+        - Contract in Virginia, Position in Virginia → 'On-Site'
+        - Contract in California, Position in Texas → 'Off-Site'
+        - Contract in Virginia, Position location not specified → 'On-Site'
+
+        Default to 'On-Site' if unclear."""
+    )
+
 
 class DocumentMetadataExtract(BaseModel):
     """Document metadata for LlamaExtract."""
@@ -357,7 +375,8 @@ def _convert_to_job_description(
         location=location,
         hours=total_hours,
         hours_per_year=hours_per_year_dict,
-        is_key_position=position.is_key_position or False
+        is_key_position=position.is_key_position or False,
+        location_type=position.location_type or "On-Site"
     )
 
 
@@ -468,11 +487,92 @@ def _convert_excel_to_csv(excel_path: str) -> str:
     return temp_csv.name
 
 
+def _convert_docx_to_text(docx_path: str) -> str:
+    """
+    Convert DOCX to text file with tables preserved.
+
+    LlamaExtract API doesn't properly support DOCX files, so we extract text
+    (with tables in pipe-separated format) and pass to LlamaExtract as .txt file.
+
+    Args:
+        docx_path: Path to input DOCX file
+
+    Returns:
+        Path to converted text file (in temp directory)
+
+    Raises:
+        RuntimeError: If conversion fails
+    """
+    import os
+    import tempfile
+    from docx import Document
+
+    # Create temp text file
+    temp_txt = tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8')
+    txt_path = temp_txt.name
+
+    try:
+        print(f"  Converting DOCX to text (preserving tables)...")
+
+        doc = Document(docx_path)
+        text_lines = []
+
+        # Extract all content (paragraphs and tables)
+        for element in doc.element.body:
+            tag = element.tag.split('}')[-1]  # Get tag name without namespace
+
+            if tag == 'p':
+                # Paragraph
+                para_text = ''.join(
+                    node.text for node in element.iter()
+                    if hasattr(node, 'text') and node.text
+                )
+                if para_text.strip():
+                    text_lines.append(para_text.strip())
+
+            elif tag == 'tbl':
+                # Table - convert to pipe-separated format
+                text_lines.append('')  # Blank line before table
+
+                # Find the table object
+                table = None
+                for tbl in doc.tables:
+                    if tbl._element == element:
+                        table = tbl
+                        break
+
+                if table:
+                    for row in table.rows:
+                        cells = [cell.text.strip() for cell in row.cells]
+                        text_lines.append(' | '.join(cells))
+
+                text_lines.append('')  # Blank line after table
+
+        # Write to temp file
+        temp_txt.write('\n'.join(text_lines))
+        temp_txt.close()
+
+        if not os.path.exists(txt_path) or os.path.getsize(txt_path) == 0:
+            raise RuntimeError(f"Text extraction failed or file is empty: {txt_path}")
+
+        print(f"  ✓ Converted DOCX to text with tables preserved")
+        return txt_path
+
+    except Exception as e:
+        # Clean up on error
+        temp_txt.close()
+        if os.path.exists(txt_path):
+            os.unlink(txt_path)
+        raise RuntimeError(f"DOCX to text conversion failed: {e}")
+
+
 def extract_with_llamaextract(file_path: str, mode: str = "premium") -> GovernmentProposalExtraction:
     """
     Extract structured data from document using LlamaExtract API.
 
-    Supports PDF, CSV, DOCX, and Excel files (xlsx/xls are converted to CSV).
+    Supports PDF, CSV, DOCX, and Excel files.
+    - DOCX files are converted to text with tables preserved
+    - Excel files are converted to CSV
 
     Args:
         file_path: Path to the document file
@@ -486,14 +586,19 @@ def extract_with_llamaextract(file_path: str, mode: str = "premium") -> Governme
     """
     import os
 
-    # Check if file is Excel and convert to CSV
+    # Check file extension and convert if needed
     file_ext = os.path.splitext(file_path)[1].lower()
     temp_csv_path = None
+    temp_txt_path = None
 
     if file_ext in ['.xlsx', '.xls']:
         print(f"  Converting Excel to CSV...")
         temp_csv_path = _convert_excel_to_csv(file_path)
         file_path = temp_csv_path
+    elif file_ext == '.docx':
+        # Convert DOCX to text with tables preserved
+        temp_txt_path = _convert_docx_to_text(file_path)
+        file_path = temp_txt_path
 
     try:
         # Get singleton LlamaExtract client
@@ -513,11 +618,29 @@ def extract_with_llamaextract(file_path: str, mode: str = "premium") -> Governme
         max_retries = 3
         for attempt in range(max_retries):
             try:
-                extract_run = extractor.extract(
-                    GovernmentProposalExtraction,
-                    config,
-                    file_path
-                )
+                # For DOCX files, use BytesIO with explicit filename attribute
+                # LlamaExtract API sometimes fails to detect .docx extension from path alone
+                if file_ext == '.docx':
+                    from io import BytesIO
+                    with open(file_path, 'rb') as f:
+                        file_content = f.read()
+
+                    # Create BytesIO object and add name attribute
+                    file_obj = BytesIO(file_content)
+                    file_obj.name = os.path.basename(file_path)
+
+                    extract_run = extractor.extract(
+                        GovernmentProposalExtraction,
+                        config,
+                        file_obj
+                    )
+                else:
+                    # For PDF, CSV, Excel - pass path directly (works fine)
+                    extract_run = extractor.extract(
+                        GovernmentProposalExtraction,
+                        config,
+                        file_path
+                    )
                 break  # Success, exit retry loop
             except TimeoutError:
                 if attempt < max_retries - 1:
@@ -542,6 +665,13 @@ def extract_with_llamaextract(file_path: str, mode: str = "premium") -> Governme
         if temp_csv_path:
             try:
                 os.unlink(temp_csv_path)
+            except Exception:
+                pass
+
+        # Clean up temporary text file (from DOCX conversion)
+        if temp_txt_path:
+            try:
+                os.unlink(temp_txt_path)
             except Exception:
                 pass
 
@@ -666,7 +796,7 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> Dict[str, a
         # Create empty DataFrame with correct columns
         df = pd.DataFrame(columns=[
             "labor_category", "description", "experience", "location", "hours", "hours_per_year",
-            "is_key_position", "base_years", "option_years", "total_years", "project_name", "standard_fte_hours", "months_per_year"
+            "is_key_position", "location_type", "base_years", "option_years", "total_years", "project_name", "standard_fte_hours", "months_per_year"
         ])
     else:
         df = pd.DataFrame([
@@ -678,6 +808,7 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> Dict[str, a
                 "hours": jd.hours,
                 "hours_per_year": jd.hours_per_year,
                 "is_key_position": jd.is_key_position or False,
+                "location_type": jd.location_type or "On-Site",
                 # Document-level metadata (same for all jobs from same document)
                 "base_years": metadata.base_years,
                 "option_years": metadata.option_years,

@@ -112,7 +112,12 @@ const calculateAveragedFBLR = (
 
   // Apply FBLR cascade
   const fringe = dlRate * rates.fringe;
-  const oh = (dlRate + fringe) * rates.oh;
+  // Determine which OH rate to use based on location_type
+  // Fallback: oh_onsite/oh_offsite → oh → 0.0711
+  const ohOnsite = rates.oh_onsite !== undefined ? rates.oh_onsite : (rates.oh !== undefined ? rates.oh : 0.0711);
+  const ohOffsite = rates.oh_offsite !== undefined ? rates.oh_offsite : (rates.oh !== undefined ? rates.oh : 0.0711);
+  const ohRate = position.location_type === 'On-Site' ? ohOnsite : ohOffsite;
+  const oh = (dlRate + fringe) * ohRate;
   const ga = (dlRate + fringe + oh) * rates.ga;
   // Fee is calculated separately in Fee Section (not included in FBLR)
   // This matches government cost proposal format (Intprepix)
@@ -151,13 +156,16 @@ export const PrimeLaborSection = ({
   onUpdatePosition,
   isAdvancedMode = true, // Default to true for backwards compatibility
 }: PrimeLaborSectionProps) => {
-  // Get wage source from store to determine column names
+  // Get wage source and subcontractors from store
   const wageSource = usePricingStore((state) => state.wageSource);
+  const subcontractors = usePricingStore((state) => state.subcontractors);
+  const updatePosition = usePricingStore((state) => state.updatePosition);
+  const advancedModeVersion = usePricingStore((state) => state.advancedModeVersion);
   const isGSAProposal = wageSource?.type === 'gsa';
 
   // Create a version string that changes when rates change to force re-render
   const ratesVersion = useMemo(() => {
-    return `${rates.fringe}-${rates.oh}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}`;
+    return `${rates.fringe}-${rates.oh_onsite}-${rates.oh_offsite}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}`;
   }, [rates, escalationRates]);
 
   // Debug: Log when component re-renders
@@ -165,7 +173,8 @@ export const PrimeLaborSection = ({
   console.log('[PrimeLaborSection] Positions count:', positions.length);
   console.log('[PrimeLaborSection] Rates received:', {
     fringe: rates.fringe,
-    oh: rates.oh,
+    oh_onsite: rates.oh_onsite,
+    oh_offsite: rates.oh_offsite,
     ga: rates.ga,
     fee: rates.fee
   });
@@ -340,9 +349,78 @@ export const PrimeLaborSection = ({
     });
 
     return totals;
-  }, [positions, rates, escalationRates, totalYears]);
+  }, [positions, rates, escalationRates, totalYears, advancedModeVersion]);
 
-  // Transform positions to grid rows with breakdown rows
+  // Build order-based position mapping for subcontractors without original_position_id
+  // Groups positions by labor_category and tracks which ones have been matched
+  const getLinkedSubcontractorPositions = useMemo(() => {
+    // Collect all subcontractor positions across all subcontractors
+    const allSubPositions: Array<{
+      subName: string;
+      subPos: typeof subcontractors[0]['positions'][0];
+    }> = [];
+
+    for (const sub of subcontractors) {
+      for (const subPos of sub.positions) {
+        allSubPositions.push({ subName: sub.name, subPos });
+      }
+    }
+
+    // Build mapping: positionId -> linked subcontractor positions
+    const linkedMap = new Map<string, Array<{ subName: string; subPos: typeof allSubPositions[0]['subPos'] }>>();
+
+    // First pass: handle positions with original_position_id (direct 1-to-1 linking)
+    const matchedSubIndices = new Set<number>();
+    allSubPositions.forEach((item, idx) => {
+      if (item.subPos.original_position_id) {
+        const posId = item.subPos.original_position_id;
+        if (!linkedMap.has(posId)) {
+          linkedMap.set(posId, []);
+        }
+        linkedMap.get(posId)!.push(item);
+        matchedSubIndices.add(idx);
+      }
+    });
+
+    // Second pass: order-based fallback for positions without original_position_id
+    // Group prime positions by labor_category with their order
+    const primeByLaborCat = new Map<string, string[]>(); // labor_category -> [positionId, ...]
+    positions.forEach((pos) => {
+      const lc = pos.labor_category;
+      if (!primeByLaborCat.has(lc)) {
+        primeByLaborCat.set(lc, []);
+      }
+      primeByLaborCat.get(lc)!.push(pos.id);
+    });
+
+    // Track how many subs have been assigned to each labor_category
+    const assignedCountByLaborCat = new Map<string, number>();
+
+    allSubPositions.forEach((item, idx) => {
+      if (matchedSubIndices.has(idx)) return; // Already matched by original_position_id
+
+      const lc = item.subPos.labor_category;
+      const primeIds = primeByLaborCat.get(lc);
+      if (!primeIds || primeIds.length === 0) return;
+
+      // Get current assignment count for this labor_category
+      const currentCount = assignedCountByLaborCat.get(lc) || 0;
+
+      // Assign to nth prime position with this labor_category (order-based)
+      const targetPrimeIndex = currentCount % primeIds.length;
+      const targetPrimeId = primeIds[targetPrimeIndex];
+
+      if (!linkedMap.has(targetPrimeId)) {
+        linkedMap.set(targetPrimeId, []);
+      }
+      linkedMap.get(targetPrimeId)!.push(item);
+      assignedCountByLaborCat.set(lc, currentCount + 1);
+    });
+
+    return linkedMap;
+  }, [positions, subcontractors]);
+
+  // Transform positions to grid rows with breakdown rows + subcontractor rows
   const gridRows = useMemo<GridRow[]>(() => {
     const rows: GridRow[] = [];
 
@@ -390,6 +468,24 @@ export const PrimeLaborSection = ({
           }
         );
       }
+
+      // Add subcontractor rows linked to this position
+      const linkedSubs = getLinkedSubcontractorPositions.get(pos.id) || [];
+      for (const { subName, subPos } of linkedSubs) {
+        const totalSubHours = Object.values(subPos.hours_per_year || {})
+          .reduce((a, b) => a + (b || 0), 0);
+
+        rows.push({
+          type: 'subcontractor',
+          positionId: pos.id,
+          data: pos,
+          subcontractorName: subName,
+          subcontractorHours: subPos.hours_per_year,
+          subcontractorTotalHours: totalSubHours,
+          subcontractorRate: subPos.rate,
+          subcontractorLocationType: subPos.location_type || 'On-Site',
+        });
+      }
     });
 
     // Add subtotal row at the end
@@ -400,7 +496,7 @@ export const PrimeLaborSection = ({
     });
 
     return rows;
-  }, [positions, expandedPositions, rates, escalationRates, totalYears, columnTotals]);
+  }, [positions, expandedPositions, rates, escalationRates, totalYears, columnTotals, getLinkedSubcontractorPositions, advancedModeVersion]);
 
   // Get cell styling for manual overrides
   const getCellClassName = (positionId: string, year: string, field: string) => {
@@ -452,6 +548,10 @@ export const PrimeLaborSection = ({
           if (row.type === 'subtotal') {
             return <div className="h-full bg-blue-50 border-t-2 border-blue-200" />;
           }
+          // Subcontractor row - show purple styled empty cell
+          if (row.type === 'subcontractor') {
+            return <div className="h-full bg-purple-50/50" />;
+          }
           // Only show actions for position rows, not breakdown rows
           if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
@@ -471,6 +571,67 @@ export const PrimeLaborSection = ({
             );
           }
           return null;
+        },
+      },
+      // Location Type - Toggle between On-Site and Off-Site
+      {
+        key: 'location_type',
+        name: 'Location',
+        width: 100,
+        resizable: true,
+        frozen: true,
+        editable: false,
+        renderCell: ({ row }) => {
+          if (row.type === 'subtotal') {
+            return <div className="h-full bg-blue-50 border-t-2 border-blue-200" />;
+          } else if (row.type === 'position') {
+            const pos = row.data as AdvancedPosition;
+            const locationType = pos.location_type || 'On-Site';
+            const isOnSite = locationType === 'On-Site';
+
+            return (
+              <div className="flex items-center justify-center h-full px-2">
+                <button
+                  type="button"
+                  className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium transition-all duration-200 cursor-pointer transform hover:scale-105 active:scale-95 ${
+                    isOnSite
+                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 hover:bg-blue-200'
+                      : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 hover:bg-orange-200'
+                  }`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Toggle between On-Site and Off-Site
+                    const newLocationType = isOnSite ? 'Off-Site' : 'On-Site';
+                    updatePosition(pos.id, { location_type: newLocationType });
+                  }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                  }}
+                  title="Click to toggle between On-Site and Off-Site"
+                >
+                  {locationType}
+                </button>
+              </div>
+            );
+          } else if (row.type === 'subcontractor') {
+            // Show location type for subcontractor row (non-editable, inherits from prime)
+            const locationType = row.subcontractorLocationType || 'On-Site';
+            const isOnSite = locationType === 'On-Site';
+
+            return (
+              <div className="flex items-center justify-center h-full px-2 bg-purple-50/50">
+                <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                  isOnSite
+                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                    : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+                }`}>
+                  {locationType}
+                </span>
+              </div>
+            );
+          }
+          return <div className="h-full bg-muted/30" />;
         },
       },
       // Labour Category - Expandable indicator + labor category
@@ -522,6 +683,15 @@ export const PrimeLaborSection = ({
                 )}
                 {/* Fill remaining space to make entire cell clickable */}
                 <div className="flex-1" />
+              </div>
+            );
+          } else if (row.type === 'subcontractor') {
+            // Subcontractor row - show subcontractor name with indent
+            return (
+              <div className="flex items-center h-full px-2 pl-10 bg-purple-50/50">
+                <span className="text-sm text-purple-700 font-medium">
+                  ↳ {row.subcontractorName}
+                </span>
               </div>
             );
           } else {
@@ -582,6 +752,8 @@ export const PrimeLaborSection = ({
                 <div className="flex-1" />
               </div>
             );
+          } else if (row.type === 'subcontractor') {
+            return <div className="h-full bg-purple-50/50" />;
           }
           return <div className="h-full bg-muted/30" />;
         },
@@ -637,6 +809,8 @@ export const PrimeLaborSection = ({
                 <div className="flex-1" />
               </div>
             );
+          } else if (row.type === 'subcontractor') {
+            return <div className="h-full bg-purple-50/50" />;
           }
           return <div className="h-full bg-muted/30" />;
         },
@@ -709,11 +883,143 @@ export const PrimeLaborSection = ({
                 <div className="flex-1" />
               </div>
             );
+          } else if (row.type === 'subcontractor') {
+            return <div className="h-full bg-purple-50/50" />;
           }
           return <div className="h-full bg-muted/30" />;
         },
       },
     ];
+
+    // Add GSA Discount column (only for GSA proposals)
+    if (isGSAProposal) {
+      cols.push({
+        key: 'gsa_discount',
+        name: 'GSA Discount',
+        width: 220,
+        resizable: true,
+        editable: true,
+        renderEditCell: (props: RenderEditCellProps<GridRow>) => {
+          // Only allow editing for position rows
+          if (props.row.type !== 'position') {
+            props.onClose(false);
+            return null;
+          }
+
+          const pos = props.row.data as AdvancedPosition;
+          const isGSA = isGSAPosition(pos);
+
+          if (!isGSA) {
+            props.onClose(false);
+            return null;
+          }
+
+          const currentDiscount = pos.gsa_discount_rate || 0;
+
+          const EditInput = () => {
+            const [inputValue, setInputValue] = React.useState((currentDiscount * 100).toFixed(1));
+
+            const handleSave = () => {
+              const newDiscountPercent = parseFloat(inputValue) || 0;
+              const newDiscountRate = newDiscountPercent / 100;
+
+              console.log('[PrimeLaborSection] Updating GSA discount:', {
+                positionId: pos.id,
+                newDiscountRate
+              });
+
+              onUpdatePosition(pos.id, { gsa_discount_rate: newDiscountRate });
+              props.onClose(true);
+            };
+
+            return (
+              <input
+                type="text"
+                inputMode="decimal"
+                className="w-full h-full px-2 bg-transparent text-foreground outline-none text-right font-mono"
+                value={inputValue}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                    setInputValue(value);
+                  }
+                }}
+                onBlur={handleSave}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSave();
+                  } else if (e.key === 'Escape') {
+                    props.onClose(false);
+                  }
+                }}
+                autoFocus
+                onFocus={(e) => e.target.select()}
+              />
+            );
+          };
+
+          return <EditInput />;
+        },
+        renderCell: ({ row }) => {
+          if (row.type === 'subtotal') {
+            return <div className="h-full bg-blue-50 border-t-2 border-blue-200" />;
+          } else if (row.type === 'position') {
+            const pos = row.data as AdvancedPosition;
+            const isGSA = isGSAPosition(pos);
+
+            if (!isGSA) {
+              return <div className="flex items-center justify-center h-full px-2 text-muted-foreground text-xs">N/A</div>;
+            }
+
+            const suggestedDiscount = pos.suggested_discount_rate || 0;
+            const appliedDiscount = pos.gsa_discount_rate || 0;
+            const blsComparison = pos.bls_comparison_fblr;
+            const rationale = pos.discount_rationale;
+
+            // Get first year GSA rate for comparison display
+            const gsaRate = getGSARateForYear(pos, 1);
+
+            return (
+              <div
+                className="flex flex-col justify-center h-full px-2 space-y-0.5"
+                title={rationale || 'BLS comparison data not available'}
+              >
+                {suggestedDiscount > 0 ? (
+                  <>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Suggested:</span>
+                      <span className="text-amber-600 font-semibold">
+                        {(suggestedDiscount * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground">Applied:</span>
+                      <span className={appliedDiscount > 0 ? "text-emerald-600 font-semibold" : "text-muted-foreground"}>
+                        {appliedDiscount > 0 ? `${(appliedDiscount * 100).toFixed(1)}%` : '0%'}
+                      </span>
+                    </div>
+                    {blsComparison && (
+                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+                        <span>GSA vs BLS:</span>
+                        <span>${gsaRate.toFixed(2)} / ${blsComparison.toFixed(2)}</span>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-xs text-muted-foreground text-center">
+                    No discount needed
+                  </div>
+                )}
+              </div>
+            );
+          } else if (row.type === 'subcontractor') {
+            return <div className="h-full bg-purple-50/50" />;
+          }
+          return <div className="h-full bg-muted/30" />;
+        },
+      });
+    }
 
     // Add year-based columns (Rate, Hours, Amount triplets)
     for (let year = 1; year <= totalYears; year++) {
@@ -743,6 +1049,11 @@ export const PrimeLaborSection = ({
                 </span>
               </div>
             );
+          }
+
+          // Subcontractor row - empty (calculations done separately)
+          if (row.type === 'subcontractor') {
+            return <div className="h-full bg-purple-50/50" />;
           }
 
           const pos = row.data as AdvancedPosition;
@@ -881,6 +1192,16 @@ export const PrimeLaborSection = ({
                 </span>
               </div>
             );
+          } else if (row.type === 'subcontractor') {
+            // Subcontractor row - show hours for this year
+            const hours = row.subcontractorHours?.[yearStr] || 0;
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-purple-50/50">
+                <span className="text-purple-700 font-medium">
+                  {hours.toLocaleString()}
+                </span>
+              </div>
+            );
           } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             const breakdown = pos.breakdown[yearStr];
@@ -916,6 +1237,11 @@ export const PrimeLaborSection = ({
                 </span>
               </div>
             );
+          }
+
+          // Subcontractor row - empty (calculations done separately)
+          if (row.type === 'subcontractor') {
+            return <div className="h-full bg-purple-50/50" />;
           }
 
           const pos = row.data as AdvancedPosition;
@@ -1156,6 +1482,14 @@ export const PrimeLaborSection = ({
                 </span>
               </div>
             );
+          } else if (row.type === 'subcontractor') {
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-purple-50/50">
+                <span className="text-purple-700 font-medium">
+                  {(row.subcontractorTotalHours || 0).toLocaleString()}
+                </span>
+              </div>
+            );
           } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             return (
@@ -1184,6 +1518,8 @@ export const PrimeLaborSection = ({
                 </span>
               </div>
             );
+          } else if (row.type === 'subcontractor') {
+            return <div className="h-full bg-purple-50/50" />;
           } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             return (
@@ -1272,7 +1608,7 @@ export const PrimeLaborSection = ({
         style={{ height: 'calc(100vh - 280px)', minHeight: 400 }}
       >
         <DataGrid
-          key={`${rates.fringe}-${rates.oh}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}`}
+          key={`${rates.fringe}-${rates.oh_onsite}-${rates.oh_offsite}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}-v${advancedModeVersion}`}
           columns={columns}
           rows={gridRows}
           onRowsChange={handleRowsChange}

@@ -367,7 +367,8 @@ export default function CompanyRepositoryPage() {
   const [manualPresetName, setManualPresetName] = useState('');
   const [manualPresetRates, setManualPresetRates] = useState({
     fringe: 0,
-    oh: 0,
+    oh_onsite: 0,
+    oh_offsite: 0,
     ga: 0,
     fee: 0,
     smh: 0,
@@ -397,7 +398,8 @@ export default function CompanyRepositoryPage() {
   const [editPresetName, setEditPresetName] = useState('');
   const [editPresetRates, setEditPresetRates] = useState({
     fringe: 0,
-    oh: 0,
+    oh_onsite: 0,
+    oh_offsite: 0,
     ga: 0,
     fee: 0,
     smh: 0,
@@ -616,7 +618,8 @@ export default function CompanyRepositoryPage() {
       const presetData = {
         name: manualPresetName.trim(),
         fringe: manualPresetRates.fringe / 100,
-        oh: manualPresetRates.oh / 100,
+        oh_onsite: manualPresetRates.oh_onsite / 100,
+        oh_offsite: manualPresetRates.oh_offsite / 100,
         ga: manualPresetRates.ga / 100,
         fee: manualPresetRates.fee / 100,
         smh: manualPresetRates.smh / 100,
@@ -631,7 +634,8 @@ export default function CompanyRepositoryPage() {
       setManualPresetName('');
       setManualPresetRates({
         fringe: 0,
-        oh: 0,
+        oh_onsite: 0,
+        oh_offsite: 0,
         ga: 0,
         fee: 0,
         smh: 0,
@@ -687,9 +691,15 @@ export default function CompanyRepositoryPage() {
   const handleEditPreset = (preset: any) => {
     setEditingPreset({ id: preset.id, name: preset.name });
     setEditPresetName(preset.name);
+
+    // Handle migration from old 'oh' field to new 'oh_onsite' and 'oh_offsite'
+    const ohOnsite = preset.oh_onsite !== undefined ? preset.oh_onsite : preset.oh || 0;
+    const ohOffsite = preset.oh_offsite !== undefined ? preset.oh_offsite : preset.oh || 0;
+
     setEditPresetRates({
       fringe: toPercentageNumber(preset.fringe),
-      oh: toPercentageNumber(preset.oh),
+      oh_onsite: toPercentageNumber(ohOnsite),
+      oh_offsite: toPercentageNumber(ohOffsite),
       ga: toPercentageNumber(preset.ga),
       fee: toPercentageNumber(preset.fee),
       smh: toPercentageNumber(preset.smh),
@@ -708,7 +718,8 @@ export default function CompanyRepositoryPage() {
       const presetData = {
         name: editPresetName.trim(),
         fringe: editPresetRates.fringe / 100,
-        oh: editPresetRates.oh / 100,
+        oh_onsite: editPresetRates.oh_onsite / 100,
+        oh_offsite: editPresetRates.oh_offsite / 100,
         ga: editPresetRates.ga / 100,
         fee: editPresetRates.fee / 100,
         smh: editPresetRates.smh / 100,
@@ -724,7 +735,8 @@ export default function CompanyRepositoryPage() {
       setEditPresetName('');
       setEditPresetRates({
         fringe: 0,
-        oh: 0,
+        oh_onsite: 0,
+        oh_offsite: 0,
         ga: 0,
         fee: 0,
         smh: 0,
@@ -1140,7 +1152,8 @@ export default function CompanyRepositoryPage() {
                         <h4 className="font-medium text-foreground">{preset.name}</h4>
                         {organization?.settings?.default_rates &&
                           preset.fringe === organization.settings.default_rates.fringe &&
-                          preset.oh === organization.settings.default_rates.oh &&
+                          (preset.oh_onsite !== undefined ? preset.oh_onsite : preset.oh) === organization.settings.default_rates.oh_onsite &&
+                          (preset.oh_offsite !== undefined ? preset.oh_offsite : preset.oh) === organization.settings.default_rates.oh_offsite &&
                           preset.ga === organization.settings.default_rates.ga &&
                           preset.fee === organization.settings.default_rates.fee && (
                           <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 font-medium">
@@ -1152,7 +1165,8 @@ export default function CompanyRepositoryPage() {
                         <div className="flex gap-3">
                           {!(organization?.settings?.default_rates &&
                             preset.fringe === organization.settings.default_rates.fringe &&
-                            preset.oh === organization.settings.default_rates.oh &&
+                            (preset.oh_onsite !== undefined ? preset.oh_onsite : preset.oh) === organization.settings.default_rates.oh_onsite &&
+                            (preset.oh_offsite !== undefined ? preset.oh_offsite : preset.oh) === organization.settings.default_rates.oh_offsite &&
                             preset.ga === organization.settings.default_rates.ga &&
                             preset.fee === organization.settings.default_rates.fee) && (
                             <button
@@ -1183,8 +1197,12 @@ export default function CompanyRepositoryPage() {
                         <span className="font-mono font-semibold">{toPercentageDisplay(preset.fringe)}%</span>
                       </div>
                       <div>
-                        <span className="text-muted-foreground">OH: </span>
-                        <span className="font-mono font-semibold">{toPercentageDisplay(preset.oh)}%</span>
+                        <span className="text-muted-foreground">OH On-Site: </span>
+                        <span className="font-mono font-semibold">{toPercentageDisplay(preset.oh_onsite !== undefined ? preset.oh_onsite : preset.oh || 0)}%</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">OH Off-Site: </span>
+                        <span className="font-mono font-semibold">{toPercentageDisplay(preset.oh_offsite !== undefined ? preset.oh_offsite : preset.oh || 0)}%</span>
                       </div>
                       <div>
                         <span className="text-muted-foreground">G&A: </span>
@@ -1483,7 +1501,8 @@ export default function CompanyRepositoryPage() {
           setManualPresetName('');
           setManualPresetRates({
             fringe: 0,
-            oh: 0,
+            oh_onsite: 0,
+            oh_offsite: 0,
             ga: 0,
             fee: 0,
             smh: 0,
@@ -1502,7 +1521,8 @@ export default function CompanyRepositoryPage() {
                 setManualPresetName('');
                 setManualPresetRates({
                   fringe: 0,
-                  oh: 0,
+                  oh_onsite: 0,
+                  oh_offsite: 0,
                   ga: 0,
                   fee: 0,
                   smh: 0,
@@ -1543,10 +1563,17 @@ export default function CompanyRepositoryPage() {
                 placeholder="24.70"
               />
               <Input
-                label="Overhead (OH) Rate"
+                label="OH (On-Site) Rate"
                 type="number"
-                value={manualPresetRates.oh || ''}
-                onChange={(e) => setManualPresetRates({ ...manualPresetRates, oh: parseFloat(e.target.value) || 0 })}
+                value={manualPresetRates.oh_onsite || ''}
+                onChange={(e) => setManualPresetRates({ ...manualPresetRates, oh_onsite: parseFloat(e.target.value) || 0 })}
+                placeholder="7.11"
+              />
+              <Input
+                label="OH (Off-Site) Rate"
+                type="number"
+                value={manualPresetRates.oh_offsite || ''}
+                onChange={(e) => setManualPresetRates({ ...manualPresetRates, oh_offsite: parseFloat(e.target.value) || 0 })}
                 placeholder="7.11"
               />
               <Input
@@ -1605,7 +1632,8 @@ export default function CompanyRepositoryPage() {
           setEditPresetName('');
           setEditPresetRates({
             fringe: 0,
-            oh: 0,
+            oh_onsite: 0,
+            oh_offsite: 0,
             ga: 0,
             fee: 0,
             smh: 0,
@@ -1625,7 +1653,8 @@ export default function CompanyRepositoryPage() {
                 setEditPresetName('');
                 setEditPresetRates({
                   fringe: 0,
-                  oh: 0,
+                  oh_onsite: 0,
+                  oh_offsite: 0,
                   ga: 0,
                   fee: 0,
                   smh: 0,
@@ -1666,10 +1695,17 @@ export default function CompanyRepositoryPage() {
                 placeholder="24.70"
               />
               <Input
-                label="Overhead (OH) Rate"
+                label="OH (On-Site) Rate"
                 type="number"
-                value={editPresetRates.oh || ''}
-                onChange={(e) => setEditPresetRates({ ...editPresetRates, oh: parseFloat(e.target.value) || 0 })}
+                value={editPresetRates.oh_onsite || ''}
+                onChange={(e) => setEditPresetRates({ ...editPresetRates, oh_onsite: parseFloat(e.target.value) || 0 })}
+                placeholder="7.11"
+              />
+              <Input
+                label="OH (Off-Site) Rate"
+                type="number"
+                value={editPresetRates.oh_offsite || ''}
+                onChange={(e) => setEditPresetRates({ ...editPresetRates, oh_offsite: parseFloat(e.target.value) || 0 })}
                 placeholder="7.11"
               />
               <Input

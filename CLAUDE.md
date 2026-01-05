@@ -162,6 +162,12 @@ proposals = db.find({
 3. Debounced auto-save (2 seconds) → `saveProposal()` persists to MongoDB
 4. User converts to subcontractor → immediate save (bypasses debounce), invalidates cache, reloads proposal
 
+**Advanced Mode vs Basic Mode**:
+- When in **Advanced Mode**, `updatePosition()` automatically calls `performTransformToAdvanced()` to recalculate breakdowns
+- Location type changes (On-Site/Off-Site toggle) trigger immediate recalculation in Advanced Mode
+- Rate changes (Fringe, OH, G&A, Fee) automatically trigger `performTransformToAdvanced()` + auto-save
+- Never use the `/api/pricing/recalculate` endpoint - all calculations are done frontend via transforms
+
 **Cache Management**:
 - `frontend/lib/cache/` - Browser-side caching with stale-while-revalidate
 - Organization-scoped cache keys: `proposals:list:${orgId}`
@@ -200,13 +206,20 @@ proposals = db.find({
 **Fully Burdened Labor Rate (FBLR)** cascade:
 ```python
 # client/calculation_service.py:Calculator
-DL (Direct Labor) = annual_wage / hours
+DL (Direct Labor) = annual_wage / standard_fte_hours
 Fringe = DL × fringe_rate
-OH (Overhead) = (DL + Fringe) × oh_rate
+OH (Overhead) = (DL + Fringe) × oh_rate  // oh_onsite or oh_offsite based on location_type
 G&A = (DL + Fringe + OH) × ga_rate
 Fee = (DL + Fringe + OH + G&A) × fee_rate
 FBLR = DL + Fringe + OH + G&A + Fee
 ```
+
+**CRITICAL: OH Rate Selection**:
+- System supports separate rates for On-Site and Off-Site positions
+- Each position has a `location_type` field ('On-Site' or 'Off-Site')
+- Use `oh_onsite` for On-Site positions, `oh_offsite` for Off-Site positions
+- Always provide fallback: `rates.oh_onsite ?? rates.oh_offsite ?? rates.oh ?? 0.0711`
+- Old `oh` field is deprecated but kept for backward compatibility
 
 **Escalation (Year-over-Year)**:
 - Compound escalation: `Year 3 rate = Year 1 rate × (1 + rate_1_to_2) × (1 + rate_2_to_3)`
@@ -215,8 +228,15 @@ FBLR = DL + Fringe + OH + G&A + Fee
 **Wage Percentile Selection**:
 - < 3 years experience → 25th percentile
 - 3-5 years → 50th percentile (median)
-- \> 5 years → 75th percentile
+- > 5 years → 75th percentile
 - Logic in `utils/pipeline.py:process_single_row`
+
+**GSA vs BLS Positions**:
+- **BLS positions**: Use indirect rates (Fringe, OH, G&A, Fee) to calculate FBLR from annual wage
+- **GSA positions**: Rates are ALREADY fully burdened - indirect rates are ONLY for display breakdown
+- For GSA: Always use `gsaRate × hours` for totals (NOT reverse-engineered FBLR)
+- GSA breakdown (`reverseEngineerGSARate`) is purely cosmetic for UI consistency
+- GSA totals MUST NOT change when indirect rates are modified
 
 ## Common Tasks
 
@@ -254,6 +274,39 @@ FBLR = DL + Fringe + OH + G&A + Fee
 
 ## Important Patterns
 
+### Frontend: Migration Pattern for Rate Structure Changes
+
+When loading proposals, always migrate old rate structure to new:
+```typescript
+// In pricingStore.ts loadProposal()
+let rates = proposal.spreadsheet_data?.rates || proposal.rates;
+
+// Ensure rates object exists
+if (!rates) {
+  rates = {
+    fringe: 0.247,
+    oh_onsite: 0.0711,
+    oh_offsite: 0.0711,
+    ga: 0.2243,
+    fee: 0.08,
+  };
+} else {
+  // Migrate old 'oh' to new structure
+  if (rates.oh !== undefined && !rates.oh_onsite && !rates.oh_offsite) {
+    rates = {
+      ...rates,
+      oh_onsite: rates.oh,
+      oh_offsite: rates.oh,
+    };
+    delete rates.oh;
+  }
+
+  // Always ensure both OH rates exist
+  if (!rates.oh_onsite) rates.oh_onsite = 0.0711;
+  if (!rates.oh_offsite) rates.oh_offsite = 0.0711;
+}
+```
+
 ### Backend: ObjectId Serialization
 
 MongoDB uses `ObjectId` type which breaks JSON serialization. Always serialize before returning:
@@ -284,7 +337,7 @@ proposals = proposal_crud.get_user_proposals(
 ### Frontend: Zustand Store Updates
 
 Use `set()` for state updates, `get()` for reading current state:
-```python
+```typescript
 // Update single field
 set({ isLoading: true })
 
@@ -297,6 +350,11 @@ set({
 // Access current state
 const currentPositions = get().positions
 ```
+
+**CRITICAL: Always set isDirty when modifying data**:
+- Rate updates: `set({ rates: newRates, isDirty: true })`
+- Position updates: `set({ positions: [...], isDirty: true })`
+- Without `isDirty: true`, auto-save will be skipped (guard check at line 585)
 
 ### Frontend: React Data Grid Columns
 

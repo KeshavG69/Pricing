@@ -14,7 +14,8 @@ async def process_single_row(
     row_dict: Dict[str, Any],
     row_index: int,
     wage_source: Optional[Dict[str, Any]] = None,
-    organization_id: Optional[str] = None
+    organization_id: Optional[str] = None,
+    organization_rates: Optional[Dict[str, float]] = None
 ) -> Dict[str, Any]:
     """
     Process a single JD row with the pricing agent (BLS or GSA).
@@ -45,13 +46,36 @@ async def process_single_row(
         if is_gsa:
             # GSA flow - use GSA agent with Pinecone search
             file_id = wage_source.get("file_id")
-            agent = await create_gsa_pricing_agent(
+            gsa_agent = await create_gsa_pricing_agent(
                 labor_category=labor_category,
                 description=description,
                 organization_id=organization_id,
                 file_id=file_id
             )
-            prompt = f"Find GSA labor category and rate for: {labor_category}"
+            gsa_prompt = f"Find GSA labor category and rate for: {labor_category}"
+
+            # If organization rates provided, also run BLS agent in parallel for discount comparison
+            if organization_rates:
+                print(f"  [{row_index}] 🔍 Running GSA + BLS agents in parallel for discount comparison...")
+                bls_agent = await create_pricing_agent(
+                    labor_category=labor_category,
+                    description=description,
+                    location=location or "National"
+                )
+                bls_prompt = f"Find wage data for {labor_category}"
+
+                # Run both agents in parallel
+                gsa_result, bls_result = await asyncio.gather(
+                    gsa_agent.arun(gsa_prompt),
+                    bls_agent.arun(bls_prompt),
+                    return_exceptions=True
+                )
+            else:
+                # Only run GSA agent
+                gsa_result = await gsa_agent.arun(gsa_prompt)
+                bls_result = None
+
+            result = gsa_result  # For compatibility with existing code
         else:
             # BLS flow - use standard pricing agent
             agent = await create_pricing_agent(
@@ -60,8 +84,8 @@ async def process_single_row(
                 location=location
             )
             prompt = f"Find wage data for {labor_category} in {location}"
-
-        result = await agent.arun(prompt)
+            result = await agent.arun(prompt)
+            bls_result = None  # Not used in BLS flow
 
         # Extract data from agent response
         if result and hasattr(result, 'content'):
@@ -87,7 +111,8 @@ async def process_single_row(
                     if data.get("error"):
                         print(f"  [{row_index}] ⚠️ GSA Error: {data.get('error')}")
 
-                    return {
+                    # NEW: Also fetch BLS data for discount comparison (if org rates provided)
+                    gsa_result = {
                         **row_dict,
                         "wage_source": "gsa",
                         "gsa_lcat_id": data.get("lcat_id"),
@@ -98,6 +123,7 @@ async def process_single_row(
                         "gsa_rates_by_year": rates_by_year,
                         "gsa_current_year": current_gsa_year,
                         "selected_wage": year1_rate,  # For display, calculation service uses rates_by_year
+                        "gsa_discount_rate": 0.0,  # Default, user can override
                         # No BLS fields for GSA
                         "BLS Code": None,
                         "BLS Labour Category Mapping": None,
@@ -110,6 +136,59 @@ async def process_single_row(
                         "wage_90th": None,
                         "selected_percentile": None,
                     }
+
+                    # Process BLS comparison data if available (from parallel execution)
+                    if organization_rates and year1_rate and bls_result:
+                        try:
+                            # Check if BLS result is an exception
+                            if isinstance(bls_result, Exception):
+                                print(f"  [{row_index}] ⚠️ BLS agent failed: {bls_result}")
+                            elif bls_result and hasattr(bls_result, 'content'):
+                                print(f"  [{row_index}] ✓ Processing BLS comparison data...")
+                                bls_data = bls_result.content
+
+                                # Parse string to dict if needed
+                                if isinstance(bls_data, str):
+                                    try:
+                                        bls_data = json.loads(bls_data.replace("'", '"'))
+                                    except json.JSONDecodeError:
+                                        bls_data = eval(bls_data)
+
+                                if isinstance(bls_data, dict) and bls_data.get("wages"):
+                                    # Calculate BLS FBLR using organization rates
+                                    bls_fblr_data = calculate_bls_fblr_comparison(
+                                        bls_wages=bls_data["wages"],
+                                        experience=row_dict.get("experience"),
+                                        organization_rates=organization_rates,
+                                        standard_fte_hours=row_dict.get("standard_fte_hours", 1880),
+                                        location_type=row_dict.get("location_type", "On-Site")
+                                    )
+
+                                    if bls_fblr_data:
+                                        # Compare GSA rate vs BLS FBLR and suggest discount
+                                        discount_analysis = calculate_suggested_discount(
+                                            gsa_rate=year1_rate,
+                                            bls_fblr=bls_fblr_data["fblr"],
+                                            bls_selected_wage=bls_fblr_data["selected_wage"]
+                                        )
+
+                                        print(f"  [{row_index}] 💰 GSA: ${year1_rate:.2f}/hr vs BLS FBLR: ${bls_fblr_data['fblr']:.2f}/hr → Suggested discount: {discount_analysis['suggested_discount_rate']*100:.1f}%")
+
+                                        # Add comparison data to GSA response
+                                        gsa_result.update({
+                                            "bls_comparison_fblr": bls_fblr_data["fblr"],
+                                            "bls_comparison_soc_code": bls_data.get("soc_code"),
+                                            "bls_comparison_wage": bls_fblr_data["selected_wage"],
+                                            "bls_comparison_percentile": bls_fblr_data["selected_percentile"],
+                                            "suggested_discount_rate": discount_analysis["suggested_discount_rate"],
+                                            "discount_rationale": discount_analysis["rationale"],
+                                        })
+
+                        except Exception as e:
+                            print(f"  [{row_index}] ⚠️ BLS comparison processing failed: {e}")
+                            # Continue without comparison data
+
+                    return gsa_result
                 else:
                     # BLS response: {soc_code, occupation_name, area, wages: {...}}
                     wages = data.get("wages", {})
@@ -189,11 +268,180 @@ async def process_single_row(
         }
 
 
+def calculate_bls_fblr_comparison(
+    bls_wages: Dict[str, float],
+    experience: Optional[float],
+    organization_rates: Dict[str, float],
+    standard_fte_hours: int = 1880,
+    location_type: str = "On-Site"
+) -> Optional[Dict[str, Any]]:
+    """
+    Calculate BLS FBLR for comparison with GSA rates.
+
+    Uses the same logic as BLS flow to select wage based on experience,
+    then calculates FBLR using organization's indirect rates (including fee).
+
+    Args:
+        bls_wages: BLS wage data {"10th": ..., "25th": ..., "50th": ..., "75th": ..., "90th": ...}
+        experience: Years of experience (determines percentile selection)
+        organization_rates: {"fringe": 0.247, "oh_onsite": 0.0711, "oh_offsite": 0.0711, "ga": 0.2243, "fee": 0.07}
+        standard_fte_hours: FTE hours for hourly rate calculation (default 1880)
+        location_type: Position location type ("On-Site" or "Off-Site", default "On-Site")
+
+    Returns:
+        {
+            "selected_wage": 115000,
+            "selected_percentile": "50th",
+            "fblr": 107.03,  # Hourly FBLR rate (includes fee)
+            "dl_rate": 61.17,
+            "components": {
+                "fringe": 15.11,
+                "oh": 5.42,
+                "ga": 18.33,
+                "fee": 7.00
+            }
+        }
+        Returns None if no valid wage found.
+    """
+    from client.calculation_service import Calculator
+
+    # Determine selected wage based on experience (same logic as BLS flow)
+    selected_wage = None
+    selected_percentile = None
+
+    if experience is not None and isinstance(experience, (int, float)):
+        if experience < 3:
+            selected_wage = bls_wages.get("25th")
+            selected_percentile = "25th"
+        elif 3 <= experience < 6:
+            selected_wage = bls_wages.get("50th")
+            selected_percentile = "50th"
+        else:
+            selected_wage = bls_wages.get("75th")
+            selected_percentile = "75th"
+    else:
+        selected_wage = bls_wages.get("50th")
+        selected_percentile = "50th"
+
+    if not selected_wage or selected_wage <= 0:
+        return None
+
+    # Calculate FBLR using calculate_averaged_fblr (includes fee!)
+    # Use appropriate OH rate based on location_type (fallback to old 'oh' field if present)
+    oh_onsite = organization_rates.get("oh_onsite", organization_rates.get("oh", 0.0711))
+    oh_offsite = organization_rates.get("oh_offsite", organization_rates.get("oh", 0.0711))
+
+    fblr_data = Calculator.calculate_averaged_fblr(
+        base_wage=selected_wage,
+        hours_per_year={"1": standard_fte_hours},  # Single year
+        escalation_rates={},  # No escalation
+        fringe_rate=organization_rates.get("fringe", 0.247),
+        oh_onsite_rate=oh_onsite,
+        oh_offsite_rate=oh_offsite,
+        location_type=location_type,  # Use actual location_type from job data
+        ga_rate=organization_rates.get("ga", 0.2243),
+        fee_rate=organization_rates.get("fee", 0.07),
+        standard_fte_hours=standard_fte_hours,
+        total_years=1  # Single year
+    )
+
+    return {
+        "selected_wage": selected_wage,
+        "selected_percentile": selected_percentile,
+        "fblr": fblr_data["fblr"],  # Already includes fee
+        "dl_rate": fblr_data["dl_rate"],
+        "components": {
+            "fringe": fblr_data["fringe"],
+            "oh": fblr_data["oh"],
+            "ga": fblr_data["ga"],
+            "fee": fblr_data["fee"]
+        }
+    }
+
+
+def calculate_suggested_discount(
+    gsa_rate: float,
+    bls_fblr: float,
+    bls_selected_wage: float
+) -> Dict[str, Any]:
+    """
+    Calculate suggested discount based on GSA vs BLS comparison.
+
+    Strategy:
+    - If GSA > BLS FBLR: Suggest discount to match BLS exactly
+    - If GSA <= BLS FBLR: No discount needed (already competitive)
+    - Cap maximum suggested discount at 20%
+
+    Args:
+        gsa_rate: GSA hourly rate ($/hr)
+        bls_fblr: BLS FBLR hourly rate ($/hr, includes fee)
+        bls_selected_wage: BLS annual wage used for comparison
+
+    Returns:
+        {
+            "suggested_discount_rate": 0.187,  # 18.7% discount
+            "rationale": "GSA rate ($131.68/hr) is 18.7% higher than BLS FBLR ($107.03/hr)...",
+            "gsa_rate_original": 131.68,
+            "bls_fblr": 107.03,
+            "rate_after_discount": 107.03
+        }
+    """
+    if not gsa_rate or not bls_fblr or gsa_rate <= 0 or bls_fblr <= 0:
+        return {
+            "suggested_discount_rate": 0.0,
+            "rationale": "Insufficient data for comparison",
+            "gsa_rate_original": gsa_rate,
+            "bls_fblr": bls_fblr,
+            "rate_after_discount": gsa_rate
+        }
+
+    # Calculate percentage difference
+    diff_pct = (gsa_rate - bls_fblr) / gsa_rate
+
+    if diff_pct <= 0:
+        # GSA is already equal or lower than BLS
+        return {
+            "suggested_discount_rate": 0.0,
+            "rationale": f"GSA rate (${gsa_rate:.2f}/hr) is already competitive vs BLS FBLR (${bls_fblr:.2f}/hr). No discount needed.",
+            "gsa_rate_original": gsa_rate,
+            "bls_fblr": bls_fblr,
+            "rate_after_discount": gsa_rate
+        }
+
+    # GSA is higher - suggest discount to match BLS exactly
+    suggested_discount = (gsa_rate - bls_fblr) / gsa_rate
+
+    # Cap discount at 20%
+    if suggested_discount > 0.20:
+        suggested_discount = 0.20
+        rate_after_discount = gsa_rate * (1 - suggested_discount)
+        rationale = (
+            f"GSA rate (${gsa_rate:.2f}/hr) is {diff_pct*100:.1f}% higher than BLS FBLR (${bls_fblr:.2f}/hr). "
+            f"Suggested discount capped at 20% → Final rate: ${rate_after_discount:.2f}/hr "
+            f"(Note: BLS rate is ${bls_fblr:.2f}/hr)"
+        )
+    else:
+        rate_after_discount = bls_fblr  # Match BLS exactly
+        rationale = (
+            f"GSA rate (${gsa_rate:.2f}/hr) is {diff_pct*100:.1f}% higher than BLS FBLR (${bls_fblr:.2f}/hr). "
+            f"Suggested discount: {suggested_discount*100:.1f}% to match BLS rate exactly"
+        )
+
+    return {
+        "suggested_discount_rate": round(suggested_discount, 4),
+        "rationale": rationale,
+        "gsa_rate_original": gsa_rate,
+        "bls_fblr": bls_fblr,
+        "rate_after_discount": round(rate_after_discount, 2)
+    }
+
+
 async def process_dataframe_with_agents(
     df: pd.DataFrame,
     max_workers: int = 10,
     wage_source: Optional[Dict[str, Any]] = None,
-    organization_id: Optional[str] = None
+    organization_id: Optional[str] = None,
+    organization_rates: Optional[Dict[str, float]] = None
 ) -> pd.DataFrame:
     """
     Process DataFrame with pricing agents in parallel and add wage columns.
@@ -203,9 +451,10 @@ async def process_dataframe_with_agents(
         max_workers: Number of parallel agents (default: 10)
         wage_source: {"type": "bls"} or {"type": "gsa", "file_id": "..."}
         organization_id: Organization ID (required for GSA)
+        organization_rates: Organization's indirect rates for BLS comparison (GSA mode only)
 
     Returns:
-        DataFrame with added wage columns
+        DataFrame with added wage columns (includes discount suggestions for GSA)
     """
     source_type = wage_source.get("type", "bls") if wage_source else "bls"
     print(f"\n{'='*60}")
@@ -230,7 +479,7 @@ async def process_dataframe_with_agents(
     async def bounded_process(row, index):
         """Process a single row with semaphore to limit concurrency."""
         async with semaphore:
-            return await process_single_row(row, index, wage_source, organization_id)
+            return await process_single_row(row, index, wage_source, organization_id, organization_rates)
 
     # Create all tasks and run them in parallel (limited by semaphore)
     tasks = [bounded_process(row, i + 1) for i, row in enumerate(rows)]
