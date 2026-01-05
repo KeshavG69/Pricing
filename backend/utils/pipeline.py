@@ -160,7 +160,8 @@ async def process_single_row(
                                         bls_wages=bls_data["wages"],
                                         experience=row_dict.get("experience"),
                                         organization_rates=organization_rates,
-                                        standard_fte_hours=row_dict.get("standard_fte_hours", 1880)
+                                        standard_fte_hours=row_dict.get("standard_fte_hours", 1880),
+                                        location_type=row_dict.get("location_type", "On-Site")
                                     )
 
                                     if bls_fblr_data:
@@ -271,7 +272,8 @@ def calculate_bls_fblr_comparison(
     bls_wages: Dict[str, float],
     experience: Optional[float],
     organization_rates: Dict[str, float],
-    standard_fte_hours: int = 1880
+    standard_fte_hours: int = 1880,
+    location_type: str = "On-Site"
 ) -> Optional[Dict[str, Any]]:
     """
     Calculate BLS FBLR for comparison with GSA rates.
@@ -282,8 +284,9 @@ def calculate_bls_fblr_comparison(
     Args:
         bls_wages: BLS wage data {"10th": ..., "25th": ..., "50th": ..., "75th": ..., "90th": ...}
         experience: Years of experience (determines percentile selection)
-        organization_rates: {"fringe": 0.247, "oh": 0.0711, "ga": 0.2243, "fee": 0.07}
+        organization_rates: {"fringe": 0.247, "oh_onsite": 0.0711, "oh_offsite": 0.0711, "ga": 0.2243, "fee": 0.07}
         standard_fte_hours: FTE hours for hourly rate calculation (default 1880)
+        location_type: Position location type ("On-Site" or "Off-Site", default "On-Site")
 
     Returns:
         {
@@ -324,12 +327,18 @@ def calculate_bls_fblr_comparison(
         return None
 
     # Calculate FBLR using calculate_averaged_fblr (includes fee!)
+    # Use appropriate OH rate based on location_type (fallback to old 'oh' field if present)
+    oh_onsite = organization_rates.get("oh_onsite", organization_rates.get("oh", 0.0711))
+    oh_offsite = organization_rates.get("oh_offsite", organization_rates.get("oh", 0.0711))
+
     fblr_data = Calculator.calculate_averaged_fblr(
         base_wage=selected_wage,
         hours_per_year={"1": standard_fte_hours},  # Single year
         escalation_rates={},  # No escalation
         fringe_rate=organization_rates.get("fringe", 0.247),
-        oh_rate=organization_rates.get("oh", 0.0711),
+        oh_onsite_rate=oh_onsite,
+        oh_offsite_rate=oh_offsite,
+        location_type=location_type,  # Use actual location_type from job data
         ga_rate=organization_rates.get("ga", 0.2243),
         fee_rate=organization_rates.get("fee", 0.07),
         standard_fte_hours=standard_fte_hours,

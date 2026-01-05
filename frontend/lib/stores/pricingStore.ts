@@ -309,7 +309,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
     console.log('[TRANSFORM] ========== TRANSFORM START ==========');
     console.log('[TRANSFORM] Current rates:', {
       fringe: state.rates.fringe,
-      oh: state.rates.oh,
+      oh_onsite: state.rates.oh_onsite,
+      oh_offsite: state.rates.oh_offsite,
       ga: state.rates.ga,
       fee: state.rates.fee
     });
@@ -383,7 +384,12 @@ export const usePricingStore = create<PricingState>((set, get) => {
           const fringe = dlRate * state.rates.fringe;
           const fringeAmount = fringe * hours;
 
-          const oh = (dlRate + fringe) * state.rates.oh;
+          // Determine which OH rate to use based on location_type
+          // Fallback: oh_onsite/oh_offsite → oh → 0.0711
+          const ohOnsite = state.rates.oh_onsite !== undefined ? state.rates.oh_onsite : (state.rates.oh !== undefined ? state.rates.oh : 0.0711);
+          const ohOffsite = state.rates.oh_offsite !== undefined ? state.rates.oh_offsite : (state.rates.oh !== undefined ? state.rates.oh : 0.0711);
+          const ohRate = pos.location_type === 'On-Site' ? ohOnsite : ohOffsite;
+          const oh = (dlRate + fringe) * ohRate;
           const ohAmount = oh * hours;
 
           const ga = (dlRate + fringe + oh) * state.rates.ga;
@@ -508,6 +514,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           wage_50th: p.wage_50th,
           wage_75th: p.wage_75th,
           wage_90th: p.wage_90th,
+          location_type: p.location_type || 'On-Site',  // Add location_type for OH rate selection
           ...buildYearHours(p.hours_per_year),
         })),
         rates: state.rates,
@@ -738,6 +745,18 @@ export const usePricingStore = create<PricingState>((set, get) => {
         const subcontractorConfigured = proposal.spreadsheet_data?.subcontractor_configured || false;
         const advancedMode = proposal.spreadsheet_data?.advanced_mode || false;
 
+        // Migrate old 'oh' field to 'oh_onsite' and 'oh_offsite'
+        let rates = proposal.spreadsheet_data?.rates || proposal.rates;
+        if (rates && rates.oh !== undefined && !rates.oh_onsite) {
+          console.log('[MIGRATION] Migrating old OH rate to on-site/off-site rates');
+          rates = {
+            ...rates,
+            oh_onsite: rates.oh,
+            oh_offsite: rates.oh,
+          };
+          delete rates.oh;
+        }
+
         set({
           proposalId,
           proposalName: proposal.name,
@@ -749,7 +768,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           travel: proposal.spreadsheet_data?.travel || [],
           odcs: proposal.spreadsheet_data?.odcs || [],
           extensions: proposal.spreadsheet_data?.extensions || [],
-          rates: proposal.spreadsheet_data?.rates || proposal.rates,  // Try spreadsheet_data first, fallback to org defaults
+          rates: rates,  // Use migrated rates
           escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Try spreadsheet_data first
           wageSource: proposal.wage_source || { type: 'bls' },  // Load wage source from proposal
           totalYears,
@@ -776,7 +795,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           travel: proposal.spreadsheet_data?.travel || [],
           odcs: proposal.spreadsheet_data?.odcs || [],
           extensions: proposal.spreadsheet_data?.extensions || [],
-          rates: proposal.spreadsheet_data?.rates || proposal.rates,  // Try spreadsheet_data first, fallback to org defaults
+          rates: rates,  // Use migrated rates
           escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Try spreadsheet_data first
           wageSource: proposal.wage_source || { type: 'bls' },  // Cache wage source
           totalYears,
@@ -811,7 +830,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
                 travel: proposal.spreadsheet_data?.travel || [],
                 odcs: proposal.spreadsheet_data?.odcs || [],
                 extensions: proposal.spreadsheet_data?.extensions || [],
-                rates: proposal.spreadsheet_data?.rates || proposal.rates,
+                rates: rates,  // Use migrated rates
                 escalation_rates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,
                 months_per_year: proposal.metadata?.months_per_year || defaultMonthsPerYear,
                 subcontractor_configured: subcontractorConfigured,
@@ -920,6 +939,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         rate: data.rate,
         hours_per_year: data.hoursAllocation,
         original_position_id: position.id, // Link back to prime position
+        location_type: position.location_type || 'On-Site', // Inherit from prime position
       };
 
       // 3. Add position to subcontractor
@@ -1253,7 +1273,11 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
             const dlRate = totalSalary / totalHours;
             const fringe = dlRate * state.rates.fringe;
-            const oh = (dlRate + fringe) * state.rates.oh;
+            // Use appropriate OH rate based on position location_type (default to On-Site)
+            const ohRate = p.location_type === 'Off-Site'
+              ? (state.rates.oh_offsite ?? state.rates.oh_onsite ?? 0.0711)
+              : (state.rates.oh_onsite ?? state.rates.oh_offsite ?? 0.0711);
+            const oh = (dlRate + fringe) * ohRate;
             const ga = (dlRate + fringe + oh) * state.rates.ga;
             const fee = (dlRate + fringe + oh + ga) * state.rates.fee;
             const fblr = dlRate + fringe + oh + ga + fee;
@@ -1343,6 +1367,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
               wage_75th: p.wage_75th,
               wage_90th: p.wage_90th,
               standard_fte_hours: p.standard_fte_hours!,
+              location_type: p.location_type || 'On-Site',  // Add location_type for OH rate selection
             };
           }),
           project_config: {
@@ -1355,7 +1380,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
             escalation_rates: state.escalationRates,
             indirect_rates: {
               fringe: state.rates.fringe,
-              oh: state.rates.oh,
+              oh_onsite: state.rates.oh_onsite,
+              oh_offsite: state.rates.oh_offsite,
               ga: state.rates.ga,
             },
             passthrough_rates: {

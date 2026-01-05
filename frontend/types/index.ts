@@ -51,25 +51,29 @@ export interface RatePreset {
   id: string;
   name: string;
   fringe: number;
-  oh: number;
+  oh_onsite: number;
+  oh_offsite: number;
   ga: number;
   fee: number;
   smh: number;
   sub_fee: number;
   ga_passthrough: number;
   escalation_rate: number;
+  oh?: number;  // Deprecated
 }
 
 export interface OrganizationSettings {
   default_rates: {
     fringe: number;
-    oh: number;
+    oh_onsite: number;
+    oh_offsite: number;
     ga: number;
     fee: number;
     smh: number;
     sub_fee: number;
     ga_passthrough: number;
     ga_adder: number;
+    oh?: number;  // Deprecated
   };
   default_escalation_rate: number;
   allow_user_rate_override: boolean;
@@ -240,6 +244,7 @@ export interface JobPosition {
   description?: string;
   experience?: number;
   location?: string;
+  location_type?: string; // 'On-Site' or 'Off-Site'
   hours?: number;
   hours_per_year?: Record<string, number>;
   standard_fte_hours?: number;  // Standard full-time hours from contract
@@ -277,13 +282,15 @@ export interface JobPosition {
 // Rates types
 export interface IndirectRates {
   fringe: number;
-  oh: number;
+  oh_onsite: number;    // Renamed from 'oh'
+  oh_offsite: number;   // New field
   ga: number;
   fee: number;
   smh?: number;
   sub_fee?: number;
   ga_passthrough?: number;
   ga_adder?: number;
+  oh?: number;  // Deprecated (for backward compatibility)
 }
 
 export interface EscalationRates {
@@ -301,6 +308,7 @@ export interface SpreadsheetPosition {
   description?: string; // Job description extracted from document
   experience?: number; // Years of experience
   location?: string; // Job location
+  location_type?: string; // 'On-Site' or 'Off-Site'
   soc_code?: string;
   soc_title?: string;
   percentile: '10th' | '25th' | '50th' | '75th' | '90th';
@@ -358,6 +366,7 @@ export interface SubcontractorPosition {
   rate: number;
   hours_per_year: Record<string, number>;
   original_position_id?: string; // Links to prime position ID this was converted from
+  location_type?: string; // 'On-Site' or 'Off-Site'
 }
 
 export interface Subcontractor {
@@ -415,6 +424,7 @@ export interface AdvancedPosition {
   description?: string; // Job description extracted from document
   experience?: number;
   location?: string;
+  location_type?: string; // 'On-Site' or 'Off-Site'
   soc_code?: string;
   soc_title?: string;
   percentile: '10th' | '25th' | '50th' | '75th' | '90th';
@@ -492,6 +502,7 @@ export interface GridRow {
   subcontractorHours?: Record<string, number>;
   subcontractorTotalHours?: number;
   subcontractorRate?: number;
+  subcontractorLocationType?: string;
 }
 
 // Context Menu types
@@ -567,7 +578,8 @@ export interface ProjectConfig {
   escalation_rates: EscalationRates;
   indirect_rates: {
     fringe: number;
-    oh: number;
+    oh_onsite: number;
+    oh_offsite: number;
     ga: number;
   };
   passthrough_rates: {
@@ -598,6 +610,7 @@ export interface ExcelGenerationRequest {
     wage_75th?: number;
     wage_90th?: number;
     standard_fte_hours?: number;
+    location_type?: string;  // Location type for OH rate selection
   }>;
   project_config: ProjectConfig;
 }

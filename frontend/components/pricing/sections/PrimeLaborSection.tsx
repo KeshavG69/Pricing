@@ -112,7 +112,12 @@ const calculateAveragedFBLR = (
 
   // Apply FBLR cascade
   const fringe = dlRate * rates.fringe;
-  const oh = (dlRate + fringe) * rates.oh;
+  // Determine which OH rate to use based on location_type
+  // Fallback: oh_onsite/oh_offsite → oh → 0.0711
+  const ohOnsite = rates.oh_onsite !== undefined ? rates.oh_onsite : (rates.oh !== undefined ? rates.oh : 0.0711);
+  const ohOffsite = rates.oh_offsite !== undefined ? rates.oh_offsite : (rates.oh !== undefined ? rates.oh : 0.0711);
+  const ohRate = position.location_type === 'On-Site' ? ohOnsite : ohOffsite;
+  const oh = (dlRate + fringe) * ohRate;
   const ga = (dlRate + fringe + oh) * rates.ga;
   // Fee is calculated separately in Fee Section (not included in FBLR)
   // This matches government cost proposal format (Intprepix)
@@ -154,6 +159,7 @@ export const PrimeLaborSection = ({
   // Get wage source and subcontractors from store
   const wageSource = usePricingStore((state) => state.wageSource);
   const subcontractors = usePricingStore((state) => state.subcontractors);
+  const updatePosition = usePricingStore((state) => state.updatePosition);
   const isGSAProposal = wageSource?.type === 'gsa';
 
   // Create a version string that changes when rates change to force re-render
@@ -475,6 +481,7 @@ export const PrimeLaborSection = ({
           subcontractorHours: subPos.hours_per_year,
           subcontractorTotalHours: totalSubHours,
           subcontractorRate: subPos.rate,
+          subcontractorLocationType: subPos.location_type || 'On-Site',
         });
       }
     });
@@ -562,6 +569,67 @@ export const PrimeLaborSection = ({
             );
           }
           return null;
+        },
+      },
+      // Location Type - Toggle between On-Site and Off-Site
+      {
+        key: 'location_type',
+        name: 'Location',
+        width: 100,
+        resizable: true,
+        frozen: true,
+        editable: false,
+        renderCell: ({ row }) => {
+          if (row.type === 'subtotal') {
+            return <div className="h-full bg-blue-50 border-t-2 border-blue-200" />;
+          } else if (row.type === 'position') {
+            const pos = row.data as AdvancedPosition;
+            const locationType = pos.location_type || 'On-Site';
+            const isOnSite = locationType === 'On-Site';
+
+            return (
+              <div className="flex items-center justify-center h-full px-2">
+                <button
+                  type="button"
+                  className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium transition-all duration-200 cursor-pointer transform hover:scale-105 active:scale-95 ${
+                    isOnSite
+                      ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 hover:bg-blue-200'
+                      : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 hover:bg-orange-200'
+                  }`}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    // Toggle between On-Site and Off-Site
+                    const newLocationType = isOnSite ? 'Off-Site' : 'On-Site';
+                    updatePosition(pos.id, { location_type: newLocationType });
+                  }}
+                  onMouseDown={(e) => {
+                    e.stopPropagation();
+                  }}
+                  title="Click to toggle between On-Site and Off-Site"
+                >
+                  {locationType}
+                </button>
+              </div>
+            );
+          } else if (row.type === 'subcontractor') {
+            // Show location type for subcontractor row (non-editable, inherits from prime)
+            const locationType = row.subcontractorLocationType || 'On-Site';
+            const isOnSite = locationType === 'On-Site';
+
+            return (
+              <div className="flex items-center justify-center h-full px-2 bg-purple-50/50">
+                <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
+                  isOnSite
+                    ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
+                    : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200'
+                }`}>
+                  {locationType}
+                </span>
+              </div>
+            );
+          }
+          return <div className="h-full bg-muted/30" />;
         },
       },
       // Labour Category - Expandable indicator + labor category

@@ -22,7 +22,8 @@ class RatePreset(BaseModel):
     id: str
     name: str
     fringe: float
-    oh: float
+    oh_onsite: float
+    oh_offsite: float
     ga: float
     fee: float
     smh: float = 0.0
@@ -35,7 +36,8 @@ class CreateRatePresetRequest(BaseModel):
     """Request to create a new rate preset"""
     name: str
     fringe: float
-    oh: float
+    oh_onsite: float
+    oh_offsite: float
     ga: float
     fee: float
     smh: float = 0.0
@@ -48,7 +50,8 @@ class UpdateRatePresetRequest(BaseModel):
     """Request to update an existing rate preset"""
     name: Optional[str] = None
     fringe: Optional[float] = None
-    oh: Optional[float] = None
+    oh_onsite: Optional[float] = None
+    oh_offsite: Optional[float] = None
     ga: Optional[float] = None
     fee: Optional[float] = None
     smh: Optional[float] = None
@@ -220,7 +223,8 @@ async def create_rate_preset(
         "id": str(uuid.uuid4()),
         "name": preset.name,
         "fringe": preset.fringe,
-        "oh": preset.oh,
+        "oh_onsite": preset.oh_onsite,
+        "oh_offsite": preset.oh_offsite,
         "ga": preset.ga,
         "fee": preset.fee,
         "smh": preset.smh,
@@ -286,8 +290,10 @@ async def update_rate_preset(
         preset["name"] = preset_update.name
     if preset_update.fringe is not None:
         preset["fringe"] = preset_update.fringe
-    if preset_update.oh is not None:
-        preset["oh"] = preset_update.oh
+    if preset_update.oh_onsite is not None:
+        preset["oh_onsite"] = preset_update.oh_onsite
+    if preset_update.oh_offsite is not None:
+        preset["oh_offsite"] = preset_update.oh_offsite
     if preset_update.ga is not None:
         preset["ga"] = preset_update.ga
     if preset_update.fee is not None:
@@ -404,7 +410,8 @@ async def apply_preset_as_default(
     # Copy preset values to default_rates
     settings["default_rates"] = {
         "fringe": preset.get("fringe", 0),
-        "oh": preset.get("oh", 0),
+        "oh_onsite": preset.get("oh_onsite", 0),
+        "oh_offsite": preset.get("oh_offsite", 0),
         "ga": preset.get("ga", 0),
         "fee": preset.get("fee", 0),
         "smh": preset.get("smh", 0),

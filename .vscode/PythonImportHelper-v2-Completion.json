@@ -2026,6 +2026,14 @@
         "documentation": {}
     },
     {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
         "label": "timedelta",
         "importPath": "datetime",
         "description": "datetime",
@@ -2473,6 +2481,14 @@
         "description": "auth",
         "isExtraImport": true,
         "detail": "auth",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
         "documentation": {}
     },
     {
@@ -5216,7 +5232,7 @@
         "kind": 6,
         "importPath": "backend.routers.organizations",
         "description": "backend.routers.organizations",
-        "peekOfCode": "class RatePreset(BaseModel):\n    \"\"\"Rate preset with name and all rates\"\"\"\n    id: str\n    name: str\n    fringe: float\n    oh: float\n    ga: float\n    fee: float\n    smh: float = 0.0\n    sub_fee: float = 0.0",
+        "peekOfCode": "class RatePreset(BaseModel):\n    \"\"\"Rate preset with name and all rates\"\"\"\n    id: str\n    name: str\n    fringe: float\n    oh_onsite: float\n    oh_offsite: float\n    ga: float\n    fee: float\n    smh: float = 0.0",
         "detail": "backend.routers.organizations",
         "documentation": {}
     },
@@ -5225,7 +5241,7 @@
         "kind": 6,
         "importPath": "backend.routers.organizations",
         "description": "backend.routers.organizations",
-        "peekOfCode": "class CreateRatePresetRequest(BaseModel):\n    \"\"\"Request to create a new rate preset\"\"\"\n    name: str\n    fringe: float\n    oh: float\n    ga: float\n    fee: float\n    smh: float = 0.0\n    sub_fee: float = 0.0\n    ga_passthrough: float = 0.0",
+        "peekOfCode": "class CreateRatePresetRequest(BaseModel):\n    \"\"\"Request to create a new rate preset\"\"\"\n    name: str\n    fringe: float\n    oh_onsite: float\n    oh_offsite: float\n    ga: float\n    fee: float\n    smh: float = 0.0\n    sub_fee: float = 0.0",
         "detail": "backend.routers.organizations",
         "documentation": {}
     },
@@ -5234,7 +5250,7 @@
         "kind": 6,
         "importPath": "backend.routers.organizations",
         "description": "backend.routers.organizations",
-        "peekOfCode": "class UpdateRatePresetRequest(BaseModel):\n    \"\"\"Request to update an existing rate preset\"\"\"\n    name: Optional[str] = None\n    fringe: Optional[float] = None\n    oh: Optional[float] = None\n    ga: Optional[float] = None\n    fee: Optional[float] = None\n    smh: Optional[float] = None\n    sub_fee: Optional[float] = None\n    ga_passthrough: Optional[float] = None",
+        "peekOfCode": "class UpdateRatePresetRequest(BaseModel):\n    \"\"\"Request to update an existing rate preset\"\"\"\n    name: Optional[str] = None\n    fringe: Optional[float] = None\n    oh_onsite: Optional[float] = None\n    oh_offsite: Optional[float] = None\n    ga: Optional[float] = None\n    fee: Optional[float] = None\n    smh: Optional[float] = None\n    sub_fee: Optional[float] = None",
         "detail": "backend.routers.organizations",
         "documentation": {}
     },
@@ -5252,7 +5268,7 @@
         "kind": 5,
         "importPath": "backend.routers.organizations",
         "description": "backend.routers.organizations",
-        "peekOfCode": "router = APIRouter(prefix=\"/api/organizations\", tags=[\"organizations\"])\nclass RatePreset(BaseModel):\n    \"\"\"Rate preset with name and all rates\"\"\"\n    id: str\n    name: str\n    fringe: float\n    oh: float\n    ga: float\n    fee: float\n    smh: float = 0.0",
+        "peekOfCode": "router = APIRouter(prefix=\"/api/organizations\", tags=[\"organizations\"])\nclass RatePreset(BaseModel):\n    \"\"\"Rate preset with name and all rates\"\"\"\n    id: str\n    name: str\n    fringe: float\n    oh_onsite: float\n    oh_offsite: float\n    ga: float\n    fee: float",
         "detail": "backend.routers.organizations",
         "documentation": {}
     },
@@ -5653,6 +5669,42 @@
         "documentation": {}
     },
     {
+        "label": "migrate_organizations",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_oh_rates",
+        "description": "backend.scripts.migrate_oh_rates",
+        "peekOfCode": "def migrate_organizations():\n    \"\"\"Migrate organization default_rates from 'oh' to 'oh_onsite' and 'oh_offsite'\"\"\"\n    print(\"\\n=== Migrating Organizations ===\")\n    mongodb = get_mongodb_client()\n    db = mongodb.get_database()\n    orgs = db[\"organizations\"]\n    # Find organizations with old 'oh' field\n    cursor = orgs.find({\"settings.default_rates.oh\": {\"$exists\": True}})\n    count = 0\n    for org in cursor:",
+        "detail": "backend.scripts.migrate_oh_rates",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_proposals_rates",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_oh_rates",
+        "description": "backend.scripts.migrate_oh_rates",
+        "peekOfCode": "def migrate_proposals_rates():\n    \"\"\"Migrate proposal.rates from 'oh' to 'oh_onsite' and 'oh_offsite'\"\"\"\n    print(\"\\n=== Migrating Proposal Rates ===\")\n    mongodb = get_mongodb_client()\n    db = mongodb.get_database()\n    proposals = db[\"proposals\"]\n    # Find proposals with old 'oh' field in rates\n    cursor = proposals.find({\"rates.oh\": {\"$exists\": True}})\n    count = 0\n    for prop in cursor:",
+        "detail": "backend.scripts.migrate_oh_rates",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_proposals_spreadsheet_data",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_oh_rates",
+        "description": "backend.scripts.migrate_oh_rates",
+        "peekOfCode": "def migrate_proposals_spreadsheet_data():\n    \"\"\"Migrate proposal.spreadsheet_data.rates from 'oh' to 'oh_onsite' and 'oh_offsite'\"\"\"\n    print(\"\\n=== Migrating Proposal Spreadsheet Data Rates ===\")\n    mongodb = get_mongodb_client()\n    db = mongodb.get_database()\n    proposals = db[\"proposals\"]\n    # Find proposals with old 'oh' field in spreadsheet_data.rates\n    cursor = proposals.find({\"spreadsheet_data.rates.oh\": {\"$exists\": True}})\n    count = 0\n    for prop in cursor:",
+        "detail": "backend.scripts.migrate_oh_rates",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_rate_presets",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_oh_rates",
+        "description": "backend.scripts.migrate_oh_rates",
+        "peekOfCode": "def migrate_rate_presets():\n    \"\"\"Migrate rate presets from 'oh' to 'oh_onsite' and 'oh_offsite'\"\"\"\n    print(\"\\n=== Migrating Rate Presets ===\")\n    mongodb = get_mongodb_client()\n    db = mongodb.get_database()\n    orgs = db[\"organizations\"]\n    # Find organizations with rate presets containing old 'oh' field\n    cursor = orgs.find({\"settings.rate_presets\": {\"$exists\": True, \"$ne\": []}})\n    orgs_updated = 0\n    presets_migrated = 0",
+        "detail": "backend.scripts.migrate_oh_rates",
+        "documentation": {}
+    },
+    {
         "label": "migrate_existing_users",
         "kind": 2,
         "importPath": "backend.scripts.migrate_terms",
@@ -6017,7 +6069,7 @@
         "kind": 2,
         "importPath": "backend.utils.pipeline",
         "description": "backend.utils.pipeline",
-        "peekOfCode": "def calculate_bls_fblr_comparison(\n    bls_wages: Dict[str, float],\n    experience: Optional[float],\n    organization_rates: Dict[str, float],\n    standard_fte_hours: int = 1880\n) -> Optional[Dict[str, Any]]:\n    \"\"\"\n    Calculate BLS FBLR for comparison with GSA rates.\n    Uses the same logic as BLS flow to select wage based on experience,\n    then calculates FBLR using organization's indirect rates (including fee).",
+        "peekOfCode": "def calculate_bls_fblr_comparison(\n    bls_wages: Dict[str, float],\n    experience: Optional[float],\n    organization_rates: Dict[str, float],\n    standard_fte_hours: int = 1880,\n    location_type: str = \"On-Site\"\n) -> Optional[Dict[str, Any]]:\n    \"\"\"\n    Calculate BLS FBLR for comparison with GSA rates.\n    Uses the same logic as BLS flow to select wage based on experience,",
         "detail": "backend.utils.pipeline",
         "documentation": {}
     },

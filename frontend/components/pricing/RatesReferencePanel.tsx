@@ -45,6 +45,9 @@ export const RatesReferencePanel = ({
   const [appliedPresetName, setAppliedPresetName] = useState<string>('');
   const [showPresetModal, setShowPresetModal] = useState(false);
 
+  // OH sync state - sync on-site and off-site rates
+  const [syncOHRates, setSyncOHRates] = useState(rates.oh_onsite === rates.oh_offsite);
+
   // Get rate presets from organization
   const ratePresets = organization?.settings?.rate_presets || [];
 
@@ -53,9 +56,15 @@ export const RatesReferencePanel = ({
     if (ratePresets.length === 0) return;
 
     const matchingPreset = ratePresets.find(preset => {
+      const presetOhOnsite = preset.oh_onsite !== undefined ? preset.oh_onsite : preset.oh || 0;
+      const presetOhOffsite = preset.oh_offsite !== undefined ? preset.oh_offsite : preset.oh || 0;
+      const currentOhOnsite = rates.oh_onsite !== undefined ? rates.oh_onsite : rates.oh || 0;
+      const currentOhOffsite = rates.oh_offsite !== undefined ? rates.oh_offsite : rates.oh || 0;
+
       const ratesMatch =
         Math.abs(preset.fringe - rates.fringe) < 0.0001 &&
-        Math.abs(preset.oh - rates.oh) < 0.0001 &&
+        Math.abs(presetOhOnsite - currentOhOnsite) < 0.0001 &&
+        Math.abs(presetOhOffsite - currentOhOffsite) < 0.0001 &&
         Math.abs(preset.ga - rates.ga) < 0.0001 &&
         Math.abs(preset.fee - rates.fee) < 0.0001 &&
         Math.abs((preset.smh || 0) - (rates.smh || 0)) < 0.0001 &&
@@ -150,7 +159,8 @@ export const RatesReferencePanel = ({
     // Apply preset rates immediately (real-time update)
     const newRates: IndirectRates = {
       fringe: preset.fringe,
-      oh: preset.oh,
+      oh_onsite: preset.oh_onsite !== undefined ? preset.oh_onsite : preset.oh || 0.0711,
+      oh_offsite: preset.oh_offsite !== undefined ? preset.oh_offsite : preset.oh || 0.0711,
       ga: preset.ga,
       fee: preset.fee,
       smh: preset.smh,
@@ -233,15 +243,47 @@ export const RatesReferencePanel = ({
               suffix="%"
               size="sm"
             />
-            <Input
-              label="Overhead (OH) Rate"
-              type="number"
-              value={formatRateValue(rates.oh)}
-              onChange={(e) => updateDefaultRate('oh', e.target.value)}
-              placeholder="0"
-              suffix="%"
-              size="sm"
-            />
+            <div>
+              <Input
+                label="OH (On-Site) Rate"
+                type="number"
+                value={formatRateValue(rates.oh_onsite)}
+                onChange={(e) => {
+                  updateDefaultRate('oh_onsite', e.target.value);
+                  if (syncOHRates) {
+                    updateDefaultRate('oh_offsite', e.target.value);
+                  }
+                }}
+                placeholder="0"
+                suffix="%"
+                size="sm"
+              />
+            </div>
+            <div>
+              <Input
+                label="OH (Off-Site) Rate"
+                type="number"
+                value={formatRateValue(rates.oh_offsite)}
+                onChange={(e) => {
+                  updateDefaultRate('oh_offsite', e.target.value);
+                  if (syncOHRates) {
+                    updateDefaultRate('oh_onsite', e.target.value);
+                  }
+                }}
+                placeholder="0"
+                suffix="%"
+                size="sm"
+              />
+              <label className="flex items-center gap-2 text-sm mt-2 text-muted-foreground cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={syncOHRates}
+                  onChange={(e) => setSyncOHRates(e.target.checked)}
+                  className="rounded border-border"
+                />
+                <span>Keep On-Site and Off-Site rates the same</span>
+              </label>
+            </div>
             <Input
               label="G&A Rate"
               type="number"
@@ -380,9 +422,15 @@ export const RatesReferencePanel = ({
                         </div>
                       </div>
                       <div className="bg-muted/50 rounded px-2 py-1.5">
-                        <div className="text-muted-foreground mb-0.5">OH</div>
+                        <div className="text-muted-foreground mb-0.5">OH On-Site</div>
                         <div className="font-mono font-semibold text-foreground">
-                          {toPercentageDisplay(preset.oh)}%
+                          {toPercentageDisplay(preset.oh_onsite !== undefined ? preset.oh_onsite : preset.oh || 0)}%
+                        </div>
+                      </div>
+                      <div className="bg-muted/50 rounded px-2 py-1.5">
+                        <div className="text-muted-foreground mb-0.5">OH Off-Site</div>
+                        <div className="font-mono font-semibold text-foreground">
+                          {toPercentageDisplay(preset.oh_offsite !== undefined ? preset.oh_offsite : preset.oh || 0)}%
                         </div>
                       </div>
                       <div className="bg-muted/50 rounded px-2 py-1.5">
