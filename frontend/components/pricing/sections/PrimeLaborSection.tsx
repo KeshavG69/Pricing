@@ -160,6 +160,7 @@ export const PrimeLaborSection = ({
   const wageSource = usePricingStore((state) => state.wageSource);
   const subcontractors = usePricingStore((state) => state.subcontractors);
   const updatePosition = usePricingStore((state) => state.updatePosition);
+  const advancedModeVersion = usePricingStore((state) => state.advancedModeVersion);
   const isGSAProposal = wageSource?.type === 'gsa';
 
   // Create a version string that changes when rates change to force re-render
@@ -348,7 +349,7 @@ export const PrimeLaborSection = ({
     });
 
     return totals;
-  }, [positions, rates, escalationRates, totalYears]);
+  }, [positions, rates, escalationRates, totalYears, advancedModeVersion]);
 
   // Build order-based position mapping for subcontractors without original_position_id
   // Groups positions by labor_category and tracks which ones have been matched
@@ -495,7 +496,7 @@ export const PrimeLaborSection = ({
     });
 
     return rows;
-  }, [positions, expandedPositions, rates, escalationRates, totalYears, columnTotals, getLinkedSubcontractorPositions]);
+  }, [positions, expandedPositions, rates, escalationRates, totalYears, columnTotals, getLinkedSubcontractorPositions, advancedModeVersion]);
 
   // Get cell styling for manual overrides
   const getCellClassName = (positionId: string, year: string, field: string) => {
@@ -1607,7 +1608,7 @@ export const PrimeLaborSection = ({
         style={{ height: 'calc(100vh - 280px)', minHeight: 400 }}
       >
         <DataGrid
-          key={`${rates.fringe}-${rates.oh_onsite}-${rates.oh_offsite}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}`}
+          key={`${rates.fringe}-${rates.oh_onsite}-${rates.oh_offsite}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}-v${advancedModeVersion}`}
           columns={columns}
           rows={gridRows}
           onRowsChange={handleRowsChange}

@@ -70,6 +70,7 @@ export default function OverviewTab() {
     escalationRates,
     totalYears,
     extensions,
+    advancedModeVersion,
   } = usePricingStore();
 
   // Calculate all costs with FBLR breakdown
@@ -241,7 +242,7 @@ export default function OverviewTab() {
       odcTotal,
       grandTotal,
     };
-  }, [positions, subcontractors, travel, odcs, rates, escalationRates]);
+  }, [positions, subcontractors, travel, odcs, rates, escalationRates, advancedModeVersion]);
 
   // Calculate year-by-year breakdown
   const yearBreakdown = useMemo(() => {
@@ -412,7 +413,7 @@ export default function OverviewTab() {
     });
 
     return breakdown;
-  }, [positions, subcontractors, travel, odcs, rates, escalationRates, totalYears]);
+  }, [positions, subcontractors, travel, odcs, rates, escalationRates, totalYears, advancedModeVersion]);
 
   const formatCurrency = (value: number) => {
     return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
