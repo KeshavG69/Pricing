@@ -366,6 +366,7 @@ export interface SubcontractorPosition {
   rate: number;
   hours_per_year: Record<string, number>;
   original_position_id?: string; // Links to prime position ID this was converted from
+  original_total_hours?: Record<string, number>; // Original prime hours before any sub allocation
   location_type?: string; // 'On-Site' or 'Off-Site'
 }
 

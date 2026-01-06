@@ -66,6 +66,15 @@ interface PricingState {
   deletePosition: (id: string) => void;
   addSubcontractor: (subcontractor: Omit<Subcontractor, 'id'>) => void;
   deleteSubcontractor: (id: string) => void;
+  deleteSubcontractorPosition: (subId: string, posIndex: number) => void;
+  updateSubcontractorPosition: (subId: string, posIndex: number, updates: Partial<SubcontractorPosition>) => void;
+  transferSubcontractorHours: (data: {
+    sourceSubcontractorId: string;
+    sourcePositionIndex: number;
+    targetSubcontractorId?: string;
+    newSubcontractorName?: string;
+    hoursAllocation: Record<string, number>;
+  }) => Promise<void>;
   convertToSubcontractor: (data: ConversionData) => Promise<void>;
   addTravel: (travel: Omit<TravelItem, 'id'>) => void;
   updateTravel: (id: string, updates: Partial<TravelItem>) => void;
@@ -93,7 +102,7 @@ interface PricingState {
   recalculateAdvanced: () => Promise<void>;
   toggleRatesReference: () => void;
   setActiveTab: (tab: 'files' | 'overview' | 'main' | 'subcontractors' | 'rate-table') => void;
-  preCreateSubcontractors: (subs: { name: string; worksharePercent: number }[]) => void;
+  preCreateSubcontractors: (subs: { name: string }[]) => void;
   autoAllocateWorkshare: () => Promise<void>;
 }
 
@@ -977,10 +986,338 @@ export const usePricingStore = create<PricingState>((set, get) => {
     },
 
     deleteSubcontractor: (id) => {
+      const state = get();
+
+      // Find the subcontractor being deleted
+      const subToDelete = state.subcontractors.find(s => s.id === id);
+      if (!subToDelete) {
+        console.error('[DELETE SUB] Subcontractor not found:', id);
+        return;
+      }
+
+      console.log('[DELETE SUB] Deleting subcontractor:', subToDelete.name);
+      console.log('[DELETE SUB] Positions to return:', subToDelete.positions.length);
+
+      // Build map of prime position ID -> updated hours
+      const primeHoursUpdates: Record<string, Record<string, number>> = {};
+
+      // For each position in the deleted subcontractor
+      subToDelete.positions.forEach(subPos => {
+        if (!subPos.original_position_id) {
+          console.log('[DELETE SUB] Position has no original_position_id, skipping:', subPos.labor_category);
+          return;
+        }
+
+        const primeId = subPos.original_position_id;
+        const primePos = state.positions.find(p => p.id === primeId);
+
+        if (!primePos) {
+          console.log('[DELETE SUB] Prime position not found:', primeId);
+          return;
+        }
+
+        // Simple logic: add the deleted sub's hours back to current prime hours
+        const newPrimeHours: Record<string, number> = {};
+
+        // Get all years from both prime and sub positions
+        const allYears = new Set([
+          ...Object.keys(primePos.hours_per_year),
+          ...Object.keys(subPos.hours_per_year)
+        ]);
+
+        allYears.forEach(year => {
+          const currentPrimeHours = primePos.hours_per_year[year] || 0;
+          const returningHours = subPos.hours_per_year[year] || 0;
+          newPrimeHours[year] = currentPrimeHours + returningHours;
+        });
+
+        console.log('[DELETE SUB] Adding hours back to prime', primeId, ':', newPrimeHours);
+        console.log('[DELETE SUB]   Current prime hours:', primePos.hours_per_year);
+        console.log('[DELETE SUB]   Returning hours:', subPos.hours_per_year);
+
+        primeHoursUpdates[primeId] = newPrimeHours;
+      });
+
+      // Update state: positions and subcontractors
+      set((prevState) => {
+        // Update prime positions with returned hours
+        const updatedPositions = prevState.positions.map(pos => {
+          if (primeHoursUpdates[pos.id]) {
+            return {
+              ...pos,
+              hours_per_year: { ...primeHoursUpdates[pos.id] }
+            };
+          }
+          return pos;
+        });
+
+        return {
+          positions: updatedPositions,
+          subcontractors: prevState.subcontractors.filter((s) => s.id !== id),
+          isDirty: true,
+        };
+      });
+
+      // Re-transform if in advanced mode
+      if (state.advancedMode) {
+        console.log('[DELETE SUB] Re-transforming to advanced mode');
+        performTransformToAdvanced();
+      }
+
+      console.log('[DELETE SUB] Delete complete, triggering auto-save');
+      debouncedAutoSave();
+    },
+
+    deleteSubcontractorPosition: (subId, posIndex) => {
+      const state = get();
+
+      // Find the subcontractor
+      const sub = state.subcontractors.find(s => s.id === subId);
+      if (!sub || !sub.positions[posIndex]) {
+        console.error('[DELETE SUB POS] Subcontractor or position not found:', subId, posIndex);
+        return;
+      }
+
+      const subPos = sub.positions[posIndex];
+      console.log('[DELETE SUB POS] Deleting position:', subPos.labor_category, 'from', sub.name);
+
+      // Return hours to prime position if linked
+      let primeHoursUpdate: Record<string, number> | null = null;
+      let primeId: string | null = null;
+
+      if (subPos.original_position_id) {
+        primeId = subPos.original_position_id;
+        const primePos = state.positions.find(p => p.id === primeId);
+
+        if (primePos) {
+          // Simple logic: add the deleted sub position's hours back to current prime hours
+          primeHoursUpdate = {};
+
+          // Get all years from both prime and sub positions
+          const allYears = new Set([
+            ...Object.keys(primePos.hours_per_year),
+            ...Object.keys(subPos.hours_per_year)
+          ]);
+
+          allYears.forEach(year => {
+            const currentPrimeHours = primePos.hours_per_year[year] || 0;
+            const returningHours = subPos.hours_per_year[year] || 0;
+            primeHoursUpdate![year] = currentPrimeHours + returningHours;
+          });
+
+          console.log('[DELETE SUB POS] Adding hours back to prime:', primeHoursUpdate);
+          console.log('[DELETE SUB POS]   Current prime hours:', primePos.hours_per_year);
+          console.log('[DELETE SUB POS]   Returning hours:', subPos.hours_per_year);
+        } else {
+          console.log('[DELETE SUB POS] Prime position not found:', primeId);
+        }
+      }
+
+      // Update state
+      set((prevState) => {
+        // Update prime position if needed
+        const updatedPositions = primeId && primeHoursUpdate
+          ? prevState.positions.map(pos => {
+              if (pos.id === primeId) {
+                return {
+                  ...pos,
+                  hours_per_year: { ...primeHoursUpdate! }
+                };
+              }
+              return pos;
+            })
+          : prevState.positions;
+
+        // Remove position from subcontractor
+        const updatedSubcontractors = prevState.subcontractors
+          .map(s => {
+            if (s.id === subId) {
+              const newPositions = s.positions.filter((_, idx) => idx !== posIndex);
+              return { ...s, positions: newPositions };
+            }
+            return s;
+          })
+          // Remove subcontractor if it has no positions left
+          .filter(s => s.positions.length > 0);
+
+        return {
+          positions: updatedPositions,
+          subcontractors: updatedSubcontractors,
+          isDirty: true,
+        };
+      });
+
+      // Re-transform if in advanced mode
+      if (state.advancedMode) {
+        console.log('[DELETE SUB POS] Re-transforming to advanced mode');
+        performTransformToAdvanced();
+      }
+
+      console.log('[DELETE SUB POS] Delete complete, triggering auto-save');
+      debouncedAutoSave();
+    },
+
+    updateSubcontractorPosition: (subId, posIndex, updates) => {
       set((state) => ({
-        subcontractors: state.subcontractors.filter((s) => s.id !== id),
+        subcontractors: state.subcontractors.map((sub) => {
+          if (sub.id === subId && sub.positions[posIndex]) {
+            const updatedPositions = [...sub.positions];
+            updatedPositions[posIndex] = { ...updatedPositions[posIndex], ...updates };
+            return { ...sub, positions: updatedPositions };
+          }
+          return sub;
+        }),
         isDirty: true,
       }));
+      debouncedAutoSave();
+    },
+
+    transferSubcontractorHours: async (data) => {
+      console.log('[TRANSFER] Starting transfer:', data);
+      const state = get();
+
+      // Find source subcontractor and position
+      const sourceSub = state.subcontractors.find(s => s.id === data.sourceSubcontractorId);
+      if (!sourceSub) {
+        console.error('[TRANSFER] Source subcontractor not found:', data.sourceSubcontractorId);
+        return;
+      }
+
+      const sourcePos = sourceSub.positions[data.sourcePositionIndex];
+      if (!sourcePos) {
+        console.error('[TRANSFER] Source position not found at index:', data.sourcePositionIndex);
+        return;
+      }
+
+      console.log('[TRANSFER] Source position:', sourcePos.labor_category, 'from', sourceSub.name);
+
+      // Find or create target subcontractor
+      let targetSub = state.subcontractors.find(s => s.id === data.targetSubcontractorId);
+      let isNewTargetSub = false;
+
+      if (!targetSub && data.newSubcontractorName) {
+        const newId = `sub_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+        targetSub = {
+          id: newId,
+          name: data.newSubcontractorName,
+          positions: [],
+        };
+        isNewTargetSub = true;
+        console.log('[TRANSFER] Creating new target subcontractor:', data.newSubcontractorName);
+      }
+
+      if (!targetSub) {
+        console.error('[TRANSFER] No target subcontractor specified');
+        return;
+      }
+
+      // Calculate remaining hours for source position after transfer
+      const remainingSourceHours: Record<string, number> = {};
+      let sourceHasRemainingHours = false;
+
+      Object.entries(sourcePos.hours_per_year).forEach(([year, hours]) => {
+        const transferring = data.hoursAllocation[year] || 0;
+        const remaining = hours - transferring;
+        remainingSourceHours[year] = remaining;
+        if (remaining > 0) sourceHasRemainingHours = true;
+      });
+
+      console.log('[TRANSFER] Remaining source hours:', remainingSourceHours);
+
+      // Check if target already has a position with the same labor_category and original_position_id
+      const existingTargetPosIndex = targetSub.positions.findIndex(
+        p => p.labor_category === sourcePos.labor_category &&
+             p.original_position_id === sourcePos.original_position_id
+      );
+
+      // Build updated target subcontractor
+      let updatedTargetSub: typeof targetSub;
+
+      if (existingTargetPosIndex >= 0) {
+        // Merge hours into existing position
+        const existingPos = targetSub.positions[existingTargetPosIndex];
+        const mergedHours: Record<string, number> = { ...existingPos.hours_per_year };
+        Object.entries(data.hoursAllocation).forEach(([year, hours]) => {
+          mergedHours[year] = (mergedHours[year] || 0) + hours;
+        });
+
+        const updatedPositions = [...targetSub.positions];
+        updatedPositions[existingTargetPosIndex] = {
+          ...existingPos,
+          hours_per_year: mergedHours,
+        };
+
+        updatedTargetSub = { ...targetSub, positions: updatedPositions };
+        console.log('[TRANSFER] Merged into existing target position');
+      } else {
+        // Create new position in target
+        const newTargetPos: SubcontractorPosition = {
+          labor_category: sourcePos.labor_category,
+          rate: sourcePos.rate,
+          hours_per_year: { ...data.hoursAllocation },
+          original_position_id: sourcePos.original_position_id,
+          original_total_hours: sourcePos.original_total_hours,
+          location_type: sourcePos.location_type,
+        };
+
+        updatedTargetSub = {
+          ...targetSub,
+          positions: [...targetSub.positions, newTargetPos],
+        };
+        console.log('[TRANSFER] Created new position in target');
+      }
+
+      // Update state
+      set((prevState) => {
+        let updatedSubcontractors = prevState.subcontractors.map(sub => {
+          // Update source subcontractor
+          if (sub.id === data.sourceSubcontractorId) {
+            if (sourceHasRemainingHours) {
+              // Update source position with remaining hours
+              const updatedPositions = [...sub.positions];
+              updatedPositions[data.sourcePositionIndex] = {
+                ...sourcePos,
+                hours_per_year: remainingSourceHours,
+              };
+              return { ...sub, positions: updatedPositions };
+            } else {
+              // Remove source position entirely
+              return {
+                ...sub,
+                positions: sub.positions.filter((_, idx) => idx !== data.sourcePositionIndex),
+              };
+            }
+          }
+
+          // Update target subcontractor (if existing)
+          if (sub.id === targetSub!.id) {
+            return updatedTargetSub;
+          }
+
+          return sub;
+        });
+
+        // Add new target subcontractor if created
+        if (isNewTargetSub) {
+          updatedSubcontractors = [...updatedSubcontractors, updatedTargetSub];
+        }
+
+        // Remove subcontractors with no positions
+        updatedSubcontractors = updatedSubcontractors.filter(s => s.positions.length > 0);
+
+        return {
+          subcontractors: updatedSubcontractors,
+          isDirty: true,
+        };
+      });
+
+      // Re-transform if in advanced mode
+      if (state.advancedMode) {
+        console.log('[TRANSFER] Re-transforming to advanced mode');
+        performTransformToAdvanced();
+      }
+
+      console.log('[TRANSFER] Transfer complete, triggering auto-save');
       debouncedAutoSave();
     },
 
@@ -1014,22 +1351,48 @@ export const usePricingStore = create<PricingState>((set, get) => {
         return;
       }
 
-      // 2. Create subcontractor position (transfer data except rates)
+      // 2. Calculate original_total_hours
+      // This tracks the original prime hours before ANY subcontractor allocation
+      // Formula: prime_hours = original_total_hours - sum(all_linked_sub_hours)
+      let originalTotalHours: Record<string, number>;
+
+      // Check if there are existing subs linked to this prime position
+      const existingSubPositions = state.subcontractors.flatMap(sub =>
+        sub.positions.filter(pos => pos.original_position_id === position.id)
+      );
+
+      if (existingSubPositions.length > 0 && existingSubPositions[0].original_total_hours) {
+        // Copy from existing sub (they all share the same original)
+        originalTotalHours = { ...existingSubPositions[0].original_total_hours };
+        console.log('[CONVERT] Using existing original_total_hours:', originalTotalHours);
+      } else {
+        // First time converting - original = current prime hours + hours being allocated
+        originalTotalHours = {};
+        Object.keys(position.hours_per_year).forEach(year => {
+          const primeHours = position.hours_per_year[year] || 0;
+          const allocating = data.hoursAllocation[year] || 0;
+          originalTotalHours[year] = primeHours + allocating;
+        });
+        console.log('[CONVERT] First conversion - calculated original_total_hours:', originalTotalHours);
+      }
+
+      // 3. Create subcontractor position (transfer data except rates)
       const subPosition: SubcontractorPosition = {
         labor_category: position.labor_category,
         rate: data.rate,
         hours_per_year: data.hoursAllocation,
         original_position_id: position.id, // Link back to prime position
+        original_total_hours: originalTotalHours, // Track original hours for hour return on delete
         location_type: position.location_type || 'On-Site', // Inherit from prime position
       };
 
-      // 3. Add position to subcontractor
+      // 4. Add position to subcontractor
       const updatedSubcontractor = {
         ...subcontractor,
         positions: [...subcontractor.positions, subPosition],
       };
 
-      // 4. Calculate remaining hours for prime position
+      // 5. Calculate remaining hours for prime position
       const remainingHours: Record<string, number> = {};
 
       Object.entries(position.hours_per_year).forEach(([year, hours]) => {
@@ -1696,8 +2059,6 @@ export const usePricingStore = create<PricingState>((set, get) => {
         id: `sub_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         name: sub.name,
         positions: [],
-        // Store workshare percent as metadata (optional, for future use)
-        worksharePercent: sub.worksharePercent,
       } as Subcontractor));
 
       set((state) => ({

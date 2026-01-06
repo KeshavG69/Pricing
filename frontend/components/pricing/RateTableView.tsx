@@ -15,10 +15,10 @@ interface RateTableViewProps {
 interface RateTableRow {
   id: string;
   laborCategory: string;
-  baseRate: number;
-  afterFee: number;
-  afterSMH: number;
-  finalRate: number;
+  baseRate: number;      // Input: Subcontractor base rate (what you pay them)
+  afterFee: number;      // After adding Fee
+  afterSMH: number;      // After adding S&MH
+  finalRate: number;     // Output: Final billable rate (what you bill government)
 }
 
 export const RateTableView = ({
@@ -41,14 +41,16 @@ export const RateTableView = ({
     return `${(value * 100).toFixed(2)}%`;
   };
 
-  // Calculate example (first subcontractor position)
+  // Calculate example (first subcontractor position) - FORWARD CALCULATION
   const exampleCalculation = useMemo(() => {
     if (subcontractors.length === 0 || subcontractors[0].positions.length === 0) {
       return null;
     }
 
     const firstPosition = subcontractors[0].positions[0];
-    const baseRate = firstPosition.rate;
+    const baseRate = firstPosition.rate; // Input: base rate (what you pay subcontractor)
+
+    // Forward calculation: add Fee, then add S&MH
     const afterFee = baseRate * (1 + feeRate);
     const finalRate = afterFee * (1 + smhRate);
 
@@ -62,13 +64,15 @@ export const RateTableView = ({
     };
   }, [subcontractors, feeRate, smhRate]);
 
-  // Create rate table rows
+  // Create rate table rows - FORWARD CALCULATION
   const rows = useMemo<RateTableRow[]>(() => {
     const allRows: RateTableRow[] = [];
 
     subcontractors.forEach((sub) => {
       sub.positions.forEach((pos, index) => {
-        const baseRate = pos.rate;
+        const baseRate = pos.rate; // Input: base rate (what you pay subcontractor)
+
+        // Forward calculation: add Fee, then add S&MH
         const afterFee = baseRate * (1 + feeRate);
         const finalRate = afterFee * (1 + smhRate);
 
@@ -86,7 +90,7 @@ export const RateTableView = ({
     return allRows;
   }, [subcontractors, feeRate, smhRate]);
 
-  // Generate columns
+  // Generate columns - FORWARD ORDER
   const columns = useMemo<Column<RateTableRow>[]>(() => {
     return [
       {
@@ -104,7 +108,7 @@ export const RateTableView = ({
       {
         key: 'baseRate',
         name: 'Base Rate',
-        width: 150,
+        width: 180,
         resizable: true,
         renderCell: ({ row }) => (
           <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
@@ -117,7 +121,7 @@ export const RateTableView = ({
       {
         key: 'afterFee',
         name: `After Fee (+${formatPercentage(feeRate)})`,
-        width: 180,
+        width: 200,
         resizable: true,
         renderCell: ({ row }) => (
           <div className="flex items-center justify-end h-full px-2 bg-yellow-500/5">
@@ -130,7 +134,7 @@ export const RateTableView = ({
       {
         key: 'afterSMH',
         name: `After S&MH (+${formatPercentage(smhRate)})`,
-        width: 180,
+        width: 200,
         resizable: true,
         renderCell: ({ row }) => (
           <div className="flex items-center justify-end h-full px-2 bg-blue-500/5">
@@ -191,7 +195,7 @@ export const RateTableView = ({
           Subcontractor Fee/MH Rate Table
         </h2>
         <p className="text-sm text-muted-foreground">
-          Shows step-by-step markup calculations for subcontractor labor rates
+          Shows how base rates are marked up to final billable rates with Fee and S&MH
         </p>
       </div>
 
@@ -202,7 +206,7 @@ export const RateTableView = ({
             Example Calculation
           </h3>
           <div className="flex items-center gap-4 flex-wrap">
-            {/* Base Rate */}
+            {/* Base Rate (Input) */}
             <div className="flex flex-col items-center">
               <span className="text-xs text-muted-foreground mb-1">Base Rate</span>
               <div className="bg-purple-50 border border-purple-200 rounded-lg px-4 py-2">
@@ -262,9 +266,9 @@ export const RateTableView = ({
               </svg>
             </div>
 
-            {/* Final Rate */}
+            {/* Final Rate (Output) */}
             <div className="flex flex-col items-center">
-              <span className="text-xs text-muted-foreground mb-1">Final Rate</span>
+              <span className="text-xs text-muted-foreground mb-1">Final Billable Rate</span>
               <div className="bg-emerald-50 border border-emerald-200 rounded-lg px-4 py-2">
                 <span className="text-emerald-600 font-bold text-xl">
                   {formatCurrency(exampleCalculation.finalRate)}

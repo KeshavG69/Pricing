@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     # MongoDB configuration
     MONGODB_URL: str = "mongodb://localhost:27017"
     MONGODB_DATABASE: str = "testing"
+    EXA_API_KEY:str=""
 
     # CareerOneStop API (free gov API for wage data by SOC code)
     CAREERONESTOP_API_KEY: str = ""  # Register at careeronestop.org
