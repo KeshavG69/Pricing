@@ -11,6 +11,7 @@ export interface DialogProps {
   children: React.ReactNode;
   footer?: React.ReactNode;
   size?: 'sm' | 'md' | 'lg' | 'xl';
+  hideCloseButton?: boolean;
 }
 
 const sizeClasses = {
@@ -27,6 +28,7 @@ export const Dialog = ({
   children,
   footer,
   size = 'md',
+  hideCloseButton = false,
 }: DialogProps) => {
   return (
     <DialogPrimitive.Root open={isOpen} onOpenChange={onClose}>
@@ -55,10 +57,12 @@ export const Dialog = ({
             <DialogPrimitive.Title className="text-lg font-semibold text-foreground">
               {title}
             </DialogPrimitive.Title>
-            <DialogPrimitive.Close className="rounded-sm opacity-70 hover:opacity-100 transition-opacity">
-              <X className="h-5 w-5 text-muted-foreground" />
-              <span className="sr-only">Close</span>
-            </DialogPrimitive.Close>
+            {!hideCloseButton && (
+              <DialogPrimitive.Close className="rounded-sm opacity-70 hover:opacity-100 transition-opacity">
+                <X className="h-5 w-5 text-muted-foreground" />
+                <span className="sr-only">Close</span>
+              </DialogPrimitive.Close>
+            )}
           </div>
 
           {/* Content */}
