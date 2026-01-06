@@ -11,14 +11,21 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TransferSubcontractorModal } from './TransferSubcontractorModal';
 import { Trash2, Building2, ChevronDown, ArrowRightLeft } from 'lucide-react';
 
+interface YearData {
+  rate: number;      // Escalated rate for this year
+  hours: number;     // Hours for this year
+  amount: number;    // rate × hours
+}
+
 interface SubcontractorGridRow {
   id: string;
   posIndex: number; // Track position index for operations
   labor_category: string;
-  rate: number;
+  baseRate: number; // Base rate (Year 1)
   hours_per_year: Record<string, number>;
+  yearData: Record<string, YearData>; // Per-year rate, hours, amount
   totalHours: number;
-  totalCost: number;
+  totalAmount: number;
 }
 
 interface ContextMenuState {
@@ -29,7 +36,20 @@ interface ContextMenuState {
 }
 
 export const SubcontractorSection = () => {
-  const { subcontractors, totalYears, deleteSubcontractor, deleteSubcontractorPosition, updateSubcontractorPosition } = usePricingStore();
+  const { subcontractors, totalYears, escalationRates, deleteSubcontractor, deleteSubcontractorPosition, updateSubcontractorPosition } = usePricingStore();
+
+  // Helper to calculate escalated rate for a given year
+  // Uses escalation rates from Rates Reference table
+  const getEscalatedRate = useCallback((baseRate: number, year: number): number => {
+    let rate = baseRate;
+    // Apply compound escalation for each year
+    for (let y = 1; y < year; y++) {
+      const escalationKey = `${y}_to_${y + 1}`;
+      const escalation = escalationRates?.[escalationKey] || 0;
+      rate = rate * (1 + escalation);
+    }
+    return rate;
+  }, [escalationRates]);
 
   // Delete confirmation state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -89,25 +109,45 @@ export const SubcontractorSection = () => {
     return subcontractors.find((s) => s.id === selectedSubId);
   }, [subcontractors, selectedSubId]);
 
-  // Transform positions into grid rows
+  // Transform positions into grid rows with escalated rates
   const gridRows: SubcontractorGridRow[] = useMemo(() => {
     if (!selectedSub) return [];
 
     return selectedSub.positions.map((pos, index) => {
-      const totalHours = Object.values(pos.hours_per_year).reduce((sum, h) => sum + h, 0);
-      const totalCost = totalHours * pos.rate;
+      const baseRate = pos.rate;
+      const yearData: Record<string, YearData> = {};
+      let totalHours = 0;
+      let totalAmount = 0;
+
+      // Calculate per-year data with escalation
+      for (let year = 1; year <= totalYears; year++) {
+        const yearStr = year.toString();
+        const escalatedRate = getEscalatedRate(baseRate, year);
+        const hours = pos.hours_per_year[yearStr] || 0;
+        const amount = escalatedRate * hours;
+
+        yearData[yearStr] = {
+          rate: escalatedRate,
+          hours,
+          amount,
+        };
+
+        totalHours += hours;
+        totalAmount += amount;
+      }
 
       return {
         id: `${selectedSub.id}-${index}`,
-        posIndex: index, // Track position index for operations
+        posIndex: index,
         labor_category: pos.labor_category,
-        rate: pos.rate,
+        baseRate,
         hours_per_year: pos.hours_per_year,
+        yearData,
         totalHours,
-        totalCost,
+        totalAmount,
       };
     });
-  }, [selectedSub]);
+  }, [selectedSub, totalYears, escalationRates, getEscalatedRate]);
 
   // Context menu handlers
   const handleContextMenu = useCallback((event: React.MouseEvent, row: SubcontractorGridRow) => {
@@ -149,28 +189,34 @@ export const SubcontractorSection = () => {
       {
         key: 'labor_category',
         name: 'Labor Category',
-        width: 300,
+        width: 280,
         frozen: true,
+        resizable: true,
+        headerCellClass: 'bg-muted/50 font-semibold text-foreground border-r border-border',
+        cellClass: 'border-r border-border',
         renderCell: ({ row }) => (
-          <div className="flex items-center h-full px-2">
-            <span className="font-medium text-sm">{row.labor_category}</span>
+          <div className="flex items-center h-full px-3 bg-muted/20">
+            <span className="font-semibold text-sm text-foreground">{row.labor_category}</span>
           </div>
         ),
       },
       {
-        key: 'rate',
-        name: 'Rate ($/hr)',
+        key: 'baseRate',
+        name: 'Base Rate ($/hr)',
         width: 120,
+        resizable: true,
+        headerCellClass: 'bg-emerald-50 font-semibold text-emerald-700 border-r border-border',
+        cellClass: 'border-r border-border',
         renderCell: ({ row }) => (
-          <div className="flex items-center justify-end h-full px-2">
-            <span className="font-semibold text-emerald-600">
-              ${row.rate.toFixed(2)}
+          <div className="flex items-center justify-end h-full px-3 bg-emerald-50/30">
+            <span className="font-bold text-emerald-600">
+              ${row.baseRate.toFixed(2)}
             </span>
           </div>
         ),
         editable: true,
         renderEditCell: (props: RenderEditCellProps<SubcontractorGridRow>) => {
-          const [inputValue, setInputValue] = useState(props.row.rate.toFixed(2));
+          const [inputValue, setInputValue] = useState(props.row.baseRate.toFixed(2));
 
           const handleSave = () => {
             const newRate = parseFloat(inputValue) || 0;
@@ -185,7 +231,7 @@ export const SubcontractorSection = () => {
 
           return (
             <input
-              className="w-full h-full px-2 border-2 border-primary focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="w-full h-full px-2 border-2 border-emerald-500 focus:outline-none text-right font-bold text-emerald-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               type="number"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
@@ -201,20 +247,48 @@ export const SubcontractorSection = () => {
       },
     ];
 
-    // Add year columns
+    // Add year columns: Rate, Hours, Amount for each year
     for (let year = 1; year <= totalYears; year++) {
       const yearStr = year.toString();
+      const label = year === 1 ? 'Base Period' : `Option Year ${year - 1}`;
+
+      // Rate column (escalated, read-only) - shows escalated rate for this year
       cols.push({
-        key: `year_${year}`,
-        name: year === 1 ? 'Base' : `Opt ${year - 1}`,
+        key: `rate_${year}`,
+        name: `${label}\nRate ($/hr)`,
+        width: 115,
+        resizable: true,
+        headerCellClass: 'bg-emerald-50 font-semibold text-emerald-700',
+        renderCell: ({ row }) => {
+          const yearData = row.yearData[yearStr];
+          const rate = yearData?.rate || 0;
+          return (
+            <div className="flex items-center justify-end h-full px-2 bg-emerald-50/30">
+              <span className="text-sm font-bold text-emerald-600">
+                ${rate.toFixed(2)}
+              </span>
+            </div>
+          );
+        },
+      });
+
+      // Hours column (editable)
+      cols.push({
+        key: `hours_${year}`,
+        name: `${label}\nHours`,
         width: 100,
-        renderCell: ({ row }) => (
-          <div className="flex items-center justify-end h-full px-2">
-            <span className="text-sm">
-              {(row.hours_per_year[yearStr] || 0).toLocaleString('en-US')}
-            </span>
-          </div>
-        ),
+        resizable: true,
+        headerCellClass: 'bg-blue-50 font-medium text-blue-600',
+        renderCell: ({ row }) => {
+          const yearData = row.yearData[yearStr];
+          return (
+            <div className="flex items-center justify-end h-full px-2 bg-blue-50/30">
+              <span className="text-sm font-semibold text-blue-600">
+                {(yearData?.hours || 0).toLocaleString('en-US')}
+              </span>
+            </div>
+          );
+        },
         editable: true,
         renderEditCell: (props: RenderEditCellProps<SubcontractorGridRow>) => {
           const currentHours = props.row.hours_per_year[yearStr] || 0;
@@ -234,7 +308,7 @@ export const SubcontractorSection = () => {
 
           return (
             <input
-              className="w-full h-full px-2 border-2 border-primary focus:outline-none text-right [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              className="w-full h-full px-2 border-2 border-blue-500 focus:outline-none text-right font-semibold text-blue-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
               type="number"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
@@ -248,6 +322,26 @@ export const SubcontractorSection = () => {
           );
         },
       });
+
+      // Amount column (read-only, rate × hours)
+      cols.push({
+        key: `amount_${year}`,
+        name: `${label}\nAmount ($)`,
+        width: 120,
+        resizable: true,
+        headerCellClass: 'bg-purple-50 font-medium text-purple-600 border-r border-border',
+        cellClass: 'border-r border-border',
+        renderCell: ({ row }) => {
+          const yearData = row.yearData[yearStr];
+          return (
+            <div className="flex items-center justify-end h-full px-2 bg-purple-50/30">
+              <span className="text-sm font-bold text-purple-600">
+                ${(yearData?.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+          );
+        },
+      });
     }
 
     // Add total columns
@@ -255,25 +349,29 @@ export const SubcontractorSection = () => {
       {
         key: 'totalHours',
         name: 'Total Hours',
-        width: 120,
+        width: 100,
         frozen: true,
+        resizable: true,
+        headerCellClass: 'bg-blue-100 font-bold text-blue-700',
         renderCell: ({ row }) => (
-          <div className="flex items-center justify-end h-full px-2">
-            <span className="font-semibold text-sm">
+          <div className="flex items-center justify-end h-full px-3 bg-blue-100/50">
+            <span className="font-bold text-sm text-blue-700">
               {row.totalHours.toLocaleString('en-US')}
             </span>
           </div>
         ),
       },
       {
-        key: 'totalCost',
-        name: 'Total Cost',
-        width: 150,
+        key: 'totalAmount',
+        name: 'Total Amount',
+        width: 140,
         frozen: true,
+        resizable: true,
+        headerCellClass: 'bg-purple-100 font-bold text-purple-700',
         renderCell: ({ row }) => (
-          <div className="flex items-center justify-end h-full px-2">
-            <span className="font-bold text-purple-600">
-              ${row.totalCost.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+          <div className="flex items-center justify-end h-full px-3 bg-purple-100/50">
+            <span className="font-bold text-purple-700">
+              ${row.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </span>
           </div>
         ),
@@ -283,21 +381,27 @@ export const SubcontractorSection = () => {
     return cols;
   }, [totalYears, selectedSub, updateSubcontractorPosition]);
 
-  // Calculate grand total
+  // Calculate grand total for selected subcontractor
   const grandTotal = useMemo(() => {
-    return gridRows.reduce((sum, row) => sum + row.totalCost, 0);
+    return gridRows.reduce((sum, row) => sum + row.totalAmount, 0);
   }, [gridRows]);
 
-  // Calculate total for all subcontractors
+  // Calculate total for all subcontractors (with escalation)
   const allSubsTotal = useMemo(() => {
     return subcontractors.reduce((sum, sub) => {
       const subTotal = sub.positions.reduce((posSum, pos) => {
-        const hours = Object.values(pos.hours_per_year).reduce((h, val) => h + val, 0);
-        return posSum + (hours * pos.rate);
+        let positionTotal = 0;
+        for (let year = 1; year <= totalYears; year++) {
+          const yearStr = year.toString();
+          const escalatedRate = getEscalatedRate(pos.rate, year);
+          const hours = pos.hours_per_year[yearStr] || 0;
+          positionTotal += escalatedRate * hours;
+        }
+        return posSum + positionTotal;
       }, 0);
       return sum + subTotal;
     }, 0);
-  }, [subcontractors]);
+  }, [subcontractors, totalYears, escalationRates, getEscalatedRate]);
 
   if (subcontractors.length === 0) {
     return (
