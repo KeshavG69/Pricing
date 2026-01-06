@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useEffect, useState, useCallback } from 'react';
+import { useMemo, useEffect, useState, useCallback, useRef } from 'react';
 import { DataGrid } from 'react-data-grid';
 import type { Column, RenderEditCellProps } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
@@ -8,10 +8,12 @@ import { usePricingStore } from '@/lib/stores/pricingStore';
 import { Card } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
-import { Trash2, Building2, ChevronDown } from 'lucide-react';
+import { TransferSubcontractorModal } from './TransferSubcontractorModal';
+import { Trash2, Building2, ChevronDown, ArrowRightLeft } from 'lucide-react';
 
 interface SubcontractorGridRow {
   id: string;
+  posIndex: number; // Track position index for operations
   labor_category: string;
   rate: number;
   hours_per_year: Record<string, number>;
@@ -19,15 +21,56 @@ interface SubcontractorGridRow {
   totalCost: number;
 }
 
+interface ContextMenuState {
+  visible: boolean;
+  x: number;
+  y: number;
+  row: SubcontractorGridRow | null;
+}
+
 export const SubcontractorSection = () => {
-  const { subcontractors, totalYears, deleteSubcontractor, updateSubcontractorPosition } = usePricingStore();
+  const { subcontractors, totalYears, deleteSubcontractor, deleteSubcontractorPosition, updateSubcontractorPosition } = usePricingStore();
 
   // Delete confirmation state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [subToDelete, setSubToDelete] = useState<{ id: string; name: string; positionCount: number } | null>(null);
 
+  // Position delete confirmation state
+  const [deletePosDialogOpen, setDeletePosDialogOpen] = useState(false);
+  const [posToDelete, setPosToDelete] = useState<{ subId: string; posIndex: number; laborCategory: string } | null>(null);
+
+  // Transfer modal state
+  const [transferModalOpen, setTransferModalOpen] = useState(false);
+  const [transferSource, setTransferSource] = useState<{ subId: string; posIndex: number } | null>(null);
+
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState<ContextMenuState>({
+    visible: false,
+    x: 0,
+    y: 0,
+    row: null,
+  });
+  const contextMenuRef = useRef<HTMLDivElement>(null);
+
   // Track which subcontractor is selected (default to first one)
   const [selectedSubId, setSelectedSubId] = useState<string | null>(null);
+
+  // Close context menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (contextMenuRef.current && !contextMenuRef.current.contains(event.target as Node)) {
+        setContextMenu({ visible: false, x: 0, y: 0, row: null });
+      }
+    };
+
+    if (contextMenu.visible) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [contextMenu.visible]);
 
   // Set default selection when subcontractors change
   useEffect(() => {
@@ -56,6 +99,7 @@ export const SubcontractorSection = () => {
 
       return {
         id: `${selectedSub.id}-${index}`,
+        posIndex: index, // Track position index for operations
         labor_category: pos.labor_category,
         rate: pos.rate,
         hours_per_year: pos.hours_per_year,
@@ -64,6 +108,40 @@ export const SubcontractorSection = () => {
       };
     });
   }, [selectedSub]);
+
+  // Context menu handlers
+  const handleContextMenu = useCallback((event: React.MouseEvent, row: SubcontractorGridRow) => {
+    event.preventDefault();
+    setContextMenu({
+      visible: true,
+      x: event.clientX,
+      y: event.clientY,
+      row,
+    });
+  }, []);
+
+  const handleTransferClick = useCallback(() => {
+    if (contextMenu.row && selectedSubId) {
+      setTransferSource({
+        subId: selectedSubId,
+        posIndex: contextMenu.row.posIndex,
+      });
+      setTransferModalOpen(true);
+    }
+    setContextMenu({ visible: false, x: 0, y: 0, row: null });
+  }, [contextMenu.row, selectedSubId]);
+
+  const handleDeletePositionClick = useCallback(() => {
+    if (contextMenu.row && selectedSubId) {
+      setPosToDelete({
+        subId: selectedSubId,
+        posIndex: contextMenu.row.posIndex,
+        laborCategory: contextMenu.row.labor_category,
+      });
+      setDeletePosDialogOpen(true);
+    }
+    setContextMenu({ visible: false, x: 0, y: 0, row: null });
+  }, [contextMenu.row, selectedSubId]);
 
   // Define columns
   const columns: Column<SubcontractorGridRow>[] = useMemo(() => {
@@ -308,7 +386,20 @@ export const SubcontractorSection = () => {
 
           {/* Data Grid */}
           <div className="p-4">
-            <div style={{ height: `${Math.min(gridRows.length * 45 + 100, 600)}px` }}>
+            <div
+              style={{ height: `${Math.min(gridRows.length * 45 + 100, 600)}px` }}
+              onContextMenu={(e) => {
+                // Find which row was right-clicked
+                const target = e.target as HTMLElement;
+                const rowElement = target.closest('[role="row"]');
+                if (rowElement) {
+                  const rowIndex = parseInt(rowElement.getAttribute('aria-rowindex') || '0', 10) - 2; // Subtract 2 for header
+                  if (rowIndex >= 0 && rowIndex < gridRows.length) {
+                    handleContextMenu(e, gridRows[rowIndex]);
+                  }
+                }
+              }}
+            >
               <DataGrid
                 columns={columns}
                 rows={gridRows}
@@ -338,7 +429,7 @@ export const SubcontractorSection = () => {
         </Card>
       )}
 
-      {/* Delete Confirmation Dialog */}
+      {/* Delete Subcontractor Confirmation Dialog */}
       <ConfirmDialog
         isOpen={deleteDialogOpen}
         onClose={() => {
@@ -353,11 +444,72 @@ export const SubcontractorSection = () => {
           setSubToDelete(null);
         }}
         title="Delete Subcontractor"
-        message={`Are you sure you want to delete subcontractor "${subToDelete?.name}" and all ${subToDelete?.positionCount} position(s)? This action cannot be undone.`}
+        message={`Are you sure you want to delete subcontractor "${subToDelete?.name}" and all ${subToDelete?.positionCount} position(s)? Hours will be returned to prime positions.`}
         confirmText="Delete"
         cancelText="Cancel"
         confirmVariant="danger"
       />
+
+      {/* Delete Position Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={deletePosDialogOpen}
+        onClose={() => {
+          setDeletePosDialogOpen(false);
+          setPosToDelete(null);
+        }}
+        onConfirm={() => {
+          if (posToDelete) {
+            deleteSubcontractorPosition(posToDelete.subId, posToDelete.posIndex);
+          }
+          setDeletePosDialogOpen(false);
+          setPosToDelete(null);
+        }}
+        title="Delete Position"
+        message={`Are you sure you want to delete "${posToDelete?.laborCategory}" from this subcontractor? Hours will be returned to the prime position.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        confirmVariant="danger"
+      />
+
+      {/* Transfer Modal */}
+      <TransferSubcontractorModal
+        open={transferModalOpen}
+        onClose={() => {
+          setTransferModalOpen(false);
+          setTransferSource(null);
+        }}
+        lockSource={true}
+        sourceSubcontractorId={transferSource?.subId}
+        sourcePositionIndex={transferSource?.posIndex}
+      />
+
+      {/* Context Menu */}
+      {contextMenu.visible && (
+        <div
+          ref={contextMenuRef}
+          className="fixed bg-background border border-border rounded-lg shadow-lg py-1 z-50 min-w-[180px]"
+          style={{
+            left: contextMenu.x,
+            top: contextMenu.y,
+          }}
+        >
+          <button
+            className="w-full px-4 py-2 text-left text-sm hover:bg-muted flex items-center gap-2"
+            onClick={handleTransferClick}
+          >
+            <ArrowRightLeft className="w-4 h-4" />
+            Transfer to Subcontractor
+          </button>
+          <div className="border-t border-border my-1" />
+          <button
+            className="w-full px-4 py-2 text-left text-sm hover:bg-red-50 text-red-600 flex items-center gap-2"
+            onClick={handleDeletePositionClick}
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete Position
+          </button>
+        </div>
+      )}
     </div>
   );
 };

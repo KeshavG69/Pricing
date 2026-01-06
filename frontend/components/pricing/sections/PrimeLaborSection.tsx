@@ -6,12 +6,13 @@ import type { Column, RenderEditCellProps } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
 import { AdvancedPosition, IndirectRates, EscalationRates, Extension, GridRow, BreakdownType, ContextMenuItem } from '@/types';
-import { ChevronDown, ChevronRight, Trash2, MoreVertical, Plus } from 'lucide-react';
+import { ChevronDown, ChevronRight, Trash2, MoreVertical, Plus, ArrowRightLeft } from 'lucide-react';
 import { ContextMenu } from '@/components/ui/ContextMenu';
 import { SalaryContextMenu } from '@/components/pricing/SalaryContextMenu';
 import { SOCContextMenu } from '@/components/pricing/SOCContextMenu';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { ConvertToSubcontractorModal } from '@/components/pricing/ConvertToSubcontractorModal';
+import { TransferSubcontractorModal } from '@/components/pricing/TransferSubcontractorModal';
 import { SalarySelectionModal } from '@/components/pricing/SalarySelectionModal';
 import { SOCSelectionModal } from '@/components/pricing/SOCSelectionModal';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
@@ -190,6 +191,10 @@ export const PrimeLaborSection = ({
   const [conversionModalOpen, setConversionModalOpen] = useState(false);
   const [positionToConvert, setPositionToConvert] = useState<AdvancedPosition | null>(null);
 
+  // Transfer modal state
+  const [transferModalOpen, setTransferModalOpen] = useState(false);
+  const [positionToTransfer, setPositionToTransfer] = useState<AdvancedPosition | null>(null);
+
   // Salary selection modal state
   const [salaryModalOpen, setSalaryModalOpen] = useState(false);
   const [positionToEdit, setPositionToEdit] = useState<AdvancedPosition | null>(null);
@@ -288,6 +293,23 @@ export const PrimeLaborSection = ({
           setConversionModalOpen(true);
         },
       });
+
+      // Show "Transfer Subcontractor Hours" if position has linked subcontractors
+      // Check if any subcontractor positions are linked to this prime position
+      const hasLinkedSubs = subcontractors.some(sub =>
+        sub.positions.some(pos => pos.original_position_id === position.id)
+      );
+      if (hasLinkedSubs) {
+        items.push({
+          label: 'Transfer Subcontractor Hours',
+          icon: <ArrowRightLeft className="w-4 h-4" />,
+          onClick: () => {
+            setPositionToTransfer(position);
+            setTransferModalOpen(true);
+            setContextMenu(null);
+          },
+        });
+      }
     }
 
     // Always show "Delete Position"
@@ -303,7 +325,7 @@ export const PrimeLaborSection = ({
     });
 
     return items;
-  }, [onDeletePosition, onUpdatePosition, isAdvancedMode]);
+  }, [onDeletePosition, onUpdatePosition, isAdvancedMode, subcontractors]);
 
   // Calculate column totals for subtotal row
   const columnTotals = useMemo(() => {
@@ -1730,6 +1752,16 @@ export const PrimeLaborSection = ({
         confirmText="Delete"
         cancelText="Cancel"
         confirmVariant="danger"
+      />
+
+      {/* Transfer Subcontractor Hours Modal */}
+      <TransferSubcontractorModal
+        open={transferModalOpen}
+        onClose={() => {
+          setTransferModalOpen(false);
+          setPositionToTransfer(null);
+        }}
+        lockSource={false}
       />
     </div>
   );

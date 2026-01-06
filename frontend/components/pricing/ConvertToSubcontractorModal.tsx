@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import Dialog from '@/components/ui/Dialog';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import { usePricingStore } from '@/lib/stores/pricingStore';
 import { SpreadsheetPosition, AdvancedPosition } from '@/types';
-import { AlertCircle, DollarSign, Clock } from 'lucide-react';
+import { AlertCircle, DollarSign, Clock, ChevronDown, Building2, Check } from 'lucide-react';
 
 interface ConvertToSubcontractorModalProps {
   open: boolean;
@@ -29,6 +29,27 @@ export const ConvertToSubcontractorModal = ({
   const [hoursAllocation, setHoursAllocation] = useState<Record<string, number>>({});
   const [customRate, setCustomRate] = useState<string>('');
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Custom dropdown state
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  // Get selected subcontractor details
+  const selectedSubcontractor = useMemo(() => {
+    return subcontractors.find(s => s.id === selectedSubcontractorId);
+  }, [subcontractors, selectedSubcontractorId]);
 
   // Helper to check if position is AdvancedPosition
   const isAdvancedPosition = (pos: any): pos is AdvancedPosition => {
@@ -166,16 +187,20 @@ export const ConvertToSubcontractorModal = ({
   const handleConvert = async () => {
     if (!validate() || !position) return;
 
-    await convertToSubcontractor({
+    // Capture data before closing modal
+    const conversionData = {
       positionId: position.id,
       subcontractorId: mode === 'existing' ? selectedSubcontractorId : undefined,
       newSubcontractorName: mode === 'new' ? newSubcontractorName.trim() : undefined,
       hoursAllocation,
       rate: parseFloat(customRate),
-    });
+    };
 
-    // Reset and close
+    // Close modal immediately for better UX
     handleClose();
+
+    // Then run conversion (backend save happens in background)
+    await convertToSubcontractor(conversionData);
   };
 
   const handleClose = () => {
@@ -246,21 +271,78 @@ export const ConvertToSubcontractorModal = ({
               <div>
                 <label className="block text-sm text-muted-foreground mb-2">Subcontractor</label>
                 {subcontractors.length > 0 ? (
-                  <select
-                    value={selectedSubcontractorId}
-                    onChange={(e) => {
-                      setSelectedSubcontractorId(e.target.value);
-                      setErrors({ ...errors, subcontractor: '' });
-                    }}
-                    className="w-full px-3 py-2 bg-background border border-input rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                  >
-                    <option value="">-- Select a subcontractor --</option>
-                    {subcontractors.map((sub) => (
-                      <option key={sub.id} value={sub.id}>
-                        {sub.name} ({sub.positions.length} positions)
-                      </option>
-                    ))}
-                  </select>
+                  <div className="relative" ref={dropdownRef}>
+                    {/* Dropdown Trigger */}
+                    <button
+                      type="button"
+                      onClick={() => setDropdownOpen(!dropdownOpen)}
+                      className={`w-full px-3 py-2.5 bg-background border rounded-lg text-left flex items-center justify-between transition-all ${
+                        dropdownOpen
+                          ? 'border-primary ring-2 ring-primary/20'
+                          : 'border-input hover:border-muted-foreground/50'
+                      } ${errors.subcontractor ? 'border-red-500' : ''}`}
+                    >
+                      {selectedSubcontractor ? (
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                            <Building2 className="w-4 h-4 text-primary" />
+                          </div>
+                          <div>
+                            <div className="font-medium text-foreground">{selectedSubcontractor.name}</div>
+                            <div className="text-xs text-muted-foreground">
+                              {selectedSubcontractor.positions.length} position{selectedSubcontractor.positions.length !== 1 ? 's' : ''}
+                            </div>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground">Select a subcontractor...</span>
+                      )}
+                      <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${dropdownOpen ? 'rotate-180' : ''}`} />
+                    </button>
+
+                    {/* Dropdown Menu */}
+                    {dropdownOpen && (
+                      <div className="absolute z-50 w-full mt-1 bg-background border border-border rounded-lg shadow-lg overflow-hidden">
+                        <div className="max-h-60 overflow-y-auto">
+                          {subcontractors.map((sub) => (
+                            <button
+                              key={sub.id}
+                              type="button"
+                              onClick={() => {
+                                setSelectedSubcontractorId(sub.id);
+                                setErrors({ ...errors, subcontractor: '' });
+                                setDropdownOpen(false);
+                              }}
+                              className={`w-full px-3 py-2.5 flex items-center gap-3 hover:bg-muted/50 transition-colors ${
+                                selectedSubcontractorId === sub.id ? 'bg-primary/5' : ''
+                              }`}
+                            >
+                              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${
+                                selectedSubcontractorId === sub.id ? 'bg-primary/20' : 'bg-muted'
+                              }`}>
+                                <Building2 className={`w-4 h-4 ${
+                                  selectedSubcontractorId === sub.id ? 'text-primary' : 'text-muted-foreground'
+                                }`} />
+                              </div>
+                              <div className="flex-1 text-left">
+                                <div className={`font-medium ${
+                                  selectedSubcontractorId === sub.id ? 'text-primary' : 'text-foreground'
+                                }`}>
+                                  {sub.name}
+                                </div>
+                                <div className="text-xs text-muted-foreground">
+                                  {sub.positions.length} position{sub.positions.length !== 1 ? 's' : ''}
+                                </div>
+                              </div>
+                              {selectedSubcontractorId === sub.id && (
+                                <Check className="w-4 h-4 text-primary" />
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 ) : (
                   <p className="text-sm text-muted-foreground italic">No existing subcontractors. Create a new one below.</p>
                 )}
