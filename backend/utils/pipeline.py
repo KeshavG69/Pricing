@@ -567,6 +567,8 @@ def build_project_data_from_dataframe(
             'wage_50th': row.get('wage_50th', 0),
             'wage_75th': row.get('wage_75th', 0),
             'wage_90th': row.get('wage_90th', 0),
+            'location': row.get('location', ''),
+            'site': 'Government' if row.get('location_type') == 'On-Site' else 'Contractor',
         }
 
         # Check if position has subcontractor hours assigned
@@ -634,6 +636,7 @@ def build_project_data_from_dataframe(
             labor_cat = {
                 'labor_category': sub_pos['labor_category'],
                 'ecraft_code': sub_pos['ecraft_code'],
+                'site': sub_pos.get('site', 'Government'),
             }
 
             # Add year rates from hours_per_year

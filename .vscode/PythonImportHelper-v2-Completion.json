@@ -111,6 +111,14 @@
         "documentation": {}
     },
     {
+        "label": "Agent",
+        "importPath": "agno.agent",
+        "description": "agno.agent",
+        "isExtraImport": true,
+        "detail": "agno.agent",
+        "documentation": {}
+    },
+    {
         "label": "get_chat_llm_agno",
         "importPath": "client.llm_client",
         "description": "client.llm_client",
@@ -920,6 +928,14 @@
         "documentation": {}
     },
     {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
         "label": "pricing",
         "importPath": "routers",
         "description": "routers",
@@ -1267,6 +1283,30 @@
     },
     {
         "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -2436,6 +2476,14 @@
         "documentation": {}
     },
     {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
         "label": "HTTPBearer",
         "importPath": "fastapi.security",
         "description": "fastapi.security",
@@ -3081,6 +3129,62 @@
         "documentation": {}
     },
     {
+        "label": "OpenAIChat",
+        "importPath": "agno.models.openai",
+        "description": "agno.models.openai",
+        "isExtraImport": true,
+        "detail": "agno.models.openai",
+        "documentation": {}
+    },
+    {
+        "label": "OpenAIChat",
+        "importPath": "agno.models.openai",
+        "description": "agno.models.openai",
+        "isExtraImport": true,
+        "detail": "agno.models.openai",
+        "documentation": {}
+    },
+    {
+        "label": "OpenAIChat",
+        "importPath": "agno.models.openai",
+        "description": "agno.models.openai",
+        "isExtraImport": true,
+        "detail": "agno.models.openai",
+        "documentation": {}
+    },
+    {
+        "label": "tool",
+        "importPath": "agno.tools",
+        "description": "agno.tools",
+        "isExtraImport": true,
+        "detail": "agno.tools",
+        "documentation": {}
+    },
+    {
+        "label": "tool",
+        "importPath": "agno.tools",
+        "description": "agno.tools",
+        "isExtraImport": true,
+        "detail": "agno.tools",
+        "documentation": {}
+    },
+    {
+        "label": "ExaTools",
+        "importPath": "agno.tools.exa",
+        "description": "agno.tools.exa",
+        "isExtraImport": true,
+        "detail": "agno.tools.exa",
+        "documentation": {}
+    },
+    {
+        "label": "ExaTools",
+        "importPath": "agno.tools.exa",
+        "description": "agno.tools.exa",
+        "isExtraImport": true,
+        "detail": "agno.tools.exa",
+        "documentation": {}
+    },
+    {
         "label": "pandas",
         "kind": 6,
         "isExtraImport": true,
@@ -3114,22 +3218,6 @@
         "documentation": {}
     },
     {
-        "label": "OpenAIChat",
-        "importPath": "agno.models.openai",
-        "description": "agno.models.openai",
-        "isExtraImport": true,
-        "detail": "agno.models.openai",
-        "documentation": {}
-    },
-    {
-        "label": "OpenAIChat",
-        "importPath": "agno.models.openai",
-        "description": "agno.models.openai",
-        "isExtraImport": true,
-        "detail": "agno.models.openai",
-        "documentation": {}
-    },
-    {
         "label": "AsyncIOMotorClient",
         "importPath": "motor.motor_asyncio",
         "description": "motor.motor_asyncio",
@@ -3152,14 +3240,6 @@
         "importPath": "math",
         "description": "math",
         "detail": "math",
-        "documentation": {}
-    },
-    {
-        "label": "ExaTools",
-        "importPath": "agno.tools.exa",
-        "description": "agno.tools.exa",
-        "isExtraImport": true,
-        "detail": "agno.tools.exa",
         "documentation": {}
     },
     {
@@ -3919,14 +3999,6 @@
         "documentation": {}
     },
     {
-        "label": "tool",
-        "importPath": "agno.tools",
-        "description": "agno.tools",
-        "isExtraImport": true,
-        "detail": "agno.tools",
-        "documentation": {}
-    },
-    {
         "label": "secrets",
         "kind": 6,
         "isExtraImport": true,
@@ -4639,7 +4711,7 @@
         "kind": 6,
         "importPath": "backend.client.excel_generator",
         "description": "backend.client.excel_generator",
-        "peekOfCode": "class ExcelGenerator:\n    \"\"\"\n    Generates government contract cost proposal Excel files.\n    Creates professional, formatted Excel workbooks with:\n    - Dynamic year columns based on contract structure\n    - Prime contractor labor calculations\n    - Subcontractor rate tables (no calculation details)\n    - Pass-through and fee sections\n    - ODC sections\n    \"\"\"",
+        "peekOfCode": "class ExcelGenerator:\n    \"\"\"\n    Generates government contract cost proposal Excel files.\n    Matches the Price IQ Sample Template format.\n    \"\"\"\n    # Style constants matching sample template\n    HEADER_FILL = PatternFill(start_color=\"284C82\", end_color=\"284C82\", fill_type=\"solid\")\n    HEADER_FONT = Font(bold=True, size=10, color=\"FFFFFF\")\n    NORMAL_FONT = Font(size=10)\n    BOLD_FONT = Font(bold=True, size=10)",
         "detail": "backend.client.excel_generator",
         "documentation": {}
     },
@@ -4722,6 +4794,24 @@
         "description": "backend.client.idrive_storage",
         "peekOfCode": "_client_lock = threading.RLock()\ndef get_idrive_storage() -> IDriveStorage:\n    \"\"\"\n    Get or create iDrive storage client (singleton pattern).\n    Returns:\n        IDriveStorage instance\n    \"\"\"\n    global _idrive_storage_client\n    with _client_lock:\n        if _idrive_storage_client is None:",
         "detail": "backend.client.idrive_storage",
+        "documentation": {}
+    },
+    {
+        "label": "reasoning_tool",
+        "kind": 2,
+        "importPath": "backend.client.intelligent_parser",
+        "description": "backend.client.intelligent_parser",
+        "peekOfCode": "def reasoning_tool(analysis: str) -> str:\n    \"\"\"\n    Use this tool to think through the document before extracting data.\n    Share your step-by-step analysis:\n    - What is the contract structure?\n    - How is staffing described?\n    - What patterns do you see?\n    - What data is present vs missing?\n    - Do you need web search?\n    Args:",
+        "detail": "backend.client.intelligent_parser",
+        "documentation": {}
+    },
+    {
+        "label": "test_intelligent_parser",
+        "kind": 2,
+        "importPath": "backend.client.intelligent_parser",
+        "description": "backend.client.intelligent_parser",
+        "peekOfCode": "def test_intelligent_parser(file_path: str) -> Dict[str, Any]:\n    \"\"\"Test the intelligent parser on a file.\"\"\"\n    import asyncio\n    return asyncio.run(parse_document_intelligent(file_path))\nif __name__ == \"__main__\":\n    import sys\n    if len(sys.argv) > 1:\n        result = test_intelligent_parser(sys.argv[1])\n        print(f\"\\n\\n=== FINAL JSON ===\")\n        print(json.dumps(result, indent=2, default=str))",
+        "detail": "backend.client.intelligent_parser",
         "documentation": {}
     },
     {
