@@ -1815,6 +1815,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
               wage_90th: p.wage_90th,
               standard_fte_hours: p.standard_fte_hours!,
               location_type: p.location_type || 'On-Site',  // Add location_type for OH rate selection
+              location: p.location || '',  // Add location string
             };
           }),
           project_config: {
