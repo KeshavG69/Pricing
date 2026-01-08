@@ -57,7 +57,7 @@ interface PricingState {
   aggregates: Aggregates;
   ratesReferenceExpanded: boolean;
   advancedModeVersion: number; // Force re-render counter
-  activeTab: 'files' | 'overview' | 'main' | 'subcontractors' | 'rate-table';
+  activeTab: 'files' | 'overview' | 'main' | 'subcontractors';
 
   // Actions
   loadProposal: (proposalId: string, existingProposal?: Proposal) => Promise<void>;
@@ -102,7 +102,7 @@ interface PricingState {
   clearManualOverrides: (positionId?: string) => void;
   recalculateAdvanced: () => Promise<void>;
   toggleRatesReference: () => void;
-  setActiveTab: (tab: 'files' | 'overview' | 'main' | 'subcontractors' | 'rate-table') => void;
+  setActiveTab: (tab: 'files' | 'overview' | 'main' | 'subcontractors') => void;
   preCreateSubcontractors: (subs: { name: string }[]) => void;
   autoAllocateWorkshare: () => Promise<void>;
 }
@@ -1409,6 +1409,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
       const subPosition: SubcontractorPosition = {
         labor_category: position.labor_category,
         rate: data.rate,
+        original_base_rate: data.rate, // Store original rate chosen at conversion (immutable)
         hours_per_year: data.hoursAllocation,
         original_position_id: position.id, // Link back to prime position
         original_total_hours: originalTotalHours, // Track original hours for hour return on delete
