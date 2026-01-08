@@ -164,6 +164,30 @@ export const PrimeLaborSection = ({
   const advancedModeVersion = usePricingStore((state) => state.advancedModeVersion);
   const isGSAProposal = wageSource?.type === 'gsa';
 
+  // Helper to calculate escalated rate for subcontractors
+  const getEscalatedRate = (baseRate: number, year: number): number => {
+    let rate = baseRate;
+    // Apply compound escalation for each year
+    for (let y = 1; y < year; y++) {
+      const escalationKey = `${y}_to_${y + 1}`;
+      const escalation = escalationRates?.[escalationKey] || 0;
+      rate = rate * (1 + escalation);
+    }
+    return rate;
+  };
+
+  // Helper to calculate marked-up subcontractor rate for DISPLAY ONLY
+  // Formula: displayed_rate = escalated_base_rate × (1 + sub_fee) × (1 + smh)
+  // This does NOT change any calculations - purely for display
+  const getSubcontractorDisplayRate = (baseRate: number, year: number): number => {
+    // First apply escalation to base rate
+    const escalatedRate = getEscalatedRate(baseRate, year);
+    // Then apply markup (sub_fee + smh)
+    const subFee = rates?.sub_fee || 0;
+    const smh = rates?.smh || 0;
+    return escalatedRate * (1 + subFee) * (1 + smh);
+  };
+
   // Create a version string that changes when rates change to force re-render
   const ratesVersion = useMemo(() => {
     return `${rates.fringe}-${rates.oh_onsite}-${rates.oh_offsite}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}`;
@@ -1106,9 +1130,17 @@ export const PrimeLaborSection = ({
             );
           }
 
-          // Subcontractor row - empty (calculations done separately)
+          // Subcontractor row - show escalated marked-up rate (escalated base + sub_fee + S&MH)
           if (row.type === 'subcontractor') {
-            return <div className="h-full bg-purple-50/50" />;
+            const baseRate = row.subcontractorRate || 0;
+            const markedUpRate = getSubcontractorDisplayRate(baseRate, year);
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-purple-50/50">
+                <span className="text-purple-700 font-semibold">
+                  {formatCurrency(markedUpRate)}
+                </span>
+              </div>
+            );
           }
 
           const pos = row.data as AdvancedPosition;
@@ -1294,9 +1326,17 @@ export const PrimeLaborSection = ({
             );
           }
 
-          // Subcontractor row - empty (calculations done separately)
+          // Subcontractor row - show escalated marked-up rate (escalated base + sub_fee + S&MH)
           if (row.type === 'subcontractor') {
-            return <div className="h-full bg-purple-50/50" />;
+            const baseRate = row.subcontractorRate || 0;
+            const markedUpRate = getSubcontractorDisplayRate(baseRate, year);
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-purple-50/50">
+                <span className="text-purple-700 font-semibold">
+                  {formatCurrency(markedUpRate)}
+                </span>
+              </div>
+            );
           }
 
           const pos = row.data as AdvancedPosition;
