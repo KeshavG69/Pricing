@@ -490,7 +490,7 @@ export interface Aggregates {
   };
 }
 
-export type GridRowType = 'position' | 'breakdown' | 'subtotal' | 'subcontractor';
+export type GridRowType = 'position' | 'breakdown' | 'subtotal' | 'subcontractor' | 'subcontractor-header';
 export type BreakdownType = 'dl' | 'fringe' | 'oh' | 'ga' | 'fee';
 
 export interface GridRow {
@@ -505,6 +505,9 @@ export interface GridRow {
   subcontractorTotalHours?: number;
   subcontractorRate?: number;
   subcontractorLocationType?: string;
+  // Subcontractor header fields
+  subcontractorCount?: number;
+  subcontractorsTotalHours?: number;
 }
 
 // Context Menu types
