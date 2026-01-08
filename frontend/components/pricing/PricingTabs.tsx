@@ -1,8 +1,8 @@
 'use client';
 
-import { FileText, BarChart3, Calculator, Building2, Table } from 'lucide-react';
+import { FileText, BarChart3, Calculator, Building2 } from 'lucide-react';
 
-export type PricingTabType = 'files' | 'overview' | 'main' | 'subcontractors' | 'rate-table';
+export type PricingTabType = 'files' | 'overview' | 'main' | 'subcontractors';
 
 interface PricingTabsProps {
   activeTab: PricingTabType;
@@ -38,13 +38,6 @@ export const PricingTabs = ({
       label: 'Pricing Workspace',
       description: 'Detailed cost proposal spreadsheet',
       icon: <Calculator className="w-5 h-5" />,
-    },
-    {
-      id: 'rate-table' as const,
-      label: 'Target Rate Table for Subs',
-      description: 'Subcontractor fee/MH markup calculations',
-      icon: <Table className="w-5 h-5" />,
-      hidden: mode === 'initial' || !hasSubcontractors, // Hide in initial mode or when no subcontractors
     },
     {
       id: 'subcontractors' as const,

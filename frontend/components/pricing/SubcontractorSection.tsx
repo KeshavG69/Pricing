@@ -22,10 +22,9 @@ interface SubcontractorGridRow {
   posIndex: number; // Track position index for operations
   labor_category: string;
   baseRate: number; // Base rate (Year 1)
+  originalBaseRate: number; // Original rate at conversion (immutable)
   hours_per_year: Record<string, number>;
   yearData: Record<string, YearData>; // Per-year rate, hours, amount
-  totalHours: number;
-  totalAmount: number;
 }
 
 interface ContextMenuState {
@@ -75,6 +74,12 @@ export const SubcontractorSection = () => {
   // Track which subcontractor is selected (default to first one)
   const [selectedSubId, setSelectedSubId] = useState<string | null>(null);
 
+  // Track overflow menu state
+  const [showOverflowMenu, setShowOverflowMenu] = useState(false);
+  const overflowMenuRef = useRef<HTMLDivElement>(null);
+
+  const MAX_VISIBLE_TABS = 4; // Show max 4 tabs before overflow
+
   // Close context menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -91,6 +96,23 @@ export const SubcontractorSection = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [contextMenu.visible]);
+
+  // Close overflow menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (overflowMenuRef.current && !overflowMenuRef.current.contains(event.target as Node)) {
+        setShowOverflowMenu(false);
+      }
+    };
+
+    if (showOverflowMenu) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showOverflowMenu]);
 
   // Set default selection when subcontractors change
   useEffect(() => {
@@ -115,9 +137,8 @@ export const SubcontractorSection = () => {
 
     return selectedSub.positions.map((pos, index) => {
       const baseRate = pos.rate;
+      const originalBaseRate = pos.original_base_rate || pos.rate; // Fallback for old data
       const yearData: Record<string, YearData> = {};
-      let totalHours = 0;
-      let totalAmount = 0;
 
       // Calculate per-year data with escalation
       for (let year = 1; year <= totalYears; year++) {
@@ -131,9 +152,6 @@ export const SubcontractorSection = () => {
           hours,
           amount,
         };
-
-        totalHours += hours;
-        totalAmount += amount;
       }
 
       return {
@@ -141,10 +159,9 @@ export const SubcontractorSection = () => {
         posIndex: index,
         labor_category: pos.labor_category,
         baseRate,
+        originalBaseRate,
         hours_per_year: pos.hours_per_year,
         yearData,
-        totalHours,
-        totalAmount,
       };
     });
   }, [selectedSub, totalYears, escalationRates, getEscalatedRate]);
@@ -204,6 +221,7 @@ export const SubcontractorSection = () => {
         key: 'baseRate',
         name: 'Base Rate ($/hr)',
         width: 120,
+        frozen: true,
         resizable: true,
         headerCellClass: 'bg-emerald-50 font-semibold text-emerald-700 border-r border-border',
         cellClass: 'border-r border-border',
@@ -242,6 +260,25 @@ export const SubcontractorSection = () => {
               }}
               autoFocus
             />
+          );
+        },
+      },
+      {
+        key: 'originalBaseRate',
+        name: 'Original Rate ($/hr)',
+        width: 135,
+        frozen: true,
+        resizable: true,
+        headerCellClass: 'bg-gray-50 font-semibold text-gray-700 border-r border-border',
+        cellClass: 'border-r border-border',
+        renderCell: ({ row }) => {
+          const originalRate = row.originalBaseRate;
+          return (
+            <div className="flex items-center justify-end h-full px-3 bg-gray-50/30">
+              <span className="font-medium text-gray-600">
+                ${originalRate.toFixed(2)}
+              </span>
+            </div>
           );
         },
       },
@@ -344,46 +381,18 @@ export const SubcontractorSection = () => {
       });
     }
 
-    // Add total columns
-    cols.push(
-      {
-        key: 'totalHours',
-        name: 'Total Hours',
-        width: 100,
-        frozen: true,
-        resizable: true,
-        headerCellClass: 'bg-blue-100 font-bold text-blue-700',
-        renderCell: ({ row }) => (
-          <div className="flex items-center justify-end h-full px-3 bg-blue-100/50">
-            <span className="font-bold text-sm text-blue-700">
-              {row.totalHours.toLocaleString('en-US')}
-            </span>
-          </div>
-        ),
-      },
-      {
-        key: 'totalAmount',
-        name: 'Total Amount',
-        width: 140,
-        frozen: true,
-        resizable: true,
-        headerCellClass: 'bg-purple-100 font-bold text-purple-700',
-        renderCell: ({ row }) => (
-          <div className="flex items-center justify-end h-full px-3 bg-purple-100/50">
-            <span className="font-bold text-purple-700">
-              ${row.totalAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
-          </div>
-        ),
-      }
-    );
-
     return cols;
   }, [totalYears, selectedSub, updateSubcontractorPosition]);
 
   // Calculate grand total for selected subcontractor
   const grandTotal = useMemo(() => {
-    return gridRows.reduce((sum, row) => sum + row.totalAmount, 0);
+    return gridRows.reduce((sum, row) => {
+      // Sum all amounts from yearData
+      const rowTotal = Object.values(row.yearData).reduce((yearSum, yearData) => {
+        return yearSum + yearData.amount;
+      }, 0);
+      return sum + rowTotal;
+    }, 0);
   }, [gridRows]);
 
   // Calculate total for all subcontractors (with escalation)
@@ -424,49 +433,92 @@ export const SubcontractorSection = () => {
 
   return (
     <div className="mt-6 space-y-4">
-      {/* Header with Dropdown Selector */}
-      <div className="flex items-center justify-between px-6 mb-4">
-        <div className="flex items-center gap-4">
+      {/* Header with Tabs */}
+      <div className="px-6">
+        <div className="flex items-center justify-between mb-4">
           <h3 className="text-base font-semibold text-foreground">
             Subcontractor Labor
           </h3>
 
-          {/* Dropdown Selector */}
-          <div className="relative">
-            <select
-              value={selectedSubId || ''}
-              onChange={(e) => setSelectedSubId(e.target.value)}
-              className="appearance-none bg-background border border-border rounded-md pl-3 pr-10 py-2 text-sm font-medium text-foreground cursor-pointer hover:border-primary focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent min-w-[200px]"
+          {/* Delete Button for Selected Sub */}
+          {selectedSub && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setSubToDelete({
+                  id: selectedSub.id,
+                  name: selectedSub.name,
+                  positionCount: selectedSub.positions.length,
+                });
+                setDeleteDialogOpen(true);
+              }}
+              className="text-muted-foreground hover:text-red-600 hover:bg-red-50 hover:border-red-200"
             >
-              {subcontractors.map((sub) => (
-                <option key={sub.id} value={sub.id}>
-                  {sub.name} ({sub.positions.length} positions)
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-          </div>
+              <Trash2 className="w-4 h-4 mr-2" />
+              Delete Subcontractor
+            </Button>
+          )}
         </div>
 
-        {/* Delete Button for Selected Sub */}
-        {selectedSub && (
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setSubToDelete({
-                id: selectedSub.id,
-                name: selectedSub.name,
-                positionCount: selectedSub.positions.length,
-              });
-              setDeleteDialogOpen(true);
-            }}
-            className="text-muted-foreground hover:text-red-600 hover:bg-red-50 hover:border-red-200"
-          >
-            <Trash2 className="w-4 h-4 mr-2" />
-            Delete Subcontractor
-          </Button>
-        )}
+        {/* Tabs for Subcontractors */}
+        <div className="flex items-center gap-1 border-b border-border">
+          {/* Visible Tabs */}
+          {subcontractors.slice(0, MAX_VISIBLE_TABS).map((sub) => (
+            <button
+              key={sub.id}
+              onClick={() => setSelectedSubId(sub.id)}
+              className={`px-4 py-2 text-sm font-medium transition-colors relative ${
+                selectedSubId === sub.id
+                  ? 'text-primary border-b-2 border-primary'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              {sub.name}
+              <span className="ml-2 text-xs opacity-70">
+                ({sub.positions.length})
+              </span>
+            </button>
+          ))}
+
+          {/* Overflow Menu Button */}
+          {subcontractors.length > MAX_VISIBLE_TABS && (
+            <div className="relative" ref={overflowMenuRef}>
+              <button
+                onClick={() => setShowOverflowMenu(!showOverflowMenu)}
+                className={`px-3 py-2 text-sm font-medium transition-colors flex items-center gap-1 ${
+                  showOverflowMenu ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                <ChevronDown className="w-4 h-4" />
+                More ({subcontractors.length - MAX_VISIBLE_TABS})
+              </button>
+
+              {/* Overflow Dropdown */}
+              {showOverflowMenu && (
+                <div className="absolute top-full left-0 mt-1 bg-background border border-border rounded-lg shadow-lg py-1 z-50 min-w-[200px]">
+                  {subcontractors.slice(MAX_VISIBLE_TABS).map((sub) => (
+                    <button
+                      key={sub.id}
+                      onClick={() => {
+                        setSelectedSubId(sub.id);
+                        setShowOverflowMenu(false);
+                      }}
+                      className={`w-full px-4 py-2 text-left text-sm hover:bg-muted flex items-center justify-between ${
+                        selectedSubId === sub.id ? 'bg-muted font-medium' : ''
+                      }`}
+                    >
+                      <span>{sub.name}</span>
+                      <span className="text-xs text-muted-foreground ml-2">
+                        ({sub.positions.length})
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Selected Subcontractor Details */}
