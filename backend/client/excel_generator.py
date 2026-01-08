@@ -1,13 +1,12 @@
 """
 Excel Generator for Government Contract Cost Proposals.
+Refactored to match the Price IQ Sample Template format.
 
-Generates professional Excel files matching the Intprepix format:
-- Dynamic year columns (adjusts to contract length)
-- Prime labor with full FBLR calculations
-- Subcontractor rates (simple table, no calculation breakdown)
-- Pass-through costs (prime's management overhead)
-- Fee calculations (profit)
-- ODCs (Other Direct Costs)
+Creates professional Excel files with:
+- Multiple sheets (CE Summary, Labor Detail, Subcontractor sheets, Material, Travel, LOE, Indirect Rates)
+- Blue header styling (#284C82)
+- Thin borders on all cells
+- Period-based columns with support for Base, Options, and Extensions
 """
 
 from typing import Dict, List, Any
@@ -20,1400 +19,1181 @@ from .calculation_service import Calculator
 class ExcelGenerator:
     """
     Generates government contract cost proposal Excel files.
-
-    Creates professional, formatted Excel workbooks with:
-    - Dynamic year columns based on contract structure
-    - Prime contractor labor calculations
-    - Subcontractor rate tables (no calculation details)
-    - Pass-through and fee sections
-    - ODC sections
+    Matches the Price IQ Sample Template format.
     """
+
+    # Style constants matching sample template
+    HEADER_FILL = PatternFill(start_color="284C82", end_color="284C82", fill_type="solid")  # Dark blue
+    PERIOD_HEADER_FILL = PatternFill(start_color="D6DCE4", end_color="D6DCE4", fill_type="solid")  # Light blue
+    HEADER_FONT = Font(bold=True, size=10, color="FFFFFF")
+    NORMAL_FONT = Font(size=10)
+    BOLD_FONT = Font(bold=True, size=10)
+    THIN_BORDER = Border(
+        left=Side(style='thin'),
+        right=Side(style='thin'),
+        top=Side(style='thin'),
+        bottom=Side(style='thin')
+    )
+    # Exact formats from template
+    CURRENCY_FORMAT = '_("$"* #,##0.00_);_("$"* \\(#,##0.00\\);_("$"* "-"??_);_(@_)'
+    PERCENT_FORMAT = '0.00%'
+    NUMBER_FORMAT = '#,##0.00'  # Template uses decimal for hours
 
     def __init__(self):
         """Initialize the Excel generator."""
         self.wb = None
-        self.ws = None
-        self.row_trackers = {}  # Track important row numbers for references
+        self.total_years = 0
+        self.project_data = None
+        self.extensions = []
 
     def generate_cost_proposal(self, project_data: Dict[str, Any]) -> Workbook:
         """
-        Generate complete cost proposal Excel workbook.
+        Generate complete cost proposal Excel workbook in Price IQ format.
 
         Args:
-            project_data: Complete project data including:
-                - solicitation_number: str
-                - prime_contractor_name: str
-                - subcontractor_names: List[str]
-                - dcaa_contact: str (optional)
-                - total_years: int
-                - base_years: int
-                - option_years: int
-                - escalation_rates: Dict[str, float]
-                - indirect_rates: Dict[str, float] (fringe, oh, ga)
-                - prime_positions: List[Dict]
-                - subcontractors: List[Dict]
-                - passthrough_rates: Dict[str, float] (smh, ga)
-                - fee_rates: Dict[str, float] (prime_labor, sub_labor)
-                - odcs: List[Dict]
-                - ga_adder_rate: float
-                - include_rate_table: bool (optional, default True)
+            project_data: Complete project data including all positions, rates, etc.
 
         Returns:
             Workbook ready to save
         """
-        # Create workbook
         self.wb = Workbook()
-        self.ws = self.wb.active
-        self.ws.title = "Cost Proposal Spreadsheet"
+        self.project_data = project_data
+        self.total_years = project_data['total_years']
+        self.extensions = project_data.get('extensions', [])
+        
+        # Create sheets in order (matching sample template)
+        # 1. CE Summary (Cost Element Summary) - the main sheet
+        self._create_ce_summary_sheet()
 
-        # Extract key configuration
-        total_years = project_data['total_years']
+        # 2. Labor Detail - Prime contractor labor categories
+        self._create_labor_detail_sheet()
 
-        # Default months if missing (backward compatibility)
-        if 'months_per_year' not in project_data or project_data['months_per_year'] is None:
-            project_data['months_per_year'] = {
-                str(year): 12 for year in range(1, total_years + 1)
-            }
+        # 3. Subcontractor sheets - One per subcontractor
+        if project_data.get('subcontractors'):
+            for idx, sub in enumerate(project_data['subcontractors'], 1):
+                self._create_subcontractor_sheet(sub, idx)
 
-        # Build Excel section by section
-        current_row = 1
+        # 4. Material sheet (ODCs excluding travel)
+        if project_data.get('odcs'):
+            self._create_material_sheet()
 
-        # Header section (rows 1-10)
-        current_row = self._write_header_section(self.ws, project_data, total_years)
+        # 5. Travel sheet
+        if project_data.get('travel'):
+            self._create_travel_sheet()
 
-        # Prime labor section
-        prime_start_row = current_row
-        current_row = self._write_prime_labor_section(
-            self.ws,
-            project_data['prime_positions'],
-            project_data['indirect_rates'],
-            project_data['escalation_rates'],
-            project_data['fee_rates'],
-            current_row,
-            total_years
-        )
-        self.row_trackers['prime_labor_end'] = current_row - 1
+        # 6. LOE sheet - Level of Effort (Hours only)
+        self._create_loe_sheet()
 
-        # Subcontractor section (only if subcontractors exist)
-        if project_data['subcontractors'] and len(project_data['subcontractors']) > 0:
-            sub_start_row = current_row
-            current_row = self._write_subcontractor_section(
-                self.ws,
-                project_data['subcontractors'],
-                current_row,
-                total_years
-            )
-            self.row_trackers['sub_labor_end'] = current_row - 1
-        else:
-            self.row_trackers['sub_labor_end'] = current_row - 1
+        # 7. Indirect Rates reference sheet
+        self._create_indirect_rates_sheet()
 
-        # Pass-through section (only if subcontractors exist)
-        if project_data['subcontractors'] and len(project_data['subcontractors']) > 0:
-            current_row = self._write_passthrough_section(
-                self.ws,
-                project_data['passthrough_rates'],
-                current_row,
-                total_years
-            )
-
-        # Fee section
-        current_row = self._write_fee_section(
-            self.ws,
-            project_data['fee_rates'],
-            current_row,
-            total_years
-        )
-
-        # Travel section (SEPARATE from ODCs) - uses G&A Rate
-        if 'travel' in project_data and project_data['travel']:
-            current_row = self._write_travel_section(
-                self.ws,
-                project_data['travel'],
-                project_data.get('indirect_rates', {}).get('ga', 0),
-                project_data['escalation_rates'],
-                current_row,
-                total_years
-            )
-
-        # ODC section (materials, equipment, etc.) - uses SMH Rate
-        if 'odcs' in project_data and project_data['odcs']:
-            current_row = self._write_odc_section(
-                self.ws,
-                project_data['odcs'],
-                project_data['ga_adder_rate'],
-                project_data['escalation_rates'],
-                current_row,
-                total_years,
-                ga_rate=project_data.get('indirect_rates', {}).get('ga'),
-                smh_rate=project_data.get('passthrough_rates', {}).get('smh')
-            )
-
-        # Grand Total section (CPFF + Travel + ODCs)
-        has_travel = 'travel' in project_data and project_data['travel']
-        has_odcs = 'odcs' in project_data and project_data['odcs']
-        if has_travel or has_odcs:
-            current_row = self._write_grand_total_section(
-                self.ws,
-                current_row,
-                total_years,
-                has_travel,
-                has_odcs
-            )
-
-        # Apply formatting
-        self._apply_formatting(self.ws, total_years)
-
-        # Add Sheet 2: Subcontractor Fee/MH Rate Table (only if subcontractors exist)
-        has_subcontractors = project_data.get('subcontractors') and len(project_data['subcontractors']) > 0
-        if has_subcontractors and project_data.get('include_rate_table', True):
-            self._create_rate_table_sheet(project_data)
+        # Remove default empty sheet if exists
+        if 'Sheet' in self.wb.sheetnames:
+            del self.wb['Sheet']
 
         return self.wb
 
-    def _write_header_section(self, ws, project_data: Dict, total_years: int) -> int:
-        """
-        Write header section (rows 1-10).
+    def _get_period_label(self, year: int) -> str:
+        """Get label for a given year (Base, Option, Extension)."""
+        base_years = self.project_data.get('base_years', 1)
+        
+        if year <= base_years:
+            if base_years == 1:
+                return "Base Period"
+            return f"Base Year {year}"
+        
+        # Check if it's an extension
+        for ext in self.extensions:
+            if ext['year'] == year:
+                return ext.get('label', f"Extension {year}")
+        
+        # Regular option year
+        option_num = year - base_years
+        return f"Option Period {option_num}"
 
-        Includes:
-        - Solicitation number and escalation rate labels
-        - Company names (prime and subcontractors)
-        - DCAA contact info
-        - Year column headers (dynamic based on total_years)
-        - Sub-headers (Cost Elements, Labor Category, etc.)
+    def _create_ce_summary_sheet(self):
+        """Create the CE Summary (Cost Element Summary) sheet."""
+        ws = self.wb.active
+        ws.title = "CE Summary"
 
-        Args:
-            ws: Worksheet
-            project_data: Project configuration
-            total_years: Total number of years
+        # Set column widths matching template exactly
+        ws.column_dimensions['A'].width = 2.33  # Padding column
+        ws.column_dimensions['B'].width = 40.66  # Cost Element labels
+        # First period column slightly wider
+        ws.column_dimensions['C'].width = 20.66
+        # Remaining period columns + Total
+        for col_idx in range(4, 3 + self.total_years + 1):  # D onwards
+            ws.column_dimensions[get_column_letter(col_idx)].width = 13
+        # Total column
+        ws.column_dimensions[get_column_letter(3 + self.total_years)].width = 13
 
-        Returns:
-            Next available row number
-        """
-        # Row 1: Solicitation number and escalation labels
-        ws.cell(1, 1, f"SOLICITATION NO. {project_data['solicitation_number']}")
+        # Header section (Rows 1-5)
+        ws.cell(1, 2, "Proprietary Data")
+        ws.cell(2, 2, f"Prime Contractor Name: {self.project_data['prime_contractor_name']}")
 
-        # Add escalation labels in year columns (every 3rd column starting at I/9)
-        esc_col = 9
-        for i in range(total_years - 1):
-            ws.cell(1, esc_col, "Escalation")
-            esc_col += 3
+        sub_names = ", ".join(self.project_data.get('subcontractor_names', []))
+        ws.cell(3, 2, f"Subcontractor(s) Name: {sub_names}")
 
-        # Row 2: Title and escalation rates
-        ws.cell(2, 1, "COST PROPOSAL SPREADSHEET")
+        ws.cell(4, 2, f"Solicitation: {self.project_data['solicitation_number']}")
+        ws.cell(5, 2, f"Task Order Number: {self.project_data.get('task_order_number', '')}")
 
-        # Put escalation rates in their columns
-        escalation_rates = project_data['escalation_rates']
-        esc_col = 9
-        for year in range(1, total_years):
-            key = f"{year}_to_{year+1}"
-            rate = escalation_rates.get(key, 0)
-            ws.cell(2, esc_col, rate)
-            esc_col += 3
+        # Row 9: Column headers
+        header_row = 9
+        ws.cell(header_row, 2, "Cost Element")
+        self._style_header_cell(ws.cell(header_row, 2))
 
-        # Row 4-6: Company information
-        ws.cell(4, 1, f"Prime Offeror Name: {project_data['prime_contractor_name']}")
+        # Period column headers - Light blue background
+        col = 3
+        for year in range(1, self.total_years + 1):
+            label = self._get_period_label(year)
+            period_cell = ws.cell(header_row, col, label)
+            self._style_period_header_cell(period_cell)  # Light blue for period headers
+            col += 1
 
-        sub_names = ", ".join(project_data.get('subcontractor_names', []))
-        ws.cell(5, 1, f"Subcontractor Name (if applicable): {sub_names}")
+        # Total column
+        ws.cell(header_row, col, "Total")
+        self._style_header_cell(ws.cell(header_row, col))
+        total_col = col
 
-        dcaa = project_data.get('dcaa_contact', '')
-        ws.cell(6, 1, f"DCAA Point of Contact Information: {dcaa}")
+        # Row 10: "Cost" sub-header for each period
+        for c in range(3, total_col + 1):
+            ws.cell(10, c, "Cost")
+            self._style_subheader_cell(ws.cell(10, c))
 
-        # Row 7: Year column headers (DYNAMIC)
-        ws.cell(7, 4, "Total for All Years")  # Column D
+        # Cost Element rows (starting row 11)
+        data_start_row = 11
+        current_row = data_start_row
 
-        # Get months_per_year and extensions
-        months_per_year = project_data.get('months_per_year', {})
-        extensions = project_data.get('extensions', [])
+        # Calculate base totals (aggregated from positions/subcontractors/odcs)
+        cost_elements = self._calculate_cost_elements()
 
-        # Base Period - starts at column 7 (G) to align with Rate column
-        col_offset = 7  # Column G
-        base_months = months_per_year.get('1', 12)
-        base_label = f"Base Period ({base_months} mo)" if base_months != 12 else "Base Period"
-        ws.cell(7, col_offset, base_label)
+        # Get rates for formulas
+        indirect_rates = self.project_data.get('indirect_rates', {})
+        fringe_rate = indirect_rates.get('fringe', 0.247)
+        oh_rate = indirect_rates.get('oh_onsite', indirect_rates.get('oh', 0.0711))
+        ga_rate = indirect_rates.get('ga', 0.2243)
+        smh_rate = self.project_data.get('passthrough_rates', {}).get('smh', 0.0665)
 
-        # Option Years (exclude extension years from count)
-        num_extensions = len(extensions)
-        option_years = total_years - project_data['base_years'] - num_extensions
-        for year_num in range(1, option_years + 1):
-            col_offset += 3  # Each year takes 3 columns
-            year_key = str(year_num + project_data['base_years'])
-            option_months = months_per_year.get(year_key, 12)
-            option_label = f"Option Year {year_num}"
-            if option_months != 12:
-                option_label += f" ({option_months} mo)"
-            ws.cell(7, col_offset, option_label)
+        # Row 11: Direct Labor (calculated value)
+        dl_row = current_row
+        ws.cell(current_row, 2, "Direct Labor")
+        ws.cell(current_row, 2).font = self.BOLD_FONT
+        ws.cell(current_row, 2).border = self.THIN_BORDER
+        for period_idx in range(self.total_years):
+            period_key = f"year_{period_idx + 1}"
+            value = cost_elements.get('direct_labor', {}).get(period_key, 0)
+            cell = ws.cell(current_row, 3 + period_idx)
+            cell.value = value
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+        cell = ws.cell(current_row, total_col)
+        cell.value = cost_elements.get('direct_labor', {}).get('total', 0)
+        cell.number_format = self.CURRENCY_FORMAT
+        cell.border = self.THIN_BORDER
+        cell.font = self.BOLD_FONT
+        current_row += 1
 
-        # Extension periods (after regular years)
-        for extension in extensions:
-            col_offset += 3  # Each extension takes 3 columns
-            extension_label = extension.get('label', f"{extension.get('duration_months', 6)} Month Extension")
-            ws.cell(7, col_offset, extension_label)
+        # Row 12: Fringe Benefits (FORMULA: DL * fringe_rate)
+        fringe_row = current_row
+        ws.cell(current_row, 2, "Fringe Benefits")
+        ws.cell(current_row, 2).font = self.BOLD_FONT
+        ws.cell(current_row, 2).border = self.THIN_BORDER
+        for period_idx in range(self.total_years):
+            col_letter = get_column_letter(3 + period_idx)
+            cell = ws.cell(current_row, 3 + period_idx)
+            cell.value = f"={col_letter}{dl_row}*{fringe_rate}"
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+        cell = ws.cell(current_row, total_col)
+        cell.value = f"={get_column_letter(total_col)}{dl_row}*{fringe_rate}"
+        cell.number_format = self.CURRENCY_FORMAT
+        cell.border = self.THIN_BORDER
+        cell.font = self.BOLD_FONT
+        current_row += 1
 
-        # Row 8: Sub-headers (also dynamic)
-        ws.cell(8, 1, "Cost Elements")
-        ws.cell(8, 2, "Company Labor Category")
-        ws.cell(8, 3, "BLS Labor Category")
-        ws.cell(8, 4, "BLS Code")
-        ws.cell(8, 5, "Hours")
-        ws.cell(8, 6, "Amount")
+        # Row 13: Labor Overhead (FORMULA: (DL + Fringe) * oh_rate)
+        oh_row = current_row
+        ws.cell(current_row, 2, "Labor Overhead")
+        ws.cell(current_row, 2).font = self.BOLD_FONT
+        ws.cell(current_row, 2).border = self.THIN_BORDER
+        for period_idx in range(self.total_years):
+            col_letter = get_column_letter(3 + period_idx)
+            cell = ws.cell(current_row, 3 + period_idx)
+            cell.value = f"=({col_letter}{dl_row}+{col_letter}{fringe_row})*{oh_rate}"
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+        cell = ws.cell(current_row, total_col)
+        cell.value = f"=({get_column_letter(total_col)}{dl_row}+{get_column_letter(total_col)}{fringe_row})*{oh_rate}"
+        cell.number_format = self.CURRENCY_FORMAT
+        cell.border = self.THIN_BORDER
+        cell.font = self.BOLD_FONT
+        current_row += 1
 
-        # For each year: Rate, Hours, Amount
-        # Note: total_years already includes extension years, so we iterate over all of them
-        col_offset = 7
-        for year in range(1, total_years + 1):
-            ws.cell(8, col_offset, "Rate")
-            ws.cell(8, col_offset + 1, "Hours")
-            ws.cell(8, col_offset + 2, "Amount")
-            col_offset += 3
+        # Row 14: G&A (Labor) (FORMULA: (DL + Fringe + OH) * ga_rate)
+        ga_labor_row = current_row
+        ws.cell(current_row, 2, "General & Administrative (Labor)")
+        ws.cell(current_row, 2).font = self.BOLD_FONT
+        ws.cell(current_row, 2).border = self.THIN_BORDER
+        for period_idx in range(self.total_years):
+            col_letter = get_column_letter(3 + period_idx)
+            cell = ws.cell(current_row, 3 + period_idx)
+            cell.value = f"=({col_letter}{dl_row}+{col_letter}{fringe_row}+{col_letter}{oh_row})*{ga_rate}"
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+        cell = ws.cell(current_row, total_col)
+        total_col_letter = get_column_letter(total_col)
+        cell.value = f"=({total_col_letter}{dl_row}+{total_col_letter}{fringe_row}+{total_col_letter}{oh_row})*{ga_rate}"
+        cell.number_format = self.CURRENCY_FORMAT
+        cell.border = self.THIN_BORDER
+        cell.font = self.BOLD_FONT
+        current_row += 1
 
-        # Averaged FBLR columns (after all year columns)
-        # Note: extensions are already included in total_years, don't double-count
-        avg_fblr_start_col = 7 + (total_years * 3)
-        ws.cell(7, avg_fblr_start_col, "Averaged FBLR")
-        # Merge cells for averaged FBLR header (spans 6 columns)
-        ws.merge_cells(
-            start_row=7,
-            start_column=avg_fblr_start_col,
-            end_row=7,
-            end_column=avg_fblr_start_col + 5
-        )
+        # Row 15: Subcontractor(s) (calculated value)
+        sub_row = current_row
+        ws.cell(current_row, 2, "Subcontractor(s)")
+        ws.cell(current_row, 2).font = self.BOLD_FONT
+        ws.cell(current_row, 2).border = self.THIN_BORDER
+        for period_idx in range(self.total_years):
+            period_key = f"year_{period_idx + 1}"
+            value = cost_elements.get('subcontractors', {}).get(period_key, 0)
+            cell = ws.cell(current_row, 3 + period_idx)
+            cell.value = value
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+        cell = ws.cell(current_row, total_col)
+        cell.value = cost_elements.get('subcontractors', {}).get('total', 0)
+        cell.number_format = self.CURRENCY_FORMAT
+        cell.border = self.THIN_BORDER
+        cell.font = self.BOLD_FONT
+        current_row += 1
 
-        # Sub-headers for averaged FBLR
-        ws.cell(8, avg_fblr_start_col, "DL Rate ($/hr)")
-        ws.cell(8, avg_fblr_start_col + 1, "Fringe ($/hr)")
-        ws.cell(8, avg_fblr_start_col + 2, "OH ($/hr)")
-        ws.cell(8, avg_fblr_start_col + 3, "G&A ($/hr)")
-        ws.cell(8, avg_fblr_start_col + 4, "Fee ($/hr)")
-        ws.cell(8, avg_fblr_start_col + 5, "FBLR ($/hr)")
+        # Row 16: Subcontractor Handling (FORMULA: Sub * smh_rate)
+        sub_handling_row = current_row
+        ws.cell(current_row, 2, "Subcontractor Handling")
+        ws.cell(current_row, 2).font = self.BOLD_FONT
+        ws.cell(current_row, 2).border = self.THIN_BORDER
+        for period_idx in range(self.total_years):
+            col_letter = get_column_letter(3 + period_idx)
+            cell = ws.cell(current_row, 3 + period_idx)
+            cell.value = f"={col_letter}{sub_row}*{smh_rate}"
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+        cell = ws.cell(current_row, total_col)
+        cell.value = f"={get_column_letter(total_col)}{sub_row}*{smh_rate}"
+        cell.number_format = self.CURRENCY_FORMAT
+        cell.border = self.THIN_BORDER
+        cell.font = self.BOLD_FONT
+        current_row += 1
 
-        # Row 9: Add editable rates reference section (far right columns)
-        # These cells will be referenced by all formulas
-        # Place them in columns starting AFTER the averaged FBLR columns
-        # Averaged FBLR ends at: avg_fblr_start_col + 5, so start at +7 for safety
-        rates_col = avg_fblr_start_col + 7  # Start after averaged FBLR columns
+        # Row 17: Materials (calculated value)
+        material_row = current_row
+        ws.cell(current_row, 2, "Materials")
+        ws.cell(current_row, 2).font = self.BOLD_FONT
+        ws.cell(current_row, 2).border = self.THIN_BORDER
+        for period_idx in range(self.total_years):
+            period_key = f"year_{period_idx + 1}"
+            value = cost_elements.get('materials', {}).get(period_key, 0)
+            cell = ws.cell(current_row, 3 + period_idx)
+            cell.value = value
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+        cell = ws.cell(current_row, total_col)
+        cell.value = cost_elements.get('materials', {}).get('total', 0)
+        cell.number_format = self.CURRENCY_FORMAT
+        cell.border = self.THIN_BORDER
+        cell.font = self.BOLD_FONT
+        current_row += 1
 
-        ws.cell(1, rates_col, "RATES REFERENCE")
-        ws.cell(2, rates_col, "Edit these values to update all calculations")
+        # Row 18: Material Handling (FORMULA: Materials * smh_rate)
+        material_handling_row = current_row
+        ws.cell(current_row, 2, "Materials Handling")
+        ws.cell(current_row, 2).font = self.BOLD_FONT
+        ws.cell(current_row, 2).border = self.THIN_BORDER
+        for period_idx in range(self.total_years):
+            col_letter = get_column_letter(3 + period_idx)
+            cell = ws.cell(current_row, 3 + period_idx)
+            cell.value = f"={col_letter}{material_row}*{smh_rate}"
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+        cell = ws.cell(current_row, total_col)
+        cell.value = f"={get_column_letter(total_col)}{material_row}*{smh_rate}"
+        cell.number_format = self.CURRENCY_FORMAT
+        cell.border = self.THIN_BORDER
+        cell.font = self.BOLD_FONT
+        current_row += 1
 
-        # Indirect rates
-        ws.cell(3, rates_col, "Fringe Rate:")
-        ws.cell(3, rates_col + 1, project_data['indirect_rates']['fringe'])
-        self.row_trackers['fringe_rate_cell'] = f"{get_column_letter(rates_col + 1)}3"
+        # Row 19: Travel (calculated value)
+        travel_row = current_row
+        ws.cell(current_row, 2, "Travel")
+        ws.cell(current_row, 2).font = self.BOLD_FONT
+        ws.cell(current_row, 2).border = self.THIN_BORDER
+        for period_idx in range(self.total_years):
+            period_key = f"year_{period_idx + 1}"
+            value = cost_elements.get('travel', {}).get(period_key, 0)
+            cell = ws.cell(current_row, 3 + period_idx)
+            cell.value = value
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+        cell = ws.cell(current_row, total_col)
+        cell.value = cost_elements.get('travel', {}).get('total', 0)
+        cell.number_format = self.CURRENCY_FORMAT
+        cell.border = self.THIN_BORDER
+        cell.font = self.BOLD_FONT
+        current_row += 1
 
-        ws.cell(4, rates_col, "OH Rate:")
-        ws.cell(4, rates_col + 1, project_data['indirect_rates']['oh'])
-        self.row_trackers['oh_rate_cell'] = f"{get_column_letter(rates_col + 1)}4"
+        # Row 20: G&A (Travel) (FORMULA: Travel * ga_rate)
+        ga_travel_row = current_row
+        ws.cell(current_row, 2, "General & Administrative (Travel)")
+        ws.cell(current_row, 2).font = self.BOLD_FONT
+        ws.cell(current_row, 2).border = self.THIN_BORDER
+        for period_idx in range(self.total_years):
+            col_letter = get_column_letter(3 + period_idx)
+            cell = ws.cell(current_row, 3 + period_idx)
+            cell.value = f"={col_letter}{travel_row}*{ga_rate}"
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+        cell = ws.cell(current_row, total_col)
+        cell.value = f"={get_column_letter(total_col)}{travel_row}*{ga_rate}"
+        cell.number_format = self.CURRENCY_FORMAT
+        cell.border = self.THIN_BORDER
+        cell.font = self.BOLD_FONT
+        current_row += 1
 
-        ws.cell(5, rates_col, "G&A Rate:")
-        ws.cell(5, rates_col + 1, project_data['indirect_rates']['ga'])
-        self.row_trackers['ga_rate_cell'] = f"{get_column_letter(rates_col + 1)}5"
+        # Sub-Total row
+        subtotal_row = current_row
+        ws.cell(current_row, 2, "Sub-Total")
+        ws.cell(current_row, 2).font = self.BOLD_FONT
+        ws.cell(current_row, 2).border = self.THIN_BORDER
 
-        # Fee rates
-        ws.cell(6, rates_col, "Prime Labor Fee:")
-        ws.cell(6, rates_col + 1, project_data['fee_rates']['prime_labor'])
-        self.row_trackers['prime_fee_rate_cell'] = f"{get_column_letter(rates_col + 1)}6"
+        for period_idx in range(self.total_years):
+            cell = ws.cell(current_row, 3 + period_idx)
+            # Sum formula for this period column
+            cell.value = f"=SUM({get_column_letter(3 + period_idx)}{data_start_row}:{get_column_letter(3 + period_idx)}{current_row - 1})"
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+            cell.font = self.BOLD_FONT
 
-        ws.cell(7, rates_col, "Sub Labor Fee:")
-        ws.cell(7, rates_col + 1, project_data['fee_rates']['sub_labor'])
-        self.row_trackers['sub_fee_rate_cell'] = f"{get_column_letter(rates_col + 1)}7"
+        # Total column for sub-total
+        cell = ws.cell(current_row, total_col)
+        cell.value = f"=SUM({get_column_letter(total_col)}{data_start_row}:{get_column_letter(total_col)}{current_row - 1})"
+        cell.number_format = self.CURRENCY_FORMAT
+        cell.border = self.THIN_BORDER
+        cell.font = self.BOLD_FONT
 
-        # Passthrough rates
-        ws.cell(8, rates_col, "S&MH Rate:")
-        ws.cell(8, rates_col + 1, project_data['passthrough_rates']['smh'])
-        self.row_trackers['smh_rate_cell'] = f"{get_column_letter(rates_col + 1)}8"
+        current_row += 1
 
-        ws.cell(9, rates_col, "G&A Passthrough:")
-        ws.cell(9, rates_col + 1, project_data['passthrough_rates']['ga'])
-        self.row_trackers['ga_passthrough_rate_cell'] = f"{get_column_letter(rates_col + 1)}9"
+        # Fee row
+        fee_row = current_row
+        ws.cell(current_row, 2, "Fee")
+        ws.cell(current_row, 2).font = self.BOLD_FONT
+        ws.cell(current_row, 2).border = self.THIN_BORDER
 
-        # ODC rate
-        ws.cell(10, rates_col, "G&A Adder (ODC):")
-        ws.cell(10, rates_col + 1, project_data['ga_adder_rate'])
-        self.row_trackers['ga_adder_rate_cell'] = f"{get_column_letter(rates_col + 1)}10"
+        fee_values = cost_elements.get('fee', {})
+        for period_idx in range(self.total_years):
+            period_key = f"year_{period_idx + 1}"
+            value = fee_values.get(period_key, 0)
+            cell = ws.cell(current_row, 3 + period_idx)
+            cell.value = value
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
 
-        # Row 9-10: Section headers (back to main content area)
-        ws.cell(9, 1, "Prime Contractor Labor Cost")
-        ws.cell(10, 1, "Prime Contractor Direct Labor")
+        cell = ws.cell(current_row, total_col)
+        cell.value = fee_values.get('total', 0)
+        cell.number_format = self.CURRENCY_FORMAT
+        cell.border = self.THIN_BORDER
+        cell.font = self.BOLD_FONT
 
-        return 11  # Next section starts at row 11
+        current_row += 1
 
-    def _write_prime_labor_section(
-        self,
-        ws,
-        positions: List[Dict],
-        indirect_rates: Dict[str, float],
-        escalation_rates: Dict[str, float],
-        fee_rates: Dict[str, float],
-        start_row: int,
-        total_years: int
-    ) -> int:
-        """
-        Write prime contractor labor section.
+        # Total Proposed row
+        ws.cell(current_row, 2, "Total Proposed")
+        ws.cell(current_row, 2).font = self.BOLD_FONT
+        ws.cell(current_row, 2).border = self.THIN_BORDER
+        ws.cell(current_row, 2).alignment = Alignment(horizontal='center')
 
-        For each position:
-        - Name | Labor Category | eCRAFT Code
-        - Total hours and amount (SUM formulas)
-        - Year-by-year: Rate, Hours, Amount
+        for period_idx in range(self.total_years):
+            cell = ws.cell(current_row, 3 + period_idx)
+            cell.value = f"={get_column_letter(3 + period_idx)}{subtotal_row}+{get_column_letter(3 + period_idx)}{fee_row}"
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+            cell.font = self.BOLD_FONT
 
-        Uses Calculator.calculate_position_years() for FBLR calculations.
+        cell = ws.cell(current_row, total_col)
+        cell.value = f"={get_column_letter(total_col)}{subtotal_row}+{get_column_letter(total_col)}{fee_row}"
+        cell.number_format = self.CURRENCY_FORMAT
+        cell.border = self.THIN_BORDER
+        cell.font = self.BOLD_FONT
 
-        Args:
-            ws: Worksheet
-            positions: List of position data dicts
-            indirect_rates: Fringe, OH, G&A rates
-            escalation_rates: Year-over-year escalation
-            fee_rates: Fee rates for prime and sub labor
-            start_row: Starting row number
-            total_years: Total years in contract
+    def _create_labor_detail_sheet(self):
+        """Create the Labor Detail sheet for prime contractor positions."""
+        ws = self.wb.create_sheet("Labor Detail")
 
-        Returns:
-            Next available row number
-        """
-        current_row = start_row
+        # Column widths matching template
+        ws.column_dimensions['A'].width = 2.33  # Padding
+        ws.column_dimensions['B'].width = 50.5  # Labor Category
+        ws.column_dimensions['C'].width = 19.66  # Site
+        ws.column_dimensions['D'].width = 14.33  # Location (if used) or first Hours column
+
+        # Header section
+        ws.cell(1, 2, "Proprietary Data")
+        ws.cell(2, 2, f"Prime Contractor Name: {self.project_data['prime_contractor_name']}")
+
+        # Column headers row
+        header_row = 10
+        headers = ["Labor Category", "Site", "Location"]
+        for idx, header in enumerate(headers):
+            cell = ws.cell(header_row, 2 + idx)
+            cell.value = header
+            self._style_header_cell(cell)
+
+        # For each period: Hours, Rate, Dollars
+        col = 5
+        for year in range(1, self.total_years + 1):
+            period_label = self._get_period_label(year)
+
+            # Period header above sub-headers (row 7) - Light blue background
+            period_cell = ws.cell(7, col, period_label)
+            self._style_period_header_cell(period_cell)
+
+            # Sub-headers for Hours, Rate, Dollars
+            sub_headers = ["Hours/Base", "Rate", "Dollars"]
+            for sub_idx, sub_header in enumerate(sub_headers):
+                cell = ws.cell(header_row, col + sub_idx)
+                cell.value = sub_header
+                self._style_header_cell(cell)
+
+                # Set column widths matching template
+                if sub_idx == 0:  # Hours
+                    ws.column_dimensions[get_column_letter(col + sub_idx)].width = 14.33
+                elif sub_idx == 1:  # Rate
+                    ws.column_dimensions[get_column_letter(col + sub_idx)].width = 11.33
+                else:  # Dollars
+                    ws.column_dimensions[get_column_letter(col + sub_idx)].width = 14.5
+
+            col += 3
+
+        # Total columns
+        ws.cell(header_row, col, "Total Hours")
+        self._style_header_cell(ws.cell(header_row, col))
+        total_hours_col = col
+        col += 1
+
+        ws.cell(header_row, col, "Total Dollars")
+        self._style_header_cell(ws.cell(header_row, col))
+        total_dollars_col = col
+
+        # Data rows
+        current_row = header_row + 1
+        positions = self.project_data.get('prime_positions', [])
 
         for position in positions:
-            # Calculate year-by-year costs using Calculator
+            ws.cell(current_row, 2, position['labor_category'])
+            ws.cell(current_row, 2).border = self.THIN_BORDER
+
+            ws.cell(current_row, 3, position.get('site', 'Government'))
+            ws.cell(current_row, 3).border = self.THIN_BORDER
+
+            ws.cell(current_row, 4, position.get('location', ''))
+            ws.cell(current_row, 4).border = self.THIN_BORDER
+
+            # Calculate position data for each year
             results = Calculator.calculate_position_years(
                 position_data=position,
-                escalation_rates=escalation_rates,
-                indirect_rates=indirect_rates,
-                total_years=total_years
+                escalation_rates=self.project_data['escalation_rates'],
+                indirect_rates=self.project_data['indirect_rates'],
+                total_years=self.total_years
             )
 
-            # Column A: Name (or "TBD")
-            ws.cell(current_row, 1, position.get('name', 'TBD'))
+            col = 5
+            hours_cells = []
+            dollars_cells = []
 
-            # Column B: Labor Category
-            ws.cell(current_row, 2, position['labor_category'])
-
-            # Column C: BLS Labor Category
-            ws.cell(current_row, 3, position['ecraft_code'])
-
-            # Column D: BLS Code
-            ws.cell(current_row, 4, position.get('bls_code', ''))
-
-            # Build year column cell references for SUM formulas
-            year_hour_cells = []
-            year_amount_cells = []
-
-            for year in range(1, total_years + 1):
-                col_offset = self._calculate_column_offset(year)
-                hour_col = get_column_letter(col_offset + 1)
-                amount_col = get_column_letter(col_offset + 2)
-                year_hour_cells.append(f"{hour_col}{current_row}")
-                year_amount_cells.append(f"{amount_col}{current_row}")
-
-            # Column E: Total Hours (SUM formula)
-            ws.cell(current_row, 5, f"={'+'.join(year_hour_cells)}")
-
-            # Column F: Total Amount (SUM formula)
-            ws.cell(current_row, 6, f"={'+'.join(year_amount_cells)}")
-
-            # Year-by-year data
-            for year in range(1, total_years + 1):
-                year_data = results[f'year_{year}']
-                col_offset = self._calculate_column_offset(year)
-
-                # Rate - Use DL rate (not FBLR) so indirect cost rows calculate correctly
-                ws.cell(current_row, col_offset, year_data['dl_rate'])
+            for year in range(1, self.total_years + 1):
+                year_data = results.get(f'year_{year}', {})
 
                 # Hours
-                ws.cell(current_row, col_offset + 1, year_data['hours'])
+                hours_col = col
+                cell = ws.cell(current_row, col)
+                cell.value = year_data.get('hours', 0)
+                cell.number_format = self.NUMBER_FORMAT
+                cell.border = self.THIN_BORDER
+                hours_cells.append(f"{get_column_letter(col)}{current_row}")
+                col += 1
 
-                # Amount (formula: Rate × Hours)
-                rate_cell = get_column_letter(col_offset) + str(current_row)
-                hours_cell = get_column_letter(col_offset + 1) + str(current_row)
-                ws.cell(current_row, col_offset + 2, f"={rate_cell}*{hours_cell}")
+                # Rate (FBLR)
+                rate_col = col
+                cell = ws.cell(current_row, col)
+                cell.value = year_data.get('rate', 0)
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+                col += 1
 
-            # Averaged FBLR calculation
-            # Use base_annual_wage (which comes from selected_wage in the frontend)
-            # NOT wage_{percentile} which may be different from the user's custom salary
-            base_wage = position.get('base_annual_wage', position.get(f"wage_{position['percentile']}", 0))
-            hours_per_year = position.get('hours_per_year', {})
-            standard_fte_hours = position.get('standard_fte_hours', 1880)
+                # Dollars - USE FORMULA: Hours * Rate
+                dollars_col = col
+                cell = ws.cell(current_row, col)
+                cell.value = f"={get_column_letter(hours_col)}{current_row}*{get_column_letter(rate_col)}{current_row}"
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+                dollars_cells.append(f"{get_column_letter(col)}{current_row}")
+                col += 1
 
-            avg_fblr = Calculator.calculate_averaged_fblr(
-                base_wage=base_wage,
-                hours_per_year=hours_per_year,
-                escalation_rates=escalation_rates,
-                fringe_rate=indirect_rates['fringe'],
-                oh_rate=indirect_rates['oh'],
-                ga_rate=indirect_rates['ga'],
-                fee_rate=fee_rates['prime_labor'],
-                standard_fte_hours=standard_fte_hours,
-                total_years=total_years
-            )
+            # Total Hours
+            cell = ws.cell(current_row, total_hours_col)
+            cell.value = f"={'+'.join(hours_cells)}"
+            cell.number_format = self.NUMBER_FORMAT
+            cell.border = self.THIN_BORDER
+            cell.font = self.BOLD_FONT
 
-            # Write averaged FBLR values with currency formatting
-            avg_fblr_start_col = 7 + (total_years * 3)
-            currency_format = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)'
-
-            ws.cell(current_row, avg_fblr_start_col, avg_fblr['dl_rate'])
-            ws.cell(current_row, avg_fblr_start_col).number_format = currency_format
-
-            ws.cell(current_row, avg_fblr_start_col + 1, avg_fblr['fringe'])
-            ws.cell(current_row, avg_fblr_start_col + 1).number_format = currency_format
-
-            ws.cell(current_row, avg_fblr_start_col + 2, avg_fblr['oh'])
-            ws.cell(current_row, avg_fblr_start_col + 2).number_format = currency_format
-
-            ws.cell(current_row, avg_fblr_start_col + 3, avg_fblr['ga'])
-            ws.cell(current_row, avg_fblr_start_col + 3).number_format = currency_format
-
-            ws.cell(current_row, avg_fblr_start_col + 4, avg_fblr['fee'])
-            ws.cell(current_row, avg_fblr_start_col + 4).number_format = currency_format
-
-            ws.cell(current_row, avg_fblr_start_col + 5, avg_fblr['fblr'])
-            ws.cell(current_row, avg_fblr_start_col + 5).number_format = currency_format
+            # Total Dollars
+            cell = ws.cell(current_row, total_dollars_col)
+            cell.value = f"={'+'.join(dollars_cells)}"
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+            cell.font = self.BOLD_FONT
 
             current_row += 1
 
-        # Total Direct Labor row
-        total_dl_row = current_row
-        ws.cell(current_row, 1, "Total Direct Labor")
+        # Total row
+        if positions:
+            ws.cell(current_row, 2, "Total Direct Labor")
+            ws.cell(current_row, 2).font = self.BOLD_FONT
+            ws.cell(current_row, 2).border = self.THIN_BORDER
 
-        # Add formulas for each year column
-        for year in range(1, total_years + 1):
-            col_offset = self._calculate_column_offset(year)
-            amount_col = get_column_letter(col_offset + 2)
-            ws.cell(current_row, col_offset + 2, f"=SUM({amount_col}{start_row}:{amount_col}{current_row-1})")
+            col = 5
+            for year in range(1, self.total_years + 1):
+                # Skip Hours column in sum (just dollars)
+                col += 1  # Hours
+                col += 1  # Rate
 
-        # Total column (column F)
-        ws.cell(current_row, 6, f"=SUM(F{start_row}:F{current_row-1})")
-        current_row += 1
+                # Dollars sum
+                cell = ws.cell(current_row, col)
+                cell.value = f"=SUM({get_column_letter(col)}{header_row + 1}:{get_column_letter(col)}{current_row - 1})"
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+                cell.font = self.BOLD_FONT
+                col += 1
 
-        # Indirect costs breakdown with formulas
-        # Fringe row
-        fringe_row = current_row
-        fringe_rate_cell = self.row_trackers['fringe_rate_cell']
-        ws.cell(current_row, 1, "Fringe")
-        for year in range(1, total_years + 1):
-            col_offset = self._calculate_column_offset(year)
-            amount_col = get_column_letter(col_offset + 2)
-            ws.cell(current_row, col_offset + 2, f"={amount_col}{total_dl_row}*${fringe_rate_cell}")
-        ws.cell(current_row, 6, f"=F{total_dl_row}*${fringe_rate_cell}")
-        current_row += 1
+            # Total Dollars sum
+            cell = ws.cell(current_row, total_dollars_col)
+            cell.value = f"=SUM({get_column_letter(total_dollars_col)}{header_row + 1}:{get_column_letter(total_dollars_col)}{current_row - 1})"
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+            cell.font = self.BOLD_FONT
 
-        # Subtotal after Fringe
-        subtotal_1_row = current_row
-        ws.cell(current_row, 1, "Subtotal (DL + Fringe)")
-        for year in range(1, total_years + 1):
-            col_offset = self._calculate_column_offset(year)
-            amount_col = get_column_letter(col_offset + 2)
-            ws.cell(current_row, col_offset + 2, f"={amount_col}{total_dl_row}+{amount_col}{fringe_row}")
-        ws.cell(current_row, 6, f"=F{total_dl_row}+F{fringe_row}")
-        current_row += 1
+    def _create_subcontractor_sheet(self, sub_data: Dict, sub_index: int):
+        """Create a sheet for a single subcontractor."""
+        sheet_name = f"Subcontractor {sub_index}"
+        ws = self.wb.create_sheet(sheet_name)
 
-        # Overhead row
-        oh_row = current_row
-        oh_rate_cell = self.row_trackers['oh_rate_cell']
-        ws.cell(current_row, 1, "Overhead")
-        for year in range(1, total_years + 1):
-            col_offset = self._calculate_column_offset(year)
-            amount_col = get_column_letter(col_offset + 2)
-            ws.cell(current_row, col_offset + 2, f"={amount_col}{subtotal_1_row}*${oh_rate_cell}")
-        ws.cell(current_row, 6, f"=F{subtotal_1_row}*${oh_rate_cell}")
-        current_row += 1
+        # Column widths matching template
+        ws.column_dimensions['A'].width = 2.33  # Padding
+        ws.column_dimensions['B'].width = 50.5  # Labor Category
+        ws.column_dimensions['C'].width = 19.66  # Site
 
-        # Subtotal after OH
-        subtotal_2_row = current_row
-        ws.cell(current_row, 1, "Subtotal (DL + Fringe + OH)")
-        for year in range(1, total_years + 1):
-            col_offset = self._calculate_column_offset(year)
-            amount_col = get_column_letter(col_offset + 2)
-            ws.cell(current_row, col_offset + 2, f"={amount_col}{subtotal_1_row}+{amount_col}{oh_row}")
-        ws.cell(current_row, 6, f"=F{subtotal_1_row}+F{oh_row}")
-        current_row += 1
+        # Header
+        ws.cell(1, 2, "Proprietary Data")
+        ws.cell(2, 2, f"Subcontractor Name: {sub_data['name']}")
 
-        # G&A row
-        ga_row = current_row
-        ga_rate_cell = self.row_trackers['ga_rate_cell']
-        ws.cell(current_row, 1, "G&A")
-        for year in range(1, total_years + 1):
-            col_offset = self._calculate_column_offset(year)
-            amount_col = get_column_letter(col_offset + 2)
-            ws.cell(current_row, col_offset + 2, f"={amount_col}{subtotal_2_row}*${ga_rate_cell}")
-        ws.cell(current_row, 6, f"=F{subtotal_2_row}*${ga_rate_cell}")
-        current_row += 1
+        # Column headers
+        header_row = 10
+        headers = ["Labor Category", "Site"]
+        for idx, header in enumerate(headers):
+            cell = ws.cell(header_row, 2 + idx)
+            cell.value = header
+            self._style_header_cell(cell)
 
-        # Total Prime Labor (DL + Fringe + OH + G&A)
-        self.row_trackers['prime_labor_total_row'] = current_row
-        ws.cell(current_row, 1, "Total Prime Labor Cost (FBLR)")
-        for year in range(1, total_years + 1):
-            col_offset = self._calculate_column_offset(year)
-            amount_col = get_column_letter(col_offset + 2)
-            ws.cell(current_row, col_offset + 2, f"={amount_col}{subtotal_2_row}+{amount_col}{ga_row}")
-        ws.cell(current_row, 6, f"=F{subtotal_2_row}+F{ga_row}")
-        current_row += 2
+        # Period columns
+        col = 4
+        for year in range(1, self.total_years + 1):
+            period_label = self._get_period_label(year)
 
-        return current_row
+            # Period header above (row 7) - Light blue background
+            period_cell = ws.cell(7, col, period_label)
+            self._style_period_header_cell(period_cell)
 
-    def _write_subcontractor_section(
-        self,
-        ws,
-        subcontractors: List[Dict],
-        start_row: int,
-        total_years: int
-    ) -> int:
-        """
-        Write subcontractor section (SIMPLE - just rates, no calculation breakdown).
+            # Sub-headers for Hours, Rate, Dollars
+            sub_headers = ["Hours/Base", "Rate", "Dollars"]
+            for sub_idx, sub_header in enumerate(sub_headers):
+                cell = ws.cell(header_row, col + sub_idx)
+                cell.value = sub_header
+                self._style_header_cell(cell)
 
-        For each subcontractor:
-        - Company name
-        - Labor categories with their provided FBLR rates
-        - No individual employee breakdown
-        - No Fee/S&MH calculation details
+                # Set column widths matching template
+                if sub_idx == 0:  # Hours
+                    ws.column_dimensions[get_column_letter(col + sub_idx)].width = 14.33
+                elif sub_idx == 1:  # Rate
+                    ws.column_dimensions[get_column_letter(col + sub_idx)].width = 11.33
+                else:  # Dollars
+                    ws.column_dimensions[get_column_letter(col + sub_idx)].width = 14.5
 
-        Args:
-            ws: Worksheet
-            subcontractors: List of subcontractor data
-            start_row: Starting row number
-            total_years: Total years in contract
+            col += 3
 
-        Returns:
-            Next available row number
-        """
-        current_row = start_row
-
-        # Section headers
-        ws.cell(current_row, 1, "Subcontractor Labor Cost")
-        current_row += 1
-        ws.cell(current_row, 1, "Subcontractor proposed cost and fee")
-        current_row += 1
-
-        # Track start for total calculation
-        sub_data_start = current_row
-
-        # For each subcontractor company
-        for idx, sub in enumerate(subcontractors, 1):
-            # Company header
-            ws.cell(current_row, 1, f"Subcontractor {idx} ({sub['name']})")
-            current_row += 1
-
-            # Labor category rate table (no individual employees)
-            for labor_cat_data in sub['labor_categories']:
-                # Column A: Blank or placeholder
-                ws.cell(current_row, 1, "")
-
-                # Column B: Labor Category
-                ws.cell(current_row, 2, labor_cat_data['labor_category'])
-
-                # Column C: eCRAFT Code
-                ws.cell(current_row, 3, labor_cat_data['ecraft_code'])
-
-                # Build year cell references for SUM
-                year_hour_cells = []
-                year_amount_cells = []
-
-                for year in range(1, total_years + 1):
-                    col_offset = self._calculate_column_offset(year)
-                    hour_col = get_column_letter(col_offset + 1)
-                    amount_col = get_column_letter(col_offset + 2)
-                    year_hour_cells.append(f"{hour_col}{current_row}")
-                    year_amount_cells.append(f"{amount_col}{current_row}")
-
-                # Column D: Total Hours (SUM formula)
-                ws.cell(current_row, 4, f"={'+'.join(year_hour_cells)}")
-
-                # Column E: Total Amount (SUM formula)
-                ws.cell(current_row, 5, f"={'+'.join(year_amount_cells)}")
-
-                # Year-by-year data (rates provided by subcontractor)
-                for year in range(1, total_years + 1):
-                    col_offset = self._calculate_column_offset(year)
-
-                    # Get rate and hours from subcontractor data (required, no defaults)
-                    year_rate = labor_cat_data[f'year_{year}_rate']
-                    year_hours = labor_cat_data[f'year_{year}_hours']
-
-                    # Write rate
-                    ws.cell(current_row, col_offset, year_rate)
-
-                    # Write hours
-                    ws.cell(current_row, col_offset + 1, year_hours)
-
-                    # Write amount formula (Rate × Hours)
-                    rate_cell = get_column_letter(col_offset) + str(current_row)
-                    hours_cell = get_column_letter(col_offset + 1) + str(current_row)
-                    ws.cell(current_row, col_offset + 2, f"={rate_cell}*{hours_cell}")
-
-                current_row += 1
-
-            # Blank row between subcontractors
-            current_row += 1
-
-        # Total subcontractor labor row
-        ws.cell(current_row, 1, "Total proposed subcontractor labor cost and fee")
-        ws.cell(current_row, 5, f"=SUM(E{sub_data_start}:E{current_row-1})")
-        self.row_trackers['sub_labor_total'] = current_row
-        current_row += 2
-
-        return current_row
-
-    def _write_passthrough_section(
-        self,
-        ws,
-        passthrough_rates: Dict[str, float],
-        start_row: int,
-        total_years: int
-    ) -> int:
-        """
-        Write prime contractor pass-through section.
-
-        Pass-through covers prime's costs for managing subcontractors:
-        - S&MH (Subcontractor & Material Handling)
-        - G&A (if applicable)
-        - Other costs
-
-        Applied to total subcontractor costs.
-
-        Args:
-            ws: Worksheet
-            passthrough_rates: Dict with 'smh' and 'ga' rates
-            start_row: Starting row number
-            total_years: Total years in contract
-
-        Returns:
-            Next available row number
-        """
-        current_row = start_row
-
-        # Section header
-        ws.cell(current_row, 1, "Prime contractor pass through (not including fee)")
-        current_row += 1
-
-        # Get subcontractor total row reference
-        sub_total_row = self.row_trackers.get('sub_labor_total', start_row - 3)
-
-        # S&MH (Handling) row
-        ws.cell(current_row, 1, "Handling")
-
-        smh_rate = passthrough_rates['smh']  # Required, no default
-        smh_rate_cell = self.row_trackers['smh_rate_cell']
-        ws.cell(current_row, 6, smh_rate)  # Show rate in Base Period column
-
-        # Calculate S&MH for each year
-        year_smh_cells = []
-        for year in range(1, total_years + 1):
-            col_offset = self._calculate_column_offset(year)
-            amount_col = get_column_letter(col_offset + 2)
-
-            # Reference subcontractor amount for this year
-            sub_amount_cell = f"{amount_col}{sub_total_row}"
-
-            # S&MH = sub_amount × smh_rate (reference cell)
-            ws.cell(current_row, col_offset + 2, f"={sub_amount_cell}*${smh_rate_cell}")
-            year_smh_cells.append(f"{amount_col}{current_row}")
-
-        # Total S&MH
-        ws.cell(current_row, 5, f"={'+'.join(year_smh_cells)}")
-        current_row += 1
-
-        # G&A row (if applicable)
-        ga_rate = passthrough_rates.get('ga', 0)
-        ga_passthrough_cell = self.row_trackers['ga_passthrough_rate_cell']
-        if ga_rate > 0:
-            ws.cell(current_row, 1, "G&A")
-            ws.cell(current_row, 6, ga_rate)
-            # Calculate G&A passthrough for each year
-            year_ga_cells = []
-            for year in range(1, total_years + 1):
-                col_offset = self._calculate_column_offset(year)
-                amount_col = get_column_letter(col_offset + 2)
-                sub_amount_cell = f"{amount_col}{sub_total_row}"
-                ws.cell(current_row, col_offset + 2, f"={sub_amount_cell}*${ga_passthrough_cell}")
-                year_ga_cells.append(f"{amount_col}{current_row}")
-            ws.cell(current_row, 5, f"={'+'.join(year_ga_cells)}")
-            current_row += 1
-
-        # Other row (placeholder)
-        ws.cell(current_row, 1, "Other (if any)")
-        current_row += 1
-
-        # Total pass-through row
-        ws.cell(current_row, 1, "Total pass through (not including fee)")
-        current_row += 1
-
-        # Total Subcontractor Cost including pass-through
-        ws.cell(current_row, 1, "Total Subcontractor Cost including pass through")
-        current_row += 2
-
-        return current_row
-
-    def _write_fee_section(
-        self,
-        ws,
-        fee_rates: Dict[str, float],
-        start_row: int,
-        total_years: int
-    ) -> int:
-        """
-        Write fee (profit) section.
-
-        Calculates prime contractor's profit on:
-        - Prime labor (higher fee rate, e.g., 8%)
-        - Subcontractor labor (lower fee rate, e.g., 1.26%)
-
-        Args:
-            ws: Worksheet
-            fee_rates: Dict with 'prime_labor' and 'sub_labor' fee rates
-            start_row: Starting row number
-            total_years: Total years in contract
-
-        Returns:
-            Next available row number
-        """
-        current_row = start_row
-
-        # Get row references from tracker
-        prime_labor_total_row = self.row_trackers.get('prime_labor_total_row')
-        sub_labor_total_row = self.row_trackers.get('sub_labor_total')
-        prime_fee_rate_cell = self.row_trackers.get('prime_fee_rate_cell')
-        sub_fee_rate_cell = self.row_trackers.get('sub_fee_rate_cell')
-
-        # Total Labor Cost row (sum of prime + sub)
-        total_labor_row = current_row
-        ws.cell(current_row, 1, "Total Labor Cost (Prime and Subcontractor Labor)")
-        # Add formulas for each year
-        for year in range(1, total_years + 1):
-            col_offset = self._calculate_column_offset(year)
-            amount_col = get_column_letter(col_offset + 2)
-            if prime_labor_total_row and sub_labor_total_row:
-                ws.cell(current_row, col_offset + 2, f"={amount_col}{prime_labor_total_row}+{amount_col}{sub_labor_total_row}")
-            elif prime_labor_total_row:
-                ws.cell(current_row, col_offset + 2, f"={amount_col}{prime_labor_total_row}")
         # Total column
-        if prime_labor_total_row and sub_labor_total_row:
-            ws.cell(current_row, 6, f"=F{prime_labor_total_row}+F{sub_labor_total_row}")
-        elif prime_labor_total_row:
-            ws.cell(current_row, 6, f"=F{prime_labor_total_row}")
-        current_row += 2
+        ws.cell(header_row, col, "Total")
+        self._style_header_cell(ws.cell(header_row, col))
+        total_col = col
 
-        # Fixed Fee section header
-        ws.cell(current_row, 1, "Fixed Fee")
-        current_row += 1
+        # Data rows
+        current_row = header_row + 1
+        for labor_cat in sub_data.get('labor_categories', []):
+            ws.cell(current_row, 2, labor_cat['labor_category'])
+            ws.cell(current_row, 2).border = self.THIN_BORDER
 
-        # Prime contractor fee for prime labor
-        prime_fee_row = current_row
-        ws.cell(current_row, 1, "Prime Contractor Fee for Prime Contractor Labor")
-        prime_fee_rate = fee_rates['prime_labor']
-        ws.cell(current_row, 5, prime_fee_rate)  # Show rate in column E
-        # Calculate fee for each year
-        if prime_labor_total_row and prime_fee_rate_cell:
-            for year in range(1, total_years + 1):
-                col_offset = self._calculate_column_offset(year)
-                amount_col = get_column_letter(col_offset + 2)
-                ws.cell(current_row, col_offset + 2, f"={amount_col}{prime_labor_total_row}*${prime_fee_rate_cell}")
-            ws.cell(current_row, 6, f"=F{prime_labor_total_row}*${prime_fee_rate_cell}")
-        current_row += 1
+            ws.cell(current_row, 3, labor_cat.get('site', 'Government'))
+            ws.cell(current_row, 3).border = self.THIN_BORDER
 
-        # Prime contractor fee for subcontractor labor
-        sub_fee_row = current_row
-        ws.cell(current_row, 1, "Prime Contractor Fee for Subcontractor Labor *")
-        sub_fee_rate = fee_rates['sub_labor']
-        ws.cell(current_row, 5, sub_fee_rate)  # Show rate in column E
-        # Calculate fee for each year (only if subcontractors exist)
-        if sub_labor_total_row and sub_fee_rate_cell:
-            for year in range(1, total_years + 1):
-                col_offset = self._calculate_column_offset(year)
-                amount_col = get_column_letter(col_offset + 2)
-                ws.cell(current_row, col_offset + 2, f"={amount_col}{sub_labor_total_row}*${sub_fee_rate_cell}")
-            ws.cell(current_row, 6, f"=F{sub_labor_total_row}*${sub_fee_rate_cell}")
-        current_row += 1
+            col = 4
+            dollars_cells = []
 
-        # Total Fee row
-        total_fee_row = current_row
-        ws.cell(current_row, 1, "Total Fee (for Prime and Subcontractor Labor)")
-        for year in range(1, total_years + 1):
-            col_offset = self._calculate_column_offset(year)
-            amount_col = get_column_letter(col_offset + 2)
-            if sub_labor_total_row:
-                ws.cell(current_row, col_offset + 2, f"={amount_col}{prime_fee_row}+{amount_col}{sub_fee_row}")
-            else:
-                ws.cell(current_row, col_offset + 2, f"={amount_col}{prime_fee_row}")
-        if sub_labor_total_row:
-            ws.cell(current_row, 6, f"=F{prime_fee_row}+F{sub_fee_row}")
-        else:
-            ws.cell(current_row, 6, f"=F{prime_fee_row}")
-        current_row += 2
+            for year in range(1, self.total_years + 1):
+                hours = labor_cat.get(f'year_{year}_hours', 0)
+                rate = labor_cat.get(f'year_{year}_rate', 0)
 
-        # Total Labor Cost Plus Fixed Fee (CPFF)
-        ws.cell(current_row, 1, "Total Labor Cost Plus Fixed Fee (CPFF)")
-        for year in range(1, total_years + 1):
-            col_offset = self._calculate_column_offset(year)
-            amount_col = get_column_letter(col_offset + 2)
-            ws.cell(current_row, col_offset + 2, f"={amount_col}{total_labor_row}+{amount_col}{total_fee_row}")
-        ws.cell(current_row, 6, f"=F{total_labor_row}+F{total_fee_row}")
+                # Hours
+                cell = ws.cell(current_row, col)
+                cell.value = hours
+                cell.number_format = self.NUMBER_FORMAT
+                cell.border = self.THIN_BORDER
+                col += 1
 
-        # Track CPFF row for Grand Total calculation
-        self.row_trackers['cpff_row'] = current_row
+                # Rate
+                cell = ws.cell(current_row, col)
+                cell.value = rate
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+                hours_col = col - 1
+                rate_col = col
+                col += 1
 
-        current_row += 2
+                # Dollars (formula)
+                cell = ws.cell(current_row, col)
+                cell.value = f"={get_column_letter(hours_col)}{current_row}*{get_column_letter(rate_col)}{current_row}"
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+                dollars_cells.append(f"{get_column_letter(col)}{current_row}")
+                col += 1
 
-        return current_row
+            # Total
+            cell = ws.cell(current_row, total_col)
+            cell.value = f"={'+'.join(dollars_cells)}"
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+            cell.font = self.BOLD_FONT
 
-    def _write_travel_section(
-        self,
-        ws,
-        travel: List[Dict],
-        ga_rate: float,
-        escalation_rates: Dict[str, float],
-        start_row: int,
-        total_years: int
-    ) -> int:
-        """
-        Write Travel section - SEPARATE from ODCs.
+            current_row += 1
 
-        Travel uses G&A Rate (same as labor), NO FEE applied.
+        # Total row
+        ws.cell(current_row, 2, f"Total {sub_data['name']}")
+        ws.cell(current_row, 2).font = self.BOLD_FONT
+        ws.cell(current_row, 2).border = self.THIN_BORDER
 
-        Args:
-            ws: Worksheet
-            travel: List of travel data dicts
-            ga_rate: G&A rate to apply to travel (from indirect_rates)
-            escalation_rates: Year-over-year escalation rates
-            start_row: Starting row number
-            total_years: Total years in contract
+        cell = ws.cell(current_row, total_col)
+        cell.value = f"=SUM({get_column_letter(total_col)}{header_row + 1}:{get_column_letter(total_col)}{current_row - 1})"
+        cell.number_format = self.CURRENCY_FORMAT
+        cell.border = self.THIN_BORDER
+        cell.font = self.BOLD_FONT
 
-        Returns:
-            Next available row number
-        """
-        current_row = start_row
+    def _create_material_sheet(self):
+        """Create the Material sheet for ODCs."""
+        ws = self.wb.create_sheet("Material")
 
-        # Section header
-        ws.cell(current_row, 1, "Travel")
-        current_row += 1
+        # Column widths matching template
+        ws.column_dimensions['A'].width = 2.33  # Padding
+        ws.column_dimensions['B'].width = 40.66  # Material description
 
+        # Header
+        ws.cell(1, 2, "Proprietary Data")
+        ws.cell(2, 2, f"Prime Contractor Name: {self.project_data['prime_contractor_name']}")
+
+        # Period columns
+        header_row = 8
+        col = 3
+
+        for year in range(1, self.total_years + 1):
+            period_label = self._get_period_label(year)
+            period_cell = ws.cell(header_row, col, period_label)
+            self._style_period_header_cell(period_cell)  # Light blue background for periods
+            ws.column_dimensions[get_column_letter(col)].width = 18
+            ws.column_dimensions[get_column_letter(col + 1)].width = 15
+            col += 2  # Amount and handling columns
+
+        # Total column
+        ws.cell(header_row, col, "Total")
+        self._style_header_cell(ws.cell(header_row, col))
+        total_col = col
+
+        # Material rows
+        current_row = header_row + 2
+        smh_rate = self.project_data.get('passthrough_rates', {}).get('smh', 0.0671)
+
+        odcs = self.project_data.get('odcs', [])
+        material_start_row = current_row
+
+        for odc in odcs:
+            # Material base row
+            ws.cell(current_row, 2, odc['category'])
+            ws.cell(current_row, 2).border = self.THIN_BORDER
+
+            col = 3
+            for year in range(1, self.total_years + 1):
+                # Check for pre-calculated amounts
+                if 'amount_per_year' in odc:
+                    amount = odc['amount_per_year'].get(str(year), 0)
+                else:
+                    amount = odc.get('amount_year_1', 0)
+
+                cell = ws.cell(current_row, col)
+                cell.value = amount
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+                col += 2
+
+            # Add Total column formula for material row
+            total_cell = ws.cell(current_row, total_col)
+            total_cell.value = f"=SUM({get_column_letter(3)}{current_row}:{get_column_letter(total_col - 2)}{current_row})"
+            total_cell.number_format = self.CURRENCY_FORMAT
+            total_cell.border = self.THIN_BORDER
+
+            current_row += 1
+
+            # Material Handling row
+            ws.cell(current_row, 2, f"{odc['category']} Handling")
+            ws.cell(current_row, 2).border = self.THIN_BORDER
+
+            col = 3
+            for year in range(1, self.total_years + 1):
+                material_cell = f"{get_column_letter(col)}{current_row - 1}"
+                cell = ws.cell(current_row, col)
+                cell.value = f"={material_cell}*{smh_rate}"
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+                col += 2
+
+            # Add Total column formula for handling row
+            total_cell = ws.cell(current_row, total_col)
+            total_cell.value = f"=SUM({get_column_letter(3)}{current_row}:{get_column_letter(total_col - 2)}{current_row})"
+            total_cell.number_format = self.CURRENCY_FORMAT
+            total_cell.border = self.THIN_BORDER
+
+            current_row += 1
+
+        # Total row
+        ws.cell(current_row, 2, "Total Materials")
+        ws.cell(current_row, 2).font = self.BOLD_FONT
+        ws.cell(current_row, 2).border = self.THIN_BORDER
+
+        col = 3
+        for year in range(1, self.total_years + 1):
+            cell = ws.cell(current_row, col)
+            cell.value = f"=SUM({get_column_letter(col)}{material_start_row}:{get_column_letter(col)}{current_row - 1})"
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+            cell.font = self.BOLD_FONT
+            col += 2
+
+        # Add Total column formula for Total Materials row
+        total_cell = ws.cell(current_row, total_col)
+        total_cell.value = f"=SUM({get_column_letter(3)}{current_row}:{get_column_letter(total_col - 2)}{current_row})"
+        total_cell.number_format = self.CURRENCY_FORMAT
+        total_cell.border = self.THIN_BORDER
+        total_cell.font = self.BOLD_FONT
+
+    def _create_travel_sheet(self):
+        """Create the Travel sheet."""
+        ws = self.wb.create_sheet("Travel")
+
+        # Column widths matching template
+        ws.column_dimensions['A'].width = 2.33  # Padding
+        ws.column_dimensions['B'].width = 40.66  # Travel description
+
+        # Header
+        ws.cell(1, 2, "Proprietary Data")
+        ws.cell(2, 2, f"Prime Contractor Name: {self.project_data['prime_contractor_name']}")
+
+        # Period columns
+        header_row = 8
+        col = 3
+
+        for year in range(1, self.total_years + 1):
+            period_label = self._get_period_label(year)
+            period_cell = ws.cell(header_row, col, period_label)
+            self._style_period_header_cell(period_cell)  # Light blue background for periods
+            ws.column_dimensions[get_column_letter(col)].width = 18
+            ws.column_dimensions[get_column_letter(col + 1)].width = 15
+            col += 2
+
+        # Total column
+        ws.cell(header_row, col, "Total")
+        self._style_header_cell(ws.cell(header_row, col))
+        total_col = col
+
+        # Travel rows
+        current_row = header_row + 2
+        ga_rate = self.project_data.get('indirect_rates', {}).get('ga', 0.2214)
+
+        travel_items = self.project_data.get('travel', [])
         travel_start_row = current_row
 
-        # Process each travel item
-        for travel_item in travel:
-            # Use Calculator to get year-by-year costs
-            results = Calculator.calculate_travel_years(
-                travel_data=travel_item,
-                ga_rate=ga_rate,
-                escalation_rates=escalation_rates,
-                total_years=total_years,
-                escalate=travel_item.get('escalate', False)
-            )
+        for travel in travel_items:
+            description = travel.get('description', 'Travel')
 
-            # Write travel description
-            description = results.get('description', 'Travel')
-            ws.cell(current_row, 1, description)
+            # Travel base row
+            ws.cell(current_row, 2, description)
+            ws.cell(current_row, 2).border = self.THIN_BORDER
 
-            # Build year cell references
-            year_amount_cells = []
-            for year in range(1, total_years + 1):
-                year_key = f"year_{year}"
-                year_data = results[year_key]
+            col = 3
+            for year in range(1, self.total_years + 1):
+                if 'amount_per_year' in travel:
+                    amount = travel['amount_per_year'].get(str(year), 0)
+                else:
+                    amount = travel.get('amount_year_1', 0)
 
-                # Base amount in column (year * 2)
-                base_col = year * 2
-                ws.cell(current_row, base_col, year_data['base'])
+                cell = ws.cell(current_row, col)
+                cell.value = amount
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+                col += 2
 
-                # G&A in column (year * 2 + 1)
-                ga_col = year * 2 + 1
-                ws.cell(current_row, ga_col, year_data['ga'])
-
-                # Store cell reference for total column
-                year_amount_cells.append(f"{get_column_letter(base_col)}{current_row}")
-                year_amount_cells.append(f"{get_column_letter(ga_col)}{current_row}")
-
-            # Total column (last column)
-            total_col = (total_years * 2) + 2
-            total_formula = f"=SUM({','.join(year_amount_cells)})"
-            ws.cell(current_row, total_col, total_formula)
+            # Add Total column formula for this travel row
+            total_cell = ws.cell(current_row, total_col)
+            total_cell.value = f"=SUM({get_column_letter(3)}{current_row}:{get_column_letter(total_col - 2)}{current_row})"
+            total_cell.number_format = self.CURRENCY_FORMAT
+            total_cell.border = self.THIN_BORDER
 
             current_row += 1
 
-        # Total Travel row
-        ws.cell(current_row, 1, "Total Travel")
+        # G&A row
+        ws.cell(current_row, 2, "General & Administrative")
+        ws.cell(current_row, 2).border = self.THIN_BORDER
 
-        # Sum each year column
-        for year in range(1, total_years + 1):
-            base_col = year * 2
-            ga_col = year * 2 + 1
+        col = 3
+        for year in range(1, self.total_years + 1):
+            # Sum travel amounts for this period and multiply by G&A rate
+            cell = ws.cell(current_row, col)
+            cell.value = f"=SUM({get_column_letter(col)}{travel_start_row}:{get_column_letter(col)}{current_row - 1})*{ga_rate}"
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+            col += 2
 
-            # Base column formula
-            base_formula = f"=SUM({get_column_letter(base_col)}{travel_start_row}:{get_column_letter(base_col)}{current_row-1})"
-            ws.cell(current_row, base_col, base_formula)
+        # Add Total column formula for G&A row
+        total_cell = ws.cell(current_row, total_col)
+        total_cell.value = f"=SUM({get_column_letter(3)}{current_row}:{get_column_letter(total_col - 2)}{current_row})"
+        total_cell.number_format = self.CURRENCY_FORMAT
+        total_cell.border = self.THIN_BORDER
 
-            # G&A column formula
-            ga_formula = f"=SUM({get_column_letter(ga_col)}{travel_start_row}:{get_column_letter(ga_col)}{current_row-1})"
-            ws.cell(current_row, ga_col, ga_formula)
-
-        # Total Travel cost (all years)
-        total_col = (total_years * 2) + 2
-        total_formula = f"=SUM({get_column_letter(total_col)}{travel_start_row}:{get_column_letter(total_col)}{current_row-1})"
-        ws.cell(current_row, total_col, total_formula)
-
-        # Track Total Travel row for Grand Total calculation
-        self.row_trackers['total_travel_row'] = current_row
-
-        current_row += 2
-
-        return current_row
-
-    def _write_odc_section(
-        self,
-        ws,
-        odcs: List[Dict],
-        ga_adder_rate: float,
-        escalation_rates: Dict[str, float],
-        start_row: int,
-        total_years: int,
-        ga_rate: float = None,
-        smh_rate: float = None
-    ) -> int:
-        """
-        Write Other Direct Costs (ODCs) section.
-
-        ODCs include travel, materials, equipment, etc.
-        Each ODC can be:
-        - Fixed (same amount all years) or Escalating (increases with inflation)
-        - With or without overhead (G&A for Travel, SMH for ODCs)
-
-        Uses Calculator.calculate_odc_years() for calculations.
-
-        Args:
-            ws: Worksheet
-            odcs: List of ODC data dicts
-            ga_adder_rate: G&A rate to apply to ODCs (legacy, for backward compatibility)
-            escalation_rates: Year-over-year escalation rates
-            start_row: Starting row number
-            total_years: Total years in contract
-            ga_rate: G&A Rate for Travel category (from indirect_rates)
-            smh_rate: SMH Rate for ODC categories (from passthrough_rates)
-
-        Returns:
-            Next available row number
-        """
-        current_row = start_row
-
-        # Section header
-        ws.cell(current_row, 1, "Other Direct Costs")
         current_row += 1
 
-        odc_start_row = current_row
+        # Total row
+        ws.cell(current_row, 2, "Total Travel")
+        ws.cell(current_row, 2).font = self.BOLD_FONT
+        ws.cell(current_row, 2).border = self.THIN_BORDER
 
-        # Process each ODC
-        for odc in odcs:
-            # Use Calculator to get year-by-year costs
-            results = Calculator.calculate_odc_years(
-                odc_data=odc,
-                ga_adder_rate=ga_adder_rate,
-                escalation_rates=escalation_rates,
-                total_years=total_years,
-                apply_adder=odc.get('apply_adder', True),
-                escalate=odc.get('escalate', False),
-                ga_rate=ga_rate,
-                smh_rate=smh_rate
+        col = 3
+        for year in range(1, self.total_years + 1):
+            cell = ws.cell(current_row, col)
+            cell.value = f"=SUM({get_column_letter(col)}{travel_start_row}:{get_column_letter(col)}{current_row - 1})"
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+            cell.font = self.BOLD_FONT
+            col += 2
+
+        # Add Total column formula for Total Travel row
+        total_cell = ws.cell(current_row, total_col)
+        total_cell.value = f"=SUM({get_column_letter(3)}{current_row}:{get_column_letter(total_col - 2)}{current_row})"
+        total_cell.number_format = self.CURRENCY_FORMAT
+        total_cell.border = self.THIN_BORDER
+        total_cell.font = self.BOLD_FONT
+
+    def _create_loe_sheet(self):
+        """Create the Level of Effort (LOE) sheet showing hours per category."""
+        ws = self.wb.create_sheet("LOE")
+
+        # Column widths matching template
+        ws.column_dimensions['A'].width = 2.33  # Padding
+        ws.column_dimensions['B'].width = 50.5  # Labor Category
+        ws.column_dimensions['C'].width = 19.66  # Site
+        ws.column_dimensions['D'].width = 14.33  # Location
+
+        # Header
+        ws.cell(1, 2, "Proprietary Data")
+        ws.cell(2, 2, f"Prime Contractor Name: {self.project_data['prime_contractor_name']}")
+
+        # Column headers
+        header_row = 10
+        headers = ["Labor Category", "Site", "Location"]
+        for idx, header in enumerate(headers):
+            cell = ws.cell(header_row, 2 + idx)
+            cell.value = header
+            self._style_header_cell(cell)
+            
+        # Period columns (Hours only)
+        col = 5
+        for year in range(1, self.total_years + 1):
+            period_label = self._get_period_label(year)
+
+            # Period header above (row 7) - Light blue background
+            period_cell = ws.cell(7, col, period_label)
+            self._style_period_header_cell(period_cell)
+
+            # Column header for hours
+            cell = ws.cell(header_row, col)
+            cell.value = "Hours/Base"
+            self._style_header_cell(cell)
+            ws.column_dimensions[get_column_letter(col)].width = 14.33
+            col += 1
+            
+        # Total Hours column
+        ws.cell(header_row, col, "Total Hours")
+        self._style_header_cell(ws.cell(header_row, col))
+        total_col = col
+        
+        # Data rows
+        current_row = header_row + 1
+        positions = self.project_data.get('prime_positions', [])
+        
+        for position in positions:
+            ws.cell(current_row, 2, position['labor_category'])
+            ws.cell(current_row, 2).border = self.THIN_BORDER
+            
+            ws.cell(current_row, 3, position.get('site', 'Government'))
+            ws.cell(current_row, 3).border = self.THIN_BORDER
+            
+            ws.cell(current_row, 4, position.get('location', ''))
+            ws.cell(current_row, 4).border = self.THIN_BORDER
+            
+            # Hours per year
+            hour_cells = []
+            col = 5
+            hours_data = position.get('hours_per_year', {})
+            
+            for year in range(1, self.total_years + 1):
+                # Handle dictionary format {"1": 1880} or parsed format if different
+                if isinstance(hours_data, dict):
+                    hours = hours_data.get(str(year), 0)
+                else:
+                    hours = 0
+                    
+                cell = ws.cell(current_row, col)
+                cell.value = hours
+                cell.number_format = self.NUMBER_FORMAT
+                cell.border = self.THIN_BORDER
+                hour_cells.append(f"{get_column_letter(col)}{current_row}")
+                col += 1
+                
+            # Total Hours
+            cell = ws.cell(current_row, total_col)
+            cell.value = f"={'+'.join(hour_cells)}"
+            cell.number_format = self.NUMBER_FORMAT
+            cell.border = self.THIN_BORDER
+            cell.font = self.BOLD_FONT
+            
+            current_row += 1
+            
+        # Total Row
+        if positions:
+            ws.cell(current_row, 2, "Total")
+            ws.cell(current_row, 2).font = self.BOLD_FONT
+            ws.cell(current_row, 2).border = self.THIN_BORDER
+            
+            col = 5
+            for year in range(1, self.total_years + 2): # Periods + Total column
+                cell = ws.cell(current_row, col)
+                col_letter = get_column_letter(col)
+                cell.value = f"=SUM({col_letter}{header_row+1}:{col_letter}{current_row-1})"
+                cell.number_format = self.NUMBER_FORMAT
+                cell.border = self.THIN_BORDER
+                cell.font = self.BOLD_FONT
+                col += 1
+
+    def _create_indirect_rates_sheet(self):
+        """Create the Indirect Rates reference sheet."""
+        ws = self.wb.create_sheet("Indirect Rate")
+
+        # Column widths matching template
+        ws.column_dimensions['A'].width = 2.33  # Padding
+        ws.column_dimensions['B'].width = 40.66  # Rate description
+        ws.column_dimensions['C'].width = 15  # Rate value
+
+        # Header
+        ws.cell(1, 2, "Proprietary Data")
+        ws.cell(2, 2, f"Prime Contractor Name: {self.project_data['prime_contractor_name']}")
+
+        # Indirect Rates header (with blue background like template)
+        header_cell = ws.cell(8, 2, "Indirect Rates")
+        header_cell.font = self.HEADER_FONT
+        header_cell.fill = self.HEADER_FILL
+        header_cell.border = self.THIN_BORDER
+        header_cell.alignment = Alignment(horizontal='center', vertical='center')
+        ws.merge_cells('B8:C8')
+
+        # Rate rows
+        indirect_rates = self.project_data.get('indirect_rates', {})
+        passthrough_rates = self.project_data.get('passthrough_rates', {})
+        fee_rates = self.project_data.get('fee_rates', {})
+        escalation_rates = self.project_data.get('escalation_rates', {})
+
+        rates = [
+            ("Fringe", indirect_rates.get('fringe', 0)),
+            ("Onsite Overhead (OH)", indirect_rates.get('oh_onsite', indirect_rates.get('oh', 0))),
+            ("Offsite Overhead (OH)", indirect_rates.get('oh_offsite', indirect_rates.get('oh', 0))),
+            ("General & Administrative (G&A)", indirect_rates.get('ga', 0)),
+            ("Subcontractor Material Handling (S&MH)", passthrough_rates.get('smh', 0)),
+            ("Fee on Labor", fee_rates.get('prime_labor', 0)),
+            ("Fee on Subcontractor", fee_rates.get('sub_labor', 0)),
+        ]
+
+        current_row = 9
+        for label, rate in rates:
+            label_cell = ws.cell(current_row, 2, label)
+            label_cell.font = self.BOLD_FONT
+            label_cell.border = self.THIN_BORDER
+
+            cell = ws.cell(current_row, 3)
+            cell.value = rate
+            cell.number_format = self.PERCENT_FORMAT
+            cell.border = self.THIN_BORDER
+            cell.font = self.NORMAL_FONT
+
+            current_row += 1
+
+        # Escalation factors
+        current_row += 1
+        for year in range(1, self.total_years):
+            key = f"{year}_to_{year + 1}"
+            rate = escalation_rates.get(key, 0.03)
+
+            label = f"Escalation Factor (Year {year} to {year + 1})"
+            label_cell = ws.cell(current_row, 2, label)
+            label_cell.font = self.BOLD_FONT
+            label_cell.border = self.THIN_BORDER
+
+            cell = ws.cell(current_row, 3)
+            cell.value = rate
+            cell.number_format = self.PERCENT_FORMAT
+            cell.border = self.THIN_BORDER
+            cell.font = self.NORMAL_FONT
+
+            current_row += 1
+
+    def _calculate_cost_elements(self) -> Dict[str, Dict[str, float]]:
+        """
+        Calculate all cost elements for the CE Summary sheet.
+
+        Returns a dict with keys for each cost element, each containing
+        year values and total.
+        """
+        result = {
+            'direct_labor': {},
+            'fringe': {},
+            'overhead': {},
+            'ga_labor': {},
+            'subcontractors': {},
+            'sub_handling': {},
+            'materials': {},
+            'material_handling': {},
+            'travel': {},
+            'ga_travel': {},
+            'fee': {},
+        }
+
+        indirect_rates = self.project_data.get('indirect_rates', {})
+        fringe_rate = indirect_rates.get('fringe', 0.25)
+        oh_rate = indirect_rates.get('oh_onsite', indirect_rates.get('oh', 0.07))
+        ga_rate = indirect_rates.get('ga', 0.22)
+        smh_rate = self.project_data.get('passthrough_rates', {}).get('smh', 0.0671)
+        fee_rates = self.project_data.get('fee_rates', {})
+        prime_fee_rate = fee_rates.get('prime_labor', 0.08)
+        sub_fee_rate = fee_rates.get('sub_labor', 0.0126)
+
+        # Calculate prime labor costs
+        for year in range(1, self.total_years + 1):
+            year_key = f"year_{year}"
+
+            dl_total = 0
+            for position in self.project_data.get('prime_positions', []):
+                results = Calculator.calculate_position_years(
+                    position_data=position,
+                    escalation_rates=self.project_data['escalation_rates'],
+                    indirect_rates=indirect_rates,
+                    total_years=self.total_years
+                )
+                year_data = results.get(year_key, {})
+                # Direct Labor = DL rate × hours
+                dl_total += year_data.get('dl_rate', 0) * year_data.get('hours', 0)
+
+            result['direct_labor'][year_key] = round(dl_total, 2)
+            result['fringe'][year_key] = round(dl_total * fringe_rate, 2)
+            subtotal1 = dl_total + result['fringe'][year_key]
+            result['overhead'][year_key] = round(subtotal1 * oh_rate, 2)
+            subtotal2 = subtotal1 + result['overhead'][year_key]
+            result['ga_labor'][year_key] = round(subtotal2 * ga_rate, 2)
+
+            # Prime labor total for fee calculation
+            prime_labor_total = subtotal2 + result['ga_labor'][year_key]
+
+            # Subcontractor costs
+            sub_total = 0
+            for sub in self.project_data.get('subcontractors', []):
+                for labor_cat in sub.get('labor_categories', []):
+                    hours = labor_cat.get(f'year_{year}_hours', 0)
+                    rate = labor_cat.get(f'year_{year}_rate', 0)
+                    sub_total += hours * rate
+
+            result['subcontractors'][year_key] = round(sub_total, 2)
+            result['sub_handling'][year_key] = round(sub_total * smh_rate, 2)
+
+            # Materials
+            material_total = 0
+            for odc in self.project_data.get('odcs', []):
+                if 'amount_per_year' in odc:
+                    material_total += odc['amount_per_year'].get(str(year), 0)
+                else:
+                    material_total += odc.get('amount_year_1', 0)
+
+            result['materials'][year_key] = round(material_total, 2)
+            result['material_handling'][year_key] = round(material_total * smh_rate, 2)
+
+            # Travel
+            travel_total = 0
+            for travel in self.project_data.get('travel', []):
+                if 'amount_per_year' in travel:
+                    travel_total += travel['amount_per_year'].get(str(year), 0)
+                else:
+                    travel_total += travel.get('amount_year_1', 0)
+
+            result['travel'][year_key] = round(travel_total, 2)
+            result['ga_travel'][year_key] = round(travel_total * ga_rate, 2)
+
+            # Fee (on labor only)
+            prime_fee = prime_labor_total * prime_fee_rate
+            sub_labor_with_handling = sub_total + result['sub_handling'][year_key]
+            sub_fee = sub_labor_with_handling * sub_fee_rate
+            result['fee'][year_key] = round(prime_fee + sub_fee, 2)
+
+        # Calculate totals
+        for key in result:
+            result[key]['total'] = sum(
+                v for k, v in result[key].items() if k.startswith('year_')
             )
 
-            # Write ODC category
-            ws.cell(current_row, 1, odc['category'])
-
-            # Build year cell references
-            year_amount_cells = []
-
-            # Write year-by-year amounts
-            for year in range(1, total_years + 1):
-                year_data = results[f'year_{year}']
-                col_offset = self._calculate_column_offset(year)
-
-                # Write total amount (base + G&A adder)
-                amount_col = get_column_letter(col_offset + 2)
-                ws.cell(current_row, col_offset + 2, year_data['total'])
-                year_amount_cells.append(f"{amount_col}{current_row}")
-
-            # Write total in column E
-            ws.cell(current_row, 5, f"={'+'.join(year_amount_cells)}")
-
-            current_row += 1
-
-        # Total ODCs row
-        ws.cell(current_row, 1, "Total Other Direct Costs")
-        ws.cell(current_row, 5, f"=SUM(E{odc_start_row}:E{current_row-1})")
-        current_row += 2
-
-        # Track Total ODC row for Grand Total calculation
-        self.row_trackers['total_odc_row'] = current_row - 2  # Points to "Total Other Direct Costs" row
-
-        return current_row
-
-    def _write_grand_total_section(
-        self,
-        ws,
-        start_row: int,
-        total_years: int,
-        has_travel: bool,
-        has_odcs: bool
-    ) -> int:
-        """
-        Write Grand Total section combining CPFF + Travel + ODCs.
-
-        Args:
-            ws: Worksheet object
-            start_row: Row to start writing
-            total_years: Number of contract years
-            has_travel: Whether travel section exists
-            has_odcs: Whether ODC section exists
-
-        Returns:
-            Next available row number
-        """
-        current_row = start_row
-
-        # GRAND TOTAL CONTRACT VALUE
-        ws.cell(current_row, 1, "GRAND TOTAL CONTRACT VALUE")
-
-        # Get row references
-        cpff_row = self.row_trackers.get('cpff_row')
-        travel_row = self.row_trackers.get('total_travel_row')
-        odc_row = self.row_trackers.get('total_odc_row')
-
-        # Build formula components
-        # For Total Amount column (F)
-        formula_parts = []
-        if cpff_row:
-            formula_parts.append(f"F{cpff_row}")
-        if has_travel and travel_row:
-            # Travel total is in a different column structure - need to sum base + G&A for all years
-            # Actually, let's reference the sum of all travel columns
-            travel_total_col = (total_years * 2) + 2  # Total column in travel section
-            formula_parts.append(f"{get_column_letter(travel_total_col)}{travel_row}")
-        if has_odcs and odc_row:
-            formula_parts.append(f"E{odc_row}")
-
-        if formula_parts:
-            ws.cell(current_row, 6, f"={'+'.join(formula_parts)}")
-
-        # Year-by-year Grand Total
-        for year in range(1, total_years + 1):
-            col_offset = self._calculate_column_offset(year)
-            amount_col = col_offset + 2  # Amount column for this year
-
-            year_formula_parts = []
-            if cpff_row:
-                year_formula_parts.append(f"{get_column_letter(amount_col)}{cpff_row}")
-            if has_travel and travel_row:
-                # Travel has base + G&A columns for each year
-                travel_base_col = year * 2
-                travel_ga_col = year * 2 + 1
-                year_formula_parts.append(f"{get_column_letter(travel_base_col)}{travel_row}+{get_column_letter(travel_ga_col)}{travel_row}")
-            if has_odcs and odc_row:
-                # ODC structure - need to check column layout
-                year_formula_parts.append(f"{get_column_letter(amount_col)}{odc_row}")
-
-            if year_formula_parts:
-                ws.cell(current_row, amount_col, f"={'+'.join(year_formula_parts)}")
-
-        current_row += 2
-
-        return current_row
-
-    def _calculate_column_offset(self, year_num: int) -> int:
-        """
-        Calculate Excel column number for a given year.
-
-        Base Period (Year 1) starts at column 7 (G).
-        Each year takes 3 columns (Rate, Hours, Amount).
-
-        Args:
-            year_num: Year number (1, 2, 3, ...)
-
-        Returns:
-            Column number (1-indexed)
-        """
-        return 7 + ((year_num - 1) * 3)
-
-    def _apply_formatting(self, ws, total_years: int):
-        """
-        Apply professional formatting to the worksheet.
-
-        Includes:
-        - Column widths
-        - Bold headers
-        - Borders
-        - Number formatting (currency, percentages)
-        - Cell fills for headers
-        - Freeze panes
-
-        Args:
-            ws: Worksheet
-            total_years: Total years in contract
-        """
-        # Column widths
-        ws.column_dimensions['A'].width = 35  # Cost Elements
-        ws.column_dimensions['B'].width = 30  # Labor Category
-        ws.column_dimensions['C'].width = 25  # BLS Labor Category
-        ws.column_dimensions['D'].width = 12  # BLS Code
-        ws.column_dimensions['E'].width = 15  # Total Hours
-        ws.column_dimensions['F'].width = 15  # Total Amount
-
-        # Year columns (start at G/column 7)
-        for year in range(total_years):
-            col_offset = 7 + (year * 3)
-            ws.column_dimensions[get_column_letter(col_offset)].width = 12      # Rate
-            ws.column_dimensions[get_column_letter(col_offset + 1)].width = 10  # Hours
-            ws.column_dimensions[get_column_letter(col_offset + 2)].width = 15  # Amount
-
-        # Header formatting (rows 1-10)
-        header_font = Font(bold=True, size=11)
-        for row in range(1, 11):
-            for col in range(1, 7 + (total_years * 3)):
-                cell = ws.cell(row, col)
-                if cell.value:
-                    cell.font = header_font
-
-        # Solicitation row - bigger font
-        ws.cell(1, 1).font = Font(bold=True, size=12)
-
-        # Year headers (row 7) - filled and centered
-        year_fill = PatternFill(start_color="D3D3D3", end_color="D3D3D3", fill_type="solid")
-        ws.cell(7, 4).fill = year_fill  # Total for All Years column
-
-        for year in range(total_years):
-            col_offset = 7 + (year * 3)  # Start at column G
-            cell = ws.cell(7, col_offset)
-            cell.fill = year_fill
-            cell.alignment = Alignment(horizontal='center', vertical='center')
-
-        # Format Averaged FBLR header (only write to top-left cell of merged range)
-        avg_fblr_start_col = 7 + (total_years * 3)
-        avg_fblr_cell = ws.cell(7, avg_fblr_start_col)
-        avg_fblr_cell.fill = year_fill
-        avg_fblr_cell.alignment = Alignment(horizontal='center', vertical='center')
-
-        # Sub-headers (row 8) - centered (including averaged FBLR columns)
-        for col in range(1, 7 + (total_years * 3) + 6):  # +6 for averaged FBLR columns
-            cell = ws.cell(8, col)
-            if cell.value:
-                cell.alignment = Alignment(horizontal='center', vertical='center')
-                cell.font = Font(bold=True, size=10)
-
-        # Number formatting
-        for row in range(11, ws.max_row + 1):
-            # Total Hours column (E) - plain number, no currency
-            ws.cell(row, 5).number_format = '#,##0'
-
-            # Total Amount column (F) - currency
-            ws.cell(row, 6).number_format = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)'
-
-            # Year columns
-            for year in range(total_years):
-                col_offset = 7 + (year * 3)  # Start at column G
-
-                # Rate column - currency
-                ws.cell(row, col_offset).number_format = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)'
-
-                # Hours column - plain number, no currency
-                ws.cell(row, col_offset + 1).number_format = '#,##0'
-
-                # Amount column - currency
-                ws.cell(row, col_offset + 2).number_format = '_($* #,##0.00_);_($* (#,##0.00);_($* "-"??_);_(@_)'
-
-        # Freeze panes - freeze top 10 rows and first 3 columns
-        ws.freeze_panes = 'D11'
-
-        # Highlight editable rate reference cells (rows 3-10)
-        # Light yellow fill to indicate these are user-editable
-        rate_fill = PatternFill(start_color="FFFF99", end_color="FFFF99", fill_type="solid")
-        # Calculate where rates section is (after averaged FBLR columns)
-        avg_fblr_start_col = 7 + (total_years * 3)
-        rates_col = avg_fblr_start_col + 7 + 1  # +1 because values are in the column AFTER labels
-
-        for row_num in range(3, 11):  # Rows 3-10 contain the rate values
-            cell = ws.cell(row_num, rates_col)
-            cell.fill = rate_fill
-            # Also format as percentage
-            cell.number_format = '0.00%'
-            # Make bold
-            cell.font = Font(bold=True, size=11)
-
-        # Set column widths for rates reference section
-        # Calculate where rates section is (after averaged FBLR columns)
-        avg_fblr_start_col = 7 + (total_years * 3)
-        rates_col = avg_fblr_start_col + 7
-
-        ws.column_dimensions[get_column_letter(rates_col)].width = 20  # Labels column
-        ws.column_dimensions[get_column_letter(rates_col + 1)].width = 15  # Values column
-
-    def _create_rate_table_sheet(self, project_data: Dict[str, Any]):
-        """
-        Create Sheet 2: Subcontractor Fee_MH Rate Table.
-
-        This sheet shows the calculation formulas for subcontractor rates,
-        demonstrating how Fee and S&MH are calculated from base rates.
-
-        Similar to Intprepix Volume III Sheet 2 structure.
-
-        Args:
-            project_data: Project configuration
-        """
-        # Create new sheet
-        ws2 = self.wb.create_sheet("Subcontractor Fee_MH Rate Table")
-
-        # Get rates from project data (no fallbacks - must be provided)
-        fee_rate = project_data['fee_rates']['sub_labor']
-        smh_rate = project_data['passthrough_rates']['smh']
-        prime_name = project_data['prime_contractor_name']
-
-        # Get first subcontractor rate for example calculation
-        example_rate = 100  # Default if no subcontractors (but Sheet 2 shouldn't exist without subs)
-        if project_data.get('subcontractors') and len(project_data['subcontractors']) > 0:
-            first_sub = project_data['subcontractors'][0]
-            if first_sub.get('labor_categories') and len(first_sub['labor_categories']) > 0:
-                example_rate = first_sub['labor_categories'][0].get('year_1_rate', 100)
-
-        # Example calculation section (Rows 2-4, Columns B-F)
-        ws2.cell(2, 3, f"{prime_name} FBLR")  # Dynamic prime contractor name
-
-        # Row 3: FEE calculation example
-        ws2.cell(3, 2, "FEE")
-        ws2.cell(3, 3, example_rate)  # Use actual first subcontractor rate
-        ws2.cell(3, 4, fee_rate)  # Fee rate
-        ws2.cell(3, 5, "=C3*D3")  # Fee amount
-        ws2.cell(3, 6, "=C3+E3")  # Total with fee
-
-        # Row 4: S&MH calculation example
-        ws2.cell(4, 2, "S&MH")
-        ws2.cell(4, 3, "=F3")  # Reference total from row 3
-        ws2.cell(4, 4, smh_rate)  # S&MH rate
-        ws2.cell(4, 5, "=C4*D4")  # S&MH amount
-        ws2.cell(4, 6, "=C4+E4")  # Final total
-
-        # Rows 7-8: BACKWARD/REVERSE calculation (remove S&MH first, then FEE)
-        # This shows how to go from final billable rate back to base rate
-
-        # Row 7: Remove S&MH from final rate
-        ws2.cell(7, 2, "S&MH")
-        ws2.cell(7, 3, "=F4")  # Start with final rate from row 4
-        ws2.cell(7, 4, smh_rate)  # S&MH rate
-        ws2.cell(7, 5, "=C7*D7/(1+D7)")  # S&MH amount (reverse calc)
-        ws2.cell(7, 6, "=C7-E7")  # Total after removing S&MH
-
-        # Row 8: Remove FEE from subtotal
-        ws2.cell(8, 2, "FEE")
-        ws2.cell(8, 3, "=F7")  # Start with subtotal from row 7
-        ws2.cell(8, 4, fee_rate)  # Fee rate
-        ws2.cell(8, 5, "=C8*D8/(1+D8)")  # Fee amount (reverse calc)
-        ws2.cell(8, 6, "=C8-E8")  # Final base rate (should match C3)
-
-        # Rate table section (Columns H-O)
-        # Row 2: Store reference rates
-        ws2.cell(2, 10, "=D8")  # J2: FEE rate reference (derived)
-        ws2.cell(2, 11, "=D7")  # K2: S&MH rate reference (derived)
-        ws2.cell(2, 13, "=D4")  # M2: S&MH rate for reverse calc (original)
-        ws2.cell(2, 14, "=D3")  # N2: FEE rate for reverse calc (original)
-
-        # Row 3: Column headers
-        ws2.cell(3, 8, "Labor Category")
-        ws2.cell(3, 9, f"{prime_name} FBLR")  # Dynamic prime contractor name
-        ws2.cell(3, 10, "FEE")
-        ws2.cell(3, 11, "S&MH")
-        ws2.cell(3, 12, "Target Rate")
-        ws2.cell(3, 13, "S&MH")
-        ws2.cell(3, 14, "FEE")
-        ws2.cell(3, 15, "Diff Check")
-
-        # Extract unique labor categories from subcontractors
-        labor_categories = []
-        if 'subcontractors' in project_data:
-            for sub in project_data['subcontractors']:
-                for cat in sub.get('labor_categories', []):
-                    labor_categories.append({
-                        'name': cat['labor_category'],
-                        'rate': cat['year_1_rate']  # Required field, no fallback
-                    })
-
-        # Write labor categories with formulas (starting row 4)
-        current_row = 4
-        for cat in labor_categories:
-            # Column H: Labor Category
-            ws2.cell(current_row, 8, cat['name'])
-
-            # Column I: Base FBLR (Nexagen rate)
-            ws2.cell(current_row, 9, cat['rate'])
-
-            # Forward calculation (remove fee and S&MH from base)
-            # Column J: FEE = ROUND(I - (I * fee_rate), 0)
-            ws2.cell(current_row, 10, f"=ROUND(I{current_row}-(I{current_row}*$J$2),0)")
-
-            # Column K: S&MH = ROUND(J - (J * smh_rate), 0)
-            ws2.cell(current_row, 11, f"=ROUND(J{current_row}-(J{current_row}*$K$2),0)")
-
-            # Column L: Target Rate (after removing both)
-            ws2.cell(current_row, 12, f"=ROUND(K{current_row},0)")
-
-            # Reverse calculation (add S&MH and fee to target)
-            # Column M: S&MH = ROUND(L + (L * smh_rate), 0)
-            ws2.cell(current_row, 13, f"=ROUND(L{current_row}+(L{current_row}*$M$2),0)")
-
-            # Column N: FEE = ROUND(M + (M * fee_rate), 0)
-            ws2.cell(current_row, 14, f"=ROUND(M{current_row}+(M{current_row}*$N$2),0)")
-
-            # Column O: Diff Check (should be 0 or close to 0)
-            ws2.cell(current_row, 15, f"=I{current_row}-N{current_row}")
-
-            current_row += 1
-
-        # Formatting for Sheet 2
-        self._format_rate_table_sheet(ws2, len(labor_categories))
-
-    def _format_rate_table_sheet(self, ws, num_categories: int):
-        """
-        Apply formatting to the rate table sheet.
-
-        Args:
-            ws: Rate table worksheet
-            num_categories: Number of labor categories
-        """
-        # Column widths
-        ws.column_dimensions['B'].width = 12
-        ws.column_dimensions['C'].width = 15
-        ws.column_dimensions['D'].width = 12
-        ws.column_dimensions['E'].width = 12
-        ws.column_dimensions['F'].width = 15
-        ws.column_dimensions['H'].width = 35
-        ws.column_dimensions['I'].width = 15
-        ws.column_dimensions['J'].width = 12
-        ws.column_dimensions['K'].width = 12
-        ws.column_dimensions['L'].width = 12
-        ws.column_dimensions['M'].width = 12
-        ws.column_dimensions['N'].width = 12
-        ws.column_dimensions['O'].width = 12
-
-        # Header formatting (row 3)
-        header_font = Font(bold=True, size=11)
-        header_fill = PatternFill(start_color="D3D3D3", end_color="D3D3D3", fill_type="solid")
-
-        for col_idx in [8, 9, 10, 11, 12, 13, 14, 15]:
-            cell = ws.cell(3, col_idx)
-            cell.font = header_font
-            cell.fill = header_fill
-            cell.alignment = Alignment(horizontal='center', vertical='center')
-
-        # Example calculation section formatting
-        ws.cell(2, 3).font = Font(bold=True, size=11)
-        ws.cell(3, 2).font = Font(bold=True)
-        ws.cell(4, 2).font = Font(bold=True)
-
-        # Number formatting - currency for rate columns
-        for row in range(4, 4 + num_categories):
-            ws.cell(row, 9).number_format = '$#,##0.00'   # Base FBLR
-            ws.cell(row, 10).number_format = '$#,##0.00'  # FEE
-            ws.cell(row, 11).number_format = '$#,##0.00'  # S&MH
-            ws.cell(row, 12).number_format = '$#,##0.00'  # Target
-            ws.cell(row, 13).number_format = '$#,##0.00'  # S&MH reverse
-            ws.cell(row, 14).number_format = '$#,##0.00'  # FEE reverse
-            ws.cell(row, 15).number_format = '$#,##0.00'  # Diff
-
-        # Percentage formatting for rates in example section
-        ws.cell(3, 4).number_format = '0.00%'
-        ws.cell(4, 4).number_format = '0.00%'
-
-        # Currency formatting for example section
-        for col_idx in [3, 5, 6]:
-            ws.cell(3, col_idx).number_format = '$#,##0.00'
-            ws.cell(4, col_idx).number_format = '$#,##0.00'
+        return result
+
+    def _style_header_cell(self, cell):
+        """Apply header styling to a cell."""
+        cell.fill = self.HEADER_FILL
+        cell.font = self.HEADER_FONT
+        cell.border = self.THIN_BORDER
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    def _style_period_header_cell(self, cell):
+        """Apply period header styling to a cell (light blue background)."""
+        cell.fill = self.PERIOD_HEADER_FILL
+        cell.font = self.BOLD_FONT
+        cell.border = self.THIN_BORDER
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    def _style_subheader_cell(self, cell):
+        """Apply sub-header styling to a cell."""
+        cell.font = self.BOLD_FONT
+        cell.border = self.THIN_BORDER
+        cell.alignment = Alignment(horizontal='center', vertical='center')

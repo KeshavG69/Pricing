@@ -111,6 +111,14 @@
         "documentation": {}
     },
     {
+        "label": "Agent",
+        "importPath": "agno.agent",
+        "description": "agno.agent",
+        "isExtraImport": true,
+        "detail": "agno.agent",
+        "documentation": {}
+    },
+    {
         "label": "get_chat_llm_agno",
         "importPath": "client.llm_client",
         "description": "client.llm_client",
@@ -920,6 +928,22 @@
         "documentation": {}
     },
     {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
         "label": "pricing",
         "importPath": "routers",
         "description": "routers",
@@ -1274,6 +1298,38 @@
         "documentation": {}
     },
     {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "List",
         "importPath": "typing",
         "description": "typing",
@@ -1819,6 +1875,22 @@
     },
     {
         "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -2436,6 +2508,14 @@
         "documentation": {}
     },
     {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
         "label": "HTTPBearer",
         "importPath": "fastapi.security",
         "description": "fastapi.security",
@@ -2960,14 +3040,6 @@
         "documentation": {}
     },
     {
-        "label": "parse_documents_to_dataframe",
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
-        "isExtraImport": true,
-        "detail": "client.jd_parser",
-        "documentation": {}
-    },
-    {
         "label": "extract_with_llamaextract",
         "importPath": "client.jd_parser",
         "description": "client.jd_parser",
@@ -3081,6 +3153,54 @@
         "documentation": {}
     },
     {
+        "label": "OpenAIChat",
+        "importPath": "agno.models.openai",
+        "description": "agno.models.openai",
+        "isExtraImport": true,
+        "detail": "agno.models.openai",
+        "documentation": {}
+    },
+    {
+        "label": "OpenAIChat",
+        "importPath": "agno.models.openai",
+        "description": "agno.models.openai",
+        "isExtraImport": true,
+        "detail": "agno.models.openai",
+        "documentation": {}
+    },
+    {
+        "label": "OpenAIChat",
+        "importPath": "agno.models.openai",
+        "description": "agno.models.openai",
+        "isExtraImport": true,
+        "detail": "agno.models.openai",
+        "documentation": {}
+    },
+    {
+        "label": "ReasoningTools",
+        "importPath": "agno.tools.reasoning",
+        "description": "agno.tools.reasoning",
+        "isExtraImport": true,
+        "detail": "agno.tools.reasoning",
+        "documentation": {}
+    },
+    {
+        "label": "ExaTools",
+        "importPath": "agno.tools.exa",
+        "description": "agno.tools.exa",
+        "isExtraImport": true,
+        "detail": "agno.tools.exa",
+        "documentation": {}
+    },
+    {
+        "label": "ExaTools",
+        "importPath": "agno.tools.exa",
+        "description": "agno.tools.exa",
+        "isExtraImport": true,
+        "detail": "agno.tools.exa",
+        "documentation": {}
+    },
+    {
         "label": "pandas",
         "kind": 6,
         "isExtraImport": true,
@@ -3114,22 +3234,6 @@
         "documentation": {}
     },
     {
-        "label": "OpenAIChat",
-        "importPath": "agno.models.openai",
-        "description": "agno.models.openai",
-        "isExtraImport": true,
-        "detail": "agno.models.openai",
-        "documentation": {}
-    },
-    {
-        "label": "OpenAIChat",
-        "importPath": "agno.models.openai",
-        "description": "agno.models.openai",
-        "isExtraImport": true,
-        "detail": "agno.models.openai",
-        "documentation": {}
-    },
-    {
         "label": "AsyncIOMotorClient",
         "importPath": "motor.motor_asyncio",
         "description": "motor.motor_asyncio",
@@ -3152,14 +3256,6 @@
         "importPath": "math",
         "description": "math",
         "detail": "math",
-        "documentation": {}
-    },
-    {
-        "label": "ExaTools",
-        "importPath": "agno.tools.exa",
-        "description": "agno.tools.exa",
-        "isExtraImport": true,
-        "detail": "agno.tools.exa",
         "documentation": {}
     },
     {
@@ -3734,6 +3830,22 @@
         "documentation": {}
     },
     {
+        "label": "process_dataframe_with_agents",
+        "importPath": "utils.pipeline",
+        "description": "utils.pipeline",
+        "isExtraImport": true,
+        "detail": "utils.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "build_project_data_from_dataframe",
+        "importPath": "utils.pipeline",
+        "description": "utils.pipeline",
+        "isExtraImport": true,
+        "detail": "utils.pipeline",
+        "documentation": {}
+    },
+    {
         "label": "ExcelGenerator",
         "importPath": "client.excel_generator",
         "description": "client.excel_generator",
@@ -3838,7 +3950,39 @@
         "documentation": {}
     },
     {
+        "label": "parse_document_intelligent",
+        "importPath": "client.intelligent_parser",
+        "description": "client.intelligent_parser",
+        "isExtraImport": true,
+        "detail": "client.intelligent_parser",
+        "documentation": {}
+    },
+    {
+        "label": "parse_document_intelligent",
+        "importPath": "client.intelligent_parser",
+        "description": "client.intelligent_parser",
+        "isExtraImport": true,
+        "detail": "client.intelligent_parser",
+        "documentation": {}
+    },
+    {
+        "label": "parse_document_intelligent",
+        "importPath": "client.intelligent_parser",
+        "description": "client.intelligent_parser",
+        "isExtraImport": true,
+        "detail": "client.intelligent_parser",
+        "documentation": {}
+    },
+    {
         "label": "split_position_by_hours",
+        "importPath": "routers.pricing",
+        "description": "routers.pricing",
+        "isExtraImport": true,
+        "detail": "routers.pricing",
+        "documentation": {}
+    },
+    {
+        "label": "split_multi_year_position",
         "importPath": "routers.pricing",
         "description": "routers.pricing",
         "isExtraImport": true,
@@ -4639,7 +4783,7 @@
         "kind": 6,
         "importPath": "backend.client.excel_generator",
         "description": "backend.client.excel_generator",
-        "peekOfCode": "class ExcelGenerator:\n    \"\"\"\n    Generates government contract cost proposal Excel files.\n    Creates professional, formatted Excel workbooks with:\n    - Dynamic year columns based on contract structure\n    - Prime contractor labor calculations\n    - Subcontractor rate tables (no calculation details)\n    - Pass-through and fee sections\n    - ODC sections\n    \"\"\"",
+        "peekOfCode": "class ExcelGenerator:\n    \"\"\"\n    Generates government contract cost proposal Excel files.\n    Matches the Price IQ Sample Template format.\n    \"\"\"\n    # Style constants matching sample template\n    HEADER_FILL = PatternFill(start_color=\"284C82\", end_color=\"284C82\", fill_type=\"solid\")  # Dark blue\n    PERIOD_HEADER_FILL = PatternFill(start_color=\"D6DCE4\", end_color=\"D6DCE4\", fill_type=\"solid\")  # Light blue\n    HEADER_FONT = Font(bold=True, size=10, color=\"FFFFFF\")\n    NORMAL_FONT = Font(size=10)",
         "detail": "backend.client.excel_generator",
         "documentation": {}
     },
@@ -4722,6 +4866,24 @@
         "description": "backend.client.idrive_storage",
         "peekOfCode": "_client_lock = threading.RLock()\ndef get_idrive_storage() -> IDriveStorage:\n    \"\"\"\n    Get or create iDrive storage client (singleton pattern).\n    Returns:\n        IDriveStorage instance\n    \"\"\"\n    global _idrive_storage_client\n    with _client_lock:\n        if _idrive_storage_client is None:",
         "detail": "backend.client.idrive_storage",
+        "documentation": {}
+    },
+    {
+        "label": "create_reasoning_tool",
+        "kind": 2,
+        "importPath": "backend.client.intelligent_parser",
+        "description": "backend.client.intelligent_parser",
+        "peekOfCode": "def create_reasoning_tool(\n    instructions: str = \"only show reasoning no need for for action confidence\",\n    add_instructions: bool = True,\n    think: bool = True,\n    analyze: bool = True,\n    add_few_shot: bool = False,\n    few_shot_examples: Optional[List[Dict[str, str]]] = None,\n) -> ReasoningTools:\n    \"\"\"\n    Create a reasoning tool with customizable parameters.",
+        "detail": "backend.client.intelligent_parser",
+        "documentation": {}
+    },
+    {
+        "label": "test_intelligent_parser",
+        "kind": 2,
+        "importPath": "backend.client.intelligent_parser",
+        "description": "backend.client.intelligent_parser",
+        "peekOfCode": "def test_intelligent_parser(file_path: str) -> Dict[str, Any]:\n    \"\"\"Test the intelligent parser on a file.\"\"\"\n    import asyncio\n    return asyncio.run(parse_document_intelligent(file_path))\nif __name__ == \"__main__\":\n    import sys\n    if len(sys.argv) > 1:\n        result = test_intelligent_parser(sys.argv[1])\n        print(f\"\\n\\n=== FINAL JSON ===\")\n        print(json.dumps(result, indent=2, default=str))",
+        "detail": "backend.client.intelligent_parser",
         "documentation": {}
     },
     {
@@ -5396,6 +5558,15 @@
         "importPath": "backend.routers.proposals",
         "description": "backend.routers.proposals",
         "peekOfCode": "def serialize_proposal(proposal: dict) -> dict:\n    \"\"\"\n    Convert all ObjectId fields to strings for JSON serialization.\n    Also converts snake_case date fields to camelCase for frontend consistency.\n    Args:\n        proposal: Proposal document from MongoDB\n    Returns:\n        Proposal with all ObjectIds converted to strings and dates in camelCase\n    \"\"\"\n    if not proposal:",
+        "detail": "backend.routers.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "convert_intelligent_output_to_dataframe",
+        "kind": 2,
+        "importPath": "backend.routers.proposals",
+        "description": "backend.routers.proposals",
+        "peekOfCode": "def convert_intelligent_output_to_dataframe(intelligent_result: Dict[str, Any]) -> Dict[str, Any]:\n    \"\"\"\n    Convert intelligent parser output to the same format as jd_parser output.\n    Args:\n        intelligent_result: Output from parse_document_intelligent()\n    Returns:\n        Dict with keys: df, travel, odcs, extensions (same as parse_documents_to_dataframe)\n    \"\"\"\n    import pandas as pd\n    metadata = intelligent_result.get(\"metadata\", {})",
         "detail": "backend.routers.proposals",
         "documentation": {}
     },
@@ -6198,6 +6369,15 @@
         "description": "backend.utils.proposals",
         "peekOfCode": "_lock = threading.RLock()\ndef get_proposal_crud() -> ProposalCRUD:\n    \"\"\"\n    Get or create ProposalCRUD instance (singleton pattern)\n    Returns:\n        ProposalCRUD instance\n    \"\"\"\n    global _proposal_crud\n    with _lock:\n        if _proposal_crud is None:",
         "detail": "backend.utils.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "convert_intelligent_output_to_dataframe",
+        "kind": 2,
+        "importPath": "backend.test_intelligent_pipeline",
+        "description": "backend.test_intelligent_pipeline",
+        "peekOfCode": "def convert_intelligent_output_to_dataframe(intelligent_result: Dict[str, Any]) -> Dict[str, Any]:\n    \"\"\"\n    Convert intelligent parser output to the same format as jd_parser output.\n    Args:\n        intelligent_result: Output from parse_document_intelligent()\n    Returns:\n        Dict with keys: df, travel, odcs, extensions (same as parse_documents_to_dataframe)\n    \"\"\"\n    metadata = intelligent_result.get(\"metadata\", {})\n    positions = intelligent_result.get(\"positions\", [])",
+        "detail": "backend.test_intelligent_pipeline",
         "documentation": {}
     },
     {

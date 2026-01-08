@@ -27,7 +27,17 @@ export class CacheManager {
 
   constructor(config: CacheConfig) {
     this.config = config;
-    this.cleanupOldVersions();
+    // Only cleanup if we're in the browser
+    if (this.isBrowser()) {
+      this.cleanupOldVersions();
+    }
+  }
+
+  /**
+   * Check if we're in a browser environment (not SSR).
+   */
+  private isBrowser(): boolean {
+    return typeof window !== 'undefined' && typeof localStorage !== 'undefined';
   }
 
   /**
@@ -59,6 +69,11 @@ export class CacheManager {
    * Get entire cache from localStorage.
    */
   private getCache(): Record<string, CacheEntry<any>> {
+    // Return empty cache during SSR
+    if (!this.isBrowser()) {
+      return {};
+    }
+
     try {
       const cached = localStorage.getItem(this.storageKey);
       return cached ? JSON.parse(cached) : {};
@@ -72,6 +87,11 @@ export class CacheManager {
    * Save entire cache to localStorage.
    */
   private saveCache(cache: Record<string, CacheEntry<any>>): void {
+    // Skip during SSR
+    if (!this.isBrowser()) {
+      return;
+    }
+
     try {
       localStorage.setItem(this.storageKey, JSON.stringify(cache));
     } catch (error) {
@@ -200,6 +220,11 @@ export class CacheManager {
    * @param keyOrPattern - Exact key or pattern with wildcard (e.g., "org:123:*")
    */
   invalidate(keyOrPattern?: string): void {
+    // Skip during SSR
+    if (!this.isBrowser()) {
+      return;
+    }
+
     try {
       const cache = this.getCache();
 
