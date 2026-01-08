@@ -164,6 +164,30 @@ export const PrimeLaborSection = ({
   const advancedModeVersion = usePricingStore((state) => state.advancedModeVersion);
   const isGSAProposal = wageSource?.type === 'gsa';
 
+  // Helper to calculate escalated rate for subcontractors
+  const getEscalatedRate = (baseRate: number, year: number): number => {
+    let rate = baseRate;
+    // Apply compound escalation for each year
+    for (let y = 1; y < year; y++) {
+      const escalationKey = `${y}_to_${y + 1}`;
+      const escalation = escalationRates?.[escalationKey] || 0;
+      rate = rate * (1 + escalation);
+    }
+    return rate;
+  };
+
+  // Helper to calculate marked-up subcontractor rate for DISPLAY ONLY
+  // Formula: displayed_rate = escalated_base_rate × (1 + sub_fee) × (1 + smh)
+  // This does NOT change any calculations - purely for display
+  const getSubcontractorDisplayRate = (baseRate: number, year: number): number => {
+    // First apply escalation to base rate
+    const escalatedRate = getEscalatedRate(baseRate, year);
+    // Then apply markup (sub_fee + smh)
+    const subFee = rates?.sub_fee || 0;
+    const smh = rates?.smh || 0;
+    return escalatedRate * (1 + subFee) * (1 + smh);
+  };
+
   // Create a version string that changes when rates change to force re-render
   const ratesVersion = useMemo(() => {
     return `${rates.fringe}-${rates.oh_onsite}-${rates.oh_offsite}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}`;
@@ -491,22 +515,39 @@ export const PrimeLaborSection = ({
         );
       }
 
-      // Add subcontractor rows linked to this position
+      // Add subcontractor rows linked to this position (only when expanded)
       const linkedSubs = getLinkedSubcontractorPositions.get(pos.id) || [];
-      for (const { subName, subPos } of linkedSubs) {
-        const totalSubHours = Object.values(subPos.hours_per_year || {})
-          .reduce((a, b) => a + (b || 0), 0);
+      if (linkedSubs.length > 0 && expandedPositions.has(pos.id)) {
+        // Calculate total hours across all subcontractors
+        const totalSubHours = linkedSubs.reduce((sum, { subPos }) => {
+          return sum + Object.values(subPos.hours_per_year || {}).reduce((a, b) => a + (b || 0), 0);
+        }, 0);
 
+        // Add header row
         rows.push({
-          type: 'subcontractor',
+          type: 'subcontractor-header',
           positionId: pos.id,
           data: pos,
-          subcontractorName: subName,
-          subcontractorHours: subPos.hours_per_year,
-          subcontractorTotalHours: totalSubHours,
-          subcontractorRate: subPos.rate,
-          subcontractorLocationType: subPos.location_type || 'On-Site',
+          subcontractorCount: linkedSubs.length,
+          subcontractorsTotalHours: totalSubHours,
         });
+
+        // Add individual subcontractor rows
+        for (const { subName, subPos } of linkedSubs) {
+          const totalSubPosHours = Object.values(subPos.hours_per_year || {})
+            .reduce((a, b) => a + (b || 0), 0);
+
+          rows.push({
+            type: 'subcontractor',
+            positionId: pos.id,
+            data: pos,
+            subcontractorName: subName,
+            subcontractorHours: subPos.hours_per_year,
+            subcontractorTotalHours: totalSubPosHours,
+            subcontractorRate: subPos.rate,
+            subcontractorLocationType: subPos.location_type || 'On-Site',
+          });
+        }
       }
     });
 
@@ -569,6 +610,10 @@ export const PrimeLaborSection = ({
           // Subtotal row - show styled empty cell
           if (row.type === 'subtotal') {
             return <div className="h-full bg-blue-50 border-t-2 border-blue-200" />;
+          }
+          // Subcontractor header row - show styled empty cell
+          if (row.type === 'subcontractor-header') {
+            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
           }
           // Subcontractor row - show purple styled empty cell
           if (row.type === 'subcontractor') {
@@ -669,6 +714,9 @@ export const PrimeLaborSection = ({
                 <LocationTypeButton />
               </div>
             );
+          } else if (row.type === 'subcontractor-header') {
+            // Subcontractor header row
+            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
           } else if (row.type === 'subcontractor') {
             // Show location type for subcontractor row (non-editable, inherits from prime)
             const locationType = row.subcontractorLocationType || 'On-Site';
@@ -710,6 +758,11 @@ export const PrimeLaborSection = ({
             const pos = row.data as AdvancedPosition;
             const isExpanded = row.isExpanded;
             const isKey = isKeyPosition(pos);
+
+            // Get linked subcontractors count for badge
+            const linkedSubs = getLinkedSubcontractorPositions.get(pos.id) || [];
+            const subCount = linkedSubs.length;
+
             return (
               <div
                 className="flex items-center h-full w-full px-2 cursor-pointer hover:bg-muted/30 transition-colors"
@@ -736,16 +789,34 @@ export const PrimeLaborSection = ({
                     KEY
                   </span>
                 )}
+                {/* Subcontractor badge */}
+                {subCount > 0 && (
+                  <span
+                    className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 flex-shrink-0"
+                    title={`${subCount} subcontractor position${subCount !== 1 ? 's' : ''} linked`}
+                  >
+                    🏢 {subCount} Sub{subCount !== 1 ? 's' : ''}
+                  </span>
+                )}
                 {/* Fill remaining space to make entire cell clickable */}
                 <div className="flex-1" />
               </div>
             );
-          } else if (row.type === 'subcontractor') {
-            // Subcontractor row - show subcontractor name with indent
+          } else if (row.type === 'subcontractor-header') {
+            // Subcontractor section header
             return (
-              <div className="flex items-center h-full px-2 pl-10 bg-purple-50/50">
+              <div className="flex items-center h-full px-2 pl-6 bg-purple-100/30 border-t border-purple-200">
+                <span className="text-xs font-bold text-purple-900 uppercase tracking-wide">
+                  🏢 Subcontracted Positions ({row.subcontractorCount})
+                </span>
+              </div>
+            );
+          } else if (row.type === 'subcontractor') {
+            // Individual subcontractor row - show subcontractor name with details
+            return (
+              <div className="flex items-center h-full px-2 pl-12 bg-purple-50/50">
                 <span className="text-sm text-purple-700 font-medium">
-                  ↳ {row.subcontractorName}
+                  {row.subcontractorName}
                 </span>
               </div>
             );
@@ -807,6 +878,8 @@ export const PrimeLaborSection = ({
                 <div className="flex-1" />
               </div>
             );
+          } else if (row.type === 'subcontractor-header') {
+            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
           } else if (row.type === 'subcontractor') {
             return <div className="h-full bg-purple-50/50" />;
           }
@@ -864,6 +937,8 @@ export const PrimeLaborSection = ({
                 <div className="flex-1" />
               </div>
             );
+          } else if (row.type === 'subcontractor-header') {
+            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
           } else if (row.type === 'subcontractor') {
             return <div className="h-full bg-purple-50/50" />;
           }
@@ -879,6 +954,8 @@ export const PrimeLaborSection = ({
         renderCell: ({ row }) => {
           if (row.type === 'subtotal') {
             return <div className="h-full bg-blue-50 border-t-2 border-blue-200" />;
+          } else if (row.type === 'subcontractor-header') {
+            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
           } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             const isExpanded = row.isExpanded;
@@ -1068,6 +1145,8 @@ export const PrimeLaborSection = ({
                 )}
               </div>
             );
+          } else if (row.type === 'subcontractor-header') {
+            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
           } else if (row.type === 'subcontractor') {
             return <div className="h-full bg-purple-50/50" />;
           }
@@ -1106,9 +1185,26 @@ export const PrimeLaborSection = ({
             );
           }
 
-          // Subcontractor row - empty (calculations done separately)
+          // Subcontractor header row
+          if (row.type === 'subcontractor-header') {
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-purple-100/30 border-t border-purple-200">
+                <span className="text-xs text-purple-900 font-medium">Hours</span>
+              </div>
+            );
+          }
+
+          // Subcontractor row - show escalated marked-up rate (escalated base + sub_fee + S&MH)
           if (row.type === 'subcontractor') {
-            return <div className="h-full bg-purple-50/50" />;
+            const baseRate = row.subcontractorRate || 0;
+            const markedUpRate = getSubcontractorDisplayRate(baseRate, year);
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-purple-50/50">
+                <span className="text-purple-700 font-semibold">
+                  {formatCurrency(markedUpRate)}
+                </span>
+              </div>
+            );
           }
 
           const pos = row.data as AdvancedPosition;
@@ -1247,6 +1343,9 @@ export const PrimeLaborSection = ({
                 </span>
               </div>
             );
+          } else if (row.type === 'subcontractor-header') {
+            // Subcontractor header row
+            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
           } else if (row.type === 'subcontractor') {
             // Subcontractor row - show hours for this year
             const hours = row.subcontractorHours?.[yearStr] || 0;
@@ -1294,9 +1393,26 @@ export const PrimeLaborSection = ({
             );
           }
 
-          // Subcontractor row - empty (calculations done separately)
+          // Subcontractor header row
+          if (row.type === 'subcontractor-header') {
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-purple-100/30 border-t border-purple-200">
+                <span className="text-xs text-purple-900 font-medium">Total</span>
+              </div>
+            );
+          }
+
+          // Subcontractor row - show escalated marked-up rate (escalated base + sub_fee + S&MH)
           if (row.type === 'subcontractor') {
-            return <div className="h-full bg-purple-50/50" />;
+            const baseRate = row.subcontractorRate || 0;
+            const markedUpRate = getSubcontractorDisplayRate(baseRate, year);
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-purple-50/50">
+                <span className="text-purple-700 font-semibold">
+                  {formatCurrency(markedUpRate)}
+                </span>
+              </div>
+            );
           }
 
           const pos = row.data as AdvancedPosition;
@@ -1374,6 +1490,8 @@ export const PrimeLaborSection = ({
                 </span>
               </div>
             );
+          } else if (row.type === 'subcontractor-header') {
+            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
           }
           return <div />;
         },
@@ -1402,6 +1520,8 @@ export const PrimeLaborSection = ({
                 </span>
               </div>
             );
+          } else if (row.type === 'subcontractor-header') {
+            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
           }
           return <div />;
         },
@@ -1430,6 +1550,8 @@ export const PrimeLaborSection = ({
                 </span>
               </div>
             );
+          } else if (row.type === 'subcontractor-header') {
+            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
           }
           return <div />;
         },
@@ -1458,6 +1580,8 @@ export const PrimeLaborSection = ({
                 </span>
               </div>
             );
+          } else if (row.type === 'subcontractor-header') {
+            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
           }
           return <div />;
         },
@@ -1486,6 +1610,8 @@ export const PrimeLaborSection = ({
                 </span>
               </div>
             );
+          } else if (row.type === 'subcontractor-header') {
+            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
           }
           return <div />;
         },
@@ -1514,6 +1640,8 @@ export const PrimeLaborSection = ({
                 </span>
               </div>
             );
+          } else if (row.type === 'subcontractor-header') {
+            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
           }
           return <div />;
         },
@@ -1534,6 +1662,14 @@ export const PrimeLaborSection = ({
               <div className="flex items-center justify-end h-full px-2 bg-blue-50 border-t-2 border-blue-200">
                 <span className="text-blue-700 font-bold text-base">
                   {totals.totalHours.toLocaleString()}
+                </span>
+              </div>
+            );
+          } else if (row.type === 'subcontractor-header') {
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-purple-100/30 border-t border-purple-200">
+                <span className="text-xs text-purple-900 font-medium">
+                  {row.subcontractorsTotalHours?.toLocaleString()} hrs
                 </span>
               </div>
             );
@@ -1573,6 +1709,8 @@ export const PrimeLaborSection = ({
                 </span>
               </div>
             );
+          } else if (row.type === 'subcontractor-header') {
+            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
           } else if (row.type === 'subcontractor') {
             return <div className="h-full bg-purple-50/50" />;
           } else if (row.type === 'position') {
@@ -1795,6 +1933,7 @@ export const PrimeLaborSection = ({
           setPositionToTransfer(null);
         }}
         lockSource={false}
+        primePositionId={positionToTransfer?.id}
       />
     </div>
   );

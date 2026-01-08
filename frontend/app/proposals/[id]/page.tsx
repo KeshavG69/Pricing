@@ -12,7 +12,6 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import AdvancedAnalysisGrid from '@/components/pricing/AdvancedAnalysisGrid';
 import OverviewTab from '@/components/pricing/OverviewTab';
-import RateTableView from '@/components/pricing/RateTableView';
 import PricingTabs from '@/components/pricing/PricingTabs';
 import FilesTab from '@/components/pricing/FilesTab';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
@@ -588,13 +587,6 @@ export default function ProposalPage() {
               </div>
             )}
             {activeTab === 'subcontractors' && advancedMode && <SubcontractorSection />}
-            {activeTab === 'rate-table' && advancedMode && (
-              <RateTableView
-                subcontractors={subcontractors}
-                feeRate={rates.sub_fee || 0.05}
-                smhRate={rates.smh || 0.065}
-              />
-            )}
           </div>
         </CardContent>
       </Card>
