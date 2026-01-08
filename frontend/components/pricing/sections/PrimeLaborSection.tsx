@@ -1015,8 +1015,6 @@ export const PrimeLaborSection = ({
                 <div className="flex-1" />
               </div>
             );
-          } else if (row.type === 'subcontractor-header') {
-            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
           } else if (row.type === 'subcontractor') {
             return <div className="h-full bg-purple-50/50" />;
           }
