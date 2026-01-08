@@ -23,7 +23,8 @@ class ExcelGenerator:
     """
 
     # Style constants matching sample template
-    HEADER_FILL = PatternFill(start_color="284C82", end_color="284C82", fill_type="solid")
+    HEADER_FILL = PatternFill(start_color="284C82", end_color="284C82", fill_type="solid")  # Dark blue
+    PERIOD_HEADER_FILL = PatternFill(start_color="D6DCE4", end_color="D6DCE4", fill_type="solid")  # Light blue
     HEADER_FONT = Font(bold=True, size=10, color="FFFFFF")
     NORMAL_FONT = Font(size=10)
     BOLD_FONT = Font(bold=True, size=10)
@@ -141,12 +142,12 @@ class ExcelGenerator:
         ws.cell(header_row, 2, "Cost Element")
         self._style_header_cell(ws.cell(header_row, 2))
 
-        # Period column headers
+        # Period column headers - Light blue background
         col = 3
         for year in range(1, self.total_years + 1):
             label = self._get_period_label(year)
-            ws.cell(header_row, col, label)
-            self._style_header_cell(ws.cell(header_row, col))
+            period_cell = ws.cell(header_row, col, label)
+            self._style_period_header_cell(period_cell)  # Light blue for period headers
             col += 1
 
         # Total column
@@ -450,10 +451,9 @@ class ExcelGenerator:
         for year in range(1, self.total_years + 1):
             period_label = self._get_period_label(year)
 
-            # Period header above sub-headers (row 7)
-            ws.cell(7, col, period_label)
-            ws.cell(7, col).font = self.BOLD_FONT
-            ws.cell(7, col).alignment = Alignment(horizontal='center')
+            # Period header above sub-headers (row 7) - Light blue background
+            period_cell = ws.cell(7, col, period_label)
+            self._style_period_header_cell(period_cell)
 
             # Sub-headers for Hours, Rate, Dollars
             sub_headers = ["Hours/Base", "Rate", "Dollars"]
@@ -607,10 +607,9 @@ class ExcelGenerator:
         for year in range(1, self.total_years + 1):
             period_label = self._get_period_label(year)
 
-            # Period header above (row 7)
-            ws.cell(7, col, period_label)
-            ws.cell(7, col).font = self.BOLD_FONT
-            ws.cell(7, col).alignment = Alignment(horizontal='center')
+            # Period header above (row 7) - Light blue background
+            period_cell = ws.cell(7, col, period_label)
+            self._style_period_header_cell(period_cell)
 
             # Sub-headers for Hours, Rate, Dollars
             sub_headers = ["Hours/Base", "Rate", "Dollars"]
@@ -712,8 +711,8 @@ class ExcelGenerator:
 
         for year in range(1, self.total_years + 1):
             period_label = self._get_period_label(year)
-            ws.cell(header_row, col, period_label)
-            self._style_header_cell(ws.cell(header_row, col))
+            period_cell = ws.cell(header_row, col, period_label)
+            self._style_period_header_cell(period_cell)  # Light blue background for periods
             ws.column_dimensions[get_column_letter(col)].width = 18
             ws.column_dimensions[get_column_letter(col + 1)].width = 15
             col += 2  # Amount and handling columns
@@ -749,6 +748,12 @@ class ExcelGenerator:
                 cell.border = self.THIN_BORDER
                 col += 2
 
+            # Add Total column formula for material row
+            total_cell = ws.cell(current_row, total_col)
+            total_cell.value = f"=SUM({get_column_letter(3)}{current_row}:{get_column_letter(total_col - 2)}{current_row})"
+            total_cell.number_format = self.CURRENCY_FORMAT
+            total_cell.border = self.THIN_BORDER
+
             current_row += 1
 
             # Material Handling row
@@ -763,6 +768,12 @@ class ExcelGenerator:
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 2
+
+            # Add Total column formula for handling row
+            total_cell = ws.cell(current_row, total_col)
+            total_cell.value = f"=SUM({get_column_letter(3)}{current_row}:{get_column_letter(total_col - 2)}{current_row})"
+            total_cell.number_format = self.CURRENCY_FORMAT
+            total_cell.border = self.THIN_BORDER
 
             current_row += 1
 
@@ -779,6 +790,13 @@ class ExcelGenerator:
             cell.border = self.THIN_BORDER
             cell.font = self.BOLD_FONT
             col += 2
+
+        # Add Total column formula for Total Materials row
+        total_cell = ws.cell(current_row, total_col)
+        total_cell.value = f"=SUM({get_column_letter(3)}{current_row}:{get_column_letter(total_col - 2)}{current_row})"
+        total_cell.number_format = self.CURRENCY_FORMAT
+        total_cell.border = self.THIN_BORDER
+        total_cell.font = self.BOLD_FONT
 
     def _create_travel_sheet(self):
         """Create the Travel sheet."""
@@ -798,8 +816,8 @@ class ExcelGenerator:
 
         for year in range(1, self.total_years + 1):
             period_label = self._get_period_label(year)
-            ws.cell(header_row, col, period_label)
-            self._style_header_cell(ws.cell(header_row, col))
+            period_cell = ws.cell(header_row, col, period_label)
+            self._style_period_header_cell(period_cell)  # Light blue background for periods
             ws.column_dimensions[get_column_letter(col)].width = 18
             ws.column_dimensions[get_column_letter(col + 1)].width = 15
             col += 2
@@ -836,6 +854,12 @@ class ExcelGenerator:
                 cell.border = self.THIN_BORDER
                 col += 2
 
+            # Add Total column formula for this travel row
+            total_cell = ws.cell(current_row, total_col)
+            total_cell.value = f"=SUM({get_column_letter(3)}{current_row}:{get_column_letter(total_col - 2)}{current_row})"
+            total_cell.number_format = self.CURRENCY_FORMAT
+            total_cell.border = self.THIN_BORDER
+
             current_row += 1
 
         # G&A row
@@ -850,6 +874,12 @@ class ExcelGenerator:
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
             col += 2
+
+        # Add Total column formula for G&A row
+        total_cell = ws.cell(current_row, total_col)
+        total_cell.value = f"=SUM({get_column_letter(3)}{current_row}:{get_column_letter(total_col - 2)}{current_row})"
+        total_cell.number_format = self.CURRENCY_FORMAT
+        total_cell.border = self.THIN_BORDER
 
         current_row += 1
 
@@ -866,6 +896,13 @@ class ExcelGenerator:
             cell.border = self.THIN_BORDER
             cell.font = self.BOLD_FONT
             col += 2
+
+        # Add Total column formula for Total Travel row
+        total_cell = ws.cell(current_row, total_col)
+        total_cell.value = f"=SUM({get_column_letter(3)}{current_row}:{get_column_letter(total_col - 2)}{current_row})"
+        total_cell.number_format = self.CURRENCY_FORMAT
+        total_cell.border = self.THIN_BORDER
+        total_cell.font = self.BOLD_FONT
 
     def _create_loe_sheet(self):
         """Create the Level of Effort (LOE) sheet showing hours per category."""
@@ -894,10 +931,9 @@ class ExcelGenerator:
         for year in range(1, self.total_years + 1):
             period_label = self._get_period_label(year)
 
-            # Period header above (row 7)
-            ws.cell(7, col, period_label)
-            ws.cell(7, col).font = self.BOLD_FONT
-            ws.cell(7, col).alignment = Alignment(horizontal='center')
+            # Period header above (row 7) - Light blue background
+            period_cell = ws.cell(7, col, period_label)
+            self._style_period_header_cell(period_cell)
 
             # Column header for hours
             cell = ws.cell(header_row, col)
@@ -1146,6 +1182,13 @@ class ExcelGenerator:
         """Apply header styling to a cell."""
         cell.fill = self.HEADER_FILL
         cell.font = self.HEADER_FONT
+        cell.border = self.THIN_BORDER
+        cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    def _style_period_header_cell(self, cell):
+        """Apply period header styling to a cell (light blue background)."""
+        cell.fill = self.PERIOD_HEADER_FILL
+        cell.font = self.BOLD_FONT
         cell.border = self.THIN_BORDER
         cell.alignment = Alignment(horizontal='center', vertical='center')
 

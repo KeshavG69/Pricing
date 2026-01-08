@@ -141,7 +141,15 @@ class OEWSMongoLookup:
             area_code = await self.get_area_code(area)
             if area_code is None:
                 print(f"  ❌ Area '{area}' not found in database")
-                return None
+
+                # Fallback to National if not already National
+                if area.lower() != "national":
+                    print(f"  🔄 Falling back to National data...")
+                    return await self.get_wage_by_soc(soc_code, "National")
+                else:
+                    # Already tried National, no data available
+                    print(f"  ❌ National area not found in database (database error?)")
+                    return None
             print(f"  ✓ Area code: {area_code}")
         else:
             print(f"  Using provided area code: {area_code}")
