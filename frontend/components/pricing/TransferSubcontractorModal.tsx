@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import Dialog from '@/components/ui/Dialog';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { Card } from '@/components/ui/Card';
 import { usePricingStore } from '@/lib/stores/pricingStore';
-import { AlertCircle, ArrowRight, Clock } from 'lucide-react';
+import { AlertCircle, ArrowRight, Clock, ChevronDown, Check } from 'lucide-react';
 
 interface TransferSubcontractorModalProps {
   open: boolean;
@@ -17,6 +17,8 @@ interface TransferSubcontractorModalProps {
   // Pre-selected source when lockSource is true
   sourceSubcontractorId?: string;
   sourcePositionIndex?: number;
+  // When opened from Prime Labor, filter to positions linked to this prime position
+  primePositionId?: string;
 }
 
 export const TransferSubcontractorModal = ({
@@ -25,6 +27,7 @@ export const TransferSubcontractorModal = ({
   lockSource = false,
   sourceSubcontractorId,
   sourcePositionIndex,
+  primePositionId,
 }: TransferSubcontractorModalProps) => {
   const { subcontractors, totalYears, transferSubcontractorHours } = usePricingStore();
 
@@ -42,6 +45,10 @@ export const TransferSubcontractorModal = ({
 
   // Errors state
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // Custom dropdown state for target subcontractor
+  const [targetDropdownOpen, setTargetDropdownOpen] = useState(false);
+  const targetDropdownRef = useRef<HTMLDivElement>(null);
 
   // Determine actual source values
   const actualSourceSubId = lockSource ? sourceSubcontractorId : selectedSourceSubId;
@@ -65,6 +72,38 @@ export const TransferSubcontractorModal = ({
     return sourcePosition.hours_per_year;
   }, [sourcePosition]);
 
+  // Get positions linked to prime position (when opened from Prime Labor)
+  const linkedPositions = useMemo(() => {
+    if (!primePositionId) return [];
+
+    const linked: Array<{ subId: string; subName: string; posIndex: number; position: any }> = [];
+    subcontractors.forEach(sub => {
+      sub.positions.forEach((pos, index) => {
+        if (pos.original_position_id === primePositionId) {
+          linked.push({ subId: sub.id, subName: sub.name, posIndex: index, position: pos });
+        }
+      });
+    });
+    return linked;
+  }, [primePositionId, subcontractors]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (targetDropdownRef.current && !targetDropdownRef.current.contains(event.target as Node)) {
+        setTargetDropdownOpen(false);
+      }
+    };
+
+    if (targetDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [targetDropdownOpen]);
+
   // Initialize state when modal opens or source changes
   useEffect(() => {
     if (open) {
@@ -73,6 +112,7 @@ export const TransferSubcontractorModal = ({
       setSelectedTargetSubId('');
       setNewSubcontractorName('');
       setErrors({});
+      setTargetDropdownOpen(false);
 
       // Reset hours allocation with empty values (placeholders)
       setHoursAllocation({});
@@ -81,12 +121,17 @@ export const TransferSubcontractorModal = ({
       if (lockSource && sourceSubcontractorId !== undefined && sourcePositionIndex !== undefined) {
         setSelectedSourceSubId(sourceSubcontractorId);
         setSelectedSourcePosIndex(sourcePositionIndex);
+      } else if (primePositionId && linkedPositions.length > 0) {
+        // Auto-select first linked position when opened from Prime Labor
+        const firstLinked = linkedPositions[0];
+        setSelectedSourceSubId(firstLinked.subId);
+        setSelectedSourcePosIndex(firstLinked.posIndex);
       } else {
         setSelectedSourceSubId('');
         setSelectedSourcePosIndex(-1);
       }
     }
-  }, [open, lockSource, sourceSubcontractorId, sourcePositionIndex]);
+  }, [open, lockSource, sourceSubcontractorId, sourcePositionIndex, primePositionId, linkedPositions]);
 
   // Get available target subcontractors (exclude source)
   const availableTargetSubs = useMemo(() => {
@@ -193,28 +238,37 @@ export const TransferSubcontractorModal = ({
         <Card className="p-4">
           <h3 className="text-sm font-bold text-foreground mb-3">1. Source Position</h3>
 
-          {lockSource && sourcePosition ? (
+          {lockSource || (primePositionId && linkedPositions.length > 0) ? (
             // Fixed source display
-            <div className="bg-muted/50 rounded-lg p-3">
-              <div className="text-sm">
-                <span className="text-muted-foreground">From: </span>
-                <span className="font-semibold text-foreground">{sourceSubcontractor?.name}</span>
+            sourcePosition ? (
+              <div className="bg-muted/50 rounded-lg p-3">
+                <div className="text-sm">
+                  <span className="text-muted-foreground">From: </span>
+                  <span className="font-semibold text-foreground">{sourceSubcontractor?.name}</span>
+                </div>
+                <div className="text-sm mt-1">
+                  <span className="text-muted-foreground">Position: </span>
+                  <span className="font-semibold text-foreground">{sourcePosition.labor_category}</span>
+                </div>
+                <div className="text-sm mt-1">
+                  <span className="text-muted-foreground">Available: </span>
+                  <span className="text-foreground">
+                    {Object.entries(availableHours).map(([year, hours]) => (
+                      <span key={year} className="mr-3">
+                        {year === '1' ? 'Base' : `Opt ${parseInt(year) - 1}`}: {hours.toLocaleString()}h
+                      </span>
+                    ))}
+                  </span>
+                </div>
+                {linkedPositions.length > 1 && (
+                  <div className="text-xs text-muted-foreground mt-2">
+                    Note: Multiple positions linked to this prime position. Showing first one.
+                  </div>
+                )}
               </div>
-              <div className="text-sm mt-1">
-                <span className="text-muted-foreground">Position: </span>
-                <span className="font-semibold text-foreground">{sourcePosition.labor_category}</span>
-              </div>
-              <div className="text-sm mt-1">
-                <span className="text-muted-foreground">Available: </span>
-                <span className="text-foreground">
-                  {Object.entries(availableHours).map(([year, hours]) => (
-                    <span key={year} className="mr-3">
-                      {year === '1' ? 'Base' : `Opt ${parseInt(year) - 1}`}: {hours.toLocaleString()}h
-                    </span>
-                  ))}
-                </span>
-              </div>
-            </div>
+            ) : (
+              <div className="text-sm text-muted-foreground">Loading source position...</div>
+            )
           ) : (
             // Selectable source
             <div className="space-y-3">
@@ -299,21 +353,50 @@ export const TransferSubcontractorModal = ({
             <div>
               <label className="block text-sm text-muted-foreground mb-2">Target Subcontractor</label>
               {availableTargetSubs.length > 0 ? (
-                <select
-                  value={selectedTargetSubId}
-                  onChange={(e) => {
-                    setSelectedTargetSubId(e.target.value);
-                    setErrors({ ...errors, target: '' });
-                  }}
-                  className="w-full px-3 py-2 bg-background border border-input rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-                >
-                  <option value="">-- Select target subcontractor --</option>
-                  {availableTargetSubs.map(sub => (
-                    <option key={sub.id} value={sub.id}>
-                      {sub.name} ({sub.positions.length} positions)
-                    </option>
-                  ))}
-                </select>
+                <div className="relative" ref={targetDropdownRef}>
+                  <button
+                    type="button"
+                    onClick={() => setTargetDropdownOpen(!targetDropdownOpen)}
+                    className="w-full px-3 py-2 bg-background border border-input rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring flex items-center justify-between hover:border-primary transition-colors"
+                  >
+                    <span className={selectedTargetSubId ? 'text-foreground' : 'text-muted-foreground'}>
+                      {selectedTargetSubId
+                        ? `${availableTargetSubs.find(s => s.id === selectedTargetSubId)?.name} (${availableTargetSubs.find(s => s.id === selectedTargetSubId)?.positions.length} positions)`
+                        : '-- Select target subcontractor --'}
+                    </span>
+                    <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${targetDropdownOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {/* Custom Dropdown */}
+                  {targetDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-background border border-border rounded-lg shadow-lg py-1 z-50 max-h-60 overflow-y-auto">
+                      {availableTargetSubs.map(sub => (
+                        <button
+                          key={sub.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedTargetSubId(sub.id);
+                            setErrors({ ...errors, target: '' });
+                            setTargetDropdownOpen(false);
+                          }}
+                          className={`w-full px-3 py-2 text-left text-sm hover:bg-muted flex items-center justify-between ${
+                            selectedTargetSubId === sub.id ? 'bg-muted' : ''
+                          }`}
+                        >
+                          <span className="flex items-center gap-2">
+                            {selectedTargetSubId === sub.id && (
+                              <Check className="w-4 h-4 text-primary" />
+                            )}
+                            <span>{sub.name}</span>
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            ({sub.positions.length} positions)
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ) : (
                 <p className="text-sm text-muted-foreground italic">
                   No other subcontractors available. Create a new one below.

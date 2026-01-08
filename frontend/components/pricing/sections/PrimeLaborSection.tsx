@@ -1835,6 +1835,7 @@ export const PrimeLaborSection = ({
           setPositionToTransfer(null);
         }}
         lockSource={false}
+        primePositionId={positionToTransfer?.id}
       />
     </div>
   );
