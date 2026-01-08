@@ -608,32 +608,65 @@ export const PrimeLaborSection = ({
             return <div className="h-full bg-blue-50 border-t-2 border-blue-200" />;
           } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
-            const locationType = pos.location_type || 'On-Site';
-            const isOnSite = locationType === 'On-Site';
 
-            return (
-              <div className="flex items-center justify-center h-full px-2">
+            // Optimistic update component for instant feedback
+            const LocationTypeButton = () => {
+              const [optimisticLocationType, setOptimisticLocationType] = React.useState<string | null>(null);
+              const [isUpdating, setIsUpdating] = React.useState(false);
+
+              const currentLocationType = optimisticLocationType || pos.location_type || 'On-Site';
+              const isOnSite = currentLocationType === 'On-Site';
+
+              const handleToggle = async (e: React.MouseEvent) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Toggle between On-Site and Off-Site
+                const newLocationType = isOnSite ? 'Off-Site' : 'On-Site';
+
+                // Optimistic update - change UI immediately
+                setOptimisticLocationType(newLocationType);
+                setIsUpdating(true);
+
+                // Actual store update (async)
+                try {
+                  updatePosition(pos.id, { location_type: newLocationType });
+
+                  // Clear optimistic state after a brief delay to ensure store update propagated
+                  setTimeout(() => {
+                    setOptimisticLocationType(null);
+                    setIsUpdating(false);
+                  }, 300);
+                } catch (error) {
+                  // Rollback on error
+                  console.error('Failed to update location type:', error);
+                  setOptimisticLocationType(pos.location_type || 'On-Site');
+                  setIsUpdating(false);
+                }
+              };
+
+              return (
                 <button
                   type="button"
-                  className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium transition-all duration-200 cursor-pointer transform hover:scale-105 active:scale-95 ${
+                  className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium transition-all duration-150 cursor-pointer transform hover:scale-105 active:scale-95 ${
                     isOnSite
                       ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 hover:bg-blue-200'
                       : 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 hover:bg-orange-200'
-                  }`}
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    // Toggle between On-Site and Off-Site
-                    const newLocationType = isOnSite ? 'Off-Site' : 'On-Site';
-                    updatePosition(pos.id, { location_type: newLocationType });
-                  }}
+                  } ${isUpdating ? 'opacity-75 ring-2 ring-offset-1 ring-blue-400' : ''}`}
+                  onClick={handleToggle}
                   onMouseDown={(e) => {
                     e.stopPropagation();
                   }}
                   title="Click to toggle between On-Site and Off-Site"
                 >
-                  {locationType}
+                  {currentLocationType}
                 </button>
+              );
+            };
+
+            return (
+              <div className="flex items-center justify-center h-full px-2">
+                <LocationTypeButton />
               </div>
             );
           } else if (row.type === 'subcontractor') {

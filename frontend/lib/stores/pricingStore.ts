@@ -89,6 +89,7 @@ interface PricingState {
   updatePrimeContractorName: (name: string) => void;
   recalculate: () => Promise<void>;
   exportToExcel: (overrides?: { primeContractorName?: string }) => Promise<void>;
+  saveProposal: () => Promise<{ success: boolean; error?: string }>;
   reset: () => void;
 
   // Advanced mode actions
@@ -2276,6 +2277,73 @@ export const usePricingStore = create<PricingState>((set, get) => {
         } catch (error) {
           console.error('[AUTO-ALLOCATE] Failed to save:', error);
         }
+      }
+    },
+
+    // Manual save function (immediate, non-debounced)
+    saveProposal: async () => {
+      const state = get();
+
+      console.log('[MANUAL-SAVE] Save button clicked', {
+        proposalId: state.proposalId,
+        isDirty: state.isDirty,
+        positions: state.positions.length,
+      });
+
+      if (!state.proposalId) {
+        console.warn('[MANUAL-SAVE] SKIPPED - No proposal ID');
+        return { success: false, error: 'No proposal loaded' };
+      }
+
+      set({ isSaving: true });
+      console.log('💾 Manual save initiated...');
+
+      try {
+        // Calculate total cost from all positions
+        const totalCost = state.positions.reduce((sum, position) => {
+          const positionTotal = position.total_amount || 0;
+          return sum + positionTotal;
+        }, 0);
+
+        await proposalsApi.update(state.proposalId, {
+          prime_contractor_name: state.primeContractorName,
+          total_cost: totalCost,
+          spreadsheet_data: {
+            positions: state.positions,
+            subcontractors: state.subcontractors,
+            travel: state.travel,
+            odcs: state.odcs,
+            extensions: state.extensions,
+            rates: state.rates,
+            escalation_rates: state.escalationRates,
+            months_per_year: state.monthsPerYear,
+            subcontractor_configured: state.subcontractorConfigured,
+            advanced_mode: state.advancedMode,
+          },
+        });
+
+        console.log('✅ Manual save successful!');
+        console.log('   - Positions saved:', state.positions.length);
+        console.log('   - Subcontractors saved:', state.subcontractors.length);
+
+        // Invalidate cache so next load fetches fresh data from MongoDB
+        if (state.proposalId) {
+          proposalCache.delete(state.proposalId);
+          console.log('🗑️  Cache invalidated for proposal:', state.proposalId);
+        }
+
+        set({
+          isDirty: false,
+          isSaving: false,
+          lastSaved: new Date(),
+        });
+
+        return { success: true };
+      } catch (error: any) {
+        console.error('❌ Manual save failed:', error);
+        console.error('   - Error details:', error.response?.data || error.message);
+        set({ isSaving: false });
+        return { success: false, error: error.response?.data?.detail || error.message || 'Save failed' };
       }
     },
 

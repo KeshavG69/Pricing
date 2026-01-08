@@ -19,7 +19,7 @@ import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { SubcontractorSection } from '@/components/pricing/SubcontractorSection';
 import { AdvancedAnalysisModal, SubcontractorInfo } from '@/components/pricing/AdvancedAnalysisModal';
 import ChargeConfirmationModal from '@/components/ui/ChargeConfirmationModal';
-import { Loader2, AlertCircle, ArrowLeft, Plus, Download, Share2, CheckCircle, XCircle, Send, ChevronDown } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowLeft, Plus, Download, Share2, CheckCircle, XCircle, Send, ChevronDown, Save } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
 import { ShareOrInviteModal } from '@/components/proposals/ShareOrInviteModal';
 import { useAuthStore } from '@/lib/stores/authStore';
@@ -52,6 +52,8 @@ export default function ProposalPage() {
     activeTab,
     setActiveTab,
     exportToExcel,
+    saveProposal,
+    isSaving: isPricingSaving,
   } = usePricingStore();
   const [pollingStatus, setPollingStatus] = useState<any>(null);
   const [isPolling, setIsPolling] = useState(false);
@@ -326,6 +328,15 @@ export default function ProposalPage() {
       toast.error(error?.response?.data?.detail || 'Failed to retry processing');
     } finally {
       setIsRetrying(false);
+    }
+  };
+
+  const handleManualSave = async () => {
+    const result = await saveProposal();
+    if (result.success) {
+      toast.success('Saved successfully');
+    } else {
+      toast.error(result.error || 'Failed to save');
     }
   };
 
@@ -806,6 +817,26 @@ export default function ProposalPage() {
               >
                 <Share2 className="w-4 h-4 mr-2" />
                 Share
+              </Button>
+            )}
+            {/* Save button (shows in both basic and advanced mode) */}
+            {currentProposal.status === 'completed' && (
+              <Button
+                variant="outline"
+                onClick={handleManualSave}
+                disabled={isPricingSaving || isRecalculating}
+              >
+                {isPricingSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save
+                  </>
+                )}
               </Button>
             )}
             {/* Advanced Analysis or Export Excel button */}
