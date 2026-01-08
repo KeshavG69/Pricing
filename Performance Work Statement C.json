@@ -1,0 +1,159 @@
+{
+  "metadata": {
+    "project_name": "Electronic Document Management (EDM)",
+    "location": "Remote",
+    "base_years": 1,
+    "option_years": 4,
+    "total_years": 5,
+    "standard_fte_hours": 2080,
+    "notes": "Contract period structure (1 base + 4 option years) inferred from typical DoD contract structure as not explicitly stated in PWS. Document states 'Base and all Option Years anticipate the same Level of Effort' - hours remain constant across all years. 24/7/365 support required. Work performed remotely per Section 3.1. System supports DFAS locations in Columbus OH, Cleveland OH, Texarkana TX, Indianapolis IN, Japan (Yokota AFB), Europe (Kaiserslautern Germany), Rome NY, and Limestone ME."
+  },
+  "positions": [
+    {
+      "labor_category": "Database Administrator",
+      "description": "Extensive Oracle experience and knowledge with developing data structures and stored procedures, and to support/install new databases. Monitor primary and standby production databases on a daily basis, development and testing databases, and manage Oracle Data Guard standby databases. Provide database infrastructure support for development, SQL creation and analysis support, develop database stored procedures and script database updates, create Oracle scheduler jobs. Research, plan, develop, test and implement scripts for Oracle quarterly Critical Patch Updates and one-off database patches. Develop, install, manage, and audit database security triggers and logins. Manage database password encryption procedures. Review and revise database privileges to support least privilege concept. Create full sized, coordinated testing database for System Integration Testing (SIT) and User Acceptance Testing (UAT). Maintain updated documentation of database specifications through HTML site. Provide Tier II support in troubleshooting and resolving production database issues. Requires Security+ certification, IAT-I role.",
+      "experience": null,
+      "location": "Remote",
+      "location_type": "Remote",
+      "is_key_position": true,
+      "hours_per_year": {
+        "1": 2335,
+        "2": 2335,
+        "3": 2335,
+        "4": 2335,
+        "5": 2335
+      },
+      "data_source": "document"
+    },
+    {
+      "labor_category": "Enterprise Architect / Staff Engineer \u2013 Senior",
+      "description": "In depth knowledge of the EDM system or similar system and related components, Pre-Acceptance Verification (PAVER), PII Redaction Engine (PuRE), Multi-System Search Tool (MSST), Oracle Database Management System, Electronic Data Interchange (EDI), HP/UX and RedHat Linux and Win 10 Operating Systems, DFAS entitlement systems, Wide Area Workflow (WAWF), Electronic Document Access (EDA), Global Exchange (GEX), Optical Character Recognition (OCR) technology, networks and network infrastructure including routers and firewalls, encryption, DFAS Desktop Management Initiative, Security Technical Implementation Guides (STIGS). Establish basic structure of systems and subsystems, defining core design and building blocks that provide the basic system framework. Identify and define/design mitigation techniques for effects on controlled systems caused by changes in uncontrolled systems, infrastructure, operating environment and/or policy. Assist developers with design modifications and enhancements to ensure continued stability, compliance with regulations and information assurance initiatives. Requires CISSP I certification, IASAE I role. Must maintain Secret clearance.",
+      "experience": null,
+      "location": "Remote",
+      "location_type": "Remote",
+      "is_key_position": true,
+      "hours_per_year": {
+        "1": 2124,
+        "2": 2124,
+        "3": 2124,
+        "4": 2124,
+        "5": 2124
+      },
+      "data_source": "document"
+    },
+    {
+      "labor_category": "Project Manager \u2013 Senior / Program Manager",
+      "description": "Interface and communicate effectively with government personnel including DFAS EDM Program Manager, contracting office personnel, and various government staff members on a variety of EDM issues and projects. Detailed knowledge of DoD financial accounting and management reporting regarding various EDM (or like system) requirements. Staff the EDM project with the proper blend of knowledge and experience to support Government needs. Recognize and recommend enhancements to the EDM (or like) system to exploit existing functionality to assist DFAS and its customers. Work with customers to analyze needs and recommend solutions. Assist customer in the definition of requirements for future analysis and developments. Ensure optimum on-line availability to meet and exceed DFAS requirement of 95% system availability. Develop contingency plans for projects to manage risk and increase project success when faced with unforeseen obstacles.",
+      "experience": null,
+      "location": "Remote",
+      "location_type": "Remote",
+      "is_key_position": true,
+      "hours_per_year": {
+        "1": 2021,
+        "2": 2021,
+        "3": 2021,
+        "4": 2021,
+        "5": 2021
+      },
+      "data_source": "document"
+    },
+    {
+      "labor_category": "System Administrator \u2013 Advanced",
+      "description": "Administer and maintain Microsoft operating platforms (or like system applications), and HP/UX operating platforms used to support EDM operating systems and development efforts. Configure new equipment, patches, and software upgrades to ensure patches and firmware upgrades are applicable/appropriate. Monitor and Support document scanning processes, multiple disk storage devices, fibre-channel, and Ethernet switches, HP/UX servers, windows servers (web and document upload) and blade enclosure peripherals. Perform, maintain, and validate daily and weekly system backups, routine equipment inventory, system checks and data validation. Generate ad hoc reports. Perform Tier 3 level support including assisting system administrators of interface applications, agency, and network teams when issues arise. Diagnose and troubleshoot application issues including verifying the integrity of source files. Remotely perform user assistance via current DFAS Collaboration to verify/rectify VPN, ISP or PC issues. Correct errors found in routine checks. Verify web services and correct issues on web servers. Correct interface issues with agency servers. Fix discrepancies between servers and databases. Run and monitor cycle processing. Review and check various system and application logs for errors and validate security measures. Requires Security+ certification, IAT-II role. Must maintain Secret clearance.",
+      "experience": null,
+      "location": "Remote",
+      "location_type": "Remote",
+      "is_key_position": true,
+      "hours_per_year": {
+        "1": 7620,
+        "2": 7620,
+        "3": 7620,
+        "4": 7620,
+        "5": 7620
+      },
+      "data_source": "document"
+    },
+    {
+      "labor_category": "System Administrator \u2013 Senior",
+      "description": "Administer and maintain the operation of Microsoft operating platforms and HP/UX or RedHat Linux operating platforms used to support EDM operating systems and development efforts. Research emerging technology and make recommendations to government. Create the Information System Contingency Plan (ISCP) and software installation, operating system and hardware firmware upgrade plans. Maintain HP-UX and RedHat Linux server operating system and security patches, Oracle database environment and security patches, Fibre-channel and Ethernet switch firmware security patches, Firmware security patches, Blade enclosure device firmware security patches. Develop appropriate backup schedules to meet customer requirements and unique situations such as yearend processing. Monitor and research logs to identify anomalies to prevent unauthorized access and unnecessary system performance issues. Research and implement various encryption techniques for data confidentiality, integrity and accountability. Perform security audits to verify system integrity. Ensure/verify appropriate data spillage procedures are created and followed. Develop and maintain production related documentation. Ensure optimum on-line availability to meet and exceed DFAS requirement of 95% system availability. Resolve actual and potential problems and deficiencies detected during daily production support monitoring. Analyze and assist in resolution of DFAS network related issues. Participate in DFAS interfacing systems application release planning, testing and implementation. Requires Security+ certification, IAT-II role. Must maintain Secret clearance.",
+      "experience": null,
+      "location": "Remote",
+      "location_type": "Remote",
+      "is_key_position": true,
+      "hours_per_year": {
+        "1": 4836,
+        "2": 4836,
+        "3": 4836,
+        "4": 4836,
+        "5": 4836
+      },
+      "data_source": "document"
+    },
+    {
+      "labor_category": "System Architect / Staff Engineer",
+      "description": "Creates information technology plans based on an understanding of the customer's organization, strategic direction, technology context and business needs. Leads and works in a collaborative effort to conceptualize total systems and/or product solutions. Design and develop integrated business/engineering systems and products to support customer business goals. Lead in defining project scope, plans, and deliverables to include cost projections and proposed implementation dates. Control project requirements, scope and change management issues. Assists leadership in determining tactical and strategic direction of the division/organization. Monitor market trends and the work of standard bodies to assist the customer in defining technical standards. Research, evaluate, and remain current on emerging tools, techniques and technologies. Requires Security+ certification, IAT-I role.",
+      "experience": null,
+      "location": "Remote",
+      "location_type": "Remote",
+      "is_key_position": true,
+      "hours_per_year": {
+        "1": 2288,
+        "2": 2288,
+        "3": 2288,
+        "4": 2288,
+        "5": 2288
+      },
+      "data_source": "document"
+    },
+    {
+      "labor_category": "Business Service Analyst",
+      "description": "Under general direction, formulates and defines systems scope and objectives using information technology and industry knowledge/requirements. Acts as a liaison between customer and technical solutions/support groups to identify business processes, systems, and product requirements. Researches, identifies and develops solutions to problems. Analyzes business and user needs, and documents customer specifications.",
+      "experience": null,
+      "location": "Remote",
+      "location_type": "Remote",
+      "is_key_position": true,
+      "hours_per_year": {
+        "1": 126,
+        "2": 126,
+        "3": 126,
+        "4": 126,
+        "5": 126
+      },
+      "data_source": "document"
+    },
+    {
+      "labor_category": "Information Specialist \u2013 Senior",
+      "description": "Recommend software configuration practices and maintain tools used to store software and documents. Create software release components and manage software versioning. Administer the configuration management system maintaining user accounts, roles, and organization of development projects and software repositories. Liaison with DFAS desktop management service provider by providing software components to be released to the DFAS EDM community. Support desktop management service provider in release package creation process by installing and testing EDM packages. Analyze impact of change requests to current EDM systems and provide estimates to DFAS leadership. Maintain and develop client and web applications in support of the EDM solution. Expert knowledge of the following program languages: Visual Basic .Net, Visual C# .Net, Visual C++, HTML, XML, XSLT, VB Script, Java Script, JQuery. Expert knowledge in the following tools: Visual Basic, SQL-Plus, SQL Developer, VB.NET, current DFAS standard of MS Office. Recommend database table structures, develop SQL and PLSSQL database components and database tuning components such as table indexes, triggers and table views. Evaluate and recommend third party software components to enhance and support the EDM solution. Serve as liaison to DFAS testers during SQT and UAT efforts. Develop and update C applications, *UNIX scripts, and Oracle stored procedures used for production. Build host package for production releases. Maintain and optimize production data. Establish new AIS groups for production. Troubleshoot host/production issues and EDM applications/interfaces. Resolve cycle processing and host application production issues. Write host installation instructions, release notes for use by the customer, and various ad hoc reports according to customer requirements. Requires Security+ certification, IAT-I role. Must maintain Secret clearance.",
+      "experience": null,
+      "location": "Remote",
+      "location_type": "Remote",
+      "is_key_position": true,
+      "hours_per_year": {
+        "1": 3840,
+        "2": 3840,
+        "3": 3840,
+        "4": 3840,
+        "5": 3840
+      },
+      "data_source": "document"
+    }
+  ],
+  "travel": [],
+  "odcs": [
+    {
+      "category": "Development Server Hardware/Software",
+      "description": "6 Windows10 servers and 2 HPUX 11v3 servers currently located at Vendor development site, accessed remotely. Maintenance includes hardware and software support.",
+      "amount_per_year": null
+    },
+    {
+      "category": "Software Licensing",
+      "description": "LeadTools Imaging & OCR Software Maintenance - Annual License charge for DISA-DECC Mechanicsburg, PA and DISA-DECC Montgomery, AL locations, accessed remotely.",
+      "amount_per_year": null
+    },
+    {
+      "category": "Equipment Maintenance",
+      "description": "Scanner Maintenance for 15 Canon #DR-G1100 Scanners. Coverage is Next Business Day response, parts labor, and travel. 1PM visit (Does not include Consumables). Coverage only available to equipment within the United States. Locations: Columbus OH, Cleveland OH, Indianapolis IN, Rome NY, Limestone ME, Japan (Yokota AFB), Europe (Kaiserslautern, Germany). Japan and Europe will ship scanners to DFAS Columbus OH location for repair.",
+      "amount_per_year": null
+    }
+  ]
+}

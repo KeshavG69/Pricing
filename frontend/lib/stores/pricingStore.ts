@@ -919,6 +919,34 @@ export const usePricingStore = create<PricingState>((set, get) => {
     updatePosition: (id, updates) => {
       const state = get();
 
+      // If location_type is being updated, also update linked subcontractor positions
+      if (updates.location_type !== undefined) {
+        console.log('[UPDATE POSITION] location_type changed, updating linked subcontractors...');
+
+        // Find all subcontractor positions linked to this prime position
+        const updatedSubcontractors = state.subcontractors.map(sub => {
+          const hasLinkedPositions = sub.positions.some(pos => pos.original_position_id === id);
+
+          if (hasLinkedPositions) {
+            console.log(`[UPDATE POSITION] Updating location_type for subcontractor: ${sub.name}`);
+            return {
+              ...sub,
+              positions: sub.positions.map(pos => {
+                if (pos.original_position_id === id) {
+                  console.log(`  - Position: ${pos.labor_category} → ${updates.location_type}`);
+                  return { ...pos, location_type: updates.location_type };
+                }
+                return pos;
+              })
+            };
+          }
+          return sub;
+        });
+
+        // Update subcontractors in state
+        set({ subcontractors: updatedSubcontractors });
+      }
+
       if (state.advancedMode) {
         // In advanced mode, use the advanced update logic
         console.log('[ADVANCED MODE] Updating position via updatePosition', { id, updates });

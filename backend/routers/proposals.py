@@ -22,7 +22,8 @@ from models.proposal import ProposalCreate, ProposalUpdate, DocumentInfo
 from utils.proposals import get_proposal_crud
 
 # Document processing
-from client.jd_parser import parse_documents_to_dataframe
+# OLD: from client.jd_parser import parse_documents_to_dataframe  # Replaced by intelligent parser
+from client.intelligent_parser import parse_document_intelligent
 from utils.pipeline import process_dataframe_with_agents
 
 # Position splitting
@@ -119,6 +120,103 @@ def serialize_proposal(proposal: dict) -> dict:
     return proposal
 
 
+def convert_intelligent_output_to_dataframe(intelligent_result: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Convert intelligent parser output to the same format as jd_parser output.
+
+    Args:
+        intelligent_result: Output from parse_document_intelligent()
+
+    Returns:
+        Dict with keys: df, travel, odcs, extensions (same as parse_documents_to_dataframe)
+    """
+    import pandas as pd
+
+    metadata = intelligent_result.get("metadata", {})
+    positions = intelligent_result.get("positions", [])
+    travel = intelligent_result.get("travel", [])
+    odcs = intelligent_result.get("odcs", [])
+    extensions = intelligent_result.get("extensions", [])
+
+    # Build months_per_year dict from extensions
+    total_years = metadata.get("total_years", 5)
+    months_per_year_dict = {}
+
+    # Default: all regular years have 12 months
+    for year in range(1, total_years + 1):
+        months_per_year_dict[str(year)] = 12
+
+    # Add extension years with their specific month counts
+    for ext in extensions:
+        ext_year = ext.get("year")
+        ext_months = ext.get("duration_months", 6)
+        if ext_year:
+            months_per_year_dict[str(ext_year)] = ext_months
+
+    # Convert positions to DataFrame rows
+    rows = []
+    for pos in positions:
+        # Extract hours_per_year dict
+        hours_per_year = pos.get("hours_per_year", {})
+
+        row = {
+            "labor_category": pos.get("labor_category", ""),
+            "description": pos.get("description", ""),
+            "experience": pos.get("experience"),
+            "location": pos.get("location"),
+            "location_type": pos.get("location_type", "On-Site"),
+            "is_key_position": pos.get("is_key_position", False),
+            "hours_per_year": hours_per_year,
+
+            # Metadata (document-level info)
+            "base_years": metadata.get("base_years", 1),
+            "option_years": metadata.get("option_years", 4),
+            "total_years": metadata.get("total_years", 5),
+            "project_name": metadata.get("project_name"),
+            "standard_fte_hours": metadata.get("standard_fte_hours", 1920),
+            "months_per_year": months_per_year_dict if months_per_year_dict else None
+        }
+
+        rows.append(row)
+
+    # Create DataFrame
+    df = pd.DataFrame(rows)
+
+    # Convert travel list
+    travel_list = []
+    for t in travel:
+        travel_list.append({
+            "description": t.get("description", ""),
+            "amount_per_year": t.get("amount_per_year", {})
+        })
+
+    # Convert ODCs list
+    odc_list = []
+    for o in odcs:
+        odc_list.append({
+            "category": o.get("category", ""),
+            "description": o.get("description", ""),
+            "amount_per_year": o.get("amount_per_year", {})
+        })
+
+    # Convert extensions list
+    extension_list = []
+    for e in extensions:
+        extension_list.append({
+            "year": e.get("year"),
+            "label": e.get("label", ""),
+            "duration_months": e.get("duration_months", 6),
+            "description": e.get("description", "")
+        })
+
+    return {
+        "df": df,
+        "travel": travel_list,
+        "odcs": odc_list,
+        "extensions": extension_list
+    }
+
+
 # ============================================================================
 # DOCUMENT UPLOAD & ASYNC PROCESSING
 # ============================================================================
@@ -180,8 +278,12 @@ async def process_proposal_documents(
             {"status": "processing", "progress": 0, "message": "Parsing documents..."}
         )
 
-        # Step 1: Parse documents to DataFrame, Travel, ODCs, and Extensions
-        parse_result = await parse_documents_to_dataframe(file_paths)
+        # Step 1: Parse documents with Intelligent Parser (replaces JD parser)
+        # Use first file (for multi-file support, we'd loop and merge)
+        intelligent_result = await parse_document_intelligent(file_paths[0])
+
+        # Convert intelligent parser output to DataFrame format
+        parse_result = convert_intelligent_output_to_dataframe(intelligent_result)
         df = parse_result["df"]
         extracted_travel = parse_result.get("travel", [])
         extracted_odcs = parse_result.get("odcs", [])
