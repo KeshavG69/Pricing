@@ -1409,6 +1409,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
       const subPosition: SubcontractorPosition = {
         labor_category: position.labor_category,
         rate: data.rate,
+        original_base_rate: data.rate, // Store original rate chosen at conversion (immutable)
         hours_per_year: data.hoursAllocation,
         original_position_id: position.id, // Link back to prime position
         original_total_hours: originalTotalHours, // Track original hours for hour return on delete
