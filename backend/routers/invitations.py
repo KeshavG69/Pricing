@@ -14,7 +14,8 @@ from auth.crud import get_user_crud, UserCRUD
 from auth.models import UserSignup
 from auth.utils import create_access_token
 from auth.refresh_token import create_refresh_token
-from datetime import timedelta, datetime
+from datetime import timedelta
+from datetime import datetime as dt
 
 
 router = APIRouter(prefix="/api/invitations", tags=["invitations"])
@@ -320,8 +321,6 @@ async def accept_invitation(accept_data: AcceptInvitationRequest):
 
         if existing_user:
             # Existing user - add to organizations array (multi-org support)
-            from datetime import datetime
-
             # Check if already in organizations array
             organizations = existing_user.get("organizations", [])
             existing_org_entry = None
@@ -345,9 +344,9 @@ async def accept_invitation(accept_data: AcceptInvitationRequest):
                             "$set": {
                                 "organizations.$.status": "active",
                                 "organizations.$.role": invitation["role"],
-                                "organizations.$.joinedAt": datetime.utcnow(),
+                                "organizations.$.joinedAt": dt.utcnow(),
                                 "current_organization_id": invitation["organization_id"],
-                                "updatedAt": datetime.utcnow()
+                                "updatedAt": dt.utcnow()
                             }
                         }
                     )
@@ -357,7 +356,7 @@ async def accept_invitation(accept_data: AcceptInvitationRequest):
                     "organization_id": invitation["organization_id"],
                     "role": invitation["role"],
                     "status": "active",
-                    "joinedAt": datetime.utcnow()
+                    "joinedAt": dt.utcnow()
                 }
                 user_crud.collection.update_one(
                     {"_id": existing_user["_id"]},
@@ -365,7 +364,7 @@ async def accept_invitation(accept_data: AcceptInvitationRequest):
                         "$push": {"organizations": new_org},
                         "$set": {
                             "current_organization_id": invitation["organization_id"],
-                            "updatedAt": datetime.utcnow()
+                            "updatedAt": dt.utcnow()
                         }
                     }
                 )
@@ -401,7 +400,7 @@ async def accept_invitation(accept_data: AcceptInvitationRequest):
                 "organization_id": invitation["organization_id"],
                 "role": invitation["role"],
                 "status": "active",
-                "joinedAt": datetime.utcnow()
+                "joinedAt": dt.utcnow()
             }
             user_crud.collection.update_one(
                 {"_id": user_id},
