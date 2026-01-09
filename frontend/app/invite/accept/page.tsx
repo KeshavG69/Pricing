@@ -27,6 +27,7 @@ function AcceptInvitationContent() {
   const [lastName, setLastName] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Validate token on mount
@@ -89,6 +90,11 @@ function AcceptInvitationContent() {
         setError('Passwords do not match');
         return;
       }
+
+      if (!termsAccepted) {
+        setError('You must accept the terms and conditions to create an account');
+        return;
+      }
     }
 
     setIsSubmitting(true);
@@ -99,6 +105,7 @@ function AcceptInvitationContent() {
           firstName: firstName.trim(),
           lastName: lastName.trim(),
           password,
+          terms_accepted: termsAccepted,
         })
       };
 
@@ -317,6 +324,38 @@ function AcceptInvitationContent() {
                     required
                     autoComplete="new-password"
                   />
+
+                  {/* Terms and Conditions Checkbox */}
+                  <div className="flex items-start gap-3 pt-2">
+                    <input
+                      type="checkbox"
+                      id="terms"
+                      checked={termsAccepted}
+                      onChange={(e) => setTermsAccepted(e.target.checked)}
+                      className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-2 focus:ring-primary focus:ring-offset-0"
+                      required
+                    />
+                    <label htmlFor="terms" className="text-sm text-muted-foreground leading-tight">
+                      I agree to the{' '}
+                      <a
+                        href="/terms"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline font-medium"
+                      >
+                        Terms and Conditions
+                      </a>
+                      {' '}and{' '}
+                      <a
+                        href="/privacy"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-primary hover:underline font-medium"
+                      >
+                        Privacy Policy
+                      </a>
+                    </label>
+                  </div>
                 </>
               )}
 
