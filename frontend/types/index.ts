@@ -132,6 +132,7 @@ export interface AcceptInvitationRequest {
   firstName?: string;
   lastName?: string;
   password?: string;
+  terms_accepted?: boolean;
 }
 
 export interface ValidateTokenResponse {
