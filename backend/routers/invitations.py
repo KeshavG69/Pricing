@@ -42,6 +42,7 @@ class AcceptInvitationRequest(BaseModel):
     firstName: str = Field(None, min_length=1, max_length=100, description="Required for new users only")
     lastName: str = Field(None, min_length=1, max_length=100, description="Required for new users only")
     password: str = Field(None, min_length=8, max_length=100, description="Required for new users only")
+    terms_accepted: bool = Field(None, description="Required for new users only")
 
     class Config:
         schema_extra = {
@@ -49,7 +50,8 @@ class AcceptInvitationRequest(BaseModel):
                 "token": "abc123...",
                 "firstName": "John",
                 "lastName": "Doe",
-                "password": "SecurePassword123!"
+                "password": "SecurePassword123!",
+                "terms_accepted": True
             }
         }
 
@@ -377,12 +379,19 @@ async def accept_invitation(accept_data: AcceptInvitationRequest):
                     detail="firstName, lastName, and password are required for new users"
                 )
 
+            if accept_data.terms_accepted is None or not accept_data.terms_accepted:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="You must accept the terms and conditions to create an account"
+                )
+
             # Step 1: Create user with their own personal org (they are admin of it)
             user_signup = UserSignup(
                 firstName=accept_data.firstName,
                 lastName=accept_data.lastName,
                 email=invitation["email"],
-                password=accept_data.password
+                password=accept_data.password,
+                terms_accepted=accept_data.terms_accepted
             )
             user_response = UserCRUD.create_user(user_signup)
             user_id = user_response.id
