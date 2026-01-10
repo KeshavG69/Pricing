@@ -741,7 +741,7 @@ export const PrimeLaborSection = ({
       {
         key: 'cost_element',
         name: 'Labour Category',
-        width: 280, // Increased for larger text (+12%)
+        width: 320,
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => {
@@ -778,7 +778,7 @@ export const PrimeLaborSection = ({
                     <ChevronRight className="w-4 h-4" />
                   )}
                 </div>
-                <span className="font-semibold text-foreground flex-shrink-0">
+                <span className="font-semibold text-foreground whitespace-normal break-words overflow-wrap">
                   {pos.labor_category}
                 </span>
                 {isKey && (

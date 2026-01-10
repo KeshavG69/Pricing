@@ -144,7 +144,7 @@ export const ODCSection = ({
       {
         key: 'category',
         name: 'Category',
-        width: 150,
+        width: 200,
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => (
@@ -154,7 +154,7 @@ export const ODCSection = ({
             row.type === 'total' ? 'bg-orange-100 border-t-2 border-orange-300 border-b-2' : ''
           }`}>
             <span
-              className={`font-semibold ${
+              className={`font-semibold whitespace-normal break-words overflow-wrap ${
                 row.type === 'total' ? 'text-orange-700 text-lg font-bold' :
                 row.type === 'subtotal' ? 'text-gray-700 font-bold' :
                 row.type === 'smh' ? 'text-purple-700 font-bold' :

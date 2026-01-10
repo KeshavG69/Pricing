@@ -206,14 +206,14 @@ export const SubcontractorSection = () => {
       {
         key: 'labor_category',
         name: 'Labor Category',
-        width: 280,
+        width: 300,
         frozen: true,
         resizable: true,
         headerCellClass: 'bg-muted/50 font-semibold text-foreground border-r border-border',
         cellClass: 'border-r border-border',
         renderCell: ({ row }) => (
           <div className="flex items-center h-full px-3 bg-muted/20">
-            <span className="font-semibold text-sm text-foreground">{row.labor_category}</span>
+            <span className="font-semibold text-sm text-foreground whitespace-normal break-words overflow-wrap">{row.labor_category}</span>
           </div>
         ),
       },

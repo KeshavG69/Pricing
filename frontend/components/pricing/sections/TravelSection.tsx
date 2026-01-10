@@ -158,7 +158,7 @@ export const TravelSection = ({
                   row.type === 'subtotal' ? 'text-gray-700 font-bold' :
                   row.type === 'ga' ? 'text-green-700 font-bold' :
                   'font-semibold text-foreground'
-                }`}
+                } whitespace-normal break-words overflow-wrap`}
               >
                 {row.description || 'Travel'}
               </span>
