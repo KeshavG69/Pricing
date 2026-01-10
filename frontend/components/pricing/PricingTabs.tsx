@@ -49,7 +49,7 @@ export const PricingTabs = ({
   ];
 
   return (
-    <div className="border-b border-border">
+    <div className="sticky top-16 z-10 bg-card border-b border-border rounded-t-xl overflow-hidden">
       <div className="flex items-center gap-2">
         {tabs.map((tab) => {
           if (tab.hidden) return null;
