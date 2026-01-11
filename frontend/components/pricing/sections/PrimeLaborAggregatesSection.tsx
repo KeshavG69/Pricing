@@ -51,12 +51,12 @@ export const PrimeLaborAggregatesSection = ({
       {
         key: 'label',
         name: 'Cost Category',
-        width: 250,
+        width: 280,
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => (
           <div className="flex items-center h-full px-2">
-            <span className={`font-semibold ${row.type === 'fblr' ? 'text-emerald-600' : 'text-foreground'}`}>
+            <span className={`font-semibold whitespace-normal break-words overflow-wrap ${row.type === 'fblr' ? 'text-emerald-600' : 'text-foreground'}`}>
               {row.label}
             </span>
           </div>

@@ -101,7 +101,7 @@ export const GrandTotalSection = ({
 
           return (
             <div className="flex items-center h-full px-2">
-              <span className={`font-semibold ${colorClass}`}>
+              <span className={`font-semibold whitespace-normal break-words overflow-wrap ${colorClass}`}>
                 {row.label}
               </span>
             </div>

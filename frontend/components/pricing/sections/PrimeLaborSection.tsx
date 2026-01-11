@@ -1,12 +1,13 @@
 'use client';
 
 import React, { useMemo, useCallback, useState } from 'react';
+import ReactDOM from 'react-dom';
 import { DataGrid } from 'react-data-grid';
 import type { Column, RenderEditCellProps } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
 import { AdvancedPosition, IndirectRates, EscalationRates, Extension, GridRow, BreakdownType, ContextMenuItem } from '@/types';
-import { ChevronDown, ChevronRight, Trash2, MoreVertical, Plus, ArrowRightLeft } from 'lucide-react';
+import { ChevronDown, ChevronRight, Trash2, MoreVertical, Plus, ArrowRightLeft, Check } from 'lucide-react';
 import { ContextMenu } from '@/components/ui/ContextMenu';
 import { SalaryContextMenu } from '@/components/pricing/SalaryContextMenu';
 import { SOCContextMenu } from '@/components/pricing/SOCContextMenu';
@@ -114,10 +115,12 @@ const calculateAveragedFBLR = (
   // Apply FBLR cascade
   const fringe = dlRate * rates.fringe;
   // Determine which OH rate to use based on location_type
+  // Default to On-Site if not specified
   // Fallback: oh_onsite/oh_offsite → oh → 0.0711
   const ohOnsite = rates.oh_onsite !== undefined ? rates.oh_onsite : (rates.oh !== undefined ? rates.oh : 0.0711);
   const ohOffsite = rates.oh_offsite !== undefined ? rates.oh_offsite : (rates.oh !== undefined ? rates.oh : 0.0711);
-  const ohRate = position.location_type === 'On-Site' ? ohOnsite : ohOffsite;
+  const locationType = position.location_type || 'On-Site'; // Default to On-Site
+  const ohRate = locationType === 'On-Site' ? ohOnsite : ohOffsite;
   const oh = (dlRate + fringe) * ohRate;
   const ga = (dlRate + fringe + oh) * rates.ga;
   // Fee is calculated separately in Fee Section (not included in FBLR)
@@ -162,7 +165,35 @@ export const PrimeLaborSection = ({
   const subcontractors = usePricingStore((state) => state.subcontractors);
   const updatePosition = usePricingStore((state) => state.updatePosition);
   const advancedModeVersion = usePricingStore((state) => state.advancedModeVersion);
+  const assignPositionToContractor = usePricingStore((state) => state.assignPositionToContractor);
+  const getLinkedSubcontractorPosition = usePricingStore((state) => state.getLinkedSubcontractorPosition);
+  const updateLinkedBaseRate = usePricingStore((state) => state.updateLinkedBaseRate);
+  const saveScrollPosition = usePricingStore((state) => state.saveScrollPosition);
+  const restoreScrollPosition = usePricingStore((state) => state.restoreScrollPosition);
   const isGSAProposal = wageSource?.type === 'gsa';
+
+  // Track optimistic contractor assignments (persists across renders)
+  const optimisticContractorRef = React.useRef<Map<string, string | null>>(new Map());
+
+  // Restore scroll position after grid re-renders
+  React.useLayoutEffect(() => {
+    const savedPos = restoreScrollPosition();
+    if (savedPos) {
+      // Delay restoration to ensure ALL renders complete (including auto-save state changes)
+      const timeoutId = setTimeout(() => {
+        requestAnimationFrame(() => {
+          const container = document.querySelector('.rdg') as HTMLElement;
+          if (container) {
+            console.log('[SCROLL] Restoring position to:', savedPos);
+            container.scrollTop = savedPos.top;
+            container.scrollLeft = savedPos.left;
+          }
+        });
+      }, 150); // Wait for auto-save and other state updates to complete
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [advancedModeVersion, restoreScrollPosition]);
 
   // Helper to calculate escalated rate for subcontractors
   const getEscalatedRate = (baseRate: number, year: number): number => {
@@ -207,6 +238,170 @@ export const PrimeLaborSection = ({
   console.log('[PrimeLaborSection] Rates version (key):', ratesVersion);
   console.log('[PrimeLaborSection] Sample position breakdown (first position):', positions[0]?.breakdown);
   console.log('[PrimeLaborSection] ========== RENDER END ==========');
+
+  // Contractor Dropdown Button Component (defined outside renderCell to persist state)
+  interface ContractorDropdownButtonProps {
+    position: AdvancedPosition;
+    subcontractors: Array<{id: string; name: string}>;
+    assignPositionToContractor: (posId: string, subId: string | null) => Promise<void>;
+    optimisticContractorRef: React.RefObject<Map<string, string | null>>;
+  }
+
+  const ContractorDropdownButton = React.memo<ContractorDropdownButtonProps>(({
+    position,
+    subcontractors,
+    assignPositionToContractor,
+    optimisticContractorRef
+  }) => {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const [isUpdating, setIsUpdating] = React.useState(false);
+    const buttonRef = React.useRef<HTMLButtonElement>(null);
+    const dropdownRef = React.useRef<HTMLDivElement>(null);
+    const [dropdownPosition, setDropdownPosition] = React.useState({ top: 0, left: 0 });
+
+    // Get optimistic value from shared ref
+    const optimisticSubId = optimisticContractorRef.current.get(position.id);
+    const currentSubId = optimisticSubId !== undefined ? optimisticSubId : position.assigned_subcontractor_id;
+
+    const assignedSub = currentSubId
+      ? subcontractors.find(s => s.id === currentSubId)
+      : null;
+    const displayName = assignedSub ? assignedSub.name : 'Prime';
+
+    // Calculate dropdown position when opening
+    React.useEffect(() => {
+      if (isOpen && buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        setDropdownPosition({
+          top: rect.bottom + 4,
+          left: rect.left,
+        });
+      }
+    }, [isOpen]);
+
+    // Close dropdown when clicking outside
+    React.useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          buttonRef.current && !buttonRef.current.contains(event.target as Node) &&
+          dropdownRef.current && !dropdownRef.current.contains(event.target as Node)
+        ) {
+          setIsOpen(false);
+        }
+      };
+      if (isOpen) {
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+      }
+    }, [isOpen]);
+
+    const handleSelect = async (newSubId: string | null) => {
+      if (newSubId === currentSubId) {
+        setIsOpen(false);
+        return;
+      }
+
+      // Set optimistic value in shared ref
+      optimisticContractorRef.current.set(position.id, newSubId);
+      setIsUpdating(true);
+      setIsOpen(false);
+
+      try {
+        await assignPositionToContractor(position.id, newSubId);
+
+        // Clear optimistic value after store updates
+        setTimeout(() => {
+          optimisticContractorRef.current.delete(position.id);
+          setIsUpdating(false);
+        }, 300);
+      } catch (error) {
+        console.error('Failed to assign contractor:', error);
+        // Rollback on error
+        optimisticContractorRef.current.set(position.id, position.assigned_subcontractor_id ?? null);
+        setIsUpdating(false);
+      }
+    };
+
+    return (
+      <>
+        <button
+          ref={buttonRef}
+          type="button"
+          disabled={isUpdating}
+          className={`inline-flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border text-sm font-medium transition-colors ${
+            isUpdating ? 'opacity-50 cursor-wait' : 'hover:bg-muted/50 cursor-pointer'
+          }`}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!isUpdating) setIsOpen(!isOpen);
+          }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          title="Click to change contractor assignment"
+        >
+          <span className="text-foreground">{displayName}</span>
+          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        </button>
+
+        {isOpen && typeof window !== 'undefined' && ReactDOM.createPortal(
+          <div
+            ref={dropdownRef}
+            className="fixed z-[9999] w-52 bg-card border border-border rounded-lg shadow-lg overflow-hidden"
+            style={{
+              top: `${dropdownPosition.top}px`,
+              left: `${dropdownPosition.left}px`,
+            }}
+          >
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                handleSelect(null);
+              }}
+              className={`w-full flex items-center justify-between px-3 py-2.5 text-sm hover:bg-muted transition-colors ${
+                !currentSubId ? 'text-foreground font-medium' : 'text-foreground'
+              }`}
+            >
+              <span>Prime</span>
+              {!currentSubId && (
+                <Check className="w-4 h-4 text-primary" />
+              )}
+            </button>
+            {subcontractors.map((sub) => (
+              <button
+                key={sub.id}
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleSelect(sub.id);
+                }}
+                className={`w-full flex items-center justify-between px-3 py-2.5 text-sm hover:bg-muted transition-colors border-t border-border ${
+                  currentSubId === sub.id ? 'text-foreground font-medium' : 'text-foreground'
+                }`}
+              >
+                <span>{sub.name}</span>
+                {currentSubId === sub.id && (
+                  <Check className="w-4 h-4 text-primary" />
+                )}
+              </button>
+            ))}
+          </div>,
+          document.body
+        )}
+      </>
+    );
+  }, (prevProps, nextProps) => {
+    // Custom comparison to prevent unnecessary re-renders
+    return (
+      prevProps.position.id === nextProps.position.id &&
+      prevProps.position.assigned_subcontractor_id === nextProps.position.assigned_subcontractor_id &&
+      prevProps.subcontractors === nextProps.subcontractors
+    );
+  });
 
   // Context menu state
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; position: AdvancedPosition; columnKey?: string } | null>(null);
@@ -479,45 +674,71 @@ export const PrimeLaborSection = ({
         isExpanded: expandedPositions.has(pos.id),
       });
 
-      // If expanded, add 5 breakdown rows
+      // If expanded, add breakdown rows
       if (expandedPositions.has(pos.id)) {
-        rows.push(
-          {
-            type: 'breakdown',
-            positionId: pos.id,
-            breakdownType: 'dl',
-            data: pos,
-          },
-          {
-            type: 'breakdown',
-            positionId: pos.id,
-            breakdownType: 'fringe',
-            data: pos,
-          },
-          {
-            type: 'breakdown',
-            positionId: pos.id,
-            breakdownType: 'oh',
-            data: pos,
-          },
-          {
-            type: 'breakdown',
-            positionId: pos.id,
-            breakdownType: 'ga',
-            data: pos,
-          },
-          {
-            type: 'breakdown',
-            positionId: pos.id,
-            breakdownType: 'fee',
-            data: pos,
-          }
-        );
+        if (pos.assigned_subcontractor_id) {
+          // Subcontractor breakdown: Base Rate, Sub Fee, S&MH (3 rows)
+          rows.push(
+            {
+              type: 'subcontractor-breakdown',
+              positionId: pos.id,
+              subcontractorBreakdownType: 'base',
+              data: pos,
+            },
+            {
+              type: 'subcontractor-breakdown',
+              positionId: pos.id,
+              subcontractorBreakdownType: 'sub_fee',
+              data: pos,
+            },
+            {
+              type: 'subcontractor-breakdown',
+              positionId: pos.id,
+              subcontractorBreakdownType: 'smh',
+              data: pos,
+            }
+          );
+        } else {
+          // Prime breakdown: DL, Fringe, OH, G&A, Fee (5 rows)
+          rows.push(
+            {
+              type: 'breakdown',
+              positionId: pos.id,
+              breakdownType: 'dl',
+              data: pos,
+            },
+            {
+              type: 'breakdown',
+              positionId: pos.id,
+              breakdownType: 'fringe',
+              data: pos,
+            },
+            {
+              type: 'breakdown',
+              positionId: pos.id,
+              breakdownType: 'oh',
+              data: pos,
+            },
+            {
+              type: 'breakdown',
+              positionId: pos.id,
+              breakdownType: 'ga',
+              data: pos,
+            },
+            {
+              type: 'breakdown',
+              positionId: pos.id,
+              breakdownType: 'fee',
+              data: pos,
+            }
+          );
+        }
       }
 
       // Add subcontractor rows linked to this position (only when expanded)
+      // Skip if position is assigned via dropdown (handled differently in breakdown)
       const linkedSubs = getLinkedSubcontractorPositions.get(pos.id) || [];
-      if (linkedSubs.length > 0 && expandedPositions.has(pos.id)) {
+      if (linkedSubs.length > 0 && expandedPositions.has(pos.id) && !pos.assigned_subcontractor_id) {
         // Calculate total hours across all subcontractors
         const totalSubHours = linkedSubs.reduce((sum, { subPos }) => {
           return sum + Object.values(subPos.hours_per_year || {}).reduce((a, b) => a + (b || 0), 0);
@@ -611,13 +832,13 @@ export const PrimeLaborSection = ({
           if (row.type === 'subtotal') {
             return <div className="h-full bg-blue-50 border-t-2 border-blue-200" />;
           }
-          // Subcontractor header row - show styled empty cell
+          // Subcontractor header row
           if (row.type === 'subcontractor-header') {
-            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
+            return <div className="h-full bg-muted/30" />;
           }
-          // Subcontractor row - show purple styled empty cell
+          // Subcontractor row
           if (row.type === 'subcontractor') {
-            return <div className="h-full bg-purple-50/50" />;
+            return <div className="h-full bg-muted/30" />;
           }
           // Only show actions for position rows, not breakdown rows
           if (row.type === 'position') {
@@ -666,6 +887,15 @@ export const PrimeLaborSection = ({
                 e.preventDefault();
                 e.stopPropagation();
 
+                // Save scroll position to Zustand store BEFORE state change
+                const gridContainer = (e.target as HTMLElement).closest('.rdg');
+                if (gridContainer) {
+                  saveScrollPosition({
+                    top: gridContainer.scrollTop,
+                    left: gridContainer.scrollLeft
+                  });
+                }
+
                 // Toggle between On-Site and Off-Site
                 const newLocationType = isOnSite ? 'Off-Site' : 'On-Site';
 
@@ -677,11 +907,11 @@ export const PrimeLaborSection = ({
                 try {
                   updatePosition(pos.id, { location_type: newLocationType });
 
-                  // Clear optimistic state after a brief delay to ensure store update propagated
+                  // Clear optimistic state after update
                   setTimeout(() => {
                     setOptimisticLocationType(null);
                     setIsUpdating(false);
-                  }, 300);
+                  }, 100); // Reduced delay for better UX
                 } catch (error) {
                   // Rollback on error
                   console.error('Failed to update location type:', error);
@@ -716,14 +946,14 @@ export const PrimeLaborSection = ({
             );
           } else if (row.type === 'subcontractor-header') {
             // Subcontractor header row
-            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
+            return <div className="h-full bg-muted/30" />;
           } else if (row.type === 'subcontractor') {
             // Show location type for subcontractor row (non-editable, inherits from prime)
             const locationType = row.subcontractorLocationType || 'On-Site';
             const isOnSite = locationType === 'On-Site';
 
             return (
-              <div className="flex items-center justify-center h-full px-2 bg-purple-50/50">
+              <div className="flex items-center justify-center h-full px-2">
                 <span className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
                   isOnSite
                     ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200'
@@ -737,11 +967,50 @@ export const PrimeLaborSection = ({
           return <div className="h-full bg-muted/30" />;
         },
       },
+      // Contractor Assignment - Dropdown to assign position to Prime or Subcontractor
+      {
+        key: 'contractor_assignment',
+        name: 'Contractor',
+        width: 150,
+        resizable: true,
+        frozen: true,
+        editable: false,
+        renderCell: ({ row }) => {
+          if (row.type === 'subtotal') {
+            return <div className="h-full bg-blue-50 border-t-2 border-blue-200" />;
+          } else if (row.type === 'position') {
+            const pos = row.data as AdvancedPosition;
+
+            return (
+              <div className="flex items-center justify-center h-full px-2">
+                <ContractorDropdownButton
+                  position={pos}
+                  subcontractors={subcontractors}
+                  assignPositionToContractor={assignPositionToContractor}
+                  optimisticContractorRef={optimisticContractorRef}
+                />
+              </div>
+            );
+          } else if (row.type === 'subcontractor-header') {
+            return <div className="h-full bg-muted/30" />;
+          } else if (row.type === 'subcontractor') {
+            // Show contractor name for modal-assigned subcontractor row
+            return (
+              <div className="flex items-center justify-center h-full px-2">
+                <span className="inline-flex items-center px-3 py-2 rounded-lg bg-muted/30 border border-border text-sm font-medium text-foreground">
+                  {row.subcontractorName}
+                </span>
+              </div>
+            );
+          }
+          return <div className="h-full bg-muted/30" />;
+        },
+      },
       // Labour Category - Expandable indicator + labor category
       {
         key: 'cost_element',
         name: 'Labour Category',
-        width: 280, // Increased for larger text (+12%)
+        width: 320,
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => {
@@ -759,10 +1028,6 @@ export const PrimeLaborSection = ({
             const isExpanded = row.isExpanded;
             const isKey = isKeyPosition(pos);
 
-            // Get linked subcontractors count for badge
-            const linkedSubs = getLinkedSubcontractorPositions.get(pos.id) || [];
-            const subCount = linkedSubs.length;
-
             return (
               <div
                 className="flex items-center h-full w-full px-2 cursor-pointer hover:bg-muted/30 transition-colors"
@@ -778,7 +1043,7 @@ export const PrimeLaborSection = ({
                     <ChevronRight className="w-4 h-4" />
                   )}
                 </div>
-                <span className="font-semibold text-foreground flex-shrink-0">
+                <span className="font-semibold text-foreground whitespace-normal break-words overflow-wrap">
                   {pos.labor_category}
                 </span>
                 {isKey && (
@@ -789,15 +1054,6 @@ export const PrimeLaborSection = ({
                     KEY
                   </span>
                 )}
-                {/* Subcontractor badge */}
-                {subCount > 0 && (
-                  <span
-                    className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 flex-shrink-0"
-                    title={`${subCount} subcontractor position${subCount !== 1 ? 's' : ''} linked`}
-                  >
-                    🏢 {subCount} Sub{subCount !== 1 ? 's' : ''}
-                  </span>
-                )}
                 {/* Fill remaining space to make entire cell clickable */}
                 <div className="flex-1" />
               </div>
@@ -805,8 +1061,8 @@ export const PrimeLaborSection = ({
           } else if (row.type === 'subcontractor-header') {
             // Subcontractor section header
             return (
-              <div className="flex items-center h-full px-2 pl-6 bg-purple-100/30 border-t border-purple-200">
-                <span className="text-xs font-bold text-purple-900 uppercase tracking-wide">
+              <div className="flex items-center h-full px-2 pl-6 bg-muted/30">
+                <span className="text-xs font-bold text-foreground uppercase tracking-wide">
                   🏢 Subcontracted Positions ({row.subcontractorCount})
                 </span>
               </div>
@@ -814,9 +1070,23 @@ export const PrimeLaborSection = ({
           } else if (row.type === 'subcontractor') {
             // Individual subcontractor row - show subcontractor name with details
             return (
-              <div className="flex items-center h-full px-2 pl-12 bg-purple-50/50">
-                <span className="text-sm text-purple-700 font-medium">
+              <div className="flex items-center h-full px-2 pl-12">
+                <span className="text-sm text-foreground font-medium">
                   {row.subcontractorName}
+                </span>
+              </div>
+            );
+          } else if (row.type === 'subcontractor-breakdown') {
+            // Subcontractor breakdown rows (Base Rate, Sub Fee, S&MH)
+            const labels = {
+              base: 'Base Rate',
+              sub_fee: 'Sub Fee',
+              smh: 'S&MH'
+            };
+            return (
+              <div className="flex items-center h-full px-2 pl-8 bg-blue-50/20">
+                <span className="text-sm text-blue-700">
+                  {labels[row.subcontractorBreakdownType!]}
                 </span>
               </div>
             );
@@ -879,9 +1149,9 @@ export const PrimeLaborSection = ({
               </div>
             );
           } else if (row.type === 'subcontractor-header') {
-            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
+            return <div className="h-full bg-muted/30" />;
           } else if (row.type === 'subcontractor') {
-            return <div className="h-full bg-purple-50/50" />;
+            return <div className="h-full bg-muted/30" />;
           }
           return <div className="h-full bg-muted/30" />;
         },
@@ -938,9 +1208,9 @@ export const PrimeLaborSection = ({
               </div>
             );
           } else if (row.type === 'subcontractor-header') {
-            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
+            return <div className="h-full bg-muted/30" />;
           } else if (row.type === 'subcontractor') {
-            return <div className="h-full bg-purple-50/50" />;
+            return <div className="h-full bg-muted/30" />;
           }
           return <div className="h-full bg-muted/30" />;
         },
@@ -955,7 +1225,7 @@ export const PrimeLaborSection = ({
           if (row.type === 'subtotal') {
             return <div className="h-full bg-blue-50 border-t-2 border-blue-200" />;
           } else if (row.type === 'subcontractor-header') {
-            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
+            return <div className="h-full bg-muted/30" />;
           } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             const isExpanded = row.isExpanded;
@@ -992,8 +1262,8 @@ export const PrimeLaborSection = ({
                   {isMulti ? (
                     // Multi-select - show label + averaged amount
                     <>
-                      <span className="text-purple-600 dark:text-purple-400 font-semibold">{label}</span>
-                      <span className="ml-2 text-xs px-2 py-0.5 rounded text-purple-600 bg-purple-600/10">
+                      <span className="text-blue-600 dark:text-blue-400 font-semibold">{label}</span>
+                      <span className="ml-2 text-xs px-2 py-0.5 rounded text-blue-600 bg-blue-600/10">
                         ${wage.toLocaleString()}
                       </span>
                     </>
@@ -1016,7 +1286,7 @@ export const PrimeLaborSection = ({
               </div>
             );
           } else if (row.type === 'subcontractor') {
-            return <div className="h-full bg-purple-50/50" />;
+            return <div className="h-full bg-muted/30" />;
           }
           return <div className="h-full bg-muted/30" />;
         },
@@ -1146,9 +1416,9 @@ export const PrimeLaborSection = ({
               </div>
             );
           } else if (row.type === 'subcontractor-header') {
-            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
+            return <div className="h-full bg-muted/30" />;
           } else if (row.type === 'subcontractor') {
-            return <div className="h-full bg-purple-50/50" />;
+            return <div className="h-full bg-muted/30" />;
           }
           return <div className="h-full bg-muted/30" />;
         },
@@ -1188,8 +1458,8 @@ export const PrimeLaborSection = ({
           // Subcontractor header row
           if (row.type === 'subcontractor-header') {
             return (
-              <div className="flex items-center justify-end h-full px-2 bg-purple-100/30 border-t border-purple-200">
-                <span className="text-xs text-purple-900 font-medium">Hours</span>
+              <div className="flex items-center justify-end h-full px-2 bg-muted/30">
+                <span className="text-xs text-foreground font-medium">Hours</span>
               </div>
             );
           }
@@ -1199,9 +1469,44 @@ export const PrimeLaborSection = ({
             const baseRate = row.subcontractorRate || 0;
             const markedUpRate = getSubcontractorDisplayRate(baseRate, year);
             return (
-              <div className="flex items-center justify-end h-full px-2 bg-purple-50/50">
-                <span className="text-purple-700 font-semibold">
+              <div className="flex items-center justify-end h-full px-2 bg-muted/30">
+                <span className="text-foreground font-semibold">
                   {formatCurrency(markedUpRate)}
+                </span>
+              </div>
+            );
+          }
+
+          // Subcontractor breakdown rows
+          if (row.type === 'subcontractor-breakdown') {
+            const pos = row.data as AdvancedPosition;
+            const linked = getLinkedSubcontractorPosition(pos.id);
+
+            if (!linked) return <div className="h-full" />;
+
+            const baseRate = linked.subPos.rate;
+            const escalatedBaseRate = getEscalatedRate(baseRate, year);
+            const subFee = rates?.sub_fee || 0;
+            const smh = rates?.smh || 0;
+
+            let value = 0;
+
+            switch (row.subcontractorBreakdownType) {
+              case 'base':
+                value = escalatedBaseRate;
+                break;
+              case 'sub_fee':
+                value = escalatedBaseRate * subFee;
+                break;
+              case 'smh':
+                value = (escalatedBaseRate * (1 + subFee)) * smh;
+                break;
+            }
+
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-blue-50/20">
+                <span className="text-blue-700 text-sm">
+                  {formatCurrency(value)}
                 </span>
               </div>
             );
@@ -1210,6 +1515,25 @@ export const PrimeLaborSection = ({
           const pos = row.data as AdvancedPosition;
           const breakdown = pos.breakdown[yearStr];
           if (!breakdown) return <div className="h-full" />;
+
+          // Check if this position is assigned to a subcontractor
+          if (row.type === 'position' && pos.assigned_subcontractor_id) {
+            const linked = getLinkedSubcontractorPosition(pos.id);
+
+            if (linked) {
+              const baseRate = linked.subPos.rate;
+              // Apply escalation + markups (sub_fee + smh)
+              const displayRate = getSubcontractorDisplayRate(baseRate, year);
+
+              return (
+                <div className="flex items-center justify-end h-full px-2 bg-blue-50/30">
+                  <span className="text-blue-600 font-semibold">
+                    {formatCurrency(displayRate)}
+                  </span>
+                </div>
+              );
+            }
+          }
 
           let value = 0;
           let field = '';
@@ -1246,12 +1570,85 @@ export const PrimeLaborSection = ({
 
           return (
             <div className={`flex items-center justify-end h-full px-2 ${className}`}>
-              <span className={row.type === 'position' ? 'text-emerald-600 font-semibold' : 'text-purple-600'}>
+              <span className={row.type === 'position' ? 'text-emerald-600 font-semibold' : 'text-foreground'}>
                 {formatCurrency(value)}
               </span>
             </div>
           );
         },
+        // Allow editing for year 1 only (Base Period) for subcontractor-assigned positions
+        editable: year === 1,
+        renderEditCell: year === 1 ? (props: RenderEditCellProps<GridRow>) => {
+          // Only allow editing for position rows assigned to subcontractors
+          if (props.row.type !== 'position') {
+            props.onClose(false);
+            return null;
+          }
+
+          const pos = props.row.data as AdvancedPosition;
+
+          if (!pos.assigned_subcontractor_id) {
+            props.onClose(false);
+            return null;
+          }
+
+          const linked = getLinkedSubcontractorPosition(pos.id);
+          if (!linked) {
+            props.onClose(false);
+            return null;
+          }
+
+          const currentBaseRate = linked.subPos.rate;
+
+          // Show the MARKED UP rate in the input (what user sees in grid)
+          const currentDisplayRate = getSubcontractorDisplayRate(currentBaseRate, year);
+
+          // Create inline edit component
+          const EditInput = () => {
+            const [inputValue, setInputValue] = React.useState(currentDisplayRate.toFixed(2));
+
+            const handleSave = () => {
+              const editedDisplayRate = parseFloat(inputValue) || 0;
+
+              // REVERSE ENGINEER: User edited the marked-up rate, convert back to clean base rate
+              const subFee = rates?.sub_fee || 0;
+              const smh = rates?.smh || 0;
+              const newBaseRate = editedDisplayRate / ((1 + subFee) * (1 + smh));
+
+              console.log('[MAIN GRID] Reverse engineering base rate:', {
+                positionId: pos.id,
+                editedDisplayRate,
+                subFee,
+                smh,
+                oldBaseRate: currentBaseRate,
+                newBaseRate
+              });
+
+              // Use bidirectional update method with the clean base rate
+              updateLinkedBaseRate(pos.id, newBaseRate);
+
+              props.onClose(true);
+            };
+
+            return (
+              <input
+                type="number"
+                step="0.01"
+                className="w-full h-full px-2 text-right border-2 border-blue-500 focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSave();
+                  if (e.key === 'Escape') props.onClose(false);
+                }}
+                onBlur={handleSave}
+                autoFocus
+              />
+            );
+          };
+
+          return <EditInput />;
+        } : undefined,
       });
 
       // Hours column
@@ -1345,14 +1742,27 @@ export const PrimeLaborSection = ({
             );
           } else if (row.type === 'subcontractor-header') {
             // Subcontractor header row
-            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
+            return <div className="h-full bg-muted/30" />;
           } else if (row.type === 'subcontractor') {
             // Subcontractor row - show hours for this year
             const hours = row.subcontractorHours?.[yearStr] || 0;
             return (
-              <div className="flex items-center justify-end h-full px-2 bg-purple-50/50">
-                <span className="text-purple-700 font-medium">
+              <div className="flex items-center justify-end h-full px-2 bg-muted/30">
+                <span className="text-foreground font-medium">
                   {hours.toLocaleString()}
+                </span>
+              </div>
+            );
+          } else if (row.type === 'subcontractor-breakdown') {
+            // Subcontractor breakdown rows - show same hours as parent position
+            const pos = row.data as AdvancedPosition;
+            const breakdown = pos.breakdown[yearStr];
+            const hours = breakdown?.hours || 0;
+
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-blue-50/20">
+                <span className="text-blue-700 text-sm">
+                  {hours.toLocaleString('en-US')}
                 </span>
               </div>
             );
@@ -1396,8 +1806,8 @@ export const PrimeLaborSection = ({
           // Subcontractor header row
           if (row.type === 'subcontractor-header') {
             return (
-              <div className="flex items-center justify-end h-full px-2 bg-purple-100/30 border-t border-purple-200">
-                <span className="text-xs text-purple-900 font-medium">Total</span>
+              <div className="flex items-center justify-end h-full px-2 bg-muted/30">
+                <span className="text-xs text-foreground font-medium">Total</span>
               </div>
             );
           }
@@ -1407,9 +1817,48 @@ export const PrimeLaborSection = ({
             const baseRate = row.subcontractorRate || 0;
             const markedUpRate = getSubcontractorDisplayRate(baseRate, year);
             return (
-              <div className="flex items-center justify-end h-full px-2 bg-purple-50/50">
-                <span className="text-purple-700 font-semibold">
+              <div className="flex items-center justify-end h-full px-2 bg-muted/30">
+                <span className="text-foreground font-semibold">
                   {formatCurrency(markedUpRate)}
+                </span>
+              </div>
+            );
+          }
+
+          // Subcontractor breakdown rows
+          if (row.type === 'subcontractor-breakdown') {
+            const pos = row.data as AdvancedPosition;
+            const linked = getLinkedSubcontractorPosition(pos.id);
+            const breakdown = pos.breakdown[yearStr];
+
+            if (!linked || !breakdown) return <div className="h-full" />;
+
+            const baseRate = linked.subPos.rate;
+            const escalatedBaseRate = getEscalatedRate(baseRate, year);
+            const hours = breakdown.hours || 0;
+            const subFee = rates?.sub_fee || 0;
+            const smh = rates?.smh || 0;
+
+            let rateValue = 0;
+
+            switch (row.subcontractorBreakdownType) {
+              case 'base':
+                rateValue = escalatedBaseRate;
+                break;
+              case 'sub_fee':
+                rateValue = escalatedBaseRate * subFee;
+                break;
+              case 'smh':
+                rateValue = (escalatedBaseRate * (1 + subFee)) * smh;
+                break;
+            }
+
+            const amount = rateValue * hours;
+
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-blue-50/20">
+                <span className="text-blue-700 text-sm font-semibold">
+                  {formatCurrency(amount)}
                 </span>
               </div>
             );
@@ -1418,6 +1867,27 @@ export const PrimeLaborSection = ({
           const pos = row.data as AdvancedPosition;
           const breakdown = pos.breakdown[yearStr];
           if (!breakdown) return <div className="h-full" />;
+
+          // Check if this position is assigned to a subcontractor (for amount calculation)
+          if (row.type === 'position' && pos.assigned_subcontractor_id) {
+            const linked = getLinkedSubcontractorPosition(pos.id);
+
+            if (linked) {
+              const baseRate = linked.subPos.rate;
+              // Apply escalation + markups (sub_fee + smh)
+              const displayRate = getSubcontractorDisplayRate(baseRate, year);
+              const hours = breakdown.hours || 0;
+              const amount = displayRate * hours;
+
+              return (
+                <div className="flex items-center justify-end h-full px-2 bg-blue-50/30">
+                  <span className="text-emerald-600 font-semibold">
+                    {formatCurrency(amount)}
+                  </span>
+                </div>
+              );
+            }
+          }
 
           let value = 0;
           let field = '';
@@ -1454,7 +1924,7 @@ export const PrimeLaborSection = ({
 
           return (
             <div className={`flex items-center justify-end h-full px-2 ${className}`}>
-              <span className={row.type === 'position' ? 'text-emerald-600 font-semibold' : 'text-purple-600'}>
+              <span className={row.type === 'position' ? 'text-emerald-600 font-semibold' : 'text-foreground'}>
                 {formatCurrency(value)}
               </span>
             </div>
@@ -1484,14 +1954,14 @@ export const PrimeLaborSection = ({
             const pos = row.data as AdvancedPosition;
             const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
             return (
-              <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
-                <span className="text-purple-600 font-semibold">
+              <div className="flex items-center justify-end h-full px-2 bg-muted/30">
+                <span className="text-foreground font-semibold">
                   ${calc.dlRate.toFixed(2)}
                 </span>
               </div>
             );
           } else if (row.type === 'subcontractor-header') {
-            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
+            return <div className="h-full bg-muted/30" />;
           }
           return <div />;
         },
@@ -1514,14 +1984,14 @@ export const PrimeLaborSection = ({
             const pos = row.data as AdvancedPosition;
             const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
             return (
-              <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
-                <span className="text-purple-600 font-semibold">
+              <div className="flex items-center justify-end h-full px-2 bg-muted/30">
+                <span className="text-foreground font-semibold">
                   ${calc.fringe.toFixed(2)}
                 </span>
               </div>
             );
           } else if (row.type === 'subcontractor-header') {
-            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
+            return <div className="h-full bg-muted/30" />;
           }
           return <div />;
         },
@@ -1544,14 +2014,14 @@ export const PrimeLaborSection = ({
             const pos = row.data as AdvancedPosition;
             const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
             return (
-              <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
-                <span className="text-purple-600 font-semibold">
+              <div className="flex items-center justify-end h-full px-2 bg-muted/30">
+                <span className="text-foreground font-semibold">
                   ${calc.oh.toFixed(2)}
                 </span>
               </div>
             );
           } else if (row.type === 'subcontractor-header') {
-            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
+            return <div className="h-full bg-muted/30" />;
           }
           return <div />;
         },
@@ -1574,14 +2044,14 @@ export const PrimeLaborSection = ({
             const pos = row.data as AdvancedPosition;
             const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
             return (
-              <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
-                <span className="text-purple-600 font-semibold">
+              <div className="flex items-center justify-end h-full px-2 bg-muted/30">
+                <span className="text-foreground font-semibold">
                   ${calc.ga.toFixed(2)}
                 </span>
               </div>
             );
           } else if (row.type === 'subcontractor-header') {
-            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
+            return <div className="h-full bg-muted/30" />;
           }
           return <div />;
         },
@@ -1604,14 +2074,14 @@ export const PrimeLaborSection = ({
             const pos = row.data as AdvancedPosition;
             const calc = calculateAveragedFBLR(pos, rates, escalationRates, totalYears);
             return (
-              <div className="flex items-center justify-end h-full px-2 bg-purple-500/5">
-                <span className="text-purple-600 font-semibold">
+              <div className="flex items-center justify-end h-full px-2 bg-muted/30">
+                <span className="text-foreground font-semibold">
                   ${calc.fee.toFixed(2)}
                 </span>
               </div>
             );
           } else if (row.type === 'subcontractor-header') {
-            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
+            return <div className="h-full bg-muted/30" />;
           }
           return <div />;
         },
@@ -1641,7 +2111,7 @@ export const PrimeLaborSection = ({
               </div>
             );
           } else if (row.type === 'subcontractor-header') {
-            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
+            return <div className="h-full bg-muted/30" />;
           }
           return <div />;
         },
@@ -1667,16 +2137,16 @@ export const PrimeLaborSection = ({
             );
           } else if (row.type === 'subcontractor-header') {
             return (
-              <div className="flex items-center justify-end h-full px-2 bg-purple-100/30 border-t border-purple-200">
-                <span className="text-xs text-purple-900 font-medium">
+              <div className="flex items-center justify-end h-full px-2 bg-muted/30">
+                <span className="text-xs text-foreground font-medium">
                   {row.subcontractorsTotalHours?.toLocaleString()} hrs
                 </span>
               </div>
             );
           } else if (row.type === 'subcontractor') {
             return (
-              <div className="flex items-center justify-end h-full px-2 bg-purple-50/50">
-                <span className="text-purple-700 font-medium">
+              <div className="flex items-center justify-end h-full px-2 bg-muted/30">
+                <span className="text-foreground font-medium">
                   {(row.subcontractorTotalHours || 0).toLocaleString()}
                 </span>
               </div>
@@ -1710,9 +2180,9 @@ export const PrimeLaborSection = ({
               </div>
             );
           } else if (row.type === 'subcontractor-header') {
-            return <div className="h-full bg-purple-100/30 border-t border-purple-200" />;
+            return <div className="h-full bg-muted/30" />;
           } else if (row.type === 'subcontractor') {
-            return <div className="h-full bg-purple-50/50" />;
+            return <div className="h-full bg-muted/30" />;
           } else if (row.type === 'position') {
             const pos = row.data as AdvancedPosition;
             return (
