@@ -122,7 +122,7 @@ export const FeeSection = ({
         frozen: true,
         renderCell: ({ row }) => (
           <div className="flex items-center h-full px-2">
-            <span className={`font-semibold ${row.type === 'total' ? 'text-emerald-600' : 'text-foreground'}`}>
+            <span className={`font-semibold whitespace-normal break-words overflow-wrap ${row.type === 'total' ? 'text-emerald-600' : 'text-foreground'}`}>
               {row.label}
             </span>
           </div>

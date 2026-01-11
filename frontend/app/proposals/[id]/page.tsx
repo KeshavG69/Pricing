@@ -557,16 +557,16 @@ export default function ProposalPage() {
     <div className="space-y-2">
       {/* Pricing Workspace - Both initial and advanced show tabs */}
       <Card>
-        <CardContent className="pt-4">
-          {/* Tab Navigation - mode determines which tabs are shown */}
-          <PricingTabs
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            hasSubcontractors={subcontractors.length > 0}
-            hasFiles={(currentProposal?.documents?.length ?? 0) > 0}
-            mode={advancedMode ? 'advanced' : 'initial'}
-          />
+        {/* Tab Navigation - mode determines which tabs are shown */}
+        <PricingTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          hasSubcontractors={subcontractors.length > 0}
+          hasFiles={(currentProposal?.documents?.length ?? 0) > 0}
+          mode={advancedMode ? 'advanced' : 'initial'}
+        />
 
+        <CardContent className="pt-0">
           {/* Tab Content */}
           <div className="mt-4">
             {activeTab === 'files' && (
