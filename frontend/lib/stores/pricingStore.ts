@@ -58,6 +58,7 @@ interface PricingState {
   ratesReferenceExpanded: boolean;
   advancedModeVersion: number; // Force re-render counter
   activeTab: 'files' | 'overview' | 'main' | 'subcontractors';
+  savedScrollPosition: { top: number; left: number } | null;  // For scroll preservation
 
   // Actions
   loadProposal: (proposalId: string, existingProposal?: Proposal) => Promise<void>;
@@ -108,6 +109,8 @@ interface PricingState {
   preCreateSubcontractors: (subs: { name: string }[]) => void;
   autoAllocateWorkshare: () => Promise<void>;
   assignPositionToContractor: (positionId: string, subcontractorId: string | null) => Promise<void>;
+  saveScrollPosition: (position: { top: number; left: number }) => void;
+  restoreScrollPosition: () => { top: number; left: number } | null;
 }
 
 // Helper to check if a position is a key position (cannot be auto-allocated to subcontractors)
@@ -203,6 +206,7 @@ const mapJobToPosition = (job: JobPosition, index: number): SpreadsheetPosition 
     labor_category: job.labor_category,
     experience: job.experience,
     location: job.location,
+    location_type: job.location_type || 'On-Site', // Default to On-Site
     soc_code: job.soc_code,
     soc_title: job.soc_title,
     percentile,
@@ -316,7 +320,7 @@ const setCachedProposal = (proposalId: string, data: any) => {
 
 export const usePricingStore = create<PricingState>((set, get) => {
   // Helper function for actual transformation logic
-  const performTransformToAdvanced = () => {
+  const performTransformToAdvanced = (options?: { skipVersionIncrement?: boolean }) => {
     const state = get();
 
     console.log('[TRANSFORM] ========== TRANSFORM START ==========');
@@ -422,10 +426,12 @@ export const usePricingStore = create<PricingState>((set, get) => {
           const fringeAmount = fringe * hours;
 
           // Determine which OH rate to use based on location_type
+          // Default to On-Site if not specified
           // Fallback: oh_onsite/oh_offsite → oh → 0.0711
           const ohOnsite = state.rates.oh_onsite !== undefined ? state.rates.oh_onsite : (state.rates.oh !== undefined ? state.rates.oh : 0.0711);
           const ohOffsite = state.rates.oh_offsite !== undefined ? state.rates.oh_offsite : (state.rates.oh !== undefined ? state.rates.oh : 0.0711);
-          const ohRate = pos.location_type === 'On-Site' ? ohOnsite : ohOffsite;
+          const locationType = pos.location_type || 'On-Site'; // Default to On-Site
+          const ohRate = locationType === 'On-Site' ? ohOnsite : ohOffsite;
           const oh = (dlRate + fringe) * ohRate;
           const ohAmount = oh * hours;
 
@@ -518,9 +524,11 @@ export const usePricingStore = create<PricingState>((set, get) => {
       totalFBLR: aggregates.totalFBLR
     });
 
-    // Increment version to force React re-render
-    const newVersion = state.advancedModeVersion + 1;
-    console.log('[TRANSFORM] Setting new version:', newVersion);
+    // Only increment version if not explicitly skipped (to prevent unnecessary remounts)
+    const newVersion = options?.skipVersionIncrement
+      ? state.advancedModeVersion
+      : state.advancedModeVersion + 1;
+    console.log('[TRANSFORM] Setting new version:', newVersion, options?.skipVersionIncrement ? '(skipped increment)' : '');
 
     set({
       positionsAdvanced: advanced,
@@ -706,6 +714,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
     ratesReferenceExpanded: false,
     advancedModeVersion: 0,
     activeTab: 'overview',
+    savedScrollPosition: null,
 
     loadProposal: async (proposalId, existingProposal) => {
       try {
@@ -731,13 +740,12 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
         if (proposal.spreadsheet_data?.positions && proposal.spreadsheet_data.positions.length > 0) {
           positions = proposal.spreadsheet_data.positions;
-          // Apply standard_fte_hours from metadata to all positions
-          if (standardFteHours) {
-            positions = positions.map((pos) => ({
-              ...pos,
-              standard_fte_hours: standardFteHours
-            }));
-          }
+          // Apply defaults and standard_fte_hours from metadata to all positions
+          positions = positions.map((pos) => ({
+            ...pos,
+            location_type: pos.location_type || 'On-Site', // Default to On-Site
+            standard_fte_hours: standardFteHours || pos.standard_fte_hours
+          }));
         } else if (proposal.jobs && proposal.jobs.length > 0) {
           positions = proposal.jobs.map((job, index) => {
             const mappedPos = mapJobToPosition(job, index);
@@ -923,6 +931,11 @@ export const usePricingStore = create<PricingState>((set, get) => {
     updatePosition: (id, updates) => {
       const state = get();
 
+      // Check if this is ONLY a location_type change (to prevent unnecessary grid remounts)
+      const isLocationOnlyChange =
+        Object.keys(updates).length === 1 &&
+        updates.location_type !== undefined;
+
       // If location_type is being updated, also update linked subcontractor positions
       if (updates.location_type !== undefined) {
         console.log('[UPDATE POSITION] location_type changed, updating linked subcontractors...');
@@ -963,8 +976,9 @@ export const usePricingStore = create<PricingState>((set, get) => {
         }));
 
         // Then retransform to advanced mode to recalculate breakdown
-        console.log('[ADVANCED MODE] Calling transformToAdvanced');
-        performTransformToAdvanced();
+        // Skip version increment for location-only changes to prevent grid remount
+        console.log('[ADVANCED MODE] Calling transformToAdvanced', { isLocationOnlyChange });
+        performTransformToAdvanced({ skipVersionIncrement: isLocationOnlyChange });
 
         // Set isDirty AFTER transformation to ensure it persists through all state updates
         console.log('[ADVANCED MODE] Setting isDirty=true');
@@ -984,12 +998,19 @@ export const usePricingStore = create<PricingState>((set, get) => {
           isDirty: true, // Set dirty immediately
         }));
 
-        // Trigger recalculate for UI updates
-        debouncedRecalculate();
+        // For location-only changes, skip recalculation and just transform
+        if (isLocationOnlyChange) {
+          console.log('[BASIC MODE] Location-only change, transforming without recalculation');
+          performTransformToAdvanced({ skipVersionIncrement: true });
+          debouncedAutoSave();
+        } else {
+          // Trigger recalculate for UI updates
+          debouncedRecalculate();
 
-        // Also trigger auto-save directly to ensure persistence
-        console.log('[BASIC MODE] Triggering debouncedAutoSave (will run in 2s)');
-        debouncedAutoSave();
+          // Also trigger auto-save directly to ensure persistence
+          console.log('[BASIC MODE] Triggering debouncedAutoSave (will run in 2s)');
+          debouncedAutoSave();
+        }
       }
     },
 
@@ -2503,6 +2524,20 @@ export const usePricingStore = create<PricingState>((set, get) => {
       await get().saveProposal();
     },
 
+    saveScrollPosition: (position) => {
+      console.log('[SCROLL] Saving scroll position:', position);
+      set({ savedScrollPosition: position });
+    },
+
+    restoreScrollPosition: () => {
+      const pos = get().savedScrollPosition;
+      if (pos) {
+        console.log('[SCROLL] Restoring scroll position:', pos);
+        set({ savedScrollPosition: null }); // Clear after use
+      }
+      return pos;
+    },
+
     // Manual save function (immediate, non-debounced)
     saveProposal: async () => {
       const state = get();
@@ -2611,6 +2646,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         ratesReferenceExpanded: false,
         advancedModeVersion: 0,
         activeTab: 'overview',
+        savedScrollPosition: null,
       });
     },
   };

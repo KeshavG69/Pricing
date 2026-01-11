@@ -115,10 +115,12 @@ const calculateAveragedFBLR = (
   // Apply FBLR cascade
   const fringe = dlRate * rates.fringe;
   // Determine which OH rate to use based on location_type
+  // Default to On-Site if not specified
   // Fallback: oh_onsite/oh_offsite → oh → 0.0711
   const ohOnsite = rates.oh_onsite !== undefined ? rates.oh_onsite : (rates.oh !== undefined ? rates.oh : 0.0711);
   const ohOffsite = rates.oh_offsite !== undefined ? rates.oh_offsite : (rates.oh !== undefined ? rates.oh : 0.0711);
-  const ohRate = position.location_type === 'On-Site' ? ohOnsite : ohOffsite;
+  const locationType = position.location_type || 'On-Site'; // Default to On-Site
+  const ohRate = locationType === 'On-Site' ? ohOnsite : ohOffsite;
   const oh = (dlRate + fringe) * ohRate;
   const ga = (dlRate + fringe + oh) * rates.ga;
   // Fee is calculated separately in Fee Section (not included in FBLR)
@@ -166,10 +168,32 @@ export const PrimeLaborSection = ({
   const assignPositionToContractor = usePricingStore((state) => state.assignPositionToContractor);
   const getLinkedSubcontractorPosition = usePricingStore((state) => state.getLinkedSubcontractorPosition);
   const updateLinkedBaseRate = usePricingStore((state) => state.updateLinkedBaseRate);
+  const saveScrollPosition = usePricingStore((state) => state.saveScrollPosition);
+  const restoreScrollPosition = usePricingStore((state) => state.restoreScrollPosition);
   const isGSAProposal = wageSource?.type === 'gsa';
 
   // Track optimistic contractor assignments (persists across renders)
   const optimisticContractorRef = React.useRef<Map<string, string | null>>(new Map());
+
+  // Restore scroll position after grid re-renders
+  React.useLayoutEffect(() => {
+    const savedPos = restoreScrollPosition();
+    if (savedPos) {
+      // Delay restoration to ensure ALL renders complete (including auto-save state changes)
+      const timeoutId = setTimeout(() => {
+        requestAnimationFrame(() => {
+          const container = document.querySelector('.rdg') as HTMLElement;
+          if (container) {
+            console.log('[SCROLL] Restoring position to:', savedPos);
+            container.scrollTop = savedPos.top;
+            container.scrollLeft = savedPos.left;
+          }
+        });
+      }, 150); // Wait for auto-save and other state updates to complete
+
+      return () => clearTimeout(timeoutId);
+    }
+  }, [advancedModeVersion, restoreScrollPosition]);
 
   // Helper to calculate escalated rate for subcontractors
   const getEscalatedRate = (baseRate: number, year: number): number => {
@@ -863,6 +887,15 @@ export const PrimeLaborSection = ({
                 e.preventDefault();
                 e.stopPropagation();
 
+                // Save scroll position to Zustand store BEFORE state change
+                const gridContainer = (e.target as HTMLElement).closest('.rdg');
+                if (gridContainer) {
+                  saveScrollPosition({
+                    top: gridContainer.scrollTop,
+                    left: gridContainer.scrollLeft
+                  });
+                }
+
                 // Toggle between On-Site and Off-Site
                 const newLocationType = isOnSite ? 'Off-Site' : 'On-Site';
 
@@ -874,11 +907,11 @@ export const PrimeLaborSection = ({
                 try {
                   updatePosition(pos.id, { location_type: newLocationType });
 
-                  // Clear optimistic state after a brief delay to ensure store update propagated
+                  // Clear optimistic state after update
                   setTimeout(() => {
                     setOptimisticLocationType(null);
                     setIsUpdating(false);
-                  }, 300);
+                  }, 100); // Reduced delay for better UX
                 } catch (error) {
                   // Rollback on error
                   console.error('Failed to update location type:', error);
