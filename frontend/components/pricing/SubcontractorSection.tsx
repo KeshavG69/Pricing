@@ -9,7 +9,8 @@ import { Card } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TransferSubcontractorModal } from './TransferSubcontractorModal';
-import { Trash2, Building2, ChevronDown, ArrowRightLeft } from 'lucide-react';
+import { AddSubcontractorModal } from './AddSubcontractorModal';
+import { Trash2, Building2, ChevronDown, ArrowRightLeft, Plus } from 'lucide-react';
 
 interface YearData {
   rate: number;      // Escalated rate for this year
@@ -35,7 +36,7 @@ interface ContextMenuState {
 }
 
 export const SubcontractorSection = () => {
-  const { subcontractors, totalYears, escalationRates, deleteSubcontractor, deleteSubcontractorPosition, updateSubcontractorPosition, updateLinkedBaseRate } = usePricingStore();
+  const { subcontractors, totalYears, escalationRates, deleteSubcontractor, deleteSubcontractorPosition, updateSubcontractorPosition, updateLinkedBaseRate, addSubcontractor } = usePricingStore();
 
   // Helper to calculate escalated rate for a given year
   // Uses escalation rates from Rates Reference table
@@ -77,6 +78,9 @@ export const SubcontractorSection = () => {
   // Track overflow menu state
   const [showOverflowMenu, setShowOverflowMenu] = useState(false);
   const overflowMenuRef = useRef<HTMLDivElement>(null);
+
+  // Add subcontractor modal state
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   const MAX_VISIBLE_TABS = 4; // Show max 4 tabs before overflow
 
@@ -125,6 +129,18 @@ export const SubcontractorSection = () => {
       setSelectedSubId(null);
     }
   }, [subcontractors, selectedSubId]);
+
+  // Track previous subcontractor count to detect new additions
+  const prevSubCountRef = useRef(subcontractors.length);
+
+  useEffect(() => {
+    // If subcontractors increased, select the newly added one
+    if (subcontractors.length > prevSubCountRef.current) {
+      const newSub = subcontractors[subcontractors.length - 1];
+      setSelectedSubId(newSub.id);
+    }
+    prevSubCountRef.current = subcontractors.length;
+  }, [subcontractors]);
 
   // Get the selected subcontractor's data
   const selectedSub = useMemo(() => {
@@ -199,6 +215,20 @@ export const SubcontractorSection = () => {
     }
     setContextMenu({ visible: false, x: 0, y: 0, row: null });
   }, [contextMenu.row, selectedSubId]);
+
+  // Add subcontractor modal handlers
+  const handleAddSubcontractor = useCallback(() => {
+    setIsAddModalOpen(true);
+  }, []);
+
+  const handleSaveSubcontractor = useCallback((name: string) => {
+    addSubcontractor({ name, positions: [] });
+    setIsAddModalOpen(false);
+  }, [addSubcontractor]);
+
+  const handleCloseModal = useCallback(() => {
+    setIsAddModalOpen(false);
+  }, []);
 
   // Define columns
   const columns: Column<SubcontractorGridRow>[] = useMemo(() => {
@@ -434,8 +464,25 @@ export const SubcontractorSection = () => {
             <p className="text-xs text-muted-foreground mt-1">
               Right-click on a position and select "Convert to Subcontractor"
             </p>
+            <div className="mt-4">
+              <Button
+                variant="outline"
+                onClick={handleAddSubcontractor}
+                className="text-muted-foreground hover:text-green-600 hover:bg-green-50 hover:border-green-200"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Subcontractor
+              </Button>
+            </div>
           </div>
         </Card>
+
+        {/* Add Subcontractor Modal */}
+        <AddSubcontractorModal
+          isOpen={isAddModalOpen}
+          onClose={handleCloseModal}
+          onSave={handleSaveSubcontractor}
+        />
       </div>
     );
   }
@@ -445,9 +492,22 @@ export const SubcontractorSection = () => {
       {/* Header with Tabs */}
       <div className="px-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-base font-semibold text-foreground">
-            Subcontractor Labor
-          </h3>
+          <div className="flex items-center gap-3">
+            <h3 className="text-base font-semibold text-foreground">
+              Subcontractor Labor
+            </h3>
+
+            {/* Add Subcontractor Button */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleAddSubcontractor}
+              className="text-muted-foreground hover:text-green-600 hover:bg-green-50 hover:border-green-200"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Subcontractor
+            </Button>
+          </div>
 
           {/* Delete Button for Selected Sub */}
           {selectedSub && (
@@ -675,6 +735,13 @@ export const SubcontractorSection = () => {
           </button>
         </div>
       )}
+
+      {/* Add Subcontractor Modal */}
+      <AddSubcontractorModal
+        isOpen={isAddModalOpen}
+        onClose={handleCloseModal}
+        onSave={handleSaveSubcontractor}
+      />
     </div>
   );
 };
