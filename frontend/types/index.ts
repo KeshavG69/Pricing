@@ -498,13 +498,15 @@ export interface Aggregates {
   };
 }
 
-export type GridRowType = 'position' | 'breakdown' | 'subtotal' | 'subcontractor' | 'subcontractor-header';
+export type GridRowType = 'position' | 'breakdown' | 'subtotal' | 'subcontractor' | 'subcontractor-header' | 'subcontractor-breakdown';
 export type BreakdownType = 'dl' | 'fringe' | 'oh' | 'ga' | 'fee';
+export type SubcontractorBreakdownType = 'base' | 'sub_fee' | 'smh';
 
 export interface GridRow {
   type: GridRowType;
   positionId: string;
   breakdownType?: BreakdownType;
+  subcontractorBreakdownType?: SubcontractorBreakdownType;
   data: any; // Actual row data
   isExpanded?: boolean;
   // Subcontractor row fields
