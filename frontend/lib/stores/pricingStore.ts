@@ -68,6 +68,8 @@ interface PricingState {
   deleteSubcontractor: (id: string) => void;
   deleteSubcontractorPosition: (subId: string, posIndex: number) => void;
   updateSubcontractorPosition: (subId: string, posIndex: number, updates: Partial<SubcontractorPosition>) => void;
+  getLinkedSubcontractorPosition: (positionId: string) => { subId: string; posIndex: number; subPos: SubcontractorPosition } | null;
+  updateLinkedBaseRate: (positionId: string, newBaseRate: number) => void;
   transferSubcontractorHours: (data: {
     sourceSubcontractorId: string;
     sourcePositionIndex: number;
@@ -105,6 +107,7 @@ interface PricingState {
   setActiveTab: (tab: 'files' | 'overview' | 'main' | 'subcontractors') => void;
   preCreateSubcontractors: (subs: { name: string }[]) => void;
   autoAllocateWorkshare: () => Promise<void>;
+  assignPositionToContractor: (positionId: string, subcontractorId: string | null) => Promise<void>;
 }
 
 // Helper to check if a position is a key position (cannot be auto-allocated to subcontractors)
@@ -1201,6 +1204,80 @@ export const usePricingStore = create<PricingState>((set, get) => {
       debouncedAutoSave();
     },
 
+    getLinkedSubcontractorPosition: (positionId) => {
+      const state = get();
+      const position = state.positions.find(p => p.id === positionId);
+
+      if (!position?.assigned_subcontractor_id) {
+        return null;
+      }
+
+      const subcontractor = state.subcontractors.find(s => s.id === position.assigned_subcontractor_id);
+      if (!subcontractor) {
+        return null;
+      }
+
+      const posIndex = subcontractor.positions.findIndex(
+        sp => sp.original_position_id === positionId
+      );
+
+      if (posIndex === -1) {
+        return null;
+      }
+
+      return {
+        subId: subcontractor.id,
+        posIndex,
+        subPos: subcontractor.positions[posIndex]
+      };
+    },
+
+    updateLinkedBaseRate: (positionId, newBaseRate) => {
+      const linked = get().getLinkedSubcontractorPosition(positionId);
+
+      if (!linked) {
+        console.warn('[UPDATE LINKED RATE] No linked subcontractor position found for:', positionId);
+        return;
+      }
+
+      console.log('[UPDATE LINKED RATE]', {
+        positionId,
+        newBaseRate,
+        subId: linked.subId,
+        posIndex: linked.posIndex,
+        oldRate: linked.subPos.rate
+      });
+
+      // Update the subcontractor position rate AND save to position for future toggles
+      set((state) => ({
+        subcontractors: state.subcontractors.map((sub) => {
+          if (sub.id === linked.subId) {
+            const updatedPositions = [...sub.positions];
+            updatedPositions[linked.posIndex] = {
+              ...updatedPositions[linked.posIndex],
+              rate: newBaseRate
+            };
+            return { ...sub, positions: updatedPositions };
+          }
+          return sub;
+        }),
+        // ALSO update the position's last_subcontractor_base_rate
+        positions: state.positions.map(p =>
+          p.id === positionId
+            ? { ...p, last_subcontractor_base_rate: newBaseRate }
+            : p
+        ),
+        isDirty: true,
+      }));
+
+      // Re-transform to update main grid display
+      if (get().advancedMode) {
+        performTransformToAdvanced();
+      }
+
+      debouncedAutoSave();
+    },
+
     transferSubcontractorHours: async (data) => {
       console.log('[TRANSFER] Starting transfer:', data);
       const state = get();
@@ -2279,6 +2356,151 @@ export const usePricingStore = create<PricingState>((set, get) => {
           console.error('[AUTO-ALLOCATE] Failed to save:', error);
         }
       }
+    },
+
+    assignPositionToContractor: async (positionId: string, subcontractorId: string | null) => {
+      console.log('🔄 Assigning position to contractor:', positionId, subcontractorId || 'Prime');
+      const state = get();
+
+      // Find the position
+      const position = state.positions.find(p => p.id === positionId);
+      if (!position) {
+        console.error('❌ Position not found:', positionId);
+        return;
+      }
+
+      // Case 1: Switching back to Prime
+      if (subcontractorId === null) {
+        console.log('📤 Returning position to Prime');
+
+        // Update position to remove subcontractor assignment but preserve the last edited rate
+        const updatedPositions = state.positions.map(p => {
+          if (p.id === positionId) {
+            // Find the current subcontractor position to get its rate
+            const currentSub = state.subcontractors.find(s => s.id === p.assigned_subcontractor_id);
+            const subPos = currentSub?.positions.find(sp =>
+              sp.original_position_id === positionId && sp.shows_in_main_grid
+            );
+
+            console.log(`💾 Preserving edited rate: $${subPos?.rate?.toFixed(2) || 'N/A'}/hr`);
+
+            return {
+              ...p,
+              assigned_subcontractor_id: undefined,
+              last_subcontractor_base_rate: subPos?.rate // Preserve the edited rate
+            };
+          }
+          return p;
+        });
+
+        // Remove from subcontractor's positions array
+        const updatedSubcontractors = state.subcontractors.map(sub => ({
+          ...sub,
+          positions: sub.positions.filter(subPos =>
+            subPos.original_position_id !== positionId || !subPos.shows_in_main_grid
+          ),
+        }));
+
+        set({
+          positions: updatedPositions,
+          subcontractors: updatedSubcontractors,
+          isDirty: true,
+        });
+
+        // Re-transform to update grid immediately
+        performTransformToAdvanced();
+
+        console.log('✅ Position returned to Prime');
+        await get().saveProposal();
+        return;
+      }
+
+      // Case 2: Assigning to a subcontractor
+      console.log('📥 Assigning to subcontractor...');
+
+      const subcontractor = state.subcontractors.find(s => s.id === subcontractorId);
+      if (!subcontractor) {
+        console.error('❌ Subcontractor not found:', subcontractorId);
+        return;
+      }
+
+      // Calculate base rate from FBLR
+      const effectiveSalary = getEffectiveSalary(position);
+      const fteHours = position.standard_fte_hours || 1920;
+      const dlRate = effectiveSalary / fteHours;
+
+      // Calculate FBLR using prime rates
+      const fringeRate = state.rates.fringe || 0.247;
+      const ohRate = (position.location_type === 'Off-Site' ? state.rates.oh_offsite : state.rates.oh_onsite) || 0.0711;
+      const gaRate = state.rates.ga || 0.2243;
+      const feeRate = state.rates.fee || 0.08;
+
+      const fringeAmount = dlRate * fringeRate;
+      const ohAmount = (dlRate + fringeAmount) * ohRate;
+      const gaAmount = (dlRate + fringeAmount + ohAmount) * gaRate;
+      const feeAmount = (dlRate + fringeAmount + ohAmount + gaAmount) * feeRate;
+      const fblr = dlRate + fringeAmount + ohAmount + gaAmount + feeAmount;
+
+      // Check if there's a previously edited rate to preserve
+      const subFee = state.rates.sub_fee || 0;
+      const smh = state.rates.smh || 0;
+      let baseRate: number;
+
+      if (position.last_subcontractor_base_rate !== undefined) {
+        // Reuse the last edited rate
+        baseRate = position.last_subcontractor_base_rate;
+        console.log(`💾 Reusing previously edited rate: $${baseRate.toFixed(2)}/hr`);
+      } else {
+        // First time assignment - calculate from FBLR
+        baseRate = fblr / ((1 + subFee) * (1 + smh));
+        console.log(`💰 Calculated base rate: $${baseRate.toFixed(2)}/hr (from FBLR: $${fblr.toFixed(2)}/hr)`);
+      }
+
+      // Update position with subcontractor assignment
+      const updatedPositions = state.positions.map(p =>
+        p.id === positionId
+          ? { ...p, assigned_subcontractor_id: subcontractorId }
+          : p
+      );
+
+      // Create SubcontractorPosition for the Subcontractor tab
+      const subPosition: SubcontractorPosition = {
+        labor_category: position.labor_category,
+        rate: baseRate,
+        original_base_rate: baseRate,
+        hours_per_year: { ...position.hours_per_year },
+        original_position_id: position.id,
+        original_total_hours: { ...position.hours_per_year },
+        location_type: position.location_type,
+        shows_in_main_grid: true, // KEY FLAG - this position shows in main grid
+      };
+
+      // Add to subcontractor (or update if already exists)
+      const updatedSubcontractors = state.subcontractors.map(s => {
+        if (s.id === subcontractorId) {
+          // Remove any existing shows_in_main_grid position for this positionId (to avoid duplicates)
+          const filteredPositions = s.positions.filter(p =>
+            !(p.original_position_id === positionId && p.shows_in_main_grid)
+          );
+          return {
+            ...s,
+            positions: [...filteredPositions, subPosition],
+          };
+        }
+        return s;
+      });
+
+      set({
+        positions: updatedPositions,
+        subcontractors: updatedSubcontractors,
+        isDirty: true,
+      });
+
+      // Re-transform to update grid immediately
+      performTransformToAdvanced();
+
+      console.log('✅ Position assigned to subcontractor');
+      await get().saveProposal();
     },
 
     // Manual save function (immediate, non-debounced)

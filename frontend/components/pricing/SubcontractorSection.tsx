@@ -35,7 +35,7 @@ interface ContextMenuState {
 }
 
 export const SubcontractorSection = () => {
-  const { subcontractors, totalYears, escalationRates, deleteSubcontractor, deleteSubcontractorPosition, updateSubcontractorPosition } = usePricingStore();
+  const { subcontractors, totalYears, escalationRates, deleteSubcontractor, deleteSubcontractorPosition, updateSubcontractorPosition, updateLinkedBaseRate } = usePricingStore();
 
   // Helper to calculate escalated rate for a given year
   // Uses escalation rates from Rates Reference table
@@ -242,7 +242,16 @@ export const SubcontractorSection = () => {
 
             const posIndex = selectedSub.positions.findIndex(p => p.labor_category === props.row.labor_category);
             if (posIndex >= 0) {
-              updateSubcontractorPosition(selectedSub.id, posIndex, { rate: newRate });
+              const subPos = selectedSub.positions[posIndex];
+              const originalPositionId = subPos.original_position_id;
+
+              if (originalPositionId) {
+                // Use bidirectional update method for positions linked to main grid
+                updateLinkedBaseRate(originalPositionId, newRate);
+              } else {
+                // Fallback to direct update for positions without original_position_id
+                updateSubcontractorPosition(selectedSub.id, posIndex, { rate: newRate });
+              }
             }
             props.onClose(true);
           };

@@ -345,6 +345,10 @@ export interface SpreadsheetPosition {
   bls_comparison_percentile?: string; // BLS percentile selected
   // Key position flag (cannot be auto-allocated to subcontractors)
   is_key_position?: boolean;
+  // Assigned subcontractor (if this position is handled by a subcontractor via dropdown)
+  assigned_subcontractor_id?: string;
+  // Last edited subcontractor base rate (preserved when toggling Prime/Sub)
+  last_subcontractor_base_rate?: number;
   // Calculated fields (from backend)
   fblr?: number;
   yearly_amounts?: Array<{
@@ -370,6 +374,7 @@ export interface SubcontractorPosition {
   original_position_id?: string; // Links to prime position ID this was converted from
   original_total_hours?: Record<string, number>; // Original prime hours before any sub allocation
   location_type?: string; // 'On-Site' or 'Off-Site'
+  shows_in_main_grid?: boolean; // True if this position shows in main grid (assigned via dropdown)
 }
 
 export interface Subcontractor {
@@ -460,6 +465,8 @@ export interface AdvancedPosition {
   bls_comparison_percentile?: string;
   // Key position flag (cannot be auto-allocated to subcontractors)
   is_key_position?: boolean;
+  // Assigned subcontractor (if this position is handled by a subcontractor via dropdown)
+  assigned_subcontractor_id?: string;
 
   // Per-year breakdown
   breakdown: {
