@@ -5,6 +5,7 @@ import { usePricingStore } from '@/lib/stores/pricingStore';
 import { TravelItem, ODCItem } from '@/types';
 import PrimeLaborSection from './sections/PrimeLaborSection';
 import PrimeLaborAggregatesSection from './sections/PrimeLaborAggregatesSection';
+import CombinedLaborTotalsSection from './sections/CombinedLaborTotalsSection';
 import PassthroughSection from './sections/PassthroughSection';
 import FeeSection from './sections/FeeSection';
 import TravelSection from './sections/TravelSection';
@@ -171,6 +172,32 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     return result;
   }, [subcontractors]);
 
+  // Calculate prime hours by year from positionsAdvanced
+  const primeHoursByYear = useMemo(() => {
+    const result: Record<string, number> = {};
+    positionsAdvanced.forEach((pos) => {
+      Object.entries(pos.breakdown).forEach(([year, breakdown]) => {
+        if (!result[year]) result[year] = 0;
+        result[year] += breakdown.hours;
+      });
+    });
+    return result;
+  }, [positionsAdvanced]);
+
+  // Calculate subcontractor hours by year
+  const subcontractorHoursByYear = useMemo(() => {
+    const result: Record<string, number> = {};
+    subcontractors.forEach((sub) => {
+      sub.positions.forEach((pos) => {
+        Object.entries(pos.hours_per_year).forEach(([year, hours]) => {
+          if (!result[year]) result[year] = 0;
+          result[year] += hours;
+        });
+      });
+    });
+    return result;
+  }, [subcontractors]);
+
   // Calculate passthrough costs by year
   const passthroughByYear = useMemo(() => {
     const result: Record<string, number> = {};
@@ -196,6 +223,15 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
 
     return result;
   }, [primeLaborByYear, subcontractorCostsByYear, rates]);
+
+  // Calculate subcontractor fee by year (for aggregate display)
+  const subFeeByYear = useMemo(() => {
+    const result: Record<string, number> = {};
+    Object.entries(subcontractorCostsByYear).forEach(([year, cost]) => {
+      result[year] = cost * (rates.sub_fee || 0);
+    });
+    return result;
+  }, [subcontractorCostsByYear, rates]);
 
   // Calculate Travel costs by year with G&A markup
   // Formula: Travel Total = Travel Base × (1 + G&A Rate)
@@ -302,9 +338,24 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
         isAdvancedMode={isAdvancedMode}
       />
 
-      {/* Prime Labor Aggregates */}
+      {/* Labor Subtotals (Prime + Subcontractor) */}
       <PrimeLaborAggregatesSection
         aggregates={aggregates}
+        totalYears={totalYears}
+        extensions={extensions}
+        subLaborByYear={subcontractorCostsByYear}
+        passthroughByYear={passthroughByYear}
+        subFeeByYear={subFeeByYear}
+      />
+
+      {/* Combined Labor Totals */}
+      <CombinedLaborTotalsSection
+        primeHoursByYear={primeHoursByYear}
+        subHoursByYear={subcontractorHoursByYear}
+        primeLaborByYear={primeLaborByYear}
+        subLaborByYear={subcontractorCostsByYear}
+        passthroughByYear={passthroughByYear}
+        feeByYear={feeByYear}
         totalYears={totalYears}
         extensions={extensions}
       />
