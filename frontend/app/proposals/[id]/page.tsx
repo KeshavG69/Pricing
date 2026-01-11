@@ -18,7 +18,7 @@ import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { SubcontractorSection } from '@/components/pricing/SubcontractorSection';
 import { AdvancedAnalysisModal, SubcontractorInfo } from '@/components/pricing/AdvancedAnalysisModal';
 import ChargeConfirmationModal from '@/components/ui/ChargeConfirmationModal';
-import { Loader2, AlertCircle, ArrowLeft, Plus, Download, Share2, CheckCircle, XCircle, Send, ChevronDown, Save } from 'lucide-react';
+import { Loader2, AlertCircle, Download, Share2, CheckCircle, XCircle, Send, ChevronDown, Save } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
 import { ShareOrInviteModal } from '@/components/proposals/ShareOrInviteModal';
 import { useAuthStore } from '@/lib/stores/authStore';
@@ -43,7 +43,6 @@ export default function ProposalPage() {
     recalculate,
     isRecalculating,
     enableAdvancedMode,
-    disableAdvancedMode,
     transformToAdvanced,
     advancedMode,
     subcontractorConfigured,
@@ -590,21 +589,6 @@ export default function ProposalPage() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Back button */}
-      <div>
-        {advancedMode ? (
-          <Button variant="outline" onClick={disableAdvancedMode}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Initial Analysis
-          </Button>
-        ) : (
-          <Button variant="outline" onClick={() => router.push('/dashboard')}>
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Dashboard
-          </Button>
-        )}
-      </div>
     </div>
   );
 
