@@ -1111,10 +1111,14 @@ export const usePricingStore = create<PricingState>((set, get) => {
         };
       });
 
-      // Re-transform if in advanced mode
+      // Re-transform to update grid display (both Basic and Advanced mode)
       if (state.advancedMode) {
         console.log('[DELETE SUB] Re-transforming to advanced mode');
         performTransformToAdvanced();
+      } else {
+        // In Basic Mode, also need to transform to update the grid display
+        console.log('[DELETE SUB] Transforming to update grid display');
+        performTransformToAdvanced({ skipVersionIncrement: true });
       }
 
       console.log('[DELETE SUB] Delete complete, triggering auto-save');
@@ -1133,34 +1137,47 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
       const subPos = sub.positions[posIndex];
       console.log('[DELETE SUB POS] Deleting position:', subPos.labor_category, 'from', sub.name);
+      console.log('[DELETE SUB POS] Position details:', {
+        original_position_id: subPos.original_position_id,
+        shows_in_main_grid: subPos.shows_in_main_grid,
+      });
 
-      // Return hours to prime position if linked
+      // Return hours to prime position if linked (OLD FLOW: convert to subcontractor)
+      // OR clear subcontractor assignment if shows_in_main_grid (NEW FLOW: dropdown assignment)
       let primeHoursUpdate: Record<string, number> | null = null;
       let primeId: string | null = null;
+      let clearSubcontractorAssignment = false;
 
       if (subPos.original_position_id) {
         primeId = subPos.original_position_id;
         const primePos = state.positions.find(p => p.id === primeId);
 
         if (primePos) {
-          // Simple logic: add the deleted sub position's hours back to current prime hours
-          primeHoursUpdate = {};
+          // Check if this is a "shows in main grid" position (dropdown assignment flow)
+          if (subPos.shows_in_main_grid) {
+            // NEW FLOW: Just clear the subcontractor assignment, don't add hours back
+            console.log('[DELETE SUB POS] Clearing subcontractor assignment from prime position');
+            clearSubcontractorAssignment = true;
+          } else {
+            // OLD FLOW: Add the deleted sub position's hours back to current prime hours
+            primeHoursUpdate = {};
 
-          // Get all years from both prime and sub positions
-          const allYears = new Set([
-            ...Object.keys(primePos.hours_per_year),
-            ...Object.keys(subPos.hours_per_year)
-          ]);
+            // Get all years from both prime and sub positions
+            const allYears = new Set([
+              ...Object.keys(primePos.hours_per_year),
+              ...Object.keys(subPos.hours_per_year)
+            ]);
 
-          allYears.forEach(year => {
-            const currentPrimeHours = primePos.hours_per_year[year] || 0;
-            const returningHours = subPos.hours_per_year[year] || 0;
-            primeHoursUpdate![year] = currentPrimeHours + returningHours;
-          });
+            allYears.forEach(year => {
+              const currentPrimeHours = primePos.hours_per_year[year] || 0;
+              const returningHours = subPos.hours_per_year[year] || 0;
+              primeHoursUpdate![year] = currentPrimeHours + returningHours;
+            });
 
-          console.log('[DELETE SUB POS] Adding hours back to prime:', primeHoursUpdate);
-          console.log('[DELETE SUB POS]   Current prime hours:', primePos.hours_per_year);
-          console.log('[DELETE SUB POS]   Returning hours:', subPos.hours_per_year);
+            console.log('[DELETE SUB POS] Adding hours back to prime:', primeHoursUpdate);
+            console.log('[DELETE SUB POS]   Current prime hours:', primePos.hours_per_year);
+            console.log('[DELETE SUB POS]   Returning hours:', subPos.hours_per_year);
+          }
         } else {
           console.log('[DELETE SUB POS] Prime position not found:', primeId);
         }
@@ -1168,9 +1185,24 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
       // Update state
       set((prevState) => {
-        // Update prime position if needed
-        const updatedPositions = primeId && primeHoursUpdate
-          ? prevState.positions.map(pos => {
+        // Update prime position based on the type of deletion
+        let updatedPositions = prevState.positions;
+
+        if (primeId) {
+          if (clearSubcontractorAssignment) {
+            // NEW FLOW: Clear the assigned_subcontractor_id
+            updatedPositions = prevState.positions.map(pos => {
+              if (pos.id === primeId) {
+                return {
+                  ...pos,
+                  assigned_subcontractor_id: undefined,
+                };
+              }
+              return pos;
+            });
+          } else if (primeHoursUpdate) {
+            // OLD FLOW: Return hours to prime position
+            updatedPositions = prevState.positions.map(pos => {
               if (pos.id === primeId) {
                 return {
                   ...pos,
@@ -1178,8 +1210,9 @@ export const usePricingStore = create<PricingState>((set, get) => {
                 };
               }
               return pos;
-            })
-          : prevState.positions;
+            });
+          }
+        }
 
         // Remove position from subcontractor
         const updatedSubcontractors = prevState.subcontractors
@@ -1189,9 +1222,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
               return { ...s, positions: newPositions };
             }
             return s;
-          })
-          // Remove subcontractor if it has no positions left
-          .filter(s => s.positions.length > 0);
+          });
 
         return {
           positions: updatedPositions,
@@ -1200,10 +1231,14 @@ export const usePricingStore = create<PricingState>((set, get) => {
         };
       });
 
-      // Re-transform if in advanced mode
+      // Re-transform to update grid display (both Basic and Advanced mode)
       if (state.advancedMode) {
         console.log('[DELETE SUB POS] Re-transforming to advanced mode');
         performTransformToAdvanced();
+      } else {
+        // In Basic Mode, also need to transform to update the grid display
+        console.log('[DELETE SUB POS] Transforming to update grid display');
+        performTransformToAdvanced({ skipVersionIncrement: true });
       }
 
       console.log('[DELETE SUB POS] Delete complete, triggering auto-save');
@@ -1429,19 +1464,20 @@ export const usePricingStore = create<PricingState>((set, get) => {
           updatedSubcontractors = [...updatedSubcontractors, updatedTargetSub];
         }
 
-        // Remove subcontractors with no positions
-        updatedSubcontractors = updatedSubcontractors.filter(s => s.positions.length > 0);
-
         return {
           subcontractors: updatedSubcontractors,
           isDirty: true,
         };
       });
 
-      // Re-transform if in advanced mode
+      // Re-transform to update grid display (both Basic and Advanced mode)
       if (state.advancedMode) {
         console.log('[TRANSFER] Re-transforming to advanced mode');
         performTransformToAdvanced();
+      } else {
+        // In Basic Mode, also need to transform to update the grid display
+        console.log('[TRANSFER] Transforming to update grid display');
+        performTransformToAdvanced({ skipVersionIncrement: true });
       }
 
       console.log('[TRANSFER] Transfer complete, triggering auto-save');

@@ -546,7 +546,7 @@ export const PrimeLaborSection = ({
     return items;
   }, [onDeletePosition, onUpdatePosition, isAdvancedMode, subcontractors]);
 
-  // Calculate column totals for subtotal row
+  // Calculate column totals for subtotal row (prime + subcontractor)
   const columnTotals = useMemo(() => {
     const totals: any = {
       totalHours: 0,
@@ -560,7 +560,13 @@ export const PrimeLaborSection = ({
       byYear: {} as Record<string, { hours: number; amount: number; rate: number }>,
     };
 
+    // Add prime position totals (only positions showing in main grid)
     positions.forEach((pos) => {
+      // Skip positions assigned to subcontractors (they're counted in subcontractor totals)
+      if (pos.assigned_subcontractor_id) {
+        return;
+      }
+
       // Sum total hours and total amount
       totals.totalHours += pos.total_hours;
       totals.totalAmount += pos.total_amount;
@@ -589,8 +595,41 @@ export const PrimeLaborSection = ({
       }
     });
 
+    // Add subcontractor totals
+    subcontractors.forEach((sub) => {
+      sub.positions.forEach((subPos) => {
+        // Sum total hours and amounts
+        const subTotalHours = Object.values(subPos.hours_per_year).reduce((sum, h) => sum + h, 0);
+        totals.totalHours += subTotalHours;
+
+        // Calculate subcontractor amounts (with passthrough and fee)
+        const subBaseCost = subTotalHours * subPos.rate;
+        const passthrough = subBaseCost * ((rates.smh || 0) + (rates.ga_passthrough || 0));
+        const subFee = subBaseCost * (rates.sub_fee || 0);
+        const subTotalAmount = subBaseCost + passthrough + subFee;
+        totals.totalAmount += subTotalAmount;
+
+        // Sum per-year hours and amounts
+        for (let year = 1; year <= totalYears; year++) {
+          const yearStr = year.toString();
+          const hours = subPos.hours_per_year[yearStr] || 0;
+          if (!totals.byYear[yearStr]) {
+            totals.byYear[yearStr] = { hours: 0, amount: 0, rate: 0 };
+          }
+          totals.byYear[yearStr].hours += hours;
+
+          // Calculate amount for this year with escalation
+          const escalatedRate = getEscalatedRate(subPos.rate, year);
+          const baseCost = hours * escalatedRate;
+          const passthroughCost = baseCost * ((rates.smh || 0) + (rates.ga_passthrough || 0));
+          const feeCost = baseCost * (rates.sub_fee || 0);
+          totals.byYear[yearStr].amount += baseCost + passthroughCost + feeCost;
+        }
+      });
+    });
+
     return totals;
-  }, [positions, rates, escalationRates, totalYears, advancedModeVersion]);
+  }, [positions, rates, escalationRates, totalYears, advancedModeVersion, subcontractors]);
 
   // Build order-based position mapping for subcontractors without original_position_id
   // Groups positions by labor_category and tracks which ones have been matched
@@ -1019,7 +1058,7 @@ export const PrimeLaborSection = ({
             return (
               <div className="flex items-center h-full px-2 bg-blue-50 border-t-2 border-blue-200">
                 <span className="font-bold text-blue-700 text-sm">
-                  Prime Labor Subtotals
+                  Combined Labor Subtotals
                 </span>
               </div>
             );
