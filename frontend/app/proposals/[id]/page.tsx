@@ -16,6 +16,7 @@ import PricingTabs from '@/components/pricing/PricingTabs';
 import FilesTab from '@/components/pricing/FilesTab';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { SubcontractorSection } from '@/components/pricing/SubcontractorSection';
+import { WageDataSection } from '@/components/pricing/sections/WageDataSection';
 import { AdvancedAnalysisModal, SubcontractorInfo } from '@/components/pricing/AdvancedAnalysisModal';
 import ChargeConfirmationModal from '@/components/ui/ChargeConfirmationModal';
 import { Loader2, AlertCircle, Download, Share2, CheckCircle, XCircle, Send, ChevronDown, Save } from 'lucide-react';
@@ -35,6 +36,7 @@ export default function ProposalPage() {
     loadProposal,
     proposalName,
     positions,
+    positionsAdvanced,
     subcontractors,
     rates,
     totalYears,
@@ -585,6 +587,7 @@ export default function ProposalPage() {
                 <AdvancedAnalysisGrid isAdvancedMode={advancedMode} />
               </div>
             )}
+            {activeTab === 'wage-data' && <WageDataSection positions={positionsAdvanced} />}
             {activeTab === 'subcontractors' && advancedMode && <SubcontractorSection />}
           </div>
         </CardContent>
