@@ -57,7 +57,7 @@ interface PricingState {
   aggregates: Aggregates;
   ratesReferenceExpanded: boolean;
   advancedModeVersion: number; // Force re-render counter
-  activeTab: 'files' | 'overview' | 'main' | 'subcontractors';
+  activeTab: 'files' | 'overview' | 'main' | 'subcontractors' | 'wage-data';
   savedScrollPosition: { top: number; left: number } | null;  // For scroll preservation
 
   // Actions
@@ -105,7 +105,7 @@ interface PricingState {
   clearManualOverrides: (positionId?: string) => void;
   recalculateAdvanced: () => Promise<void>;
   toggleRatesReference: () => void;
-  setActiveTab: (tab: 'files' | 'overview' | 'main' | 'subcontractors') => void;
+  setActiveTab: (tab: 'files' | 'overview' | 'main' | 'subcontractors' | 'wage-data') => void;
   preCreateSubcontractors: (subs: { name: string }[]) => void;
   autoAllocateWorkshare: () => Promise<void>;
   assignPositionToContractor: (positionId: string, subcontractorId: string | null) => Promise<void>;
@@ -204,6 +204,7 @@ const mapJobToPosition = (job: JobPosition, index: number): SpreadsheetPosition 
   return {
     id: `pos_${index}_${Date.now()}`,
     labor_category: job.labor_category,
+    description: job.description, // Job description from document parsing
     experience: job.experience,
     location: job.location,
     location_type: job.location_type || 'On-Site', // Default to On-Site
@@ -746,6 +747,40 @@ export const usePricingStore = create<PricingState>((set, get) => {
             location_type: pos.location_type || 'On-Site', // Default to On-Site
             standard_fte_hours: standardFteHours || pos.standard_fte_hours
           }));
+
+          // Migration: Copy descriptions from jobs to positions if missing
+          if (proposal.jobs && Array.isArray(proposal.jobs) && proposal.jobs.length > 0) {
+            const positionsNeedDescriptions = positions.some(pos => !pos.description);
+            const jobsHaveDescriptions = proposal.jobs.some(job => !!job.description);
+
+            if (positionsNeedDescriptions && jobsHaveDescriptions) {
+              console.log('[MIGRATION] Copying descriptions from jobs to positions');
+
+              positions = positions.map((pos) => {
+                // If position already has description, skip
+                if (pos.description) return pos;
+
+                // Try to find matching job by labor_category
+                const matchingJob = proposal.jobs!.find(
+                  job => job.labor_category === pos.labor_category
+                );
+
+                if (matchingJob?.description) {
+                  console.log(`[MIGRATION] Copied description for position: ${pos.labor_category}`);
+                  return {
+                    ...pos,
+                    description: matchingJob.description
+                  };
+                }
+
+                return pos;
+              });
+
+              // Mark as needing save to persist the migration
+              positionsFromJobs = true;
+              console.log('[MIGRATION] Descriptions copied, will save to backend');
+            }
+          }
         } else if (proposal.jobs && proposal.jobs.length > 0) {
           positions = proposal.jobs.map((job, index) => {
             const mappedPos = mapJobToPosition(job, index);
@@ -788,7 +823,10 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
         // Load subcontractor configuration state
         const subcontractorConfigured = proposal.spreadsheet_data?.subcontractor_configured || false;
-        const advancedMode = proposal.spreadsheet_data?.advanced_mode || false;
+        // Detect advanced mode: explicit flag OR has subcontractors OR subcontractor_configured
+        // This handles proposals activated before we added the advanced_mode flag
+        const hasSubcontractors = proposal.spreadsheet_data?.subcontractors && proposal.spreadsheet_data.subcontractors.length > 0;
+        const advancedMode = proposal.spreadsheet_data?.advanced_mode || subcontractorConfigured || hasSubcontractors || false;
 
         // Migrate old 'oh' field to 'oh_onsite' and 'oh_offsite'
         let rates = proposal.spreadsheet_data?.rates || proposal.rates;
