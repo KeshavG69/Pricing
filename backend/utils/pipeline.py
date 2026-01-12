@@ -62,7 +62,10 @@ async def process_single_row(
                     description=description,
                     location=location or "National"
                 )
+                # Build prompt with description for better context
                 bls_prompt = f"Find wage data for {labor_category}"
+                if description:
+                    bls_prompt += f". Job description: {description}"
 
                 # Run both agents in parallel
                 gsa_result, bls_result = await asyncio.gather(
@@ -83,7 +86,10 @@ async def process_single_row(
                 description=description,
                 location=location
             )
+            # Build prompt with description for better context
             prompt = f"Find wage data for {labor_category} in {location}"
+            if description:
+                prompt += f". Job description: {description}"
             result = await agent.arun(prompt)
             bls_result = None  # Not used in BLS flow
 

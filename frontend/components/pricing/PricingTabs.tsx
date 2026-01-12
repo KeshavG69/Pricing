@@ -1,8 +1,8 @@
 'use client';
 
-import { FileText, BarChart3, Calculator, Building2 } from 'lucide-react';
+import { FileText, BarChart3, Calculator, Building2, Database } from 'lucide-react';
 
-export type PricingTabType = 'files' | 'overview' | 'main' | 'subcontractors';
+export type PricingTabType = 'files' | 'overview' | 'main' | 'subcontractors' | 'wage-data';
 
 interface PricingTabsProps {
   activeTab: PricingTabType;
@@ -38,6 +38,12 @@ export const PricingTabs = ({
       label: 'Pricing Workspace',
       description: 'Detailed cost proposal spreadsheet',
       icon: <Calculator className="w-5 h-5" />,
+    },
+    {
+      id: 'wage-data' as const,
+      label: 'Wage Data',
+      description: 'Position wage percentiles & details',
+      icon: <Database className="w-5 h-5" />,
     },
     {
       id: 'subcontractors' as const,
