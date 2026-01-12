@@ -492,11 +492,11 @@ export const SubcontractorSection = () => {
       {/* Header with Tabs */}
       <div className="px-6">
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <h3 className="text-base font-semibold text-foreground">
-              Subcontractor Labor
-            </h3>
+          <h3 className="text-base font-semibold text-foreground">
+            Subcontractor Labor
+          </h3>
 
+          <div className="flex items-center gap-3">
             {/* Add Subcontractor Button */}
             <Button
               variant="outline"
@@ -507,27 +507,27 @@ export const SubcontractorSection = () => {
               <Plus className="w-4 h-4 mr-2" />
               Add Subcontractor
             </Button>
-          </div>
 
-          {/* Delete Button for Selected Sub */}
-          {selectedSub && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                setSubToDelete({
-                  id: selectedSub.id,
-                  name: selectedSub.name,
-                  positionCount: selectedSub.positions.length,
-                });
-                setDeleteDialogOpen(true);
-              }}
-              className="text-muted-foreground hover:text-red-600 hover:bg-red-50 hover:border-red-200"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              Delete Subcontractor
-            </Button>
-          )}
+            {/* Delete Button for Selected Sub */}
+            {selectedSub && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setSubToDelete({
+                    id: selectedSub.id,
+                    name: selectedSub.name,
+                    positionCount: selectedSub.positions.length,
+                  });
+                  setDeleteDialogOpen(true);
+                }}
+                className="text-muted-foreground hover:text-red-600 hover:bg-red-50 hover:border-red-200"
+              >
+                <Trash2 className="w-4 h-4 mr-2" />
+                Delete Subcontractor
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Tabs for Subcontractors */}
