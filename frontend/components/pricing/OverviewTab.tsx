@@ -188,12 +188,20 @@ export default function OverviewTab() {
     });
 
 
-    // Subcontractor costs
+    // Subcontractor costs with escalation
     let subcontractorTotal = 0;
     subcontractors.forEach((sub) => {
       sub.positions.forEach((pos) => {
-        Object.values(pos.hours_per_year).forEach((hours) => {
-          subcontractorTotal += hours * pos.rate;
+        Object.entries(pos.hours_per_year).forEach(([yearStr, hours]) => {
+          const yearNum = parseInt(yearStr);
+          // Apply compound escalation
+          let escalatedRate = pos.rate;
+          for (let y = 1; y < yearNum; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = escalationRates[escKey] || 0;
+            escalatedRate *= (1 + escRate);
+          }
+          subcontractorTotal += escalatedRate * hours;
         });
       });
     });
@@ -206,20 +214,44 @@ export default function OverviewTab() {
     const subFee = subcontractorTotal * (rates.sub_fee || 0);
     const feeTotal = primeFeeTotal + subFee;
 
-    // Travel costs (separate from ODCs) - Apply G&A rate
+    // Travel costs (separate from ODCs) - Apply G&A rate and escalation
     let travelTotal = 0;
     travel.forEach((travelItem) => {
-      Object.values(travelItem.amount_per_year).forEach((amount) => {
-        const travelWithGA = amount * (1 + rates.ga);
+      Object.entries(travelItem.amount_per_year).forEach(([yearStr, amount]) => {
+        const yearNum = parseInt(yearStr);
+        let escalatedAmount = amount;
+
+        // Apply compound escalation if flag is set
+        if (travelItem.escalate) {
+          for (let y = 1; y < yearNum; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = escalationRates[escKey] || 0;
+            escalatedAmount *= (1 + escRate);
+          }
+        }
+
+        const travelWithGA = escalatedAmount * (1 + rates.ga);
         travelTotal += travelWithGA;
       });
     });
 
-    // ODC costs - Apply S&MH rate
+    // ODC costs - Apply S&MH rate and escalation
     let odcTotal = 0;
     odcs.forEach((odc) => {
-      Object.values(odc.amount_per_year).forEach((amount) => {
-        const odcWithSMH = amount * (1 + (rates.smh || 0));
+      Object.entries(odc.amount_per_year).forEach(([yearStr, amount]) => {
+        const yearNum = parseInt(yearStr);
+        let escalatedAmount = amount;
+
+        // Apply compound escalation if flag is set
+        if (odc.escalate) {
+          for (let y = 1; y < yearNum; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = escalationRates[escKey] || 0;
+            escalatedAmount *= (1 + escRate);
+          }
+        }
+
+        const odcWithSMH = escalatedAmount * (1 + (rates.smh || 0));
         odcTotal += odcWithSMH;
       });
     });
@@ -359,12 +391,20 @@ export default function OverviewTab() {
       });
     });
 
-    // Subcontractor by year
+    // Subcontractor by year with escalation
     subcontractors.forEach((sub) => {
       sub.positions.forEach((pos) => {
         Object.entries(pos.hours_per_year).forEach(([year, hours]) => {
           if (breakdown[year]) {
-            breakdown[year].subcontractor += hours * pos.rate;
+            const yearNum = parseInt(year);
+            // Apply compound escalation
+            let escalatedRate = pos.rate;
+            for (let y = 1; y < yearNum; y++) {
+              const escKey = `${y}_to_${y + 1}`;
+              const escRate = escalationRates[escKey] || 0;
+              escalatedRate *= (1 + escRate);
+            }
+            breakdown[year].subcontractor += escalatedRate * hours;
           }
         });
       });
@@ -385,21 +425,45 @@ export default function OverviewTab() {
       breakdown[year].fee = primeFee + subFee;
     });
 
-    // Travel by year - Apply G&A rate
+    // Travel by year - Apply G&A rate and escalation
     travel.forEach((travelItem) => {
       Object.entries(travelItem.amount_per_year).forEach(([year, amount]) => {
         if (breakdown[year]) {
-          const travelWithGA = amount * (1 + rates.ga);
+          const yearNum = parseInt(year);
+          let escalatedAmount = amount;
+
+          // Apply compound escalation if flag is set
+          if (travelItem.escalate) {
+            for (let y = 1; y < yearNum; y++) {
+              const escKey = `${y}_to_${y + 1}`;
+              const escRate = escalationRates[escKey] || 0;
+              escalatedAmount *= (1 + escRate);
+            }
+          }
+
+          const travelWithGA = escalatedAmount * (1 + rates.ga);
           breakdown[year].travel += travelWithGA;
         }
       });
     });
 
-    // ODC by year - Apply S&MH rate
+    // ODC by year - Apply S&MH rate and escalation
     odcs.forEach((odc) => {
       Object.entries(odc.amount_per_year).forEach(([year, amount]) => {
         if (breakdown[year]) {
-          const odcWithSMH = amount * (1 + (rates.smh || 0));
+          const yearNum = parseInt(year);
+          let escalatedAmount = amount;
+
+          // Apply compound escalation if flag is set
+          if (odc.escalate) {
+            for (let y = 1; y < yearNum; y++) {
+              const escKey = `${y}_to_${y + 1}`;
+              const escRate = escalationRates[escKey] || 0;
+              escalatedAmount *= (1 + escRate);
+            }
+          }
+
+          const odcWithSMH = escalatedAmount * (1 + (rates.smh || 0));
           breakdown[year].odc += odcWithSMH;
         }
       });

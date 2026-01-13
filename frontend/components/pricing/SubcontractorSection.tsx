@@ -11,6 +11,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { TransferSubcontractorModal } from './TransferSubcontractorModal';
 import { AddSubcontractorModal } from './AddSubcontractorModal';
 import { Trash2, Building2, ChevronDown, ArrowRightLeft, Plus } from 'lucide-react';
+import { getEffectiveSalary, isGSAPosition, getGSARateForYear } from '@/lib/utils/salaryHelpers';
 
 interface YearData {
   rate: number;      // Escalated rate for this year
@@ -36,7 +37,20 @@ interface ContextMenuState {
 }
 
 export const SubcontractorSection = () => {
-  const { subcontractors, totalYears, escalationRates, deleteSubcontractor, deleteSubcontractorPosition, updateSubcontractorPosition, updateLinkedBaseRate, addSubcontractor } = usePricingStore();
+  const {
+    subcontractors,
+    totalYears,
+    escalationRates,
+    positions,
+    travel,
+    odcs,
+    rates,
+    deleteSubcontractor,
+    deleteSubcontractorPosition,
+    updateSubcontractorPosition,
+    updateLinkedBaseRate,
+    addSubcontractor
+  } = usePricingStore();
 
   // Helper to calculate escalated rate for a given year
   // Uses escalation rates from Rates Reference table
@@ -451,6 +465,136 @@ export const SubcontractorSection = () => {
     }, 0);
   }, [subcontractors, totalYears, escalationRates, getEscalatedRate]);
 
+  // Calculate percentage of dollars allocated to subcontractors
+  // Formula: (Subcontractor Total + Passthrough) / (Total Contract Value - ODC - Travel)
+  const subcontractorPercentages = useMemo(() => {
+    // Calculate prime labor total
+    let primeLaborTotal = 0;
+    positions.forEach((pos) => {
+      const isGSA = isGSAPosition(pos);
+
+      Object.entries(pos.hours_per_year).forEach(([yearStr, hours]) => {
+        const yearNum = parseInt(yearStr);
+
+        if (isGSA) {
+          const originalGsaRate = getGSARateForYear(pos, yearNum);
+          const discountRate = pos.gsa_discount_rate || 0;
+          const gsaRate = originalGsaRate * (1 - discountRate);
+          primeLaborTotal += gsaRate * hours;
+        } else {
+          const baseWage = getEffectiveSalary(pos);
+          if (!baseWage || baseWage === 0 || !pos.standard_fte_hours || pos.standard_fte_hours === 0) {
+            return;
+          }
+
+          // Apply compound escalation
+          let wage = baseWage;
+          for (let y = 1; y < yearNum; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = escalationRates[escKey] || 0;
+            wage *= (1 + escRate);
+          }
+
+          const dlRate = wage / pos.standard_fte_hours;
+          const fringe = dlRate * rates.fringe;
+          const ohOnsite = rates.oh_onsite !== undefined ? rates.oh_onsite : (rates.oh !== undefined ? rates.oh : 0.0711);
+          const ohOffsite = rates.oh_offsite !== undefined ? rates.oh_offsite : (rates.oh !== undefined ? rates.oh : 0.0711);
+          const locType = pos.location_type || 'On-Site';
+          const ohRate = locType === 'On-Site' ? ohOnsite : ohOffsite;
+          const oh = (dlRate + fringe) * ohRate;
+          const ga = (dlRate + fringe + oh) * rates.ga;
+          const fee = (dlRate + fringe + oh + ga) * rates.fee;
+          const fblr = dlRate + fringe + oh + ga + fee;
+          primeLaborTotal += fblr * hours;
+        }
+      });
+    });
+
+    // Calculate subcontractor total with escalation (already calculated in allSubsTotal)
+    const subcontractorTotal = allSubsTotal;
+
+    // Calculate passthrough (S&MH + G&A on subs)
+    const passthroughTotal = subcontractorTotal * ((rates.smh || 0) + (rates.ga_passthrough || 0));
+
+    // Calculate sub fee
+    const subFee = subcontractorTotal * (rates.sub_fee || 0);
+
+    // Calculate travel total with G&A and escalation
+    let travelTotal = 0;
+    travel.forEach((travelItem) => {
+      Object.entries(travelItem.amount_per_year).forEach(([yearStr, amount]) => {
+        const yearNum = parseInt(yearStr);
+        let escalatedAmount = amount;
+
+        if (travelItem.escalate) {
+          for (let y = 1; y < yearNum; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = escalationRates[escKey] || 0;
+            escalatedAmount *= (1 + escRate);
+          }
+        }
+
+        const travelWithGA = escalatedAmount * (1 + rates.ga);
+        travelTotal += travelWithGA;
+      });
+    });
+
+    // Calculate ODC total with S&MH and escalation
+    let odcTotal = 0;
+    odcs.forEach((odc) => {
+      Object.entries(odc.amount_per_year).forEach(([yearStr, amount]) => {
+        const yearNum = parseInt(yearStr);
+        let escalatedAmount = amount;
+
+        if (odc.escalate) {
+          for (let y = 1; y < yearNum; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = escalationRates[escKey] || 0;
+            escalatedAmount *= (1 + escRate);
+          }
+        }
+
+        const odcWithSMH = escalatedAmount * (1 + (rates.smh || 0));
+        odcTotal += odcWithSMH;
+      });
+    });
+
+    // Calculate grand total
+    const grandTotal = primeLaborTotal + subFee + subcontractorTotal + passthroughTotal + travelTotal + odcTotal;
+
+    // Calculate labor-only total (excluding ODC and Travel)
+    const laborTotal = grandTotal - odcTotal - travelTotal;
+
+    // Calculate percentage for each subcontractor
+    const percentages: Record<string, { percentage: number; laborTotal: number }> = {};
+    subcontractors.forEach((sub) => {
+      const subTotal = sub.positions.reduce((posSum, pos) => {
+        let positionTotal = 0;
+        for (let year = 1; year <= totalYears; year++) {
+          const yearStr = year.toString();
+          const escalatedRate = getEscalatedRate(pos.rate, year);
+          const hours = pos.hours_per_year[yearStr] || 0;
+          positionTotal += escalatedRate * hours;
+        }
+        return posSum + positionTotal;
+      }, 0);
+
+      // Calculate passthrough for this specific sub
+      const subPassthrough = subTotal * ((rates.smh || 0) + (rates.ga_passthrough || 0));
+
+      // Percentage includes both subcontractor cost and passthrough
+      const subTotalWithPassthrough = subTotal + subPassthrough;
+      const percentage = laborTotal > 0 ? (subTotalWithPassthrough / laborTotal) * 100 : 0;
+
+      percentages[sub.id] = {
+        percentage,
+        laborTotal,
+      };
+    });
+
+    return percentages;
+  }, [positions, subcontractors, travel, odcs, rates, escalationRates, totalYears, allSubsTotal, getEscalatedRate]);
+
   if (subcontractors.length === 0) {
     return (
       <div className="mt-6">
@@ -606,6 +750,14 @@ export const SubcontractorSection = () => {
               <p className="text-xl font-bold text-purple-600">
                 ${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
+              {subcontractorPercentages[selectedSub.id] && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  {subcontractorPercentages[selectedSub.id].percentage.toFixed(1)}% of labor dollars
+                  {subcontractorPercentages[selectedSub.id].percentage > 70 && (
+                    <span className="ml-1 text-amber-600 font-medium" title="Exceeds FAR 70% threshold">⚠</span>
+                  )}
+                </p>
+              )}
             </div>
           </div>
 
@@ -640,19 +792,35 @@ export const SubcontractorSection = () => {
       )}
 
       {/* Grand Total for All Subcontractors */}
-      {subcontractors.length > 1 && (
-        <Card className="p-4 bg-purple-50 border-purple-200">
-          <div className="flex items-center justify-between">
-            <span className="text-base font-semibold text-foreground">
-              Total Subcontractor Cost
-            </span>
-            <span className="text-xl font-bold text-purple-600">
-              $
-              {allSubsTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </span>
-          </div>
-        </Card>
-      )}
+      {subcontractors.length > 1 && (() => {
+        // Calculate combined percentage for all subcontractors
+        const totalPassthrough = allSubsTotal * ((rates.smh || 0) + (rates.ga_passthrough || 0));
+        const totalWithPassthrough = allSubsTotal + totalPassthrough;
+        const laborTotal = subcontractorPercentages[subcontractors[0]?.id]?.laborTotal || 1;
+        const combinedPercentage = laborTotal > 0 ? (totalWithPassthrough / laborTotal) * 100 : 0;
+
+        return (
+          <Card className="p-4 bg-purple-50 border-purple-200">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-base font-semibold text-foreground">
+                  Total Subcontractor Cost
+                </span>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {combinedPercentage.toFixed(1)}% of labor dollars
+                  {combinedPercentage > 70 && (
+                    <span className="ml-1 text-amber-600 font-medium" title="Exceeds FAR 70% threshold">⚠</span>
+                  )}
+                </p>
+              </div>
+              <span className="text-xl font-bold text-purple-600">
+                $
+                {allSubsTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </span>
+            </div>
+          </Card>
+        );
+      })()}
 
       {/* Delete Subcontractor Confirmation Dialog */}
       <ConfirmDialog
