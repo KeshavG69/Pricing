@@ -870,6 +870,87 @@ export const usePricingStore = create<PricingState>((set, get) => {
           }
         }
 
+        // MIGRATION: Fix old subcontractor positions (pre-dropdown assignment)
+        // Old flow removed positions from main array and didn't set shows_in_main_grid flag
+        // New flow keeps positions in main array with assigned_subcontractor_id
+        let subcontractors = proposal.spreadsheet_data?.subcontractors || [];
+        let needsMigration = false;
+
+        // Check if any subcontractor has positions without shows_in_main_grid flag
+        const hasOldPositions = subcontractors.some(sub =>
+          sub.positions?.some(pos => pos.shows_in_main_grid !== true)
+        );
+
+        if (hasOldPositions) {
+          console.log('[MIGRATION] Detected old subcontractor positions, starting migration...');
+
+          subcontractors = subcontractors.map(sub => {
+            const updatedPositions = sub.positions.map(subPos => {
+              // If already has the flag, skip
+              if (subPos.shows_in_main_grid === true) {
+                return subPos;
+              }
+
+              console.log(`[MIGRATION] Migrating old subcontractor position: ${subPos.labor_category} in ${sub.name}`);
+
+              // Check if this position exists in main positions array
+              const existsInMain = positions.some(p =>
+                p.id === subPos.original_position_id ||
+                (p.labor_category === subPos.labor_category && p.assigned_subcontractor_id === sub.id)
+              );
+
+              // If not in main positions, add it back
+              if (!existsInMain && subPos.original_position_id) {
+                console.log(`[MIGRATION] Restoring position to main array: ${subPos.labor_category}`);
+
+                // Reconstruct main position from subcontractor data
+                const restoredPosition: SpreadsheetPosition = {
+                  id: subPos.original_position_id,
+                  labor_category: subPos.labor_category,
+                  hours_per_year: { ...subPos.hours_per_year },
+                  assigned_subcontractor_id: sub.id,
+                  location_type: subPos.location_type || 'On-Site',
+                  standard_fte_hours: standardFteHours,
+                  // Keep the last rate that was set in subcontractor
+                  last_subcontractor_base_rate: subPos.rate,
+                };
+
+                positions.push(restoredPosition);
+                needsMigration = true;
+              } else if (existsInMain) {
+                // Position exists, make sure assigned_subcontractor_id is set
+                positions = positions.map(p => {
+                  if (p.id === subPos.original_position_id && !p.assigned_subcontractor_id) {
+                    console.log(`[MIGRATION] Setting assigned_subcontractor_id for: ${p.labor_category}`);
+                    needsMigration = true;
+                    return {
+                      ...p,
+                      assigned_subcontractor_id: sub.id,
+                    };
+                  }
+                  return p;
+                });
+              }
+
+              // Add the shows_in_main_grid flag to subcontractor position
+              return {
+                ...subPos,
+                shows_in_main_grid: true,
+              };
+            });
+
+            return {
+              ...sub,
+              positions: updatedPositions,
+            };
+          });
+
+          if (needsMigration) {
+            console.log('[MIGRATION] Migration complete, will save to backend');
+            positionsFromJobs = true; // Trigger auto-save
+          }
+        }
+
         set({
           proposalId,
           proposalName: proposal.name,
@@ -877,7 +958,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           primeContractorName,
           dcaaContact: proposal.dcaa_contact || '',
           positions,
-          subcontractors: proposal.spreadsheet_data?.subcontractors || [],
+          subcontractors,
           travel: proposal.spreadsheet_data?.travel || [],
           odcs: proposal.spreadsheet_data?.odcs || [],
           extensions: proposal.spreadsheet_data?.extensions || [],
@@ -904,7 +985,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           primeContractorName,
           dcaaContact: proposal.dcaa_contact || '',
           positions,
-          subcontractors: proposal.spreadsheet_data?.subcontractors || [],
+          subcontractors,  // Use migrated subcontractors
           travel: proposal.spreadsheet_data?.travel || [],
           odcs: proposal.spreadsheet_data?.odcs || [],
           extensions: proposal.spreadsheet_data?.extensions || [],
