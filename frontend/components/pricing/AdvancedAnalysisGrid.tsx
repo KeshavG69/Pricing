@@ -158,19 +158,29 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     return result;
   }, [aggregates]);
 
-  // Calculate subcontractor costs by year
+  // Calculate subcontractor costs by year with compound escalation
   const subcontractorCostsByYear = useMemo(() => {
     const result: Record<string, number> = {};
     subcontractors.forEach((sub) => {
       sub.positions.forEach((pos) => {
-        Object.entries(pos.hours_per_year).forEach(([year, hours]) => {
-          if (!result[year]) result[year] = 0;
-          result[year] += hours * pos.rate;
+        Object.entries(pos.hours_per_year).forEach(([yearStr, hours]) => {
+          if (!result[yearStr]) result[yearStr] = 0;
+
+          const yearNum = parseInt(yearStr);
+          // Apply compound escalation to base rate
+          let escalatedRate = pos.rate;
+          for (let y = 1; y < yearNum; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = escalationRates[escKey] || 0;
+            escalatedRate *= (1 + escRate);
+          }
+
+          result[yearStr] += hours * escalatedRate;
         });
       });
     });
     return result;
-  }, [subcontractors]);
+  }, [subcontractors, escalationRates]);
 
   // Calculate prime hours by year from positionsAdvanced
   const primeHoursByYear = useMemo(() => {
