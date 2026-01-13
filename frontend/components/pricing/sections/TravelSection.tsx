@@ -12,6 +12,7 @@ interface TravelSectionProps {
   totalYears: number;
   extensions: Extension[];  // Extension periods beyond regular years
   gaRate: number; // G&A rate to apply to travel
+  escalationRates: Record<string, number | undefined>; // Escalation rates by year
   onAdd: () => void;
   onEdit: (travel: TravelItem) => void;
   onDelete: (id: string) => void;
@@ -31,6 +32,7 @@ export const TravelSection = ({
   totalYears,
   extensions,
   gaRate,
+  escalationRates,
   onAdd,
   onEdit,
   onDelete,
@@ -47,7 +49,7 @@ export const TravelSection = ({
     }).format(value);
   };
 
-  // Calculate Travel totals by year (before G&A)
+  // Calculate Travel totals by year (before G&A) with escalation
   const travelSubtotalsByYear = useMemo(() => {
     const result: Record<string, number> = {};
 
@@ -56,12 +58,24 @@ export const TravelSection = ({
       result[yearStr] = 0;
 
       travel.forEach((item) => {
-        result[yearStr] += item.amount_per_year[yearStr] || 0;
+        const baseAmount = item.amount_per_year[yearStr] || 0;
+        let escalatedAmount = baseAmount;
+
+        // Apply compound escalation if flag is set
+        if (item.escalate) {
+          for (let y = 1; y < year; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = escalationRates[escKey] || 0;
+            escalatedAmount *= (1 + escRate);
+          }
+        }
+
+        result[yearStr] += escalatedAmount;
       });
     }
 
     return result;
-  }, [travel, totalYears]);
+  }, [travel, totalYears, escalationRates]);
 
   // Calculate G&A amounts by year
   const gaAmountsByYear = useMemo(() => {

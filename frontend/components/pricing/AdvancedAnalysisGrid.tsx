@@ -233,8 +233,8 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     return result;
   }, [subcontractorCostsByYear, rates]);
 
-  // Calculate Travel costs by year with G&A markup
-  // Formula: Travel Total = Travel Base × (1 + G&A Rate)
+    // Calculate Travel costs by year with G&A markup and escalation
+  // Formula: Travel Total = (Travel Base with escalation) × (1 + G&A Rate)
   const travelCostsByYear = useMemo(() => {
     const result: Record<string, number> = {};
     const gaRate = rates.ga || 0;
@@ -244,7 +244,19 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
       let travelBase = 0;
 
       travel.forEach((item) => {
-        travelBase += item.amount_per_year[yearStr] || 0;
+        const baseAmount = item.amount_per_year[yearStr] || 0;
+        let escalatedAmount = baseAmount;
+
+        // Apply compound escalation if flag is set
+        if (item.escalate) {
+          for (let y = 1; y < year; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = escalationRates[escKey] || 0;
+            escalatedAmount *= (1 + escRate);
+          }
+        }
+
+        travelBase += escalatedAmount;
       });
 
       // Apply G&A markup to all Travel
@@ -252,10 +264,10 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     }
 
     return result;
-  }, [travel, rates.ga, totalYears]);
+  }, [travel, rates.ga, totalYears, escalationRates]);
 
-  // Calculate ODC costs by year with S&MH markup
-  // Formula: ODC Total = ODC Base × (1 + S&MH Rate)
+  // Calculate ODC costs by year with S&MH markup and escalation
+  // Formula: ODC Total = (ODC Base with escalation) × (1 + S&MH Rate)
   const odcCostsByYear = useMemo(() => {
     const result: Record<string, number> = {};
     const smhRate = rates.smh || 0;
@@ -265,7 +277,19 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
       let odcBase = 0;
 
       odcs.forEach((odc) => {
-        odcBase += odc.amount_per_year[yearStr] || 0;
+        const baseAmount = odc.amount_per_year[yearStr] || 0;
+        let escalatedAmount = baseAmount;
+
+        // Apply compound escalation if flag is set
+        if (odc.escalate) {
+          for (let y = 1; y < year; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = escalationRates[escKey] || 0;
+            escalatedAmount *= (1 + escRate);
+          }
+        }
+
+        odcBase += escalatedAmount;
       });
 
       // Apply S&MH markup to all ODCs
@@ -273,7 +297,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     }
 
     return result;
-  }, [odcs, rates.smh, totalYears]);
+  }, [odcs, rates.smh, totalYears, escalationRates]);
 
   // Calculate grand total (includes prime labor, subcontractors, passthrough, fee, Travel, and ODCs)
   // Formula: Grand Total = Labor CPFF (prime + sub + passthrough + fee) + Total Travel (with G&A) + Total ODCs (with S&MH)
@@ -390,6 +414,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
           totalYears={totalYears}
           extensions={extensions}
           gaRate={rates.ga}
+          escalationRates={escalationRates}
           onAdd={handleAddTravel}
           onEdit={handleEditTravel}
           onDelete={deleteTravel}

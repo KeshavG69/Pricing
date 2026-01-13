@@ -48,7 +48,7 @@ export const ODCSection = ({
     }).format(value);
   };
 
-  // Calculate ODC totals by year (before S&MH)
+  // Calculate ODC totals by year (before S&MH) with escalation
   const odcSubtotalsByYear = useMemo(() => {
     const result: Record<string, number> = {};
 
@@ -57,12 +57,24 @@ export const ODCSection = ({
       result[yearStr] = 0;
 
       odcs.forEach((odc) => {
-        result[yearStr] += odc.amount_per_year[yearStr] || 0;
+        const baseAmount = odc.amount_per_year[yearStr] || 0;
+        let escalatedAmount = baseAmount;
+
+        // Apply compound escalation if flag is set
+        if (odc.escalate) {
+          for (let y = 1; y < year; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = escalationRates[escKey] || 0;
+            escalatedAmount *= (1 + escRate);
+          }
+        }
+
+        result[yearStr] += escalatedAmount;
       });
     }
 
     return result;
-  }, [odcs, totalYears]);
+  }, [odcs, totalYears, escalationRates]);
 
   // Calculate S&MH amounts by year
   const smhAmountsByYear = useMemo(() => {
