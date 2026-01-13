@@ -188,12 +188,20 @@ export default function OverviewTab() {
     });
 
 
-    // Subcontractor costs
+    // Subcontractor costs with escalation
     let subcontractorTotal = 0;
     subcontractors.forEach((sub) => {
       sub.positions.forEach((pos) => {
-        Object.values(pos.hours_per_year).forEach((hours) => {
-          subcontractorTotal += hours * pos.rate;
+        Object.entries(pos.hours_per_year).forEach(([yearStr, hours]) => {
+          const yearNum = parseInt(yearStr);
+          // Apply compound escalation
+          let escalatedRate = pos.rate;
+          for (let y = 1; y < yearNum; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = escalationRates[escKey] || 0;
+            escalatedRate *= (1 + escRate);
+          }
+          subcontractorTotal += escalatedRate * hours;
         });
       });
     });
@@ -359,12 +367,20 @@ export default function OverviewTab() {
       });
     });
 
-    // Subcontractor by year
+    // Subcontractor by year with escalation
     subcontractors.forEach((sub) => {
       sub.positions.forEach((pos) => {
         Object.entries(pos.hours_per_year).forEach(([year, hours]) => {
           if (breakdown[year]) {
-            breakdown[year].subcontractor += hours * pos.rate;
+            const yearNum = parseInt(year);
+            // Apply compound escalation
+            let escalatedRate = pos.rate;
+            for (let y = 1; y < yearNum; y++) {
+              const escKey = `${y}_to_${y + 1}`;
+              const escRate = escalationRates[escKey] || 0;
+              escalatedRate *= (1 + escRate);
+            }
+            breakdown[year].subcontractor += escalatedRate * hours;
           }
         });
       });
