@@ -1920,12 +1920,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
       const state = get();
       if (!state.proposalId) return;
 
-      // Use override if provided, otherwise use store value
-      const primeContractorName = overrides?.primeContractorName || state.primeContractorName || 'TBD';
-
       try {
-        console.log('Generating Excel file...');
-        console.log('[EXPORT] Using prime contractor name:', primeContractorName);
+        console.log('Generating Excel file from proposal:', state.proposalId);
 
         // Basic mode: Export simple Excel spreadsheet matching frontend grid
         if (!state.advancedMode) {
@@ -2077,88 +2073,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
           return;
         }
 
-        // Advanced mode: Export full cost proposal (existing logic)
-        console.log('Exporting advanced cost proposal...');
-
-        // Split rates object into backend-expected structure
-        const payload = {
-          jobs: state.positions.map((p) => {
-            const effectiveSalary = getEffectiveSalary(p);
-            console.log(`[EXPORT] Position "${p.labor_category}": selected_wage=${effectiveSalary}, percentile=${p.percentile}, wage_${p.percentile}=${p[`wage_${p.percentile}` as keyof typeof p]}, selected_salaries=${p.selected_salaries?.join(',') || 'none'}`);
-            return {
-              labor_category: p.labor_category,
-              soc_code: p.soc_code,
-              soc_title: p.soc_title,  // Add BLS Category name for Excel export
-              hours_per_year: p.hours_per_year,
-              selected_wage: effectiveSalary,
-              percentile: p.percentile,
-              wage_10th: p.wage_10th,
-              wage_25th: p.wage_25th,
-              wage_50th: p.wage_50th,
-              wage_75th: p.wage_75th,
-              wage_90th: p.wage_90th,
-              standard_fte_hours: p.standard_fte_hours!,
-              location_type: p.location_type || 'On-Site',  // Add location_type for OH rate selection
-              location: p.location || '',  // Add location string
-            };
-          }),
-          project_config: {
-            solicitation_number: state.solicitationNumber || '',
-            prime_contractor_name: primeContractorName,
-            subcontractor_names: state.subcontractors.map(s => s.name),
-            dcaa_contact: state.dcaaContact || '',
-            total_years: state.totalYears,
-            base_years: state.baseYears,
-            escalation_rates: state.escalationRates,
-            indirect_rates: {
-              fringe: state.rates.fringe,
-              oh_onsite: state.rates.oh_onsite,
-              oh_offsite: state.rates.oh_offsite,
-              ga: state.rates.ga,
-            },
-            passthrough_rates: {
-              smh: state.rates.smh || 0,
-              ga: state.rates.ga_passthrough || 0,
-            },
-            fee_rates: {
-              prime_labor: state.rates.fee,
-              sub_labor: state.rates.sub_fee || 0,
-            },
-            ga_adder_rate: state.rates.ga_adder || 0,
-            subcontractors: state.subcontractors.map(sub => ({
-              name: sub.name,
-              labor_categories: sub.positions.map(pos => {
-                const laborCat: any = {
-                  labor_category: pos.labor_category,
-                  ecraft_code: '',
-                };
-
-                // Convert hours_per_year dict to year_N_rate and year_N_hours format
-                Object.entries(pos.hours_per_year).forEach(([year, hours]) => {
-                  const yearNum = parseInt(year);
-                  laborCat[`year_${yearNum}_rate`] = pos.rate;
-                  laborCat[`year_${yearNum}_hours`] = hours;
-                });
-
-                return laborCat;
-              })
-            })),
-            travel: state.travel,
-            odcs: state.odcs,
-            extensions: state.extensions,
-            include_rate_table: true,
-          },
-        };
-
-        console.log('[EXPORT] Rates being sent:', {
-          indirect_rates: payload.project_config.indirect_rates,
-          fee_rates: payload.project_config.fee_rates,
-          escalation_rates: payload.project_config.escalation_rates,
-        });
-        console.log('[EXPORT] Travel items:', payload.project_config.travel);
-        console.log('[EXPORT] ODC items:', payload.project_config.odcs);
-
-        const blob = await pricingApi.exportToExcel(payload as any);
+        // Use new backend endpoint that fetches proposal data from MongoDB
+        const blob = await pricingApi.exportToExcel(state.proposalId);
 
         // Trigger download
         const url = window.URL.createObjectURL(blob);

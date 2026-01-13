@@ -2,7 +2,6 @@ import apiClient from './client';
 import {
   RecalculateRequest,
   RecalculateResponse,
-  ExcelGenerationRequest,
 } from '@/types';
 
 export const pricingApi = {
@@ -18,10 +17,10 @@ export const pricingApi = {
   },
 
   /**
-   * Export proposal to Excel file
+   * Export proposal to Excel file using proposal ID
    */
-  exportToExcel: async (data: ExcelGenerationRequest): Promise<Blob> => {
-    const response = await apiClient.post('/excel/generate-from-data', data, {
+  exportToExcel: async (proposalId: string): Promise<Blob> => {
+    const response = await apiClient.get(`/excel/generate-from-proposal/${proposalId}`, {
       responseType: 'blob',
     });
     return response.data;
