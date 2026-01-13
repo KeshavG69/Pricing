@@ -877,15 +877,15 @@ export const usePricingStore = create<PricingState>((set, get) => {
         let needsMigration = false;
 
         // Check if any subcontractor has positions without shows_in_main_grid flag
-        const hasOldPositions = subcontractors.some(sub =>
-          sub.positions?.some(pos => pos.shows_in_main_grid !== true)
+        const hasOldPositions = subcontractors.some((sub: Subcontractor) =>
+          sub.positions?.some((pos: SubcontractorPosition) => pos.shows_in_main_grid !== true)
         );
 
         if (hasOldPositions) {
           console.log('[MIGRATION] Detected old subcontractor positions, starting migration...');
 
-          subcontractors = subcontractors.map(sub => {
-            const updatedPositions = sub.positions.map(subPos => {
+          subcontractors = subcontractors.map((sub: Subcontractor) => {
+            const updatedPositions = sub.positions.map((subPos: SubcontractorPosition) => {
               // If already has the flag, skip
               if (subPos.shows_in_main_grid === true) {
                 return subPos;
@@ -894,7 +894,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
               console.log(`[MIGRATION] Migrating old subcontractor position: ${subPos.labor_category} in ${sub.name}`);
 
               // Check if this position exists in main positions array
-              const existsInMain = positions.some(p =>
+              const existsInMain = positions.some((p: SpreadsheetPosition) =>
                 p.id === subPos.original_position_id ||
                 (p.labor_category === subPos.labor_category && p.assigned_subcontractor_id === sub.id)
               );
@@ -911,6 +911,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
                   assigned_subcontractor_id: sub.id,
                   location_type: subPos.location_type || 'On-Site',
                   standard_fte_hours: standardFteHours,
+                  percentile: '50th', // Default to median for restored positions
                   // Keep the last rate that was set in subcontractor
                   last_subcontractor_base_rate: subPos.rate,
                 };
