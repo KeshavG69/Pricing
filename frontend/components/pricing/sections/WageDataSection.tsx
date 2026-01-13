@@ -14,6 +14,7 @@ interface WageDataSectionProps {
 interface WageDataRow {
   id: string;
   labor_category: string;
+  location?: string;
   description?: string;
   soc_code?: string;
   soc_title?: string;
@@ -66,6 +67,7 @@ export const WageDataSection = ({ positions }: WageDataSectionProps) => {
       return {
         id: pos.id,
         labor_category: pos.labor_category,
+        location: pos.location,
         description: pos.description,
         soc_code: pos.soc_code,
         soc_title: pos.soc_title,
@@ -96,6 +98,18 @@ export const WageDataSection = ({ positions }: WageDataSectionProps) => {
       renderCell: ({ row }) => (
         <div className="flex items-center h-full px-2">
           <span className="font-semibold text-foreground">{row.labor_category}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'location',
+      name: 'Location',
+      width: 200,
+      resizable: true,
+      frozen: true,
+      renderCell: ({ row }) => (
+        <div className="flex items-center h-full px-2">
+          <span className="text-sm text-foreground">{row.location || '-'}</span>
         </div>
       ),
     },

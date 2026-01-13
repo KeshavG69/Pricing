@@ -5449,7 +5449,7 @@
         "kind": 6,
         "importPath": "backend.routers.invitations",
         "description": "backend.routers.invitations",
-        "peekOfCode": "class AcceptInvitationRequest(BaseModel):\n    \"\"\"Request body for accepting invitation\"\"\"\n    token: str = Field(..., description=\"Invitation token from email\")\n    firstName: str = Field(None, min_length=1, max_length=100, description=\"Required for new users only\")\n    lastName: str = Field(None, min_length=1, max_length=100, description=\"Required for new users only\")\n    password: str = Field(None, min_length=8, max_length=100, description=\"Required for new users only\")\n    class Config:\n        schema_extra = {\n            \"example\": {\n                \"token\": \"abc123...\",",
+        "peekOfCode": "class AcceptInvitationRequest(BaseModel):\n    \"\"\"Request body for accepting invitation\"\"\"\n    token: str = Field(..., description=\"Invitation token from email\")\n    firstName: str = Field(None, min_length=1, max_length=100, description=\"Required for new users only\")\n    lastName: str = Field(None, min_length=1, max_length=100, description=\"Required for new users only\")\n    password: str = Field(None, min_length=8, max_length=100, description=\"Required for new users only\")\n    terms_accepted: bool = Field(None, description=\"Required for new users only\")\n    class Config:\n        schema_extra = {\n            \"example\": {",
         "detail": "backend.routers.invitations",
         "documentation": {}
     },
