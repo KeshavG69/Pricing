@@ -428,6 +428,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
           totalYears={totalYears}
           extensions={extensions}
           smhRate={rates.smh || 0}
+          escalationRates={escalationRates}
           onAdd={handleAddODC}
           onEdit={handleEditODC}
           onDelete={deleteODC}

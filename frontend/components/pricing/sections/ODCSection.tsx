@@ -12,6 +12,7 @@ interface ODCSectionProps {
   totalYears: number;
   extensions: Extension[];  // Extension periods beyond regular years
   smhRate: number; // S&MH rate to apply to ODCs
+  escalationRates: Record<string, number | undefined>; // Escalation rates by year
   onAdd: () => void;
   onEdit: (odc: ODCItem) => void;
   onDelete: (id: string) => void;
@@ -32,6 +33,7 @@ export const ODCSection = ({
   totalYears,
   extensions,
   smhRate,
+  escalationRates,
   onAdd,
   onEdit,
   onDelete,
