@@ -6,7 +6,7 @@ Provides endpoints to:
 2. Generate Excel from uploaded documents (full pipeline)
 """
 
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, HTTPException, Depends
 from fastapi.responses import StreamingResponse
 from typing import List, Dict, Any
 from pathlib import Path
@@ -19,6 +19,9 @@ from datetime import datetime
 from client.jd_parser import parse_documents_to_dataframe
 from utils.pipeline import process_dataframe_with_agents, build_project_data_from_dataframe
 from client.excel_generator import ExcelGenerator
+from utils.proposals import ProposalCRUD
+from utils.helpers import serialize_doc
+from auth.dependencies import get_current_user
 
 router = APIRouter()
 
@@ -314,6 +317,191 @@ async def generate_excel_from_documents(
         # Clean up temp directory
         if temp_dir and temp_dir.exists():
             shutil.rmtree(temp_dir, ignore_errors=True)
+
+
+@router.get("/generate-from-proposal/{proposal_id}")
+async def generate_excel_from_proposal(
+    proposal_id: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Generate Excel cost proposal from a saved proposal ID.
+
+    Fetches the proposal data from MongoDB and generates an Excel file.
+    This is the recommended endpoint for exporting existing proposals.
+
+    Args:
+        proposal_id: MongoDB proposal ID
+        current_user: Authenticated user (injected by dependency)
+
+    Returns:
+        Excel file as downloadable attachment
+    """
+    try:
+        import pandas as pd
+        from bson import ObjectId
+
+        # Fetch proposal from MongoDB
+        proposal_crud = ProposalCRUD()
+        proposal = proposal_crud.get_by_id(ObjectId(proposal_id))
+
+        if not proposal:
+            raise HTTPException(status_code=404, detail="Proposal not found")
+
+        # Check if user has access to this proposal
+        if proposal['user_id'] != current_user['_id']:
+            # Check if proposal is shared with user
+            shared_with = proposal.get('shared_with', [])
+            if current_user['_id'] not in shared_with:
+                # Check organization access for admins
+                if current_user['organization_id'] != proposal.get('organization_id'):
+                    raise HTTPException(status_code=403, detail="Access denied")
+
+        # Extract spreadsheet data
+        spreadsheet_data = proposal.get('spreadsheet_data', {})
+
+        # Build project_config from proposal data
+        project_config = {
+            'solicitation_number': proposal.get('solicitation_number', 'N/A'),
+            'prime_contractor_name': proposal.get('prime_contractor_name', 'N/A'),
+            'subcontractor_names': [sub['name'] for sub in spreadsheet_data.get('subcontractors', [])],
+            'dcaa_contact': spreadsheet_data.get('dcaa_contact', ''),
+            'total_years': spreadsheet_data.get('total_years', 1),
+            'base_years': 1,  # Default to 1 base year
+            'task_order_number': proposal.get('task_order_number', ''),
+
+            # Rates
+            'escalation_rates': spreadsheet_data.get('escalation_rates', {}),
+            'indirect_rates': spreadsheet_data.get('rates', {}),
+            'passthrough_rates': {
+                'smh': spreadsheet_data.get('rates', {}).get('smh', 0.0665),
+                'ga': spreadsheet_data.get('rates', {}).get('ga_passthrough', 0.0)
+            },
+            'fee_rates': {
+                'prime_labor': spreadsheet_data.get('rates', {}).get('fee', 0.08),
+                'sub_labor': spreadsheet_data.get('rates', {}).get('sub_fee', 0.0126)
+            },
+            'ga_adder_rate': spreadsheet_data.get('rates', {}).get('ga', 0.2243),
+
+            # Data
+            'subcontractors': [],
+            'travel': spreadsheet_data.get('travel', []),
+            'odcs': spreadsheet_data.get('odcs', []),
+            'extensions': spreadsheet_data.get('extensions', []),
+            'include_rate_table': True
+        }
+
+        # Convert positions to DataFrame format
+        positions = spreadsheet_data.get('positions', [])
+        jobs = []
+
+        for pos in positions:
+            # Skip positions assigned to subcontractors
+            if pos.get('assigned_subcontractor_id'):
+                continue
+
+            job = {
+                'labor_category': pos.get('labor_category', ''),
+                'description': pos.get('description', ''),
+                'experience': pos.get('experience', 0),
+                'location': pos.get('location', ''),
+                'location_type': pos.get('location_type', 'On-Site'),
+                'soc_code': pos.get('soc_code', ''),
+                'soc_title': pos.get('soc_title', ''),
+                'percentile': pos.get('percentile', '50th'),
+                'wage_10th': pos.get('wage_10th'),
+                'wage_25th': pos.get('wage_25th'),
+                'wage_50th': pos.get('wage_50th'),
+                'wage_75th': pos.get('wage_75th'),
+                'wage_90th': pos.get('wage_90th'),
+                'selected_wage': pos.get('selected_wage'),
+                'selected_salaries': pos.get('selected_salaries', []),
+                'hours_per_year': pos.get('hours_per_year', {}),
+                'standard_fte_hours': pos.get('standard_fte_hours', 2080),
+                'wage_source': pos.get('wage_source', 'bls'),
+                'gsa_lcat_id': pos.get('gsa_lcat_id'),
+                'gsa_title': pos.get('gsa_title'),
+                'gsa_rates_by_year': pos.get('gsa_rates_by_year', {}),
+                'gsa_current_year': pos.get('gsa_current_year'),
+                'gsa_custom_rate': pos.get('gsa_custom_rate'),
+                'gsa_discount_rate': pos.get('gsa_discount_rate'),
+            }
+            jobs.append(job)
+
+        # Convert jobs list to DataFrame
+        df = pd.DataFrame(jobs)
+
+        # Build project data structure
+        project_data = build_project_data_from_dataframe(df, project_config)
+
+        # Add subcontractor data
+        for sub in spreadsheet_data.get('subcontractors', []):
+            sub_labor_categories = []
+            for pos in sub.get('positions', []):
+                labor_cat = {
+                    'labor_category': pos.get('labor_category', ''),
+                    'ecraft_code': pos.get('ecraft_code', ''),
+                    'site': pos.get('site', 'Government'),
+                }
+
+                # Add hours and rates per year
+                for year in range(1, project_config['total_years'] + 1):
+                    year_key = str(year)
+                    hours = pos.get('hours_per_year', {}).get(year_key, 0)
+
+                    # Calculate escalated rate
+                    base_rate = pos.get('rate', 0)
+                    escalated_rate = base_rate
+                    for y in range(1, year):
+                        esc_key = f"{y}_to_{y + 1}"
+                        esc_rate = project_config['escalation_rates'].get(esc_key, 0)
+                        escalated_rate *= (1 + esc_rate)
+
+                    labor_cat[f'year_{year}_hours'] = hours
+                    labor_cat[f'year_{year}_rate'] = escalated_rate
+
+                sub_labor_categories.append(labor_cat)
+
+            project_data['subcontractors'].append({
+                'name': sub['name'],
+                'labor_categories': sub_labor_categories
+            })
+
+        # Add wage data for the new tab
+        project_data['wage_data'] = {
+            'positions': spreadsheet_data.get('positions', []),
+            'standard_fte_hours': spreadsheet_data.get('standard_fte_hours', 2080)
+        }
+
+        # Generate Excel workbook
+        generator = ExcelGenerator()
+        workbook = generator.generate_cost_proposal(project_data)
+
+        # Save to BytesIO buffer
+        output = BytesIO()
+        workbook.save(output)
+        output.seek(0)
+
+        # Generate filename with timestamp
+        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        filename = f"cost_proposal_{project_config['solicitation_number']}_{timestamp}.xlsx"
+
+        # Return as downloadable file
+        return StreamingResponse(
+            output,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            headers={
+                "Content-Disposition": f"attachment; filename={filename}"
+            }
+        )
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to generate Excel from proposal: {str(e)}"
+        )
 
 
 @router.get("/template")

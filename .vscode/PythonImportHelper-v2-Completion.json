@@ -448,6 +448,14 @@
         "documentation": {}
     },
     {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
         "label": "APIRouter",
         "importPath": "fastapi",
         "description": "fastapi",
@@ -2322,6 +2330,14 @@
         "documentation": {}
     },
     {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
+        "documentation": {}
+    },
+    {
         "label": "bcrypt",
         "kind": 6,
         "isExtraImport": true,
@@ -2609,6 +2625,14 @@
         "description": "auth",
         "isExtraImport": true,
         "detail": "auth",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
         "documentation": {}
     },
     {
@@ -3540,6 +3564,14 @@
         "documentation": {}
     },
     {
+        "label": "get_current_user",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
         "label": "require_admin",
         "importPath": "auth.dependencies",
         "description": "auth.dependencies",
@@ -3701,6 +3733,14 @@
     },
     {
         "label": "get_proposal_crud",
+        "importPath": "utils.proposals",
+        "description": "utils.proposals",
+        "isExtraImport": true,
+        "detail": "utils.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "ProposalCRUD",
         "importPath": "utils.proposals",
         "description": "utils.proposals",
         "isExtraImport": true,
@@ -3851,6 +3891,14 @@
         "description": "client.excel_generator",
         "isExtraImport": true,
         "detail": "client.excel_generator",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_doc",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
         "documentation": {}
     },
     {
@@ -6369,6 +6417,51 @@
         "description": "backend.utils.proposals",
         "peekOfCode": "_lock = threading.RLock()\ndef get_proposal_crud() -> ProposalCRUD:\n    \"\"\"\n    Get or create ProposalCRUD instance (singleton pattern)\n    Returns:\n        ProposalCRUD instance\n    \"\"\"\n    global _proposal_crud\n    with _lock:\n        if _proposal_crud is None:",
         "detail": "backend.utils.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "mongodb",
+        "kind": 5,
+        "importPath": "backend.check_proposal",
+        "description": "backend.check_proposal",
+        "peekOfCode": "mongodb = get_mongodb_client()\ndb = mongodb.get_database()\nproposals_collection = db['proposals']\n# Query the proposal\nproposal_id = \"6959c65efd0a29c39050bbbd\"\nproposal = proposals_collection.find_one({\"_id\": ObjectId(proposal_id)})\nif proposal:\n    print(f\"=== PROPOSAL: {proposal.get('name', 'Unnamed')} ===\")\n    print()\n    # Check spreadsheet_data for travel and ODCs",
+        "detail": "backend.check_proposal",
+        "documentation": {}
+    },
+    {
+        "label": "db",
+        "kind": 5,
+        "importPath": "backend.check_proposal",
+        "description": "backend.check_proposal",
+        "peekOfCode": "db = mongodb.get_database()\nproposals_collection = db['proposals']\n# Query the proposal\nproposal_id = \"6959c65efd0a29c39050bbbd\"\nproposal = proposals_collection.find_one({\"_id\": ObjectId(proposal_id)})\nif proposal:\n    print(f\"=== PROPOSAL: {proposal.get('name', 'Unnamed')} ===\")\n    print()\n    # Check spreadsheet_data for travel and ODCs\n    spreadsheet_data = proposal.get('spreadsheet_data', {})",
+        "detail": "backend.check_proposal",
+        "documentation": {}
+    },
+    {
+        "label": "proposals_collection",
+        "kind": 5,
+        "importPath": "backend.check_proposal",
+        "description": "backend.check_proposal",
+        "peekOfCode": "proposals_collection = db['proposals']\n# Query the proposal\nproposal_id = \"6959c65efd0a29c39050bbbd\"\nproposal = proposals_collection.find_one({\"_id\": ObjectId(proposal_id)})\nif proposal:\n    print(f\"=== PROPOSAL: {proposal.get('name', 'Unnamed')} ===\")\n    print()\n    # Check spreadsheet_data for travel and ODCs\n    spreadsheet_data = proposal.get('spreadsheet_data', {})\n    print(\"TRAVEL ITEMS:\")",
+        "detail": "backend.check_proposal",
+        "documentation": {}
+    },
+    {
+        "label": "proposal_id",
+        "kind": 5,
+        "importPath": "backend.check_proposal",
+        "description": "backend.check_proposal",
+        "peekOfCode": "proposal_id = \"6959c65efd0a29c39050bbbd\"\nproposal = proposals_collection.find_one({\"_id\": ObjectId(proposal_id)})\nif proposal:\n    print(f\"=== PROPOSAL: {proposal.get('name', 'Unnamed')} ===\")\n    print()\n    # Check spreadsheet_data for travel and ODCs\n    spreadsheet_data = proposal.get('spreadsheet_data', {})\n    print(\"TRAVEL ITEMS:\")\n    travel_items = spreadsheet_data.get('travel', [])\n    if travel_items:",
+        "detail": "backend.check_proposal",
+        "documentation": {}
+    },
+    {
+        "label": "proposal",
+        "kind": 5,
+        "importPath": "backend.check_proposal",
+        "description": "backend.check_proposal",
+        "peekOfCode": "proposal = proposals_collection.find_one({\"_id\": ObjectId(proposal_id)})\nif proposal:\n    print(f\"=== PROPOSAL: {proposal.get('name', 'Unnamed')} ===\")\n    print()\n    # Check spreadsheet_data for travel and ODCs\n    spreadsheet_data = proposal.get('spreadsheet_data', {})\n    print(\"TRAVEL ITEMS:\")\n    travel_items = spreadsheet_data.get('travel', [])\n    if travel_items:\n        for idx, item in enumerate(travel_items, 1):",
+        "detail": "backend.check_proposal",
         "documentation": {}
     },
     {

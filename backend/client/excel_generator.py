@@ -87,6 +87,10 @@ class ExcelGenerator:
         # 7. Indirect Rates reference sheet
         self._create_indirect_rates_sheet()
 
+        # 8. Wage Data sheet (if wage data is provided)
+        if project_data.get('wage_data'):
+            self._create_wage_data_sheet()
+
         # Remove default empty sheet if exists
         if 'Sheet' in self.wb.sheetnames:
             del self.wb['Sheet']
@@ -728,22 +732,32 @@ class ExcelGenerator:
 
         odcs = self.project_data.get('odcs', [])
         material_start_row = current_row
+        escalation_rates = self.project_data.get('escalation_rates', {})
 
         for odc in odcs:
             # Material base row
             ws.cell(current_row, 2, odc['category'])
             ws.cell(current_row, 2).border = self.THIN_BORDER
+            escalate = odc.get('escalate', False)
 
             col = 3
             for year in range(1, self.total_years + 1):
                 # Check for pre-calculated amounts
                 if 'amount_per_year' in odc:
-                    amount = odc['amount_per_year'].get(str(year), 0)
+                    base_amount = odc['amount_per_year'].get(str(year), 0)
                 else:
-                    amount = odc.get('amount_year_1', 0)
+                    base_amount = odc.get('amount_year_1', 0)
+
+                # Apply compound escalation if flag is set
+                escalated_amount = base_amount
+                if escalate and year > 1:
+                    for y in range(1, year):
+                        esc_key = f"{y}_to_{y + 1}"
+                        esc_rate = escalation_rates.get(esc_key, 0)
+                        escalated_amount *= (1 + esc_rate)
 
                 cell = ws.cell(current_row, col)
-                cell.value = amount
+                cell.value = escalated_amount
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 2
@@ -834,8 +848,11 @@ class ExcelGenerator:
         travel_items = self.project_data.get('travel', [])
         travel_start_row = current_row
 
+        escalation_rates = self.project_data.get('escalation_rates', {})
+
         for travel in travel_items:
             description = travel.get('description', 'Travel')
+            escalate = travel.get('escalate', False)
 
             # Travel base row
             ws.cell(current_row, 2, description)
@@ -844,12 +861,20 @@ class ExcelGenerator:
             col = 3
             for year in range(1, self.total_years + 1):
                 if 'amount_per_year' in travel:
-                    amount = travel['amount_per_year'].get(str(year), 0)
+                    base_amount = travel['amount_per_year'].get(str(year), 0)
                 else:
-                    amount = travel.get('amount_year_1', 0)
+                    base_amount = travel.get('amount_year_1', 0)
+
+                # Apply compound escalation if flag is set
+                escalated_amount = base_amount
+                if escalate and year > 1:
+                    for y in range(1, year):
+                        esc_key = f"{y}_to_{y + 1}"
+                        esc_rate = escalation_rates.get(esc_key, 0)
+                        escalated_amount *= (1 + esc_rate)
 
                 cell = ws.cell(current_row, col)
-                cell.value = amount
+                cell.value = escalated_amount
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 2
@@ -1142,24 +1167,47 @@ class ExcelGenerator:
             result['subcontractors'][year_key] = round(sub_total, 2)
             result['sub_handling'][year_key] = round(sub_total * smh_rate, 2)
 
-            # Materials
+            # Materials with escalation
             material_total = 0
+            escalation_rates = self.project_data.get('escalation_rates', {})
             for odc in self.project_data.get('odcs', []):
                 if 'amount_per_year' in odc:
-                    material_total += odc['amount_per_year'].get(str(year), 0)
+                    base_amount = odc['amount_per_year'].get(str(year), 0)
                 else:
-                    material_total += odc.get('amount_year_1', 0)
+                    base_amount = odc.get('amount_year_1', 0)
+
+                # Apply compound escalation if flag is set
+                escalated_amount = base_amount
+                escalate = odc.get('escalate', False)
+                if escalate and year > 1:
+                    for y in range(1, year):
+                        esc_key = f"{y}_to_{y + 1}"
+                        esc_rate = escalation_rates.get(esc_key, 0)
+                        escalated_amount *= (1 + esc_rate)
+
+                material_total += escalated_amount
 
             result['materials'][year_key] = round(material_total, 2)
             result['material_handling'][year_key] = round(material_total * smh_rate, 2)
 
-            # Travel
+            # Travel with escalation
             travel_total = 0
             for travel in self.project_data.get('travel', []):
                 if 'amount_per_year' in travel:
-                    travel_total += travel['amount_per_year'].get(str(year), 0)
+                    base_amount = travel['amount_per_year'].get(str(year), 0)
                 else:
-                    travel_total += travel.get('amount_year_1', 0)
+                    base_amount = travel.get('amount_year_1', 0)
+
+                # Apply compound escalation if flag is set
+                escalated_amount = base_amount
+                escalate = travel.get('escalate', False)
+                if escalate and year > 1:
+                    for y in range(1, year):
+                        esc_key = f"{y}_to_{y + 1}"
+                        esc_rate = escalation_rates.get(esc_key, 0)
+                        escalated_amount *= (1 + esc_rate)
+
+                travel_total += escalated_amount
 
             result['travel'][year_key] = round(travel_total, 2)
             result['ga_travel'][year_key] = round(travel_total * ga_rate, 2)
@@ -1197,3 +1245,168 @@ class ExcelGenerator:
         cell.font = self.BOLD_FONT
         cell.border = self.THIN_BORDER
         cell.alignment = Alignment(horizontal='center', vertical='center')
+
+    def _create_wage_data_sheet(self):
+        """Create the Wage Data sheet showing all positions with wage percentiles."""
+        ws = self.wb.create_sheet("Wage Data")
+
+        # Column widths
+        ws.column_dimensions['A'].width = 2.33  # Padding
+        ws.column_dimensions['B'].width = 30  # Labor Category
+        ws.column_dimensions['C'].width = 20  # Location
+        ws.column_dimensions['D'].width = 50  # Description
+        ws.column_dimensions['E'].width = 10  # Source
+        ws.column_dimensions['F'].width = 15  # SOC Code
+        ws.column_dimensions['G'].width = 35  # SOC Title / GSA Labor Category
+        ws.column_dimensions['H'].width = 15  # 10th Percentile
+        ws.column_dimensions['I'].width = 15  # 25th Percentile
+        ws.column_dimensions['J'].width = 15  # 50th Percentile
+        ws.column_dimensions['K'].width = 15  # 75th Percentile
+        ws.column_dimensions['L'].width = 15  # 90th Percentile
+        ws.column_dimensions['M'].width = 18  # Selected Wage
+
+        # Header
+        ws.cell(1, 2, "Proprietary Data")
+        ws.cell(2, 2, f"Prime Contractor Name: {self.project_data['prime_contractor_name']}")
+        ws.cell(4, 2, "Wage Data - All Positions with Percentiles")
+        ws.cell(4, 2).font = self.BOLD_FONT
+
+        # Column headers
+        header_row = 7
+        headers = [
+            "Labor Category",
+            "Location",
+            "Description",
+            "Source",
+            "SOC Code",
+            "SOC Title / GSA Labor Category",
+            "10th Percentile",
+            "25th Percentile",
+            "50th Percentile\n(Median)",
+            "75th Percentile",
+            "90th Percentile",
+            "Selected Wage/Rate"
+        ]
+
+        for idx, header in enumerate(headers):
+            cell = ws.cell(header_row, 2 + idx)
+            cell.value = header
+            self._style_header_cell(cell)
+            cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
+        # Data rows
+        current_row = header_row + 1
+        wage_data = self.project_data.get('wage_data', {})
+        positions = wage_data.get('positions', [])
+
+        for pos in positions:
+            col = 2
+
+            # Labor Category
+            cell = ws.cell(current_row, col, pos.get('labor_category', ''))
+            cell.border = self.THIN_BORDER
+            cell.font = self.BOLD_FONT
+            col += 1
+
+            # Location
+            cell = ws.cell(current_row, col, pos.get('location', ''))
+            cell.border = self.THIN_BORDER
+            col += 1
+
+            # Description
+            cell = ws.cell(current_row, col, pos.get('description', ''))
+            cell.border = self.THIN_BORDER
+            cell.alignment = Alignment(wrap_text=True, vertical='top')
+            col += 1
+
+            # Source (BLS or GSA)
+            wage_source = pos.get('wage_source', 'bls').upper()
+            cell = ws.cell(current_row, col, wage_source)
+            cell.border = self.THIN_BORDER
+            cell.alignment = Alignment(horizontal='center')
+            if wage_source == 'GSA':
+                cell.fill = PatternFill(start_color="DBEAFE", end_color="DBEAFE", fill_type="solid")
+                cell.font = Font(bold=True, color="1E40AF")
+            else:
+                cell.fill = PatternFill(start_color="F3E8FF", end_color="F3E8FF", fill_type="solid")
+                cell.font = Font(bold=True, color="7C3AED")
+            col += 1
+
+            # SOC Code (BLS only)
+            if wage_source == 'BLS':
+                cell = ws.cell(current_row, col, pos.get('soc_code', ''))
+            else:
+                cell = ws.cell(current_row, col, '-')
+            cell.border = self.THIN_BORDER
+            col += 1
+
+            # SOC Title / GSA Labor Category
+            if wage_source == 'GSA':
+                cell = ws.cell(current_row, col, pos.get('gsa_title', ''))
+            else:
+                cell = ws.cell(current_row, col, pos.get('soc_title', ''))
+            cell.border = self.THIN_BORDER
+            cell.alignment = Alignment(wrap_text=True, vertical='top')
+            col += 1
+
+            # Percentiles (BLS only, GSA shows '-')
+            selected_percentile = pos.get('percentile', '50th')
+
+            for percentile in ['10th', '25th', '50th', '75th', '90th']:
+                if wage_source == 'BLS':
+                    wage_key = f'wage_{percentile}'
+                    wage_value = pos.get(wage_key)
+                    cell = ws.cell(current_row, col)
+
+                    if wage_value is not None:
+                        cell.value = wage_value
+                        cell.number_format = self.CURRENCY_FORMAT
+
+                        # Highlight selected percentile
+                        if percentile == selected_percentile:
+                            cell.fill = PatternFill(start_color="D1FAE5", end_color="D1FAE5", fill_type="solid")
+                            cell.font = Font(bold=True, color="059669")
+                        else:
+                            cell.font = Font(color="7C3AED")
+                    else:
+                        cell.value = '-'
+                        cell.alignment = Alignment(horizontal='center')
+                else:
+                    cell = ws.cell(current_row, col, '-')
+                    cell.alignment = Alignment(horizontal='center')
+
+                cell.border = self.THIN_BORDER
+                col += 1
+
+            # Selected Wage/Rate
+            cell = ws.cell(current_row, col)
+
+            if wage_source == 'GSA':
+                # For GSA, get the current year's rate
+                gsa_rates = pos.get('gsa_rates_by_year', {})
+                current_year = pos.get('gsa_current_year', 1)
+                custom_rate = pos.get('gsa_custom_rate')
+
+                if custom_rate is not None:
+                    selected_wage = custom_rate
+                else:
+                    selected_wage = gsa_rates.get(str(current_year), 0)
+            else:
+                # For BLS, use selected_salaries average or selected_wage
+                selected_salaries = pos.get('selected_salaries', [])
+                if selected_salaries and len(selected_salaries) > 0:
+                    selected_wage = sum(selected_salaries) / len(selected_salaries)
+                else:
+                    selected_wage = pos.get('selected_wage') or pos.get(f'wage_{selected_percentile}', 0)
+
+            cell.value = selected_wage if selected_wage else 0
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+            cell.fill = PatternFill(start_color="DBEAFE", end_color="DBEAFE", fill_type="solid")
+            cell.font = Font(bold=True, color="1E40AF")
+
+            current_row += 1
+
+        # Set row height for better readability
+        for row_idx in range(header_row + 1, current_row):
+            ws.row_dimensions[row_idx].height = 40
