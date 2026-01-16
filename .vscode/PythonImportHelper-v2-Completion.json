@@ -952,6 +952,14 @@
         "documentation": {}
     },
     {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
         "label": "pricing",
         "importPath": "routers",
         "description": "routers",
@@ -1746,6 +1754,14 @@
         "documentation": {}
     },
     {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Dict",
         "importPath": "typing",
         "description": "typing",
@@ -2175,6 +2191,14 @@
         "description": "datetime",
         "isExtraImport": true,
         "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
         "documentation": {}
     },
     {
@@ -3152,6 +3176,30 @@
         "documentation": {}
     },
     {
+        "label": "Pinecone",
+        "importPath": "pinecone",
+        "description": "pinecone",
+        "isExtraImport": true,
+        "detail": "pinecone",
+        "documentation": {}
+    },
+    {
+        "label": "ServerlessSpec",
+        "importPath": "pinecone",
+        "description": "pinecone",
+        "isExtraImport": true,
+        "detail": "pinecone",
+        "documentation": {}
+    },
+    {
+        "label": "PineconeVectorStore",
+        "importPath": "langchain_pinecone",
+        "description": "langchain_pinecone",
+        "isExtraImport": true,
+        "detail": "langchain_pinecone",
+        "documentation": {}
+    },
+    {
         "label": "PineconeVectorStore",
         "importPath": "langchain_pinecone",
         "description": "langchain_pinecone",
@@ -3243,6 +3291,14 @@
     },
     {
         "label": "ChatOpenAI",
+        "importPath": "langchain_openai",
+        "description": "langchain_openai",
+        "isExtraImport": true,
+        "detail": "langchain_openai",
+        "documentation": {}
+    },
+    {
+        "label": "OpenAIEmbeddings",
         "importPath": "langchain_openai",
         "description": "langchain_openai",
         "isExtraImport": true,
@@ -4099,6 +4155,22 @@
         "description": "pymongo.database",
         "isExtraImport": true,
         "detail": "pymongo.database",
+        "documentation": {}
+    },
+    {
+        "label": "RecursiveCharacterTextSplitter",
+        "importPath": "langchain_text_splitters",
+        "description": "langchain_text_splitters",
+        "isExtraImport": true,
+        "detail": "langchain_text_splitters",
+        "documentation": {}
+    },
+    {
+        "label": "Document",
+        "importPath": "langchain_core.documents",
+        "description": "langchain_core.documents",
+        "isExtraImport": true,
+        "detail": "langchain_core.documents",
         "documentation": {}
     },
     {
@@ -6003,6 +6075,159 @@
         "description": "backend.scripts.migrate_terms",
         "peekOfCode": "def migrate_existing_users():\n    \"\"\"\n    Add terms acceptance fields to all existing users.\n    Sets them to current version with createdAt timestamp (grandfathered).\n    \"\"\"\n    print(f\"🚀 Starting terms acceptance migration...\")\n    print(f\"📌 Current terms version: {config.CURRENT_TERMS_VERSION}\")\n    users_collection = get_mongodb_client().get_users_collection()\n    # Find users without terms acceptance fields\n    users_to_migrate = users_collection.count_documents({",
         "detail": "backend.scripts.migrate_terms",
+        "documentation": {}
+    },
+    {
+        "label": "validate_environment",
+        "kind": 2,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "def validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENROUTER_API_KEY:\n        raise ValueError(\"OPENROUTER_API_KEY not found in environment\")\n    if not PINECONE_API_KEY:\n        raise ValueError(\"PINECONE_API_KEY not found in environment\")\n    print(\"✓ Environment variables validated\")\ndef initialize_pinecone():\n    \"\"\"Initialize Pinecone client and create index if it doesn't exist.\"\"\"\n    print(f\"\\nInitializing Pinecone...\")",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "initialize_pinecone",
+        "kind": 2,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "def initialize_pinecone():\n    \"\"\"Initialize Pinecone client and create index if it doesn't exist.\"\"\"\n    print(f\"\\nInitializing Pinecone...\")\n    print(f\"Index: {PINECONE_INDEX_NAME}\")\n    print(f\"Namespace: {PINECONE_NAMESPACE}\")\n    pc = Pinecone(api_key=PINECONE_API_KEY)\n    # Check if index exists\n    existing_indexes = pc.list_indexes()\n    index_names = [index['name'] for index in existing_indexes]\n    if PINECONE_INDEX_NAME not in index_names:",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "extract_metadata_from_content",
+        "kind": 2,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "def extract_metadata_from_content(content: str) -> dict:\n    \"\"\"\n    Extract article_type and priority from markdown content.\n    Looks for lines like:\n    **Article Type:** Tutorial | **Priority:** P0 | **Reading Time:** 5 minutes\n    \"\"\"\n    metadata = {\n        \"article_type\": \"Unknown\",\n        \"priority\": \"Unknown\"\n    }",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "load_markdown_files",
+        "kind": 2,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "def load_markdown_files() -> List[Document]:\n    \"\"\"Load all markdown files from help center directory.\"\"\"\n    print(f\"\\nLoading markdown files from: {DOCS_PATH}\")\n    if not DOCS_PATH.exists():\n        raise ValueError(f\"Documentation path does not exist: {DOCS_PATH}\")\n    documents = []\n    markdown_files = list(DOCS_PATH.rglob(\"*.md\"))\n    # Filter out certain files\n    excluded_files = {\n        \"DOCUMENTATION_STATUS.md\",",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "split_documents",
+        "kind": 2,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "def split_documents(documents: List[Document]) -> List[Document]:\n    \"\"\"Split documents into chunks and add chunk_index metadata.\"\"\"\n    print(f\"\\nSplitting documents into chunks...\")\n    text_splitter = RecursiveCharacterTextSplitter(\n        chunk_size=CHUNK_SIZE,\n        chunk_overlap=CHUNK_OVERLAP,\n        length_function=len,\n        separators=[\n            \"\\n## \",  # Split on H2 headers first\n            \"\\n### \",  # Then H3 headers",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "upload_to_pinecone",
+        "kind": 2,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "def upload_to_pinecone(chunks: List[Document]):\n    \"\"\"Generate embeddings and upload to Pinecone namespace.\"\"\"\n    print(f\"\\nGenerating embeddings and uploading to Pinecone...\")\n    print(f\"Using model: {EMBEDDING_MODEL}\")\n    print(f\"Target: Index '{PINECONE_INDEX_NAME}' → Namespace '{PINECONE_NAMESPACE}'\")\n    # Initialize embeddings (using OpenRouter)\n    embeddings = OpenAIEmbeddings(\n        model=EMBEDDING_MODEL,\n        openai_api_key=OPENROUTER_API_KEY,\n        openai_api_base=\"https://openrouter.ai/api/v1\"",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "print_summary",
+        "kind": 2,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "def print_summary(chunks: List[Document]):\n    \"\"\"Print summary statistics.\"\"\"\n    print(\"\\n\" + \"=\"*60)\n    print(\"SUMMARY\")\n    print(\"=\"*60)\n    # Count by category\n    categories = {}\n    for chunk in chunks:\n        cat = chunk.metadata.get('category', 'unknown')\n        categories[cat] = categories.get(cat, 0) + 1",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "def main():\n    \"\"\"Main execution function.\"\"\"\n    print(\"=\"*60)\n    print(\"PRICEIQ HELP CENTER RAG SETUP\")\n    print(\"=\"*60)\n    try:\n        # Step 1: Validate environment\n        validate_environment()\n        # Step 2: Initialize Pinecone\n        initialize_pinecone()",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "OPENROUTER_API_KEY",
+        "kind": 5,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "OPENROUTER_API_KEY = os.getenv(\"OPENROUTER_API_KEY\")\nPINECONE_API_KEY = os.getenv(\"PINECONE_API_KEY\")\nPINECONE_INDEX_NAME = \"corporate\"  # Main index\nPINECONE_NAMESPACE = \"help-center\"  # Namespace for help docs\nDOCS_PATH = Path(__file__).parent.parent.parent / \"docs\" / \"help-center\"\n# Embedding configuration\nEMBEDDING_MODEL = \"openai/text-embedding-3-small\"  # Via OpenRouter\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "PINECONE_API_KEY",
+        "kind": 5,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "PINECONE_API_KEY = os.getenv(\"PINECONE_API_KEY\")\nPINECONE_INDEX_NAME = \"corporate\"  # Main index\nPINECONE_NAMESPACE = \"help-center\"  # Namespace for help docs\nDOCS_PATH = Path(__file__).parent.parent.parent / \"docs\" / \"help-center\"\n# Embedding configuration\nEMBEDDING_MODEL = \"openai/text-embedding-3-small\"  # Via OpenRouter\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "PINECONE_INDEX_NAME",
+        "kind": 5,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "PINECONE_INDEX_NAME = \"corporate\"  # Main index\nPINECONE_NAMESPACE = \"help-center\"  # Namespace for help docs\nDOCS_PATH = Path(__file__).parent.parent.parent / \"docs\" / \"help-center\"\n# Embedding configuration\nEMBEDDING_MODEL = \"openai/text-embedding-3-small\"  # Via OpenRouter\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "PINECONE_NAMESPACE",
+        "kind": 5,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "PINECONE_NAMESPACE = \"help-center\"  # Namespace for help docs\nDOCS_PATH = Path(__file__).parent.parent.parent / \"docs\" / \"help-center\"\n# Embedding configuration\nEMBEDDING_MODEL = \"openai/text-embedding-3-small\"  # Via OpenRouter\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "DOCS_PATH",
+        "kind": 5,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "DOCS_PATH = Path(__file__).parent.parent.parent / \"docs\" / \"help-center\"\n# Embedding configuration\nEMBEDDING_MODEL = \"openai/text-embedding-3-small\"  # Via OpenRouter\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENROUTER_API_KEY:",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "EMBEDDING_MODEL",
+        "kind": 5,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "EMBEDDING_MODEL = \"openai/text-embedding-3-small\"  # Via OpenRouter\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENROUTER_API_KEY:\n        raise ValueError(\"OPENROUTER_API_KEY not found in environment\")\n    if not PINECONE_API_KEY:",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "EMBEDDING_DIMENSION",
+        "kind": 5,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "EMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENROUTER_API_KEY:\n        raise ValueError(\"OPENROUTER_API_KEY not found in environment\")\n    if not PINECONE_API_KEY:\n        raise ValueError(\"PINECONE_API_KEY not found in environment\")",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "CHUNK_SIZE",
+        "kind": 5,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "CHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENROUTER_API_KEY:\n        raise ValueError(\"OPENROUTER_API_KEY not found in environment\")\n    if not PINECONE_API_KEY:\n        raise ValueError(\"PINECONE_API_KEY not found in environment\")\n    print(\"✓ Environment variables validated\")\ndef initialize_pinecone():",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "CHUNK_OVERLAP",
+        "kind": 5,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "CHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENROUTER_API_KEY:\n        raise ValueError(\"OPENROUTER_API_KEY not found in environment\")\n    if not PINECONE_API_KEY:\n        raise ValueError(\"PINECONE_API_KEY not found in environment\")\n    print(\"✓ Environment variables validated\")\ndef initialize_pinecone():\n    \"\"\"Initialize Pinecone client and create index if it doesn't exist.\"\"\"",
+        "detail": "backend.scripts.setup_help_center_rag",
         "documentation": {}
     },
     {
