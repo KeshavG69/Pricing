@@ -6,16 +6,14 @@ import pandas as pd
 from pydantic import BaseModel, Field
 
 from models.job_description import JobDescription
-from app.settings import settings
+from client.llama_client import get_llama_extract
 
-# Import LlamaExtract
 try:
-    from llama_cloud_services import LlamaExtract
     from llama_cloud import ExtractConfig, ExtractMode
 except ImportError:
     raise ImportError(
-        "llama-cloud-services not installed. "
-        "Run: pip install llama-cloud-services"
+        "llama-cloud not installed. "
+        "Run: pip install llama-cloud"
     )
 
 
@@ -81,6 +79,45 @@ class YearMonths(BaseModel):
     )
 
 
+class YearAmount(BaseModel):
+    """Dollar amount for a specific year - used for ODCs like travel."""
+    year: str = Field(
+        description="Year number as string: '1' for Base Period, '2' for Option Year 1, etc."
+    )
+    amount: float = Field(
+        description="Dollar amount for this year (e.g., 299542.60)"
+    )
+
+
+class TravelExtract(BaseModel):
+    """Travel cost item extracted from document - SEPARATE from ODCs."""
+    description: Optional[str] = Field(
+        None,
+        description="Description of the travel item (e.g., 'Government Estimated Travel Amount', 'Airfare', 'Per Diem')"
+    )
+    amount_per_year: List[YearAmount] = Field(
+        description="""Dollar amounts per year.
+        Year "1" = Base Period, "2" = Option Year 1, "3" = Option Year 2, etc.
+        Example: [{"year": "1", "amount": 299542.60}, {"year": "2", "amount": 308528.88}]"""
+    )
+
+
+class ODCExtract(BaseModel):
+    """Other Direct Cost item extracted from document - DOES NOT include Travel."""
+    category: str = Field(
+        description="ODC category (e.g., 'Materials', 'Equipment', 'Software', 'Supplies'). DO NOT use 'Travel' - that has its own section."
+    )
+    description: Optional[str] = Field(
+        None,
+        description="Description of the ODC item"
+    )
+    amount_per_year: List[YearAmount] = Field(
+        description="""Dollar amounts per year.
+        Year "1" = Base Period, "2" = Option Year 1, "3" = Option Year 2, etc.
+        Example: [{"year": "1", "amount": 299542.60}, {"year": "2", "amount": 308528.88}]"""
+    )
+
+
 class PositionExtract(BaseModel):
     """Position model for LlamaExtract - includes List[YearHours]."""
 
@@ -103,17 +140,94 @@ class PositionExtract(BaseModel):
         description="State name only for this position (e.g., 'Virginia', 'California', 'Texas'). Extract only the state, not city. Use full state name, not abbreviation."
     )
 
+    ftes: Optional[int] = Field(
+        1,
+        description="""Number of full-time equivalents (FTEs) for this position.
+
+        WHEN TO USE: Only extract FTE count if the table has a dedicated FTE/Count column
+        AND the hours columns show per-person hours (not totals).
+
+        WHEN NOT TO USE: If the hours columns show TOTAL hours for all FTEs combined,
+        set ftes=1 (default) and extract total hours in hours_per_year.
+        The backend will automatically split multi-FTE positions based on total hours.
+
+        Examples:
+        - Table shows "FTEs: 4 | Hours: 1920" → Extract ftes=4, hours=1920 (per-person)
+        - Table shows "Base: 3,808 | OY1: 3,808" (no FTE column, total hours) → ftes=1, hours_per_year=[...] (totals)
+        - No FTE column → Default to ftes=1"""
+    )
+
     hours: Optional[int] = Field(
         None,
-        description="Annual hours for single-year contracts (e.g., 1880 for full-time, 940 for part-time). LEGACY FIELD."
+        description="""Annual hours for a SINGLE person in this position (NOT multiplied by FTE count).
+
+        USE THIS FIELD WHEN: The document has a single "Hours" column (not year-by-year columns).
+        DO NOT USE: If the document has separate columns for Base Period, Option Year 1, etc.
+
+        Extract the per-person hours only. Examples:
+        - Table shows "Hours: 1920" → Extract hours=1920 (even if FTEs=4)
+        - Table shows "Annual Hours: 2080" → Extract hours=2080
+        - Table has year columns → Leave hours=None, use hours_per_year instead"""
     )
 
     hours_per_year: Optional[List[YearHours]] = Field(
         None,
-        description="""Hours worked per year in multi-year contracts.
-        Extract as a list where each item has 'year' and 'hours'.
-        Year "1" = Base Period, "2" = Option Year 1, "3" = Option Year 2, etc.
-        Example: [{"year": "1", "hours": 1880}, {"year": "2", "hours": 1880}, {"year": "3", "hours": 0}]"""
+        description="""Hours per year - EXACT values from the table row (TOTAL hours, not per-person).
+
+        ONLY USE THIS FIELD IF: The document has ACTUAL year-by-year hour columns.
+        Look for column headers like: "Base Period", "BY", "Option Year 1", "OY1", "Year 1", "Year 2", etc.
+
+        CRITICAL RULES:
+        1. Each table row = ONE position extraction (even if hours vary by year)
+        2. Extract EXACTLY what's in the table row - don't split into multiple positions
+        3. Extract TOTAL hours shown in each year column (as-is from the table)
+        4. Year "1" = Base Period/Base Year, "2" = Option Year 1, "3" = Option Year 2, etc.
+        5. If document only has single "Hours" column, use 'hours' field instead
+
+        Examples:
+        - Table row: "IT Specialist/Networks | Base: 3,808 | OY1: 3,808 | OY2: 5,712 | OY3: 5,712 | OY4: 5,712"
+          → Extract ONE position with: [{"year": "1", "hours": 3808}, {"year": "2", "hours": 3808}, {"year": "3", "hours": 5712}, {"year": "4", "hours": 5712}, {"year": "5", "hours": 5712}]
+          → Do NOT create multiple positions just because hours change
+
+        - Table row: "Engineer | Base: 1920 | OY1: 1920 | OY2: 1920"
+          → Extract: [{"year": "1", "hours": 1920}, {"year": "2", "hours": 1920}, {"year": "3", "hours": 1920}]
+
+        - Table row: "Specialist | Base: - | OY1: 1904 | OY2: 1904 | OY3: 1904"
+          → Extract: [{"year": "1", "hours": 0}, {"year": "2", "hours": 1904}, {"year": "3", "hours": 1904}, {"year": "4", "hours": 1904}]
+          → "-" or empty means 0 hours
+
+        - Table row with single Hours column: "Analyst | Hours: 1920"
+          → Leave hours_per_year=None, use 'hours' field instead"""
+    )
+
+    is_key_position: Optional[bool] = Field(
+        False,
+        description="""True if this is a key position/key personnel that cannot be subcontracted.
+
+        Look for indicators such as:
+        - Position listed under 'Key Personnel', 'Key Positions', or 'Required Personnel' sections
+        - Position explicitly marked as 'key', 'critical', or 'essential' in the document
+        - Position mentioned in contract requirements as non-subcontractable
+
+        Default to False if there's no indication the position is key."""
+    )
+
+    location_type: Optional[str] = Field(
+        "On-Site",
+        description="""Work location type: 'On-Site' or 'Off-Site'.
+
+        DETECTION LOGIC:
+        1. Compare this position's location (state) with the contract/document location (from metadata)
+        2. If position location matches contract location → 'On-Site'
+        3. If position location differs from contract location → 'Off-Site'
+        4. If position location is not specified → 'On-Site' (default)
+
+        Examples:
+        - Contract in Virginia, Position in Virginia → 'On-Site'
+        - Contract in California, Position in Texas → 'Off-Site'
+        - Contract in Virginia, Position location not specified → 'On-Site'
+
+        Default to 'On-Site' if unclear."""
     )
 
 
@@ -170,6 +284,21 @@ class GovernmentProposalExtraction(BaseModel):
     positions: List[PositionExtract] = Field(
         description="All job positions/labor categories found in the document"
     )
+    travel: Optional[List[TravelExtract]] = Field(
+        None,
+        description="""Travel costs found in the document - SEPARATE from ODCs.
+        Look for sections labeled 'Travel', 'Travel Expenses', 'Government Estimated Travel'.
+        Extract amounts per period (Base Period, Option Year 1, etc.).
+        IMPORTANT: Travel is NOT an ODC - it's a separate category."""
+    )
+    odcs: Optional[List[ODCExtract]] = Field(
+        None,
+        description="""Other Direct Costs (ODCs) found in the document - DOES NOT include Travel.
+        Include Materials, Equipment, Software, Supplies, etc.
+        Look for sections labeled 'ODCs', 'Other Direct Costs', 'Non-Labor Costs', 'Materials'.
+        Extract amounts per period (Base Period, Option Year 1, etc.).
+        IMPORTANT: Do NOT extract Travel here - Travel has its own separate field."""
+    )
 
 
 def _convert_to_job_description(
@@ -190,25 +319,45 @@ def _convert_to_job_description(
     Returns:
         JobDescription object with hours_per_year populated
     """
+    # Get FTE multiplier (default to 1 if not specified)
+    ftes = position.ftes or 1
+
     # Convert hours_per_year from List[YearHours] to dict[str, int]
     hours_per_year_dict = None
 
     if position.hours_per_year:
-        # Case 1: LlamaExtract found year columns (Personnel Qualifications format)
-        # System already works correctly - use directly
-        hours_per_year_dict = {yh.year: yh.hours for yh in position.hours_per_year}
+        # Case 1: LlamaExtract found year columns
+        # Two scenarios:
+        # A) ftes > 1: Table has FTE column, hours are per-person → multiply by ftes
+        # B) ftes = 1: No FTE column, hours are totals → use as-is
+        if ftes > 1:
+            # Multiply per-person hours by FTE count
+            hours_per_year_dict = {yh.year: yh.hours * ftes for yh in position.hours_per_year}
+        else:
+            # Use total hours as-is
+            hours_per_year_dict = {yh.year: yh.hours for yh in position.hours_per_year}
+
+        # If hours_per_year has fewer years than total_years, extend it
+        # (e.g., only Base Period extracted but contract has Option Years)
+        if doc_metadata.total_years and len(hours_per_year_dict) < doc_metadata.total_years:
+            base_hours = hours_per_year_dict.get("1", position.hours or 1920)
+            for year in range(1, doc_metadata.total_years + 1):
+                if str(year) not in hours_per_year_dict:
+                    hours_per_year_dict[str(year)] = base_hours
 
     elif position.hours and not position.hours_per_year and doc_metadata.total_years and doc_metadata.total_years > 1:
-        # Case 2: Only total hours + multi-year contract (SeaPort format)
-        # Distribute hours evenly across years
-        # Backend split_multi_year_position() will handle creating multiple people if needed
-        fte_hours = doc_metadata.standard_fte_hours or 1920
+        # Case 2: Single hours field + multi-year contract
+        # The hours field represents annual hours per person
+        # We need to multiply by FTE count and repeat for all years
 
-        hours_per_year_dict = _distribute_hours_across_years(
-            total_hours=position.hours,
-            total_years=doc_metadata.total_years,
-            fte_hours=fte_hours
-        )
+        # Calculate hours per year (all FTEs combined)
+        annual_hours = position.hours * ftes
+
+        # Repeat the same hours for all contract years
+        hours_per_year_dict = {
+            str(year): annual_hours
+            for year in range(1, doc_metadata.total_years + 1)
+        }
 
         # Keep original hours field for backward compatibility
         # Frontend can display total hours if needed
@@ -216,13 +365,18 @@ def _convert_to_job_description(
     # Use doc-level location if position has no location
     location = position.location or doc_metadata.location
 
+    # Multiply legacy hours field by FTE count
+    total_hours = (position.hours * ftes) if position.hours else None
+
     return JobDescription(
         labor_category=position.labor_category,
         description=position.description,
         experience=position.experience,
         location=location,
-        hours=position.hours,
-        hours_per_year=hours_per_year_dict
+        hours=total_hours,
+        hours_per_year=hours_per_year_dict,
+        is_key_position=position.is_key_position or False,
+        location_type=position.location_type or "On-Site"
     )
 
 
@@ -291,13 +445,138 @@ def _distribute_hours_across_years(
     return hours_dict
 
 
-def extract_with_llamaextract(pdf_path: str, mode: str = "fast") -> GovernmentProposalExtraction:
+def _convert_excel_to_csv(excel_path: str) -> str:
     """
-    Extract structured data from PDF using LlamaExtract API.
+    Convert Excel file to CSV for LlamaExtract compatibility.
+
+    Handles multiple sheets by combining them into a single CSV with sheet markers.
+    Pandas automatically trims empty columns, solving the "too many columns" issue.
 
     Args:
-        pdf_path: Path to the PDF file
-        mode: Extraction mode - "fast" or "thorough"
+        excel_path: Path to the Excel file (.xlsx or .xls)
+
+    Returns:
+        Path to the temporary CSV file
+    """
+    import tempfile
+
+    excel_file = pd.ExcelFile(excel_path)
+    sheet_names = excel_file.sheet_names
+
+    print(f"  Found {len(sheet_names)} sheet(s): {sheet_names}")
+
+    temp_csv = tempfile.NamedTemporaryFile(mode='w', suffix='.csv', delete=False)
+
+    all_data = []
+    for sheet_name in sheet_names:
+        df = pd.read_excel(excel_file, sheet_name=sheet_name)
+        print(f"    Sheet '{sheet_name}': {df.shape[0]} rows x {df.shape[1]} cols")
+
+        # Add sheet marker if multiple sheets
+        if len(sheet_names) > 1:
+            marker_row = pd.DataFrame([{df.columns[0]: f"=== SHEET: {sheet_name} ==="}])
+            all_data.append(marker_row)
+
+        all_data.append(df)
+
+    if all_data:
+        combined_df = pd.concat(all_data, ignore_index=True)
+        combined_df.to_csv(temp_csv.name, index=False)
+        print(f"  Converted to CSV: {combined_df.shape[0]} rows x {combined_df.shape[1]} cols")
+
+    return temp_csv.name
+
+
+def _convert_docx_to_text(docx_path: str) -> str:
+    """
+    Convert DOCX to text file with tables preserved.
+
+    LlamaExtract API doesn't properly support DOCX files, so we extract text
+    (with tables in pipe-separated format) and pass to LlamaExtract as .txt file.
+
+    Args:
+        docx_path: Path to input DOCX file
+
+    Returns:
+        Path to converted text file (in temp directory)
+
+    Raises:
+        RuntimeError: If conversion fails
+    """
+    import os
+    import tempfile
+    from docx import Document
+
+    # Create temp text file
+    temp_txt = tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False, encoding='utf-8')
+    txt_path = temp_txt.name
+
+    try:
+        print(f"  Converting DOCX to text (preserving tables)...")
+
+        doc = Document(docx_path)
+        text_lines = []
+
+        # Extract all content (paragraphs and tables)
+        for element in doc.element.body:
+            tag = element.tag.split('}')[-1]  # Get tag name without namespace
+
+            if tag == 'p':
+                # Paragraph
+                para_text = ''.join(
+                    node.text for node in element.iter()
+                    if hasattr(node, 'text') and node.text
+                )
+                if para_text.strip():
+                    text_lines.append(para_text.strip())
+
+            elif tag == 'tbl':
+                # Table - convert to pipe-separated format
+                text_lines.append('')  # Blank line before table
+
+                # Find the table object
+                table = None
+                for tbl in doc.tables:
+                    if tbl._element == element:
+                        table = tbl
+                        break
+
+                if table:
+                    for row in table.rows:
+                        cells = [cell.text.strip() for cell in row.cells]
+                        text_lines.append(' | '.join(cells))
+
+                text_lines.append('')  # Blank line after table
+
+        # Write to temp file
+        temp_txt.write('\n'.join(text_lines))
+        temp_txt.close()
+
+        if not os.path.exists(txt_path) or os.path.getsize(txt_path) == 0:
+            raise RuntimeError(f"Text extraction failed or file is empty: {txt_path}")
+
+        print(f"  ✓ Converted DOCX to text with tables preserved")
+        return txt_path
+
+    except Exception as e:
+        # Clean up on error
+        temp_txt.close()
+        if os.path.exists(txt_path):
+            os.unlink(txt_path)
+        raise RuntimeError(f"DOCX to text conversion failed: {e}")
+
+
+def extract_with_llamaextract(file_path: str, mode: str = "premium") -> GovernmentProposalExtraction:
+    """
+    Extract structured data from document using LlamaExtract API.
+
+    Supports PDF, CSV, DOCX, and Excel files.
+    - DOCX files are converted to text with tables preserved
+    - Excel files are converted to CSV
+
+    Args:
+        file_path: Path to the document file
+        mode: Extraction mode - "premium" (default, high quality), "balanced", "fast", or "multimodal"
 
     Returns:
         GovernmentProposalExtraction object with all data
@@ -305,55 +584,117 @@ def extract_with_llamaextract(pdf_path: str, mode: str = "fast") -> GovernmentPr
     Raises:
         ValueError: If LLAMA_CLOUD_API_KEY not found or extraction fails
     """
-    # Get API key from settings
-    api_key = settings.LLAMA_CLOUD_API_KEY
-    if not api_key:
-        raise ValueError(
-            "LLAMA_CLOUD_API_KEY not found in settings. "
-            "Please set it in your .env file."
-        )
+    import os
 
-    # Initialize LlamaExtract
-    extractor = LlamaExtract(api_key=api_key)
+    # Check file extension and convert if needed
+    file_ext = os.path.splitext(file_path)[1].lower()
+    temp_csv_path = None
+    temp_txt_path = None
 
-    # Create config
-    extraction_mode = ExtractMode.FAST if mode == "fast" else ExtractMode.THOROUGH
-    config = ExtractConfig(extraction_mode=extraction_mode)
+    if file_ext in ['.xlsx', '.xls']:
+        print(f"  Converting Excel to CSV...")
+        temp_csv_path = _convert_excel_to_csv(file_path)
+        file_path = temp_csv_path
+    elif file_ext == '.docx':
+        # Convert DOCX to text with tables preserved
+        temp_txt_path = _convert_docx_to_text(file_path)
+        file_path = temp_txt_path
 
-    # Extract with Pydantic model CLASS
-    extract_run = extractor.extract(
-        GovernmentProposalExtraction,
-        config,
-        pdf_path
-    )
+    try:
+        # Get singleton LlamaExtract client
+        extractor = get_llama_extract()
 
-    # Access the .data property to get the actual extracted data
-    extraction = extract_run.data
+        # Map mode string to ExtractMode enum
+        mode_mapping = {
+            "balanced": ExtractMode.BALANCED,
+            "fast": ExtractMode.FAST,
+            "premium": ExtractMode.PREMIUM,
+            "multimodal": ExtractMode.MULTIMODAL
+        }
+        extraction_mode = mode_mapping.get(mode.lower(), ExtractMode.BALANCED)
+        config = ExtractConfig(extraction_mode=extraction_mode)
 
-    if not isinstance(extraction, GovernmentProposalExtraction):
-        if isinstance(extraction, dict):
-            extraction = GovernmentProposalExtraction(**extraction)
-        else:
-            raise ValueError(f"Unexpected data type from LlamaExtract: {type(extraction)}")
+        # Retry logic for connection timeouts
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                # For DOCX files, use BytesIO with explicit filename attribute
+                # LlamaExtract API sometimes fails to detect .docx extension from path alone
+                if file_ext == '.docx':
+                    from io import BytesIO
+                    with open(file_path, 'rb') as f:
+                        file_content = f.read()
 
-    return extraction
+                    # Create BytesIO object and add name attribute
+                    file_obj = BytesIO(file_content)
+                    file_obj.name = os.path.basename(file_path)
+
+                    extract_run = extractor.extract(
+                        GovernmentProposalExtraction,
+                        config,
+                        file_obj
+                    )
+                else:
+                    # For PDF, CSV, Excel - pass path directly (works fine)
+                    extract_run = extractor.extract(
+                        GovernmentProposalExtraction,
+                        config,
+                        file_path
+                    )
+                break  # Success, exit retry loop
+            except TimeoutError:
+                if attempt < max_retries - 1:
+                    print(f"  Timeout on attempt {attempt + 1}/{max_retries}, retrying...")
+                    import time
+                    time.sleep(5)  # Wait 5 seconds before retry
+                else:
+                    raise  # Final attempt failed, re-raise
+
+        extraction = extract_run.data
+
+        if not isinstance(extraction, GovernmentProposalExtraction):
+            if isinstance(extraction, dict):
+                extraction = GovernmentProposalExtraction(**extraction)
+            else:
+                raise ValueError(f"Unexpected data type from LlamaExtract: {type(extraction)}")
+
+        return extraction
+
+    finally:
+        # Clean up temporary CSV file
+        if temp_csv_path:
+            try:
+                os.unlink(temp_csv_path)
+            except Exception:
+                pass
+
+        # Clean up temporary text file (from DOCX conversion)
+        if temp_txt_path:
+            try:
+                os.unlink(temp_txt_path)
+            except Exception:
+                pass
 
 
-async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFrame:
+async def parse_documents_to_dataframe(document_paths: List[str]) -> Dict[str, any]:
     """
-    Parse multiple documents and extract all job descriptions into a DataFrame using LlamaExtract.
+    Parse multiple documents and extract all job descriptions, Travel, and ODCs using LlamaExtract.
 
     Args:
-        document_paths: List of paths to PDF documents
+        document_paths: List of paths to documents (PDF, Excel, CSV, DOCX)
 
     Returns:
-        pandas DataFrame with columns:
-        - labor_category, description, experience, location, hours, hours_per_year (job-level)
-        - base_years, option_years, total_years, project_name (document-level, same for all rows)
-        One row per job description found across all documents
+        Dict with:
+        - 'df': pandas DataFrame with positions (labor_category, hours_per_year, etc.)
+        - 'travel': List of Travel items in frontend format
+        - 'odcs': List of ODC items (materials, equipment, etc.) in frontend format
     """
+    import asyncio
+
     all_jds: List[JobDescription] = []
     all_metadata_list: List[DocumentMetadata] = []
+    all_travel: List[Dict] = []
+    all_odcs: List[Dict] = []
 
     print(f"\n{'='*60}")
     print(f"Parsing {len(document_paths)} document(s) with LlamaExtract")
@@ -365,8 +706,9 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
 
         try:
             # Extract everything in one pass using LlamaExtract
-            print(f"  Extracting with LlamaExtract...", end=" ")
-            extraction = extract_with_llamaextract(doc_path, mode="fast")
+            # Run in thread to avoid blocking event loop
+            print(f"  Extracting with LlamaExtract (premium mode)...", end=" ")
+            extraction = await asyncio.to_thread(extract_with_llamaextract, doc_path, "premium")
 
             # Convert months_per_year from List[YearMonths] to Dict[str, int]
             months_dict = None
@@ -404,6 +746,41 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
                 all_jds.append(jd)
                 all_metadata_list.append(doc_metadata)
 
+            # Convert Travel to frontend format (SEPARATE from ODCs)
+            if extraction.travel:
+                print(f"  Travel items found: {len(extraction.travel)}")
+                for travel in extraction.travel:
+                    # Convert amount_per_year from List[YearAmount] to Dict[str, float]
+                    amount_per_year = {
+                        ya.year: ya.amount
+                        for ya in travel.amount_per_year
+                    }
+                    all_travel.append({
+                        "id": f"travel_{len(all_travel)}_{hash(travel.description or 'travel')}",
+                        "description": travel.description,
+                        "amount_per_year": amount_per_year,
+                        "escalate": False  # Already has per-year amounts
+                        # G&A Rate is applied to Travel (NOT S&MH)
+                    })
+
+            # Convert ODCs to frontend format (SEPARATE from Travel)
+            if extraction.odcs:
+                print(f"  ODC items found: {len(extraction.odcs)}")
+                for odc in extraction.odcs:
+                    # Convert amount_per_year from List[YearAmount] to Dict[str, float]
+                    amount_per_year = {
+                        ya.year: ya.amount
+                        for ya in odc.amount_per_year
+                    }
+                    all_odcs.append({
+                        "id": f"odc_{len(all_odcs)}_{hash(odc.category)}",
+                        "category": odc.category,
+                        "description": odc.description,
+                        "amount_per_year": amount_per_year,
+                        "escalate": False  # Already has per-year amounts
+                        # S&MH Rate is applied to ODCs (NOT G&A)
+                    })
+
         except Exception as e:
             print(f"  ❌ Error processing {doc_path}: {e}")
             import traceback
@@ -419,7 +796,7 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
         # Create empty DataFrame with correct columns
         df = pd.DataFrame(columns=[
             "labor_category", "description", "experience", "location", "hours", "hours_per_year",
-            "base_years", "option_years", "total_years", "project_name", "standard_fte_hours", "months_per_year"
+            "is_key_position", "location_type", "base_years", "option_years", "total_years", "project_name", "standard_fte_hours", "months_per_year"
         ])
     else:
         df = pd.DataFrame([
@@ -430,6 +807,8 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
                 "location": jd.location,
                 "hours": jd.hours,
                 "hours_per_year": jd.hours_per_year,
+                "is_key_position": jd.is_key_position or False,
+                "location_type": jd.location_type or "On-Site",
                 # Document-level metadata (same for all jobs from same document)
                 "base_years": metadata.base_years,
                 "option_years": metadata.option_years,
@@ -441,5 +820,136 @@ async def parse_documents_to_dataframe(document_paths: List[str]) -> pd.DataFram
             for jd, metadata in zip(all_jds, all_metadata_list)
         ])
 
-    print(f"✓ Extracted {len(df)} job descriptions\n")
-    return df
+    print(f"✓ Extracted {len(df)} job descriptions")
+    if all_travel:
+        print(f"✓ Extracted {len(all_travel)} Travel items")
+    if all_odcs:
+        print(f"✓ Extracted {len(all_odcs)} ODC items")
+    print()
+
+    # Detect and extract extension periods
+    # Extensions are years beyond the regular contract period (base + options)
+    extensions = []
+    total_years_from_metadata = df['total_years'].iloc[0] if not df.empty and 'total_years' in df.columns else 0
+
+    if total_years_from_metadata > 0:
+        # Collect all years that have data
+        years_with_data = set()
+
+        # Check travel items
+        for travel in all_travel:
+            if travel.get("amount_per_year"):
+                for year_str in travel["amount_per_year"].keys():
+                    if year_str.isdigit():
+                        years_with_data.add(int(year_str))
+
+        # Check ODC items
+        for odc in all_odcs:
+            if odc.get("amount_per_year"):
+                for year_str in odc["amount_per_year"].keys():
+                    if year_str.isdigit():
+                        years_with_data.add(int(year_str))
+
+        # Check position hours_per_year
+        for jd in all_jds:
+            if jd.hours_per_year:
+                for year_str in jd.hours_per_year.keys():
+                    if year_str.isdigit():
+                        years_with_data.add(int(year_str))
+
+        # Find extension years (years beyond total_years)
+        extension_years = sorted([y for y in years_with_data if y > total_years_from_metadata])
+
+        if extension_years:
+            print(f"⚠️  Detected extension periods beyond year {total_years_from_metadata}: {extension_years}")
+
+            for ext_year in extension_years:
+                ext_year_str = str(ext_year)
+
+                # Try to determine duration from description or default to 6 months
+                duration_months = 6  # Default
+                description_parts = []
+
+                # Check travel descriptions for duration hints
+                for travel in all_travel:
+                    if ext_year_str in travel.get("amount_per_year", {}):
+                        desc = travel.get("description", "")
+                        if desc and "month" in desc.lower():
+                            description_parts.append(desc)
+                            # Try to extract month count (e.g., "6-Month" -> 6)
+                            import re
+                            month_match = re.search(r'(\d+)[\s-]*month', desc, re.IGNORECASE)
+                            if month_match:
+                                duration_months = int(month_match.group(1))
+
+                # Create extension entry
+                extension = {
+                    "year": ext_year,
+                    "label": f"{duration_months} Month Extension" if duration_months != 12 else "12 Month Extension",
+                    "duration_months": duration_months,
+                    "description": " / ".join(description_parts) if description_parts else f"Extension Period {ext_year}"
+                }
+                extensions.append(extension)
+                print(f"   Extension {ext_year}: {extension['label']}")
+
+    # Add extension hours to positions and update months_per_year
+    if extensions and not df.empty:
+        print(f"\n⚙️  Adding extension hours to positions...")
+
+        # Get the standard FTE hours (default to 1920 if not set)
+        standard_fte_hours = df['standard_fte_hours'].iloc[0] if 'standard_fte_hours' in df.columns else 1920
+
+        # Update months_per_year for each extension
+        for ext in extensions:
+            ext_year = ext['year']
+            ext_months = ext['duration_months']
+
+            # Update months_per_year column for all rows
+            for idx in df.index:
+                months_dict = df.at[idx, 'months_per_year']
+                if months_dict is None:
+                    months_dict = {}
+                    df.at[idx, 'months_per_year'] = months_dict
+
+                # Add extension month duration
+                months_dict[str(ext_year)] = ext_months
+                df.at[idx, 'months_per_year'] = months_dict
+
+            # Calculate prorated hours PER FTE for extension period
+            # For 6 months: (6/12) * standard_fte_hours = 960 hours per FTE
+            prorated_hours_per_fte = int((ext_months / 12) * standard_fte_hours)
+
+            print(f"   Year {ext_year} ({ext_months} months): {prorated_hours_per_fte} hours per FTE")
+
+            # Add extension year hours to each position's hours_per_year
+            # IMPORTANT: Calculate total extension hours based on max FTEs in the position
+            for idx in df.index:
+                hours_per_year = df.loc[idx, 'hours_per_year']
+                if hours_per_year and isinstance(hours_per_year, dict):
+                    # Find max hours across non-extension years to determine FTE count
+                    max_hours_in_position = 0
+                    for year_key, year_hours in hours_per_year.items():
+                        # Skip extension years (already processed or current one)
+                        if int(year_key) > total_years_from_metadata:
+                            continue
+                        if year_hours and year_hours > max_hours_in_position:
+                            max_hours_in_position = year_hours
+
+                    # Calculate number of FTEs in this position
+                    num_ftes = max(1, int(max_hours_in_position / standard_fte_hours + 0.5))
+
+                    # Total extension hours = prorated hours per FTE × number of FTEs
+                    total_extension_hours = prorated_hours_per_fte * num_ftes
+
+                    hours_per_year[str(ext_year)] = total_extension_hours
+                    df.at[idx, 'hours_per_year'] = hours_per_year
+
+                    if num_ftes > 1:
+                        print(f"      Position {idx}: {num_ftes} FTEs × {prorated_hours_per_fte} = {total_extension_hours} hours")
+
+    return {
+        "df": df,
+        "travel": all_travel,
+        "odcs": all_odcs,
+        "extensions": extensions  # New field
+    }

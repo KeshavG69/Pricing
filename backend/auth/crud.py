@@ -25,6 +25,7 @@ class UserCRUD:
     def create_user(user_data: UserSignup) -> UserResponse:
         """Create a new user with default organization"""
         from utils.organizations import get_organization_crud
+        from auth import config
 
         mongodb = get_mongodb_client()
         users_collection = mongodb.get_users_collection()
@@ -66,6 +67,8 @@ class UserCRUD:
                 "status": "active",
                 "joinedAt": now
             }],
+            "terms_accepted_version": config.CURRENT_TERMS_VERSION,
+            "terms_accepted_at": now,
             "createdAt": now,
             "updatedAt": now
         }
@@ -103,7 +106,7 @@ class UserCRUD:
             return None
 
         return UserResponse(
-            id=user_doc["_id"],
+            id=str(user_doc["_id"]),
             firstName=user_doc["firstName"],
             lastName=user_doc["lastName"],
             email=user_doc["email"],
@@ -123,7 +126,7 @@ class UserCRUD:
             return None
 
         return UserResponse(
-            id=user_doc["_id"],
+            id=str(user_doc["_id"]),
             firstName=user_doc["firstName"],
             lastName=user_doc["lastName"],
             email=user_doc["email"],
@@ -143,7 +146,7 @@ class UserCRUD:
             return None
 
         return UserResponse(
-            id=user_doc["_id"],
+            id=str(user_doc["_id"]),
             firstName=user_doc["firstName"],
             lastName=user_doc["lastName"],
             email=user_doc["email"],
@@ -184,7 +187,7 @@ class UserCRUD:
             )
 
             return UserResponse(
-                id=existing_user["_id"],
+                id=str(existing_user["_id"]),
                 firstName=existing_user.get("firstName", google_profile.given_name),
                 lastName=existing_user.get("lastName", google_profile.family_name),
                 email=google_profile.email,
@@ -208,6 +211,9 @@ class UserCRUD:
                 {"$set": {"name": organization["slug"]}}
             )
 
+            # Import config for terms version
+            from auth import config
+
             user_doc = {
                 "_id": user_id,
                 "firstName": google_profile.given_name,
@@ -229,6 +235,8 @@ class UserCRUD:
                     "status": "active",
                     "joinedAt": now
                 }],
+                "terms_accepted_version": config.CURRENT_TERMS_VERSION,
+                "terms_accepted_at": now,
                 "createdAt": now,
                 "updatedAt": now
             }
@@ -257,6 +265,7 @@ class UserCRUD:
         role: str = "user"
     ) -> dict:
         """Create user with organization (for invitation acceptance)"""
+        from auth import config
 
         # Check if user already exists
         existing = self.collection.find_one({"email": email})
@@ -277,6 +286,8 @@ class UserCRUD:
             }],
             "current_organization_id": organization_id,
             "auth_method": "email",
+            "terms_accepted_version": config.CURRENT_TERMS_VERSION,
+            "terms_accepted_at": now,
             "createdAt": now,
             "updatedAt": now
         }

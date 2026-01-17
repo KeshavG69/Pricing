@@ -25,38 +25,58 @@ interface ProposalCardProps {
 
 export const ProposalCard = React.memo(
   ({ proposal, onClick, onDuplicate, onDelete, onShare, onRename, showShareButton = false }: ProposalCardProps) => {
-    const getStatusIcon = (status: string, excelDownloaded?: boolean) => {
-      if (status === 'completed') {
-        // Completed proposals: In Progress (not downloaded) or Submitted (downloaded)
-        return <CheckCircle className={`w-5 h-5 ${excelDownloaded ? 'text-blue-500' : 'text-emerald-500'}`} />;
+    const getStatusIcon = (status: string, businessStatus?: string) => {
+      // PRIORITY: Show business status icon if exists
+      if (businessStatus) {
+        switch (businessStatus) {
+          case 'active':
+            return <CheckCircle className="w-5 h-5 text-blue-500" />;
+          case 'no-bid':
+            return <AlertCircle className="w-5 h-5 text-amber-500" />;
+          case 'submitted':
+            return <CheckCircle className="w-5 h-5 text-emerald-500" />;
+        }
       }
+
+      // FALLBACK: Technical status icon
       switch (status) {
         case 'processing':
           return <Clock className="w-5 h-5 text-blue-500 animate-pulse" />;
         case 'error':
           return <AlertCircle className="w-5 h-5 text-red-500" />;
+        case 'completed':
+          return <CheckCircle className="w-5 h-5 text-emerald-500" />;
         default:
           return <FileText className="w-5 h-5 text-muted-foreground" />;
       }
     };
 
-    const getStatusBadge = (status: string, excelDownloaded?: boolean) => {
-      if (status === 'completed') {
-        // Completed proposals: In Progress (not downloaded) or Submitted (downloaded)
-        if (excelDownloaded) {
-          return (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
-              Submitted
-            </span>
-          );
-        } else {
-          return (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
-              In Progress
-            </span>
-          );
+    const getStatusBadge = (status: string, businessStatus?: string) => {
+      // PRIORITY: Show business status badge if exists
+      if (businessStatus) {
+        switch (businessStatus) {
+          case 'active':
+            return (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                Active
+              </span>
+            );
+          case 'no-bid':
+            return (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800 border border-amber-200">
+                No-Bid
+              </span>
+            );
+          case 'submitted':
+            return (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800 border border-emerald-200">
+                Submitted
+              </span>
+            );
         }
       }
+
+      // FALLBACK: Technical status badge
       switch (status) {
         case 'processing':
           return (
@@ -68,6 +88,12 @@ export const ProposalCard = React.memo(
           return (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 border border-red-200">
               Error
+            </span>
+          );
+        case 'completed':
+          return (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
+              Completed
             </span>
           );
         default:
@@ -90,11 +116,11 @@ export const ProposalCard = React.memo(
     return (
       <div
         onClick={() => onClick(proposal.id)}
-        className="group flex items-center justify-between p-4 hover:bg-muted/50 transition-all duration-200 cursor-pointer"
+        className="group flex items-center justify-between p-4.5 hover:bg-muted/50 transition-all duration-200 cursor-pointer"
       >
         <div className="flex items-center space-x-4 flex-1 min-w-0">
           <div className="h-10 w-10 rounded-lg bg-muted flex items-center justify-center group-hover:bg-muted/80 transition-colors">
-            {getStatusIcon(proposal.status, proposal.excel_downloaded)}
+            {getStatusIcon(proposal.status, proposal.business_status)}
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
@@ -119,7 +145,7 @@ export const ProposalCard = React.memo(
         <div className="flex items-center space-x-6">
           <div className="hidden sm:block text-right">
             <p className="text-xs text-muted-foreground mb-1">Status</p>
-            {getStatusBadge(proposal.status, proposal.excel_downloaded)}
+            {getStatusBadge(proposal.status, proposal.business_status)}
           </div>
           <div className="text-right min-w-[80px]">
             <p className="text-xs text-muted-foreground mb-1">Created</p>

@@ -43,6 +43,14 @@ class ProposalCRUD:
             self.collection.create_index([("organization_id", 1), ("created_at", -1)])
             self.collection.create_index("shared_with")
 
+            # Business status indexes
+            self.collection.create_index("business_status")
+            self.collection.create_index([
+                ("organization_id", 1),
+                ("business_status", 1),
+                ("created_at", -1)
+            ])
+
         except Exception:
             # Silently ignore index creation errors (indexes may already exist)
             pass
@@ -201,6 +209,35 @@ class ProposalCRUD:
             {"_id": ObjectId(proposal_id), "user_id": user_id},
             projection
         )
+
+    def can_change_business_status(self, proposal_id: str) -> tuple[bool, str]:
+        """
+        Check if a proposal's business status can be changed.
+
+        Args:
+            proposal_id: Proposal's MongoDB ObjectId (as string)
+
+        Returns:
+            Tuple of (can_change: bool, reason: str)
+        """
+        try:
+            proposal = self.collection.find_one(
+                {"_id": ObjectId(proposal_id)},
+                {"status": 1}
+            )
+
+            if not proposal:
+                return False, "Proposal not found"
+
+            status = proposal.get("status")
+            if status == "processing":
+                return False, "Cannot change status while processing"
+            if status == "error":
+                return False, "Proposal has errors"
+
+            return True, ""
+        except Exception:
+            return False, "Invalid proposal ID"
 
     def update_proposal(
         self,
@@ -615,6 +652,35 @@ class ProposalCRUD:
         )
 
         return result.modified_count > 0
+
+    def check_for_timeout(self, proposal: dict) -> dict:
+        """
+        Check if proposal is stuck in processing for >30 min and mark as error.
+        """
+        if proposal.get("status") != "processing":
+            return proposal
+
+        created_at = proposal.get("created_at")
+        if not created_at:
+            return proposal
+
+        # 30 minute timeout
+        elapsed = (datetime.utcnow() - created_at).total_seconds()
+        if elapsed < 30 * 60:
+            return proposal  # Still within timeout
+
+        # Timed out - mark as error
+        self.collection.update_one(
+            {"_id": proposal["_id"]},
+            {"$set": {
+                "status": "error",
+                "message": "Processing timed out. Click 'Retry Processing' to try again.",
+                "updated_at": datetime.utcnow()
+            }}
+        )
+        proposal["status"] = "error"
+        proposal["message"] = "Processing timed out. Click 'Retry Processing' to try again."
+        return proposal
 
 
 # Global singleton instance

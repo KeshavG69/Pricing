@@ -1,13 +1,16 @@
 """
-Custom agno tools for SOC code vector search retriever.
+Custom agno tools for SOC code vector search retriever and GSA labor category tools.
 """
 
 from typing import Any, Optional, List, Dict
+from datetime import datetime
 import math
 from agno.agent import Agent
 from agno.tools import tool
 from client.soc_vector_search import get_soc_vector_search_client
 from client.oews_mongodb import get_oews_mongo_client
+from client.gsa_pinecone import get_gsa_pinecone_client
+from utils.company_repository import get_company_repository_crud
 
 
 def create_custom_retreiver(description: Optional[str] = None):
@@ -31,7 +34,7 @@ def create_custom_retreiver(description: Optional[str] = None):
     def custom_retriever(
         query: str,
         agent: Optional[Agent] = None,
-        num_documents: int = 5,
+        num_documents: int = 20,
         **kwargs
     ) -> List[Dict[str, str]]:
         """
@@ -44,7 +47,7 @@ def create_custom_retreiver(description: Optional[str] = None):
         Args:
             query (str): Job title or description to search for.
                         Examples: "Software Developer", "Senior Python Engineer", "Data Scientist"
-            num_documents (int): Maximum number of similar SOC codes to return. Default is 5.
+            num_documents (int): Maximum number of similar SOC codes to return. Default is 20.
                                 Higher values provide more alternatives but may include less relevant matches.
 
         Returns:
@@ -61,8 +64,8 @@ def create_custom_retreiver(description: Optional[str] = None):
             ]
         """
         # Search using vector similarity with description for better matching
-        # Handle None value from agno (use default of 5)
-        k = num_documents if num_documents is not None else 15
+        # Handle None value from agno (use default of 20)
+        k =  30
         results = vector_client.search(query, description=description, top_k=k)
 
         # Format results for agno agent consumption
@@ -164,4 +167,127 @@ def create_wage_tool():
         return result
 
     return wage_tool
+
+
+# ============================================================================
+# GSA TOOLS
+# ============================================================================
+
+def calculate_gsa_year(contract_start_date: str) -> int:
+    """
+    Calculate current GSA contract year based on contract start date.
+
+    Example:
+        Contract started: January 15, 2020
+        Current date: December 24, 2024
+        Result: Year 5
+    """
+    from dateutil import parser as date_parser
+
+    try:
+        start_date = date_parser.parse(contract_start_date)
+        current_date = datetime.now()
+
+        years_diff = current_date.year - start_date.year
+
+        if (current_date.month, current_date.day) < (start_date.month, start_date.day):
+            years_diff -= 1
+
+        return max(1, years_diff + 1)
+
+    except Exception:
+        return 1
+
+
+def create_gsa_retriever(organization_id: str, file_id: str):
+    """
+    Create a retriever for GSA labor category search using Pinecone.
+
+    Args:
+        organization_id: Organization ID to filter results
+        file_id: GSA contract file ID to filter results
+
+    Returns:
+        Callable retriever function for agno agents
+    """
+    pinecone_client = get_gsa_pinecone_client()
+
+    def gsa_retriever(
+        query: str,
+        agent: Optional[Agent] = None,
+        num_documents: int = 5,
+        **kwargs
+    ) -> List[Dict[str, str]]:
+        """
+        Search for matching GSA labor categories using Pinecone vector search.
+
+        Args:
+            query: Job title or description to search for
+            num_documents: Maximum number of results to return
+
+        Returns:
+            List of matching labor categories with lcat_id, title, score
+        """
+        k = 30
+
+        results = pinecone_client.search_labor_categories(
+            query=query,
+            organization_id=organization_id,
+            file_id=file_id,
+            top_k=k
+        )
+
+        return results
+
+    return gsa_retriever
+
+
+def create_gsa_rate_tool(organization_id: str, file_id: str, contract_start_date: str):
+    """
+    Create a tool for retrieving GSA rates from MongoDB.
+
+    Args:
+        organization_id: Organization ID
+        file_id: GSA contract file ID
+        contract_start_date: Contract start date for year calculation
+
+    Returns:
+        Callable tool function for agno agents
+    """
+    crud = get_company_repository_crud()
+    current_gsa_year = calculate_gsa_year(contract_start_date)
+
+    @tool(stop_after_tool_call=True)
+    def gsa_rate_tool(lcat_id: str) -> Dict[str, Any]:
+        """
+        Get GSA labor category with all rates.
+
+        Args:
+            lcat_id: Labor category ID from search results
+
+        Returns:
+            Labor category info with all rates_by_year
+        """
+        lcat = crud.get_labor_category(file_id, organization_id, lcat_id)
+
+        if not lcat:
+            return {
+                "lcat_id": lcat_id,
+                "error": f"Labor category {lcat_id} not found"
+            }
+
+        return {
+            "lcat_id": lcat_id,
+            "title": lcat.get("title", ""),
+            "sin": lcat.get("sin", ""),
+            "education": lcat.get("education", ""),
+            "experience": lcat.get("experience", ""),
+            "rates_by_year": lcat.get("rates_by_year", {}),
+            "current_gsa_year": current_gsa_year
+        }
+
+    return gsa_rate_tool
+
+
+
 

@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
 
-from routers import pricing, auth, excel_export, proposals, organizations, invitations, workspace
+from routers import pricing, auth, excel_export, proposals, organizations, invitations, workspace, soc, company_repository, billing, stripe_webhooks, terms
 from auth.config import FRONTEND_URL
 from app.startup import startup_manager
 
@@ -67,12 +67,17 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router, prefix="/api", tags=["authentication"])
+app.include_router(terms.router, tags=["terms"])
 app.include_router(organizations.router, tags=["organizations"])
 app.include_router(invitations.router, tags=["invitations"])
 app.include_router(workspace.router, tags=["workspace"])
 app.include_router(proposals.router, prefix="/api", tags=["proposals"])
 app.include_router(pricing.router, prefix="/api/pricing", tags=["pricing"])
 app.include_router(excel_export.router, prefix="/api/excel", tags=["excel-export"])
+app.include_router(soc.router, prefix="/api", tags=["soc"])
+app.include_router(company_repository.router, tags=["company-repository"])
+app.include_router(billing.router, tags=["billing"])
+app.include_router(stripe_webhooks.router, tags=["webhooks"])
 
 
 @app.get("/")

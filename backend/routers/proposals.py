@@ -22,11 +22,16 @@ from models.proposal import ProposalCreate, ProposalUpdate, DocumentInfo
 from utils.proposals import get_proposal_crud
 
 # Document processing
-from client.jd_parser import parse_documents_to_dataframe
+# OLD: from client.jd_parser import parse_documents_to_dataframe  # Replaced by intelligent parser
+from client.intelligent_parser import parse_document_intelligent
 from utils.pipeline import process_dataframe_with_agents
 
 # Position splitting
 from routers.pricing import split_position_by_hours, split_multi_year_position
+
+# Billing
+from client.stripe_client import get_stripe_service, ChargeType
+from utils.billing_crud import get_billing_crud
 
 # Storage
 from client.idrive_storage import get_idrive_storage
@@ -35,6 +40,35 @@ from client.idrive_storage import get_idrive_storage
 from auth.database import get_mongodb_client
 
 router = APIRouter(prefix="/proposals", tags=["proposals"])
+
+# Document preview cache (in-memory with 7-day TTL)
+import time
+
+class DocumentCache:
+    """Simple in-memory cache for document previews with 7-day TTL."""
+
+    def __init__(self):
+        self._cache = {}  # {idrive_key: (content, content_type, timestamp)}
+        self._ttl = 7 * 24 * 60 * 60  # 7 days in seconds
+
+    def get(self, key: str):
+        """Get cached document if exists and not expired."""
+        if key in self._cache:
+            content, content_type, timestamp = self._cache[key]
+            # Check if expired (7 days)
+            if time.time() - timestamp < self._ttl:
+                return content, content_type
+            else:
+                # Expired, remove from cache
+                del self._cache[key]
+        return None, None
+
+    def set(self, key: str, content: bytes, content_type: str):
+        """Cache document content with 7-day TTL."""
+        self._cache[key] = (content, content_type, time.time())
+
+# Global document cache instance
+document_cache = DocumentCache()
 
 # Get singleton ProposalCRUD instance
 async def get_crud():
@@ -65,13 +99,122 @@ def serialize_proposal(proposal: dict) -> dict:
     if "organization_id" in proposal and proposal["organization_id"]:
         proposal["organization_id"] = str(proposal["organization_id"])
 
-    # Convert snake_case to camelCase for date fields
+    # Convert snake_case to camelCase for date fields and ensure ISO format with timezone
     if "created_at" in proposal:
-        proposal["createdAt"] = proposal.pop("created_at")
+        dt = proposal.pop("created_at")
+        # Ensure timezone-aware ISO format (MongoDB datetimes are UTC)
+        if dt:
+            iso_str = dt.isoformat()
+            proposal["createdAt"] = iso_str if iso_str.endswith('Z') or '+' in iso_str else iso_str + 'Z'
+        else:
+            proposal["createdAt"] = None
     if "updated_at" in proposal:
-        proposal["updatedAt"] = proposal.pop("updated_at")
+        dt = proposal.pop("updated_at")
+        # Ensure timezone-aware ISO format (MongoDB datetimes are UTC)
+        if dt:
+            iso_str = dt.isoformat()
+            proposal["updatedAt"] = iso_str if iso_str.endswith('Z') or '+' in iso_str else iso_str + 'Z'
+        else:
+            proposal["updatedAt"] = None
 
     return proposal
+
+
+def convert_intelligent_output_to_dataframe(intelligent_result: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Convert intelligent parser output to the same format as jd_parser output.
+
+    Args:
+        intelligent_result: Output from parse_document_intelligent()
+
+    Returns:
+        Dict with keys: df, travel, odcs, extensions (same as parse_documents_to_dataframe)
+    """
+    import pandas as pd
+
+    metadata = intelligent_result.get("metadata", {})
+    positions = intelligent_result.get("positions", [])
+    travel = intelligent_result.get("travel", [])
+    odcs = intelligent_result.get("odcs", [])
+    extensions = intelligent_result.get("extensions", [])
+
+    # Build months_per_year dict from extensions
+    total_years = metadata.get("total_years", 5)
+    months_per_year_dict = {}
+
+    # Default: all regular years have 12 months
+    for year in range(1, total_years + 1):
+        months_per_year_dict[str(year)] = 12
+
+    # Add extension years with their specific month counts
+    for ext in extensions:
+        ext_year = ext.get("year")
+        ext_months = ext.get("duration_months", 6)
+        if ext_year:
+            months_per_year_dict[str(ext_year)] = ext_months
+
+    # Convert positions to DataFrame rows
+    rows = []
+    for pos in positions:
+        # Extract hours_per_year dict
+        hours_per_year = pos.get("hours_per_year", {})
+
+        row = {
+            "labor_category": pos.get("labor_category", ""),
+            "description": pos.get("description", ""),
+            "experience": pos.get("experience"),
+            "location": pos.get("location"),
+            "location_type": pos.get("location_type", "On-Site"),
+            "is_key_position": pos.get("is_key_position", False),
+            "hours_per_year": hours_per_year,
+
+            # Metadata (document-level info)
+            "base_years": metadata.get("base_years", 1),
+            "option_years": metadata.get("option_years", 4),
+            "total_years": metadata.get("total_years", 5),
+            "project_name": metadata.get("project_name"),
+            "standard_fte_hours": metadata.get("standard_fte_hours", 1920),
+            "months_per_year": months_per_year_dict if months_per_year_dict else None
+        }
+
+        rows.append(row)
+
+    # Create DataFrame
+    df = pd.DataFrame(rows)
+
+    # Convert travel list
+    travel_list = []
+    for t in travel:
+        travel_list.append({
+            "description": t.get("description", ""),
+            "amount_per_year": t.get("amount_per_year", {})
+        })
+
+    # Convert ODCs list
+    odc_list = []
+    for o in odcs:
+        odc_list.append({
+            "category": o.get("category", ""),
+            "description": o.get("description", ""),
+            "amount_per_year": o.get("amount_per_year", {})
+        })
+
+    # Convert extensions list
+    extension_list = []
+    for e in extensions:
+        extension_list.append({
+            "year": e.get("year"),
+            "label": e.get("label", ""),
+            "duration_months": e.get("duration_months", 6),
+            "description": e.get("description", "")
+        })
+
+    return {
+        "df": df,
+        "travel": travel_list,
+        "odcs": odc_list,
+        "extensions": extension_list
+    }
 
 
 # ============================================================================
@@ -81,41 +224,47 @@ def serialize_proposal(proposal: dict) -> dict:
 async def process_proposal_documents(
     proposal_id: str,
     user_id: str,
+    organization_id: str,
     file_paths: List[str],
     file_names: List[str],
-    temp_dir: Path
+    temp_dir: Path,
+    wage_source: Dict[str, Any] = None
 ):
     """
     Background task to process uploaded documents.
 
     Updates proposal status as processing progresses.
     Uses singleton ProposalCRUD instance for thread safety.
+
+    Args:
+        wage_source: {"type": "bls"} or {"type": "gsa", "file_id": "..."}
     """
     # Get singleton CRUD instance
     crud = await get_crud()
 
-    try:
-        # Get proposal to fetch organization settings
-        proposal = crud.get_by_id(ObjectId(proposal_id))
-        organization_id = proposal.get("organization_id")
+    # Default to BLS if not specified
+    if wage_source is None:
+        wage_source = {"type": "bls"}
 
+    try:
         # Get organization settings for default rates and escalation rate
         default_escalation_rate = 0.03  # Fallback default
         default_rates = {
             "fringe": 0.247,
-            "oh": 0.0711,
+            "oh_onsite": 0.0711,
+            "oh_offsite": 0.0711,
             "ga": 0.2243,
             "fee": 0.07,
             "smh": 0.065,
             "sub_fee": 0.05,
             "ga_passthrough": 0.025,
-            "ga_adder": 0.0243
+            "ga_adder": 0.0
         }
 
         if organization_id:
             from utils.organizations import get_organization_crud
             org_crud = get_organization_crud()
-            org = org_crud.get_by_id(organization_id)
+            org = org_crud.get_by_id(ObjectId(organization_id))
             if org and "settings" in org:
                 settings = org.get("settings", {})
                 default_escalation_rate = settings.get("default_escalation_rate", 0.03)
@@ -129,17 +278,53 @@ async def process_proposal_documents(
             {"status": "processing", "progress": 0, "message": "Parsing documents..."}
         )
 
-        # Step 1: Parse documents to DataFrame
-        df = await parse_documents_to_dataframe(file_paths)
+        # Step 1: Parse documents with Intelligent Parser (replaces JD parser)
+        # Use first file (for multi-file support, we'd loop and merge)
+        intelligent_result = await parse_document_intelligent(file_paths[0])
+
+        # Convert intelligent parser output to DataFrame format
+        parse_result = convert_intelligent_output_to_dataframe(intelligent_result)
+        df = parse_result["df"]
+        extracted_travel = parse_result.get("travel", [])
+        extracted_odcs = parse_result.get("odcs", [])
+        extracted_extensions = parse_result.get("extensions", [])
 
         crud.update_proposal(
             proposal_id,
             user_id,
-            {"progress": 30, "message": f"Found {len(df)} positions. Fetching wage data..."}
+            {"progress": 30, "message": f"Found {len(df)} positions, {len(extracted_travel)} Travel items, {len(extracted_odcs)} ODCs. Fetching wage data..."}
         )
 
-        # Step 2: Process with agents
-        final_df = await process_dataframe_with_agents(df, max_workers=10)
+        # NEW: Fetch organization rates for BLS comparison (if GSA mode)
+        organization_rates = None
+        if wage_source.get("type") == "gsa":
+            try:
+                from utils.organizations import get_organization_crud
+                org_crud = get_organization_crud()
+                org = org_crud.get_by_id(ObjectId(organization_id))
+
+                if org and org.get("settings"):
+                    default_rates = org["settings"].get("default_rates", {})
+                    organization_rates = {
+                        "fringe": default_rates.get("fringe", 0.247),
+                        "oh_onsite": default_rates.get("oh_onsite", default_rates.get("oh", 0.0711)),
+                        "oh_offsite": default_rates.get("oh_offsite", default_rates.get("oh", 0.0711)),
+                        "ga": default_rates.get("ga", 0.2243),
+                        "fee": default_rates.get("fee", 0.07)
+                    }
+                    print(f"📊 Using organization rates for BLS comparison: Fringe={organization_rates['fringe']}, OH On-Site={organization_rates['oh_onsite']}, OH Off-Site={organization_rates['oh_offsite']}, G&A={organization_rates['ga']}, Fee={organization_rates['fee']}")
+            except Exception as e:
+                print(f"⚠️ Failed to fetch organization rates for BLS comparison: {e}")
+                # Continue without rates - no discount suggestions will be generated
+
+        # Step 2: Process with agents (BLS or GSA based on wage_source)
+        final_df = await process_dataframe_with_agents(
+            df,
+            max_workers=10,
+            wage_source=wage_source,
+            organization_id=organization_id,
+            organization_rates=organization_rates  # NEW: Pass rates for BLS comparison
+        )
 
         crud.update_proposal(
             proposal_id,
@@ -233,14 +418,82 @@ async def process_proposal_documents(
             key = f"{year}_to_{year + 1}"
             escalation_rates[key] = default_escalation_rate
 
-        # Update proposal with results
+        # Charge for basic proposal (if payment method configured)
+        billing_status = "unpaid"
+        billing_message = None
+
+        try:
+            stripe_service = get_stripe_service()
+            billing_crud = get_billing_crud()
+
+            if stripe_service.is_configured and org and org.get("stripe_customer_id") and org.get("default_payment_method_id"):
+                # Check if already charged (idempotent)
+                if not billing_crud.is_proposal_charged(proposal_id, "basic"):
+                    # Get proposal name for description
+                    proposal_doc = crud.get_by_id(ObjectId(proposal_id))
+                    proposal_name = proposal_doc.get("name", "Untitled") if proposal_doc else "Untitled"
+
+                    # Create billing record
+                    amount_cents = stripe_service.get_price(ChargeType.BASIC)
+                    billing_id = billing_crud.create_billing_record(
+                        organization_id=str(org["_id"]),
+                        proposal_id=proposal_id,
+                        charge_type="basic",
+                        amount_cents=amount_cents,
+                        description=f"PriceIQ Basic: {proposal_name[:50]}",
+                        triggered_by_user_id=user_id,
+                        status="pending"
+                    )
+
+                    # Charge
+                    result = stripe_service.charge_for_proposal(
+                        customer_id=org["stripe_customer_id"],
+                        payment_method_id=org["default_payment_method_id"],
+                        charge_type=ChargeType.BASIC,
+                        proposal_id=proposal_id,
+                        proposal_name=proposal_name,
+                        organization_id=str(org["_id"])
+                    )
+
+                    if result["success"]:
+                        billing_status = "paid"
+                        billing_crud.collection.update_one(
+                            {"_id": ObjectId(billing_id)},
+                            {"$set": {
+                                "stripe_payment_intent_id": result["payment_intent_id"],
+                                "status": "succeeded",
+                                "updated_at": datetime.utcnow()
+                            }}
+                        )
+                    else:
+                        billing_status = "failed"
+                        billing_message = result.get("error", "Payment failed")
+                        billing_crud.collection.update_one(
+                            {"_id": ObjectId(billing_id)},
+                            {"$set": {
+                                "status": "failed",
+                                "error_message": billing_message,
+                                "updated_at": datetime.utcnow()
+                            }}
+                        )
+                else:
+                    billing_status = "paid"  # Already charged
+        except Exception as billing_error:
+            import traceback
+            traceback.print_exc()
+            billing_message = f"Billing error: {str(billing_error)}"
+            # Don't fail the whole proposal processing for billing errors
+
+        # Update proposal with results (including Travel and ODCs in spreadsheet_data)
         crud.update_proposal(
             proposal_id,
             user_id,
             {
                 "status": "completed",
+                "business_status": "active",  # Auto-assign active status when completed
                 "progress": 100,
-                "message": "Processing complete",
+                "message": billing_message or "Processing complete",
+                "billing_status": billing_status,
                 "jobs": cleaned_jobs,
                 "metadata": {
                     "total_jobs": len(cleaned_jobs),
@@ -250,7 +503,12 @@ async def process_proposal_documents(
                     "fte_hours_threshold": fte_threshold
                 },
                 "rates": default_rates,
-                "escalation_rates": escalation_rates
+                "escalation_rates": escalation_rates,
+                "spreadsheet_data": {
+                    "travel": extracted_travel,
+                    "odcs": extracted_odcs,
+                    "extensions": extracted_extensions
+                }
             }
         )
 
@@ -278,15 +536,30 @@ async def process_proposal_documents(
 async def upload_proposal_documents(
     background_tasks: BackgroundTasks,
     files: List[UploadFile] = File(...),
+    name: str = Form(...),
     solicitation_number: str = Form(None),
+    wage_source_type: str = Form("bls"),
+    wage_source_file_id: str = Form(None),
     current_user: dict = Depends(get_current_user)
 ):
     """
     Upload documents, store in iDrive e2, and start async processing.
 
+    Args:
+        files: Document files to upload
+        name: Proposal name (required)
+        solicitation_number: Optional solicitation number
+        wage_source_type: "bls" (default) or "gsa"
+        wage_source_file_id: GSA contract file_id (required if wage_source_type is "gsa")
+
     Returns proposal_id immediately for status polling.
     """
     try:
+        # Build wage source config
+        wage_source = {"type": wage_source_type}
+        if wage_source_type == "gsa" and wage_source_file_id:
+            wage_source["file_id"] = wage_source_file_id
+
         # Initialize services
         storage = get_idrive_storage()
         crud = await get_crud()
@@ -308,12 +581,13 @@ async def upload_proposal_documents(
         # Create proposal in MongoDB (status: processing)
         # Note: prime_contractor_name will be set by frontend from organization data
         proposal_data = {
-            "name": f"Proposal {datetime.utcnow().strftime('%Y-%m-%d %H:%M')}",
+            "name": name,
             "solicitation_number": solicitation_number,
             "prime_contractor_name": "TBD",  # Frontend will update this from org data
             "documents": [],
             "progress": 0,
-            "message": "Uploading documents..."
+            "message": "Uploading documents...",
+            "wage_source": wage_source
         }
 
         # Use organization-aware creation if user belongs to an organization
@@ -362,9 +636,11 @@ async def upload_proposal_documents(
             process_proposal_documents,
             proposal_id,
             str(current_user["_id"]),
+            str(current_user.get("organization_id")),
             file_paths,
             file_names,
-            temp_dir
+            temp_dir,
+            wage_source
         )
 
         return {
@@ -432,13 +708,13 @@ async def get_proposal_stats(
     current_user: dict = Depends(get_current_user)
 ):
     """
-    Get proposal statistics for the current user.
+    Get proposal statistics for the current user with business status breakdown.
 
     Returns:
-        Statistics including total, completed, processing (not downloaded),
-        submitted (downloaded), and error counts
+        Statistics with count and value for active, analyzed (active+no-bid),
+        no-bid, and submitted proposals, plus processing and error counts.
 
-    Optimized: Uses single aggregation pipeline instead of multiple count queries
+    Optimized: Uses single aggregation pipeline with $facet
     """
     crud = await get_crud()
 
@@ -462,7 +738,7 @@ async def get_proposal_stats(
         else:
             match_query = {"user_id": str(current_user["_id"])}
 
-        # Use aggregation pipeline to get all counts in a single query
+        # Use aggregation pipeline to get all counts and values in a single query
         collection = crud.collection
         pipeline = [
             {"$match": match_query},
@@ -472,29 +748,68 @@ async def get_proposal_stats(
                         {"$match": {"status": "completed"}},
                         {"$count": "count"}
                     ],
-                    "completed": [
+                    "active": [
                         {
                             "$match": {
                                 "status": "completed",
-                                "$or": [
-                                    {"excel_downloaded": {"$exists": False}},
-                                    {"excel_downloaded": False}
-                                ]
+                                "business_status": "active"
                             }
                         },
-                        {"$count": "count"}
+                        {
+                            "$group": {
+                                "_id": None,
+                                "count": {"$sum": 1},
+                                "value": {"$sum": {"$ifNull": ["$total_cost", 0]}}
+                            }
+                        }
                     ],
-                    "processing": [
-                        {"$match": {"status": "processing"}},
-                        {"$count": "count"}
+                    "analyzed": [
+                        {
+                            "$match": {
+                                "status": "completed",
+                                "business_status": {"$in": ["active", "no-bid"]}
+                            }
+                        },
+                        {
+                            "$group": {
+                                "_id": None,
+                                "count": {"$sum": 1},
+                                "value": {"$sum": {"$ifNull": ["$total_cost", 0]}}
+                            }
+                        }
+                    ],
+                    "no_bid": [
+                        {
+                            "$match": {
+                                "status": "completed",
+                                "business_status": "no-bid"
+                            }
+                        },
+                        {
+                            "$group": {
+                                "_id": None,
+                                "count": {"$sum": 1},
+                                "value": {"$sum": {"$ifNull": ["$total_cost", 0]}}
+                            }
+                        }
                     ],
                     "submitted": [
                         {
                             "$match": {
                                 "status": "completed",
-                                "excel_downloaded": True
+                                "business_status": "submitted"
                             }
                         },
+                        {
+                            "$group": {
+                                "_id": None,
+                                "count": {"$sum": 1},
+                                "value": {"$sum": {"$ifNull": ["$total_cost", 0]}}
+                            }
+                        }
+                    ],
+                    "processing": [
+                        {"$match": {"status": "processing"}},
                         {"$count": "count"}
                     ],
                     "error": [
@@ -511,17 +826,33 @@ async def get_proposal_stats(
             stats = result[0]
             return {
                 "total": stats["total"][0]["count"] if stats["total"] else 0,
-                "completed": stats["completed"][0]["count"] if stats["completed"] else 0,
+                "active": {
+                    "count": stats["active"][0]["count"] if stats["active"] else 0,
+                    "value": stats["active"][0]["value"] if stats["active"] else 0
+                },
+                "analyzed": {
+                    "count": stats["analyzed"][0]["count"] if stats["analyzed"] else 0,
+                    "value": stats["analyzed"][0]["value"] if stats["analyzed"] else 0
+                },
+                "no_bid": {
+                    "count": stats["no_bid"][0]["count"] if stats["no_bid"] else 0,
+                    "value": stats["no_bid"][0]["value"] if stats["no_bid"] else 0
+                },
+                "submitted": {
+                    "count": stats["submitted"][0]["count"] if stats["submitted"] else 0,
+                    "value": stats["submitted"][0]["value"] if stats["submitted"] else 0
+                },
                 "processing": stats["processing"][0]["count"] if stats["processing"] else 0,
-                "submitted": stats["submitted"][0]["count"] if stats["submitted"] else 0,
                 "error": stats["error"][0]["count"] if stats["error"] else 0
             }
 
         return {
             "total": 0,
-            "completed": 0,
+            "active": {"count": 0, "value": 0},
+            "analyzed": {"count": 0, "value": 0},
+            "no_bid": {"count": 0, "value": 0},
+            "submitted": {"count": 0, "value": 0},
             "processing": 0,
-            "submitted": 0,
             "error": 0
         }
 
@@ -530,6 +861,245 @@ async def get_proposal_stats(
             status_code=500,
             detail=f"Failed to get proposal statistics: {str(e)}"
         )
+
+
+@router.get("/analytics/{business_status}")
+async def get_business_status_analytics(
+    business_status: str,
+    skip: int = 0,
+    limit: int = 100,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Get detailed analytics for proposals with specific business status.
+
+    Supports special "analyzed" status which returns Active + No-Bid combined.
+    Returns all proposals matching the status with pagination support.
+    Frontend will handle client-side filtering and sorting.
+    """
+    # Validate status - "analyzed" is special case for Active + No-Bid
+    if business_status not in ["active", "no-bid", "submitted", "analyzed"]:
+        raise HTTPException(status_code=400, detail="Invalid status")
+
+    crud = await get_crud()
+    organization_id = current_user.get("organization_id")
+    role = current_user.get("role")
+
+    # Determine which business_status values to query
+    # "analyzed" queries both "active" and "no-bid" (superset)
+    if business_status == "analyzed":
+        status_match = {"$in": ["active", "no-bid"]}
+    else:
+        status_match = business_status
+
+    # Build base query with org isolation and RBAC
+    if organization_id:
+        if role == "admin":
+            match_query = {
+                "organization_id": organization_id,
+                "status": "completed",
+                "business_status": status_match
+            }
+        else:
+            match_query = {
+                "$or": [
+                    {"user_id": str(current_user["_id"])},
+                    {"shared_with": str(current_user["_id"])}
+                ],
+                "organization_id": organization_id,
+                "status": "completed",
+                "business_status": status_match
+            }
+    else:
+        match_query = {
+            "user_id": str(current_user["_id"]),
+            "status": "completed",
+            "business_status": status_match
+        }
+
+    collection = crud.collection
+
+    # Get summary metrics using aggregation
+    from datetime import datetime
+    pipeline = [
+        {"$match": match_query},
+        {
+            "$facet": {
+                "metrics": [
+                    {
+                        "$group": {
+                            "_id": None,
+                            "count": {"$sum": 1},
+                            "total_value": {"$sum": {"$ifNull": ["$total_cost", 0]}},
+                            "avg_age_ms": {
+                                "$avg": {
+                                    "$subtract": [datetime.utcnow(), "$created_at"]
+                                }
+                            },
+                            "contributors": {"$addToSet": "$user_id"}
+                        }
+                    }
+                ],
+                "proposals": [
+                    {"$sort": {"updated_at": -1}},  # Default sort by updated
+                    {"$skip": skip},
+                    {"$limit": limit},
+                    {
+                        "$project": {
+                            "_id": 1,
+                            "name": 1,
+                            "solicitation_number": 1,
+                            "total_cost": 1,
+                            "business_status": 1,
+                            "created_at": 1,
+                            "updated_at": 1,
+                            "user_id": 1
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+
+    result = list(collection.aggregate(pipeline))
+
+    if not result:
+        return {
+            "count": 0,
+            "total_value": 0,
+            "avg_value": 0,
+            "avg_age_days": 0,
+            "contributors_count": 0,
+            "proposals": [],
+            "has_more": False
+        }
+
+    data = result[0]
+    metrics = data["metrics"][0] if data["metrics"] else None
+
+    if not metrics:
+        return {
+            "count": 0,
+            "total_value": 0,
+            "avg_value": 0,
+            "avg_age_days": 0,
+            "contributors_count": 0,
+            "proposals": [],
+            "has_more": False
+        }
+
+    # Calculate metrics
+    count = metrics["count"]
+    total_value = metrics.get("total_value") or 0
+    avg_value = total_value / count if count > 0 else 0
+    avg_age_ms = metrics.get("avg_age_ms") or 0
+    avg_age_days = (avg_age_ms / (1000 * 60 * 60 * 24)) if avg_age_ms else 0
+
+    # Serialize proposals
+    proposals = []
+    for prop in data["proposals"]:
+        proposals.append({
+            "id": str(prop["_id"]),
+            "name": prop.get("name", "Untitled"),
+            "solicitation_number": prop.get("solicitation_number"),
+            "total_cost": prop.get("total_cost"),
+            "business_status": prop.get("business_status"),  # Include for tab filtering
+            "created_at": prop.get("created_at").isoformat() if prop.get("created_at") else None,
+            "updated_at": prop.get("updated_at").isoformat() if prop.get("updated_at") else None,
+            "user_id": prop.get("user_id")
+        })
+
+    return {
+        "count": count,
+        "total_value": total_value,
+        "avg_value": avg_value,
+        "avg_age_days": round(avg_age_days, 1),
+        "contributors_count": len(metrics.get("contributors", [])),
+        "proposals": proposals,
+        "has_more": len(proposals) == limit  # Indicate if more results available
+    }
+
+
+@router.get("/document-proxy")
+async def proxy_document(url: str, filename: str = "document"):
+    """
+    Proxy document content for iframe preview.
+
+    Fetches document from provided URL and streams it back
+    without X-Frame-Options header, enabling iframe embedding.
+
+    Note: This endpoint does not require authentication since iframes
+    cannot send Authorization headers. Access is controlled by the
+    presigned URL which expires after 7 days.
+
+    Args:
+        url: IDrive presigned URL to fetch
+        filename: Original filename for Content-Disposition header
+
+    Returns:
+        StreamingResponse with document content
+    """
+    from fastapi.responses import StreamingResponse
+    import httpx
+
+    # Check cache first (using URL as key)
+    cached_content, cached_type = document_cache.get(url)
+    if cached_content:
+        return StreamingResponse(
+            iter([cached_content]),
+            media_type=cached_type,
+            headers={
+                "Content-Disposition": f'inline; filename="{filename}"',
+                "Cache-Control": "private, max-age=604800",
+                "X-Cache": "HIT"
+            }
+        )
+
+    # Fetch document from IDrive and stream back
+    try:
+        async with httpx.AsyncClient(timeout=60.0) as client:
+            response = await client.get(url, follow_redirects=True)
+
+            if response.status_code != 200:
+                raise HTTPException(
+                    status_code=status.HTTP_502_BAD_GATEWAY,
+                    detail=f"Failed to fetch document: HTTP {response.status_code}"
+                )
+
+            content_type = response.headers.get("content-type", "application/octet-stream")
+
+            # Infer content type from filename if generic
+            if content_type in ["binary/octet-stream", "application/octet-stream"]:
+                ext = filename.lower().split(".")[-1] if "." in filename else ""
+                content_types = {
+                    "pdf": "application/pdf",
+                    "xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    "xls": "application/vnd.ms-excel",
+                    "docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                    "doc": "application/msword",
+                    "csv": "text/csv",
+                    "txt": "text/plain",
+                    "rtf": "application/rtf"
+                }
+                content_type = content_types.get(ext, content_type)
+
+            # Cache for 7 days
+            document_cache.set(url, response.content, content_type)
+
+            return StreamingResponse(
+                iter([response.content]),
+                media_type=content_type,
+                headers={
+                    "Content-Disposition": f'inline; filename="{filename}"',
+                    "Cache-Control": "private, max-age=604800",
+                    "X-Cache": "MISS"
+                }
+            )
+
+    except httpx.TimeoutException:
+        raise HTTPException(status_code=status.HTTP_504_GATEWAY_TIMEOUT, detail="Document fetch timed out")
+    except Exception as e:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to proxy document: {str(e)}")
 
 
 @router.get("")
@@ -597,14 +1167,22 @@ async def list_proposals(
     result = []
     for prop in proposals:
         prop["_id"] = str(prop["_id"])
+
+        # Format dates with timezone (MongoDB datetimes are UTC)
+        created_at = prop.get("created_at")
+        updated_at = prop.get("updated_at")
+        created_iso = created_at.isoformat() + 'Z' if created_at else None
+        updated_iso = updated_at.isoformat() + 'Z' if updated_at else None
+
         # Only include summary fields (use camelCase for frontend)
         summary = {
             "id": prop["_id"],
             "name": prop.get("name", "Untitled"),
             "solicitation_number": prop.get("solicitation_number"),
             "status": prop.get("status", "draft"),
-            "createdAt": prop.get("created_at"),  # Convert to camelCase
-            "updatedAt": prop.get("updated_at"),  # Convert to camelCase
+            "business_status": prop.get("business_status"),  # NEW: business workflow status
+            "createdAt": created_iso,  # ISO format with timezone
+            "updatedAt": updated_iso,  # ISO format with timezone
             "total_cost": prop.get("total_cost")
         }
         result.append(summary)
@@ -620,6 +1198,61 @@ async def list_proposals(
         }
 
     return result
+
+
+@router.patch("/{proposal_id}/business-status")
+async def update_business_status(
+    proposal_id: str,
+    business_status: str,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Update proposal business status (active, no-bid, submitted).
+
+    All users can change status of their own proposals.
+    Status can only be changed for completed proposals.
+    """
+    # Validate status
+    valid_statuses = ["active", "no-bid", "submitted"]
+    if business_status not in valid_statuses:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid status. Must be: {', '.join(valid_statuses)}"
+        )
+
+    crud = await get_crud()
+    organization_id = current_user.get("organization_id")
+    role = current_user.get("role")
+
+    # Get proposal with access control
+    proposal = crud.get_proposal(
+        proposal_id,
+        str(current_user["_id"]),
+        organization_id=organization_id,
+        role=role
+    )
+
+    if not proposal:
+        raise HTTPException(status_code=404, detail="Proposal not found")
+
+    # Validate can change status
+    can_change, reason = crud.can_change_business_status(proposal_id)
+    if not can_change:
+        raise HTTPException(status_code=400, detail=reason)
+
+    # Update status
+    updated = crud.update_proposal(
+        proposal_id,
+        str(current_user["_id"]),
+        {"business_status": business_status}
+    )
+
+    if not updated:
+        raise HTTPException(status_code=404, detail="Failed to update proposal")
+
+    # Serialize and return
+    from utils.helpers import serialize_doc
+    return serialize_doc(updated)
 
 
 @router.get("/{proposal_id}")
@@ -651,6 +1284,9 @@ async def get_proposal(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Proposal not found"
         )
+
+    # Check for timeout on stuck processing proposals (marks as error if >30 min)
+    proposal = crud.check_for_timeout(proposal)
 
     # Check if user has access (owner, admin, or shared)
     if not can_access_proposal(proposal, current_user):
@@ -893,6 +1529,109 @@ async def mark_proposal_downloaded(
     return {
         "message": "Proposal marked as downloaded",
         "excel_downloaded": True
+    }
+
+
+@router.post("/{proposal_id}/retry")
+async def retry_proposal_processing(
+    proposal_id: str,
+    background_tasks: BackgroundTasks,
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Retry processing for a stuck or failed proposal.
+    Re-downloads documents from iDrive and re-runs processing.
+    """
+    crud = await get_crud()
+    storage = get_idrive_storage()
+
+    # Get user's organization and role for access control
+    organization_id = current_user.get("organization_id")
+    role = current_user.get("role")
+
+    # Get proposal with access control
+    proposal = crud.get_proposal(
+        proposal_id,
+        str(current_user["_id"]),
+        organization_id=organization_id,
+        role=role
+    )
+
+    if not proposal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Proposal not found"
+        )
+
+    # Only allow retry for processing/error status
+    if proposal.get("status") not in ["processing", "error"]:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Can only retry proposals in processing or error state"
+        )
+
+    # Get documents from iDrive
+    documents = proposal.get("documents", [])
+    if not documents:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="No documents found. The original files were not saved. Please create a new proposal and upload the documents again."
+        )
+
+    # Create temp directory and download files from iDrive
+    temp_dir = Path(tempfile.mkdtemp())
+    file_paths = []
+    file_names = []
+
+    try:
+        for doc in documents:
+            idrive_key = doc.get("idrive_key")
+            filename = doc.get("filename")
+            if idrive_key and filename:
+                file_path = temp_dir / filename
+                storage.download_document(idrive_key, str(file_path))
+                file_paths.append(str(file_path))
+                file_names.append(filename)
+    except Exception as e:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to retrieve documents from storage: {str(e)}"
+        )
+
+    if not file_paths:
+        shutil.rmtree(temp_dir, ignore_errors=True)
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Could not retrieve any documents for reprocessing"
+        )
+
+    # Reset status to processing
+    crud.update_proposal(
+        proposal_id,
+        str(current_user["_id"]),
+        {
+            "status": "processing",
+            "progress": 0,
+            "message": "Retrying processing..."
+        }
+    )
+
+    # Start background processing
+    background_tasks.add_task(
+        process_proposal_documents,
+        proposal_id,
+        str(current_user["_id"]),
+        str(current_user.get("organization_id")),
+        file_paths,
+        file_names,
+        temp_dir,
+        proposal.get("wage_source")
+    )
+
+    return {
+        "status": "processing",
+        "message": "Retry initiated. Processing restarted."
     }
 
 
@@ -1306,15 +2045,15 @@ async def refresh_document_urls(
     updated_documents = []
 
     for doc in documents:
-        object_key = doc.get("object_key")
-        if object_key:
+        storage_key = doc.get("idrive_key")
+        if storage_key:
             try:
                 # Generate fresh pre-signed URL (7 days)
-                fresh_url = idrive.get_presigned_url(object_key)
-                updated_doc = {**doc, "url": fresh_url}
+                fresh_url = idrive.get_presigned_url(storage_key)
+                updated_doc = {**doc, "idrive_url": fresh_url}
                 updated_documents.append(updated_doc)
             except Exception as e:
-                print(f"Error refreshing URL for {object_key}: {e}")
+                print(f"Error refreshing URL for {storage_key}: {e}")
                 # Keep old URL if refresh fails
                 updated_documents.append(doc)
         else:
@@ -1335,3 +2074,190 @@ async def refresh_document_urls(
     updated_proposal = proposal_crud.get_by_id(prop_oid)
 
     return serialize_proposal(updated_proposal)
+
+
+@router.post("/{proposal_id}/positions/{position_id}/refresh-wage")
+async def refresh_position_wage_data(
+    proposal_id: str,
+    position_id: str,
+    update_data: Dict[str, Any],
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Refresh wage data for a position when SOC code changes.
+
+    Fetches new wage percentiles from MongoDB wage_data collection
+    based on the new SOC code and location, then updates the position.
+
+    Args:
+        proposal_id: Proposal ID
+        position_id: Position ID (string ID from frontend)
+        update_data: Dict with soc_code, soc_title, location?, experience?
+        current_user: Authenticated user
+
+    Returns:
+        Dict with status and updated wage_data
+
+    Raises:
+        HTTPException: If proposal/position not found or wage lookup fails
+    """
+    from client.oews_mongodb import OEWSMongoLookup
+
+    crud = await get_crud()
+
+    # Get user's organization and role
+    organization_id = current_user.get("organization_id")
+    role = current_user.get("role")
+
+    # Get proposal with access control
+    proposal = crud.get_proposal(
+        proposal_id,
+        str(current_user["_id"]),
+        organization_id=organization_id,
+        role=role
+    )
+
+    if not proposal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Proposal not found"
+        )
+
+    # Get position from spreadsheet_data
+    spreadsheet_data = proposal.get("spreadsheet_data", {})
+    positions = spreadsheet_data.get("positions", [])
+
+    # Find position by ID
+    position_index = None
+    position = None
+    for i, pos in enumerate(positions):
+        if pos.get("id") == position_id:
+            position_index = i
+            position = pos
+            break
+
+    if position is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Position with ID '{position_id}' not found"
+        )
+
+    # Extract required fields
+    soc_code = update_data.get("soc_code")
+    soc_title = update_data.get("soc_title")
+    location = update_data.get("location") or position.get("location") or "National"
+    experience = update_data.get("experience") or position.get("experience")
+
+    if not soc_code or not soc_title:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="soc_code and soc_title are required"
+        )
+
+    # Normalize SOC code to XX-XXXX format (accepts both "518000" and "51-8000")
+    import re
+    soc_code = soc_code.strip()
+
+    # Remove existing hyphens
+    clean_code = soc_code.replace('-', '')
+
+    # Validate it's 6 digits
+    if not re.match(r'^\d{6}$', clean_code):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Invalid SOC code format: '{soc_code}'. Expected 6 digits (e.g., '518000' or '51-8000')"
+        )
+
+    # Format as XX-XXXX
+    soc_code = f"{clean_code[:2]}-{clean_code[2:]}"
+
+    try:
+        # Get wage lookup client
+        wage_client = OEWSMongoLookup()
+
+        # Fetch wage data for new SOC code (async call)
+        wage_data = await wage_client.get_wage_by_soc(soc_code, location)
+
+        if not wage_data or "wages" not in wage_data:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No wage data found for SOC code '{soc_code}' in location '{location}'. Try 'National' as location."
+            )
+
+        wages = wage_data["wages"]
+
+        # Use occupation_name from database (more reliable than user input)
+        soc_title = wage_data.get("occupation_name", soc_title)
+
+        # Determine appropriate percentile based on experience
+        # Same logic as utils/pipeline.py:process_single_row
+        if experience is not None:
+            if experience < 3:
+                selected_percentile = "25th"
+            elif experience <= 5:
+                selected_percentile = "50th"
+            else:
+                selected_percentile = "75th"
+        else:
+            selected_percentile = "50th"  # Default to median
+
+        selected_wage = wages.get(selected_percentile)
+
+        # Build updated wage data
+        updated_wage_data = {
+            "soc_code": soc_code,
+            "soc_title": soc_title,
+            "wage_10th": wages.get("10th"),
+            "wage_25th": wages.get("25th"),
+            "wage_50th": wages.get("50th"),
+            "wage_75th": wages.get("75th"),
+            "wage_90th": wages.get("90th"),
+            "selected_wage": selected_wage,
+            "percentile": selected_percentile
+        }
+
+        # Update position in MongoDB
+        position.update({
+            "soc_code": soc_code,
+            "soc_title": soc_title,
+            "wage_10th": wages.get("10th"),
+            "wage_25th": wages.get("25th"),
+            "wage_50th": wages.get("50th"),
+            "wage_75th": wages.get("75th"),
+            "wage_90th": wages.get("90th"),
+            "percentile": selected_percentile
+        })
+
+        # Update the positions array
+        positions[position_index] = position
+        spreadsheet_data["positions"] = positions
+
+        # Save to MongoDB
+        updated_proposal = crud.update_proposal(
+            proposal_id,
+            str(current_user["_id"]),
+            {"spreadsheet_data": spreadsheet_data}
+        )
+
+        if not updated_proposal:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update proposal"
+            )
+
+        return {
+            "status": "success",
+            "wage_data": updated_wage_data
+        }
+
+    except HTTPException:
+        raise
+
+    except Exception as e:
+        print(f"❌ Wage refresh failed: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to refresh wage data: {str(e)}"
+        )

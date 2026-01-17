@@ -5,6 +5,7 @@ import { DataGrid } from 'react-data-grid';
 import type { Column } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
+import type { Extension } from '@/types';
 
 interface GrandTotalSectionProps {
   grandTotal: {
@@ -15,13 +16,16 @@ interface GrandTotalSectionProps {
   subLaborByYear?: Record<string, number>;
   passthroughByYear?: Record<string, number>;
   feeByYear?: Record<string, number>;
+  travelByYear?: Record<string, number>;
+  odcByYear?: Record<string, number>;
   totalYears: number;
+  extensions?: Extension[];
 }
 
 interface GrandTotalRow {
   id: string;
   label: string;
-  type: 'prime' | 'sub' | 'passthrough' | 'fee' | 'total';
+  type: 'prime' | 'sub' | 'passthrough' | 'fee' | 'travel' | 'odc' | 'total';
 }
 
 export const GrandTotalSection = ({
@@ -30,7 +34,10 @@ export const GrandTotalSection = ({
   subLaborByYear = {},
   passthroughByYear = {},
   feeByYear = {},
+  travelByYear = {},
+  odcByYear = {},
   totalYears,
+  extensions = [],
 }: GrandTotalSectionProps) => {
   // Format currency
   const formatCurrency = (value: number) => {
@@ -48,16 +55,20 @@ export const GrandTotalSection = ({
     const subTotal = Object.values(subLaborByYear).reduce((sum, val) => sum + val, 0);
     const passthroughTotal = Object.values(passthroughByYear).reduce((sum, val) => sum + val, 0);
     const feeTotal = Object.values(feeByYear).reduce((sum, val) => sum + val, 0);
+    const travelTotal = Object.values(travelByYear).reduce((sum, val) => sum + val, 0);
+    const odcTotal = Object.values(odcByYear).reduce((sum, val) => sum + val, 0);
 
-    return { primeTotal, subTotal, passthroughTotal, feeTotal };
-  }, [primeLaborByYear, subLaborByYear, passthroughByYear, feeByYear]);
+    return { primeTotal, subTotal, passthroughTotal, feeTotal, travelTotal, odcTotal };
+  }, [primeLaborByYear, subLaborByYear, passthroughByYear, feeByYear, travelByYear, odcByYear]);
 
-  // Create breakdown rows
+  // Create breakdown rows - Prime Labor is base (DL+Fringe+OH+G&A), Fee shown separately
   const rows = useMemo<GrandTotalRow[]>(() => [
-    { id: 'prime', label: 'Prime Labor (FBLR)', type: 'prime' },
+    { id: 'prime', label: 'Prime Labor (Base)', type: 'prime' },
     { id: 'sub', label: 'Subcontractor Labor', type: 'sub' },
     { id: 'passthrough', label: 'Passthrough (S&MH + G&A)', type: 'passthrough' },
     { id: 'fee', label: 'Fee (Profit)', type: 'fee' },
+    { id: 'travel', label: 'Travel (with G&A)', type: 'travel' },
+    { id: 'odc', label: 'ODCs (with S&MH)', type: 'odc' },
     { id: 'grand_total', label: 'Grand Total Contract Value', type: 'total' },
   ], []);
 
@@ -80,11 +91,17 @@ export const GrandTotalSection = ({
             ? 'text-purple-600'
             : row.type === 'passthrough'
             ? 'text-blue-600'
-            : 'text-amber-600';
+            : row.type === 'fee'
+            ? 'text-amber-600'
+            : row.type === 'travel'
+            ? 'text-sky-600'
+            : row.type === 'odc'
+            ? 'text-orange-600'
+            : 'text-gray-600';
 
           return (
             <div className="flex items-center h-full px-2">
-              <span className={`font-semibold ${colorClass}`}>
+              <span className={`font-semibold whitespace-normal break-words overflow-wrap ${colorClass}`}>
                 {row.label}
               </span>
             </div>
@@ -96,7 +113,12 @@ export const GrandTotalSection = ({
     // Add year-based columns
     for (let year = 1; year <= totalYears; year++) {
       const yearStr = year.toString();
-      const label = year === 1 ? 'Base Period' : `Option Year ${year - 1}`;
+
+      // Check if this year is an extension
+      const extension = extensions.find(ext => ext.year === year);
+      const label = extension
+        ? extension.label
+        : (year === 1 ? 'Base Period' : `Option Year ${year - 1}`);
 
       cols.push({
         key: `year${year}`,
@@ -128,6 +150,16 @@ export const GrandTotalSection = ({
               value = feeByYear[yearStr] || 0;
               bgClass = 'bg-amber-50/50';
               textClass = 'text-amber-600';
+              break;
+            case 'travel':
+              value = travelByYear[yearStr] || 0;
+              bgClass = 'bg-sky-50/50';
+              textClass = 'text-sky-600';
+              break;
+            case 'odc':
+              value = odcByYear[yearStr] || 0;
+              bgClass = 'bg-orange-50/50';
+              textClass = 'text-orange-600';
               break;
             case 'total':
               value = grandTotal.byYear[yearStr] || 0;
@@ -180,6 +212,16 @@ export const GrandTotalSection = ({
             bgClass = 'bg-amber-50';
             textClass = 'text-amber-600 font-semibold';
             break;
+          case 'travel':
+            value = totals.travelTotal;
+            bgClass = 'bg-sky-50';
+            textClass = 'text-sky-600 font-semibold';
+            break;
+          case 'odc':
+            value = totals.odcTotal;
+            bgClass = 'bg-orange-50';
+            textClass = 'text-orange-600 font-semibold';
+            break;
           case 'total':
             value = grandTotal.total;
             bgClass = 'bg-emerald-100';
@@ -198,7 +240,7 @@ export const GrandTotalSection = ({
     });
 
     return cols;
-  }, [totalYears, grandTotal, primeLaborByYear, subLaborByYear, passthroughByYear, feeByYear, totals]);
+  }, [totalYears, grandTotal, primeLaborByYear, subLaborByYear, passthroughByYear, feeByYear, odcByYear, totals]);
 
   return (
     <div className="space-y-4">

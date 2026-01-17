@@ -176,7 +176,8 @@ async def recalculate_spreadsheet(request: Dict[str, Any]):
         ],
         "rates": {
             "fringe": 0.247,
-            "oh": 0.0711,
+            "oh_onsite": 0.0711,
+            "oh_offsite": 0.0711,
             "ga": 0.2243,
             "fee": 0.08
         },
@@ -216,11 +217,14 @@ async def recalculate_spreadsheet(request: Dict[str, Any]):
             for year in range(1, total_years + 1):
                 hours_per_year[str(year)] = pos.get(f"year{year}_hours", 1880)
 
+            # Get standard FTE hours from position (provided by jd_parser)
+            standard_fte_hours = pos.get("standard_fte_hours", 1880)
+
             # Calculate Year 1 FBLR
             year_1_hours = hours_per_year.get("1", 1880)
 
-            # Skip positions with invalid wages or zero hours (prevents division by zero)
-            if base_wage <= 0 or year_1_hours <= 0:
+            # Skip positions with invalid wages
+            if base_wage <= 0:
                 results.append({
                     "id": pos.get("id"),
                     "years": [],
@@ -228,11 +232,16 @@ async def recalculate_spreadsheet(request: Dict[str, Any]):
                     "total_amount": 0
                 })
                 continue
+            # Get location type to determine which OH rate to use
+            location_type = pos.get("location_type", "On-Site")
+
             fblr_breakdown = Calculator.calculate_fblr(
                 annual_wage=base_wage,
-                hours=year_1_hours,
+                standard_fte_hours=standard_fte_hours,  # Use standard FTE hours, not actual year hours
                 fringe_rate=rates.get("fringe", 0.247),
-                oh_rate=rates.get("oh", 0.0711),
+                oh_onsite_rate=rates.get("oh_onsite", rates.get("oh", 0.0711)),
+                oh_offsite_rate=rates.get("oh_offsite", rates.get("oh", 0.0711)),
+                location_type=location_type,
                 ga_rate=rates.get("ga", 0.2243)
             )
             base_fblr = fblr_breakdown["fblr"]
@@ -253,13 +262,18 @@ async def recalculate_spreadsheet(request: Dict[str, Any]):
                 hours = hours_per_year.get(str(year), 0)
                 amount = round(rate * hours, 2)
 
+                # Determine which OH rate to use for dlRate calculation
+                oh_rate_for_calc = rates.get("oh_onsite", 0.0711) if location_type == "On-Site" else rates.get("oh_offsite", 0.0711)
+                if oh_rate_for_calc is None:
+                    oh_rate_for_calc = rates.get("oh", 0.0711)
+
                 yearly_data.append({
                     "year": year,
                     "hours": hours,
                     "amount": amount,
                     "breakdown": {
                         "fblr": rate,
-                        "dlRate": fblr_breakdown["dl_rate"] if year == 1 else round(rate / (1 + rates.get("fringe", 0.247) + rates.get("oh", 0.0711) + rates.get("ga", 0.2243)), 2),
+                        "dlRate": fblr_breakdown["dl_rate"] if year == 1 else round(rate / (1 + rates.get("fringe", 0.247) + oh_rate_for_calc + rates.get("ga", 0.2243)), 2),
                         "fringe": fblr_breakdown["fringe"] if year == 1 else 0,
                         "oh": fblr_breakdown["oh"] if year == 1 else 0,
                         "ga": fblr_breakdown["ga"] if year == 1 else 0

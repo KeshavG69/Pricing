@@ -10,7 +10,6 @@ from jose import jwt, JWTError
 from typing import Optional
 from auth import config
 from auth.database import get_mongodb_client
-from auth.blacklist import is_token_blacklisted
 
 
 security = HTTPBearer()
@@ -23,6 +22,7 @@ async def get_current_user(
     Get current user from JWT token.
 
     Validates JWT token and returns user dict with organization info.
+    Optimized: Single DB query for user + blacklist check.
 
     Args:
         credentials: HTTP Bearer token from Authorization header
@@ -47,14 +47,7 @@ async def get_current_user(
                 detail="Invalid token: missing email"
             )
 
-        # Check if token is blacklisted
-        if await is_token_blacklisted(email, token):
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Token has been revoked"
-            )
-
-        # Get user from database
+        # Single DB query: Get user (includes blacklisted_tokens if any)
         users_collection = get_mongodb_client().get_users_collection()
         user = users_collection.find_one({"email": email})
 
@@ -63,6 +56,15 @@ async def get_current_user(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="User not found"
             )
+
+        # Check blacklist in-memory (no extra DB call)
+        blacklisted_tokens = user.get("blacklisted_tokens", [])
+        for bt in blacklisted_tokens:
+            if bt.get("token") == token:
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Token has been revoked"
+                )
 
         # Get current organization membership from organizations array
         current_org_id = user.get("current_organization_id")
@@ -102,6 +104,16 @@ async def get_current_user(
         user["organization_id"] = current_org["organization_id"]
         user["role"] = current_org["role"]
         user["status"] = current_org["status"]
+
+        # Check terms and conditions version
+        user_version = user.get("terms_accepted_version")
+        current_version = config.CURRENT_TERMS_VERSION
+
+        # Add flag to indicate if user needs to accept updated terms
+        if user_version != current_version:
+            user["needs_terms_acceptance"] = True
+        else:
+            user["needs_terms_acceptance"] = False
 
         return user
 

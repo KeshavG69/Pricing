@@ -3,6 +3,7 @@
 import { useMemo } from 'react';
 import { DataGrid } from 'react-data-grid';
 import type { Column } from 'react-data-grid';
+import type { Extension } from '@/types';
 import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
 
@@ -10,6 +11,7 @@ interface PassthroughSectionProps {
   subcontractorCostsByYear: Record<string, number>;
   passthroughRates: { smh: number; ga_passthrough: number };
   totalYears: number;
+  extensions?: Extension[];
 }
 
 interface PassthroughRow {
@@ -23,6 +25,7 @@ export const PassthroughSection = ({
   subcontractorCostsByYear,
   passthroughRates,
   totalYears,
+  extensions = [],
 }: PassthroughSectionProps) => {
   // Format currency
   const formatCurrency = (value: number) => {
@@ -102,12 +105,12 @@ export const PassthroughSection = ({
       {
         key: 'label',
         name: 'Labour Category',
-        width: 250,
+        width: 280,
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => (
           <div className="flex items-center h-full px-2">
-            <span className={`font-semibold ${row.type === 'total' ? 'text-blue-600' : 'text-foreground'}`}>
+            <span className={`font-semibold whitespace-normal break-words overflow-wrap ${row.type === 'total' ? 'text-blue-600' : 'text-foreground'}`}>
               {row.label}
             </span>
           </div>
@@ -129,10 +132,15 @@ export const PassthroughSection = ({
       },
     ];
 
-    // Add year-based columns
+    // Add year-based columns (including extensions)
     for (let year = 1; year <= totalYears; year++) {
       const yearStr = year.toString();
-      const label = year === 1 ? 'Base Period' : `Option Year ${year - 1}`;
+
+      // Check if this year is an extension
+      const extension = extensions.find(ext => ext.year === year);
+      const label = extension
+        ? extension.label
+        : (year === 1 ? 'Base Period' : `Option Year ${year - 1}`);
 
       cols.push({
         key: `year${year}`,
@@ -199,7 +207,7 @@ export const PassthroughSection = ({
     });
 
     return cols;
-  }, [totalYears, passthroughByYear, totals]);
+  }, [totalYears, extensions, passthroughByYear, totals]);
 
   // Don't render if no subcontractor costs
   const hasSubcontractorCosts = Object.values(subcontractorCostsByYear).some(cost => cost > 0);

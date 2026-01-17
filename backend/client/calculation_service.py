@@ -22,27 +22,36 @@ class Calculator:
     @staticmethod
     def calculate_fblr(
         annual_wage: float,
-        hours: int,
+        standard_fte_hours: int,
         fringe_rate: float,
-        oh_rate: float,
-        ga_rate: float
+        oh_rate: float = None,
+        ga_rate: float = None,
+        oh_onsite_rate: float = None,
+        oh_offsite_rate: float = None,
+        location_type: str = None
     ) -> Dict[str, float]:
         """
         Calculate Fully Burdened Labor Rate from annual wage.
 
         Applies wrap rates in sequence:
-        1. DL (Direct Labor) = annual_wage / hours
+        1. DL (Direct Labor) = annual_wage / standard_fte_hours
         2. Fringe = DL × fringe_rate
-        3. OH (Overhead) = (DL + Fringe) × oh_rate
+        3. OH (Overhead) = (DL + Fringe) × oh_rate (conditional on location_type)
         4. G&A (General & Administrative) = (DL + Fringe + OH) × ga_rate
         5. FBLR = DL + Fringe + OH + G&A
 
+        IMPORTANT: Uses STANDARD FTE hours from contract to calculate hourly rate.
+        This ensures consistent rate across all periods, including partial years (extensions).
+
         Args:
             annual_wage: Annual salary in dollars
-            hours: Annual hours (e.g., 1880 for full-time)
+            standard_fte_hours: Standard full-time hours from contract (e.g., 1880, 1920, 2080)
             fringe_rate: Fringe benefits rate (e.g., 0.247 for 24.7%)
-            oh_rate: Overhead rate (e.g., 0.0711 for 7.11%)
+            oh_rate: Overhead rate (DEPRECATED - use oh_onsite_rate/oh_offsite_rate)
             ga_rate: G&A rate (e.g., 0.2243 for 22.43%)
+            oh_onsite_rate: Overhead rate for on-site positions (e.g., 0.0711 for 7.11%)
+            oh_offsite_rate: Overhead rate for off-site positions (e.g., 0.0711 for 7.11%)
+            location_type: Position location ('On-Site' or 'Off-Site')
 
         Returns:
             Dict with:
@@ -53,7 +62,9 @@ class Calculator:
                 - fblr: Fully burdened labor rate (total)
 
         Example:
-            >>> Calculator.calculate_fblr(115000, 1880, 0.247, 0.0711, 0.2243)
+            >>> Calculator.calculate_fblr(115000, 1880, 0.247, oh_onsite_rate=0.0711,
+            ...                           oh_offsite_rate=0.0500, ga_rate=0.2243,
+            ...                           location_type='On-Site')
             {
                 'dl_rate': 61.17,
                 'fringe': 15.11,
@@ -62,26 +73,43 @@ class Calculator:
                 'fblr': 100.02
             }
         """
-        # Step 1: Calculate direct labor hourly rate
-        dl_rate = round(annual_wage / hours, 2)
+        # Step 1: Calculate direct labor hourly rate using STANDARD FTE hours
+        # Use 6 decimal places for precision (Rate × Hours = exact salary)
+        dl_rate = round(annual_wage / standard_fte_hours, 6)
 
         # Step 2: Apply wrap rates (each applies to cumulative subtotal)
-        fringe = round(dl_rate * fringe_rate, 2)
+        # Keep full precision for internal calculations
+        fringe = dl_rate * fringe_rate
         subtotal_1 = dl_rate + fringe
 
-        oh = round(subtotal_1 * oh_rate, 2)
+        # Determine which OH rate to use based on location_type
+        if oh_onsite_rate is not None and oh_offsite_rate is not None and location_type:
+            # New system: use conditional OH rate based on location
+            actual_oh_rate = oh_onsite_rate if location_type == 'On-Site' else oh_offsite_rate
+        elif oh_rate is not None:
+            # Backward compatibility: use single oh_rate
+            actual_oh_rate = oh_rate
+        else:
+            # Fallback
+            actual_oh_rate = 0.0711
+
+        oh = subtotal_1 * actual_oh_rate
         subtotal_2 = subtotal_1 + oh
 
-        ga = round(subtotal_2 * ga_rate, 2)
+        # Handle ga_rate default
+        if ga_rate is None:
+            ga_rate = 0.2243
 
-        fblr = round(subtotal_2 + ga, 2)
+        ga = subtotal_2 * ga_rate
+
+        fblr = subtotal_2 + ga
 
         return {
             "dl_rate": dl_rate,
-            "fringe": fringe,
-            "oh": oh,
-            "ga": ga,
-            "fblr": fblr
+            "fringe": round(fringe, 6),
+            "oh": round(oh, 6),
+            "ga": round(ga, 6),
+            "fblr": round(fblr, 6)
         }
 
     @staticmethod
@@ -149,7 +177,8 @@ class Calculator:
             escalation_rates: Dict like {"1_to_2": 0.0272, ...}
             indirect_rates: Dict with:
                 - fringe: float
-                - oh: float
+                - oh_onsite: float (or 'oh' for backward compatibility)
+                - oh_offsite: float (or 'oh' for backward compatibility)
                 - ga: float
             total_years: Number of years (e.g., 5)
 
@@ -177,49 +206,58 @@ class Calculator:
         base_wage = float(position_data["base_annual_wage"])
         hours_per_year = position_data["hours_per_year"]
 
-        # Year 1: Calculate base FBLR
+        # Get standard FTE hours from contract (always provided by jd_parser)
+        standard_fte_hours = position_data.get("standard_fte_hours", 1880)
+
+        # Year 1: Calculate base FBLR using STANDARD FTE hours
         year_1_hours = hours_per_year.get("1", 0)
-        if year_1_hours > 0:
-            fblr_breakdown = Calculator.calculate_fblr(
-                base_wage,
-                year_1_hours,
-                indirect_rates["fringe"],
-                indirect_rates["oh"],
-                indirect_rates["ga"]
-            )
-            base_fblr = fblr_breakdown["fblr"]
-        else:
-            # No hours in Year 1, still need FBLR for future years
-            # Use default 1880 hours for calculation only
-            fblr_breakdown = Calculator.calculate_fblr(
-                base_wage,
-                1880,
-                indirect_rates["fringe"],
-                indirect_rates["oh"],
-                indirect_rates["ga"]
-            )
-            base_fblr = fblr_breakdown["fblr"]
+
+        # Support both old and new OH rate formats
+        # Default to on-site rate, fallback to old 'oh' field if present
+        oh_onsite = indirect_rates.get("oh_onsite", indirect_rates.get("oh", 0.0711))
+        oh_offsite = indirect_rates.get("oh_offsite", indirect_rates.get("oh", 0.0711))
+        location_type = position_data.get("location_type", "On-Site")
+
+        fblr_breakdown = Calculator.calculate_fblr(
+            base_wage,
+            standard_fte_hours,  # Use standard FTE hours, not actual year hours
+            indirect_rates["fringe"],
+            oh_onsite_rate=oh_onsite,
+            oh_offsite_rate=oh_offsite,
+            location_type=location_type,
+            ga_rate=indirect_rates["ga"]
+        )
+        base_fblr = fblr_breakdown["fblr"]
+        base_dl_rate = fblr_breakdown["dl_rate"]
 
         results["year_1"] = {
-            "rate": base_fblr,
+            "dl_rate": base_dl_rate,  # Direct Labor rate (for Excel indirect cost calculation)
+            "rate": base_fblr,  # FBLR (for display/totals)
             "hours": year_1_hours,
             "amount": round(base_fblr * year_1_hours, 2)
         }
 
         # Years 2-N: Escalate rate and calculate amount
         for year in range(2, total_years + 1):
-            escalated_rate = Calculator.calculate_year_rate(
+            escalated_fblr = Calculator.calculate_year_rate(
                 base_fblr,
+                escalation_rates,
+                from_year=1,
+                to_year=year
+            )
+            escalated_dl_rate = Calculator.calculate_year_rate(
+                base_dl_rate,
                 escalation_rates,
                 from_year=1,
                 to_year=year
             )
 
             hours = hours_per_year.get(str(year), 0)
-            amount = round(escalated_rate * hours, 2)
+            amount = round(escalated_fblr * hours, 2)
 
             results[f"year_{year}"] = {
-                "rate": escalated_rate,
+                "dl_rate": escalated_dl_rate,  # Direct Labor rate (for Excel)
+                "rate": escalated_fblr,  # FBLR
                 "hours": hours,
                 "amount": amount
             }
@@ -238,104 +276,263 @@ class Calculator:
         }
 
     @staticmethod
+    def calculate_travel_years(
+        travel_data: Dict[str, Any],
+        ga_rate: float,
+        escalation_rates: Dict[str, float],
+        total_years: int,
+        escalate: bool = False
+    ) -> Dict[str, Any]:
+        """
+        Calculate Travel costs for all years with G&A Rate.
+
+        Travel is a separate category from ODCs, uses G&A Rate (same as labor),
+        and NO FEE is applied (fees only on labor).
+
+        Args:
+            travel_data: Dict with travel data. Supports two formats:
+                - New format (pre-calculated per year):
+                    - description: str (e.g., "Airfare", "Per Diem")
+                    - amount_per_year: dict (e.g., {"1": 5000, "2": 5150, ...})
+                - Old format (base amount + escalation):
+                    - description: str
+                    - amount_year_1: float (base amount for Year 1)
+            ga_rate: G&A rate (e.g., 0.2243 for 22.43%)
+            escalation_rates: Dict like {"1_to_2": 0.0272, "2_to_3": 0.0299, ...}
+            total_years: Number of years
+            escalate: Whether to escalate travel year-over-year (default False)
+
+        Returns:
+            Dict with:
+                - description: str
+                - year_1, year_2, ... year_N: Each with {base, ga, total}
+                - total_cost: float (sum of all years)
+
+        Example:
+            >>> travel = {
+            ...     "description": "Government Travel",
+            ...     "amount_per_year": {"1": 10000, "2": 10272}
+            ... }
+            >>> Calculator.calculate_travel_years(
+            ...     travel, 0.2243, {}, 2
+            ... )
+            {
+                'description': 'Government Travel',
+                'year_1': {'base': 10000, 'ga': 2243, 'total': 12243},
+                'year_2': {'base': 10272, 'ga': 2304, 'total': 12576},
+                'total_cost': 24819
+            }
+        """
+        results = {}
+        description = travel_data.get("description", "Travel")
+
+        # Check if frontend sent pre-calculated amounts (new format)
+        if "amount_per_year" in travel_data:
+            # Use pre-calculated amounts from frontend
+            amounts_per_year_dict = travel_data["amount_per_year"]
+
+            # Build results for each year with G&A (NO FEE)
+            for year in range(1, total_years + 1):
+                year_amount = float(amounts_per_year_dict.get(str(year), 0))
+
+                # Apply G&A Rate (NO FEE - fees are only on labor)
+                ga_overhead = round(year_amount * ga_rate, 2)
+                total = round(year_amount + ga_overhead, 2)
+
+                results[f"year_{year}"] = {
+                    "base": year_amount,
+                    "ga": ga_overhead,
+                    "total": total
+                }
+        else:
+            # Old format: calculate from base amount with escalation
+            base_amount = float(travel_data.get("amount_year_1", 0))
+
+            # Calculate amounts for each year based on escalate flag
+            if escalate:
+                # Escalating travel - apply escalation rates year-over-year
+                amounts_per_year = [base_amount]
+                current = base_amount
+                for year in range(2, total_years + 1):
+                    key = f"{year-1}_to_{year}"
+                    esc_rate = escalation_rates.get(key, 0.0)
+                    current = current * (1 + esc_rate)
+                    amounts_per_year.append(round(current, 2))
+            else:
+                # Fixed travel - same amount for all years
+                amounts_per_year = [base_amount] * total_years
+
+            # Build results for each year with G&A (NO FEE)
+            for year in range(1, total_years + 1):
+                year_amount = amounts_per_year[year - 1]
+
+                # Apply G&A Rate (NO FEE - fees are only on labor)
+                ga_overhead = round(year_amount * ga_rate, 2)
+                total = round(year_amount + ga_overhead, 2)
+
+                results[f"year_{year}"] = {
+                    "base": year_amount,
+                    "ga": ga_overhead,
+                    "total": total
+                }
+
+        # Calculate total cost across all years
+        total_cost = sum(
+            year_data["total"]
+            for year_data in results.values()
+            if isinstance(year_data, dict)
+        )
+
+        return {
+            "description": description,
+            **results,
+            "total_cost": round(total_cost, 2)
+        }
+
+    @staticmethod
     def calculate_odc_years(
         odc_data: Dict[str, Any],
         ga_adder_rate: float,
         escalation_rates: Dict[str, float],
         total_years: int,
         apply_adder: bool = True,
-        escalate: bool = False
+        escalate: bool = False,
+        ga_rate: float = None,
+        smh_rate: float = None
     ) -> Dict[str, Any]:
         """
-        Calculate ODC (Other Direct Costs) for all years with optional G&A adder.
+        Calculate ODC (Other Direct Costs) for all years with SMH Rate.
 
-        ODCs include travel, materials, equipment, etc.
-        G&A adder covers administrative overhead for processing these costs.
+        ODCs include materials, equipment, software, supplies, etc. (NOT Travel - Travel is separate).
+        SMH (Subcontract & Material Handling) Rate covers logistics/handling overhead.
 
         ODCs can be either fixed (same amount all years) or escalating (increases with inflation).
 
         Args:
-            odc_data: Dict with:
-                - category: str (e.g., "Travel", "Materials")
-                - description: str (optional)
-                - amount_year_1: float (base amount for Year 1)
-            ga_adder_rate: G&A rate for ODCs (e.g., 0.2212 for 22.12%)
+            odc_data: Dict with category and amount data. Supports two formats:
+                - New format (pre-calculated per year):
+                    - category: str (e.g., "Materials", "Equipment")
+                    - description: str (optional)
+                    - amount_per_year: dict (e.g., {"1": 5000, "2": 5150, ...})
+                - Old format (base amount + escalation):
+                    - category: str (e.g., "Materials", "Equipment")
+                    - description: str (optional)
+                    - amount_year_1: float (base amount for Year 1)
+            ga_adder_rate: Legacy G&A adder rate (for backward compatibility)
             escalation_rates: Dict like {"1_to_2": 0.0272, "2_to_3": 0.0299, ...}
             total_years: Number of years
-            apply_adder: Whether to apply G&A adder (default True)
+            apply_adder: Whether to apply overhead (default True)
             escalate: Whether to escalate ODC year-over-year (default False - most ODCs stay fixed)
+            ga_rate: NOT USED for ODCs (only for Travel which is now separate)
+            smh_rate: SMH Rate for ODCs (e.g., 0.065 for 6.5%)
 
         Returns:
             Dict with:
                 - category: str
-                - year_1, year_2, ... year_N: Each with {base, ga_adder, total}
+                - year_1, year_2, ... year_N: Each with {base, smh, total}
                 - total_cost: float (sum of all years)
 
-        Example (Fixed ODC - Travel):
-            >>> odc = {
-            ...     "category": "Travel",
-            ...     "amount_year_1": 5000
-            ... }
-            >>> Calculator.calculate_odc_years(
-            ...     odc, 0.2212, {"1_to_2": 0.03}, 2, True, escalate=False
-            ... )
-            {
-                'category': 'Travel',
-                'year_1': {'base': 5000, 'ga_adder': 1106, 'total': 6106},
-                'year_2': {'base': 5000, 'ga_adder': 1106, 'total': 6106},
-                'total_cost': 12212
-            }
-
-        Example (Escalating ODC - Equipment):
+        Example (Fixed ODC - Equipment):
             >>> odc = {
             ...     "category": "Equipment",
-            ...     "amount_year_1": 5000
+            ...     "amount_per_year": {"1": 5000, "2": 5000}
             ... }
             >>> Calculator.calculate_odc_years(
-            ...     odc, 0.2212, {"1_to_2": 0.03}, 2, True, escalate=True
+            ...     odc, 0, {}, 2, True, smh_rate=0.065
             ... )
             {
                 'category': 'Equipment',
-                'year_1': {'base': 5000, 'ga_adder': 1106, 'total': 6106},
-                'year_2': {'base': 5150, 'ga_adder': 1139, 'total': 6289},
-                'total_cost': 12395
+                'year_1': {'base': 5000, 'smh': 325, 'total': 5325},
+                'year_2': {'base': 5000, 'smh': 325, 'total': 5325},
+                'total_cost': 10650
+            }
+
+        Example (Escalating ODC - Materials):
+            >>> odc = {
+            ...     "category": "Materials",
+            ...     "amount_per_year": {"1": 5000, "2": 5150}
+            ... }
+            >>> Calculator.calculate_odc_years(
+            ...     odc, 0, {}, 2, True, smh_rate=0.065
+            ... )
+            {
+                'category': 'Materials',
+                'year_1': {'base': 5000, 'smh': 325, 'total': 5325},
+                'year_2': {'base': 5150, 'smh': 335, 'total': 5485},
+                'total_cost': 10810
             }
         """
         results = {}
         category = odc_data["category"]
-        base_amount = float(odc_data["amount_year_1"])
 
-        # Calculate amounts for each year based on escalate flag
-        if escalate:
-            # Escalating ODC - apply escalation rates year-over-year
-            amounts_per_year = [base_amount]
-            current = base_amount
-            for year in range(2, total_years + 1):
-                key = f"{year-1}_to_{year}"
-                esc_rate = escalation_rates.get(key, 0.0)
-                current = current * (1 + esc_rate)
-                amounts_per_year.append(round(current, 2))
+        # ODCs use SMH Rate (Subcontract & Material Handling)
+        # Travel is now completely separate and not handled by this method
+        if smh_rate is not None:
+            overhead_rate = smh_rate  # SMH Rate for ODCs (Equipment, Materials, etc.)
+            overhead_label = "smh"
         else:
-            # Fixed ODC - same amount for all years
-            amounts_per_year = [base_amount] * total_years
+            # Backward compatibility: use ga_adder_rate if smh_rate not provided
+            overhead_rate = ga_adder_rate
+            overhead_label = "ga_adder"
 
-        # Build results for each year with G&A adder
-        for year in range(1, total_years + 1):
-            year_amount = amounts_per_year[year - 1]
+        # Check if frontend sent pre-calculated amounts (new format)
+        if "amount_per_year" in odc_data:
+            # Use pre-calculated amounts from frontend (what user sees in UI)
+            amounts_per_year_dict = odc_data["amount_per_year"]
 
-            # Calculate G&A adder if applicable
-            if apply_adder:
-                ga_adder = round(year_amount * ga_adder_rate, 2)
+            # Build results for each year with SMH overhead (NO FEE - fees are only on labor)
+            for year in range(1, total_years + 1):
+                # Use pre-calculated amount for this year
+                year_amount = float(amounts_per_year_dict.get(str(year), 0))
+
+                # Calculate SMH overhead (NO FEE - fees are only on labor)
+                if apply_adder:
+                    overhead = round(year_amount * overhead_rate, 2)
+                else:
+                    overhead = 0.0
+
+                total = round(year_amount + overhead, 2)
+
+                results[f"year_{year}"] = {
+                    "base": year_amount,
+                    overhead_label: overhead,
+                    "total": total
+                }
+        else:
+            # Old format: calculate from base amount with escalation
+            base_amount = float(odc_data["amount_year_1"])
+
+            # Calculate amounts for each year based on escalate flag
+            if escalate:
+                # Escalating ODC - apply escalation rates year-over-year
+                amounts_per_year = [base_amount]
+                current = base_amount
+                for year in range(2, total_years + 1):
+                    key = f"{year-1}_to_{year}"
+                    esc_rate = escalation_rates.get(key, 0.0)
+                    current = current * (1 + esc_rate)
+                    amounts_per_year.append(round(current, 2))
             else:
-                ga_adder = 0.0
+                # Fixed ODC - same amount for all years
+                amounts_per_year = [base_amount] * total_years
 
-            total = round(year_amount + ga_adder, 2)
+            # Build results for each year with SMH overhead (NO FEE - fees are only on labor)
+            for year in range(1, total_years + 1):
+                year_amount = amounts_per_year[year - 1]
 
-            results[f"year_{year}"] = {
-                "base": year_amount,
-                "ga_adder": ga_adder,
-                "total": total
-            }
+                # Calculate SMH overhead (NO FEE - fees are only on labor)
+                if apply_adder:
+                    overhead = round(year_amount * overhead_rate, 2)
+                else:
+                    overhead = 0.0
+
+                total = round(year_amount + overhead, 2)
+
+                results[f"year_{year}"] = {
+                    "base": year_amount,
+                    overhead_label: overhead,
+                    "total": total
+                }
 
         # Calculate total cost across all years
         total_cost = sum(
@@ -552,17 +749,126 @@ class Calculator:
         return float(wages_dict[percentile])
 
     @staticmethod
+    def calculate_gsa_rate(
+        gsa_hourly_rate: float,
+        discount_rate: float = 0.0
+    ) -> Dict[str, float]:
+        """
+        Calculate final rate for GSA positions.
+
+        GSA rates are FINAL rates - no indirect rates (fringe, OH, G&A, fee) applied.
+        Only discount can be applied.
+
+        Args:
+            gsa_hourly_rate: GSA contract hourly rate (already final)
+            discount_rate: Optional discount (e.g., 0.10 for 10% off)
+
+        Returns:
+            Dict with:
+                - gsa_rate: Original GSA rate
+                - discount: Discount amount
+                - final_rate: Rate after discount
+
+        Example:
+            >>> Calculator.calculate_gsa_rate(185.50, 0.10)
+            {
+                'gsa_rate': 185.50,
+                'discount': 18.55,
+                'final_rate': 166.95
+            }
+        """
+        discount = round(gsa_hourly_rate * discount_rate, 2)
+        final_rate = round(gsa_hourly_rate - discount, 2)
+
+        return {
+            "gsa_rate": gsa_hourly_rate,
+            "discount": discount,
+            "discount_rate": discount_rate,
+            "final_rate": final_rate,
+            # No indirect rates for GSA
+            "dl_rate": final_rate,
+            "fringe": 0,
+            "oh": 0,
+            "ga": 0,
+            "fee": 0,
+            "fblr": final_rate  # For compatibility - FBLR equals final rate
+        }
+
+    @staticmethod
+    def calculate_gsa_position_years(
+        position_data: Dict[str, Any],
+        total_years: int,
+        discount_rate: float = 0.0
+    ) -> Dict[str, Any]:
+        """
+        Calculate GSA position costs for all years.
+
+        GSA contracts have rates per year built-in (no escalation calculation needed).
+        Just apply optional discount.
+
+        Args:
+            position_data: Dict with:
+                - labor_category: str
+                - gsa_rates_by_year: Dict[str, float] like {"1": 185.50, "2": 190.25, ...}
+                - hours_per_year: Dict[str, int] like {"1": 1880, "2": 1880, ...}
+            total_years: Number of years
+            discount_rate: Optional discount rate
+
+        Returns:
+            Dict with year-by-year breakdown and total cost
+        """
+        results = {}
+        labor_category = position_data.get("labor_category", "")
+        gsa_rates = position_data.get("gsa_rates_by_year", {})
+        hours_per_year = position_data.get("hours_per_year", {})
+
+        for year in range(1, total_years + 1):
+            year_str = str(year)
+            gsa_rate = gsa_rates.get(year_str, 0)
+            hours = hours_per_year.get(year_str, 0)
+
+            # Apply discount
+            rate_calc = Calculator.calculate_gsa_rate(gsa_rate, discount_rate)
+            final_rate = rate_calc["final_rate"]
+            amount = round(final_rate * hours, 2)
+
+            results[f"year_{year}"] = {
+                "gsa_rate": gsa_rate,
+                "discount": rate_calc["discount"],
+                "rate": final_rate,
+                "hours": hours,
+                "amount": amount
+            }
+
+        # Calculate total cost
+        total_cost = sum(
+            year_data["amount"]
+            for year_data in results.values()
+            if isinstance(year_data, dict)
+        )
+
+        return {
+            "labor_category": labor_category,
+            "wage_source": "gsa",
+            **results,
+            "total_cost": round(total_cost, 2)
+        }
+
+    @staticmethod
     def calculate_averaged_fblr(
         base_wage: float,
         hours_per_year: Dict[str, float],
         escalation_rates: Dict[str, float],
         fringe_rate: float,
-        oh_rate: float,
-        ga_rate: float,
-        fee_rate: float,
+        oh_rate: float = None,
+        ga_rate: float = None,
+        fee_rate: float = None,
         standard_fte_hours: float = 1880,
         total_years: int = 1,
-        months_per_year: Optional[Dict[str, int]] = None
+        months_per_year: Optional[Dict[str, int]] = None,
+        oh_onsite_rate: float = None,
+        oh_offsite_rate: float = None,
+        location_type: str = None
     ) -> Dict[str, float]:
         """
         Calculate averaged FBLR using proportional hourly rates with FTE hours.
@@ -578,11 +884,14 @@ class Calculator:
             hours_per_year: Dict of actual hours worked per year (e.g., {"1": 1880, "2": 50})
             escalation_rates: Year-over-year escalation rates (e.g., {"1_to_2": 0.0272})
             fringe_rate: Fringe benefits rate (e.g., 0.247 for 24.7%)
-            oh_rate: Overhead rate (e.g., 0.0711 for 7.11%)
+            oh_rate: Overhead rate (DEPRECATED - use oh_onsite_rate/oh_offsite_rate)
             ga_rate: G&A rate (e.g., 0.2243 for 22.43%)
             fee_rate: Fee/profit rate (e.g., 0.07 for 7%)
             standard_fte_hours: Full-time equivalent hours (default 1880)
             total_years: Total contract years
+            oh_onsite_rate: Overhead rate for on-site positions (e.g., 0.0711 for 7.11%)
+            oh_offsite_rate: Overhead rate for off-site positions (e.g., 0.0711 for 7.11%)
+            location_type: Position location ('On-Site' or 'Off-Site')
 
         Returns:
             Dict with keys: dl_rate, fringe, oh, ga, fee, fblr
@@ -593,11 +902,13 @@ class Calculator:
             ...     hours_per_year={"1": 1880, "2": 50, "3": 0, "4": 0, "5": 0},
             ...     escalation_rates={"1_to_2": 0.0272},
             ...     fringe_rate=0.247,
-            ...     oh_rate=0.0711,
+            ...     oh_onsite_rate=0.0711,
+            ...     oh_offsite_rate=0.0500,
             ...     ga_rate=0.2243,
             ...     fee_rate=0.07,
             ...     standard_fte_hours=1880,
-            ...     total_years=5
+            ...     total_years=5,
+            ...     location_type='On-Site'
             ... )
             {'dl_rate': 59.93, 'fringe': 14.80, ...}
         """
@@ -651,9 +962,26 @@ class Calculator:
         # Calculate averaged DL rate
         dl_rate = total_salary / total_hours
 
+        # Determine which OH rate to use based on location_type
+        if oh_onsite_rate is not None and oh_offsite_rate is not None and location_type:
+            # New system: use conditional OH rate based on location
+            actual_oh_rate = oh_onsite_rate if location_type == 'On-Site' else oh_offsite_rate
+        elif oh_rate is not None:
+            # Backward compatibility: use single oh_rate
+            actual_oh_rate = oh_rate
+        else:
+            # Fallback
+            actual_oh_rate = 0.0711
+
+        # Handle defaults for ga_rate and fee_rate
+        if ga_rate is None:
+            ga_rate = 0.2243
+        if fee_rate is None:
+            fee_rate = 0.07
+
         # Apply FBLR cascade
         fringe = dl_rate * fringe_rate
-        oh = (dl_rate + fringe) * oh_rate
+        oh = (dl_rate + fringe) * actual_oh_rate
         ga = (dl_rate + fringe + oh) * ga_rate
         fee = (dl_rate + fringe + oh + ga) * fee_rate
         fblr = dl_rate + fringe + oh + ga + fee

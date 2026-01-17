@@ -39,16 +39,20 @@ class OrganizationCRUD:
             "created_at": datetime.utcnow(),
             "updated_at": datetime.utcnow(),
             "status": "active",
+            # Stripe billing fields (set when admin adds payment method)
+            "stripe_customer_id": None,
+            "default_payment_method_id": None,
             "settings": {
                 "default_rates": {
                     "fringe": 0.247,
-                    "oh": 0.0711,
+                    "oh_onsite": 0.0711,
+                    "oh_offsite": 0.0711,
                     "ga": 0.2243,
                     "fee": 0.07,
                     "smh": 0.065,
                     "sub_fee": 0.05,
                     "ga_passthrough": 0.025,
-                    "ga_adder": 0.0243
+                    "ga_adder": 0.0
                 },
                 "default_escalation_rate": 0.03,
                 "allow_user_rate_override": True

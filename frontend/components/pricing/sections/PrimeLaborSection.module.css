@@ -1,28 +1,33 @@
 /* Excel-like styling for DataGrid */
 
-/* Cell styling - cleaner borders and padding */
+/* Cell styling - cleaner borders and padding - Compact mode for more data visibility */
 .excelGrid :global(.rdg-cell) {
   border-right: 1px solid #e2e8f0;
   border-bottom: 1px solid #e2e8f0;
-  padding: 8px 12px;
+  padding: 4px 8px;
   background-color: white;
 }
 
-/* Header row styling - professional appearance */
+/* Header row styling - professional appearance - Compact mode */
+/* Sticky header - stays fixed while grid is visible, scrolls away when grid ends */
 .excelGrid :global(.rdg-header-row) {
   background-color: #f8fafc;
   font-weight: 600;
-  font-size: 13px;
+  font-size: 12px;
   color: #334155;
   border-bottom: 2px solid #cbd5e1;
+  position: sticky;
+  top: 64px; /* Account for fixed top nav bar (h-16 = 64px) */
+  z-index: 20;
 }
 
-/* Header cell styling */
+/* Header cell styling - Compact mode */
 .excelGrid :global(.rdg-header-cell) {
   border-right: 1px solid #cbd5e1;
-  padding: 10px 12px;
+  padding: 6px 8px;
   display: flex;
   align-items: center;
+  background-color: #f8fafc;
 }
 
 /* Row styling - clean separation */

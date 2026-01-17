@@ -24,7 +24,6 @@ export const ODCFormModal = ({
   const [description, setDescription] = useState<string>('');
   const [amountsByYear, setAmountsByYear] = useState<Record<string, number>>({});
   const [escalate, setEscalate] = useState<boolean>(false);
-  const [applyGAAdder, setApplyGAAdder] = useState<boolean>(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   // Initialize form with existing ODC data if editing
@@ -34,7 +33,6 @@ export const ODCFormModal = ({
       setDescription(existingODC.description || '');
       setAmountsByYear(existingODC.amount_per_year);
       setEscalate(existingODC.escalate);
-      setApplyGAAdder(existingODC.apply_ga_adder);
     } else {
       // Initialize amounts for all years
       const initialAmounts: Record<string, number> = {};
@@ -83,7 +81,7 @@ export const ODCFormModal = ({
       description: description.trim() || undefined,
       amount_per_year: amountsByYear,
       escalate,
-      apply_ga_adder: applyGAAdder,
+      // S&MH is always applied to all ODCs
     };
 
     onSave(odcData);
@@ -96,13 +94,14 @@ export const ODCFormModal = ({
     setDescription('');
     setAmountsByYear({});
     setEscalate(false);
-    setApplyGAAdder(false);
     setErrors({});
     onClose();
   };
 
   const handleAmountChange = (year: string, value: string) => {
-    const numValue = parseFloat(value) || 0;
+    // If empty string, set to 0
+    // Otherwise parse the number (parseFloat will return NaN for invalid input, fallback to 0)
+    const numValue = value === '' ? 0 : (parseFloat(value) || 0);
     setAmountsByYear((prev) => ({
       ...prev,
       [year]: numValue,
@@ -199,7 +198,8 @@ export const ODCFormModal = ({
                         type="number"
                         min="0"
                         step="0.01"
-                        value={amountsByYear[year] || 0}
+                        value={amountsByYear[year] === 0 ? '' : amountsByYear[year]}
+                        placeholder="0"
                         onChange={(e) => handleAmountChange(year, e.target.value)}
                         className="w-full pl-7 pr-3 py-2 bg-background border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
                       />
@@ -227,26 +227,13 @@ export const ODCFormModal = ({
                 Apply escalation (year-over-year increase)
               </label>
             </div>
-
-            <div className="flex items-center">
-              <input
-                type="checkbox"
-                id="gaAdder"
-                checked={applyGAAdder}
-                onChange={(e) => setApplyGAAdder(e.target.checked)}
-                className="w-4 h-4 text-primary bg-background border-input rounded focus:ring-2 focus:ring-ring"
-              />
-              <label htmlFor="gaAdder" className="ml-2 text-sm text-muted-foreground">
-                Apply G&amp;A adder (2.43%)
-              </label>
-            </div>
           </div>
 
           {/* Total cost display */}
           <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium text-muted-foreground">
-                Base Total (before escalation/G&amp;A):
+                Base Total (S&amp;MH applied in Grand Total):
               </span>
               <span className="text-lg font-bold text-orange-600">
                 {new Intl.NumberFormat('en-US', {
