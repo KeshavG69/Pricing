@@ -3,7 +3,9 @@ import { debounce } from 'lodash-es';
 import {
   SpreadsheetPosition,
   Subcontractor,
+  TravelItem,
   ODCItem,
+  Extension,
   IndirectRates,
   EscalationRates,
   JobPosition,
@@ -12,10 +14,12 @@ import {
   ConversionData,
   SubcontractorPosition,
   Proposal,
+  WageSource,
 } from '@/types';
 import { pricingApi } from '../api/pricing';
 import { proposalsApi } from '../api/proposals';
 import { useOrganizationStore } from './organizationStore';
+import { getEffectiveSalary, isGSAPosition, getGSARateForYear, reverseEngineerGSARate } from '../utils/salaryHelpers';
 
 interface PricingState {
   // Data
@@ -26,9 +30,12 @@ interface PricingState {
   dcaaContact: string;
   positions: SpreadsheetPosition[];
   subcontractors: Subcontractor[];
+  travel: TravelItem[];
   odcs: ODCItem[];
+  extensions: Extension[];  // Extension periods beyond regular contract years
   rates: IndirectRates;
   escalationRates: EscalationRates;
+  wageSource: WageSource;  // BLS or GSA wage source configuration
 
   // Metadata
   totalYears: number;
@@ -43,13 +50,15 @@ interface PricingState {
 
   // Advanced mode state
   advancedMode: boolean;
+  subcontractorConfigured: boolean;  // Track if questionnaire was completed
   positionsAdvanced: AdvancedPosition[];
   expandedPositions: Set<string>;
   manualOverrides: Map<string, Set<string>>;
   aggregates: Aggregates;
   ratesReferenceExpanded: boolean;
   advancedModeVersion: number; // Force re-render counter
-  activeTab: 'overview' | 'main' | 'subcontractors' | 'rate-table';
+  activeTab: 'files' | 'overview' | 'main' | 'subcontractors' | 'wage-data';
+  savedScrollPosition: { top: number; left: number } | null;  // For scroll preservation
 
   // Actions
   loadProposal: (proposalId: string, existingProposal?: Proposal) => Promise<void>;
@@ -58,7 +67,21 @@ interface PricingState {
   deletePosition: (id: string) => void;
   addSubcontractor: (subcontractor: Omit<Subcontractor, 'id'>) => void;
   deleteSubcontractor: (id: string) => void;
+  deleteSubcontractorPosition: (subId: string, posIndex: number) => void;
+  updateSubcontractorPosition: (subId: string, posIndex: number, updates: Partial<SubcontractorPosition>) => void;
+  getLinkedSubcontractorPosition: (positionId: string) => { subId: string; posIndex: number; subPos: SubcontractorPosition } | null;
+  updateLinkedBaseRate: (positionId: string, newBaseRate: number) => void;
+  transferSubcontractorHours: (data: {
+    sourceSubcontractorId: string;
+    sourcePositionIndex: number;
+    targetSubcontractorId?: string;
+    newSubcontractorName?: string;
+    hoursAllocation: Record<string, number>;
+  }) => Promise<void>;
   convertToSubcontractor: (data: ConversionData) => Promise<void>;
+  addTravel: (travel: Omit<TravelItem, 'id'>) => void;
+  updateTravel: (id: string, updates: Partial<TravelItem>) => void;
+  deleteTravel: (id: string) => void;
   addODC: (odc: Omit<ODCItem, 'id'>) => void;
   updateODC: (id: string, updates: Partial<ODCItem>) => void;
   deleteODC: (id: string) => void;
@@ -69,10 +92,12 @@ interface PricingState {
   updatePrimeContractorName: (name: string) => void;
   recalculate: () => Promise<void>;
   exportToExcel: (overrides?: { primeContractorName?: string }) => Promise<void>;
+  saveProposal: () => Promise<{ success: boolean; error?: string }>;
   reset: () => void;
 
   // Advanced mode actions
   enableAdvancedMode: () => void;
+  disableAdvancedMode: () => void;
   transformToAdvanced: () => void;
   updateAdvancedPosition: (id: string, updates: Partial<AdvancedPosition>) => void;
   togglePositionExpansion: (id: string) => void;
@@ -80,35 +105,109 @@ interface PricingState {
   clearManualOverrides: (positionId?: string) => void;
   recalculateAdvanced: () => Promise<void>;
   toggleRatesReference: () => void;
-  setActiveTab: (tab: 'overview' | 'main' | 'subcontractors' | 'rate-table') => void;
+  setActiveTab: (tab: 'files' | 'overview' | 'main' | 'subcontractors' | 'wage-data') => void;
+  preCreateSubcontractors: (subs: { name: string }[]) => void;
+  autoAllocateWorkshare: () => Promise<void>;
+  assignPositionToContractor: (positionId: string, subcontractorId: string | null) => Promise<void>;
+  saveScrollPosition: (position: { top: number; left: number }) => void;
+  restoreScrollPosition: () => { top: number; left: number } | null;
 }
+
+// Helper to check if a position is a key position (cannot be auto-allocated to subcontractors)
+// Uses fuzzy matching for PM/FA variations
+const isKeyPosition = (position: { is_key_position?: boolean; labor_category: string }): boolean => {
+  // Check if LLM flagged it as key during document parsing
+  if (position.is_key_position) {
+    return true;
+  }
+
+  // Fallback: fuzzy check labor category for PM/FA variations (case-insensitive)
+  const lc = position.labor_category.toLowerCase();
+
+  // Program Manager variations: PM, Prog Manager, Program Mgr, etc.
+  const pmPatterns = [
+    'program manager',
+    'program mgr',
+    'prog manager',
+    'prog mgr',
+    'programme manager',  // British spelling
+    /\bpm\b/,  // "PM" as standalone word (e.g., "Senior PM", "PM III")
+    /\bp\.?m\.?\b/,  // "P.M." or "P.M"
+  ];
+
+  // Financial Analyst variations: FA, Finance Analyst, etc.
+  const faPatterns = [
+    'financial analyst',
+    'finance analyst',
+    'financial anlyst',  // Common typo
+    /\bfa\b/,  // "FA" as standalone word
+    /\bf\.?a\.?\b/,  // "F.A." or "F.A"
+  ];
+
+  // Check PM patterns
+  for (const pattern of pmPatterns) {
+    if (typeof pattern === 'string') {
+      if (lc.includes(pattern)) return true;
+    } else {
+      if (pattern.test(lc)) return true;
+    }
+  }
+
+  // Check FA patterns
+  for (const pattern of faPatterns) {
+    if (typeof pattern === 'string') {
+      if (lc.includes(pattern)) return true;
+    } else {
+      if (pattern.test(lc)) return true;
+    }
+  }
+
+  return false;
+};
+
+// Export for use in UI components
+export { isKeyPosition };
 
 // Helper to map JobPosition to SpreadsheetPosition
 const mapJobToPosition = (job: JobPosition, index: number): SpreadsheetPosition => {
-  // Find first available percentile with a valid wage
+  // Check if this is a GSA position
+  const isGSA = job.wage_source === 'gsa';
+
+  // Find first available percentile with a valid wage (for BLS positions)
   let percentile = job.selected_percentile || '50th';
 
-  // Validate that the percentile has a wage value
-  const percentileWage = job[`wage_${percentile}` as keyof JobPosition];
-  if (percentileWage == null) {
-    // Fallback: find first non-null percentile
-    const fallbacks = ['50th', '75th', '25th', '90th', '10th'] as const;
-    for (const p of fallbacks) {
-      if (job[`wage_${p}` as keyof JobPosition] != null) {
-        percentile = p;
-        break;
+  // Validate that the percentile has a wage value (BLS only)
+  if (!isGSA) {
+    const percentileWage = job[`wage_${percentile}` as keyof JobPosition];
+    if (percentileWage == null) {
+      // Fallback: find first non-null percentile
+      const fallbacks = ['50th', '75th', '25th', '90th', '10th'] as const;
+      for (const p of fallbacks) {
+        if (job[`wage_${p}` as keyof JobPosition] != null) {
+          percentile = p;
+          break;
+        }
       }
     }
   }
 
-  // Calculate selected_wage from the determined percentile
-  const selectedWage = job[`wage_${percentile}` as keyof JobPosition] as number | undefined;
+  // Calculate selected_wage from the determined percentile (BLS) or GSA rate (GSA)
+  let selectedWage: number | undefined;
+  if (isGSA && job.gsa_rates_by_year) {
+    // For GSA, use the first year's rate for display
+    const currentYear = job.gsa_current_year || 1;
+    selectedWage = job.gsa_rates_by_year[String(currentYear)];
+  } else {
+    selectedWage = job[`wage_${percentile}` as keyof JobPosition] as number | undefined;
+  }
 
   return {
     id: `pos_${index}_${Date.now()}`,
     labor_category: job.labor_category,
+    description: job.description, // Job description from document parsing
     experience: job.experience,
     location: job.location,
+    location_type: job.location_type || 'On-Site', // Default to On-Site
     soc_code: job.soc_code,
     soc_title: job.soc_title,
     percentile,
@@ -117,10 +216,19 @@ const mapJobToPosition = (job: JobPosition, index: number): SpreadsheetPosition 
     wage_50th: job.wage_50th,
     wage_75th: job.wage_75th,
     wage_90th: job.wage_90th,
-    selected_wage: selectedWage, // Use the wage from the determined percentile
+    selected_wage: selectedWage,
     hours_per_year: job.hours_per_year || { '1': job.hours || 1880 },
+    standard_fte_hours: job.standard_fte_hours,
     yearly_amounts: [],
     total_amount: 0,
+    // GSA-specific fields
+    wage_source: job.wage_source,
+    gsa_lcat_id: job.gsa_lcat_id,
+    gsa_title: job.gsa_title,
+    gsa_rates_by_year: job.gsa_rates_by_year,
+    gsa_current_year: job.gsa_current_year,
+    // Key position flag
+    is_key_position: job.is_key_position,
   };
 };
 
@@ -213,58 +321,148 @@ const setCachedProposal = (proposalId: string, data: any) => {
 
 export const usePricingStore = create<PricingState>((set, get) => {
   // Helper function for actual transformation logic
-  const performTransformToAdvanced = () => {
+  const performTransformToAdvanced = (options?: { skipVersionIncrement?: boolean }) => {
     const state = get();
 
-    console.log('[TRANSFORM] Starting transformation with rates:', {
+    console.log('[TRANSFORM] ========== TRANSFORM START ==========');
+    console.log('[TRANSFORM] Current rates:', {
       fringe: state.rates.fringe,
-      oh: state.rates.oh,
+      oh_onsite: state.rates.oh_onsite,
+      oh_offsite: state.rates.oh_offsite,
       ga: state.rates.ga,
       fee: state.rates.fee
     });
+    console.log('[TRANSFORM] Positions to transform:', state.positions.length);
+    console.log('[TRANSFORM] Escalation rates:', state.escalationRates);
 
     // Convert each SpreadsheetPosition to AdvancedPosition
     const advanced = state.positions.map((pos) => {
       const breakdown: AdvancedPosition['breakdown'] = {};
+      const isGSA = isGSAPosition(pos);
 
       // For each year, create detailed breakdown
       Object.entries(pos.hours_per_year).forEach(([year, hours]) => {
-        // Prioritize custom_salary, then percentile wage, then selected_wage
-        const wage = pos.custom_salary || pos[`wage_${pos.percentile}`] || pos.selected_wage || 0;
-        const dlRate = hours > 0 ? wage / hours : 0;
-        const dlAmount = dlRate * hours;
+        const yearNum = parseInt(year, 10);
 
-        const fringe = dlRate * state.rates.fringe;
-        const fringeAmount = fringe * hours;
+        if (isGSA) {
+          // GSA positions: Reverse engineer for DISPLAY purposes
+          // The GSA rate is the final FBLR, but we show it broken down
+          // as if it were calculated with indirect rates (for consistency in UI)
+          const originalGsaRate = getGSARateForYear(pos, yearNum);
 
-        const oh = (dlRate + fringe) * state.rates.oh;
-        const ohAmount = oh * hours;
+          // Apply discount if set by user
+          const discountRate = pos.gsa_discount_rate || 0;
+          const gsaRate = originalGsaRate * (1 - discountRate);
 
-        const ga = (dlRate + fringe + oh) * state.rates.ga;
-        const gaAmount = ga * hours;
+          const gsaBreakdown = reverseEngineerGSARate(gsaRate, state.rates);
 
-        const fee = (dlRate + fringe + oh + ga) * state.rates.fee;
-        const feeAmount = fee * hours;
+          // IMPORTANT: For GSA, the breakdown is ONLY for display purposes
+          // The actual cost is ALWAYS gsaRate * hours (independent of indirect rates)
+          const dlAmount = gsaBreakdown.dlRate * hours;
+          const fringeAmount = gsaBreakdown.fringe * hours;
+          const ohAmount = gsaBreakdown.oh * hours;
+          const gaAmount = gsaBreakdown.ga * hours;
+          const feeAmount = gsaBreakdown.fee * hours;
+          // Use GSA rate directly for total (NOT gsaBreakdown.fblr)
+          const totalAmount = gsaRate * hours;
 
-        const fblr = dlRate + fringe + oh + ga + fee;
-        const totalAmount = fblr * hours;
+          breakdown[year] = {
+            hours,
+            wage: gsaRate, // Original GSA rate for reference
+            dlRate: gsaBreakdown.dlRate,
+            dlAmount,
+            fringe: gsaBreakdown.fringe,
+            fringeAmount,
+            oh: gsaBreakdown.oh,
+            ohAmount,
+            ga: gsaBreakdown.ga,
+            gaAmount,
+            fee: gsaBreakdown.fee,
+            feeAmount,
+            fblr: gsaRate, // GSA rate is the true FBLR (not reverse-engineered value)
+            totalAmount,
+          };
+        } else {
+          // BLS positions: Calculate with indirect rates and escalation
+          // Use getEffectiveSalary to handle multi-select averaging
+          const baseWage = getEffectiveSalary(pos);
 
-        breakdown[year] = {
-          hours,
-          wage,
-          dlRate,
-          dlAmount,
-          fringe,
-          fringeAmount,
-          oh,
-          ohAmount,
-          ga,
-          gaAmount,
-          fee,
-          feeAmount,
-          fblr,
-          totalAmount,
-        };
+          // Skip if no valid wage or hours
+          if (!baseWage || baseWage === 0 || !pos.standard_fte_hours || pos.standard_fte_hours === 0) {
+            breakdown[year] = {
+              hours,
+              wage: 0,
+              dlRate: 0,
+              dlAmount: 0,
+              fringe: 0,
+              fringeAmount: 0,
+              oh: 0,
+              ohAmount: 0,
+              ga: 0,
+              gaAmount: 0,
+              fee: 0,
+              feeAmount: 0,
+              fblr: 0,
+              totalAmount: 0,
+            };
+            return;
+          }
+
+          // Apply compound escalation for years after year 1
+          let wage = baseWage;
+          for (let y = 1; y < yearNum; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = state.escalationRates[escKey] || 0;
+            wage *= (1 + escRate);
+          }
+
+          // IMPORTANT: Calculate hourly rate using STANDARD FTE hours from contract, not actual hours
+          // This ensures consistent hourly rate for partial years (like 6-month extensions)
+          // Each contract defines its own standard FTE hours (1880, 1920, 2080, etc.)
+          const standardFTEHours = pos.standard_fte_hours;
+          const dlRate = wage / standardFTEHours;
+          const dlAmount = dlRate * hours;
+
+          const fringe = dlRate * state.rates.fringe;
+          const fringeAmount = fringe * hours;
+
+          // Determine which OH rate to use based on location_type
+          // Default to On-Site if not specified
+          // Fallback: oh_onsite/oh_offsite → oh → 0.0711
+          const ohOnsite = state.rates.oh_onsite !== undefined ? state.rates.oh_onsite : (state.rates.oh !== undefined ? state.rates.oh : 0.0711);
+          const ohOffsite = state.rates.oh_offsite !== undefined ? state.rates.oh_offsite : (state.rates.oh !== undefined ? state.rates.oh : 0.0711);
+          const locationType = pos.location_type || 'On-Site'; // Default to On-Site
+          const ohRate = locationType === 'On-Site' ? ohOnsite : ohOffsite;
+          const oh = (dlRate + fringe) * ohRate;
+          const ohAmount = oh * hours;
+
+          const ga = (dlRate + fringe + oh) * state.rates.ga;
+          const gaAmount = ga * hours;
+
+          const fee = (dlRate + fringe + oh + ga) * state.rates.fee;
+          const feeAmount = fee * hours;
+
+          // FBLR includes fee for UI display
+          const fblr = dlRate + fringe + oh + ga + fee;
+          const totalAmount = fblr * hours;
+
+          breakdown[year] = {
+            hours,
+            wage,
+            dlRate,
+            dlAmount,
+            fringe,
+            fringeAmount,
+            oh,
+            ohAmount,
+            ga,
+            gaAmount,
+            fee,
+            feeAmount,
+            fblr,
+            totalAmount,
+          };
+        }
       });
 
       return {
@@ -281,6 +479,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
       totalFringe: 0,
       totalOH: 0,
       totalGA: 0,
+      totalFee: 0,
       totalFBLR: 0,
       byYear: {},
     };
@@ -293,6 +492,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
             fringe: 0,
             oh: 0,
             ga: 0,
+            fee: 0,
             fblr: 0,
             totalAmount: 0,
           };
@@ -302,6 +502,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         aggregates.byYear[year].fringe += breakdown.fringeAmount;
         aggregates.byYear[year].oh += breakdown.ohAmount;
         aggregates.byYear[year].ga += breakdown.gaAmount;
+        aggregates.byYear[year].fee += breakdown.feeAmount;
         aggregates.byYear[year].fblr += breakdown.totalAmount;
         aggregates.byYear[year].totalAmount += breakdown.totalAmount;
 
@@ -309,26 +510,35 @@ export const usePricingStore = create<PricingState>((set, get) => {
         aggregates.totalFringe += breakdown.fringeAmount;
         aggregates.totalOH += breakdown.ohAmount;
         aggregates.totalGA += breakdown.gaAmount;
+        aggregates.totalFee += breakdown.feeAmount;
         aggregates.totalFBLR += breakdown.totalAmount;
       });
     });
 
-    console.log('[TRANSFORM] Setting positionsAdvanced:', advanced.length, 'positions');
-    console.log('[TRANSFORM] Setting aggregates:', {
+    console.log('[TRANSFORM] Calculated positions count:', advanced.length);
+    console.log('[TRANSFORM] Sample position breakdown (first pos, year 1):', advanced[0]?.breakdown['1']);
+    console.log('[TRANSFORM] Aggregates calculated:', {
+      totalDL: aggregates.totalDL,
       totalFringe: aggregates.totalFringe,
       totalOH: aggregates.totalOH,
-      totalGA: aggregates.totalGA
+      totalGA: aggregates.totalGA,
+      totalFBLR: aggregates.totalFBLR
     });
 
-    // Increment version to force React re-render
-    const newVersion = state.advancedModeVersion + 1;
+    // Only increment version if not explicitly skipped (to prevent unnecessary remounts)
+    const newVersion = options?.skipVersionIncrement
+      ? state.advancedModeVersion
+      : state.advancedModeVersion + 1;
+    console.log('[TRANSFORM] Setting new version:', newVersion, options?.skipVersionIncrement ? '(skipped increment)' : '');
+
     set({
       positionsAdvanced: advanced,
       aggregates,
       advancedModeVersion: newVersion
     });
 
-    console.log('[TRANSFORM] State updated with version', newVersion, '- should trigger re-render');
+    console.log('[TRANSFORM] State updated - should trigger re-render');
+    console.log('[TRANSFORM] ========== TRANSFORM END ==========');
   };
 
 
@@ -350,6 +560,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           wage_50th: p.wage_50th,
           wage_75th: p.wage_75th,
           wage_90th: p.wage_90th,
+          location_type: p.location_type || 'On-Site',  // Add location_type for OH rate selection
           ...buildYearHours(p.hours_per_year),
         })),
         rates: state.rates,
@@ -373,10 +584,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
         isDirty: true,
       });
 
-      // If in advanced mode, transform to update detailed view
-      if (get().advancedMode) {
-        performTransformToAdvanced();
-      }
+      // Always transform to update detailed view (used by both initial and advanced mode)
+      performTransformToAdvanced();
 
       console.log('Calculations updated');
 
@@ -411,15 +620,26 @@ export const usePricingStore = create<PricingState>((set, get) => {
     console.log('💾 Attempting auto-save to MongoDB...');
 
     try {
+      // Calculate total cost from all positions
+      const totalCost = state.positions.reduce((sum, position) => {
+        const positionTotal = position.total_amount || 0;
+        return sum + positionTotal;
+      }, 0);
+
       await proposalsApi.update(state.proposalId, {
         prime_contractor_name: state.primeContractorName,  // Save at proposal level
+        total_cost: totalCost,  // Add total cost calculation
         spreadsheet_data: {
           positions: state.positions,
           subcontractors: state.subcontractors,
+          travel: state.travel,
           odcs: state.odcs,
+          extensions: state.extensions,
           rates: state.rates,
           escalation_rates: state.escalationRates,
           months_per_year: state.monthsPerYear,
+          subcontractor_configured: state.subcontractorConfigured,
+          advanced_mode: state.advancedMode,
         },
       });
 
@@ -461,9 +681,12 @@ export const usePricingStore = create<PricingState>((set, get) => {
     dcaaContact: '',
     positions: [],
     subcontractors: [],
+    travel: [],
     odcs: [],
+    extensions: [],
     rates: {} as IndirectRates,  // Will be populated from backend (org settings)
     escalationRates: {} as EscalationRates,  // Will be populated from backend (org settings)
+    wageSource: { type: 'bls' } as WageSource,  // Default to BLS, updated from proposal
     totalYears: 1,
     baseYears: 1,
     optionYears: 0,
@@ -476,6 +699,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
     // Advanced mode initial state
     advancedMode: false,
+    subcontractorConfigured: false,
     positionsAdvanced: [],
     expandedPositions: new Set<string>(),
     manualOverrides: new Map<string, Set<string>>(),
@@ -484,12 +708,14 @@ export const usePricingStore = create<PricingState>((set, get) => {
       totalFringe: 0,
       totalOH: 0,
       totalGA: 0,
+      totalFee: 0,
       totalFBLR: 0,
       byYear: {},
     },
     ratesReferenceExpanded: false,
     advancedModeVersion: 0,
     activeTab: 'overview',
+    savedScrollPosition: null,
 
     loadProposal: async (proposalId, existingProposal) => {
       try {
@@ -508,15 +734,75 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
         // Extract positions from jobs or spreadsheet_data
         let positions: SpreadsheetPosition[] = [];
+        let positionsFromJobs = false; // Track if we need to save new IDs
 
-        if (proposal.spreadsheet_data?.positions) {
+        // Get standard FTE hours from metadata (contract-level setting)
+        const standardFteHours = proposal.metadata?.fte_hours_threshold;
+
+        if (proposal.spreadsheet_data?.positions && proposal.spreadsheet_data.positions.length > 0) {
           positions = proposal.spreadsheet_data.positions;
+          // Apply defaults and standard_fte_hours from metadata to all positions
+          positions = positions.map((pos) => ({
+            ...pos,
+            location_type: pos.location_type || 'On-Site', // Default to On-Site
+            standard_fte_hours: standardFteHours || pos.standard_fte_hours
+          }));
+
+          // Migration: Copy descriptions from jobs to positions if missing
+          if (proposal.jobs && Array.isArray(proposal.jobs) && proposal.jobs.length > 0) {
+            const positionsNeedDescriptions = positions.some(pos => !pos.description);
+            const jobsHaveDescriptions = proposal.jobs.some(job => !!job.description);
+
+            if (positionsNeedDescriptions && jobsHaveDescriptions) {
+              console.log('[MIGRATION] Copying descriptions from jobs to positions');
+
+              positions = positions.map((pos) => {
+                // If position already has description, skip
+                if (pos.description) return pos;
+
+                // Try to find matching job by labor_category
+                const matchingJob = proposal.jobs!.find(
+                  job => job.labor_category === pos.labor_category
+                );
+
+                if (matchingJob?.description) {
+                  console.log(`[MIGRATION] Copied description for position: ${pos.labor_category}`);
+                  return {
+                    ...pos,
+                    description: matchingJob.description
+                  };
+                }
+
+                return pos;
+              });
+
+              // Mark as needing save to persist the migration
+              positionsFromJobs = true;
+              console.log('[MIGRATION] Descriptions copied, will save to backend');
+            }
+          }
         } else if (proposal.jobs && proposal.jobs.length > 0) {
-          positions = proposal.jobs.map((job, index) => mapJobToPosition(job, index));
+          positions = proposal.jobs.map((job, index) => {
+            const mappedPos = mapJobToPosition(job, index);
+            // Apply standard_fte_hours from metadata if not in job
+            if (standardFteHours && !mappedPos.standard_fte_hours) {
+              mappedPos.standard_fte_hours = standardFteHours;
+            }
+            return mappedPos;
+          });
+          positionsFromJobs = true; // New temp IDs generated, need to save
         }
 
         // Generate default months if not provided
-        const totalYears = proposal.metadata?.total_years || 1;
+        let totalYears = proposal.metadata?.total_years || 1;
+
+        // If there are extensions, calculate actual total including them
+        const extensionsArray = proposal.spreadsheet_data?.extensions || [];
+        if (extensionsArray.length > 0) {
+          const maxExtensionYear = Math.max(...extensionsArray.map((ext: any) => ext.year));
+          totalYears = Math.max(totalYears, maxExtensionYear);
+        }
+
         const defaultMonthsPerYear: Record<string, number> = {};
         for (let i = 1; i <= totalYears; i++) {
           defaultMonthsPerYear[i.toString()] = 12;
@@ -535,6 +821,137 @@ export const usePricingStore = create<PricingState>((set, get) => {
           }
         }
 
+        // Load subcontractor configuration state
+        const subcontractorConfigured = proposal.spreadsheet_data?.subcontractor_configured || false;
+        // Detect advanced mode: explicit flag OR has subcontractors OR subcontractor_configured
+        // This handles proposals activated before we added the advanced_mode flag
+        const hasSubcontractors = proposal.spreadsheet_data?.subcontractors && proposal.spreadsheet_data.subcontractors.length > 0;
+        const advancedMode = proposal.spreadsheet_data?.advanced_mode || subcontractorConfigured || hasSubcontractors || false;
+
+        // Migrate old 'oh' field to 'oh_onsite' and 'oh_offsite'
+        let rates = proposal.spreadsheet_data?.rates || proposal.rates;
+
+        // Ensure rates object exists
+        if (!rates) {
+          console.log('[MIGRATION] No rates found, creating default rates');
+          rates = {
+            fringe: 0.247,
+            oh_onsite: 0.0711,
+            oh_offsite: 0.0711,
+            ga: 0.2243,
+            fee: 0.08,
+          };
+        } else {
+          // Migrate old 'oh' to new structure
+          if (rates.oh !== undefined && rates.oh !== null && !rates.oh_onsite && !rates.oh_offsite) {
+            console.log('[MIGRATION] Migrating old OH rate to on-site/off-site rates', rates.oh);
+            rates = {
+              ...rates,
+              oh_onsite: rates.oh,
+              oh_offsite: rates.oh,
+            };
+            delete rates.oh;
+          }
+
+          // Ensure oh_onsite and oh_offsite always exist (fallback to defaults)
+          if (rates.oh_onsite === undefined || rates.oh_onsite === null) {
+            console.log('[MIGRATION] Adding missing oh_onsite with default value');
+            rates = {
+              ...rates,
+              oh_onsite: 0.0711,
+            };
+          }
+          if (rates.oh_offsite === undefined || rates.oh_offsite === null) {
+            console.log('[MIGRATION] Adding missing oh_offsite with default value');
+            rates = {
+              ...rates,
+              oh_offsite: 0.0711,
+            };
+          }
+        }
+
+        // MIGRATION: Fix old subcontractor positions (pre-dropdown assignment)
+        // Old flow removed positions from main array and didn't set shows_in_main_grid flag
+        // New flow keeps positions in main array with assigned_subcontractor_id
+        let subcontractors = proposal.spreadsheet_data?.subcontractors || [];
+        let needsMigration = false;
+
+        // Check if any subcontractor has positions without shows_in_main_grid flag
+        const hasOldPositions = subcontractors.some((sub: Subcontractor) =>
+          sub.positions?.some((pos: SubcontractorPosition) => pos.shows_in_main_grid !== true)
+        );
+
+        if (hasOldPositions) {
+          console.log('[MIGRATION] Detected old subcontractor positions, starting migration...');
+
+          subcontractors = subcontractors.map((sub: Subcontractor) => {
+            const updatedPositions = sub.positions.map((subPos: SubcontractorPosition) => {
+              // If already has the flag, skip
+              if (subPos.shows_in_main_grid === true) {
+                return subPos;
+              }
+
+              console.log(`[MIGRATION] Migrating old subcontractor position: ${subPos.labor_category} in ${sub.name}`);
+
+              // Check if this position exists in main positions array
+              const existsInMain = positions.some((p: SpreadsheetPosition) =>
+                p.id === subPos.original_position_id ||
+                (p.labor_category === subPos.labor_category && p.assigned_subcontractor_id === sub.id)
+              );
+
+              // If not in main positions, add it back
+              if (!existsInMain && subPos.original_position_id) {
+                console.log(`[MIGRATION] Restoring position to main array: ${subPos.labor_category}`);
+
+                // Reconstruct main position from subcontractor data
+                const restoredPosition: SpreadsheetPosition = {
+                  id: subPos.original_position_id,
+                  labor_category: subPos.labor_category,
+                  hours_per_year: { ...subPos.hours_per_year },
+                  assigned_subcontractor_id: sub.id,
+                  location_type: subPos.location_type || 'On-Site',
+                  standard_fte_hours: standardFteHours,
+                  percentile: '50th', // Default to median for restored positions
+                  // Keep the last rate that was set in subcontractor
+                  last_subcontractor_base_rate: subPos.rate,
+                };
+
+                positions.push(restoredPosition);
+                needsMigration = true;
+              } else if (existsInMain) {
+                // Position exists, make sure assigned_subcontractor_id is set
+                positions = positions.map(p => {
+                  if (p.id === subPos.original_position_id && !p.assigned_subcontractor_id) {
+                    console.log(`[MIGRATION] Setting assigned_subcontractor_id for: ${p.labor_category}`);
+                    needsMigration = true;
+                    return {
+                      ...p,
+                      assigned_subcontractor_id: sub.id,
+                    };
+                  }
+                  return p;
+                });
+              }
+
+              // Add the shows_in_main_grid flag to subcontractor position
+              return {
+                ...subPos,
+                shows_in_main_grid: true,
+              };
+            });
+
+            return {
+              ...sub,
+              positions: updatedPositions,
+            };
+          });
+
+          if (needsMigration) {
+            console.log('[MIGRATION] Migration complete, will save to backend');
+            positionsFromJobs = true; // Trigger auto-save
+          }
+        }
+
         set({
           proposalId,
           proposalName: proposal.name,
@@ -542,10 +959,13 @@ export const usePricingStore = create<PricingState>((set, get) => {
           primeContractorName,
           dcaaContact: proposal.dcaa_contact || '',
           positions,
-          subcontractors: proposal.spreadsheet_data?.subcontractors || [],
+          subcontractors,
+          travel: proposal.spreadsheet_data?.travel || [],
           odcs: proposal.spreadsheet_data?.odcs || [],
-          rates: proposal.spreadsheet_data?.rates || proposal.rates,  // Try spreadsheet_data first, fallback to org defaults
+          extensions: proposal.spreadsheet_data?.extensions || [],
+          rates: rates,  // Use migrated rates
           escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Try spreadsheet_data first
+          wageSource: proposal.wage_source || { type: 'bls' },  // Load wage source from proposal
           totalYears,
           baseYears: proposal.metadata?.base_years || 1,
           optionYears: proposal.metadata?.option_years || 0,
@@ -553,6 +973,9 @@ export const usePricingStore = create<PricingState>((set, get) => {
           isDirty: false,
           lastSaved: null,
           error: null,
+          // Restore advanced mode state
+          subcontractorConfigured,
+          advancedMode,
         });
 
         // Cache the loaded state for faster future access
@@ -563,10 +986,13 @@ export const usePricingStore = create<PricingState>((set, get) => {
           primeContractorName,
           dcaaContact: proposal.dcaa_contact || '',
           positions,
-          subcontractors: proposal.spreadsheet_data?.subcontractors || [],
+          subcontractors,  // Use migrated subcontractors
+          travel: proposal.spreadsheet_data?.travel || [],
           odcs: proposal.spreadsheet_data?.odcs || [],
-          rates: proposal.spreadsheet_data?.rates || proposal.rates,  // Try spreadsheet_data first, fallback to org defaults
+          extensions: proposal.spreadsheet_data?.extensions || [],
+          rates: rates,  // Use migrated rates
           escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Try spreadsheet_data first
+          wageSource: proposal.wage_source || { type: 'bls' },  // Cache wage source
           totalYears,
           baseYears: proposal.metadata?.base_years || 1,
           optionYears: proposal.metadata?.option_years || 0,
@@ -574,7 +1000,43 @@ export const usePricingStore = create<PricingState>((set, get) => {
           isDirty: false,
           lastSaved: null,
           error: null,
+          subcontractorConfigured,
+          advancedMode,
         });
+
+        // If proposal was saved in advanced mode, restore the advanced view
+        if (advancedMode) {
+          console.log('[LOAD] Restoring advanced mode view...');
+          performTransformToAdvanced();
+        }
+
+        // If positions came from jobs (not spreadsheet_data), save them immediately
+        // This persists the new IDs so SOC changes and other updates work correctly
+        if (positionsFromJobs && positions.length > 0) {
+          console.log('[LOAD] Positions loaded from jobs, saving to spreadsheet_data immediately...');
+          try {
+            const totalCost = positions.reduce((sum, pos) => sum + (pos.total_amount || 0), 0);
+            await proposalsApi.update(proposalId, {
+              prime_contractor_name: primeContractorName,
+              total_cost: totalCost,
+              spreadsheet_data: {
+                positions,
+                subcontractors: proposal.spreadsheet_data?.subcontractors || [],
+                travel: proposal.spreadsheet_data?.travel || [],
+                odcs: proposal.spreadsheet_data?.odcs || [],
+                extensions: proposal.spreadsheet_data?.extensions || [],
+                rates: rates,  // Use migrated rates
+                escalation_rates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,
+                months_per_year: proposal.metadata?.months_per_year || defaultMonthsPerYear,
+                subcontractor_configured: subcontractorConfigured,
+                advanced_mode: advancedMode,
+              },
+            });
+            console.log('[LOAD] ✅ Positions saved to spreadsheet_data');
+          } catch (saveError) {
+            console.error('[LOAD] ❌ Failed to save positions:', saveError);
+          }
+        }
 
         // NOTE: Don't auto-recalculate on initial load
         // The spreadsheet shows editable data, but FBLR calculations
@@ -587,12 +1049,89 @@ export const usePricingStore = create<PricingState>((set, get) => {
     },
 
     updatePosition: (id, updates) => {
-      set((state) => ({
-        positions: state.positions.map((p) =>
-          p.id === id ? { ...p, ...updates } : p
-        ),
-      }));
-      debouncedRecalculate();
+      const state = get();
+
+      // Check if this is ONLY a location_type change (to prevent unnecessary grid remounts)
+      const isLocationOnlyChange =
+        Object.keys(updates).length === 1 &&
+        updates.location_type !== undefined;
+
+      // If location_type is being updated, also update linked subcontractor positions
+      if (updates.location_type !== undefined) {
+        console.log('[UPDATE POSITION] location_type changed, updating linked subcontractors...');
+
+        // Find all subcontractor positions linked to this prime position
+        const updatedSubcontractors = state.subcontractors.map(sub => {
+          const hasLinkedPositions = sub.positions.some(pos => pos.original_position_id === id);
+
+          if (hasLinkedPositions) {
+            console.log(`[UPDATE POSITION] Updating location_type for subcontractor: ${sub.name}`);
+            return {
+              ...sub,
+              positions: sub.positions.map(pos => {
+                if (pos.original_position_id === id) {
+                  console.log(`  - Position: ${pos.labor_category} → ${updates.location_type}`);
+                  return { ...pos, location_type: updates.location_type };
+                }
+                return pos;
+              })
+            };
+          }
+          return sub;
+        });
+
+        // Update subcontractors in state
+        set({ subcontractors: updatedSubcontractors });
+      }
+
+      if (state.advancedMode) {
+        // In advanced mode, use the advanced update logic
+        console.log('[ADVANCED MODE] Updating position via updatePosition', { id, updates });
+
+        // Update the underlying positions array first (WITHOUT isDirty)
+        set((prevState) => ({
+          positions: prevState.positions.map((p) =>
+            p.id === id ? { ...p, ...updates } : p
+          ),
+        }));
+
+        // Then retransform to advanced mode to recalculate breakdown
+        // Skip version increment for location-only changes to prevent grid remount
+        console.log('[ADVANCED MODE] Calling transformToAdvanced', { isLocationOnlyChange });
+        performTransformToAdvanced({ skipVersionIncrement: isLocationOnlyChange });
+
+        // Set isDirty AFTER transformation to ensure it persists through all state updates
+        console.log('[ADVANCED MODE] Setting isDirty=true');
+        set({ isDirty: true });
+
+        // Trigger auto-save directly (no need to recalculate via API in advanced mode)
+        console.log('[ADVANCED MODE] Triggering debouncedAutoSave (will run in 2s)');
+        debouncedAutoSave();
+      } else {
+        // Basic mode logic
+        console.log('[BASIC MODE] Updating position', { id, updates });
+
+        set((prevState) => ({
+          positions: prevState.positions.map((p) =>
+            p.id === id ? { ...p, ...updates } : p
+          ),
+          isDirty: true, // Set dirty immediately
+        }));
+
+        // For location-only changes, skip recalculation and just transform
+        if (isLocationOnlyChange) {
+          console.log('[BASIC MODE] Location-only change, transforming without recalculation');
+          performTransformToAdvanced({ skipVersionIncrement: true });
+          debouncedAutoSave();
+        } else {
+          // Trigger recalculate for UI updates
+          debouncedRecalculate();
+
+          // Also trigger auto-save directly to ensure persistence
+          console.log('[BASIC MODE] Triggering debouncedAutoSave (will run in 2s)');
+          debouncedAutoSave();
+        }
+      }
     },
 
     addPosition: (position) => {
@@ -620,10 +1159,448 @@ export const usePricingStore = create<PricingState>((set, get) => {
     },
 
     deleteSubcontractor: (id) => {
+      const state = get();
+
+      // Find the subcontractor being deleted
+      const subToDelete = state.subcontractors.find(s => s.id === id);
+      if (!subToDelete) {
+        console.error('[DELETE SUB] Subcontractor not found:', id);
+        return;
+      }
+
+      console.log('[DELETE SUB] Deleting subcontractor:', subToDelete.name);
+      console.log('[DELETE SUB] Positions to return:', subToDelete.positions.length);
+
+      // Build map of prime position ID -> updated hours
+      const primeHoursUpdates: Record<string, Record<string, number>> = {};
+
+      // For each position in the deleted subcontractor
+      subToDelete.positions.forEach(subPos => {
+        if (!subPos.original_position_id) {
+          console.log('[DELETE SUB] Position has no original_position_id, skipping:', subPos.labor_category);
+          return;
+        }
+
+        const primeId = subPos.original_position_id;
+        const primePos = state.positions.find(p => p.id === primeId);
+
+        if (!primePos) {
+          console.log('[DELETE SUB] Prime position not found:', primeId);
+          return;
+        }
+
+        // Simple logic: add the deleted sub's hours back to current prime hours
+        const newPrimeHours: Record<string, number> = {};
+
+        // Get all years from both prime and sub positions
+        const allYears = new Set([
+          ...Object.keys(primePos.hours_per_year),
+          ...Object.keys(subPos.hours_per_year)
+        ]);
+
+        allYears.forEach(year => {
+          const currentPrimeHours = primePos.hours_per_year[year] || 0;
+          const returningHours = subPos.hours_per_year[year] || 0;
+          newPrimeHours[year] = currentPrimeHours + returningHours;
+        });
+
+        console.log('[DELETE SUB] Adding hours back to prime', primeId, ':', newPrimeHours);
+        console.log('[DELETE SUB]   Current prime hours:', primePos.hours_per_year);
+        console.log('[DELETE SUB]   Returning hours:', subPos.hours_per_year);
+
+        primeHoursUpdates[primeId] = newPrimeHours;
+      });
+
+      // Update state: positions and subcontractors
+      set((prevState) => {
+        // Update prime positions with returned hours
+        const updatedPositions = prevState.positions.map(pos => {
+          if (primeHoursUpdates[pos.id]) {
+            return {
+              ...pos,
+              hours_per_year: { ...primeHoursUpdates[pos.id] }
+            };
+          }
+          return pos;
+        });
+
+        return {
+          positions: updatedPositions,
+          subcontractors: prevState.subcontractors.filter((s) => s.id !== id),
+          isDirty: true,
+        };
+      });
+
+      // Re-transform to update grid display (both Basic and Advanced mode)
+      if (state.advancedMode) {
+        console.log('[DELETE SUB] Re-transforming to advanced mode');
+        performTransformToAdvanced();
+      } else {
+        // In Basic Mode, also need to transform to update the grid display
+        console.log('[DELETE SUB] Transforming to update grid display');
+        performTransformToAdvanced({ skipVersionIncrement: true });
+      }
+
+      console.log('[DELETE SUB] Delete complete, triggering auto-save');
+      debouncedAutoSave();
+    },
+
+    deleteSubcontractorPosition: (subId, posIndex) => {
+      const state = get();
+
+      // Find the subcontractor
+      const sub = state.subcontractors.find(s => s.id === subId);
+      if (!sub || !sub.positions[posIndex]) {
+        console.error('[DELETE SUB POS] Subcontractor or position not found:', subId, posIndex);
+        return;
+      }
+
+      const subPos = sub.positions[posIndex];
+      console.log('[DELETE SUB POS] Deleting position:', subPos.labor_category, 'from', sub.name);
+      console.log('[DELETE SUB POS] Position details:', {
+        original_position_id: subPos.original_position_id,
+        shows_in_main_grid: subPos.shows_in_main_grid,
+      });
+
+      // Return hours to prime position if linked (OLD FLOW: convert to subcontractor)
+      // OR clear subcontractor assignment if shows_in_main_grid (NEW FLOW: dropdown assignment)
+      let primeHoursUpdate: Record<string, number> | null = null;
+      let primeId: string | null = null;
+      let clearSubcontractorAssignment = false;
+
+      if (subPos.original_position_id) {
+        primeId = subPos.original_position_id;
+        const primePos = state.positions.find(p => p.id === primeId);
+
+        if (primePos) {
+          // Check if this is a "shows in main grid" position (dropdown assignment flow)
+          if (subPos.shows_in_main_grid) {
+            // NEW FLOW: Just clear the subcontractor assignment, don't add hours back
+            console.log('[DELETE SUB POS] Clearing subcontractor assignment from prime position');
+            clearSubcontractorAssignment = true;
+          } else {
+            // OLD FLOW: Add the deleted sub position's hours back to current prime hours
+            primeHoursUpdate = {};
+
+            // Get all years from both prime and sub positions
+            const allYears = new Set([
+              ...Object.keys(primePos.hours_per_year),
+              ...Object.keys(subPos.hours_per_year)
+            ]);
+
+            allYears.forEach(year => {
+              const currentPrimeHours = primePos.hours_per_year[year] || 0;
+              const returningHours = subPos.hours_per_year[year] || 0;
+              primeHoursUpdate![year] = currentPrimeHours + returningHours;
+            });
+
+            console.log('[DELETE SUB POS] Adding hours back to prime:', primeHoursUpdate);
+            console.log('[DELETE SUB POS]   Current prime hours:', primePos.hours_per_year);
+            console.log('[DELETE SUB POS]   Returning hours:', subPos.hours_per_year);
+          }
+        } else {
+          console.log('[DELETE SUB POS] Prime position not found:', primeId);
+        }
+      }
+
+      // Update state
+      set((prevState) => {
+        // Update prime position based on the type of deletion
+        let updatedPositions = prevState.positions;
+
+        if (primeId) {
+          if (clearSubcontractorAssignment) {
+            // NEW FLOW: Clear the assigned_subcontractor_id
+            updatedPositions = prevState.positions.map(pos => {
+              if (pos.id === primeId) {
+                return {
+                  ...pos,
+                  assigned_subcontractor_id: undefined,
+                };
+              }
+              return pos;
+            });
+          } else if (primeHoursUpdate) {
+            // OLD FLOW: Return hours to prime position
+            updatedPositions = prevState.positions.map(pos => {
+              if (pos.id === primeId) {
+                return {
+                  ...pos,
+                  hours_per_year: { ...primeHoursUpdate! }
+                };
+              }
+              return pos;
+            });
+          }
+        }
+
+        // Remove position from subcontractor
+        const updatedSubcontractors = prevState.subcontractors
+          .map(s => {
+            if (s.id === subId) {
+              const newPositions = s.positions.filter((_, idx) => idx !== posIndex);
+              return { ...s, positions: newPositions };
+            }
+            return s;
+          });
+
+        return {
+          positions: updatedPositions,
+          subcontractors: updatedSubcontractors,
+          isDirty: true,
+        };
+      });
+
+      // Re-transform to update grid display (both Basic and Advanced mode)
+      if (state.advancedMode) {
+        console.log('[DELETE SUB POS] Re-transforming to advanced mode');
+        performTransformToAdvanced();
+      } else {
+        // In Basic Mode, also need to transform to update the grid display
+        console.log('[DELETE SUB POS] Transforming to update grid display');
+        performTransformToAdvanced({ skipVersionIncrement: true });
+      }
+
+      console.log('[DELETE SUB POS] Delete complete, triggering auto-save');
+      debouncedAutoSave();
+    },
+
+    updateSubcontractorPosition: (subId, posIndex, updates) => {
       set((state) => ({
-        subcontractors: state.subcontractors.filter((s) => s.id !== id),
+        subcontractors: state.subcontractors.map((sub) => {
+          if (sub.id === subId && sub.positions[posIndex]) {
+            const updatedPositions = [...sub.positions];
+            updatedPositions[posIndex] = { ...updatedPositions[posIndex], ...updates };
+            return { ...sub, positions: updatedPositions };
+          }
+          return sub;
+        }),
         isDirty: true,
       }));
+      debouncedAutoSave();
+    },
+
+    getLinkedSubcontractorPosition: (positionId) => {
+      const state = get();
+      const position = state.positions.find(p => p.id === positionId);
+
+      if (!position?.assigned_subcontractor_id) {
+        return null;
+      }
+
+      const subcontractor = state.subcontractors.find(s => s.id === position.assigned_subcontractor_id);
+      if (!subcontractor) {
+        return null;
+      }
+
+      const posIndex = subcontractor.positions.findIndex(
+        sp => sp.original_position_id === positionId
+      );
+
+      if (posIndex === -1) {
+        return null;
+      }
+
+      return {
+        subId: subcontractor.id,
+        posIndex,
+        subPos: subcontractor.positions[posIndex]
+      };
+    },
+
+    updateLinkedBaseRate: (positionId, newBaseRate) => {
+      const linked = get().getLinkedSubcontractorPosition(positionId);
+
+      if (!linked) {
+        console.warn('[UPDATE LINKED RATE] No linked subcontractor position found for:', positionId);
+        return;
+      }
+
+      console.log('[UPDATE LINKED RATE]', {
+        positionId,
+        newBaseRate,
+        subId: linked.subId,
+        posIndex: linked.posIndex,
+        oldRate: linked.subPos.rate
+      });
+
+      // Update the subcontractor position rate AND save to position for future toggles
+      set((state) => ({
+        subcontractors: state.subcontractors.map((sub) => {
+          if (sub.id === linked.subId) {
+            const updatedPositions = [...sub.positions];
+            updatedPositions[linked.posIndex] = {
+              ...updatedPositions[linked.posIndex],
+              rate: newBaseRate
+            };
+            return { ...sub, positions: updatedPositions };
+          }
+          return sub;
+        }),
+        // ALSO update the position's last_subcontractor_base_rate
+        positions: state.positions.map(p =>
+          p.id === positionId
+            ? { ...p, last_subcontractor_base_rate: newBaseRate }
+            : p
+        ),
+        isDirty: true,
+      }));
+
+      // Re-transform to update main grid display
+      if (get().advancedMode) {
+        performTransformToAdvanced();
+      }
+
+      debouncedAutoSave();
+    },
+
+    transferSubcontractorHours: async (data) => {
+      console.log('[TRANSFER] Starting transfer:', data);
+      const state = get();
+
+      // Find source subcontractor and position
+      const sourceSub = state.subcontractors.find(s => s.id === data.sourceSubcontractorId);
+      if (!sourceSub) {
+        console.error('[TRANSFER] Source subcontractor not found:', data.sourceSubcontractorId);
+        return;
+      }
+
+      const sourcePos = sourceSub.positions[data.sourcePositionIndex];
+      if (!sourcePos) {
+        console.error('[TRANSFER] Source position not found at index:', data.sourcePositionIndex);
+        return;
+      }
+
+      console.log('[TRANSFER] Source position:', sourcePos.labor_category, 'from', sourceSub.name);
+
+      // Find or create target subcontractor
+      let targetSub = state.subcontractors.find(s => s.id === data.targetSubcontractorId);
+      let isNewTargetSub = false;
+
+      if (!targetSub && data.newSubcontractorName) {
+        const newId = `sub_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+        targetSub = {
+          id: newId,
+          name: data.newSubcontractorName,
+          positions: [],
+        };
+        isNewTargetSub = true;
+        console.log('[TRANSFER] Creating new target subcontractor:', data.newSubcontractorName);
+      }
+
+      if (!targetSub) {
+        console.error('[TRANSFER] No target subcontractor specified');
+        return;
+      }
+
+      // Calculate remaining hours for source position after transfer
+      const remainingSourceHours: Record<string, number> = {};
+      let sourceHasRemainingHours = false;
+
+      Object.entries(sourcePos.hours_per_year).forEach(([year, hours]) => {
+        const transferring = data.hoursAllocation[year] || 0;
+        const remaining = hours - transferring;
+        remainingSourceHours[year] = remaining;
+        if (remaining > 0) sourceHasRemainingHours = true;
+      });
+
+      console.log('[TRANSFER] Remaining source hours:', remainingSourceHours);
+
+      // Check if target already has a position with the same labor_category and original_position_id
+      const existingTargetPosIndex = targetSub.positions.findIndex(
+        p => p.labor_category === sourcePos.labor_category &&
+             p.original_position_id === sourcePos.original_position_id
+      );
+
+      // Build updated target subcontractor
+      let updatedTargetSub: typeof targetSub;
+
+      if (existingTargetPosIndex >= 0) {
+        // Merge hours into existing position
+        const existingPos = targetSub.positions[existingTargetPosIndex];
+        const mergedHours: Record<string, number> = { ...existingPos.hours_per_year };
+        Object.entries(data.hoursAllocation).forEach(([year, hours]) => {
+          mergedHours[year] = (mergedHours[year] || 0) + hours;
+        });
+
+        const updatedPositions = [...targetSub.positions];
+        updatedPositions[existingTargetPosIndex] = {
+          ...existingPos,
+          hours_per_year: mergedHours,
+        };
+
+        updatedTargetSub = { ...targetSub, positions: updatedPositions };
+        console.log('[TRANSFER] Merged into existing target position');
+      } else {
+        // Create new position in target
+        const newTargetPos: SubcontractorPosition = {
+          labor_category: sourcePos.labor_category,
+          rate: sourcePos.rate,
+          hours_per_year: { ...data.hoursAllocation },
+          original_position_id: sourcePos.original_position_id,
+          original_total_hours: sourcePos.original_total_hours,
+          location_type: sourcePos.location_type,
+        };
+
+        updatedTargetSub = {
+          ...targetSub,
+          positions: [...targetSub.positions, newTargetPos],
+        };
+        console.log('[TRANSFER] Created new position in target');
+      }
+
+      // Update state
+      set((prevState) => {
+        let updatedSubcontractors = prevState.subcontractors.map(sub => {
+          // Update source subcontractor
+          if (sub.id === data.sourceSubcontractorId) {
+            if (sourceHasRemainingHours) {
+              // Update source position with remaining hours
+              const updatedPositions = [...sub.positions];
+              updatedPositions[data.sourcePositionIndex] = {
+                ...sourcePos,
+                hours_per_year: remainingSourceHours,
+              };
+              return { ...sub, positions: updatedPositions };
+            } else {
+              // Remove source position entirely
+              return {
+                ...sub,
+                positions: sub.positions.filter((_, idx) => idx !== data.sourcePositionIndex),
+              };
+            }
+          }
+
+          // Update target subcontractor (if existing)
+          if (sub.id === targetSub!.id) {
+            return updatedTargetSub;
+          }
+
+          return sub;
+        });
+
+        // Add new target subcontractor if created
+        if (isNewTargetSub) {
+          updatedSubcontractors = [...updatedSubcontractors, updatedTargetSub];
+        }
+
+        return {
+          subcontractors: updatedSubcontractors,
+          isDirty: true,
+        };
+      });
+
+      // Re-transform to update grid display (both Basic and Advanced mode)
+      if (state.advancedMode) {
+        console.log('[TRANSFER] Re-transforming to advanced mode');
+        performTransformToAdvanced();
+      } else {
+        // In Basic Mode, also need to transform to update the grid display
+        console.log('[TRANSFER] Transforming to update grid display');
+        performTransformToAdvanced({ skipVersionIncrement: true });
+      }
+
+      console.log('[TRANSFER] Transfer complete, triggering auto-save');
       debouncedAutoSave();
     },
 
@@ -657,28 +1634,55 @@ export const usePricingStore = create<PricingState>((set, get) => {
         return;
       }
 
-      // 2. Create subcontractor position (transfer data except rates)
+      // 2. Calculate original_total_hours
+      // This tracks the original prime hours before ANY subcontractor allocation
+      // Formula: prime_hours = original_total_hours - sum(all_linked_sub_hours)
+      let originalTotalHours: Record<string, number>;
+
+      // Check if there are existing subs linked to this prime position
+      const existingSubPositions = state.subcontractors.flatMap(sub =>
+        sub.positions.filter(pos => pos.original_position_id === position.id)
+      );
+
+      if (existingSubPositions.length > 0 && existingSubPositions[0].original_total_hours) {
+        // Copy from existing sub (they all share the same original)
+        originalTotalHours = { ...existingSubPositions[0].original_total_hours };
+        console.log('[CONVERT] Using existing original_total_hours:', originalTotalHours);
+      } else {
+        // First time converting - original = current prime hours + hours being allocated
+        originalTotalHours = {};
+        Object.keys(position.hours_per_year).forEach(year => {
+          const primeHours = position.hours_per_year[year] || 0;
+          const allocating = data.hoursAllocation[year] || 0;
+          originalTotalHours[year] = primeHours + allocating;
+        });
+        console.log('[CONVERT] First conversion - calculated original_total_hours:', originalTotalHours);
+      }
+
+      // 3. Create subcontractor position (transfer data except rates)
       const subPosition: SubcontractorPosition = {
         labor_category: position.labor_category,
         rate: data.rate,
+        original_base_rate: data.rate, // Store original rate chosen at conversion (immutable)
         hours_per_year: data.hoursAllocation,
+        original_position_id: position.id, // Link back to prime position
+        original_total_hours: originalTotalHours, // Track original hours for hour return on delete
+        location_type: position.location_type || 'On-Site', // Inherit from prime position
       };
 
-      // 3. Add position to subcontractor
+      // 4. Add position to subcontractor
       const updatedSubcontractor = {
         ...subcontractor,
         positions: [...subcontractor.positions, subPosition],
       };
 
-      // 4. Calculate remaining hours for prime position
+      // 5. Calculate remaining hours for prime position
       const remainingHours: Record<string, number> = {};
-      let hasRemainingHours = false;
 
       Object.entries(position.hours_per_year).forEach(([year, hours]) => {
         const allocated = data.hoursAllocation[year] || 0;
         const remaining = hours - allocated;
         remainingHours[year] = remaining;
-        if (remaining > 0) hasRemainingHours = true;
       });
 
       // 5. Update state
@@ -696,16 +1700,10 @@ export const usePricingStore = create<PricingState>((set, get) => {
           );
         }
 
-        // Update or remove prime position
-        if (hasRemainingHours) {
-          // Partial conversion - update position with remaining hours
-          newState.positions = state.positions.map((p) =>
-            p.id === position.id ? { ...p, hours_per_year: remainingHours } : p
-          );
-        } else {
-          // Full conversion - remove position
-          newState.positions = state.positions.filter((p) => p.id !== position.id);
-        }
+        // Update prime position with remaining hours (keep even if 0 to show lineage)
+        newState.positions = state.positions.map((p) =>
+          p.id === position.id ? { ...p, hours_per_year: remainingHours } : p
+        );
 
         return newState;
       });
@@ -742,14 +1740,26 @@ export const usePricingStore = create<PricingState>((set, get) => {
       if (state.proposalId) {
         console.log('💾 Forcing immediate save to MongoDB...');
         try {
+          // Calculate total cost
+          const positions = get().positions;
+          const totalCost = positions.reduce((sum, position) => {
+            const positionTotal = position.total_amount || 0;
+            return sum + positionTotal;
+          }, 0);
+
           await proposalsApi.update(state.proposalId, {
+            total_cost: totalCost,
             spreadsheet_data: {
               positions: get().positions,
               subcontractors: get().subcontractors,
+              travel: get().travel,
               odcs: get().odcs,
+              extensions: get().extensions,
               rates: get().rates,
               escalation_rates: get().escalationRates,
               months_per_year: get().monthsPerYear,
+              subcontractor_configured: get().subcontractorConfigured,
+              advanced_mode: get().advancedMode,
             },
           });
           console.log('✅ Proposal saved successfully');
@@ -765,17 +1775,40 @@ export const usePricingStore = create<PricingState>((set, get) => {
           // Reload pricing data with fresh proposal
           await get().loadProposal(state.proposalId, freshProposal);
 
-          // 11. If in advanced mode, retransform the positions
-          if (get().advancedMode) {
-            console.log('🔄 Retransforming to advanced mode...');
-            performTransformToAdvanced();
-          }
+          // 11. Always retransform the positions (used by both initial and advanced mode)
+          console.log('🔄 Retransforming positions...');
+          performTransformToAdvanced();
 
           console.log('✅ Pricing data refreshed - subcontractor now visible!');
         } catch (error) {
           console.error('❌ Failed to save/refresh proposal:', error);
         }
       }
+    },
+
+    addTravel: (travel) => {
+      const id = `travel_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+      set((state) => ({
+        travel: [...state.travel, { ...travel, id }],
+        isDirty: true,
+      }));
+      debouncedAutoSave();
+    },
+
+    updateTravel: (id, updates) => {
+      set((state) => ({
+        travel: state.travel.map((t) => (t.id === id ? { ...t, ...updates } : t)),
+        isDirty: true,
+      }));
+      debouncedAutoSave();
+    },
+
+    deleteTravel: (id) => {
+      set((state) => ({
+        travel: state.travel.filter((t) => t.id !== id),
+        isDirty: true,
+      }));
+      debouncedAutoSave();
     },
 
     addODC: (odc) => {
@@ -806,19 +1839,29 @@ export const usePricingStore = create<PricingState>((set, get) => {
     updateRates: (rates) => {
       const state = get();
 
+      console.log('[STORE] updateRates called with:', rates);
+      console.log('[STORE] Current rates before update:', state.rates);
+      console.log('[STORE] Advanced mode:', state.advancedMode);
+
       // Update rates
+      const newRates = { ...state.rates, ...rates };
+      console.log('[STORE] New rates after merge:', newRates);
+
       set({
-        rates: { ...state.rates, ...rates },
+        rates: newRates,
+        isDirty: true, // Mark as dirty to trigger auto-save
       });
 
-      // If in advanced mode, immediately transform (synchronous, no async wrapper)
-      if (state.advancedMode) {
-        console.log('[RATES] Immediately transforming (synchronous)...');
-        performTransformToAdvanced();
-      }
+      console.log('[STORE] Rates updated in store, isDirty set to true');
 
-      // Still trigger API recalculation in background
-      debouncedRecalculate();
+      // ALWAYS transform when rates change (used by both initial and advanced mode)
+      console.log('[STORE] Calling performTransformToAdvanced (needed for table display)');
+      performTransformToAdvanced();
+      console.log('[STORE] Transform completed');
+
+      // Trigger auto-save directly
+      console.log('[STORE] Calling debouncedAutoSave');
+      debouncedAutoSave();
     },
 
     updateEscalationRates: (rates) => {
@@ -827,16 +1870,17 @@ export const usePricingStore = create<PricingState>((set, get) => {
       // Update escalation rates
       set({
         escalationRates: { ...state.escalationRates, ...rates },
+        isDirty: true, // Mark as dirty to trigger auto-save
       });
 
-      // If in advanced mode, immediately transform (synchronous, no async wrapper)
-      if (state.advancedMode) {
-        console.log('[RATES] Immediately transforming (synchronous)...');
-        performTransformToAdvanced();
-      }
+      // ALWAYS transform when escalation rates change (used by both initial and advanced mode)
+      console.log('[RATES] Calling performTransformToAdvanced (needed for table display)');
+      performTransformToAdvanced();
+      console.log('[RATES] Transform completed');
 
-      // Still trigger API recalculation in background
-      debouncedRecalculate();
+      // Trigger auto-save directly
+      console.log('[RATES] Calling debouncedAutoSave');
+      debouncedAutoSave();
     },
 
     updateMonthsForYear: (year, months) => {
@@ -876,12 +1920,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
       const state = get();
       if (!state.proposalId) return;
 
-      // Use override if provided, otherwise use store value
-      const primeContractorName = overrides?.primeContractorName || state.primeContractorName || 'TBD';
-
       try {
-        console.log('Generating Excel file...');
-        console.log('[EXPORT] Using prime contractor name:', primeContractorName);
+        console.log('Generating Excel file from proposal:', state.proposalId);
 
         // Basic mode: Export simple Excel spreadsheet matching frontend grid
         if (!state.advancedMode) {
@@ -892,16 +1932,43 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
           // Helper to calculate averaged FBLR
           const calculateAveragedFBLR = (p: SpreadsheetPosition) => {
-            // Prioritize custom_salary, then percentile wage, then selected_wage
-            const baseWage = p.custom_salary || p[`wage_${p.percentile}`] || p.selected_wage || 0;
+            const isGSA = isGSAPosition(p);
+
+            // GSA positions: Calculate averaged GSA rate across years (no indirect rates)
+            if (isGSA) {
+              let totalAmount = 0;
+              let totalHours = 0;
+
+              for (let year = 1; year <= state.totalYears; year++) {
+                const yearStr = year.toString();
+                const hoursThisYear = p.hours_per_year[yearStr] || 0;
+                const gsaRate = getGSARateForYear(p, year);
+
+                if (hoursThisYear > 0 && gsaRate > 0) {
+                  totalAmount += gsaRate * hoursThisYear;
+                  totalHours += hoursThisYear;
+                }
+              }
+
+              if (totalHours === 0) {
+                return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0, isGSA: true };
+              }
+
+              const avgRate = totalAmount / totalHours;
+              // GSA: No indirect rates, FBLR = DL rate
+              return { dlRate: avgRate, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: avgRate, isGSA: true };
+            }
+
+            // BLS positions: Use existing calculation with indirect rates
+            const baseWage = getEffectiveSalary(p);
             if (baseWage === 0 || state.totalYears === 0) {
-              return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
+              return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0, isGSA: false };
             }
 
             let totalSalary = 0;
             let totalHours = 0;
             let currentYearWage = baseWage;
-            const fteHours = p.standard_fte_hours || 1880;
+            const fteHours = p.standard_fte_hours!;
 
             for (let year = 1; year <= state.totalYears; year++) {
               const yearStr = year.toString();
@@ -928,37 +1995,51 @@ export const usePricingStore = create<PricingState>((set, get) => {
             }
 
             if (totalHours === 0) {
-              return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0 };
+              return { dlRate: 0, fringe: 0, oh: 0, ga: 0, fee: 0, fblr: 0, isGSA: false };
             }
 
             const dlRate = totalSalary / totalHours;
             const fringe = dlRate * state.rates.fringe;
-            const oh = (dlRate + fringe) * state.rates.oh;
+            // Use appropriate OH rate based on position location_type (default to On-Site)
+            const ohRate = p.location_type === 'Off-Site'
+              ? (state.rates.oh_offsite ?? state.rates.oh_onsite ?? 0.0711)
+              : (state.rates.oh_onsite ?? state.rates.oh_offsite ?? 0.0711);
+            const oh = (dlRate + fringe) * ohRate;
             const ga = (dlRate + fringe + oh) * state.rates.ga;
             const fee = (dlRate + fringe + oh + ga) * state.rates.fee;
             const fblr = dlRate + fringe + oh + ga + fee;
 
-            return { dlRate, fringe, oh, ga, fee, fblr };
+            return { dlRate, fringe, oh, ga, fee, fblr, isGSA: false };
           };
 
           // Prepare data for Excel
           const excelData = state.positions.map(p => {
             const averaged = calculateAveragedFBLR(p);
+            const isGSA = isGSAPosition(p);
 
             const row: any = {
               'Labor Category': p.labor_category,
+              'Rate Source': isGSA ? 'GSA' : 'BLS',
               'Experience (yrs)': p.experience ?? '-',
               'Location': p.location ?? '-',
-              'BLS Code': p.soc_code ?? '-',
-              'BLS Category': p.soc_title ?? '-',
-              'Percentile': p.percentile,
-              'Wage 10th': p.wage_10th ?? 0,
-              'Wage 25th': p.wage_25th ?? 0,
-              'Wage 50th': p.wage_50th ?? 0,
-              'Wage 75th': p.wage_75th ?? 0,
-              'Wage 90th': p.wage_90th ?? 0,
-              'Selected Wage': p.custom_salary || p[`wage_${p.percentile}`] || p.selected_wage || 0,
             };
+
+            // Add source-specific columns
+            if (isGSA) {
+              row['GSA LCAT ID'] = p.gsa_lcat_id ?? '-';
+              row['GSA Title'] = p.gsa_title ?? '-';
+              row['GSA Rate ($/hr)'] = getEffectiveSalary(p);
+            } else {
+              row['BLS Code'] = p.soc_code ?? '-';
+              row['BLS Category'] = p.soc_title ?? '-';
+              row['Percentile'] = p.percentile;
+              row['Wage 10th'] = p.wage_10th ?? 0;
+              row['Wage 25th'] = p.wage_25th ?? 0;
+              row['Wage 50th'] = p.wage_50th ?? 0;
+              row['Wage 75th'] = p.wage_75th ?? 0;
+              row['Wage 90th'] = p.wage_90th ?? 0;
+              row['Selected Wage'] = getEffectiveSalary(p);
+            }
 
             // Add year columns dynamically
             for (let i = 1; i <= state.totalYears; i++) {
@@ -968,10 +2049,13 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
             // Add averaged rate columns
             row['Averaged DL Rate ($/hr)'] = averaged.dlRate.toFixed(2);
-            row['Averaged Fringe ($/hr)'] = averaged.fringe.toFixed(2);
-            row['Averaged OH ($/hr)'] = averaged.oh.toFixed(2);
-            row['Averaged G&A ($/hr)'] = averaged.ga.toFixed(2);
-            row['Averaged Fee ($/hr)'] = averaged.fee.toFixed(2);
+            if (!isGSA) {
+              // Only show indirect rate columns for BLS positions
+              row['Averaged Fringe ($/hr)'] = averaged.fringe.toFixed(2);
+              row['Averaged OH ($/hr)'] = averaged.oh.toFixed(2);
+              row['Averaged G&A ($/hr)'] = averaged.ga.toFixed(2);
+              row['Averaged Fee ($/hr)'] = averaged.fee.toFixed(2);
+            }
             row['Averaged Full Burdened Rate ($/hr)'] = averaged.fblr.toFixed(2);
 
             return row;
@@ -989,71 +2073,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
           return;
         }
 
-        // Advanced mode: Export full cost proposal (existing logic)
-        console.log('Exporting advanced cost proposal...');
-
-        // Split rates object into backend-expected structure
-        const payload = {
-          jobs: state.positions.map((p) => ({
-            labor_category: p.labor_category,
-            soc_code: p.soc_code,
-            soc_title: p.soc_title,  // Add BLS Category name for Excel export
-            hours_per_year: p.hours_per_year,
-            selected_wage: p.custom_salary || p[`wage_${p.percentile}`] || p.selected_wage || 0,
-            percentile: p.percentile,
-            wage_10th: p.wage_10th,
-            wage_25th: p.wage_25th,
-            wage_50th: p.wage_50th,
-            wage_75th: p.wage_75th,
-            wage_90th: p.wage_90th,
-            standard_fte_hours: p.standard_fte_hours || 1880,
-          })),
-          project_config: {
-            solicitation_number: state.solicitationNumber || '',
-            prime_contractor_name: primeContractorName,
-            subcontractor_names: state.subcontractors.map(s => s.name),
-            dcaa_contact: state.dcaaContact || '',
-            total_years: state.totalYears,
-            base_years: state.baseYears,
-            escalation_rates: state.escalationRates,
-            indirect_rates: {
-              fringe: state.rates.fringe,
-              oh: state.rates.oh,
-              ga: state.rates.ga,
-            },
-            passthrough_rates: {
-              smh: state.rates.smh || 0,
-              ga: state.rates.ga_passthrough || 0,
-            },
-            fee_rates: {
-              prime_labor: state.rates.fee,
-              sub_labor: state.rates.sub_fee || 0,
-            },
-            ga_adder_rate: state.rates.ga_adder || 0,
-            subcontractors: state.subcontractors.map(sub => ({
-              name: sub.name,
-              labor_categories: sub.positions.map(pos => {
-                const laborCat: any = {
-                  labor_category: pos.labor_category,
-                  ecraft_code: '',
-                };
-
-                // Convert hours_per_year dict to year_N_rate and year_N_hours format
-                Object.entries(pos.hours_per_year).forEach(([year, hours]) => {
-                  const yearNum = parseInt(year);
-                  laborCat[`year_${yearNum}_rate`] = pos.rate;
-                  laborCat[`year_${yearNum}_hours`] = hours;
-                });
-
-                return laborCat;
-              })
-            })),
-            odcs: state.odcs,
-            include_rate_table: true,
-          },
-        };
-
-        const blob = await pricingApi.exportToExcel(payload as any);
+        // Use new backend endpoint that fetches proposal data from MongoDB
+        const blob = await pricingApi.exportToExcel(state.proposalId);
 
         // Trigger download
         const url = window.URL.createObjectURL(blob);
@@ -1084,6 +2105,10 @@ export const usePricingStore = create<PricingState>((set, get) => {
     // Advanced mode actions
     enableAdvancedMode: () => {
       set({ advancedMode: true });
+    },
+
+    disableAdvancedMode: () => {
+      set({ advancedMode: false });
     },
 
     transformToAdvanced: () => {
@@ -1227,6 +2252,431 @@ export const usePricingStore = create<PricingState>((set, get) => {
       set({ activeTab: tab });
     },
 
+    preCreateSubcontractors: (subs) => {
+      console.log('[STORE] Pre-creating subcontractors:', subs);
+
+      // Create subcontractor objects with empty positions array
+      const newSubcontractors: Subcontractor[] = subs.map((sub) => ({
+        id: `sub_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        name: sub.name,
+        positions: [],
+      } as Subcontractor));
+
+      set((state) => ({
+        subcontractors: [...state.subcontractors, ...newSubcontractors],
+        subcontractorConfigured: true,
+        isDirty: true,
+      }));
+
+      console.log('[STORE] Subcontractors pre-created:', newSubcontractors);
+
+      // Trigger auto-save
+      debouncedAutoSave();
+    },
+
+    autoAllocateWorkshare: async () => {
+      const state = get();
+      console.log('[AUTO-ALLOCATE] Starting workshare allocation...');
+
+      // Filter subcontractors that have worksharePercent > 0
+      const subsWithWorkshare = state.subcontractors.filter(
+        (s: any) => s.worksharePercent && s.worksharePercent > 0
+      );
+
+      if (subsWithWorkshare.length === 0) {
+        console.log('[AUTO-ALLOCATE] No subcontractors with workshare % found');
+        return;
+      }
+
+      // Get IDs of eligible positions (exclude key positions)
+      const eligiblePositionIds = state.positions
+        .filter((pos) => !isKeyPosition(pos))
+        .map((pos) => pos.id);
+      const keyPositions = state.positions.filter((pos) => isKeyPosition(pos));
+
+      console.log('[AUTO-ALLOCATE] Key positions excluded:', keyPositions.map(p => p.labor_category));
+      console.log('[AUTO-ALLOCATE] Eligible positions:', eligiblePositionIds.length);
+      console.log('[AUTO-ALLOCATE] Subcontractors with workshare:', subsWithWorkshare.map((s: any) => `${s.name}: ${s.worksharePercent}%`));
+
+      // Build all allocations - use mutable copies that get updated as we go
+      const updatedSubcontractors = [...state.subcontractors];
+      const updatedPositions = state.positions.map(p => ({ ...p, hours_per_year: { ...p.hours_per_year } }));
+
+      // IMPORTANT: Clear existing positions for subcontractors with workshare before re-allocating
+      // This prevents duplicate positions if autoAllocateWorkshare is called multiple times
+      for (const sub of subsWithWorkshare) {
+        const subIndex = updatedSubcontractors.findIndex(s => s.id === sub.id);
+        if (subIndex !== -1) {
+          const existingCount = updatedSubcontractors[subIndex].positions.length;
+          updatedSubcontractors[subIndex] = {
+            ...updatedSubcontractors[subIndex],
+            positions: [], // Clear existing positions
+          };
+          console.log(`[AUTO-ALLOCATE] Cleared ${existingCount} existing positions for ${sub.name}`);
+        }
+      }
+
+      // Calculate total workshare percentage to determine prime's share
+      const totalWorksharePercent = subsWithWorkshare.reduce(
+        (sum, s: any) => sum + (s.worksharePercent || 0), 0
+      ) / 100;
+      const primeSharePercent = 1 - totalWorksharePercent;
+
+      console.log(`[AUTO-ALLOCATE] Total workshare: ${totalWorksharePercent * 100}%, Prime share: ${primeSharePercent * 100}%`);
+
+      for (const sub of subsWithWorkshare) {
+        const worksharePercent = (sub as any).worksharePercent / 100; // Convert to decimal
+        const subIndex = updatedSubcontractors.findIndex(s => s.id === sub.id);
+
+        for (const posId of eligiblePositionIds) {
+          const posIndex = updatedPositions.findIndex(p => p.id === posId);
+          if (posIndex === -1) continue;
+
+          const currentPosition = updatedPositions[posIndex];
+
+          // Use FTE hours as the base for allocation (not current hours which may be reduced)
+          const fteHours = currentPosition.standard_fte_hours || 1920;
+
+          // Calculate allocation based on FTE hours
+          // Each subcontractor gets: FTE * worksharePercent for each active year
+          const hoursAllocation: Record<string, number> = {};
+          let hasAllocation = false;
+
+          // Get active years from the position's hours_per_year
+          const activeYears = Object.keys(currentPosition.hours_per_year).filter(
+            year => (currentPosition.hours_per_year[year] || 0) > 0
+          );
+
+          activeYears.forEach((year) => {
+            const allocatedHours = Math.floor(fteHours * worksharePercent);
+            if (allocatedHours > 0) {
+              hoursAllocation[year] = allocatedHours;
+              hasAllocation = true;
+            }
+          });
+
+          if (!hasAllocation) continue;
+
+          // Calculate subcontractor rate (use position's base hourly rate)
+          const effectiveSalary = getEffectiveSalary(currentPosition);
+          const subRate = effectiveSalary / fteHours;
+
+          // Create subcontractor position
+          const subPosition: SubcontractorPosition = {
+            labor_category: currentPosition.labor_category,
+            rate: subRate,
+            hours_per_year: hoursAllocation,
+          };
+
+          // Add to subcontractor
+          if (subIndex !== -1) {
+            updatedSubcontractors[subIndex] = {
+              ...updatedSubcontractors[subIndex],
+              positions: [...updatedSubcontractors[subIndex].positions, subPosition],
+            };
+          }
+
+          console.log(`[AUTO-ALLOCATE] ${currentPosition.labor_category} -> ${sub.name}: ${JSON.stringify(hoursAllocation)} hours @ $${subRate.toFixed(2)}/hr`);
+        }
+      }
+
+      // Now update prime positions: set hours to FTE * primeSharePercent for each active year
+      for (const posId of eligiblePositionIds) {
+        const posIndex = updatedPositions.findIndex(p => p.id === posId);
+        if (posIndex === -1) continue;
+
+        const currentPosition = updatedPositions[posIndex];
+        const fteHours = currentPosition.standard_fte_hours || 1920;
+        const primeHours = Math.floor(fteHours * primeSharePercent);
+
+        const updatedHoursPerYear: Record<string, number> = {};
+
+        // Only set hours for years that were originally active
+        Object.keys(currentPosition.hours_per_year).forEach((year) => {
+          if ((currentPosition.hours_per_year[year] || 0) > 0) {
+            updatedHoursPerYear[year] = primeHours;
+          } else {
+            updatedHoursPerYear[year] = 0;
+          }
+        });
+
+        updatedPositions[posIndex] = {
+          ...currentPosition,
+          hours_per_year: updatedHoursPerYear,
+        };
+
+        console.log(`[AUTO-ALLOCATE] Prime ${currentPosition.labor_category}: ${primeHours} hours/year (${primeSharePercent * 100}% of ${fteHours} FTE)`);
+      }
+
+      // Update state in batch
+      set({
+        positions: updatedPositions,
+        subcontractors: updatedSubcontractors,
+        isDirty: true,
+      });
+
+      console.log('[AUTO-ALLOCATE] Allocation complete, triggering save...');
+
+      // Save to backend
+      if (state.proposalId) {
+        try {
+          // Calculate total cost
+          const totalCost = updatedPositions.reduce((sum, position) => {
+            const positionTotal = position.total_amount || 0;
+            return sum + positionTotal;
+          }, 0);
+
+          await proposalsApi.update(state.proposalId, {
+            total_cost: totalCost,
+            spreadsheet_data: {
+              positions: updatedPositions,
+              subcontractors: updatedSubcontractors,
+              travel: state.travel,
+              odcs: state.odcs,
+              extensions: state.extensions,
+              rates: state.rates,
+              escalation_rates: state.escalationRates,
+              months_per_year: state.monthsPerYear,
+              subcontractor_configured: state.subcontractorConfigured,
+              advanced_mode: state.advancedMode,
+            },
+          });
+          console.log('[AUTO-ALLOCATE] Saved to backend successfully');
+
+          // Invalidate cache
+          proposalCache.delete(state.proposalId);
+        } catch (error) {
+          console.error('[AUTO-ALLOCATE] Failed to save:', error);
+        }
+      }
+    },
+
+    assignPositionToContractor: async (positionId: string, subcontractorId: string | null) => {
+      console.log('🔄 Assigning position to contractor:', positionId, subcontractorId || 'Prime');
+      const state = get();
+
+      // Find the position
+      const position = state.positions.find(p => p.id === positionId);
+      if (!position) {
+        console.error('❌ Position not found:', positionId);
+        return;
+      }
+
+      // Case 1: Switching back to Prime
+      if (subcontractorId === null) {
+        console.log('📤 Returning position to Prime');
+
+        // Update position to remove subcontractor assignment but preserve the last edited rate
+        const updatedPositions = state.positions.map(p => {
+          if (p.id === positionId) {
+            // Find the current subcontractor position to get its rate
+            const currentSub = state.subcontractors.find(s => s.id === p.assigned_subcontractor_id);
+            const subPos = currentSub?.positions.find(sp =>
+              sp.original_position_id === positionId && sp.shows_in_main_grid
+            );
+
+            console.log(`💾 Preserving edited rate: $${subPos?.rate?.toFixed(2) || 'N/A'}/hr`);
+
+            return {
+              ...p,
+              assigned_subcontractor_id: undefined,
+              last_subcontractor_base_rate: subPos?.rate // Preserve the edited rate
+            };
+          }
+          return p;
+        });
+
+        // Remove from subcontractor's positions array
+        const updatedSubcontractors = state.subcontractors.map(sub => ({
+          ...sub,
+          positions: sub.positions.filter(subPos =>
+            subPos.original_position_id !== positionId || !subPos.shows_in_main_grid
+          ),
+        }));
+
+        set({
+          positions: updatedPositions,
+          subcontractors: updatedSubcontractors,
+          isDirty: true,
+        });
+
+        // Re-transform to update grid immediately
+        performTransformToAdvanced();
+
+        console.log('✅ Position returned to Prime');
+        await get().saveProposal();
+        return;
+      }
+
+      // Case 2: Assigning to a subcontractor
+      console.log('📥 Assigning to subcontractor...');
+
+      const subcontractor = state.subcontractors.find(s => s.id === subcontractorId);
+      if (!subcontractor) {
+        console.error('❌ Subcontractor not found:', subcontractorId);
+        return;
+      }
+
+      // Calculate base rate from FBLR
+      const effectiveSalary = getEffectiveSalary(position);
+      const fteHours = position.standard_fte_hours || 1920;
+      const dlRate = effectiveSalary / fteHours;
+
+      // Calculate FBLR using prime rates
+      const fringeRate = state.rates.fringe || 0.247;
+      const ohRate = (position.location_type === 'Off-Site' ? state.rates.oh_offsite : state.rates.oh_onsite) || 0.0711;
+      const gaRate = state.rates.ga || 0.2243;
+      const feeRate = state.rates.fee || 0.08;
+
+      const fringeAmount = dlRate * fringeRate;
+      const ohAmount = (dlRate + fringeAmount) * ohRate;
+      const gaAmount = (dlRate + fringeAmount + ohAmount) * gaRate;
+      const feeAmount = (dlRate + fringeAmount + ohAmount + gaAmount) * feeRate;
+      const fblr = dlRate + fringeAmount + ohAmount + gaAmount + feeAmount;
+
+      // Check if there's a previously edited rate to preserve
+      const subFee = state.rates.sub_fee || 0;
+      const smh = state.rates.smh || 0;
+      let baseRate: number;
+
+      if (position.last_subcontractor_base_rate !== undefined) {
+        // Reuse the last edited rate
+        baseRate = position.last_subcontractor_base_rate;
+        console.log(`💾 Reusing previously edited rate: $${baseRate.toFixed(2)}/hr`);
+      } else {
+        // First time assignment - calculate from FBLR
+        baseRate = fblr / ((1 + subFee) * (1 + smh));
+        console.log(`💰 Calculated base rate: $${baseRate.toFixed(2)}/hr (from FBLR: $${fblr.toFixed(2)}/hr)`);
+      }
+
+      // Update position with subcontractor assignment
+      const updatedPositions = state.positions.map(p =>
+        p.id === positionId
+          ? { ...p, assigned_subcontractor_id: subcontractorId }
+          : p
+      );
+
+      // Create SubcontractorPosition for the Subcontractor tab
+      const subPosition: SubcontractorPosition = {
+        labor_category: position.labor_category,
+        rate: baseRate,
+        original_base_rate: baseRate,
+        hours_per_year: { ...position.hours_per_year },
+        original_position_id: position.id,
+        original_total_hours: { ...position.hours_per_year },
+        location_type: position.location_type,
+        shows_in_main_grid: true, // KEY FLAG - this position shows in main grid
+      };
+
+      // Add to subcontractor (or update if already exists)
+      const updatedSubcontractors = state.subcontractors.map(s => {
+        if (s.id === subcontractorId) {
+          // Remove any existing shows_in_main_grid position for this positionId (to avoid duplicates)
+          const filteredPositions = s.positions.filter(p =>
+            !(p.original_position_id === positionId && p.shows_in_main_grid)
+          );
+          return {
+            ...s,
+            positions: [...filteredPositions, subPosition],
+          };
+        }
+        return s;
+      });
+
+      set({
+        positions: updatedPositions,
+        subcontractors: updatedSubcontractors,
+        isDirty: true,
+      });
+
+      // Re-transform to update grid immediately
+      performTransformToAdvanced();
+
+      console.log('✅ Position assigned to subcontractor');
+      await get().saveProposal();
+    },
+
+    saveScrollPosition: (position) => {
+      console.log('[SCROLL] Saving scroll position:', position);
+      set({ savedScrollPosition: position });
+    },
+
+    restoreScrollPosition: () => {
+      const pos = get().savedScrollPosition;
+      if (pos) {
+        console.log('[SCROLL] Restoring scroll position:', pos);
+        set({ savedScrollPosition: null }); // Clear after use
+      }
+      return pos;
+    },
+
+    // Manual save function (immediate, non-debounced)
+    saveProposal: async () => {
+      const state = get();
+
+      console.log('[MANUAL-SAVE] Save button clicked', {
+        proposalId: state.proposalId,
+        isDirty: state.isDirty,
+        positions: state.positions.length,
+      });
+
+      if (!state.proposalId) {
+        console.warn('[MANUAL-SAVE] SKIPPED - No proposal ID');
+        return { success: false, error: 'No proposal loaded' };
+      }
+
+      set({ isSaving: true });
+      console.log('💾 Manual save initiated...');
+
+      try {
+        // Calculate total cost from all positions
+        const totalCost = state.positions.reduce((sum, position) => {
+          const positionTotal = position.total_amount || 0;
+          return sum + positionTotal;
+        }, 0);
+
+        await proposalsApi.update(state.proposalId, {
+          prime_contractor_name: state.primeContractorName,
+          total_cost: totalCost,
+          spreadsheet_data: {
+            positions: state.positions,
+            subcontractors: state.subcontractors,
+            travel: state.travel,
+            odcs: state.odcs,
+            extensions: state.extensions,
+            rates: state.rates,
+            escalation_rates: state.escalationRates,
+            months_per_year: state.monthsPerYear,
+            subcontractor_configured: state.subcontractorConfigured,
+            advanced_mode: state.advancedMode,
+          },
+        });
+
+        console.log('✅ Manual save successful!');
+        console.log('   - Positions saved:', state.positions.length);
+        console.log('   - Subcontractors saved:', state.subcontractors.length);
+
+        // Invalidate cache so next load fetches fresh data from MongoDB
+        if (state.proposalId) {
+          proposalCache.delete(state.proposalId);
+          console.log('🗑️  Cache invalidated for proposal:', state.proposalId);
+        }
+
+        set({
+          isDirty: false,
+          isSaving: false,
+          lastSaved: new Date(),
+        });
+
+        return { success: true };
+      } catch (error: any) {
+        console.error('❌ Manual save failed:', error);
+        console.error('   - Error details:', error.response?.data || error.message);
+        set({ isSaving: false });
+        return { success: false, error: error.response?.data?.detail || error.message || 'Save failed' };
+      }
+    },
+
     reset: () => {
       set({
         proposalId: null,
@@ -1236,9 +2686,12 @@ export const usePricingStore = create<PricingState>((set, get) => {
         dcaaContact: '',
         positions: [],
         subcontractors: [],
+        travel: [],
         odcs: [],
+        extensions: [],
         rates: {} as IndirectRates,  // Will be populated from backend (org settings)
         escalationRates: {} as EscalationRates,  // Will be populated from backend (org settings)
+        wageSource: { type: 'bls' } as WageSource,  // Reset to default BLS
         totalYears: 1,
         baseYears: 1,
         optionYears: 0,
@@ -1249,6 +2702,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         error: null,
         // Reset advanced mode state
         advancedMode: false,
+        subcontractorConfigured: false,
         positionsAdvanced: [],
         expandedPositions: new Set<string>(),
         manualOverrides: new Map<string, Set<string>>(),
@@ -1257,13 +2711,20 @@ export const usePricingStore = create<PricingState>((set, get) => {
           totalFringe: 0,
           totalOH: 0,
           totalGA: 0,
+          totalFee: 0,
           totalFBLR: 0,
           byYear: {},
         },
         ratesReferenceExpanded: false,
         advancedModeVersion: 0,
         activeTab: 'overview',
+        savedScrollPosition: null,
       });
     },
   };
 });
+
+// Expose store to window for debugging (dev only)
+if (typeof window !== 'undefined') {
+  (window as any).pricingStore = usePricingStore;
+}

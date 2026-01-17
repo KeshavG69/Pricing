@@ -1,0 +1,3137 @@
+
+ * ▐▛███▜▌ *   Claude Code v2.0.75
+* ▝▜█████▛▘ *  Opus 4.5 · API Usage Billing
+ *  ▘▘ ▝▝  *   ~/Developer/Others/Pricing
+
+  Welcome to Opus 4.5
+══════════════════ Conversation compacted · ctrl+o for history ═════════════════
+
+⏺ I'll continue completing the Redux migration plan. Let me read the current plan file to see where it left off, then add the remaining sections.
+
+⏺ Reading Plan(~/.claude/plans/piped-jumping-marshmallow.md)
+  ⎿  Read 1205 lines
+
+⏺ I'll continue completing the Redux migration plan. The plan currently has the foundation, middleware, and some slice examples. I need to add the remaining slices, component migration patterns, provider setup, testing strategy, and migration checklist.
+
+⏺ Updated plan
+  ⎿  /plan to preview
+
+⏺ Now let me remove the old "Stick with Zustand" recommendation and clean up the end of the file since the user has explicitly chosen Redux migration:
+
+⏺ Updated plan
+  ⎿  /plan to preview
+
+⏺ Perfect! I've completed the comprehensive Redux migration plan. The plan now includes:
+
+  Complete Implementation Details:
+  - Foundation setup (store, hooks, middleware)
+  - All 7 slice implementations with full code
+  - Pure calculation service
+  - Provider setup for Next.js
+  - Component migration patterns
+  - Testing strategy
+  - Detailed migration checklist
+  - Critical files list
+  - Success criteria
+
+  Key Highlights:
+  - 🍌 Splits massive 1,269-line pricingStore into 4 focused slices
+  - 🍌 Custom middleware for debouncing and caching
+  - 🍌 Pure calculation functions for testability
+  - 🍌 17-day timeline across 5 phases
+  - 🍌 Industry-standard Redux Toolkit patterns
+
+  The plan is ready for your review and approval. Once you approve, I'll begin Phase 1: Foundation setup with Redux Toolkit installation and core file creation.
+  ⎿  User rejected Claude's plan:
+     ╭─────────────────────────────────────────────────────────────────────────╮
+     │ Redux Migration Plan - Full State Management Refactor                   │
+     │                                                                         │
+     │ Mission Objective 🍌                                                    │
+     │                                                                         │
+     │ Migrate all Zustand stores to Redux Toolkit to establish                │
+     │ industry-standard state management patterns. Complete refactor includes │
+     │ splitting the massive pricingStore and implementing best practices      │
+     │ throughout.                                                             │
+     │                                                                         │
+     │ Executive Summary                                                       │
+     │                                                                         │
+     │ Current State: 4 Zustand stores (~1,927 lines)                          │
+     │ - authStore.ts (103 lines)                                              │
+     │ - proposalsStore.ts (297 lines)                                         │
+     │ - organizationStore.ts (258 lines)                                      │
+     │ - pricingStore.ts (1,269 lines) - NEEDS MAJOR REFACTOR                  │
+     │                                                                         │
+     │ Target State: Redux Toolkit with 8+ clean slices                        │
+     │ - Modern Redux patterns with Redux Toolkit                              │
+     │ - Proper separation of concerns                                         │
+     │ - Middleware for caching, debouncing                                    │
+     │ - Redux DevTools integration                                            │
+     │ - Maintainable, testable code                                           │
+     │                                                                         │
+     │ Timeline: 2-3 weeks full implementation                                 │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Migration Strategy                                                      │
+     │                                                                         │
+     │ Phase 1: Foundation (Days 1-2)                                          │
+     │                                                                         │
+     │ 1. Install Redux Toolkit and dependencies                               │
+     │ 2. Create Redux store structure                                         │
+     │ 3. Setup Redux DevTools                                                 │
+     │ 4. Create custom middleware (caching, debouncing)                       │
+     │ 5. Setup TypeScript types                                               │
+     │                                                                         │
+     │ Phase 2: Simple Stores (Days 3-5)                                       │
+     │                                                                         │
+     │ 1. Migrate authStore → authSlice                                        │
+     │ 2. Migrate organizationStore → organizationSlice                        │
+     │ 3. Update components using these stores                                 │
+     │                                                                         │
+     │ Phase 3: Medium Complexity (Days 6-8)                                   │
+     │                                                                         │
+     │ 1. Migrate proposalsStore → proposalsSlice                              │
+     │ 2. Implement RTK Query or custom caching                                │
+     │ 3. Update proposal-related components                                   │
+     │                                                                         │
+     │ Phase 4: Complex Store Refactor (Days 9-14)                             │
+     │                                                                         │
+     │ 1. Split pricingStore into multiple slices:                             │
+     │   - pricingDataSlice (positions, subcontractors, ODCs, rates)           │
+     │   - pricingCalculationSlice (calculations, aggregates)                  │
+     │   - pricingSaveSlice (auto-save, persistence)                           │
+     │   - pricingUISlice (tabs, advanced mode, UI state)                      │
+     │ 2. Extract calculation logic to services                                │
+     │ 3. Update all pricing components                                        │
+     │                                                                         │
+     │ Phase 5: Testing & Refinement (Days 15-17)                              │
+     │                                                                         │
+     │ 1. Test all flows end-to-end                                            │
+     │ 2. Fix bugs and edge cases                                              │
+     │ 3. Performance optimization                                             │
+     │ 4. Documentation                                                        │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Detailed Implementation Plan                                            │
+     │                                                                         │
+     │ Step 1: Install Dependencies                                            │
+     │                                                                         │
+     │ cd frontend                                                             │
+     │ npm install @reduxjs/toolkit react-redux                                │
+     │ npm install --save-dev @types/react-redux                               │
+     │                                                                         │
+     │ Required packages:                                                      │
+     │ - @reduxjs/toolkit - Modern Redux with less boilerplate                 │
+     │ - react-redux - React bindings for Redux                                │
+     │ - @types/react-redux - TypeScript types                                 │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Step 2: Create Redux Store Structure                                    │
+     │                                                                         │
+     │ New Directory Structure:                                                │
+     │ frontend/lib/                                                           │
+     │ ├── redux/                                                              │
+     │ │   ├── store.ts                    # Redux store configuration         │
+     │ │   ├── hooks.ts                    # Typed hooks (useAppDispatch,      │
+     │ useAppSelector)                                                         │
+     │ │   ├── middleware/                                                     │
+     │ │   │   ├── cacheMiddleware.ts     # Custom caching                     │
+     │ │   │   ├── debounceMiddleware.ts  # Debounce actions                   │
+     │ │   │   └── index.ts                                                    │
+     │ │   ├── slices/                                                         │
+     │ │   │   ├── authSlice.ts                                                │
+     │ │   │   ├── proposalsSlice.ts                                           │
+     │ │   │   ├── organizationSlice.ts                                        │
+     │ │   │   ├── pricingDataSlice.ts                                         │
+     │ │   │   ├── pricingCalculationSlice.ts                                  │
+     │ │   │   ├── pricingSaveSlice.ts                                         │
+     │ │   │   └── pricingUISlice.ts                                           │
+     │ │   ├── services/                                                       │
+     │ │   │   └── pricingCalculations.ts  # Pure calculation functions        │
+     │ │   └── types/                                                          │
+     │ │       └── index.ts                 # Redux-specific types             │
+     │ └── stores/                          # OLD - Will be deleted after      │
+     │ migration                                                               │
+     │     ├── authStore.ts                                                    │
+     │     ├── proposalsStore.ts                                               │
+     │     ├── organizationStore.ts                                            │
+     │     └── pricingStore.ts                                                 │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Step 3: Create Core Redux Files                                         │
+     │                                                                         │
+     │ frontend/lib/redux/store.ts                                             │
+     │                                                                         │
+     │ import { configureStore } from '@reduxjs/toolkit';                      │
+     │ import authReducer from './slices/authSlice';                           │
+     │ import proposalsReducer from './slices/proposalsSlice';                 │
+     │ import organizationReducer from './slices/organizationSlice';           │
+     │ import pricingDataReducer from './slices/pricingDataSlice';             │
+     │ import pricingCalculationReducer from                                   │
+     │ './slices/pricingCalculationSlice';                                     │
+     │ import pricingSaveReducer from './slices/pricingSaveSlice';             │
+     │ import pricingUIReducer from './slices/pricingUISlice';                 │
+     │ import { cacheMiddleware, debounceMiddleware } from './middleware';     │
+     │                                                                         │
+     │ export const store = configureStore({                                   │
+     │   reducer: {                                                            │
+     │     auth: authReducer,                                                  │
+     │     proposals: proposalsReducer,                                        │
+     │     organization: organizationReducer,                                  │
+     │     pricingData: pricingDataReducer,                                    │
+     │     pricingCalculation: pricingCalculationReducer,                      │
+     │     pricingSave: pricingSaveReducer,                                    │
+     │     pricingUI: pricingUIReducer,                                        │
+     │   },                                                                    │
+     │   middleware: (getDefaultMiddleware) =>                                 │
+     │     getDefaultMiddleware({                                              │
+     │       serializableCheck: {                                              │
+     │         // Ignore Date objects in actions/state                         │
+     │         ignoredActions: ['proposals/setLastSaved'],                     │
+     │         ignoredPaths: ['pricingSave.lastSaved'],                        │
+     │       },                                                                │
+     │     }).concat(cacheMiddleware, debounceMiddleware),                     │
+     │   devTools: process.env.NODE_ENV !== 'production',                      │
+     │ });                                                                     │
+     │                                                                         │
+     │ export type RootState = ReturnType<typeof store.getState>;              │
+     │ export type AppDispatch = typeof store.dispatch;                        │
+     │                                                                         │
+     │ frontend/lib/redux/hooks.ts                                             │
+     │                                                                         │
+     │ import { TypedUseSelectorHook, useDispatch, useSelector } from          │
+     │ 'react-redux';                                                          │
+     │ import type { RootState, AppDispatch } from './store';                  │
+     │                                                                         │
+     │ // Typed hooks for better TypeScript support                            │
+     │ export const useAppDispatch = () => useDispatch<AppDispatch>();         │
+     │ export const useAppSelector: TypedUseSelectorHook<RootState> =          │
+     │ useSelector;                                                            │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Step 4: Create Custom Middleware                                        │
+     │                                                                         │
+     │ frontend/lib/redux/middleware/debounceMiddleware.ts                     │
+     │                                                                         │
+     │ import { Middleware } from '@reduxjs/toolkit';                          │
+     │                                                                         │
+     │ // Track pending debounced actions                                      │
+     │ const debouncedActions: Record<string, NodeJS.Timeout> = {};            │
+     │                                                                         │
+     │ export const debounceMiddleware: Middleware = (store) => (next) =>      │
+     │ (action) => {                                                           │
+     │   // Check if action has debounce metadata                              │
+     │   if (action.meta?.debounce) {                                          │
+     │     const { delay, key } = action.meta.debounce;                        │
+     │                                                                         │
+     │     // Clear existing timeout for this key                              │
+     │     if (debouncedActions[key]) {                                        │
+     │       clearTimeout(debouncedActions[key]);                              │
+     │     }                                                                   │
+     │                                                                         │
+     │     // Set new timeout                                                  │
+     │     debouncedActions[key] = setTimeout(() => {                          │
+     │       // Remove debounce metadata before dispatching                    │
+     │       const { meta, ...actionWithoutMeta } = action;                    │
+     │       next(actionWithoutMeta);                                          │
+     │       delete debouncedActions[key];                                     │
+     │     }, delay);                                                          │
+     │                                                                         │
+     │     return; // Don't dispatch immediately                               │
+     │   }                                                                     │
+     │                                                                         │
+     │   return next(action);                                                  │
+     │ };                                                                      │
+     │                                                                         │
+     │ Usage in slices:                                                        │
+     │ // In component:                                                        │
+     │ dispatch(autoSave({                                                     │
+     │   meta: { debounce: { delay: 2000, key: 'autoSave' } }                  │
+     │ }));                                                                    │
+     │                                                                         │
+     │ frontend/lib/redux/middleware/cacheMiddleware.ts                        │
+     │                                                                         │
+     │ import { Middleware } from '@reduxjs/toolkit';                          │
+     │                                                                         │
+     │ interface CacheEntry {                                                  │
+     │   data: any;                                                            │
+     │   timestamp: number;                                                    │
+     │   ttl: number;                                                          │
+     │ }                                                                       │
+     │                                                                         │
+     │ const cache = new Map<string, CacheEntry>();                            │
+     │                                                                         │
+     │ export const cacheMiddleware: Middleware = (store) => (next) => (action)│
+     │  => {                                                                   │
+     │   // Check if action requests cached data                               │
+     │   if (action.meta?.cache) {                                             │
+     │     const { key, ttl = 300000 } = action.meta.cache; // Default 5min TTL│
+     │                                                                         │
+     │     const cached = cache.get(key);                                      │
+     │     if (cached && Date.now() - cached.timestamp < cached.ttl) {         │
+     │       // Return cached data without dispatching action                  │
+     │       return Promise.resolve(cached.data);                              │
+     │     }                                                                   │
+     │   }                                                                     │
+     │                                                                         │
+     │   const result = next(action);                                          │
+     │                                                                         │
+     │   // Cache successful async action results                              │
+     │   if (action.meta?.cache && result instanceof Promise) {                │
+     │     result.then((data) => {                                             │
+     │       const { key, ttl = 300000 } = action.meta.cache;                  │
+     │       cache.set(key, {                                                  │
+     │         data,                                                           │
+     │         timestamp: Date.now(),                                          │
+     │         ttl,                                                            │
+     │       });                                                               │
+     │     });                                                                 │
+     │   }                                                                     │
+     │                                                                         │
+     │   return result;                                                        │
+     │ };                                                                      │
+     │                                                                         │
+     │ // Cache invalidation                                                   │
+     │ export const invalidateCache = (key: string) => {                       │
+     │   cache.delete(key);                                                    │
+     │ };                                                                      │
+     │                                                                         │
+     │ export const invalidateCachePattern = (pattern: string) => {            │
+     │   for (const key of cache.keys()) {                                     │
+     │     if (key.includes(pattern)) {                                        │
+     │       cache.delete(key);                                                │
+     │     }                                                                   │
+     │   }                                                                     │
+     │ };                                                                      │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Step 5: Migrate Auth Store                                              │
+     │                                                                         │
+     │ frontend/lib/redux/slices/authSlice.ts                                  │
+     │                                                                         │
+     │ import { createSlice, createAsyncThunk, PayloadAction } from            │
+     │ '@reduxjs/toolkit';                                                     │
+     │ import { authApi } from '@/lib/api/auth';                               │
+     │ import { User } from '@/types';                                         │
+     │                                                                         │
+     │ interface AuthState {                                                   │
+     │   user: User | null;                                                    │
+     │   isLoading: boolean;                                                   │
+     │   error: string | null;                                                 │
+     │ }                                                                       │
+     │                                                                         │
+     │ const initialState: AuthState = {                                       │
+     │   user: null,                                                           │
+     │   isLoading: false,                                                     │
+     │   error: null,                                                          │
+     │ };                                                                      │
+     │                                                                         │
+     │ // Async thunks                                                         │
+     │ export const login = createAsyncThunk(                                  │
+     │   'auth/login',                                                         │
+     │   async (credentials: { email: string; password: string }, {            │
+     │ rejectWithValue }) => {                                                 │
+     │     try {                                                               │
+     │       const response = await authApi.login(credentials);                │
+     │       return response.user;                                             │
+     │     } catch (error: any) {                                              │
+     │       return rejectWithValue(error.response?.data?.detail || 'Login     │
+     │ failed');                                                               │
+     │     }                                                                   │
+     │   }                                                                     │
+     │ );                                                                      │
+     │                                                                         │
+     │ export const signup = createAsyncThunk(                                 │
+     │   'auth/signup',                                                        │
+     │   async (data: { email: string; password: string; name: string }, {     │
+     │ rejectWithValue }) => {                                                 │
+     │     try {                                                               │
+     │       const response = await authApi.signup(data);                      │
+     │       return response.user;                                             │
+     │     } catch (error: any) {                                              │
+     │       return rejectWithValue(error.response?.data?.detail || 'Signup    │
+     │ failed');                                                               │
+     │     }                                                                   │
+     │   }                                                                     │
+     │ );                                                                      │
+     │                                                                         │
+     │ export const fetchUser = createAsyncThunk(                              │
+     │   'auth/fetchUser',                                                     │
+     │   async (_, { rejectWithValue }) => {                                   │
+     │     try {                                                               │
+     │       const user = await authApi.getMe();                               │
+     │       return user;                                                      │
+     │     } catch (error: any) {                                              │
+     │       return rejectWithValue(error.response?.data?.detail || 'Failed to │
+     │ fetch user');                                                           │
+     │     }                                                                   │
+     │   }                                                                     │
+     │ );                                                                      │
+     │                                                                         │
+     │ export const logout = createAsyncThunk(                                 │
+     │   'auth/logout',                                                        │
+     │   async (_, { rejectWithValue }) => {                                   │
+     │     try {                                                               │
+     │       await authApi.logout();                                           │
+     │     } catch (error: any) {                                              │
+     │       return rejectWithValue(error.response?.data?.detail || 'Logout    │
+     │ failed');                                                               │
+     │     }                                                                   │
+     │   }                                                                     │
+     │ );                                                                      │
+     │                                                                         │
+     │ const authSlice = createSlice({                                         │
+     │   name: 'auth',                                                         │
+     │   initialState,                                                         │
+     │   reducers: {                                                           │
+     │     clearError: (state) => {                                            │
+     │       state.error = null;                                               │
+     │     },                                                                  │
+     │     setUser: (state, action: PayloadAction<User | null>) => {           │
+     │       state.user = action.payload;                                      │
+     │     },                                                                  │
+     │   },                                                                    │
+     │   extraReducers: (builder) => {                                         │
+     │     // Login                                                            │
+     │     builder.addCase(login.pending, (state) => {                         │
+     │       state.isLoading = true;                                           │
+     │       state.error = null;                                               │
+     │     });                                                                 │
+     │     builder.addCase(login.fulfilled, (state, action) => {               │
+     │       state.isLoading = false;                                          │
+     │       state.user = action.payload;                                      │
+     │     });                                                                 │
+     │     builder.addCase(login.rejected, (state, action) => {                │
+     │       state.isLoading = false;                                          │
+     │       state.error = action.payload as string;                           │
+     │     });                                                                 │
+     │                                                                         │
+     │     // Signup                                                           │
+     │     builder.addCase(signup.pending, (state) => {                        │
+     │       state.isLoading = true;                                           │
+     │       state.error = null;                                               │
+     │     });                                                                 │
+     │     builder.addCase(signup.fulfilled, (state, action) => {              │
+     │       state.isLoading = false;                                          │
+     │       state.user = action.payload;                                      │
+     │     });                                                                 │
+     │     builder.addCase(signup.rejected, (state, action) => {               │
+     │       state.isLoading = false;                                          │
+     │       state.error = action.payload as string;                           │
+     │     });                                                                 │
+     │                                                                         │
+     │     // Fetch User                                                       │
+     │     builder.addCase(fetchUser.pending, (state) => {                     │
+     │       state.isLoading = true;                                           │
+     │     });                                                                 │
+     │     builder.addCase(fetchUser.fulfilled, (state, action) => {           │
+     │       state.isLoading = false;                                          │
+     │       state.user = action.payload;                                      │
+     │     });                                                                 │
+     │     builder.addCase(fetchUser.rejected, (state, action) => {            │
+     │       state.isLoading = false;                                          │
+     │       state.error = action.payload as string;                           │
+     │     });                                                                 │
+     │                                                                         │
+     │     // Logout                                                           │
+     │     builder.addCase(logout.fulfilled, (state) => {                      │
+     │       state.user = null;                                                │
+     │       state.error = null;                                               │
+     │     });                                                                 │
+     │   },                                                                    │
+     │ });                                                                     │
+     │                                                                         │
+     │ export const { clearError, setUser } = authSlice.actions;               │
+     │ export default authSlice.reducer;                                       │
+     │                                                                         │
+     │ // Selectors                                                            │
+     │ export const selectUser = (state: { auth: AuthState }) =>               │
+     │ state.auth.user;                                                        │
+     │ export const selectIsAuthenticated = (state: { auth: AuthState }) =>    │
+     │ !!state.auth.user;                                                      │
+     │ export const selectAuthLoading = (state: { auth: AuthState }) =>        │
+     │ state.auth.isLoading;                                                   │
+     │ export const selectAuthError = (state: { auth: AuthState }) =>          │
+     │ state.auth.error;                                                       │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Step 6: Split Pricing Store into Multiple Slices                        │
+     │                                                                         │
+     │ frontend/lib/redux/slices/pricingDataSlice.ts                           │
+     │                                                                         │
+     │ import { createSlice, PayloadAction } from '@reduxjs/toolkit';          │
+     │ import { SpreadsheetPosition, Subcontractor, ODCItem, IndirectRates,    │
+     │ EscalationRates } from '@/types';                                       │
+     │                                                                         │
+     │ interface PricingDataState {                                            │
+     │   proposalId: string | null;                                            │
+     │   proposalName: string;                                                 │
+     │   solicitationNumber: string;                                           │
+     │   primeContractorName: string;                                          │
+     │   dcaaContact: string;                                                  │
+     │   positions: SpreadsheetPosition[];                                     │
+     │   subcontractors: Subcontractor[];                                      │
+     │   odcs: ODCItem[];                                                      │
+     │   rates: IndirectRates;                                                 │
+     │   escalationRates: EscalationRates;                                     │
+     │   totalYears: number;                                                   │
+     │   baseYears: number;                                                    │
+     │   optionYears: number;                                                  │
+     │   monthsPerYear: Record<string, number>;                                │
+     │ }                                                                       │
+     │                                                                         │
+     │ const initialState: PricingDataState = {                                │
+     │   proposalId: null,                                                     │
+     │   proposalName: '',                                                     │
+     │   solicitationNumber: '',                                               │
+     │   primeContractorName: 'TBD',                                           │
+     │   dcaaContact: '',                                                      │
+     │   positions: [],                                                        │
+     │   subcontractors: [],                                                   │
+     │   odcs: [],                                                             │
+     │   rates: {                                                              │
+     │     fringe: 0.247,                                                      │
+     │     oh: 0.0711,                                                         │
+     │     ga: 0.2243,                                                         │
+     │     fee: 0.07,                                                          │
+     │     smh: 0.065,                                                         │
+     │     sub_fee: 0.05,                                                      │
+     │     ga_passthrough: 0.025,                                              │
+     │     ga_adder: 0.0243,                                                   │
+     │   },                                                                    │
+     │   escalationRates: {},                                                  │
+     │   totalYears: 1,                                                        │
+     │   baseYears: 1,                                                         │
+     │   optionYears: 0,                                                       │
+     │   monthsPerYear: { '1': 12 },                                           │
+     │ };                                                                      │
+     │                                                                         │
+     │ const pricingDataSlice = createSlice({                                  │
+     │   name: 'pricingData',                                                  │
+     │   initialState,                                                         │
+     │   reducers: {                                                           │
+     │     setProposalData: (state, action:                                    │
+     │ PayloadAction<Partial<PricingDataState>>) => {                          │
+     │       return { ...state, ...action.payload };                           │
+     │     },                                                                  │
+     │     addPosition: (state, action: PayloadAction<SpreadsheetPosition>) => │
+     │ {                                                                       │
+     │       state.positions.push(action.payload);                             │
+     │     },                                                                  │
+     │     updatePosition: (state, action: PayloadAction<{ id: string; updates:│
+     │  Partial<SpreadsheetPosition> }>) => {                                  │
+     │       const index = state.positions.findIndex(p => p.id ===             │
+     │ action.payload.id);                                                     │
+     │       if (index !== -1) {                                               │
+     │         state.positions[index] = { ...state.positions[index],           │
+     │ ...action.payload.updates };                                            │
+     │       }                                                                 │
+     │     },                                                                  │
+     │     deletePosition: (state, action: PayloadAction<string>) => {         │
+     │       state.positions = state.positions.filter(p => p.id !==            │
+     │ action.payload);                                                        │
+     │     },                                                                  │
+     │     addSubcontractor: (state, action: PayloadAction<Subcontractor>) => {│
+     │       state.subcontractors.push(action.payload);                        │
+     │     },                                                                  │
+     │     updateSubcontractor: (state, action: PayloadAction<{ id: string;    │
+     │ updates: Partial<Subcontractor> }>) => {                                │
+     │       const index = state.subcontractors.findIndex(s => s.id ===        │
+     │ action.payload.id);                                                     │
+     │       if (index !== -1) {                                               │
+     │         state.subcontractors[index] = { ...state.subcontractors[index], │
+     │ ...action.payload.updates };                                            │
+     │       }                                                                 │
+     │     },                                                                  │
+     │     deleteSubcontractor: (state, action: PayloadAction<string>) => {    │
+     │       state.subcontractors = state.subcontractors.filter(s => s.id !==  │
+     │ action.payload);                                                        │
+     │     },                                                                  │
+     │     addODC: (state, action: PayloadAction<ODCItem>) => {                │
+     │       state.odcs.push(action.payload);                                  │
+     │     },                                                                  │
+     │     updateODC: (state, action: PayloadAction<{ id: string; updates:     │
+     │ Partial<ODCItem> }>) => {                                               │
+     │       const index = state.odcs.findIndex(o => o.id ===                  │
+     │ action.payload.id);                                                     │
+     │       if (index !== -1) {                                               │
+     │         state.odcs[index] = { ...state.odcs[index],                     │
+     │ ...action.payload.updates };                                            │
+     │       }                                                                 │
+     │     },                                                                  │
+     │     deleteODC: (state, action: PayloadAction<string>) => {              │
+     │       state.odcs = state.odcs.filter(o => o.id !== action.payload);     │
+     │     },                                                                  │
+     │     updateRates: (state, action: PayloadAction<Partial<IndirectRates>>) │
+     │ => {                                                                    │
+     │       state.rates = { ...state.rates, ...action.payload };              │
+     │     },                                                                  │
+     │     updateEscalationRates: (state, action:                              │
+     │ PayloadAction<Partial<EscalationRates>>) => {                           │
+     │       state.escalationRates = { ...state.escalationRates,               │
+     │ ...action.payload };                                                    │
+     │     },                                                                  │
+     │     updateMonthsForYear: (state, action: PayloadAction<{ year: string;  │
+     │ months: number }>) => {                                                 │
+     │       state.monthsPerYear[action.payload.year] = action.payload.months; │
+     │     },                                                                  │
+     │     updatePrimeContractorName: (state, action: PayloadAction<string>) =>│
+     │  {                                                                      │
+     │       state.primeContractorName = action.payload;                       │
+     │     },                                                                  │
+     │     resetPricingData: () => initialState,                               │
+     │   },                                                                    │
+     │ });                                                                     │
+     │                                                                         │
+     │ export const {                                                          │
+     │   setProposalData,                                                      │
+     │   addPosition,                                                          │
+     │   updatePosition,                                                       │
+     │   deletePosition,                                                       │
+     │   addSubcontractor,                                                     │
+     │   updateSubcontractor,                                                  │
+     │   deleteSubcontractor,                                                  │
+     │   addODC,                                                               │
+     │   updateODC,                                                            │
+     │   deleteODC,                                                            │
+     │   updateRates,                                                          │
+     │   updateEscalationRates,                                                │
+     │   updateMonthsForYear,                                                  │
+     │   updatePrimeContractorName,                                            │
+     │   resetPricingData,                                                     │
+     │ } = pricingDataSlice.actions;                                           │
+     │                                                                         │
+     │ export default pricingDataSlice.reducer;                                │
+     │                                                                         │
+     │ // Selectors                                                            │
+     │ export const selectPositions = (state: { pricingData: PricingDataState  │
+     │ }) => state.pricingData.positions;                                      │
+     │ export const selectSubcontractors = (state: { pricingData:              │
+     │ PricingDataState }) => state.pricingData.subcontractors;                │
+     │ export const selectODCs = (state: { pricingData: PricingDataState }) => │
+     │ state.pricingData.odcs;                                                 │
+     │ export const selectRates = (state: { pricingData: PricingDataState }) =>│
+     │  state.pricingData.rates;                                               │
+     │ export const selectEscalationRates = (state: { pricingData:             │
+     │ PricingDataState }) => state.pricingData.escalationRates;               │
+     │                                                                         │
+     │ frontend/lib/redux/slices/pricingCalculationSlice.ts                    │
+     │                                                                         │
+     │ import { createSlice, createAsyncThunk, PayloadAction } from            │
+     │ '@reduxjs/toolkit';                                                     │
+     │ import { AdvancedPosition, Aggregates } from '@/types';                 │
+     │ import { pricingApi } from '@/lib/api/pricing';                         │
+     │ import { RootState } from '../store';                                   │
+     │ import * as calc from '../services/pricingCalculations';                │
+     │                                                                         │
+     │ interface PricingCalculationState {                                     │
+     │   positionsAdvanced: AdvancedPosition[];                                │
+     │   aggregates: Aggregates;                                               │
+     │   advancedModeVersion: number;                                          │
+     │   isRecalculating: boolean;                                             │
+     │   error: string | null;                                                 │
+     │ }                                                                       │
+     │                                                                         │
+     │ const initialState: PricingCalculationState = {                         │
+     │   positionsAdvanced: [],                                                │
+     │   aggregates: {                                                         │
+     │     totalDL: 0,                                                         │
+     │     totalFringe: 0,                                                     │
+     │     totalOH: 0,                                                         │
+     │     totalGA: 0,                                                         │
+     │     totalFBLR: 0,                                                       │
+     │     byYear: {},                                                         │
+     │   },                                                                    │
+     │   advancedModeVersion: 0,                                               │
+     │   isRecalculating: false,                                               │
+     │   error: null,                                                          │
+     │ };                                                                      │
+     │                                                                         │
+     │ // Async thunk for recalculation                                        │
+     │ export const recalculate = createAsyncThunk(                            │
+     │   'pricingCalculation/recalculate',                                     │
+     │   async (_, { getState, rejectWithValue }) => {                         │
+     │     try {                                                               │
+     │       const state = getState() as RootState;                            │
+     │       const { positions } = state.pricingData;                          │
+     │       const { proposalId } = state.pricingData;                         │
+     │                                                                         │
+     │       if (!proposalId) return;                                          │
+     │                                                                         │
+     │       const payload = {                                                 │
+     │         positions: positions.map((p) => ({                              │
+     │           id: p.id,                                                     │
+     │           percentile: p.percentile,                                     │
+     │           // ... build payload                                          │
+     │         })),                                                            │
+     │         rates: state.pricingData.rates,                                 │
+     │         escalation_rates: state.pricingData.escalationRates,            │
+     │       };                                                                │
+     │                                                                         │
+     │       const response = await pricingApi.recalculate(payload);           │
+     │       return response;                                                  │
+     │     } catch (error: any) {                                              │
+     │       return rejectWithValue(error.response?.data?.detail ||            │
+     │ 'Recalculation failed');                                                │
+     │     }                                                                   │
+     │   }                                                                     │
+     │ );                                                                      │
+     │                                                                         │
+     │ const pricingCalculationSlice = createSlice({                           │
+     │   name: 'pricingCalculation',                                           │
+     │   initialState,                                                         │
+     │   reducers: {                                                           │
+     │     transformToAdvanced: (state, action: PayloadAction<{ positions:     │
+     │ any[]; rates: any; escalationRates: any }>) => {                        │
+     │       const { positions, rates, escalationRates } = action.payload;     │
+     │                                                                         │
+     │       // Use calculation service                                        │
+     │       const advanced = calc.transformPositionsToAdvanced(positions,     │
+     │ rates, escalationRates);                                                │
+     │       const aggregates = calc.calculateAggregates(advanced);            │
+     │                                                                         │
+     │       state.positionsAdvanced = advanced;                               │
+     │       state.aggregates = aggregates;                                    │
+     │       state.advancedModeVersion += 1;                                   │
+     │     },                                                                  │
+     │     setAggregates: (state, action: PayloadAction<Aggregates>) => {      │
+     │       state.aggregates = action.payload;                                │
+     │     },                                                                  │
+     │     resetCalculations: () => initialState,                              │
+     │   },                                                                    │
+     │   extraReducers: (builder) => {                                         │
+     │     builder.addCase(recalculate.pending, (state) => {                   │
+     │       state.isRecalculating = true;                                     │
+     │       state.error = null;                                               │
+     │     });                                                                 │
+     │     builder.addCase(recalculate.fulfilled, (state, action) => {         │
+     │       state.isRecalculating = false;                                    │
+     │       // Update positions with recalculated data                        │
+     │     });                                                                 │
+     │     builder.addCase(recalculate.rejected, (state, action) => {          │
+     │       state.isRecalculating = false;                                    │
+     │       state.error = action.payload as string;                           │
+     │     });                                                                 │
+     │   },                                                                    │
+     │ });                                                                     │
+     │                                                                         │
+     │ export const { transformToAdvanced, setAggregates, resetCalculations } =│
+     │  pricingCalculationSlice.actions;                                       │
+     │ export default pricingCalculationSlice.reducer;                         │
+     │                                                                         │
+     │ // Selectors                                                            │
+     │ export const selectPositionsAdvanced = (state: { pricingCalculation:    │
+     │ PricingCalculationState }) =>                                           │
+     │   state.pricingCalculation.positionsAdvanced;                           │
+     │ export const selectAggregates = (state: { pricingCalculation:           │
+     │ PricingCalculationState }) =>                                           │
+     │   state.pricingCalculation.aggregates;                                  │
+     │ export const selectAdvancedModeVersion = (state: { pricingCalculation:  │
+     │ PricingCalculationState }) =>                                           │
+     │   state.pricingCalculation.advancedModeVersion;                         │
+     │                                                                         │
+     │ frontend/lib/redux/services/pricingCalculations.ts                      │
+     │                                                                         │
+     │ // Pure calculation functions extracted from store                      │
+     │ import { SpreadsheetPosition, AdvancedPosition, Aggregates,             │
+     │ IndirectRates, EscalationRates } from '@/types';                        │
+     │                                                                         │
+     │ export const calculateFBLR = (                                          │
+     │   position: SpreadsheetPosition,                                        │
+     │   rates: IndirectRates,                                                 │
+     │   escalationRates: EscalationRates,                                     │
+     │   year: string                                                          │
+     │ ): number => {                                                          │
+     │   // Pure calculation logic                                             │
+     │   const wage = position.custom_salary ||                                │
+     │ position[`wage_${position.percentile}`] || position.selected_wage || 0; │
+     │   const hours = position.hours_per_year[year] || 0;                     │
+     │                                                                         │
+     │   if (hours === 0) return 0;                                            │
+     │                                                                         │
+     │   const dlRate = wage / hours;                                          │
+     │   const fringe = dlRate * rates.fringe;                                 │
+     │   const oh = (dlRate + fringe) * rates.oh;                              │
+     │   const ga = (dlRate + fringe + oh) * rates.ga;                         │
+     │   const fee = (dlRate + fringe + oh + ga) * rates.fee;                  │
+     │                                                                         │
+     │   return dlRate + fringe + oh + ga + fee;                               │
+     │ };                                                                      │
+     │                                                                         │
+     │ export const transformPositionsToAdvanced = (                           │
+     │   positions: SpreadsheetPosition[],                                     │
+     │   rates: IndirectRates,                                                 │
+     │   escalationRates: EscalationRates                                      │
+     │ ): AdvancedPosition[] => {                                              │
+     │   return positions.map((pos) => {                                       │
+     │     const breakdown: AdvancedPosition['breakdown'] = {};                │
+     │                                                                         │
+     │     Object.entries(pos.hours_per_year).forEach(([year, hours]) => {     │
+     │       const wage = pos.custom_salary || pos[`wage_${pos.percentile}`] ||│
+     │  pos.selected_wage || 0;                                                │
+     │       const dlRate = hours > 0 ? wage / hours : 0;                      │
+     │       const dlAmount = dlRate * hours;                                  │
+     │                                                                         │
+     │       const fringe = dlRate * rates.fringe;                             │
+     │       const fringeAmount = fringe * hours;                              │
+     │                                                                         │
+     │       const oh = (dlRate + fringe) * rates.oh;                          │
+     │       const ohAmount = oh * hours;                                      │
+     │                                                                         │
+     │       const ga = (dlRate + fringe + oh) * rates.ga;                     │
+     │       const gaAmount = ga * hours;                                      │
+     │                                                                         │
+     │       const fee = (dlRate + fringe + oh + ga) * rates.fee;              │
+     │       const feeAmount = fee * hours;                                    │
+     │                                                                         │
+     │       const fblr = dlRate + fringe + oh + ga + fee;                     │
+     │       const totalAmount = fblr * hours;                                 │
+     │                                                                         │
+     │       breakdown[year] = {                                               │
+     │         hours,                                                          │
+     │         wage,                                                           │
+     │         dlRate,                                                         │
+     │         dlAmount,                                                       │
+     │         fringe,                                                         │
+     │         fringeAmount,                                                   │
+     │         oh,                                                             │
+     │         ohAmount,                                                       │
+     │         ga,                                                             │
+     │         gaAmount,                                                       │
+     │         fee,                                                            │
+     │         feeAmount,                                                      │
+     │         fblr,                                                           │
+     │         totalAmount,                                                    │
+     │       };                                                                │
+     │     });                                                                 │
+     │                                                                         │
+     │     return {                                                            │
+     │       ...pos,                                                           │
+     │       breakdown,                                                        │
+     │       total_hours: Object.values(pos.hours_per_year).reduce((sum, h) => │
+     │ sum + h, 0),                                                            │
+     │       total_amount: Object.values(breakdown).reduce((sum, b) => sum +   │
+     │ b.totalAmount, 0),                                                      │
+     │     } as AdvancedPosition;                                              │
+     │   });                                                                   │
+     │ };                                                                      │
+     │                                                                         │
+     │ export const calculateAggregates = (positionsAdvanced:                  │
+     │ AdvancedPosition[]): Aggregates => {                                    │
+     │   const aggregates: Aggregates = {                                      │
+     │     totalDL: 0,                                                         │
+     │     totalFringe: 0,                                                     │
+     │     totalOH: 0,                                                         │
+     │     totalGA: 0,                                                         │
+     │     totalFBLR: 0,                                                       │
+     │     byYear: {},                                                         │
+     │   };                                                                    │
+     │                                                                         │
+     │   positionsAdvanced.forEach((pos) => {                                  │
+     │     Object.entries(pos.breakdown).forEach(([year, breakdown]) => {      │
+     │       if (!aggregates.byYear[year]) {                                   │
+     │         aggregates.byYear[year] = {                                     │
+     │           dl: 0,                                                        │
+     │           fringe: 0,                                                    │
+     │           oh: 0,                                                        │
+     │           ga: 0,                                                        │
+     │           fblr: 0,                                                      │
+     │           totalAmount: 0,                                               │
+     │         };                                                              │
+     │       }                                                                 │
+     │                                                                         │
+     │       aggregates.byYear[year].dl += breakdown.dlAmount;                 │
+     │       aggregates.byYear[year].fringe += breakdown.fringeAmount;         │
+     │       aggregates.byYear[year].oh += breakdown.ohAmount;                 │
+     │       aggregates.byYear[year].ga += breakdown.gaAmount;                 │
+     │       aggregates.byYear[year].fblr += breakdown.totalAmount;            │
+     │       aggregates.byYear[year].totalAmount += breakdown.totalAmount;     │
+     │                                                                         │
+     │       aggregates.totalDL += breakdown.dlAmount;                         │
+     │       aggregates.totalFringe += breakdown.fringeAmount;                 │
+     │       aggregates.totalOH += breakdown.ohAmount;                         │
+     │       aggregates.totalGA += breakdown.gaAmount;                         │
+     │       aggregates.totalFBLR += breakdown.totalAmount;                    │
+     │     });                                                                 │
+     │   });                                                                   │
+     │                                                                         │
+     │   return aggregates;                                                    │
+     │ };                                                                      │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Step 7: Migrate ProposalsSlice                                          │
+     │                                                                         │
+     │ frontend/lib/redux/slices/proposalsSlice.ts                             │
+     │                                                                         │
+     │ import { createSlice, createAsyncThunk, PayloadAction } from            │
+     │ '@reduxjs/toolkit';                                                     │
+     │ import { Proposal, ProposalListResponse } from '@/types';               │
+     │ import { proposalsApi } from '@/lib/api/proposals';                     │
+     │                                                                         │
+     │ interface ProposalsState {                                              │
+     │   proposals: Proposal[];                                                │
+     │   currentProposal: Proposal | null;                                     │
+     │   pagination: {                                                         │
+     │     page: number;                                                       │
+     │     pageSize: number;                                                   │
+     │     totalCount: number;                                                 │
+     │     totalPages: number;                                                 │
+     │   };                                                                    │
+     │   isLoading: boolean;                                                   │
+     │   error: string | null;                                                 │
+     │ }                                                                       │
+     │                                                                         │
+     │ const initialState: ProposalsState = {                                  │
+     │   proposals: [],                                                        │
+     │   currentProposal: null,                                                │
+     │   pagination: {                                                         │
+     │     page: 1,                                                            │
+     │     pageSize: 10,                                                       │
+     │     totalCount: 0,                                                      │
+     │     totalPages: 0,                                                      │
+     │   },                                                                    │
+     │   isLoading: false,                                                     │
+     │   error: null,                                                          │
+     │ };                                                                      │
+     │                                                                         │
+     │ // Async thunks                                                         │
+     │ export const fetchProposals = createAsyncThunk(                         │
+     │   'proposals/fetchProposals',                                           │
+     │   async ({ page = 1, pageSize = 10 }: { page?: number; pageSize?: number│
+     │  }, { rejectWithValue }) => {                                           │
+     │     try {                                                               │
+     │       const response = await proposalsApi.getAll({ page, page_size:     │
+     │ pageSize });                                                            │
+     │       return response;                                                  │
+     │     } catch (error: any) {                                              │
+     │       return rejectWithValue(error.response?.data?.detail || 'Failed to │
+     │ fetch proposals');                                                      │
+     │     }                                                                   │
+     │   }                                                                     │
+     │ );                                                                      │
+     │                                                                         │
+     │ export const fetchProposal = createAsyncThunk(                          │
+     │   'proposals/fetchProposal',                                            │
+     │   async (proposalId: string, { rejectWithValue }) => {                  │
+     │     try {                                                               │
+     │       const proposal = await proposalsApi.getById(proposalId);          │
+     │       return proposal;                                                  │
+     │     } catch (error: any) {                                              │
+     │       return rejectWithValue(error.response?.data?.detail || 'Failed to │
+     │ fetch proposal');                                                       │
+     │     }                                                                   │
+     │   }                                                                     │
+     │ );                                                                      │
+     │                                                                         │
+     │ export const uploadProposal = createAsyncThunk(                         │
+     │   'proposals/uploadProposal',                                           │
+     │   async (files: FileList, { rejectWithValue }) => {                     │
+     │     try {                                                               │
+     │       const proposal = await proposalsApi.upload(files);                │
+     │       return proposal;                                                  │
+     │     } catch (error: any) {                                              │
+     │       return rejectWithValue(error.response?.data?.detail || 'Failed to │
+     │ upload proposal');                                                      │
+     │     }                                                                   │
+     │   }                                                                     │
+     │ );                                                                      │
+     │                                                                         │
+     │ export const deleteProposal = createAsyncThunk(                         │
+     │   'proposals/deleteProposal',                                           │
+     │   async (proposalId: string, { rejectWithValue }) => {                  │
+     │     try {                                                               │
+     │       await proposalsApi.delete(proposalId);                            │
+     │       return proposalId;                                                │
+     │     } catch (error: any) {                                              │
+     │       return rejectWithValue(error.response?.data?.detail || 'Failed to │
+     │ delete proposal');                                                      │
+     │     }                                                                   │
+     │   }                                                                     │
+     │ );                                                                      │
+     │                                                                         │
+     │ export const updateProposal = createAsyncThunk(                         │
+     │   'proposals/updateProposal',                                           │
+     │   async ({ proposalId, updates }: { proposalId: string; updates:        │
+     │ Partial<Proposal> }, { rejectWithValue }) => {                          │
+     │     try {                                                               │
+     │       const proposal = await proposalsApi.update(proposalId, updates);  │
+     │       return proposal;                                                  │
+     │     } catch (error: any) {                                              │
+     │       return rejectWithValue(error.response?.data?.detail || 'Failed to │
+     │ update proposal');                                                      │
+     │     }                                                                   │
+     │   }                                                                     │
+     │ );                                                                      │
+     │                                                                         │
+     │ const proposalsSlice = createSlice({                                    │
+     │   name: 'proposals',                                                    │
+     │   initialState,                                                         │
+     │   reducers: {                                                           │
+     │     clearError: (state) => {                                            │
+     │       state.error = null;                                               │
+     │     },                                                                  │
+     │     setCurrentProposal: (state, action: PayloadAction<Proposal | null>) │
+     │ => {                                                                    │
+     │       state.currentProposal = action.payload;                           │
+     │     },                                                                  │
+     │     setPage: (state, action: PayloadAction<number>) => {                │
+     │       state.pagination.page = action.payload;                           │
+     │     },                                                                  │
+     │     resetProposals: () => initialState,                                 │
+     │   },                                                                    │
+     │   extraReducers: (builder) => {                                         │
+     │     // Fetch Proposals                                                  │
+     │     builder.addCase(fetchProposals.pending, (state) => {                │
+     │       state.isLoading = true;                                           │
+     │       state.error = null;                                               │
+     │     });                                                                 │
+     │     builder.addCase(fetchProposals.fulfilled, (state, action) => {      │
+     │       state.isLoading = false;                                          │
+     │       state.proposals = action.payload.items;                           │
+     │       state.pagination = {                                              │
+     │         page: action.payload.page,                                      │
+     │         pageSize: action.payload.page_size,                             │
+     │         totalCount: action.payload.total_count,                         │
+     │         totalPages: action.payload.total_pages,                         │
+     │       };                                                                │
+     │     });                                                                 │
+     │     builder.addCase(fetchProposals.rejected, (state, action) => {       │
+     │       state.isLoading = false;                                          │
+     │       state.error = action.payload as string;                           │
+     │     });                                                                 │
+     │                                                                         │
+     │     // Fetch Single Proposal                                            │
+     │     builder.addCase(fetchProposal.pending, (state) => {                 │
+     │       state.isLoading = true;                                           │
+     │       state.error = null;                                               │
+     │     });                                                                 │
+     │     builder.addCase(fetchProposal.fulfilled, (state, action) => {       │
+     │       state.isLoading = false;                                          │
+     │       state.currentProposal = action.payload;                           │
+     │     });                                                                 │
+     │     builder.addCase(fetchProposal.rejected, (state, action) => {        │
+     │       state.isLoading = false;                                          │
+     │       state.error = action.payload as string;                           │
+     │     });                                                                 │
+     │                                                                         │
+     │     // Upload Proposal                                                  │
+     │     builder.addCase(uploadProposal.pending, (state) => {                │
+     │       state.isLoading = true;                                           │
+     │       state.error = null;                                               │
+     │     });                                                                 │
+     │     builder.addCase(uploadProposal.fulfilled, (state, action) => {      │
+     │       state.isLoading = false;                                          │
+     │       state.proposals.unshift(action.payload);                          │
+     │     });                                                                 │
+     │     builder.addCase(uploadProposal.rejected, (state, action) => {       │
+     │       state.isLoading = false;                                          │
+     │       state.error = action.payload as string;                           │
+     │     });                                                                 │
+     │                                                                         │
+     │     // Delete Proposal                                                  │
+     │     builder.addCase(deleteProposal.fulfilled, (state, action) => {      │
+     │       state.proposals = state.proposals.filter(p => p.id !==            │
+     │ action.payload);                                                        │
+     │     });                                                                 │
+     │                                                                         │
+     │     // Update Proposal                                                  │
+     │     builder.addCase(updateProposal.fulfilled, (state, action) => {      │
+     │       const index = state.proposals.findIndex(p => p.id ===             │
+     │ action.payload.id);                                                     │
+     │       if (index !== -1) {                                               │
+     │         state.proposals[index] = action.payload;                        │
+     │       }                                                                 │
+     │       if (state.currentProposal?.id === action.payload.id) {            │
+     │         state.currentProposal = action.payload;                         │
+     │       }                                                                 │
+     │     });                                                                 │
+     │   },                                                                    │
+     │ });                                                                     │
+     │                                                                         │
+     │ export const { clearError, setCurrentProposal, setPage, resetProposals }│
+     │  = proposalsSlice.actions;                                              │
+     │ export default proposalsSlice.reducer;                                  │
+     │                                                                         │
+     │ // Selectors                                                            │
+     │ export const selectProposals = (state: { proposals: ProposalsState }) =>│
+     │  state.proposals.proposals;                                             │
+     │ export const selectCurrentProposal = (state: { proposals: ProposalsState│
+     │  }) => state.proposals.currentProposal;                                 │
+     │ export const selectPagination = (state: { proposals: ProposalsState })  │
+     │ => state.proposals.pagination;                                          │
+     │ export const selectProposalsLoading = (state: { proposals:              │
+     │ ProposalsState }) => state.proposals.isLoading;                         │
+     │ export const selectProposalsError = (state: { proposals: ProposalsState │
+     │ }) => state.proposals.error;                                            │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Step 8: Migrate OrganizationSlice                                       │
+     │                                                                         │
+     │ frontend/lib/redux/slices/organizationSlice.ts                          │
+     │                                                                         │
+     │ import { createSlice, createAsyncThunk, PayloadAction } from            │
+     │ '@reduxjs/toolkit';                                                     │
+     │ import {                                                                │
+     │   Organization,                                                         │
+     │   OrganizationSettings,                                                 │
+     │   OrganizationStats,                                                    │
+     │   TeamMember,                                                           │
+     │   Invitation,                                                           │
+     │   InviteUserRequest,                                                    │
+     │ } from '@/types';                                                       │
+     │ import { organizationsApi } from '@/lib/api/organizations';             │
+     │ import { invitationsApi } from '@/lib/api/invitations';                 │
+     │                                                                         │
+     │ interface OrganizationState {                                           │
+     │   organization: Organization | null;                                    │
+     │   members: TeamMember[];                                                │
+     │   invitations: Invitation[];                                            │
+     │   stats: OrganizationStats | null;                                      │
+     │   isLoading: boolean;                                                   │
+     │   error: string | null;                                                 │
+     │ }                                                                       │
+     │                                                                         │
+     │ const initialState: OrganizationState = {                               │
+     │   organization: null,                                                   │
+     │   members: [],                                                          │
+     │   invitations: [],                                                      │
+     │   stats: null,                                                          │
+     │   isLoading: false,                                                     │
+     │   error: null,                                                          │
+     │ };                                                                      │
+     │                                                                         │
+     │ // Async thunks                                                         │
+     │ export const fetchOrganization = createAsyncThunk(                      │
+     │   'organization/fetchOrganization',                                     │
+     │   async (_, { rejectWithValue }) => {                                   │
+     │     try {                                                               │
+     │       const organization = await organizationsApi.getMyOrganization();  │
+     │       return organization;                                              │
+     │     } catch (error: any) {                                              │
+     │       return rejectWithValue(error.response?.data?.detail || 'Failed to │
+     │ fetch organization');                                                   │
+     │     }                                                                   │
+     │   }                                                                     │
+     │ );                                                                      │
+     │                                                                         │
+     │ export const fetchMembers = createAsyncThunk(                           │
+     │   'organization/fetchMembers',                                          │
+     │   async (_, { rejectWithValue }) => {                                   │
+     │     try {                                                               │
+     │       const members = await organizationsApi.getMembers();              │
+     │       return members;                                                   │
+     │     } catch (error: any) {                                              │
+     │       return rejectWithValue(error.response?.data?.detail || 'Failed to │
+     │ fetch members');                                                        │
+     │     }                                                                   │
+     │   }                                                                     │
+     │ );                                                                      │
+     │                                                                         │
+     │ export const fetchInvitations = createAsyncThunk(                       │
+     │   'organization/fetchInvitations',                                      │
+     │   async (_, { rejectWithValue }) => {                                   │
+     │     try {                                                               │
+     │       const invitations = await invitationsApi.listInvitations();       │
+     │       return invitations;                                               │
+     │     } catch (error: any) {                                              │
+     │       return rejectWithValue(error.response?.data?.detail || 'Failed to │
+     │ fetch invitations');                                                    │
+     │     }                                                                   │
+     │   }                                                                     │
+     │ );                                                                      │
+     │                                                                         │
+     │ export const fetchStats = createAsyncThunk(                             │
+     │   'organization/fetchStats',                                            │
+     │   async (_, { rejectWithValue }) => {                                   │
+     │     try {                                                               │
+     │       const stats = await organizationsApi.getStats();                  │
+     │       return stats;                                                     │
+     │     } catch (error: any) {                                              │
+     │       return rejectWithValue(error.response?.data?.detail || 'Failed to │
+     │ fetch stats');                                                          │
+     │     }                                                                   │
+     │   }                                                                     │
+     │ );                                                                      │
+     │                                                                         │
+     │ export const sendInvitation = createAsyncThunk(                         │
+     │   'organization/sendInvitation',                                        │
+     │   async (data: InviteUserRequest, { dispatch, rejectWithValue }) => {   │
+     │     try {                                                               │
+     │       await invitationsApi.sendInvitation(data);                        │
+     │       // Refresh invitations list                                       │
+     │       dispatch(fetchInvitations());                                     │
+     │     } catch (error: any) {                                              │
+     │       return rejectWithValue(error.response?.data?.detail || 'Failed to │
+     │ send invitation');                                                      │
+     │     }                                                                   │
+     │   }                                                                     │
+     │ );                                                                      │
+     │                                                                         │
+     │ export const revokeInvitation = createAsyncThunk(                       │
+     │   'organization/revokeInvitation',                                      │
+     │   async (invitationId: string, { rejectWithValue }) => {                │
+     │     try {                                                               │
+     │       await invitationsApi.revokeInvitation(invitationId);              │
+     │       return invitationId;                                              │
+     │     } catch (error: any) {                                              │
+     │       return rejectWithValue(error.response?.data?.detail || 'Failed to │
+     │ revoke invitation');                                                    │
+     │     }                                                                   │
+     │   }                                                                     │
+     │ );                                                                      │
+     │                                                                         │
+     │ export const removeMember = createAsyncThunk(                           │
+     │   'organization/removeMember',                                          │
+     │   async (userId: string, { dispatch, rejectWithValue }) => {            │
+     │     try {                                                               │
+     │       await organizationsApi.removeMember(userId);                      │
+     │       // Refresh members list                                           │
+     │       dispatch(fetchMembers());                                         │
+     │     } catch (error: any) {                                              │
+     │       return rejectWithValue(error.response?.data?.detail || 'Failed to │
+     │ remove member');                                                        │
+     │     }                                                                   │
+     │   }                                                                     │
+     │ );                                                                      │
+     │                                                                         │
+     │ export const updateSettings = createAsyncThunk(                         │
+     │   'organization/updateSettings',                                        │
+     │   async (settings: Partial<OrganizationSettings>, { rejectWithValue })  │
+     │ => {                                                                    │
+     │     try {                                                               │
+     │       const organization = await                                        │
+     │ organizationsApi.updateSettings(settings);                              │
+     │       return organization;                                              │
+     │     } catch (error: any) {                                              │
+     │       return rejectWithValue(error.response?.data?.detail || 'Failed to │
+     │ update settings');                                                      │
+     │     }                                                                   │
+     │   }                                                                     │
+     │ );                                                                      │
+     │                                                                         │
+     │ const organizationSlice = createSlice({                                 │
+     │   name: 'organization',                                                 │
+     │   initialState,                                                         │
+     │   reducers: {                                                           │
+     │     clearError: (state) => {                                            │
+     │       state.error = null;                                               │
+     │     },                                                                  │
+     │     resetOrganization: () => initialState,                              │
+     │   },                                                                    │
+     │   extraReducers: (builder) => {                                         │
+     │     // Fetch Organization                                               │
+     │     builder.addCase(fetchOrganization.pending, (state) => {             │
+     │       state.isLoading = true;                                           │
+     │       state.error = null;                                               │
+     │     });                                                                 │
+     │     builder.addCase(fetchOrganization.fulfilled, (state, action) => {   │
+     │       state.isLoading = false;                                          │
+     │       state.organization = action.payload;                              │
+     │     });                                                                 │
+     │     builder.addCase(fetchOrganization.rejected, (state, action) => {    │
+     │       state.isLoading = false;                                          │
+     │       state.error = action.payload as string;                           │
+     │     });                                                                 │
+     │                                                                         │
+     │     // Fetch Members                                                    │
+     │     builder.addCase(fetchMembers.pending, (state) => {                  │
+     │       state.isLoading = true;                                           │
+     │     });                                                                 │
+     │     builder.addCase(fetchMembers.fulfilled, (state, action) => {        │
+     │       state.isLoading = false;                                          │
+     │       state.members = action.payload;                                   │
+     │     });                                                                 │
+     │     builder.addCase(fetchMembers.rejected, (state, action) => {         │
+     │       state.isLoading = false;                                          │
+     │       state.error = action.payload as string;                           │
+     │     });                                                                 │
+     │                                                                         │
+     │     // Fetch Invitations                                                │
+     │     builder.addCase(fetchInvitations.fulfilled, (state, action) => {    │
+     │       state.invitations = action.payload;                               │
+     │     });                                                                 │
+     │                                                                         │
+     │     // Fetch Stats                                                      │
+     │     builder.addCase(fetchStats.fulfilled, (state, action) => {          │
+     │       state.stats = action.payload;                                     │
+     │     });                                                                 │
+     │                                                                         │
+     │     // Revoke Invitation                                                │
+     │     builder.addCase(revokeInvitation.fulfilled, (state, action) => {    │
+     │       state.invitations = state.invitations.filter(inv => inv.id !==    │
+     │ action.payload);                                                        │
+     │     });                                                                 │
+     │                                                                         │
+     │     // Update Settings                                                  │
+     │     builder.addCase(updateSettings.fulfilled, (state, action) => {      │
+     │       state.organization = action.payload;                              │
+     │     });                                                                 │
+     │   },                                                                    │
+     │ });                                                                     │
+     │                                                                         │
+     │ export const { clearError, resetOrganization } =                        │
+     │ organizationSlice.actions;                                              │
+     │ export default organizationSlice.reducer;                               │
+     │                                                                         │
+     │ // Selectors                                                            │
+     │ export const selectOrganization = (state: { organization:               │
+     │ OrganizationState }) => state.organization.organization;                │
+     │ export const selectMembers = (state: { organization: OrganizationState  │
+     │ }) => state.organization.members;                                       │
+     │ export const selectInvitations = (state: { organization:                │
+     │ OrganizationState }) => state.organization.invitations;                 │
+     │ export const selectStats = (state: { organization: OrganizationState }) │
+     │ => state.organization.stats;                                            │
+     │ export const selectOrganizationLoading = (state: { organization:        │
+     │ OrganizationState }) => state.organization.isLoading;                   │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Step 9: Add Remaining Pricing Slices                                    │
+     │                                                                         │
+     │ frontend/lib/redux/slices/pricingSaveSlice.ts                           │
+     │                                                                         │
+     │ import { createSlice, createAsyncThunk, PayloadAction } from            │
+     │ '@reduxjs/toolkit';                                                     │
+     │ import { proposalsApi } from '@/lib/api/proposals';                     │
+     │ import { RootState } from '../store';                                   │
+     │                                                                         │
+     │ interface PricingSaveState {                                            │
+     │   isDirty: boolean;                                                     │
+     │   isSaving: boolean;                                                    │
+     │   lastSaved: Date | null;                                               │
+     │   error: string | null;                                                 │
+     │ }                                                                       │
+     │                                                                         │
+     │ const initialState: PricingSaveState = {                                │
+     │   isDirty: false,                                                       │
+     │   isSaving: false,                                                      │
+     │   lastSaved: null,                                                      │
+     │   error: null,                                                          │
+     │ };                                                                      │
+     │                                                                         │
+     │ // Async thunk for auto-save                                            │
+     │ export const autoSave = createAsyncThunk(                               │
+     │   'pricingSave/autoSave',                                               │
+     │   async (_, { getState, rejectWithValue }) => {                         │
+     │     try {                                                               │
+     │       const state = getState() as RootState;                            │
+     │       const { proposalId, positions, subcontractors, odcs, rates,       │
+     │ escalationRates } = state.pricingData;                                  │
+     │                                                                         │
+     │       if (!proposalId) {                                                │
+     │         return rejectWithValue('No proposal ID');                       │
+     │       }                                                                 │
+     │                                                                         │
+     │       const payload = {                                                 │
+     │         positions,                                                      │
+     │         subcontractors,                                                 │
+     │         odcs,                                                           │
+     │         rates,                                                          │
+     │         escalation_rates: escalationRates,                              │
+     │       };                                                                │
+     │                                                                         │
+     │       await proposalsApi.update(proposalId, payload);                   │
+     │       return new Date();                                                │
+     │     } catch (error: any) {                                              │
+     │       return rejectWithValue(error.response?.data?.detail || 'Auto-save │
+     │ failed');                                                               │
+     │     }                                                                   │
+     │   }                                                                     │
+     │ );                                                                      │
+     │                                                                         │
+     │ // Debounced auto-save (2 seconds delay)                                │
+     │ export const debouncedAutoSave = createAsyncThunk(                      │
+     │   'pricingSave/debouncedAutoSave',                                      │
+     │   async (_, { dispatch }) => {                                          │
+     │     // Dispatch with debounce metadata                                  │
+     │     return dispatch({                                                   │
+     │       type: 'pricingSave/autoSave/pending',                             │
+     │       meta: { debounce: { delay: 2000, key: 'autoSave' } },             │
+     │     });                                                                 │
+     │   }                                                                     │
+     │ );                                                                      │
+     │                                                                         │
+     │ const pricingSaveSlice = createSlice({                                  │
+     │   name: 'pricingSave',                                                  │
+     │   initialState,                                                         │
+     │   reducers: {                                                           │
+     │     markDirty: (state) => {                                             │
+     │       state.isDirty = true;                                             │
+     │     },                                                                  │
+     │     markClean: (state) => {                                             │
+     │       state.isDirty = false;                                            │
+     │     },                                                                  │
+     │     clearSaveError: (state) => {                                        │
+     │       state.error = null;                                               │
+     │     },                                                                  │
+     │   },                                                                    │
+     │   extraReducers: (builder) => {                                         │
+     │     builder.addCase(autoSave.pending, (state) => {                      │
+     │       state.isSaving = true;                                            │
+     │       state.error = null;                                               │
+     │     });                                                                 │
+     │     builder.addCase(autoSave.fulfilled, (state, action) => {            │
+     │       state.isSaving = false;                                           │
+     │       state.isDirty = false;                                            │
+     │       state.lastSaved = action.payload;                                 │
+     │     });                                                                 │
+     │     builder.addCase(autoSave.rejected, (state, action) => {             │
+     │       state.isSaving = false;                                           │
+     │       state.error = action.payload as string;                           │
+     │     });                                                                 │
+     │   },                                                                    │
+     │ });                                                                     │
+     │                                                                         │
+     │ export const { markDirty, markClean, clearSaveError } =                 │
+     │ pricingSaveSlice.actions;                                               │
+     │ export default pricingSaveSlice.reducer;                                │
+     │                                                                         │
+     │ // Selectors                                                            │
+     │ export const selectIsDirty = (state: { pricingSave: PricingSaveState }) │
+     │ => state.pricingSave.isDirty;                                           │
+     │ export const selectIsSaving = (state: { pricingSave: PricingSaveState })│
+     │  => state.pricingSave.isSaving;                                         │
+     │ export const selectLastSaved = (state: { pricingSave: PricingSaveState  │
+     │ }) => state.pricingSave.lastSaved;                                      │
+     │                                                                         │
+     │ frontend/lib/redux/slices/pricingUISlice.ts                             │
+     │                                                                         │
+     │ import { createSlice, PayloadAction } from '@reduxjs/toolkit';          │
+     │                                                                         │
+     │ type TabType = 'prime-labor' | 'subcontractors' | 'odcs' | 'passthrough'│
+     │  | 'rates';                                                             │
+     │                                                                         │
+     │ interface PricingUIState {                                              │
+     │   activeTab: TabType;                                                   │
+     │   advancedMode: boolean;                                                │
+     │   expandedPositions: Set<string>;                                       │
+     │   selectedPositionIds: string[];                                        │
+     │ }                                                                       │
+     │                                                                         │
+     │ const initialState: PricingUIState = {                                  │
+     │   activeTab: 'prime-labor',                                             │
+     │   advancedMode: false,                                                  │
+     │   expandedPositions: new Set(),                                         │
+     │   selectedPositionIds: [],                                              │
+     │ };                                                                      │
+     │                                                                         │
+     │ const pricingUISlice = createSlice({                                    │
+     │   name: 'pricingUI',                                                    │
+     │   initialState,                                                         │
+     │   reducers: {                                                           │
+     │     setActiveTab: (state, action: PayloadAction<TabType>) => {          │
+     │       state.activeTab = action.payload;                                 │
+     │     },                                                                  │
+     │     toggleAdvancedMode: (state) => {                                    │
+     │       state.advancedMode = !state.advancedMode;                         │
+     │     },                                                                  │
+     │     setAdvancedMode: (state, action: PayloadAction<boolean>) => {       │
+     │       state.advancedMode = action.payload;                              │
+     │     },                                                                  │
+     │     togglePositionExpanded: (state, action: PayloadAction<string>) => { │
+     │       const positionId = action.payload;                                │
+     │       if (state.expandedPositions.has(positionId)) {                    │
+     │         state.expandedPositions.delete(positionId);                     │
+     │       } else {                                                          │
+     │         state.expandedPositions.add(positionId);                        │
+     │       }                                                                 │
+     │     },                                                                  │
+     │     setSelectedPositions: (state, action: PayloadAction<string[]>) => { │
+     │       state.selectedPositionIds = action.payload;                       │
+     │     },                                                                  │
+     │     resetPricingUI: () => initialState,                                 │
+     │   },                                                                    │
+     │ });                                                                     │
+     │                                                                         │
+     │ export const {                                                          │
+     │   setActiveTab,                                                         │
+     │   toggleAdvancedMode,                                                   │
+     │   setAdvancedMode,                                                      │
+     │   togglePositionExpanded,                                               │
+     │   setSelectedPositions,                                                 │
+     │   resetPricingUI,                                                       │
+     │ } = pricingUISlice.actions;                                             │
+     │                                                                         │
+     │ export default pricingUISlice.reducer;                                  │
+     │                                                                         │
+     │ // Selectors                                                            │
+     │ export const selectActiveTab = (state: { pricingUI: PricingUIState }) =>│
+     │  state.pricingUI.activeTab;                                             │
+     │ export const selectAdvancedMode = (state: { pricingUI: PricingUIState })│
+     │  => state.pricingUI.advancedMode;                                       │
+     │ export const selectExpandedPositions = (state: { pricingUI:             │
+     │ PricingUIState }) => state.pricingUI.expandedPositions;                 │
+     │ export const selectSelectedPositions = (state: { pricingUI:             │
+     │ PricingUIState }) => state.pricingUI.selectedPositionIds;               │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Step 10: Create Middleware Index                                        │
+     │                                                                         │
+     │ frontend/lib/redux/middleware/index.ts                                  │
+     │                                                                         │
+     │ export { cacheMiddleware, invalidateCache, invalidateCachePattern } from│
+     │  './cacheMiddleware';                                                   │
+     │ export { debounceMiddleware } from './debounceMiddleware';              │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Step 11: Setup Redux Provider                                           │
+     │                                                                         │
+     │ frontend/app/providers.tsx (Create this file)                           │
+     │                                                                         │
+     │ 'use client';                                                           │
+     │                                                                         │
+     │ import { Provider } from 'react-redux';                                 │
+     │ import { store } from '@/lib/redux/store';                              │
+     │                                                                         │
+     │ export function Providers({ children }: { children: React.ReactNode }) {│
+     │   return <Provider store={store}>{children}</Provider>;                 │
+     │ }                                                                       │
+     │                                                                         │
+     │ Update frontend/app/layout.tsx                                          │
+     │                                                                         │
+     │ Wrap the app with Redux provider:                                       │
+     │                                                                         │
+     │ import { Providers } from './providers';                                │
+     │                                                                         │
+     │ export default function RootLayout({                                    │
+     │   children,                                                             │
+     │ }: {                                                                    │
+     │   children: React.ReactNode;                                            │
+     │ }) {                                                                    │
+     │   return (                                                              │
+     │     <html lang="en">                                                    │
+     │       <body>                                                            │
+     │         <Providers>                                                     │
+     │           {children}                                                    │
+     │         </Providers>                                                    │
+     │       </body>                                                           │
+     │     </html>                                                             │
+     │   );                                                                    │
+     │ }                                                                       │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Step 12: Component Migration Patterns                                   │
+     │                                                                         │
+     │ Pattern 1: Simple State Access                                          │
+     │                                                                         │
+     │ Before (Zustand):                                                       │
+     │ import { useAuthStore } from '@/lib/stores/authStore';                  │
+     │                                                                         │
+     │ export default function ProfilePage() {                                 │
+     │   const { user, isLoading } = useAuthStore();                           │
+     │                                                                         │
+     │   if (isLoading) return <div>Loading...</div>;                          │
+     │                                                                         │
+     │   return <div>Welcome, {user?.name}</div>;                              │
+     │ }                                                                       │
+     │                                                                         │
+     │ After (Redux):                                                          │
+     │ import { useAppSelector } from '@/lib/redux/hooks';                     │
+     │ import { selectUser, selectAuthLoading } from                           │
+     │ '@/lib/redux/slices/authSlice';                                         │
+     │                                                                         │
+     │ export default function ProfilePage() {                                 │
+     │   const user = useAppSelector(selectUser);                              │
+     │   const isLoading = useAppSelector(selectAuthLoading);                  │
+     │                                                                         │
+     │   if (isLoading) return <div>Loading...</div>;                          │
+     │                                                                         │
+     │   return <div>Welcome, {user?.name}</div>;                              │
+     │ }                                                                       │
+     │                                                                         │
+     │ Pattern 2: Async Actions                                                │
+     │                                                                         │
+     │ Before (Zustand):                                                       │
+     │ import { useAuthStore } from '@/lib/stores/authStore';                  │
+     │                                                                         │
+     │ export default function LoginForm() {                                   │
+     │   const { login, isLoading } = useAuthStore();                          │
+     │                                                                         │
+     │   const handleSubmit = async (credentials) => {                         │
+     │     await login(credentials);                                           │
+     │   };                                                                    │
+     │                                                                         │
+     │   return <form onSubmit={handleSubmit}>...</form>;                      │
+     │ }                                                                       │
+     │                                                                         │
+     │ After (Redux):                                                          │
+     │ import { useAppDispatch, useAppSelector } from '@/lib/redux/hooks';     │
+     │ import { login, selectAuthLoading } from '@/lib/redux/slices/authSlice';│
+     │                                                                         │
+     │ export default function LoginForm() {                                   │
+     │   const dispatch = useAppDispatch();                                    │
+     │   const isLoading = useAppSelector(selectAuthLoading);                  │
+     │                                                                         │
+     │   const handleSubmit = async (credentials) => {                         │
+     │     await dispatch(login(credentials)).unwrap();                        │
+     │   };                                                                    │
+     │                                                                         │
+     │   return <form onSubmit={handleSubmit}>...</form>;                      │
+     │ }                                                                       │
+     │                                                                         │
+     │ Pattern 3: State Updates                                                │
+     │                                                                         │
+     │ Before (Zustand):                                                       │
+     │ import { usePricingStore } from '@/lib/stores/pricingStore';            │
+     │                                                                         │
+     │ export default function PositionsGrid() {                               │
+     │   const { positions, updatePosition } = usePricingStore();              │
+     │                                                                         │
+     │   const handleCellChange = (id, field, value) => {                      │
+     │     updatePosition(id, { [field]: value });                             │
+     │   };                                                                    │
+     │                                                                         │
+     │   return <DataGrid data={positions} onCellChange={handleCellChange} />; │
+     │ }                                                                       │
+     │                                                                         │
+     │ After (Redux):                                                          │
+     │ import { useAppDispatch, useAppSelector } from '@/lib/redux/hooks';     │
+     │ import { selectPositions, updatePosition } from                         │
+     │ '@/lib/redux/slices/pricingDataSlice';                                  │
+     │ import { markDirty } from '@/lib/redux/slices/pricingSaveSlice';        │
+     │                                                                         │
+     │ export default function PositionsGrid() {                               │
+     │   const dispatch = useAppDispatch();                                    │
+     │   const positions = useAppSelector(selectPositions);                    │
+     │                                                                         │
+     │   const handleCellChange = (id, field, value) => {                      │
+     │     dispatch(updatePosition({ id, updates: { [field]: value } }));      │
+     │     dispatch(markDirty());                                              │
+     │   };                                                                    │
+     │                                                                         │
+     │   return <DataGrid data={positions} onCellChange={handleCellChange} />; │
+     │ }                                                                       │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Step 13: Testing Strategy                                               │
+     │                                                                         │
+     │ Unit Testing Reducers                                                   │
+     │                                                                         │
+     │ import { describe, it, expect } from 'vitest';                          │
+     │ import authReducer, { login, logout, setUser } from                     │
+     │ '@/lib/redux/slices/authSlice';                                         │
+     │                                                                         │
+     │ describe('authSlice', () => {                                           │
+     │   it('should handle login fulfilled', () => {                           │
+     │     const initialState = { user: null, isLoading: false, error: null }; │
+     │     const user = { id: '1', email: 'test@example.com', name: 'Test User'│
+     │  };                                                                     │
+     │                                                                         │
+     │     const action = { type: login.fulfilled.type, payload: user };       │
+     │     const state = authReducer(initialState, action);                    │
+     │                                                                         │
+     │     expect(state.user).toEqual(user);                                   │
+     │     expect(state.isLoading).toBe(false);                                │
+     │     expect(state.error).toBeNull();                                     │
+     │   });                                                                   │
+     │                                                                         │
+     │   it('should handle logout', () => {                                    │
+     │     const initialState = {                                              │
+     │       user: { id: '1', email: 'test@example.com', name: 'Test User' },  │
+     │       isLoading: false,                                                 │
+     │       error: null                                                       │
+     │     };                                                                  │
+     │                                                                         │
+     │     const action = { type: logout.fulfilled.type };                     │
+     │     const state = authReducer(initialState, action);                    │
+     │                                                                         │
+     │     expect(state.user).toBeNull();                                      │
+     │     expect(state.error).toBeNull();                                     │
+     │   });                                                                   │
+     │ });                                                                     │
+     │                                                                         │
+     │ Integration Testing with Components                                     │
+     │                                                                         │
+     │ import { describe, it, expect } from 'vitest';                          │
+     │ import { render, screen, waitFor } from '@testing-library/react';       │
+     │ import { Provider } from 'react-redux';                                 │
+     │ import { configureStore } from '@reduxjs/toolkit';                      │
+     │ import authReducer from '@/lib/redux/slices/authSlice';                 │
+     │ import LoginForm from '@/components/auth/LoginForm';                    │
+     │                                                                         │
+     │ describe('LoginForm Integration', () => {                               │
+     │   it('should dispatch login action on form submit', async () => {       │
+     │     const store = configureStore({                                      │
+     │       reducer: {                                                        │
+     │         auth: authReducer,                                              │
+     │       },                                                                │
+     │     });                                                                 │
+     │                                                                         │
+     │     render(                                                             │
+     │       <Provider store={store}>                                          │
+     │         <LoginForm />                                                   │
+     │       </Provider>                                                       │
+     │     );                                                                  │
+     │                                                                         │
+     │     // Fill form and submit                                             │
+     │     // ... test implementation                                          │
+     │                                                                         │
+     │     await waitFor(() => {                                               │
+     │       expect(store.getState().auth.user).not.toBeNull();                │
+     │     });                                                                 │
+     │   });                                                                   │
+     │ });                                                                     │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Migration Checklist                                                     │
+     │                                                                         │
+     │ Phase 1: Foundation (Days 1-2) ✓                                        │
+     │                                                                         │
+     │ - Install Redux Toolkit and dependencies                                │
+     │ npm install @reduxjs/toolkit react-redux                                │
+     │ npm install --save-dev @types/react-redux                               │
+     │ - Create directory structure (lib/redux/)                               │
+     │ - Create store.ts with all reducers                                     │
+     │ - Create hooks.ts with typed hooks                                      │
+     │ - Create custom middleware (cache, debounce)                            │
+     │ - Create providers.tsx and wrap app in layout                           │
+     │ - Test Redux DevTools connection                                        │
+     │                                                                         │
+     │ Phase 2: Simple Stores (Days 3-5)                                       │
+     │                                                                         │
+     │ - Create authSlice.ts                                                   │
+     │   - Define state interface                                              │
+     │   - Create async thunks (login, signup, logout, fetchUser)              │
+     │   - Define reducers (clearError, setUser)                               │
+     │   - Add extraReducers for async actions                                 │
+     │   - Create selectors                                                    │
+     │ - Create organizationSlice.ts                                           │
+     │   - Define state interface                                              │
+     │   - Create async thunks (fetchOrganization, fetchMembers, etc.)         │
+     │   - Define reducers                                                     │
+     │   - Add extraReducers                                                   │
+     │   - Create selectors                                                    │
+     │ - Update components using authStore                                     │
+     │   - LoginForm.tsx                                                       │
+     │   - SignupForm.tsx                                                      │
+     │   - ProfilePage.tsx                                                     │
+     │   - Navigation components                                               │
+     │ - Update components using organizationStore                             │
+     │   - OrganizationSettings.tsx                                            │
+     │   - TeamMembers.tsx                                                     │
+     │   - InvitationsTable.tsx                                                │
+     │ - Test authentication flow                                              │
+     │ - Test organization management                                          │
+     │                                                                         │
+     │ Phase 3: Medium Complexity (Days 6-8)                                   │
+     │                                                                         │
+     │ - Create proposalsSlice.ts                                              │
+     │   - Define state interface with pagination                              │
+     │   - Create async thunks (fetchProposals, fetchProposal, upload, delete, │
+     │ update)                                                                 │
+     │   - Define reducers (setPage, setCurrentProposal)                       │
+     │   - Add extraReducers                                                   │
+     │   - Create selectors                                                    │
+     │ - Update proposals components                                           │
+     │   - ProposalsList.tsx                                                   │
+     │   - ProposalUpload.tsx                                                  │
+     │   - ProposalCard.tsx                                                    │
+     │   - Pagination component                                                │
+     │ - Test proposal CRUD operations                                         │
+     │ - Test pagination                                                       │
+     │                                                                         │
+     │ Phase 4: Complex Store Refactor (Days 9-14)                             │
+     │                                                                         │
+     │ - Create pricingDataSlice.ts                                            │
+     │   - Define state interface (positions, subcontractors, ODCs, rates)     │
+     │   - Create reducers for CRUD operations                                 │
+     │   - Create selectors                                                    │
+     │ - Create pricingCalculationSlice.ts                                     │
+     │   - Define state interface (positionsAdvanced, aggregates)              │
+     │   - Create recalculate async thunk                                      │
+     │   - Create transformToAdvanced reducer                                  │
+     │   - Create selectors                                                    │
+     │ - Create pricingSaveSlice.ts                                            │
+     │   - Define state interface (isDirty, isSaving, lastSaved)               │
+     │   - Create autoSave async thunk with debounce                           │
+     │   - Create reducers (markDirty, markClean)                              │
+     │   - Create selectors                                                    │
+     │ - Create pricingUISlice.ts                                              │
+     │   - Define state interface (activeTab, advancedMode, expandedPositions) │
+     │   - Create reducers for UI state                                        │
+     │   - Create selectors                                                    │
+     │ - Create pricingCalculations.ts service                                 │
+     │   - Extract calculateFBLR function                                      │
+     │   - Extract transformPositionsToAdvanced function                       │
+     │   - Extract calculateAggregates function                                │
+     │   - Unit test all calculation functions                                 │
+     │ - Update pricing components                                             │
+     │   - PricingWorkspace.tsx (main container)                               │
+     │   - PositionsGrid.tsx (basic mode)                                      │
+     │   - PrimeLaborSection.tsx (advanced mode)                               │
+     │   - SubcontractorSection.tsx                                            │
+     │   - ODCSection.tsx                                                      │
+     │   - PassthroughSection.tsx                                              │
+     │   - RatesSection.tsx                                                    │
+     │ - Test auto-save functionality                                          │
+     │ - Test calculations and recalculation                                   │
+     │ - Test advanced mode transformation                                     │
+     │ - Test Excel export                                                     │
+     │                                                                         │
+     │ Phase 5: Testing & Refinement (Days 15-17)                              │
+     │                                                                         │
+     │ - End-to-end testing                                                    │
+     │   - Complete user flow: signup → upload → edit → export                 │
+     │   - Organization switching                                              │
+     │   - Workspace sharing                                                   │
+     │   - All CRUD operations                                                 │
+     │ - Performance testing                                                   │
+     │   - Large datasets (500+ positions)                                     │
+     │   - Rapid state updates                                                 │
+     │   - Memory leaks check                                                  │
+     │ - Refactoring                                                           │
+     │   - Remove unused Zustand stores                                        │
+     │   - Clean up imports                                                    │
+     │   - Update any remaining references                                     │
+     │ - Documentation                                                         │
+     │   - Update README with Redux patterns                                   │
+     │   - Document slice responsibilities                                     │
+     │   - Document middleware usage                                           │
+     │   - Add inline comments where needed                                    │
+     │                                                                         │
+     │ Final Cleanup                                                           │
+     │                                                                         │
+     │ - Delete old Zustand stores                                             │
+     │ rm -rf frontend/lib/stores/                                             │
+     │ - Remove Zustand dependency                                             │
+     │ npm uninstall zustand                                                   │
+     │ - Update CLAUDE.md with Redux patterns                                  │
+     │ - Commit changes with detailed message                                  │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Critical Files to Modify                                                │
+     │                                                                         │
+     │ New Files to Create                                                     │
+     │                                                                         │
+     │ 1. frontend/lib/redux/store.ts - Redux store configuration              │
+     │ 2. frontend/lib/redux/hooks.ts - Typed hooks                            │
+     │ 3. frontend/lib/redux/middleware/cacheMiddleware.ts                     │
+     │ 4. frontend/lib/redux/middleware/debounceMiddleware.ts                  │
+     │ 5. frontend/lib/redux/middleware/index.ts                               │
+     │ 6. frontend/lib/redux/slices/authSlice.ts                               │
+     │ 7. frontend/lib/redux/slices/proposalsSlice.ts                          │
+     │ 8. frontend/lib/redux/slices/organizationSlice.ts                       │
+     │ 9. frontend/lib/redux/slices/pricingDataSlice.ts                        │
+     │ 10. frontend/lib/redux/slices/pricingCalculationSlice.ts                │
+     │ 11. frontend/lib/redux/slices/pricingSaveSlice.ts                       │
+     │ 12. frontend/lib/redux/slices/pricingUISlice.ts                         │
+     │ 13. frontend/lib/redux/services/pricingCalculations.ts                  │
+     │ 14. frontend/app/providers.tsx - Redux Provider wrapper                 │
+     │                                                                         │
+     │ Files to Update                                                         │
+     │                                                                         │
+     │ Components using authStore:                                             │
+     │ - frontend/app/login/page.tsx                                           │
+     │ - frontend/app/signup/page.tsx                                          │
+     │ - frontend/components/layout/DashboardLayout.tsx                        │
+     │ - frontend/components/layout/Navigation.tsx                             │
+     │                                                                         │
+     │ Components using proposalsStore:                                        │
+     │ - frontend/app/dashboard/page.tsx                                       │
+     │ - frontend/components/proposals/ProposalsList.tsx                       │
+     │ - frontend/components/proposals/ProposalCard.tsx                        │
+     │ - frontend/components/proposals/ProposalUpload.tsx                      │
+     │                                                                         │
+     │ Components using organizationStore:                                     │
+     │ - frontend/app/settings/page.tsx                                        │
+     │ - frontend/components/organization/OrganizationSettings.tsx             │
+     │ - frontend/components/organization/TeamMembers.tsx                      │
+     │ - frontend/components/organization/InvitationsTable.tsx                 │
+     │ - frontend/components/workspace/WorkspaceSwitcher.tsx                   │
+     │                                                                         │
+     │ Components using pricingStore (MOST COMPLEX):                           │
+     │ - frontend/app/proposals/[id]/workspace/page.tsx                        │
+     │ - frontend/components/pricing/PricingWorkspace.tsx                      │
+     │ - frontend/components/pricing/PositionsGrid.tsx                         │
+     │ - frontend/components/pricing/sections/PrimeLaborSection.tsx            │
+     │ - frontend/components/pricing/sections/SubcontractorSection.tsx         │
+     │ - frontend/components/pricing/sections/ODCSection.tsx                   │
+     │ - frontend/components/pricing/sections/PassthroughSection.tsx           │
+     │ - frontend/components/pricing/sections/RatesSection.tsx                 │
+     │ - frontend/components/pricing/AdvancedModeToggle.tsx                    │
+     │                                                                         │
+     │ Root files:                                                             │
+     │ - frontend/app/layout.tsx - Add Redux Provider                          │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Expected Benefits                                                       │
+     │                                                                         │
+     │ After Migration                                                         │
+     │                                                                         │
+     │ 1. Better Debugging:                                                    │
+     │   - Redux DevTools shows action history                                 │
+     │   - Time-travel debugging                                               │
+     │   - State diff visualization                                            │
+     │   - Performance monitoring                                              │
+     │ 2. Improved Maintainability:                                            │
+     │   - Clear action → reducer → state flow                                 │
+     │   - Centralized state logic                                             │
+     │   - Easier to trace bugs                                                │
+     │   - Better separation of concerns                                       │
+     │ 3. Enhanced Testability:                                                │
+     │   - Pure reducer functions                                              │
+     │   - Easy to mock stores                                                 │
+     │   - Predictable state transitions                                       │
+     │   - Snapshot testing support                                            │
+     │ 4. Industry Standard:                                                   │
+     │   - Well-documented patterns                                            │
+     │   - Large community support                                             │
+     │   - Extensive ecosystem                                                 │
+     │   - Career-transferable skills                                          │
+     │ 5. Code Organization:                                                   │
+     │   - 8 focused slices instead of 4 large stores                          │
+     │   - Calculation logic in pure services                                  │
+     │   - Middleware for cross-cutting concerns                               │
+     │   - Clear file structure                                                │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Potential Risks & Mitigation                                            │
+     │                                                                         │
+     │ Risk 1: Breaking Changes                                                │
+     │                                                                         │
+     │ Mitigation: Migrate one slice at a time, keep both systems running      │
+     │ temporarily                                                             │
+     │                                                                         │
+     │ Risk 2: Performance Regression                                          │
+     │                                                                         │
+     │ Mitigation: Use memoized selectors, test with large datasets, monitor   │
+     │ re-renders                                                              │
+     │                                                                         │
+     │ Risk 3: Learning Curve                                                  │
+     │                                                                         │
+     │ Mitigation: Follow Redux Toolkit patterns, extensive documentation, code│
+     │  examples                                                               │
+     │                                                                         │
+     │ Risk 4: Incomplete Migration                                            │
+     │                                                                         │
+     │ Mitigation: Detailed checklist, systematic approach, thorough testing   │
+     │                                                                         │
+     │ ---                                                                     │
+     │ Success Criteria                                                        │
+     │                                                                         │
+     │ Migration is complete when:                                             │
+     │                                                                         │
+     │ 1. ✅ All Zustand stores deleted                                        │
+     │ 2. ✅ All components use Redux hooks                                    │
+     │ 3. ✅ Redux DevTools working                                            │
+     │ 4. ✅ All existing features work                                        │
+     │ 5. ✅ Tests passing                                                     │
+     │ 6. ✅ No performance regressions                                        │
+     │ 7. ✅ Documentation updated                                             │
+     │                                                                         │
+     │ ---                                                                     │
+     │ ---                                                                     │
+     │ Summary                                                                 │
+     │                                                                         │
+     │ This plan provides a complete, production-ready Redux migration strategy│
+     │  that:                                                                  │
+     │                                                                         │
+     │ 1. Installs Redux Toolkit with minimal dependencies                     │
+     │ 2. Creates 7 focused slices from 4 large Zustand stores                 │
+     │ 3. Implements custom middleware for debouncing and caching              │
+     │ 4. Extracts pure calculation logic to testable services                 │
+     │ 5. Provides detailed migration patterns for all component types         │
+     │ 6. Includes comprehensive testing strategy                              │
+     │ 7. Delivers industry-standard architecture with Redux DevTools          │
+     │                                                                         │
+     │ Timeline: 17 days (2-3 weeks) across 5 phases                           │
+     │                                                                         │
+     │ Outcome: Maintainable, testable, debuggable state management with Redux │
+     │ Toolkit - ready for the Ape Emperor's forest of bananas! 🍌             │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     │                                                                         │
+     ╰─────────────────────────────────────────────────────────────────────────╯
+
+> ukw let it be use zustand only its fine 
+
+⏺ Got it! Sticking with Zustand - the current setup works well and no need for a 2-3 week migration. Smart call!
+
+  So what would you like to work on next?
+
+  We had paused the Company Wage Repository feature earlier (custom Excel uploads for wage data, stored in Pinecone + MongoDB). Should we continue with that, or is there something else you'd like to tackle?
+
+> did i tell u about the company repositiroy? 
+
+⏺ Yes, you did! You mentioned it earlier in our conversation. Here's what you explained:
+
+  Company Wage Repository Feature:
+  - Companies sometimes have custom wage data sources (Excel files) instead of using BLS data
+  - The Excel sheets would be parsed and added to Pinecone (SOC code, job title, job description) - similar to how we currently use FAISS for BLS
+  - All other wage data (percentiles, etc.) would go to MongoDB
+  - When agents run, they'd use the wage tool to get data from MongoDB
+  - User chooses the data source per proposal (not org-wide)
+  - Excel format can be flexible
+
+  You clarified the architecture would be similar to the existing BLS implementation, just using Pinecone for vector search instead of FAISS.
+
+  Should we continue with implementing this feature? I can start by looking at the current BLS/FAISS implementation to understand the pattern, then design the Pinecone + custom Excel upload flow.
+
+> yes lets continue w it now 
+
+⏺ Perfect! Let's implement the Company Wage Repository feature. I'll start by exploring the current BLS/FAISS implementation to understand the patterns, then design the Pinecone integration for custom wage sources.
+  ⎿  Interrupted · What should Claude do instead?
+
+> dont implement any thingn ryt now lets first discuss everything and then 
+we will start implementingn 
+
+⏺ Absolutely! Let's discuss everything first and plan it out properly before any implementation.
+
+  Let me start by understanding the feature better:
+
+  Current Understanding:
+  1. Companies upload Excel files with custom wage data
+  2. Data gets parsed and stored in Pinecone (for SOC matching) + MongoDB (for wage values)
+  3. When creating a proposal, user selects which data source to use (BLS or their custom repository)
+  4. Agent uses the selected source for wage lookups
+
+  Questions for Discussion:
+
+  1. Excel Upload UI: Where should users upload these Excel files?
+    - In Organization Settings?
+    - A dedicated "Wage Repository" page?
+    - During proposal creation?
+  2. Multiple Excel Files: You mentioned multiple files are supported
+    - Should they be merged into one company repository?
+    - Or keep them separate and let user pick which file to use per proposal?
+  3. Excel Format: You said it can be flexible
+    - Should we support the exact BLS format (SOC code + percentiles)?
+    - Or allow custom columns and map them during upload?
+    - What's the minimum required data (SOC code, job title, and...?)
+  4. Data Management:
+    - Can users edit/delete uploaded wage data?
+    - Can they see what's in their repository?
+    - Version history if they upload a new file?
+  5. Pinecone Setup:
+    - One Pinecone index per organization?
+    - Or one global index with organization_id filtering?
+    - How to handle namespace/isolation?
+
+  What are your thoughts on these?
+
+> the columns in the excel sheet can be custom they need not follow any 
+pattern 
+
+⏺ Got it! So we need a flexible column mapping system during upload.
+
+  Follow-up questions:
+
+  1. Column Mapping UI: When user uploads Excel, should we:
+    - Show them a preview of their columns
+    - Let them map: "Column A → SOC Code", "Column B → Job Title", etc.
+    - Which fields are required for mapping?
+        - SOC Code (required)
+      - Job Title (required)
+      - Job Description (required for Pinecone matching)
+      - Wage percentiles (25th, 50th, 75th, 90th) - required?
+      - Area/Location - optional?
+      - Years of experience - optional?
+  2. Wage Values: Do they provide:
+    - Annual salary values?
+    - Hourly rates?
+    - Or both?
+    - Multiple percentiles or just one rate?
+  3. Data Source Selection: When/where does user pick between BLS vs Custom Repository?
+    - During proposal upload (when agents process the document)?
+    - After upload, when viewing positions?
+    - Set as org-wide default with per-proposal override?
+  4. Mixed Sources: Can a single proposal use both BLS and custom data?
+    - Like Position 1 uses BLS, Position 2 uses Custom?
+    - Or entire proposal must use one source?
+  5. Repository Management: Should users be able to:
+    - View all their uploaded wage data in a table?
+    - Search/filter their custom repository?
+    - Download what's stored?
+    - Update individual records?
+
+  What's your vision for the user experience?
+
+> no we will have a llm decide that after seeing the excel 
+
+⏺ Ah, smart! LLM automatically determines the column mapping by analyzing the Excel structure. Much better UX.
+
+  So the flow would be:
+  1. User uploads Excel → LLM analyzes columns/data
+  2. LLM identifies: SOC code, job title, job description, wage values, etc.
+  3. Parse and store in Pinecone + MongoDB
+
+  Remaining questions:
+
+  1. LLM Validation/Confirmation: Should we:
+    - Show user what the LLM detected ("I found SOC codes in Column A, Job Titles in Column B...") and let them confirm?
+    - Or just auto-process and trust the LLM?
+  2. Data Source Selection: When does user choose BLS vs Custom Repository?
+    - During proposal upload as an option ("Use Custom Wage Data" checkbox)?
+    - After upload in the workspace?
+    - Set as org default in settings?
+  3. Repository Scope:
+    - One wage repository per organization (all members share)?
+    - Or per-user repositories?
+  4. Multiple Uploads: When they upload multiple Excel files:
+    - All merged into one searchable repository?
+    - Or keep them separate with names ("Q1-2024-Rates.xlsx", "Client-ABC-Wages.xlsx")?
+  5. Pinecone Index Strategy:
+    - One global Pinecone index with organization_id metadata filtering?
+    - Or separate index per organization?
+
+  What's your preference on these?
+
+> Data Source Selection duringn upload user will get option whether bls or 
+any of the various excel files\
+ a repository can have various excel files\
+keep them separate with names during upload user can choose whicch they want
+ \
+One global Pinecone index with organization_id metadata filtering? 
+
+⏺ Perfect! Clear picture now:
+
+  Flow:
+  1. User uploads Excel files to their org's wage repository (keeps file names)
+  2. During proposal upload, user selects data source:
+    - BLS (default)
+    - "Q1-2024-Rates.xlsx"
+    - "Client-ABC-Wages.xlsx"
+    - etc.
+  3. Agent uses selected source for all positions in that proposal
+
+  Pinecone Structure:
+  - Global index with metadata: {organization_id, file_id, soc_code, job_title, job_description}
+
+  Final clarifications:
+
+  1. LLM Extraction: When LLM analyzes Excel:
+    - Just show success/error message?
+    - Or show preview: "Found 50 job titles, 45 have SOC codes, 48 have wage data"?
+    - What if LLM can't extract required fields - show error and reject upload?
+  2. Repository Management UI: Where should this live?
+    - New page: "Wage Repository" in sidebar?
+    - Under Organization Settings?
+    - Should show list of uploaded files with:
+        - File name
+      - Upload date
+      - Number of records
+      - Delete button
+  3. MongoDB Schema: Store as:
+    - New collection custom_wage_data with fields: {organization_id, file_id, file_name, soc_code, job_title, area, wage_25, wage_50, wage_75, ...}?
+    - Or keep in existing wage_data collection with source type flag?
+  4. Mixed Sources in One Proposal: Can user change data source after upload?
+    - Or locked once proposal is created?
+
+  What do you think?
+
+> not user only adminn can upload 
+
+⏺ Got it! Admin-only for uploading wage repository files.
+
+  So access control:
+  - Admin: Can upload/delete Excel files in wage repository
+  - All users (admin + regular): Can select which data source to use during proposal upload
+
+  Updated questions:
+
+  1. LLM Extraction Feedback: When admin uploads Excel:
+    - Show preview: "Found 50 records, 45 with SOC codes, 48 with wages"?
+    - Or just "Upload successful - 50 records added"?
+    - If LLM fails to extract required fields → show error and reject?
+  2. Repository Management Page:
+    - Location: Organization Settings (admin-only section)?
+    - Shows table: File Name | Upload Date | Records | Actions
+    - Actions: Download, Delete (admin only)
+  3. MongoDB Schema:
+    - New collection custom_wage_data:
+    {
+    organization_id: ObjectId,
+    file_id: str,  # unique per file
+    file_name: str,  # "Q1-2024-Rates.xlsx"
+    soc_code: str,
+    job_title: str,
+    job_description: str,
+    wage_25: float,
+    wage_50: float,
+    wage_75: float,
+    wage_90: float,
+    annual_mean_wage: float,
+    area: str,  # optional
+    uploaded_by: ObjectId,
+    created_at: datetime
+  }
+  4. Source Change: After proposal is created with custom source, can user/admin:
+    - Switch individual positions to different source (BLS or another Excel)?
+    - Or entire proposal locked to original source?
+  5. File Deletion: If admin deletes an Excel file from repository:
+    - What happens to proposals using that source?
+    - Block deletion if proposals depend on it?
+    - Or allow deletion and mark proposals as "source unavailable"?
+
+  Your thoughts?
+
+> soc_code: str,
+    job_title: str,
+    job_description: str,
+    wage_25: float,
+    wage_50: float,
+    wage_75: float,
+    wage_90: float,
+    annual_mean_wage: float,
+    area: str,  # optional\
+\
+all this data is optional some file may have some may not 
+
+⏺ Perfect! So the schema is fully flexible - LLM extracts whatever is available.
+
+  Updated MongoDB Schema (all optional except IDs):
+  {
+    organization_id: ObjectId,  # required
+    file_id: str,  # required, unique per file
+    file_name: str,  # required
+    soc_code: str,  # optional
+    job_title: str,  # optional
+    job_description: str,  # optional
+    wage_25: float,  # optional
+    wage_50: float,  # optional
+    wage_75: float,  # optional
+    wage_90: float,  # optional
+    annual_mean_wage: float,  # optional
+    area: str,  # optional
+    uploaded_by: ObjectId,  # required
+    created_at: datetime  # required
+  }
+
+  Questions:
+
+  1. Minimum Required Data: For upload to be successful, what's the absolute minimum?
+    - At least SOC code OR job title?
+    - Or can a row have neither (and we still store it)?
+  2. Pinecone Vector Search: For SOC matching, we need text to embed:
+    - If file has job_description → use it
+    - If no description but has job_title → use title
+    - If neither → skip that row for Pinecone (but keep in MongoDB)?
+  3. Agent Wage Lookup: When agent finds a match but wage data is missing:
+    - Show "N/A" in the position?
+    - Fall back to BLS for that specific position?
+    - Mark it as requiring manual entry?
+  4. LLM Extraction Success: Upload considered successful if:
+    - LLM extracts at least 1 valid row with some data?
+    - Or need minimum X% of rows to have valid data?
+
+  What's your approach?
+
+> the llm will only tell what coloumn in the excel maps to what of our 
+column u understanding what i am saying 
+
+⏺ Ah yes! Got it now!
+
+  The LLM does column mapping, not value extraction:
+
+  1. Admin uploads Excel with columns like: "Position Title", "SOC", "Median Pay", "75th Percentile", etc.
+  2. LLM analyzes column headers and creates mapping:
+  {
+    "Position Title" → "job_title",
+    "SOC" → "soc_code",
+    "Median Pay" → "wage_50",
+    "75th Percentile" → "wage_75",
+    ...
+  }
+  3. We parse Excel rows using that mapping and store in MongoDB
+
+  Questions:
+
+  1. Mapping Confirmation: Should admin see the LLM's column mapping before confirming?
+    - Show: "I mapped 'Position Title' → Job Title, 'SOC' → SOC Code..."
+    - Let them edit if wrong?
+    - Or auto-apply without confirmation?
+  2. Unmapped Columns: If Excel has columns LLM can't map to our schema:
+    - Ignore those columns?
+    - Or store as extra_data JSON field?
+  3. Missing Columns: If Excel doesn't have certain fields (like wage_75, area):
+    - Just leave them null in MongoDB?
+    - Store only what's available?
+  4. Multiple Sheets: If Excel has multiple sheets:
+    - Process all sheets?
+    - Only first sheet?
+    - Let admin select which sheet?
+
+  What do you prefer?
+
+> analyse this doc pls and tell me wht it is '/Users/keshav/Downloads/Sample
+ Company GSA Labor Rate.rtf' 
+
+⏺ Read(~/Downloads/Sample Company GSA Labor Rate.rtf)
+  ⎿  Error reading file
+
+⏺ Read(~/Downloads/Sample Company GSA Labor Rate.rtf)
+  ⎿  Read 100 lines
+
+⏺ Let me read more of the file to get past the RTF formatting header:
+
+⏺ Read(~/Downloads/Sample Company GSA Labor Rate.rtf)
+  ⎿  Error: File content (27456 tokens) exceeds maximum allowed tokens (25000). 
+     Please use offset and limit parameters to read specific portions of the 
+     file, or use the GrepTool to search for specific content.
+
+⏺ The file is quite large. Let me search for key content to understand its structure:
+
+⏺ Search(pattern: "Labor Category|SOC|LABOR CATEGORY|Position|JOB TITLE", path:
+        "~/Downloads/Sample Company GSA Labor Rate.rtf", output_mode: "content",
+         head_limit: 20)
+  ⎿  Found 20 lines (ctrl+o to expand)
+
+⏺ Bash(textutil -convert txt '/Users/keshav/Downloads/Sample Company GSA Labor
+      Rate.rtf' -output /tmp/converted.txt && head -100 /tmp/converted.txt)
+  ⎿  GENERAL SERVICES ADMINISTRATION                  
+     FEDERAL ACQUISITION SERVICE
+     AUTHORIZED FEDERAL SUPPLY SCHEDULE FSS PRICE LIST
+     … +111 lines (ctrl+o to expand)
+
+⏺ Bash(tail -200 /tmp/converted.txt | head -100)
+  ⎿  $167.07                       
+     $170.25
+     $173.48
+     … +97 lines (ctrl+o to expand)
+
+⏺ Bash(grep -n "Year 1\|Year 2\|Year 3\|Labor Category\|SIN" /tmp/converted.txt
+      | head -20)
+  ⎿  45:1a. Table of awarded special item numbers (SINs)      
+     69:1b. Lowest priced model number and price for each SIN:
+     219:SIN
+     … +5 lines (ctrl+o to expand)
+
+⏺ Bash(sed -n '984,1020p' /tmp/converted.txt)
+  ⎿  SIN                           
+     Labor Category Title
+     Year 6
+     … +34 lines (ctrl+o to expand)
+
+⏺ Bash(sed -n '219,300p' /tmp/converted.txt)
+  ⎿  SIN                            
+     Labor Category Title
+     Labor Category Description
+     … +171 lines (ctrl+o to expand)
+
+⏺ Perfect! Now I understand. This is a GSA (General Services Administration) Federal Supply Schedule - a government contract document showing labor categories and their hourly rates.
+
+  Document Structure:
+
+  Section 1 - Labor Category Details:
+  - SIN (Special Item Number) - like "541330ENG", "54151S"
+  - Labor Category Title - "Database Administrator Senior", "Software Developer Intermediate"
+  - Labor Category Description - detailed job duties
+  - Minimum Education - "Bachelors", "Masters", "Associates"
+  - Minimum Years of Experience - "0", "2", "5", "10+"
+
+  Section 2 - Pricing Table (hourly rates):
+  - SIN
+  - Labor Category Title
+  - Year 6, Year 7, Year 8, Year 9, Year 10 (escalated hourly rates)
+
+  Example rates:
+  - IT Administrator Senior: $150.41, $153.27, $156.18, $159.15, $162.18
+  - Software Developer Intermediate: $99.52, $101.41, $103.34, $105.30, $107.30
+
+  Key Observations for Company Repository Feature:
+
+  1. Very different from BLS format - uses SIN instead of SOC, hourly rates instead of annual, multi-year escalation
+  2. Rich metadata - education requirements, experience levels, detailed job descriptions
+  3. Contract-specific rates - often higher than BLS market rates
+  4. This is exactly what companies need!
+
+  So for the wage repository feature, the LLM needs to be smart enough to handle various formats:
+  - GSA schedules (like this)
+  - BLS-style data
+  - Custom company rate sheets
+  - Different column names, structures, etc.
+
+  Does this example help clarify what we need to build?
+
+> i asked my boss this [18/12/25, 9:04:57 PM] Keshav Garg: the document that
+ u sent me has the solicitation doc as well as the price list ryt
+[18/12/25, 9:24:52 PM] ~Parth: It’s not a solicitation doc it’s a contract 
+example
+
+So GSA when you win a contract they assign rates for labor rates depending 
+on the GSA contract you win
+
+So they include the rates in that contract so whenever you go bid for a GSA 
+solicitation you have to use these rates to bid 
+
+⏺ Perfect! Now I fully understand. Let me clarify the use case:
+
+  What That Document Is:
+
+  GSA Contract with Approved Labor Rates (NOT a solicitation):
+  1. Company wins a GSA contract
+  2. GSA approves specific hourly rates for each labor category
+  3. These rates are locked into the contract for the contract period (e.g., 10 years with escalation)
+  4. When bidding on GSA solicitations, the company MUST use these pre-approved rates
+
+  Why Company Wage Repository is Critical:
+
+  The Real Use Case:
+  - Company has GSA contract → has approved rate sheet
+  - Company wants to bid on a GSA solicitation
+  - They cannot use BLS rates - they must use their GSA-approved rates
+  - They upload their GSA contract rate sheet to wage repository
+  - When creating proposal, they select "GSA Contract Rates" as data source
+  - System uses those rates (not BLS) to build the pricing
+
+  Updated Understanding:
+
+  So the wage repository feature is for:
+  1. GSA contract holders - storing their approved GSA rates
+  2. Custom company rate sheets - internal/proprietary rates
+  3. Client-specific rate agreements - negotiated rates with specific clients
+
+  This is much clearer now! The LLM needs to be smart enough to parse:
+  - GSA contract rate sheets (like the example)
+  - BLS-style data
+  - Any custom format companies use
+
+  Should we continue designing the feature with this understanding?
+
+> explain to me in detail in extremely easy language in story mode 
+
+⏺ The Company Wage Repository Story 📖
+
+  Chapter 1: The Old Way (How It Works Now)
+
+  Meet Sarah, a proposal manager at Tech Solutions Inc.
+
+  Sarah's company just got a project document from the government. It says:
+  - "We need 5 Software Developers"
+  - "We need 2 Project Managers"
+  - "We need 3 Database Administrators"
+
+  Sarah uploads this document to PriceIQ. Here's what happens:
+
+  1. PriceIQ reads the document 📄
+    - "Oh, they need Software Developers!"
+  2. PriceIQ looks up wages from BLS (Bureau of Labor Statistics) 📊
+    - "According to government salary data, Software Developers make $95,000/year"
+    - "That's about $45.67 per hour"
+  3. PriceIQ creates the proposal 💼
+    - Software Developer: $45.67/hour × 2080 hours = $95,000/year
+    - Shows this in a nice spreadsheet
+
+  Sarah submits the proposal. Done! ✅
+
+  ---
+  Chapter 2: The Problem 🚨
+
+  One day, Sarah's boss comes to her:
+
+  Boss: "Sarah, great news! We just won a GSA contract!"
+
+  Sarah: "That's awesome! What's a GSA contract?"
+
+  Boss: "It's a special agreement with the government. They said: 'Tech Solutions Inc., you can work on government projects for the next 10 years. But here are the EXACT prices you MUST charge:'"
+
+  Software Developer: $120.50/hour
+  Project Manager: $180.75/hour
+  Database Administrator: $105.25/hour
+
+  Sarah: "Wait, those are higher than BLS rates!"
+
+  Boss: "Exactly! The government approved OUR special rates. Whenever we bid on GSA projects, we MUST use these rates, not BLS rates."
+
+  Sarah: "Oh no... PriceIQ only knows about BLS rates. How do I use our GSA rates?"
+
+  Boss: "That's the problem." 😰
+
+  ---
+  Chapter 3: What Sarah Needs (The Solution)
+
+  Sarah thinks: "I wish PriceIQ had a place where I could upload OUR company's rate sheet..."
+
+  What Sarah Wants:
+
+  Step 1: Upload Company Rates (One-time setup)
+  - Sarah (as admin) goes to PriceIQ
+  - She uploads her GSA contract document (the PDF with all the rates)
+  - She names it: "GSA Contract 2020-2030"
+  - PriceIQ says: "Got it! I found 50 job titles with rates. Saved!" ✅
+
+  Step 2: Use Company Rates When Creating Proposals
+  - Sarah gets a new government project document
+  - She uploads it to PriceIQ
+  - NEW DROPDOWN APPEARS: "Which wage data should I use?"
+    - ☐ BLS Government Data (default)
+    - ☑ GSA Contract 2020-2030 ✨
+
+  Sarah picks "GSA Contract 2020-2030"
+
+  Step 3: PriceIQ Works Its Magic 🪄
+  - PriceIQ reads: "They need Software Developer"
+  - Instead of looking at BLS → PriceIQ looks at "GSA Contract 2020-2030"
+  - Finds: "Software Developer: $120.50/hour"
+  - Creates proposal with $120.50/hour ✅
+
+  ---
+  Chapter 4: The Magic Behind The Scenes 🎩✨
+
+  Let me explain what PriceIQ does when Sarah uploads her GSA contract:
+
+  The Upload Process:
+
+  Sarah uploads a file called "GSA_Contract_2020.pdf"
+
+  This file looks messy inside:
+  Labor Category: Software Developer Senior
+  Year 6: $115.50/hour
+  Year 7: $118.25/hour
+  Education: Bachelor's
+  Experience: 5+ years
+
+  Labor Category: Project Manager
+  Year 6: $180.75/hour
+  Year 7: $184.50/hour
+  ...
+
+  Problem: Every company's file is different!
+  - Company A has columns: "Job Title", "Hourly Rate", "Salary"
+  - Company B has columns: "Position", "Year 1 Rate", "Year 2 Rate"
+  - GSA contracts have: "Labor Category Title", "Year 6", "Year 7"
+
+  How does PriceIQ know which column is which? 🤔
+
+  ---
+  Chapter 5: The Smart Robot (LLM to the Rescue) 🤖
+
+  PriceIQ has a smart robot (LLM) that reads the file and figures it out:
+
+  Smart Robot looks at the file:
+  Column A: "Labor Category Title"
+  Column B: "Year 6"
+  Column C: "Year 7"
+  Column D: "Minimum Education"
+
+  Smart Robot thinks:
+  - "Hmm, 'Labor Category Title' looks like a job title → I'll map this to job_title"
+  - "'Year 6' has dollar amounts → that's probably hourly_rate"
+  - "'Minimum Education' → that's education"
+
+  Smart Robot creates a mapping:
+  {
+    "Labor Category Title" → "job_title",
+    "Year 6" → "hourly_rate",
+    "Minimum Education" → "education"
+  }
+
+  Then PriceIQ stores in database:
+  {
+    organization_id: "tech-solutions",
+    file_name: "GSA_Contract_2020.pdf",
+    records: [
+      {
+        job_title: "Software Developer Senior",
+        hourly_rate: 115.50,
+        education: "Bachelor's"
+      },
+      {
+        job_title: "Project Manager",
+        hourly_rate: 180.75,
+        education: "Master's"
+      }
+    ]
+  }
+
+  ---
+  Chapter 6: Finding the Right Job (Vector Search with Pinecone) 🔍
+
+  Here's another problem Sarah faces:
+
+  The government document says:
+  "We need a Full Stack Engineer"
+
+  But Sarah's GSA contract has:
+  "Software Developer Senior"
+
+  They're the same job, but different names! 😱
+
+  How does PriceIQ match them?
+
+  Enter: Pinecone (The Smart Matcher)
+
+  What happens:
+
+  1. PriceIQ takes the job description from government doc:
+  "Full Stack Engineer - Builds web applications,
+  works with databases, creates APIs..."
+  2. Pinecone looks through Sarah's GSA rates:
+  - Software Developer Senior: "Builds applications, designs systems..."
+  - Project Manager: "Manages teams, schedules..."
+  - Database Admin: "Maintains databases, backups..."
+  3. Pinecone says: "Full Stack Engineer sounds most like Software Developer Senior!" ✅
+  4. PriceIQ uses that rate: $115.50/hour
+
+  It's like Google search, but for job titles!
+
+  ---
+  Chapter 7: The Complete Flow (Putting It All Together) 🎯
+
+  Let me walk you through Sarah's full experience:
+
+  Monday Morning: Setup (One Time)
+
+  Sarah (Admin):
+  1. Logs into PriceIQ
+  2. Goes to "Wage Repository" page
+  3. Clicks "Upload Rate Sheet"
+  4. Uploads "GSA_Contract_2020.pdf"
+  5. Sees message: "Processing... Found 50 labor categories with rates. Saved as 'GSA Contract 2020-2030'"
+
+  Behind the scenes:
+  - LLM reads PDF, figures out columns
+  - Data goes to MongoDB (database)
+  - Job descriptions go to Pinecone (smart search)
+
+  ---
+  Tuesday: Creating a Proposal
+
+  Sarah gets new project:
+  Government wants to hire people for a cybersecurity project.
+
+  Sarah:
+  1. Uploads government document to PriceIQ
+  2. Sees NEW DROPDOWN:
+  📋 Select Wage Data Source:
+  ○ BLS Government Data
+  ● GSA Contract 2020-2030  ← Sarah picks this!
+  3. Clicks "Process"
+
+  PriceIQ's Agent (the worker robot):
+  - Reads document: "They need Cyber Security Analyst Expert"
+  - Sarah selected GSA rates, so...
+    - Searches Pinecone: "Find jobs similar to 'Cyber Security Analyst Expert' in GSA Contract 2020-2030"
+    - Pinecone responds: "Best match: Cyber Security Analyst Expert - $195.50/hour"
+    - Gets wage from MongoDB: $195.50/hour
+  - Builds proposal with that rate
+
+  Sarah sees the result:
+  Position: Cyber Security Analyst Expert
+  Hourly Rate: $195.50
+  Source: GSA Contract 2020-2030 ✅
+
+  Perfect!
+
+  ---
+  Chapter 8: Multiple Companies, Multiple Rates 🏢
+
+  Sarah's company is smart. They have:
+
+  1. GSA Contract 2020-2030 (for government work)
+  2. Amazon Rate Sheet (custom rates for Amazon projects)
+  3. Internal Rates 2025 (for budgeting internal projects)
+
+  Each project, Sarah picks which rates to use:
+
+  - Government project → Uses "GSA Contract 2020-2030"
+  - Amazon project → Uses "Amazon Rate Sheet"
+  - Internal project → Uses "Internal Rates 2025"
+
+  All stored separately! Each file has its own rates.
+
+  ---
+  Chapter 9: The Technical Magic (For You, The Developer) 🛠️
+
+  Now let me explain how this actually works in the system:
+
+  Architecture:
+
+  1. Admin uploads Excel/PDF → API receives file
+
+  2. LLM analyzes file:
+     - "This column is job title"
+     - "This column is hourly rate"
+     - Creates mapping
+
+  3. Data is split into two places:
+
+     A) MongoDB (Database):
+        - Stores: rates, education, experience
+        - Fast lookup by ID
+
+     B) Pinecone (Vector Database):
+        - Stores: job titles, descriptions
+        - Smart search (finds similar jobs)
+
+  4. When processing proposal:
+     - User picks: "GSA Contract 2020-2030"
+     - Agent searches Pinecone with job description
+     - Gets best match ID
+     - Fetches rate from MongoDB
+     - Builds proposal
+
+  Why Two Databases?
+
+  MongoDB (Regular Database):
+  - Good at: "Give me the rate for job ID #12345"
+  - Fast, simple lookups
+  - Stores structured data (numbers, dates)
+
+  Pinecone (Vector Search):
+  - Good at: "Find jobs similar to 'Full Stack Developer'"
+  - AI-powered matching
+  - Understands meaning, not just keywords
+
+  Together: They're unstoppable! 💪
+
+  ---
+  Chapter 10: Your Questions Answered ❓
+
+  Q: What if Sarah's file has weird columns?
+
+  A: The LLM is smart enough to figure it out!
+
+  Example weird file:
+  Col A: "Position Name" (LLM: "This is job_title")
+  Col B: "Yr1 Pay" (LLM: "This is hourly_rate")
+  Col C: "Degree Needed" (LLM: "This is education")
+
+  Q: What if LLM gets it wrong?
+
+  A: Show Sarah a preview:
+  I found these mappings:
+  - "Position Name" → Job Title ✓
+  - "Yr1 Pay" → Hourly Rate ✓
+  - "Degree Needed" → Education ✓
+
+  Looks good? [Confirm] [Edit]
+
+  Q: Can Sarah delete old rate sheets?
+
+  A: Yes! But we warn her:
+  ⚠️ Warning: 3 proposals are using "GSA Contract 2020-2030"
+  If you delete this, those proposals will show "Source Unavailable"
+
+  [Cancel] [Delete Anyway]
+
+  Q: Can regular users upload rates?
+
+  A: No! Only admins. Because rates are sensitive company data.
+
+  But all users can choose which rate sheet to use when creating proposals.
+
+  ---
+  The End! 🎬
+
+  Summary for you (the developer):
+
+  The Company Wage Repository is like giving Sarah a filing cabinet where she can:
+  1. Store her company's custom rate sheets
+  2. Pick which rates to use for each project
+  3. Let PriceIQ automatically match jobs and find the right rates
+
+  Instead of:
+  - Always using BLS (government data)
+
+  She can now use:
+  - GSA contract rates
+  - Client-specific rates
+  - Internal company rates
+  - Any custom rate sheet
+
+  The magic:
+  - LLM figures out the columns
+  - Pinecone finds matching jobs
+  - MongoDB stores the rates
+  - Everyone is happy! 🎉
+
+  ---
+  Does this story make sense? Should I explain any part in more detail?
+
+> what do u mean by GSA contract! 
+
+⏺ What is a GSA Contract? (Super Simple Explanation) 📚
+
+  The Story of Tech Solutions Inc. and The Government
+
+  Scene 1: How Companies Usually Sell to Government
+
+  Imagine this:
+
+  You own a company called "Tech Solutions Inc." You hire programmers and send them to work on projects.
+
+  One day, the FBI calls you:
+  - FBI: "Hey, we need 10 programmers for 6 months. How much?"
+  - You: "Each programmer costs $100/hour"
+  - FBI: "Okay, but first we need to check if you're legit..."
+
+  What happens next (the nightmare):
+  1. FBI does background check on your company (takes 3 months)
+  2. FBI negotiates prices with you (takes 2 months)
+  3. FBI does paperwork (takes 2 months)
+  4. FBI lawyers review contract (takes 1 month)
+
+  Total: 8 months just to start working! 😱
+
+  Then NASA calls you:
+  - NASA: "We also need programmers!"
+  - You: "Great!"
+  - NASA: "But first, let us do background checks..."
+
+  Oh no! Another 8 months! 😭
+
+  Every government agency (FBI, NASA, Army, etc.) has to do their own paperwork with you separately. It's crazy slow!
+
+  ---
+  Scene 2: Enter GSA (The Problem Solver)
+
+  GSA = General Services Administration
+
+  Think of GSA as a "Pre-Approved Vendor List" for the entire US government.
+
+  Here's what GSA does:
+
+  GSA says: "Hey Tech Solutions Inc., instead of negotiating with FBI, NASA, Army separately... negotiate with US ONE TIME. We'll do all the checking and paperwork once. Then ALL government agencies can hire you easily!"
+
+  ---
+  Scene 3: Getting a GSA Contract (The Big Deal)
+
+  Tech Solutions Inc. decides to get a GSA contract:
+
+  Step 1: The Application (Hard Part)
+
+  Tech Solutions applies to GSA:
+  - Shows company history
+  - Proves they're qualified
+  - Shows past projects
+  - Gets background checks
+  - Provides financial records
+
+  GSA investigates everything (takes 6-12 months)
+
+  Step 2: Price Negotiation
+
+  GSA and Tech Solutions negotiate prices:
+
+  GSA: "What do you charge for a Software Developer?"
+  Tech Solutions: "I want $150/hour"
+  GSA: "Too expensive. How about $120/hour?"
+  Tech Solutions: "Okay, deal."
+
+  They do this for EVERY job type:
+  Software Developer: $120/hour ✓
+  Senior Developer: $145/hour ✓
+  Project Manager: $180/hour ✓
+  Database Admin: $105/hour ✓
+
+  Step 3: The Contract is Signed!
+
+  GSA creates a contract that says:
+
+  "Tech Solutions Inc. is APPROVED to work with any US Government agency for the next 10 years. Here are their approved rates:
+  - Software Developer: $120/hour
+  - Senior Developer: $145/hour
+  - Project Manager: $180/hour
+
+  These rates will increase 2% each year.
+
+  Contract Number: 47QTCA20D003R"
+
+  This is the GSA CONTRACT! 🎉
+
+  ---
+  Scene 4: Life After GSA Contract (The Easy Part)
+
+  Now that Tech Solutions has a GSA contract, here's what happens:
+
+  FBI calls again:
+
+  FBI: "We need 10 programmers!"
+  Tech Solutions: "Great! We have a GSA contract. Here are our pre-approved rates."
+  FBI: "Perfect! You're already approved. Let's start next week!"
+
+  Done in 1 week instead of 8 months! ✅
+
+  NASA calls:
+
+  NASA: "We need programmers too!"
+  Tech Solutions: "We have GSA contract #47QTCA20D003R"
+  NASA: "Oh you're pre-approved! When can you start?"
+
+  Done in 1 week! ✅
+
+  Army calls:
+
+  Army: "Us too!"
+  Tech Solutions: "GSA contract #47QTCA20D003R"
+  Army: "Perfect!"
+
+  Done in 1 week! ✅
+
+  ---
+  Scene 5: The Important Rules
+
+  Here's the catch:
+
+  When Tech Solutions got their GSA contract, they agreed to specific prices. THEY MUST USE THOSE PRICES.
+
+  Example:
+
+  FBI: "We need a Software Developer"
+  Tech Solutions: "According to our GSA contract, that's $120/hour"
+  FBI: "Can you give us a discount? $100/hour?"
+  Tech Solutions: "NO! GSA says we must charge $120/hour. That's the deal."
+
+  They CANNOT change the prices! The prices are locked in the contract.
+
+  ---
+  Scene 6: Back to Sarah's Problem
+
+  Remember Sarah from before? Now you understand her problem:
+
+  Sarah's company has a GSA contract that says:
+  Software Developer: $120.50/hour (LOCKED PRICE)
+  Project Manager: $180.75/hour (LOCKED PRICE)
+
+  When the FBI gives them a project:
+  - Sarah MUST use the GSA rates ($120.50/hour)
+  - She CANNOT use BLS rates ($95/hour)
+  - She CANNOT make up her own rates
+
+  But PriceIQ only knows BLS rates!
+
+  That's why Sarah needs the "Company Wage Repository" - so she can upload her GSA contract rates and use them!
+
+  ---
+  Real World Example: The Document You Saw
+
+  Remember the document your boss sent you? Let me show you what it really is:
+
+  That document is a GSA CONTRACT for a real company.
+
+  Look at the first page:
+  Contract Number: 47QTCA20D003R
+  Company: Intrepix LLC
+  Period: December 30, 2019 through December 29, 2029
+
+  This company is approved to work with US Government.
+  Here are their prices:
+  - IT Administrator Senior: $150.41/hour
+  - Software Developer: $99.52/hour
+  - ...
+
+  What this means:
+  - Intrepix LLC applied to GSA
+  - GSA approved them
+  - GSA said: "For the next 10 years, you can charge these rates to any government agency"
+  - Whenever FBI/NASA/Army needs programmers → they can hire Intrepix at these exact rates
+  - Intrepix MUST use these rates (cannot charge more or less)
+
+  ---
+  Why Companies Want GSA Contracts
+
+  Benefits:
+
+  1. Fast Sales ✅
+    - No 8-month wait for each agency
+    - Pre-approved = instant trust
+  2. More Customers ✅
+    - Any government agency can hire you
+    - FBI, NASA, Army, Navy, etc.
+  3. Stable Business ✅
+    - 10-year contract
+    - Guaranteed rates
+    - Annual escalation (price increases each year)
+  4. Higher Rates ✅
+    - GSA rates are often higher than market rates
+    - Government pays premium for pre-approved vendors
+
+  Example:
+
+  Without GSA:
+  - Company charges $95/hour for developers
+  - Spends 8 months negotiating with each agency
+  - Gets maybe 2-3 government clients per year
+
+  With GSA:
+  - Company charges $120/hour (approved rate)
+  - Can work with ANY government agency immediately
+  - Gets 20-30 government clients per year
+  - Makes more money! 💰
+
+  ---
+  The Full Picture
+
+  Let me put it all together:
+
+  The Government's Problem:
+
+  "We have 100+ agencies. We can't spend 8 months vetting every vendor for every project. Too slow!"
+
+  GSA's Solution:
+
+  "We'll create a pre-approved vendor list! Vendors apply once, we check them once, then ALL agencies can hire them instantly!"
+
+  What GSA Contract Is:
+
+  A document that says:
+  - ✅ "This company is approved"
+  - ✅ "Here are their locked-in rates"
+  - ✅ "Any government agency can hire them"
+  - ✅ "Contract valid for 10 years"
+
+  Why Sarah Needs Company Wage Repository:
+
+  - Her company has GSA contract with approved rates
+  - When bidding on government projects, she MUST use those rates
+  - PriceIQ currently only knows BLS rates
+  - She needs to upload her GSA rates so PriceIQ can use them
+
+  ---
+  Simple Analogy
+
+  Think of GSA like Costco Membership:
+
+  Without Costco Membership:
+  - You go to regular stores
+  - Each store checks your credit card separately
+  - Slow checkout
+
+  With Costco Membership:
+  - You apply once, get approved once
+  - Can shop at ANY Costco nationwide
+  - Fast checkout (they already know you)
+  - Get special member prices
+
+  GSA Contract = Government Costco Membership!
+  - Apply once, get approved once
+  - Can work with ANY government agency
+  - Fast hiring (they already know you)
+  - Get locked-in contract prices
+
+  ---
+  Final Summary
+
+  GSA Contract in 3 sentences:
+
+  1. It's a pre-approval from the US Government that lets your company work with any government agency (FBI, NASA, Army, etc.) without re-applying each time.
+  2. It includes locked-in prices that your company MUST charge for the next 10 years (e.g., Software Developer = $120/hour, cannot change).
+  3. That document your boss sent was a real company's GSA contract showing their approved rates - Sarah needs to upload HER company's GSA contract rates into PriceIQ so she can use them instead of BLS rates.
+
+  ---
+  Does that make sense now? 😊
+
+> yes it does makes sense now i have a few confirmations that my boss will 
+send me and after that we can start implementing 
+
+⏺ Perfect! That makes sense.
+
+  Take your time to get those confirmations from your boss. Once you have the answers, we can start designing and implementing the Company Wage Repository feature with full clarity.
+
+  When you're ready, we'll need to finalize:
+  1. LLM column mapping - auto-apply or show preview for confirmation?
+  2. Repository management UI location (Organization Settings or separate page?)
+  3. What happens to proposals when a wage file is deleted?
+  4. Any other specific requirements from your boss
+
+  Just let me know when you have the confirmations and we'll dive into implementation! 🚀
+
+> since we will get a pdf instead of excel ig we will  need to use 
+llamaparse here as well 
+
+⏺ Absolutely right! Good catch! 🎯
+
+  Since you'll be receiving PDFs (like that GSA contract document), you'll definitely need LlamaExtract to parse them first.
+
+  Updated Flow:
+
+  Current Implementation (Proposal Upload):
+
+  PDF → LlamaExtract → Structured JSON → GPT-4 Agent → Positions with wages
+
+  New Implementation (Wage Repository Upload):
+
+  PDF → LlamaExtract → Structured Tables → GPT-4 Column Mapping → MongoDB + Pinecone
+
+  Architecture:
+
+  Step 1: Admin uploads GSA contract PDF
+  # Backend receives: GSA_Contract_2020.pdf
+
+  Step 2: LlamaExtract parses the PDF
+  # client/llama_extract.py
+  result = llama_extract.extract_tables(pdf_file)
+
+  # Returns structured data:
+  {
+    "tables": [
+      {
+        "headers": ["SIN", "Labor Category Title", "Year 6", "Year 7"],
+        "rows": [
+          ["54151S", "Software Developer Senior", "$115.50", "$118.25"],
+          ["54151S", "Project Manager", "$180.75", "$184.50"]
+        ]
+      }
+    ]
+  }
+
+  Step 3: GPT-4 analyzes and maps columns
+  # LLM prompt:
+  "Analyze this table and map columns to our schema:
+  - job_title
+  - hourly_rate (or annual_wage)
+  - soc_code (optional)
+  - education (optional)
+  - experience (optional)"
+
+  # LLM response:
+  {
+    "mapping": {
+      "Labor Category Title": "job_title",
+      "Year 6": "hourly_rate",
+      "SIN": "category"
+    }
+  }
+
+  Step 4: Store in MongoDB + Pinecone
+  # MongoDB: wage values
+  # Pinecone: job descriptions for vector search
+
+  Questions to Confirm with Your Boss:
+
+  1. File Format Support:
+    - PDF only? (like GSA contracts)
+    - Or also support Excel/CSV?
+    - Both?
+  2. Multi-page PDFs:
+    - GSA contracts can be 50+ pages with tables spanning multiple pages
+    - Should we handle multi-page tables?
+  3. Table Detection:
+    - Some PDFs have multiple tables (descriptions table + rates table)
+    - Which table should we use? Or combine them?
+
+  Get these confirmations and we'll be ready to implement! 👍
+
+> /model 
+  ⎿  Set model to us.anthropic.claude-opus-4-5-20251101-v1:0
+
+
+

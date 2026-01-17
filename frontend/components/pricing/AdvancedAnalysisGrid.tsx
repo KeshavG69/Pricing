@@ -2,21 +2,30 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { usePricingStore } from '@/lib/stores/pricingStore';
-import { ODCItem } from '@/types';
+import { TravelItem, ODCItem } from '@/types';
 import PrimeLaborSection from './sections/PrimeLaborSection';
 import PrimeLaborAggregatesSection from './sections/PrimeLaborAggregatesSection';
+import CombinedLaborTotalsSection from './sections/CombinedLaborTotalsSection';
 import PassthroughSection from './sections/PassthroughSection';
 import FeeSection from './sections/FeeSection';
+import TravelSection from './sections/TravelSection';
 import ODCSection from './sections/ODCSection';
+import TravelFormModal from './TravelFormModal';
 import ODCFormModal from './ODCFormModal';
 import RatesReferencePanel from './RatesReferencePanel';
 import GrandTotalSection from './sections/GrandTotalSection';
 
-export const AdvancedAnalysisGrid = () => {
+interface AdvancedAnalysisGridProps {
+  isAdvancedMode?: boolean; // true = full advanced mode, false = initial view mode
+}
+
+export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysisGridProps) => {
   const {
     positionsAdvanced,
     subcontractors,
+    travel,
     odcs,
+    extensions,
     rates,
     escalationRates,
     totalYears,
@@ -28,6 +37,9 @@ export const AdvancedAnalysisGrid = () => {
     addManualOverride,
     updateAdvancedPosition,
     deletePosition,
+    addTravel,
+    updateTravel,
+    deleteTravel,
     addODC,
     updateODC,
     deleteODC,
@@ -43,6 +55,10 @@ export const AdvancedAnalysisGrid = () => {
     totalOH: aggregates.totalOH,
     totalGA: aggregates.totalGA
   });
+
+  // Travel modal state
+  const [isTravelModalOpen, setIsTravelModalOpen] = useState(false);
+  const [editingTravel, setEditingTravel] = useState<TravelItem | null>(null);
 
   // ODC modal state
   const [isODCModalOpen, setIsODCModalOpen] = useState(false);
@@ -68,6 +84,37 @@ export const AdvancedAnalysisGrid = () => {
     },
     [deletePosition]
   );
+
+  // Handle Travel modal operations
+  const handleAddTravel = useCallback(() => {
+    setEditingTravel(null);
+    setIsTravelModalOpen(true);
+  }, []);
+
+  const handleEditTravel = useCallback((travel: TravelItem) => {
+    setEditingTravel(travel);
+    setIsTravelModalOpen(true);
+  }, []);
+
+  const handleSaveTravel = useCallback(
+    (travelData: Omit<TravelItem, 'id'>) => {
+      if (editingTravel) {
+        // Update existing Travel
+        updateTravel(editingTravel.id, travelData);
+      } else {
+        // Add new Travel
+        addTravel(travelData);
+      }
+      setIsTravelModalOpen(false);
+      setEditingTravel(null);
+    },
+    [editingTravel, addTravel, updateTravel]
+  );
+
+  const handleCloseTravelModal = useCallback(() => {
+    setIsTravelModalOpen(false);
+    setEditingTravel(null);
+  }, []);
 
   // Handle ODC modal operations
   const handleAddODC = useCallback(() => {
@@ -100,23 +147,61 @@ export const AdvancedAnalysisGrid = () => {
     setEditingODC(null);
   }, []);
 
-  // Calculate prime labor costs by year
+  // Calculate prime labor BASE costs by year (DL + Fringe + OH + G&A, WITHOUT fee)
+  // This is used by FeeSection to calculate fee on the base
   const primeLaborByYear = useMemo(() => {
     const result: Record<string, number> = {};
     Object.entries(aggregates.byYear).forEach(([year, yearData]) => {
-      result[year] = yearData.totalAmount;
+      // Base = DL + Fringe + OH + G&A (fee is calculated separately)
+      result[year] = yearData.dl + yearData.fringe + yearData.oh + yearData.ga;
     });
     return result;
   }, [aggregates]);
 
-  // Calculate subcontractor costs by year
+  // Calculate subcontractor costs by year with compound escalation
   const subcontractorCostsByYear = useMemo(() => {
+    const result: Record<string, number> = {};
+    subcontractors.forEach((sub) => {
+      sub.positions.forEach((pos) => {
+        Object.entries(pos.hours_per_year).forEach(([yearStr, hours]) => {
+          if (!result[yearStr]) result[yearStr] = 0;
+
+          const yearNum = parseInt(yearStr);
+          // Apply compound escalation to base rate
+          let escalatedRate = pos.rate;
+          for (let y = 1; y < yearNum; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = escalationRates[escKey] || 0;
+            escalatedRate *= (1 + escRate);
+          }
+
+          result[yearStr] += hours * escalatedRate;
+        });
+      });
+    });
+    return result;
+  }, [subcontractors, escalationRates]);
+
+  // Calculate prime hours by year from positionsAdvanced
+  const primeHoursByYear = useMemo(() => {
+    const result: Record<string, number> = {};
+    positionsAdvanced.forEach((pos) => {
+      Object.entries(pos.breakdown).forEach(([year, breakdown]) => {
+        if (!result[year]) result[year] = 0;
+        result[year] += breakdown.hours;
+      });
+    });
+    return result;
+  }, [positionsAdvanced]);
+
+  // Calculate subcontractor hours by year
+  const subcontractorHoursByYear = useMemo(() => {
     const result: Record<string, number> = {};
     subcontractors.forEach((sub) => {
       sub.positions.forEach((pos) => {
         Object.entries(pos.hours_per_year).forEach(([year, hours]) => {
           if (!result[year]) result[year] = 0;
-          result[year] += hours * pos.rate;
+          result[year] += hours;
         });
       });
     });
@@ -132,7 +217,7 @@ export const AdvancedAnalysisGrid = () => {
     return result;
   }, [subcontractorCostsByYear, rates]);
 
-  // Calculate fee costs by year
+  // Calculate fee costs by year (per Excel: Fee applied to Prime Labor + Sub Labor separately)
   const feeByYear = useMemo(() => {
     const result: Record<string, number> = {};
     const allYears = new Set([
@@ -149,7 +234,83 @@ export const AdvancedAnalysisGrid = () => {
     return result;
   }, [primeLaborByYear, subcontractorCostsByYear, rates]);
 
-  // Calculate grand total (includes prime labor, subcontractors, passthrough, and fee)
+  // Calculate subcontractor fee by year (for aggregate display)
+  const subFeeByYear = useMemo(() => {
+    const result: Record<string, number> = {};
+    Object.entries(subcontractorCostsByYear).forEach(([year, cost]) => {
+      result[year] = cost * (rates.sub_fee || 0);
+    });
+    return result;
+  }, [subcontractorCostsByYear, rates]);
+
+    // Calculate Travel costs by year with G&A markup and escalation
+  // Formula: Travel Total = (Travel Base with escalation) × (1 + G&A Rate)
+  const travelCostsByYear = useMemo(() => {
+    const result: Record<string, number> = {};
+    const gaRate = rates.ga || 0;
+
+    for (let year = 1; year <= totalYears; year++) {
+      const yearStr = year.toString();
+      let travelBase = 0;
+
+      travel.forEach((item) => {
+        const baseAmount = item.amount_per_year[yearStr] || 0;
+        let escalatedAmount = baseAmount;
+
+        // Apply compound escalation if flag is set
+        if (item.escalate) {
+          for (let y = 1; y < year; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = escalationRates[escKey] || 0;
+            escalatedAmount *= (1 + escRate);
+          }
+        }
+
+        travelBase += escalatedAmount;
+      });
+
+      // Apply G&A markup to all Travel
+      result[yearStr] = travelBase * (1 + gaRate);
+    }
+
+    return result;
+  }, [travel, rates.ga, totalYears, escalationRates]);
+
+  // Calculate ODC costs by year with S&MH markup and escalation
+  // Formula: ODC Total = (ODC Base with escalation) × (1 + S&MH Rate)
+  const odcCostsByYear = useMemo(() => {
+    const result: Record<string, number> = {};
+    const smhRate = rates.smh || 0;
+
+    for (let year = 1; year <= totalYears; year++) {
+      const yearStr = year.toString();
+      let odcBase = 0;
+
+      odcs.forEach((odc) => {
+        const baseAmount = odc.amount_per_year[yearStr] || 0;
+        let escalatedAmount = baseAmount;
+
+        // Apply compound escalation if flag is set
+        if (odc.escalate) {
+          for (let y = 1; y < year; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = escalationRates[escKey] || 0;
+            escalatedAmount *= (1 + escRate);
+          }
+        }
+
+        odcBase += escalatedAmount;
+      });
+
+      // Apply S&MH markup to all ODCs
+      result[yearStr] = odcBase * (1 + smhRate);
+    }
+
+    return result;
+  }, [odcs, rates.smh, totalYears, escalationRates]);
+
+  // Calculate grand total (includes prime labor, subcontractors, passthrough, fee, Travel, and ODCs)
+  // Formula: Grand Total = Labor CPFF (prime + sub + passthrough + fee) + Total Travel (with G&A) + Total ODCs (with S&MH)
   const grandTotal = useMemo(() => {
     const byYear: { [year: string]: number } = {};
     let total = 0;
@@ -160,6 +321,8 @@ export const AdvancedAnalysisGrid = () => {
       ...Object.keys(subcontractorCostsByYear),
       ...Object.keys(passthroughByYear),
       ...Object.keys(feeByYear),
+      ...Object.keys(travelCostsByYear),
+      ...Object.keys(odcCostsByYear),
     ]);
 
     allYears.forEach((year) => {
@@ -167,25 +330,18 @@ export const AdvancedAnalysisGrid = () => {
       const subLabor = subcontractorCostsByYear[year] || 0;
       const passthrough = passthroughByYear[year] || 0;
       const fee = feeByYear[year] || 0;
+      const travelCost = travelCostsByYear[year] || 0;
+      const odc = odcCostsByYear[year] || 0;
 
-      byYear[year] = primeLabor + subLabor + passthrough + fee;
+      byYear[year] = primeLabor + subLabor + passthrough + fee + travelCost + odc;
       total += byYear[year];
     });
 
     return { byYear, total };
-  }, [primeLaborByYear, subcontractorCostsByYear, passthroughByYear, feeByYear]);
+  }, [primeLaborByYear, subcontractorCostsByYear, passthroughByYear, feeByYear, travelCostsByYear, odcCostsByYear]);
 
   return (
-    <div className="space-y-2">
-      {/* Header with mode indicator */}
-      {/* Header with mode indicator */}
-      <div className="flex justify-end items-center mb-2 px-6">
-        <div className="text-xs font-medium text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100 flex items-center">
-          <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full mr-2 animate-pulse" />
-          Advanced Mode Active
-        </div>
-      </div>
-
+    <div className="space-y-1">
       {/* Rates Reference Panel */}
       <RatesReferencePanel
         rates={rates}
@@ -196,26 +352,46 @@ export const AdvancedAnalysisGrid = () => {
         onUpdateRates={updateRates}
         onUpdateEscalationRates={updateEscalationRates}
         onRecalculate={recalculate}
+        extensions={extensions}
       />
 
       {/* Prime Labor Section */}
       <PrimeLaborSection
+        key={`${rates.fringe}-${rates.oh}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}`}
         positions={positionsAdvanced}
         rates={rates}
         escalationRates={escalationRates}
         totalYears={totalYears}
+        extensions={extensions}
         expandedPositions={expandedPositions}
         manualOverrides={manualOverrides}
         onToggleExpand={togglePositionExpansion}
         onCellChange={handleCellChange}
         onDeletePosition={handleDeletePosition}
         onUpdatePosition={updateAdvancedPosition}
+        isAdvancedMode={isAdvancedMode}
       />
 
-      {/* Prime Labor Aggregates */}
+      {/* Labor Subtotals (Prime + Subcontractor) */}
       <PrimeLaborAggregatesSection
         aggregates={aggregates}
         totalYears={totalYears}
+        extensions={extensions}
+        subLaborByYear={subcontractorCostsByYear}
+        passthroughByYear={passthroughByYear}
+        subFeeByYear={subFeeByYear}
+      />
+
+      {/* Combined Labor Totals */}
+      <CombinedLaborTotalsSection
+        primeHoursByYear={primeHoursByYear}
+        subHoursByYear={subcontractorHoursByYear}
+        primeLaborByYear={primeLaborByYear}
+        subLaborByYear={subcontractorCostsByYear}
+        passthroughByYear={passthroughByYear}
+        feeByYear={feeByYear}
+        totalYears={totalYears}
+        extensions={extensions}
       />
 
       {/* Passthrough Section */}
@@ -226,6 +402,7 @@ export const AdvancedAnalysisGrid = () => {
           ga_passthrough: rates.ga_passthrough || 0,
         }}
         totalYears={totalYears}
+        extensions={extensions}
       />
 
       {/* Fee Section */}
@@ -237,16 +414,36 @@ export const AdvancedAnalysisGrid = () => {
           sub_labor: rates.sub_fee || 0,
         }}
         totalYears={totalYears}
+        extensions={extensions}
       />
 
-      {/* ODC Section */}
-      <ODCSection
-        odcs={odcs}
-        totalYears={totalYears}
-        onAdd={handleAddODC}
-        onEdit={handleEditODC}
-        onDelete={deleteODC}
-      />
+      {/* Travel Section - SEPARATE from ODCs, uses G&A Rate - Only show if travel items exist */}
+      {travel.length > 0 && (
+        <TravelSection
+          travel={travel}
+          totalYears={totalYears}
+          extensions={extensions}
+          gaRate={rates.ga}
+          escalationRates={escalationRates}
+          onAdd={handleAddTravel}
+          onEdit={handleEditTravel}
+          onDelete={deleteTravel}
+        />
+      )}
+
+      {/* ODC Section - Materials, Equipment, etc., uses SMH Rate - Only show if ODC items exist */}
+      {odcs.length > 0 && (
+        <ODCSection
+          odcs={odcs}
+          totalYears={totalYears}
+          extensions={extensions}
+          smhRate={rates.smh || 0}
+          escalationRates={escalationRates}
+          onAdd={handleAddODC}
+          onEdit={handleEditODC}
+          onDelete={deleteODC}
+        />
+      )}
 
           {/* Grand Total */}
           <GrandTotalSection
@@ -255,8 +452,20 @@ export const AdvancedAnalysisGrid = () => {
             subLaborByYear={subcontractorCostsByYear}
             passthroughByYear={passthroughByYear}
             feeByYear={feeByYear}
+            travelByYear={travelCostsByYear}
+            odcByYear={odcCostsByYear}
             totalYears={totalYears}
+            extensions={extensions}
           />
+
+      {/* Travel Form Modal */}
+      <TravelFormModal
+        isOpen={isTravelModalOpen}
+        onClose={handleCloseTravelModal}
+        onSave={handleSaveTravel}
+        totalYears={totalYears}
+        existingTravel={editingTravel}
+      />
 
       {/* ODC Form Modal */}
       <ODCFormModal

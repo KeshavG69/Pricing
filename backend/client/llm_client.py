@@ -30,6 +30,7 @@ class LLMClient:
         self,
         model: Optional[str] = None,
         api_key: Optional[str] = None,
+        max_tokens: Optional[int] = None,
         base_url: Optional[str] = None
     ) -> ChatOpenAI:
         """
@@ -55,6 +56,7 @@ class LLMClient:
                     model=model,
                     openai_api_key=api_key,
                     openai_api_base=base_url,
+                    max_tokens=max_tokens
                 )
             return self._chat_llm_cache[cache_key]
 
@@ -86,7 +88,9 @@ class LLMClient:
                 self._chat_llm_agno_cache[cache_key] = OpenAIChat(
                     id=model,
                     api_key=api_key,
+                    max_tokens=10000,
                     base_url=base_url,
+                    temperature=0,  # Deterministic responses for consistent SOC matching
                 )
             return self._chat_llm_agno_cache[cache_key]
 
@@ -150,7 +154,8 @@ def get_llm_client() -> LLMClient:
 def get_chat_llm(
     model: Optional[str] = None,
     api_key: Optional[str] = None,
-    base_url: Optional[str] = None
+    base_url: Optional[str] = None,
+    max_tokens: Optional[int] = None
 ) -> ChatOpenAI:
     """
     Convenience function to get ChatOpenAI instance directly (LangChain)
@@ -163,7 +168,7 @@ def get_chat_llm(
     Returns:
         ChatOpenAI instance
     """
-    return get_llm_client().get_chat_llm(model=model, api_key=api_key, base_url=base_url)
+    return get_llm_client().get_chat_llm(model=model, api_key=api_key, base_url=base_url,max_tokens=max_tokens)
 
 
 def get_chat_llm_agno(

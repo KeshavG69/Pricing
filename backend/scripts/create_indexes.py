@@ -6,6 +6,15 @@ This script creates indexes on:
 2. wage_data collection - for SOC code lookups
 3. areas collection - for area name searches
 4. occupations collection - for occupation code lookups
+5. users collection - for authentication and organization queries
+6. organizations collection - for org lookups
+7. invitations collection - for invitation validation
+8. token_blacklist collection - for JWT logout
+9. company_repositories collection - for GSA contract queries
+10. billing collection - for billing history and payment tracking
+
+Run this script to create all indexes:
+    uv run python scripts/create_indexes.py
 """
 
 import os
@@ -166,7 +175,7 @@ def create_indexes():
     else:
         print("   ⚠ Already exists: google_id (sparse)")
 
-    # Organization-related indexes
+    # Organization-related indexes (legacy single-org)
     if safe_create_index(users, [("organization_id", ASCENDING), ("role", ASCENDING)], "org_role_index"):
         print("   ✓ Created: organization_id + role")
     else:
@@ -176,6 +185,29 @@ def create_indexes():
         print("   ✓ Created: organization_id + status")
     else:
         print("   ⚠ Already exists: organization_id + status")
+
+    # Multi-org support: index on organizations array for $elemMatch queries
+    if safe_create_index(users, "organizations.organization_id", "orgs_array_org_id_index"):
+        print("   ✓ Created: organizations.organization_id (multi-org)")
+    else:
+        print("   ⚠ Already exists: organizations.organization_id")
+
+    # Compound index for invitation membership check
+    if safe_create_index(users, [("email", ASCENDING), ("organizations.organization_id", ASCENDING)], "email_orgs_index"):
+        print("   ✓ Created: email + organizations.organization_id")
+    else:
+        print("   ⚠ Already exists: email + organizations.organization_id")
+
+    # Terms and Conditions indexes
+    if safe_create_index(users, "terms_accepted_version", "terms_version_index"):
+        print("   ✓ Created: terms_accepted_version")
+    else:
+        print("   ⚠ Already exists: terms_accepted_version")
+
+    if safe_create_index(users, [("terms_accepted_version", ASCENDING), ("terms_accepted_at", DESCENDING)], "terms_version_date_index"):
+        print("   ✓ Created: terms_accepted_version + terms_accepted_at")
+    else:
+        print("   ⚠ Already exists: terms_accepted_version + terms_accepted_at")
 
     # =====================================================================
     # ORGANIZATIONS COLLECTION
@@ -225,6 +257,12 @@ def create_indexes():
     else:
         print("   ⚠ Already exists: email + status")
 
+    # Compound index for duplicate invitation check (org + email + status)
+    if safe_create_index(invitations, [("organization_id", ASCENDING), ("email", ASCENDING), ("status", ASCENDING)], "org_email_status_index"):
+        print("   ✓ Created: organization_id + email + status")
+    else:
+        print("   ⚠ Already exists: organization_id + email + status")
+
     # Expires At (TTL) - auto-delete expired invitations after 30 days
     if safe_create_index(invitations, "expires_at", "expires_at_ttl_index", expireAfterSeconds=2592000):
         print("   ✓ Created: expires_at (TTL - auto-deletes after 30 days)")
@@ -250,6 +288,96 @@ def create_indexes():
         print("   ⚠ Already exists: created_at (TTL)")
 
     # =====================================================================
+    # COMPANY_REPOSITORIES COLLECTION (GSA Contracts)
+    # =====================================================================
+    print("\n9. COMPANY_REPOSITORIES Collection:")
+    company_repositories = db.company_repositories
+
+    # Primary query: list contracts by organization (sorted by creation date)
+    if safe_create_index(company_repositories, [("organization_id", ASCENDING), ("created_at", DESCENDING)], "org_created_at_index"):
+        print("   ✓ Created: organization_id + created_at")
+    else:
+        print("   ⚠ Already exists: organization_id + created_at")
+
+    # Unique file_id for lookups
+    if safe_create_index(company_repositories, "file_id", "file_id_unique_index", unique=True):
+        print("   ✓ Created: file_id (unique)")
+    else:
+        print("   ⚠ Already exists: file_id (unique)")
+
+    # Filter by status within organization
+    if safe_create_index(company_repositories, [("organization_id", ASCENDING), ("status", ASCENDING)], "org_status_index"):
+        print("   ✓ Created: organization_id + status")
+    else:
+        print("   ⚠ Already exists: organization_id + status")
+
+    # Search by contract number
+    if safe_create_index(company_repositories, [("organization_id", ASCENDING), ("contract_number", ASCENDING)], "org_contract_number_index"):
+        print("   ✓ Created: organization_id + contract_number")
+    else:
+        print("   ⚠ Already exists: organization_id + contract_number")
+
+    # Search by company name
+    if safe_create_index(company_repositories, [("organization_id", ASCENDING), ("company_name", ASCENDING)], "org_company_name_index"):
+        print("   ✓ Created: organization_id + company_name")
+    else:
+        print("   ⚠ Already exists: organization_id + company_name")
+
+    # Text search index for contract name, company name, and contract number
+    if safe_create_index(company_repositories, [("name", "text"), ("company_name", "text"), ("contract_number", "text")], "text_search_index"):
+        print("   ✓ Created: text search (name, company_name, contract_number)")
+    else:
+        print("   ⚠ Already exists: text search")
+
+    # Sort by last modified
+    if safe_create_index(company_repositories, [("organization_id", ASCENDING), ("updated_at", DESCENDING)], "org_updated_at_index"):
+        print("   ✓ Created: organization_id + updated_at")
+    else:
+        print("   ⚠ Already exists: organization_id + updated_at")
+
+    # =====================================================================
+    # BILLING COLLECTION
+    # =====================================================================
+    print("\n10. BILLING Collection:")
+    billing = db.billing
+
+    # Composite index for proposal lookups (check if already charged)
+    if safe_create_index(billing, [("proposal_id", ASCENDING), ("charge_type", ASCENDING)], "proposal_charge_lookup"):
+        print("   ✓ Created: proposal_id + charge_type")
+    else:
+        print("   ⚠ Already exists: proposal_id + charge_type")
+
+    # Unique sparse index for webhook idempotency (prevent duplicate processing)
+    if safe_create_index(billing, "stripe_event_id", "stripe_event_idempotency", unique=True, sparse=True):
+        print("   ✓ Created: stripe_event_id (unique, sparse)")
+    else:
+        print("   ⚠ Already exists: stripe_event_id")
+
+    # Index for organization billing history (most common query)
+    if safe_create_index(billing, [("organization_id", ASCENDING), ("created_at", DESCENDING)], "org_billing_history"):
+        print("   ✓ Created: organization_id + created_at")
+    else:
+        print("   ⚠ Already exists: organization_id + created_at")
+
+    # Index for payment intent lookups (webhook handling)
+    if safe_create_index(billing, "stripe_payment_intent_id", "payment_intent_lookup"):
+        print("   ✓ Created: stripe_payment_intent_id")
+    else:
+        print("   ⚠ Already exists: stripe_payment_intent_id")
+
+    # Index for status queries (analytics, filtering)
+    if safe_create_index(billing, [("status", ASCENDING), ("created_at", DESCENDING)], "status_analytics"):
+        print("   ✓ Created: status + created_at")
+    else:
+        print("   ⚠ Already exists: status + created_at")
+
+    # Index for organization stats aggregation
+    if safe_create_index(billing, [("organization_id", ASCENDING), ("status", ASCENDING)], "org_status_index"):
+        print("   ✓ Created: organization_id + status")
+    else:
+        print("   ⚠ Already exists: organization_id + status")
+
+    # =====================================================================
     # SUMMARY
     # =====================================================================
     print("\n" + "=" * 60)
@@ -257,7 +385,7 @@ def create_indexes():
     print("=" * 60)
 
     # List all indexes per collection
-    collections = ["proposals", "wage_data", "areas", "occupations", "users", "organizations", "invitations", "token_blacklist"]
+    collections = ["proposals", "wage_data", "areas", "occupations", "users", "organizations", "invitations", "token_blacklist", "company_repositories", "billing"]
     for coll_name in collections:
         coll = db[coll_name]
         indexes = list(coll.list_indexes())

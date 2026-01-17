@@ -17,10 +17,56 @@ from auth.rbac import can_manage_user
 router = APIRouter(prefix="/api/organizations", tags=["organizations"])
 
 
+class RatePreset(BaseModel):
+    """Rate preset with name and all rates"""
+    id: str
+    name: str
+    fringe: float
+    oh_onsite: float
+    oh_offsite: float
+    ga: float
+    fee: float
+    smh: float = 0.0
+    sub_fee: float = 0.0
+    ga_passthrough: float = 0.0
+    escalation_rate: float = 0.0
+
+
+class CreateRatePresetRequest(BaseModel):
+    """Request to create a new rate preset"""
+    name: str
+    fringe: float
+    oh_onsite: float
+    oh_offsite: float
+    ga: float
+    fee: float
+    smh: float = 0.0
+    sub_fee: float = 0.0
+    ga_passthrough: float = 0.0
+    escalation_rate: float = 0.0
+
+
+class UpdateRatePresetRequest(BaseModel):
+    """Request to update an existing rate preset"""
+    name: Optional[str] = None
+    fringe: Optional[float] = None
+    oh_onsite: Optional[float] = None
+    oh_offsite: Optional[float] = None
+    ga: Optional[float] = None
+    fee: Optional[float] = None
+    smh: Optional[float] = None
+    sub_fee: Optional[float] = None
+    ga_passthrough: Optional[float] = None
+    escalation_rate: Optional[float] = None
+
+
 class UpdateSettingsRequest(BaseModel):
     """Request body for updating organization settings"""
     model_config = {"extra": "ignore"}
 
+    name: Optional[str] = None
+    website: Optional[str] = None
+    address: Optional[str] = None
     default_rates: Optional[Dict[str, float]] = None
     default_escalation_rate: Optional[float] = None
     allow_user_rate_override: Optional[bool] = None
@@ -96,10 +142,25 @@ async def update_organization_settings(
             detail="Organization not found"
         )
 
+    # Prepare update data for top-level organization fields
+    update_data = {}
+
+    # Update organization name if provided
+    if settings_update.name is not None:
+        update_data["name"] = settings_update.name
+
+    # Update website if provided
+    if settings_update.website is not None:
+        update_data["website"] = settings_update.website if settings_update.website else None
+
+    # Update address if provided
+    if settings_update.address is not None:
+        update_data["address"] = settings_update.address if settings_update.address else None
+
     # Get existing settings
     settings = org.get("settings", {})
 
-    # Update only provided fields
+    # Update only provided fields in settings
     if settings_update.default_rates is not None:
         settings["default_rates"] = {
             **settings.get("default_rates", {}),
@@ -113,9 +174,264 @@ async def update_organization_settings(
         settings["allow_user_rate_override"] = settings_update.allow_user_rate_override
 
     # Update organization
+    if update_data:
+        # If name was updated, use direct update
+        from auth.database import get_mongodb_client
+        mongodb = get_mongodb_client()
+        db = mongodb.get_database()
+        db["organizations"].update_one(
+            {"_id": org["_id"]},
+            {"$set": update_data}
+        )
+
     updated_org = org_crud.update_settings(current_user["organization_id"], settings)
 
     return serialize_doc(updated_org)
+
+
+@router.post("/me/rate-presets")
+async def create_rate_preset(
+    preset: CreateRatePresetRequest,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Create a new rate preset (admin only).
+
+    Args:
+        preset: Rate preset data
+
+    Returns:
+        Created preset with generated ID
+    """
+    import uuid
+
+    org_crud = get_organization_crud()
+    org = org_crud.get_by_id(current_user["organization_id"])
+
+    if not org:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organization not found"
+        )
+
+    # Get existing settings
+    settings = org.get("settings", {})
+    rate_presets = settings.get("rate_presets", [])
+
+    # Create new preset with unique ID
+    new_preset = {
+        "id": str(uuid.uuid4()),
+        "name": preset.name,
+        "fringe": preset.fringe,
+        "oh_onsite": preset.oh_onsite,
+        "oh_offsite": preset.oh_offsite,
+        "ga": preset.ga,
+        "fee": preset.fee,
+        "smh": preset.smh,
+        "sub_fee": preset.sub_fee,
+        "ga_passthrough": preset.ga_passthrough,
+        "escalation_rate": preset.escalation_rate
+    }
+
+    rate_presets.append(new_preset)
+    settings["rate_presets"] = rate_presets
+
+    # Update organization
+    updated_org = org_crud.update_settings(current_user["organization_id"], settings)
+
+    return new_preset
+
+
+@router.put("/me/rate-presets/{preset_id}")
+async def update_rate_preset(
+    preset_id: str,
+    preset_update: UpdateRatePresetRequest,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Update an existing rate preset (admin only).
+
+    Args:
+        preset_id: Preset ID to update
+        preset_update: Fields to update
+
+    Returns:
+        Updated preset
+    """
+    org_crud = get_organization_crud()
+    org = org_crud.get_by_id(current_user["organization_id"])
+
+    if not org:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organization not found"
+        )
+
+    # Get existing settings
+    settings = org.get("settings", {})
+    rate_presets = settings.get("rate_presets", [])
+
+    # Find preset
+    preset_index = None
+    for i, p in enumerate(rate_presets):
+        if p["id"] == preset_id:
+            preset_index = i
+            break
+
+    if preset_index is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Rate preset not found"
+        )
+
+    # Update preset fields
+    preset = rate_presets[preset_index]
+    if preset_update.name is not None:
+        preset["name"] = preset_update.name
+    if preset_update.fringe is not None:
+        preset["fringe"] = preset_update.fringe
+    if preset_update.oh_onsite is not None:
+        preset["oh_onsite"] = preset_update.oh_onsite
+    if preset_update.oh_offsite is not None:
+        preset["oh_offsite"] = preset_update.oh_offsite
+    if preset_update.ga is not None:
+        preset["ga"] = preset_update.ga
+    if preset_update.fee is not None:
+        preset["fee"] = preset_update.fee
+    if preset_update.smh is not None:
+        preset["smh"] = preset_update.smh
+    if preset_update.sub_fee is not None:
+        preset["sub_fee"] = preset_update.sub_fee
+    if preset_update.ga_passthrough is not None:
+        preset["ga_passthrough"] = preset_update.ga_passthrough
+    if preset_update.escalation_rate is not None:
+        preset["escalation_rate"] = preset_update.escalation_rate
+
+    rate_presets[preset_index] = preset
+    settings["rate_presets"] = rate_presets
+
+    # Update organization
+    updated_org = org_crud.update_settings(current_user["organization_id"], settings)
+
+    return preset
+
+
+@router.delete("/me/rate-presets/{preset_id}")
+async def delete_rate_preset(
+    preset_id: str,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Delete a rate preset (admin only).
+
+    Args:
+        preset_id: Preset ID to delete
+
+    Returns:
+        Success message
+    """
+    org_crud = get_organization_crud()
+    org = org_crud.get_by_id(current_user["organization_id"])
+
+    if not org:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organization not found"
+        )
+
+    # Get existing settings
+    settings = org.get("settings", {})
+    rate_presets = settings.get("rate_presets", [])
+
+    # Find and remove preset
+    preset_found = False
+    for i, p in enumerate(rate_presets):
+        if p["id"] == preset_id:
+            rate_presets.pop(i)
+            preset_found = True
+            break
+
+    if not preset_found:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Rate preset not found"
+        )
+
+    settings["rate_presets"] = rate_presets
+
+    # Update organization
+    org_crud.update_settings(current_user["organization_id"], settings)
+
+    return {"message": "Rate preset deleted successfully", "preset_id": preset_id}
+
+
+
+@router.post("/me/rate-presets/{preset_id}/apply-as-default")
+async def apply_preset_as_default(
+    preset_id: str,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Apply a rate preset as the organization's default rates (admin only).
+
+    Copies the preset's rates to the default_rates field.
+
+    Args:
+        preset_id: Preset ID to apply
+
+    Returns:
+        Success message with updated default rates
+    """
+    org_crud = get_organization_crud()
+    org = org_crud.get_by_id(current_user["organization_id"])
+
+    if not org:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Organization not found"
+        )
+
+    settings = org.get("settings", {})
+    rate_presets = settings.get("rate_presets", [])
+
+    # Find the preset
+    preset = None
+    for p in rate_presets:
+        if p["id"] == preset_id:
+            preset = p
+            break
+
+    if not preset:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Rate preset not found"
+        )
+
+    # Copy preset values to default_rates
+    settings["default_rates"] = {
+        "fringe": preset.get("fringe", 0),
+        "oh_onsite": preset.get("oh_onsite", 0),
+        "oh_offsite": preset.get("oh_offsite", 0),
+        "ga": preset.get("ga", 0),
+        "fee": preset.get("fee", 0),
+        "smh": preset.get("smh", 0),
+        "sub_fee": preset.get("sub_fee", 0),
+        "ga_passthrough": preset.get("ga_passthrough", 0),
+        "ga_adder": preset.get("ga_adder", 0),
+    }
+
+    # Also update default escalation rate if preset has it
+    if preset.get("escalation_rate") is not None:
+        settings["default_escalation_rate"] = preset.get("escalation_rate")
+
+    # Update organization
+    org_crud.update_settings(current_user["organization_id"], settings)
+
+    return {
+        "message": f"Preset '{preset['name']}' applied as default rates",
+        "default_rates": settings["default_rates"],
+        "default_escalation_rate": settings.get("default_escalation_rate")
+    }
 
 
 @router.delete("/members/{user_id}")

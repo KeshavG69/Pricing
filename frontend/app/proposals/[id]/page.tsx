@@ -1,35 +1,42 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useProposalsStore } from '@/lib/stores/proposalsStore';
 import { usePricingStore } from '@/lib/stores/pricingStore';
 import { proposalsApi } from '@/lib/api/proposals';
+import { chargeForProposal, getProposalBilling } from '@/lib/api/billing';
 import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import PositionsGrid from '@/components/pricing/PositionsGrid';
 import AdvancedAnalysisGrid from '@/components/pricing/AdvancedAnalysisGrid';
 import OverviewTab from '@/components/pricing/OverviewTab';
-import RateTableView from '@/components/pricing/RateTableView';
 import PricingTabs from '@/components/pricing/PricingTabs';
+import FilesTab from '@/components/pricing/FilesTab';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { SubcontractorSection } from '@/components/pricing/SubcontractorSection';
-import { Loader2, CheckCircle, AlertCircle, ArrowLeft, Plus, Download, Pencil, Check, X } from 'lucide-react';
+import { WageDataSection } from '@/components/pricing/sections/WageDataSection';
+import { AdvancedAnalysisModal, SubcontractorInfo } from '@/components/pricing/AdvancedAnalysisModal';
+import ChargeConfirmationModal from '@/components/ui/ChargeConfirmationModal';
+import { Loader2, AlertCircle, Download, Share2, CheckCircle, XCircle, Send, ChevronDown, Save } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
+import { ShareOrInviteModal } from '@/components/proposals/ShareOrInviteModal';
+import { useAuthStore } from '@/lib/stores/authStore';
 
 export default function ProposalPage() {
   const params = useParams();
   const router = useRouter();
   const proposalId = params.id as string;
   const toast = useToast();
+  const { user } = useAuthStore();
 
-  const { currentProposal, fetchProposal, isLoading } = useProposalsStore();
+  const { currentProposal, fetchProposal, setCurrentProposal, isLoading } = useProposalsStore();
   const {
     loadProposal,
     proposalName,
     positions,
+    positionsAdvanced,
     subcontractors,
     rates,
     totalYears,
@@ -40,9 +47,13 @@ export default function ProposalPage() {
     enableAdvancedMode,
     transformToAdvanced,
     advancedMode,
+    subcontractorConfigured,
+    preCreateSubcontractors,
     activeTab,
     setActiveTab,
     exportToExcel,
+    saveProposal,
+    isSaving: isPricingSaving,
   } = usePricingStore();
   const [pollingStatus, setPollingStatus] = useState<any>(null);
   const [isPolling, setIsPolling] = useState(false);
@@ -55,21 +66,56 @@ export default function ProposalPage() {
   const [editedPrimeContractor, setEditedPrimeContractor] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [addPositionModalOpen, setAddPositionModalOpen] = useState(false);
+  const [shareModalOpen, setShareModalOpen] = useState(false);
+  const [advancedModalOpen, setAdvancedModalOpen] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [showAdvancedChargeConfirmation, setShowAdvancedChargeConfirmation] = useState(false);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
+  const statusDropdownRef = useRef<HTMLDivElement>(null);
+  const urlsRefreshedRef = useRef(false);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (statusDropdownRef.current && !statusDropdownRef.current.contains(event.target as Node)) {
+        setStatusDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     if (proposalId) {
-      fetchProposal(proposalId);
+      fetchProposal(proposalId).then(() => {
+        // Refresh document URLs once after loading proposal (prevent duplicate calls)
+        if (!urlsRefreshedRef.current) {
+          urlsRefreshedRef.current = true;
+          proposalsApi.refreshDocumentUrls(proposalId).then((updatedProposal) => {
+            // Update store directly with fresh URLs (no re-fetch needed)
+            setCurrentProposal(updatedProposal);
+          }).catch(err => console.error('Failed to refresh document URLs:', err));
+        }
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [proposalId]);
 
   // Load pricing data when proposal is completed
   useEffect(() => {
-    if (currentProposal?.status === 'completed' && proposalId && !pricingLoaded) {
-      // Always fetch fresh data from API (don't use cached currentProposal)
-      loadProposal(proposalId);
-      setPricingLoaded(true);
-    }
+    const loadPricingData = async () => {
+      if (currentProposal?.status === 'completed' && proposalId && !pricingLoaded) {
+        // Always fetch fresh data from API (don't use cached currentProposal)
+        await loadProposal(proposalId);
+        // Transform to advanced format immediately so we can show expandable grid in initial view
+        transformToAdvanced();
+        setPricingLoaded(true);
+      }
+    };
+
+    loadPricingData();
 
     return () => {
       if (pricingLoaded) {
@@ -130,14 +176,32 @@ export default function ProposalPage() {
     if (!currentProposal) return;
 
     setIsSaving(true);
+    const oldSolicitation = currentProposal.solicitation_number;
+
     try {
+      // Optimistically update local state immediately
+      const { setCurrentProposal } = useProposalsStore.getState();
+      setCurrentProposal({
+        ...currentProposal,
+        solicitation_number: editedSolicitation.trim() || undefined,
+      });
+
+      setIsEditingSolicitation(false);
+
+      // Save to MongoDB in background (no page refresh)
       await proposalsApi.update(currentProposal.id, {
         solicitation_number: editedSolicitation.trim() || undefined
       });
-      await fetchProposal(proposalId);
-      setIsEditingSolicitation(false);
     } catch (error) {
       console.error('Failed to update solicitation number:', error);
+      toast.error('Failed to update solicitation number');
+      // Revert on error
+      const { setCurrentProposal } = useProposalsStore.getState();
+      setCurrentProposal({
+        ...currentProposal,
+        solicitation_number: oldSolicitation,
+      });
+      setEditedSolicitation(oldSolicitation || '');
     } finally {
       setIsSaving(false);
     }
@@ -161,16 +225,36 @@ export default function ProposalPage() {
     }
 
     setIsSaving(true);
+    const oldName = currentProposal?.name;
+
     try {
+      // Optimistically update local state immediately
+      if (currentProposal) {
+        const { setCurrentProposal } = useProposalsStore.getState();
+        setCurrentProposal({
+          ...currentProposal,
+          name: editedName.trim(),
+        });
+      }
+
+      setIsEditingName(false);
+
+      // Save to MongoDB in background (no page refresh)
       await proposalsApi.update(proposalId, {
         name: editedName.trim(),
       });
-      await fetchProposal(proposalId);
-      setIsEditingName(false);
-      toast.success('Proposal name updated successfully');
     } catch (error) {
       console.error('Failed to update proposal name:', error);
       toast.error('Failed to update proposal name');
+      // Revert on error
+      if (currentProposal && oldName) {
+        const { setCurrentProposal } = useProposalsStore.getState();
+        setCurrentProposal({
+          ...currentProposal,
+          name: oldName,
+        });
+        setEditedName(oldName);
+      }
     } finally {
       setIsSaving(false);
     }
@@ -187,21 +271,36 @@ export default function ProposalPage() {
   };
 
   const handleSavePrimeContractor = async () => {
+    if (!currentProposal) return;
+
     setIsSaving(true);
+    const oldPrimeContractor = currentProposal.prime_contractor_name;
+    const updatedName = editedPrimeContractor.trim() || 'TBD';
+
     try {
-      const updatedName = editedPrimeContractor.trim() || 'TBD';
+      // Optimistically update local state immediately
+      const { setCurrentProposal } = useProposalsStore.getState();
+      setCurrentProposal({
+        ...currentProposal,
+        prime_contractor_name: updatedName,
+      });
+
+      setIsEditingPrimeContractor(false);
+
+      // Save to MongoDB in background (no page refresh)
       await proposalsApi.update(proposalId, {
         prime_contractor_name: updatedName
       });
-
-      // Reload proposal data
-      await fetchProposal(proposalId);
-
-      setIsEditingPrimeContractor(false);
-      toast.success('Prime contractor name updated');
     } catch (error) {
       console.error('Failed to update prime contractor name:', error);
       toast.error('Failed to update prime contractor name');
+      // Revert on error
+      const { setCurrentProposal } = useProposalsStore.getState();
+      setCurrentProposal({
+        ...currentProposal,
+        prime_contractor_name: oldPrimeContractor,
+      });
+      setEditedPrimeContractor(oldPrimeContractor || '');
     } finally {
       setIsSaving(false);
     }
@@ -215,6 +314,69 @@ export default function ProposalPage() {
   const handleStartEditPrimeContractor = () => {
     setEditedPrimeContractor(currentProposal?.prime_contractor_name || '');
     setIsEditingPrimeContractor(true);
+  };
+
+  const handleRetryProcessing = async () => {
+    setIsRetrying(true);
+    try {
+      await proposalsApi.retry(proposalId);
+      // Refresh proposal to get updated status (should be "processing")
+      await fetchProposal(proposalId);
+      toast.success('Processing restarted');
+    } catch (error: any) {
+      console.error('Retry failed:', error);
+      toast.error(error?.response?.data?.detail || 'Failed to retry processing');
+    } finally {
+      setIsRetrying(false);
+    }
+  };
+
+  const handleManualSave = async () => {
+    const result = await saveProposal();
+    if (result.success) {
+      toast.success('Saved successfully');
+    } else {
+      toast.error(result.error || 'Failed to save');
+    }
+  };
+
+  const handleUpdateBusinessStatus = async (newStatus: 'active' | 'no-bid' | 'submitted') => {
+    if (!currentProposal || currentProposal.business_status === newStatus) {
+      setStatusDropdownOpen(false);
+      return;
+    }
+
+    setStatusDropdownOpen(false);
+    setIsUpdatingStatus(true);
+    const oldStatus = currentProposal.business_status;
+
+    try {
+      // Optimistically update local state
+      setCurrentProposal({
+        ...currentProposal,
+        business_status: newStatus,
+      });
+
+      // Update in backend
+      await proposalsApi.updateBusinessStatus(proposalId, newStatus);
+
+      const statusLabels = {
+        'active': 'Active',
+        'no-bid': 'No-Bid',
+        'submitted': 'Submitted'
+      };
+      toast.success(`Proposal marked as ${statusLabels[newStatus]}`);
+    } catch (error: any) {
+      console.error('Failed to update business status:', error);
+      toast.error(error?.response?.data?.detail || 'Failed to update status');
+      // Revert on error
+      setCurrentProposal({
+        ...currentProposal,
+        business_status: oldStatus,
+      });
+    } finally {
+      setIsUpdatingStatus(false);
+    }
   };
 
   if (isLoading || !currentProposal) {
@@ -270,8 +432,19 @@ export default function ProposalPage() {
             <Button variant="outline" onClick={() => router.push('/dashboard')}>
               Back to Dashboard
             </Button>
-            <Button variant="primary" onClick={() => router.push('/dashboard/upload')}>
-              Try Again
+            <Button
+              variant="primary"
+              onClick={handleRetryProcessing}
+              disabled={isRetrying}
+            >
+              {isRetrying ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Retrying...
+                </>
+              ) : (
+                'Retry Processing'
+              )}
             </Button>
           </div>
         </div>
@@ -284,301 +457,408 @@ export default function ProposalPage() {
   };
 
   const handleAdvancedAnalysis = async () => {
-    // Transform basic positions to advanced format
-    transformToAdvanced();
+    // Check if already paid for advanced analysis
+    try {
+      const billing = await getProposalBilling(proposalId);
+      const advancedBilling = billing.advanced;
 
-    // Enable advanced mode
-    enableAdvancedMode();
+      if (advancedBilling && advancedBilling.status === 'succeeded') {
+        // Already paid - check if subcontractors configured
+        if (!subcontractorConfigured) {
+          // Show questionnaire modal
+          setAdvancedModalOpen(true);
+          return;
+        }
 
-    // Call recalculate API
-    await recalculate();
+        // Already paid and configured - activate directly
+        toast.success('Advanced mode activated');
+        transformToAdvanced();
+        enableAdvancedMode();
+        await recalculate();
+        return;
+      }
+
+      // Not paid yet - show charge confirmation modal FIRST
+      setShowAdvancedChargeConfirmation(true);
+    } catch (error: any) {
+      console.error('Failed to check billing:', error);
+      toast.error('Failed to check payment status. Please try again.');
+    }
+  };
+
+  const confirmAndActivateAdvanced = async () => {
+    setIsProcessingPayment(true);
+
+    try {
+      // Charge for advanced mode
+      const result = await chargeForProposal(proposalId, 'advanced');
+
+      if (result.already_charged) {
+        toast.success('Advanced mode already activated');
+      } else {
+        toast.success('Payment successful!');
+      }
+
+      // Close charge modal
+      setShowAdvancedChargeConfirmation(false);
+
+      // Check if subcontractors configured
+      if (!subcontractorConfigured) {
+        // Show subcontractor questionnaire modal AFTER payment
+        setIsProcessingPayment(false);
+        setAdvancedModalOpen(true);
+        return;
+      }
+
+      // Already configured - activate directly
+      transformToAdvanced();
+      enableAdvancedMode();
+      await recalculate();
+      toast.success('Advanced mode activated');
+    } catch (error: any) {
+      console.error('Payment failed:', error);
+      const errorMsg = error.response?.data?.detail || 'Payment failed. Please check your payment method.';
+      toast.error(errorMsg);
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  const handleAdvancedModalSubmit = async (subs: SubcontractorInfo[]) => {
+    // Close modal first
+    setAdvancedModalOpen(false);
+    setIsProcessingPayment(true);
+
+    try {
+      // Pre-create subcontractors if any were specified
+      if (subs.length > 0) {
+        preCreateSubcontractors(subs);
+
+        // Auto-allocate workshare % from eligible positions (excludes key positions like PM, FA)
+        await usePricingStore.getState().autoAllocateWorkshare();
+      } else {
+        // Mark as configured even if no subs (user clicked Skip or Continue with 0 subs)
+        usePricingStore.setState({ subcontractorConfigured: true });
+      }
+
+      // Now proceed to advanced mode (payment already done)
+      transformToAdvanced();
+      enableAdvancedMode();
+      await recalculate();
+      toast.success('Advanced mode activated');
+    } catch (error: any) {
+      console.error('Failed to activate advanced mode:', error);
+      toast.error('Failed to activate advanced mode. Please try again.');
+    } finally {
+      setIsProcessingPayment(false);
+    }
   };
 
   const renderPricingWorkspace = () => (
-    <div className="space-y-6">
-      {/* Success message with Advanced Analysis button */}
+    <div className="space-y-2">
+      {/* Pricing Workspace - Both initial and advanced show tabs */}
       <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <div className="h-12 w-12 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                <CheckCircle className="w-6 h-6 text-emerald-600" />
-              </div>
-              <div className="flex-1">
-                <h3 className="text-base font-bold text-foreground mb-1">
-                  Processing Complete!
-                </h3>
-                <p className="text-sm text-muted-foreground">
-                  {positions.length} job position{positions.length !== 1 ? 's' : ''} extracted - view and edit data below
-                </p>
-              </div>
-            </div>
-            {!advancedMode && (
-              <Button
-                variant="primary"
-                onClick={handleAdvancedAnalysis}
-                disabled={isRecalculating}
-              >
-                {isRecalculating ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Calculating...
-                  </>
-                ) : (
-                  'Advanced Analysis'
-                )}
-              </Button>
+        {/* Tab Navigation - mode determines which tabs are shown */}
+        <PricingTabs
+          activeTab={activeTab}
+          onTabChange={setActiveTab}
+          hasSubcontractors={subcontractors.length > 0}
+          hasFiles={(currentProposal?.documents?.length ?? 0) > 0}
+          mode={advancedMode ? 'advanced' : 'initial'}
+        />
+
+        <CardContent className="pt-0">
+          {/* Tab Content */}
+          <div className="mt-4">
+            {activeTab === 'files' && (
+              <FilesTab
+                documents={currentProposal?.documents || []}
+                proposalId={proposalId}
+                onUrlsRefreshed={(updatedDocs) => {
+                  if (currentProposal) {
+                    setCurrentProposal({ ...currentProposal, documents: updatedDocs });
+                  }
+                }}
+              />
             )}
-            {advancedMode && (
-              <div className="text-sm text-emerald-600 font-semibold">
-                ✓ Advanced Mode Active
+            {activeTab === 'overview' && <OverviewTab key={`${rates.fringe}-${rates.oh}-${rates.ga}-${rates.fee}`} />}
+            {activeTab === 'main' && (
+              <div>
+                <AdvancedAnalysisGrid isAdvancedMode={advancedMode} />
               </div>
             )}
+            {activeTab === 'wage-data' && <WageDataSection positions={positionsAdvanced} />}
+            {activeTab === 'subcontractors' && advancedMode && <SubcontractorSection />}
           </div>
         </CardContent>
       </Card>
-
-      {/* Pricing Workspace */}
-      {!advancedMode ? (
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle>Job Positions & Pricing</CardTitle>
-              <Button variant="outline" size="sm" onClick={handleAddPosition}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Position
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent className="pl-0">
-            <div className="h-[600px]">
-              <PositionsGrid />
-            </div>
-          </CardContent>
-        </Card>
-      ) : (
-        /* Advanced Mode with Tabs */
-        <Card>
-          <CardHeader>
-            <CardTitle>Advanced Analysis</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {/* Tab Navigation */}
-            <PricingTabs
-              activeTab={activeTab}
-              onTabChange={setActiveTab}
-              hasSubcontractors={subcontractors.length > 0}
-            />
-
-            {/* Tab Content */}
-            <div className="mt-6">
-              {activeTab === 'overview' && <OverviewTab />}
-              {activeTab === 'main' && (
-                <div className="overflow-y-auto" style={{ maxHeight: '800px' }}>
-                  <AdvancedAnalysisGrid />
-                </div>
-              )}
-              {activeTab === 'subcontractors' && <SubcontractorSection />}
-              {activeTab === 'rate-table' && (
-                <RateTableView
-                  subcontractors={subcontractors}
-                  feeRate={rates.sub_fee || 0.05}
-                  smhRate={rates.smh || 0.065}
-                />
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Back button */}
-      <div>
-        <Button variant="outline" onClick={() => router.push('/dashboard')}>
-          <ArrowLeft className="w-4 h-4 mr-2" />
-          Back to Dashboard
-        </Button>
-      </div>
     </div>
   );
 
   return (
     <DashboardLayout>
-      <div className="max-w-[1800px] mx-auto">
+      <div className="w-full px-6">
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
+          <div className="flex items-center gap-6 flex-wrap mt-2">
             {/* Proposal Name with Inline Edit */}
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2">
               {!isEditingName ? (
-                <>
-                  <h1 className="text-lg font-bold text-foreground">
-                    {currentProposal.name}
-                  </h1>
-                  <button
-                    onClick={handleStartEditName}
-                    className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-                    title="Edit proposal name"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                </>
-              ) : (
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleSaveProposalName();
-                  }}
-                  className="flex items-center gap-2"
+                <h1
+                  className="text-lg font-bold text-foreground cursor-text hover:bg-muted/30 px-2 py-1 rounded transition-colors"
+                  onDoubleClick={handleStartEditName}
+                  title="Double-click to edit"
                 >
-                  <Input
-                    type="text"
-                    value={editedName}
-                    onChange={(e) => setEditedName(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Escape') {
-                        handleCancelEditName();
-                      }
-                    }}
-                    placeholder="Enter proposal name"
-                    className="w-96"
-                    autoFocus
-                  />
-                  <button
-                    type="submit"
-                    disabled={isSaving}
-                    className="p-2 text-green-600 hover:text-green-700 disabled:opacity-50 hover:bg-green-50 rounded transition-colors"
-                    title="Save"
-                  >
-                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCancelEditName}
-                    disabled={isSaving}
-                    className="p-2 text-red-600 hover:text-red-700 disabled:opacity-50 hover:bg-red-50 rounded transition-colors"
-                    title="Cancel"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </form>
+                  {currentProposal.name}
+                </h1>
+              ) : (
+                <Input
+                  type="text"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  onBlur={handleSaveProposalName}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      handleCancelEditName();
+                    }
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSaveProposalName();
+                    }
+                  }}
+                  placeholder="Enter proposal name"
+                  className="w-96"
+                  autoFocus
+                />
               )}
             </div>
             {/* Solicitation Number with Inline Edit */}
             <div className="flex items-center gap-2">
               {!isEditingSolicitation ? (
-                <>
-                  <p className="text-sm text-muted-foreground">
-                    {currentProposal.solicitation_number || 'No solicitation number'}
-                  </p>
-                  <button
-                    onClick={handleStartEdit}
-                    className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-                    title="Edit solicitation number"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                </>
+                <p
+                  className="text-sm text-muted-foreground cursor-text hover:bg-muted/30 px-2 py-1 rounded transition-colors"
+                  onDoubleClick={handleStartEdit}
+                  title="Double-click to edit"
+                >
+                  {currentProposal.solicitation_number || 'No solicitation number'}
+                </p>
               ) : (
-                <div className="flex items-center gap-2">
-                  <Input
-                    type="text"
-                    value={editedSolicitation}
-                    onChange={(e) => setEditedSolicitation(e.target.value)}
-                    placeholder="Enter solicitation number"
-                    className="w-64"
-                    autoFocus
-                  />
-                  <button
-                    onClick={handleSaveSolicitation}
-                    disabled={isSaving}
-                    className="p-1 text-green-600 hover:text-green-700 disabled:opacity-50"
-                    title="Save"
-                  >
-                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  </button>
-                  <button
-                    onClick={handleCancelEdit}
-                    disabled={isSaving}
-                    className="p-1 text-red-600 hover:text-red-700 disabled:opacity-50"
-                    title="Cancel"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
+                <Input
+                  type="text"
+                  value={editedSolicitation}
+                  onChange={(e) => setEditedSolicitation(e.target.value)}
+                  onBlur={handleSaveSolicitation}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      handleCancelEdit();
+                    }
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSaveSolicitation();
+                    }
+                  }}
+                  placeholder="Enter solicitation number"
+                  className="w-64"
+                  autoFocus
+                />
               )}
             </div>
             {/* Prime Contractor with Inline Edit */}
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex items-center gap-2">
               {!isEditingPrimeContractor ? (
-                <>
-                  <p className="text-sm text-muted-foreground">
-                    Prime Contractor: {currentProposal.prime_contractor_name || 'Not specified'}
-                  </p>
-                  <button
-                    onClick={handleStartEditPrimeContractor}
-                    className="p-1 text-muted-foreground hover:text-foreground transition-colors"
-                    title="Edit prime contractor name"
-                  >
-                    <Pencil className="w-4 h-4" />
-                  </button>
-                </>
-              ) : (
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    handleSavePrimeContractor();
-                  }}
-                  className="flex items-center gap-2"
+                <p
+                  className="text-sm text-muted-foreground cursor-text hover:bg-muted/30 px-2 py-1 rounded transition-colors"
+                  onDoubleClick={handleStartEditPrimeContractor}
+                  title="Double-click to edit"
                 >
-                  <span className="text-sm text-muted-foreground"> Prime Contractor Name:</span>
+                  Prime Contractor: {currentProposal.prime_contractor_name || 'Not specified'}
+                </p>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">Prime Contractor:</span>
                   <Input
                     type="text"
                     value={editedPrimeContractor}
                     onChange={(e) => setEditedPrimeContractor(e.target.value)}
+                    onBlur={handleSavePrimeContractor}
                     onKeyDown={(e) => {
                       if (e.key === 'Escape') {
                         handleCancelEditPrimeContractor();
+                      }
+                      if (e.key === 'Enter') {
+                        e.preventDefault();
+                        handleSavePrimeContractor();
                       }
                     }}
                     placeholder="Enter prime contractor name"
                     className="w-64"
                     autoFocus
                   />
-                  <button
-                    type="submit"
-                    disabled={isSaving}
-                    className="p-1 text-green-600 hover:text-green-700 disabled:opacity-50 hover:bg-green-50 rounded transition-colors"
-                    title="Save"
-                  >
-                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleCancelEditPrimeContractor}
-                    disabled={isSaving}
-                    className="p-1 text-red-600 hover:text-red-700 disabled:opacity-50 hover:bg-red-50 rounded transition-colors"
-                    title="Cancel"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </form>
+                </div>
               )}
             </div>
           </div>
-          {currentProposal.status === 'completed' && (
-            <Button
-              variant="outline"
-              onClick={() => {
-                // Pass current prime contractor name to export
-                exportToExcel({
-                  primeContractorName: currentProposal?.prime_contractor_name || 'TBD'
-                });
-              }}
-              disabled={isRecalculating}
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Export to Excel
-            </Button>
-          )}
+          {/* Action buttons */}
+          <div className="mt-2 flex items-center gap-2">
+            {/* Business Status Dropdown - only show for completed proposals */}
+            {currentProposal.status === 'completed' && (
+              <div className="relative" ref={statusDropdownRef}>
+                <button
+                  onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+                  disabled={isUpdatingStatus}
+                  className={`
+                    inline-flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-lg border transition-all duration-200
+                    ${currentProposal.business_status === 'active'
+                      ? 'bg-blue-50 border-blue-200 text-blue-700'
+                      : currentProposal.business_status === 'no-bid'
+                      ? 'bg-amber-50 border-amber-200 text-amber-700'
+                      : currentProposal.business_status === 'submitted'
+                      ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                      : 'bg-background border-border text-foreground'}
+                    hover:shadow-sm disabled:opacity-50 disabled:cursor-not-allowed
+                  `}
+                >
+                  {isUpdatingStatus ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : currentProposal.business_status === 'active' ? (
+                    <CheckCircle className="w-4 h-4" />
+                  ) : currentProposal.business_status === 'no-bid' ? (
+                    <XCircle className="w-4 h-4" />
+                  ) : currentProposal.business_status === 'submitted' ? (
+                    <Send className="w-4 h-4" />
+                  ) : (
+                    <CheckCircle className="w-4 h-4" />
+                  )}
+                  <span>
+                    {currentProposal.business_status === 'active' ? 'Active' :
+                     currentProposal.business_status === 'no-bid' ? 'No-Bid' :
+                     currentProposal.business_status === 'submitted' ? 'Submitted' : 'Active'}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 transition-transform duration-200 ${statusDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
+
+                {/* Dropdown Menu */}
+                {statusDropdownOpen && (
+                  <div className="absolute top-full left-0 mt-1 w-44 bg-background border border-border rounded-lg shadow-lg py-1 z-50">
+                    <button
+                      onClick={() => handleUpdateBusinessStatus('active')}
+                      className={`
+                        w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors
+                        ${currentProposal.business_status === 'active'
+                          ? 'bg-blue-50 text-blue-700'
+                          : 'text-foreground hover:bg-muted'}
+                      `}
+                    >
+                      <CheckCircle className={`w-4 h-4 ${currentProposal.business_status === 'active' ? 'text-blue-600' : 'text-muted-foreground'}`} />
+                      <span>Active</span>
+                      {currentProposal.business_status === 'active' && (
+                        <CheckCircle className="w-3.5 h-3.5 ml-auto text-blue-600" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleUpdateBusinessStatus('no-bid')}
+                      className={`
+                        w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors
+                        ${currentProposal.business_status === 'no-bid'
+                          ? 'bg-amber-50 text-amber-700'
+                          : 'text-foreground hover:bg-muted'}
+                      `}
+                    >
+                      <XCircle className={`w-4 h-4 ${currentProposal.business_status === 'no-bid' ? 'text-amber-600' : 'text-muted-foreground'}`} />
+                      <span>No-Bid</span>
+                      {currentProposal.business_status === 'no-bid' && (
+                        <CheckCircle className="w-3.5 h-3.5 ml-auto text-amber-600" />
+                      )}
+                    </button>
+                    <button
+                      onClick={() => handleUpdateBusinessStatus('submitted')}
+                      className={`
+                        w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-colors
+                        ${currentProposal.business_status === 'submitted'
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : 'text-foreground hover:bg-muted'}
+                      `}
+                    >
+                      <Send className={`w-4 h-4 ${currentProposal.business_status === 'submitted' ? 'text-emerald-600' : 'text-muted-foreground'}`} />
+                      <span>Submitted</span>
+                      {currentProposal.business_status === 'submitted' && (
+                        <CheckCircle className="w-3.5 h-3.5 ml-auto text-emerald-600" />
+                      )}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+            {/* Share button (admin only) */}
+            {currentProposal.status === 'completed' && user?.role === 'admin' && (
+              <Button
+                variant="outline"
+                onClick={() => setShareModalOpen(true)}
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Share
+              </Button>
+            )}
+            {/* Save button (shows in both basic and advanced mode) */}
+            {currentProposal.status === 'completed' && (
+              <Button
+                variant="outline"
+                onClick={handleManualSave}
+                disabled={isPricingSaving || isRecalculating}
+              >
+                {isPricingSaving ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4 mr-2" />
+                    Save
+                  </>
+                )}
+              </Button>
+            )}
+            {/* Advanced Analysis or Export Excel button */}
+            {currentProposal.status === 'completed' && (
+              <>
+                {!advancedMode ? (
+                  <Button
+                    variant="primary"
+                    onClick={handleAdvancedAnalysis}
+                    disabled={isRecalculating || isProcessingPayment}
+                  >
+                    {isProcessingPayment ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Processing Payment...
+                      </>
+                    ) : isRecalculating ? (
+                      <>
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        Calculating...
+                      </>
+                    ) : (
+                      'Advanced Analysis'
+                    )}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      // Pass current prime contractor name to export
+                      exportToExcel({
+                        primeContractorName: currentProposal?.prime_contractor_name || 'TBD'
+                      });
+                    }}
+                    disabled={isRecalculating}
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Export to Excel
+                  </Button>
+                )}
+              </>
+            )}
+          </div>
         </div>
 
         {currentProposal.status === 'processing' && renderProcessingView()}
@@ -596,6 +876,39 @@ export default function ProposalPage() {
           addPosition(positionData);
           setAddPositionModalOpen(false);
         }}
+      />
+
+      {/* Share/Invite Modal */}
+      <ShareOrInviteModal
+        isOpen={shareModalOpen}
+        onClose={() => setShareModalOpen(false)}
+        proposalId={proposalId}
+        proposalName={currentProposal?.name || ''}
+      />
+
+      {/* Advanced Analysis Questionnaire Modal */}
+      <AdvancedAnalysisModal
+        open={advancedModalOpen}
+        onClose={() => setAdvancedModalOpen(false)}
+        onSubmit={handleAdvancedModalSubmit}
+      />
+
+      {/* Advanced Mode Charge Confirmation Modal */}
+      <ChargeConfirmationModal
+        isOpen={showAdvancedChargeConfirmation}
+        onClose={() => setShowAdvancedChargeConfirmation(false)}
+        onConfirm={confirmAndActivateAdvanced}
+        title="Confirm Advanced Analysis"
+        description="Unlock advanced features including FBLR breakdown, subcontractor management, and rate table calculations."
+        amount={Number(process.env.NEXT_PUBLIC_ADVANCED_ANALYSIS_PRICE) || 250}
+        currency="USD"
+        isLoading={isProcessingPayment}
+        features={[
+          'Subcontractor labor management',
+          'Automatic workshare allocation',
+          'Target rate table for subcontractors',
+          'Excel export with detailed calculations',
+        ]}
       />
     </DashboardLayout>
   );

@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     # MongoDB configuration
     MONGODB_URL: str = "mongodb://localhost:27017"
     MONGODB_DATABASE: str = "testing"
+    EXA_API_KEY:str=""
 
     # CareerOneStop API (free gov API for wage data by SOC code)
     CAREERONESTOP_API_KEY: str = ""  # Register at careeronestop.org
@@ -28,6 +29,10 @@ class Settings(BaseSettings):
     IDRIVE_E2_ACCESS_KEY: str = ""
     IDRIVE_E2_SECRET_KEY: str = ""
     IDRIVE_E2_BUCKET: str = ""
+
+    # Pinecone configuration (for GSA labor category search)
+    PINECONE_API_KEY: str = ""
+    PINECONE_INDEX_NAME: str = "gsa-labor-categories"
 
     class Config:
         env_file = ".env"

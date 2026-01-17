@@ -5,13 +5,28 @@ import {
   ProposalStatus,
   UploadResponse,
   DocumentInfo,
+  BusinessStatusAnalytics,
 } from '@/types';
 
 export interface ProposalStats {
   total: number;
-  completed: number;
+  active: {
+    count: number;
+    value: number;
+  };
+  analyzed: {           // SUPERSET: Active + No-Bid combined
+    count: number;
+    value: number;
+  };
+  no_bid: {
+    count: number;
+    value: number;
+  };
+  submitted: {
+    count: number;
+    value: number;
+  };
   processing: number;
-  submitted: number;
   error: number;
 }
 
@@ -31,14 +46,30 @@ export const proposalsApi = {
   },
 
   // Upload documents and create proposal
-  upload: async (files: File[], solicitationNumber?: string): Promise<UploadResponse> => {
+  upload: async (
+    files: File[],
+    name: string,
+    solicitationNumber?: string,
+    wageSourceType?: 'bls' | 'gsa',
+    wageSourceFileId?: string
+  ): Promise<UploadResponse> => {
     const formData = new FormData();
     files.forEach((file) => {
       formData.append('files', file);
     });
 
+    formData.append('name', name);
+
     if (solicitationNumber) {
       formData.append('solicitation_number', solicitationNumber);
+    }
+
+    // Add wage source parameters for GSA support
+    if (wageSourceType) {
+      formData.append('wage_source_type', wageSourceType);
+    }
+    if (wageSourceFileId) {
+      formData.append('wage_source_file_id', wageSourceFileId);
     }
 
     const response = await apiClient.post<UploadResponse>(
@@ -174,6 +205,44 @@ export const proposalsApi = {
   // Mark proposal as downloaded (Excel exported)
   markDownloaded: async (proposalId: string): Promise<{ message: string; excel_downloaded: boolean }> => {
     const response = await apiClient.post(`/proposals/${proposalId}/mark-downloaded`);
+    return response.data;
+  },
+
+  // Retry processing for stuck/failed proposal
+  retry: async (proposalId: string): Promise<{ status: string; message: string }> => {
+    const response = await apiClient.post(`/proposals/${proposalId}/retry`);
+    return response.data;
+  },
+
+  // Refresh document URLs (pre-signed URLs expire after 7 days)
+  refreshDocumentUrls: async (proposalId: string): Promise<Proposal> => {
+    const response = await apiClient.post<Proposal>(`/proposals/${proposalId}/refresh-urls`);
+    return response.data;
+  },
+
+  // Update proposal business status (active, no-bid, submitted)
+  updateBusinessStatus: async (
+    proposalId: string,
+    businessStatus: 'active' | 'no-bid' | 'submitted'
+  ): Promise<Proposal> => {
+    const response = await apiClient.patch(
+      `/proposals/${proposalId}/business-status`,
+      null,
+      { params: { business_status: businessStatus } }
+    );
+    return response.data;
+  },
+
+  // Get detailed analytics for specific business status
+  getAnalytics: async (
+    businessStatus: 'active' | 'no-bid' | 'submitted' | 'analyzed',
+    skip: number = 0,
+    limit: number = 100
+  ): Promise<BusinessStatusAnalytics> => {
+    const response = await apiClient.get(
+      `/proposals/analytics/${businessStatus}`,
+      { params: { skip, limit } }
+    );
     return response.data;
   },
 };

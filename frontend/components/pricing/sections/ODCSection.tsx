@@ -3,13 +3,16 @@
 import { useMemo, useState } from 'react';
 import { DataGrid } from 'react-data-grid';
 import type { Column } from 'react-data-grid';
-import { ODCItem } from '@/types';
+import { ODCItem, Extension } from '@/types';
 import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
 
 interface ODCSectionProps {
   odcs: ODCItem[];
   totalYears: number;
+  extensions: Extension[];  // Extension periods beyond regular years
+  smhRate: number; // S&MH rate to apply to ODCs
+  escalationRates: Record<string, number | undefined>; // Escalation rates by year
   onAdd: () => void;
   onEdit: (odc: ODCItem) => void;
   onDelete: (id: string) => void;
@@ -20,15 +23,17 @@ interface ODCRow {
   category: string;
   description?: string;
   escalate: boolean;
-  applyGAAdder: boolean;
   amountsByYear: Record<string, number>;
-  type: 'odc' | 'total';
+  type: 'odc' | 'subtotal' | 'smh' | 'total';
   originalODC?: ODCItem;
 }
 
 export const ODCSection = ({
   odcs,
   totalYears,
+  extensions,
+  smhRate,
+  escalationRates,
   onAdd,
   onEdit,
   onDelete,
@@ -45,8 +50,8 @@ export const ODCSection = ({
     }).format(value);
   };
 
-  // Calculate ODC totals by year (before escalation/GA)
-  const odcTotalsByYear = useMemo(() => {
+  // Calculate ODC totals by year (before S&MH) with escalation
+  const odcSubtotalsByYear = useMemo(() => {
     const result: Record<string, number> = {};
 
     for (let year = 1; year <= totalYears; year++) {
@@ -54,43 +59,97 @@ export const ODCSection = ({
       result[yearStr] = 0;
 
       odcs.forEach((odc) => {
-        result[yearStr] += odc.amount_per_year[yearStr] || 0;
+        const baseAmount = odc.amount_per_year[yearStr] || 0;
+        let escalatedAmount = baseAmount;
+
+        // Apply compound escalation if flag is set
+        if (odc.escalate) {
+          for (let y = 1; y < year; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = escalationRates[escKey] || 0;
+            escalatedAmount *= (1 + escRate);
+          }
+        }
+
+        result[yearStr] += escalatedAmount;
       });
     }
 
     return result;
-  }, [odcs, totalYears]);
+  }, [odcs, totalYears, escalationRates]);
 
-  // Calculate grand total
+  // Calculate S&MH amounts by year
+  const smhAmountsByYear = useMemo(() => {
+    const result: Record<string, number> = {};
+    Object.entries(odcSubtotalsByYear).forEach(([year, amount]) => {
+      result[year] = amount * smhRate;
+    });
+    return result;
+  }, [odcSubtotalsByYear, smhRate]);
+
+  // Calculate total with S&MH by year
+  const totalWithSMHByYear = useMemo(() => {
+    const result: Record<string, number> = {};
+    Object.entries(odcSubtotalsByYear).forEach(([year, amount]) => {
+      result[year] = amount + smhAmountsByYear[year];
+    });
+    return result;
+  }, [odcSubtotalsByYear, smhAmountsByYear]);
+
+  // Calculate grand totals
+  const subtotalGrandTotal = useMemo(() => {
+    return Object.values(odcSubtotalsByYear).reduce((sum, val) => sum + val, 0);
+  }, [odcSubtotalsByYear]);
+
+  const smhGrandTotal = useMemo(() => {
+    return Object.values(smhAmountsByYear).reduce((sum, val) => sum + val, 0);
+  }, [smhAmountsByYear]);
+
   const grandTotal = useMemo(() => {
-    return Object.values(odcTotalsByYear).reduce((sum, val) => sum + val, 0);
-  }, [odcTotalsByYear]);
+    return subtotalGrandTotal + smhGrandTotal;
+  }, [subtotalGrandTotal, smhGrandTotal]);
 
-  // Create rows (ODC items + total row)
+  // Create rows (ODC items + subtotal + S&MH + total)
   const rows = useMemo<ODCRow[]>(() => {
     const odcRows: ODCRow[] = odcs.map((odc) => ({
       id: odc.id,
       category: odc.category,
       description: odc.description,
       escalate: odc.escalate,
-      applyGAAdder: odc.apply_ga_adder,
       amountsByYear: odc.amount_per_year,
       type: 'odc',
       originalODC: odc,
     }));
 
-    // Add total row
+    // Add subtotal row (base amounts)
+    odcRows.push({
+      id: 'subtotal',
+      category: 'Subtotal ODCs (Base)',
+      escalate: false,
+      amountsByYear: odcSubtotalsByYear,
+      type: 'subtotal',
+    });
+
+    // Add S&MH row
+    odcRows.push({
+      id: 'smh',
+      category: `S&MH (${(smhRate * 100).toFixed(2)}%)`,
+      escalate: false,
+      amountsByYear: smhAmountsByYear,
+      type: 'smh',
+    });
+
+    // Add total row with S&MH
     odcRows.push({
       id: 'total',
-      category: 'Total ODCs',
+      category: 'Total ODCs (with S&MH)',
       escalate: false,
-      applyGAAdder: false,
-      amountsByYear: odcTotalsByYear,
+      amountsByYear: totalWithSMHByYear,
       type: 'total',
     });
 
     return odcRows;
-  }, [odcs, odcTotalsByYear]);
+  }, [odcs, odcSubtotalsByYear, smhAmountsByYear, totalWithSMHByYear, smhRate]);
 
   // Generate columns dynamically
   const columns = useMemo<Column<ODCRow>[]>(() => {
@@ -99,14 +158,21 @@ export const ODCSection = ({
       {
         key: 'category',
         name: 'Category',
-        width: 150,
+        width: 200,
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => (
-          <div className="flex items-center h-full px-2">
+          <div className={`flex items-center h-full px-2 ${
+            row.type === 'subtotal' ? 'bg-gray-50 border-t-2 border-gray-300' :
+            row.type === 'smh' ? 'bg-purple-50' :
+            row.type === 'total' ? 'bg-orange-100 border-t-2 border-orange-300 border-b-2' : ''
+          }`}>
             <span
-              className={`font-semibold ${
-                row.type === 'total' ? 'text-orange-600 text-lg' : 'text-foreground'
+              className={`font-semibold whitespace-normal break-words overflow-wrap ${
+                row.type === 'total' ? 'text-orange-700 text-lg font-bold' :
+                row.type === 'subtotal' ? 'text-gray-700 font-bold' :
+                row.type === 'smh' ? 'text-purple-700 font-bold' :
+                'text-foreground'
               }`}
             >
               {row.category}
@@ -121,7 +187,13 @@ export const ODCSection = ({
         width: 250,
         resizable: true,
         renderCell: ({ row }) => {
-          if (row.type === 'total') return <div className="h-full" />;
+          if (row.type !== 'odc') return (
+            <div className={`h-full ${
+              row.type === 'subtotal' ? 'bg-gray-50 border-t-2 border-gray-300' :
+              row.type === 'smh' ? 'bg-purple-50' :
+              row.type === 'total' ? 'bg-orange-100 border-t-2 border-orange-300 border-b-2' : ''
+            }`} />
+          );
 
           return (
             <div className="flex items-center h-full px-2">
@@ -135,11 +207,6 @@ export const ODCSection = ({
                       Escalate
                     </span>
                   )}
-                  {row.applyGAAdder && (
-                    <span className="px-2 py-0.5 bg-green-50 text-green-600 rounded border border-green-100">
-                      +G&amp;A
-                    </span>
-                  )}
                 </div>
               </div>
             </div>
@@ -148,10 +215,15 @@ export const ODCSection = ({
       },
     ];
 
-    // Add year columns
+    // Add year columns (including extensions)
     for (let year = 1; year <= totalYears; year++) {
       const yearStr = year.toString();
-      const label = year === 1 ? 'Base Period' : `Option Year ${year - 1}`;
+
+      // Check if this year is an extension
+      const extension = extensions.find(ext => ext.year === year);
+      const label = extension
+        ? extension.label
+        : (year === 1 ? 'Base Period' : `Option Year ${year - 1}`);
 
       cols.push({
         key: `year${year}`,
@@ -164,14 +236,17 @@ export const ODCSection = ({
           return (
             <div
               className={`flex items-center justify-end h-full px-2 ${
-                row.type === 'total' ? 'bg-orange-50' : ''
+                row.type === 'subtotal' ? 'bg-gray-50 border-t-2 border-gray-300' :
+                row.type === 'smh' ? 'bg-purple-50' :
+                row.type === 'total' ? 'bg-orange-100 border-t-2 border-orange-300 border-b-2' : ''
               }`}
             >
               <span
                 className={
-                  row.type === 'total'
-                    ? 'text-orange-600 font-bold'
-                    : 'text-amber-600 font-semibold'
+                  row.type === 'total' ? 'text-orange-700 font-bold text-lg' :
+                  row.type === 'subtotal' ? 'text-gray-700 font-bold' :
+                  row.type === 'smh' ? 'text-purple-700 font-bold' :
+                  'text-amber-600 font-semibold'
                 }
               >
                 {formatCurrency(value)}
@@ -198,14 +273,17 @@ export const ODCSection = ({
         return (
           <div
             className={`flex items-center justify-end h-full px-2 ${
-              row.type === 'total' ? 'bg-orange-100' : ''
+              row.type === 'subtotal' ? 'bg-gray-50 border-t-2 border-gray-300' :
+              row.type === 'smh' ? 'bg-purple-50' :
+              row.type === 'total' ? 'bg-orange-100 border-t-2 border-orange-300 border-b-2' : ''
             }`}
           >
             <span
               className={
-                row.type === 'total'
-                  ? 'text-orange-600 font-bold text-lg'
-                  : 'text-amber-600 font-semibold'
+                row.type === 'total' ? 'text-orange-700 font-bold text-lg' :
+                row.type === 'subtotal' ? 'text-gray-700 font-bold' :
+                row.type === 'smh' ? 'text-purple-700 font-bold' :
+                'text-amber-600 font-semibold'
               }
             >
               {formatCurrency(total)}
@@ -222,7 +300,7 @@ export const ODCSection = ({
       width: 100,
       resizable: false,
       renderCell: ({ row }) => {
-        if (row.type === 'total') return <div className="h-full" />;
+        if (row.type !== 'odc') return <div className="h-full" />;
 
         return (
           <div className="flex items-center justify-center h-full gap-2">
@@ -270,7 +348,7 @@ export const ODCSection = ({
     });
 
     return cols;
-  }, [totalYears, onEdit]);
+  }, [totalYears, extensions, onEdit]);
 
   const handleConfirmDelete = (id: string) => {
     onDelete(id);

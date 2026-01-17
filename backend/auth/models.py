@@ -8,6 +8,7 @@ class UserSignup(BaseModel):
     lastName: str
     email: EmailStr
     password: str
+    terms_accepted: bool
 
 
 class UserLogin(BaseModel):
@@ -24,6 +25,10 @@ class UserResponse(BaseModel):
     role: Optional[str] = None
     status: Optional[str] = None
     createdAt: datetime
+    # Terms and Conditions
+    terms_accepted_version: Optional[str] = None
+    terms_accepted_at: Optional[datetime] = None
+    needs_terms_acceptance: bool = False
 
 
 class Token(BaseModel):

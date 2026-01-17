@@ -15,7 +15,7 @@ export const organizationsApi = {
   },
 
   // Update organization settings (admin only)
-  updateSettings: async (settings: Partial<OrganizationSettings>): Promise<Organization> => {
+  updateSettings: async (settings: Partial<OrganizationSettings> & { name?: string; website?: string | null; address?: string | null }): Promise<Organization> => {
     const response = await apiClient.patch<Organization>('/organizations/me/settings', settings);
     return response.data;
   },

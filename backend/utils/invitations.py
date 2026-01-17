@@ -44,7 +44,8 @@ class InvitationCRUD:
         org_id: ObjectId,
         email: str,
         role: str,
-        invited_by: ObjectId
+        invited_by: ObjectId,
+        proposal_ids: list = None
     ) -> dict:
         """Create and send invitation (sync)"""
         
@@ -58,10 +59,16 @@ class InvitationCRUD:
         if existing:
             raise ValueError("User already has a pending invitation")
 
-        # Check if user already exists in THIS organization
+        # Check if user already exists in THIS organization (using organizations array)
+        # Exclude users with status 'removed' - they can be re-invited
         existing_user = self.users_collection.find_one({
             "email": email,
-            "organization_id": org_id
+            "organizations": {
+                "$elemMatch": {
+                    "organization_id": org_id,
+                    "status": {"$ne": "removed"}
+                }
+            }
         })
         if existing_user:
             raise ValueError("User is already a member of this organization")
@@ -85,7 +92,8 @@ class InvitationCRUD:
             "status": "pending",
             "created_at": datetime.utcnow(),
             "expires_at": datetime.utcnow() + timedelta(days=7),
-            "accepted_at": None
+            "accepted_at": None,
+            "proposal_ids": proposal_ids or []  # Proposals to grant access to on acceptance
         }
 
         result = self.collection.insert_one(invitation)
