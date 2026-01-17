@@ -378,6 +378,60 @@ def create_indexes():
         print("   ⚠ Already exists: organization_id + status")
 
     # =====================================================================
+    # REFRESH_TOKENS COLLECTION (OAuth Refresh Tokens)
+    # =====================================================================
+    print("\n11. REFRESH_TOKENS Collection:")
+    refresh_tokens = db.refresh_tokens
+
+    # Token ID (unique) - for token validation
+    if safe_create_index(refresh_tokens, "token_id", "token_id_unique_index", unique=True):
+        print("   ✓ Created: token_id (unique)")
+    else:
+        print("   ⚠ Already exists: token_id (unique)")
+
+    # User email + token family - for token rotation
+    if safe_create_index(refresh_tokens, [("user_email", ASCENDING), ("token_family_id", ASCENDING)], "user_token_family_index"):
+        print("   ✓ Created: user_email + token_family_id")
+    else:
+        print("   ⚠ Already exists: user_email + token_family_id")
+
+    # User email alone - for logout (revoke all user tokens)
+    if safe_create_index(refresh_tokens, "user_email", "user_email_index"):
+        print("   ✓ Created: user_email")
+    else:
+        print("   ⚠ Already exists: user_email")
+
+    # Token family - for security (revoke entire family on reuse detection)
+    if safe_create_index(refresh_tokens, "token_family_id", "token_family_index"):
+        print("   ✓ Created: token_family_id")
+    else:
+        print("   ⚠ Already exists: token_family_id")
+
+    # Revocation status - for filtering active tokens
+    if safe_create_index(refresh_tokens, [("is_revoked", ASCENDING), ("expires_at", ASCENDING)], "revoked_expiry_index"):
+        print("   ✓ Created: is_revoked + expires_at")
+    else:
+        print("   ⚠ Already exists: is_revoked + expires_at")
+
+    # TTL index - auto-delete tokens 90 days after expiration (security audit grace period)
+    if safe_create_index(refresh_tokens, "expires_at", "expires_at_ttl_index", expireAfterSeconds=7776000):
+        print("   ✓ Created: expires_at (TTL - expires after 90 days)")
+    else:
+        print("   ⚠ Already exists: expires_at (TTL)")
+
+    # =====================================================================
+    # DATATYPES COLLECTION (BLS OEWS Data Types - Import Only)
+    # =====================================================================
+    print("\n12. DATATYPES Collection:")
+    datatypes = db.datatypes
+
+    # Datatype code - for lookups during import
+    if safe_create_index(datatypes, "datatype_code", "datatype_code_index"):
+        print("   ✓ Created: datatype_code")
+    else:
+        print("   ⚠ Already exists: datatype_code")
+
+    # =====================================================================
     # SUMMARY
     # =====================================================================
     print("\n" + "=" * 60)
@@ -385,7 +439,7 @@ def create_indexes():
     print("=" * 60)
 
     # List all indexes per collection
-    collections = ["proposals", "wage_data", "areas", "occupations", "users", "organizations", "invitations", "token_blacklist", "company_repositories", "billing"]
+    collections = ["proposals", "wage_data", "areas", "occupations", "users", "organizations", "invitations", "token_blacklist", "company_repositories", "billing", "refresh_tokens", "datatypes"]
     for coll_name in collections:
         coll = db[coll_name]
         indexes = list(coll.list_indexes())

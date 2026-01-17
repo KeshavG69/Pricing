@@ -5,7 +5,7 @@ This script:
 1. Reads all markdown files from docs/help-center/
 2. Splits them into chunks
 3. Generates embeddings using OpenAI (via OpenRouter)
-4. Uploads to Pinecone vector store (namespace: help-center in index: corporate)
+4. Uploads to Pinecone vector store (separate index from GSA, uses HELP_CENTER_PINECONE_INDEX_NAME)
 
 Metadata fields per chunk:
 - category: folder name (e.g., "getting-started")
@@ -47,8 +47,8 @@ load_dotenv()
 # Configuration
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
-PINECONE_INDEX_NAME = "corporate"  # Main index
-PINECONE_NAMESPACE = "help-center"  # Namespace for help docs
+PINECONE_INDEX_NAME = os.getenv("HELP_CENTER_PINECONE_INDEX_NAME", "help-center")  # Separate index for help center
+PINECONE_NAMESPACE = "help-center"  # Namespace within the index
 DOCS_PATH = Path(__file__).parent.parent.parent / "docs" / "help-center"
 
 # Embedding configuration
@@ -256,20 +256,36 @@ def upload_to_pinecone(chunks: List[Document]):
         openai_api_base="https://openrouter.ai/api/v1"
     )
 
+    # Augment chunks with metadata for better vector search
+    print(f"Augmenting chunks with metadata...")
+    augmented_chunks = []
+    for chunk in chunks:
+        # Create augmented content: original content + metadata string
+        metadata_str = f"\nmetadata: {chunk.metadata}"
+        augmented_content = chunk.page_content + metadata_str
+
+        # Create new document with augmented content but same metadata
+        augmented_chunk = Document(
+            page_content=augmented_content,
+            metadata=chunk.metadata
+        )
+        augmented_chunks.append(augmented_chunk)
+
     # Create vector store and upload to namespace
-    print(f"Uploading {len(chunks)} chunks...")
+    print(f"Uploading {len(augmented_chunks)} chunks...")
 
     try:
         vector_store = PineconeVectorStore.from_documents(
-            documents=chunks,
+            documents=augmented_chunks,
             embedding=embeddings,
             index_name=PINECONE_INDEX_NAME,
             namespace=PINECONE_NAMESPACE  # Store in help-center namespace
         )
 
-        print(f"✓ Successfully uploaded {len(chunks)} chunks to Pinecone")
+        print(f"✓ Successfully uploaded {len(augmented_chunks)} chunks to Pinecone")
         print(f"  Index: {PINECONE_INDEX_NAME}")
         print(f"  Namespace: {PINECONE_NAMESPACE}")
+        print(f"  (Content augmented with metadata for better search)")
 
     except Exception as e:
         print(f"✗ Error uploading to Pinecone: {e}")
