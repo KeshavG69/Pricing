@@ -10,6 +10,7 @@ import logging
 from typing import Optional
 from agno.agent import Agent
 from client.llm_client import get_chat_llm_agno
+from client.agent_memory import get_agent_db, get_memory_manager
 from utils.agno_tools import create_help_center_retriever
 
 logger = logging.getLogger(__name__)
@@ -25,7 +26,7 @@ def get_help_center_agent(session_id: str) -> Agent:
 
     Since the help center agent has no user-specific context, we cache
     a single instance and reuse it across all requests. Session ID is
-    dynamically bound for conversation tracking.
+    dynamically bound for conversation tracking and memory.
 
     Args:
         session_id: Session ID for this request
@@ -62,10 +63,14 @@ def _create_help_center_agent() -> Agent:
     Returns:
         Agent instance configured for help center Q&A
     """
-    llm = get_chat_llm_agno(model="openai/gpt-4.1-mini")
+    llm = get_chat_llm_agno(model="google/gemini-3-flash-preview")
 
     # Create help center retriever (singleton - same for all users)
     help_retriever = create_help_center_retriever()
+
+    # Get memory storage (singleton - shared across all sessions)
+    db_instance = get_agent_db()
+    memory_manager = get_memory_manager()
 
     instructions = [
         """You are a PriceIQ Help Center Assistant. Your role is to help users understand and use the PriceIQ platform effectively.
@@ -119,15 +124,20 @@ For troubleshooting questions:
 - Never make up features or steps that aren't in the documentation
 - Always be helpful and encouraging
 - Use the search_knowledge_base tool to retrieve relevant articles
+- You dont have to take the users request literaly understand the intent behind the request and provide the most relevant information from the knowledge base
 </important>"""
     ]
 
     agent = Agent(
         name="Help Center Assistant",
         model=llm,
-        # NO session_id here - will be set dynamically
         knowledge_retriever=help_retriever,
-        telemetry=True,
+        db=db_instance,
+        memory_manager=memory_manager,
+        add_history_to_context=True,
+        num_history_runs=4,
+        enable_agentic_memory=True,
+        enable_user_memories=True,
         add_datetime_to_context=True,
         markdown=True,
         id="HelpCenterAgent",
@@ -136,7 +146,7 @@ For troubleshooting questions:
         debug_mode=True
     )
 
-    logger.info("Created help center agent (singleton)")
+    logger.info("Created help center agent (singleton) with memory enabled")
     return agent
 
 

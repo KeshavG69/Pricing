@@ -393,6 +393,14 @@
         "documentation": {}
     },
     {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Dict",
         "importPath": "typing",
         "description": "typing",
@@ -1190,6 +1198,22 @@
         "description": "typing",
         "isExtraImport": true,
         "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "get_agent_db",
+        "importPath": "client.agent_memory",
+        "description": "client.agent_memory",
+        "isExtraImport": true,
+        "detail": "client.agent_memory",
+        "documentation": {}
+    },
+    {
+        "label": "get_memory_manager",
+        "importPath": "client.agent_memory",
+        "description": "client.agent_memory",
+        "isExtraImport": true,
+        "detail": "client.agent_memory",
         "documentation": {}
     },
     {
@@ -2748,6 +2772,14 @@
         "documentation": {}
     },
     {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
         "label": "HTTPBearer",
         "importPath": "fastapi.security",
         "description": "fastapi.security",
@@ -3179,6 +3211,22 @@
         "importPath": "hashlib",
         "description": "hashlib",
         "detail": "hashlib",
+        "documentation": {}
+    },
+    {
+        "label": "MongoDb",
+        "importPath": "agno.db.mongo",
+        "description": "agno.db.mongo",
+        "isExtraImport": true,
+        "detail": "agno.db.mongo",
+        "documentation": {}
+    },
+    {
+        "label": "MemoryManager",
+        "importPath": "agno.memory.manager",
+        "description": "agno.memory.manager",
+        "isExtraImport": true,
+        "detail": "agno.memory.manager",
         "documentation": {}
     },
     {
@@ -4614,7 +4662,7 @@
         "kind": 2,
         "importPath": "backend.agent.help_center_agent",
         "description": "backend.agent.help_center_agent",
-        "peekOfCode": "def get_help_center_agent(session_id: str) -> Agent:\n    \"\"\"\n    Get cached help center agent singleton with session-specific binding.\n    Since the help center agent has no user-specific context, we cache\n    a single instance and reuse it across all requests. Session ID is\n    dynamically bound for conversation tracking.\n    Args:\n        session_id: Session ID for this request\n    Returns:\n        Cached Agent instance with updated session_id",
+        "peekOfCode": "def get_help_center_agent(session_id: str) -> Agent:\n    \"\"\"\n    Get cached help center agent singleton with session-specific binding.\n    Since the help center agent has no user-specific context, we cache\n    a single instance and reuse it across all requests. Session ID is\n    dynamically bound for conversation tracking and memory.\n    Args:\n        session_id: Session ID for this request\n    Returns:\n        Cached Agent instance with updated session_id",
         "detail": "backend.agent.help_center_agent",
         "documentation": {}
     },
@@ -4632,7 +4680,7 @@
         "kind": 5,
         "importPath": "backend.agent.help_center_agent",
         "description": "backend.agent.help_center_agent",
-        "peekOfCode": "logger = logging.getLogger(__name__)\n# Global singleton for help center agent\n_help_center_agent: Optional[Agent] = None\n_agent_lock = threading.Lock()\ndef get_help_center_agent(session_id: str) -> Agent:\n    \"\"\"\n    Get cached help center agent singleton with session-specific binding.\n    Since the help center agent has no user-specific context, we cache\n    a single instance and reuse it across all requests. Session ID is\n    dynamically bound for conversation tracking.",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# Global singleton for help center agent\n_help_center_agent: Optional[Agent] = None\n_agent_lock = threading.Lock()\ndef get_help_center_agent(session_id: str) -> Agent:\n    \"\"\"\n    Get cached help center agent singleton with session-specific binding.\n    Since the help center agent has no user-specific context, we cache\n    a single instance and reuse it across all requests. Session ID is\n    dynamically bound for conversation tracking and memory.",
         "detail": "backend.agent.help_center_agent",
         "documentation": {}
     },
@@ -4641,7 +4689,7 @@
         "kind": 5,
         "importPath": "backend.agent.help_center_agent",
         "description": "backend.agent.help_center_agent",
-        "peekOfCode": "_agent_lock = threading.Lock()\ndef get_help_center_agent(session_id: str) -> Agent:\n    \"\"\"\n    Get cached help center agent singleton with session-specific binding.\n    Since the help center agent has no user-specific context, we cache\n    a single instance and reuse it across all requests. Session ID is\n    dynamically bound for conversation tracking.\n    Args:\n        session_id: Session ID for this request\n    Returns:",
+        "peekOfCode": "_agent_lock = threading.Lock()\ndef get_help_center_agent(session_id: str) -> Agent:\n    \"\"\"\n    Get cached help center agent singleton with session-specific binding.\n    Since the help center agent has no user-specific context, we cache\n    a single instance and reuse it across all requests. Session ID is\n    dynamically bound for conversation tracking and memory.\n    Args:\n        session_id: Session ID for this request\n    Returns:",
         "detail": "backend.agent.help_center_agent",
         "documentation": {}
     },
@@ -5210,6 +5258,51 @@
         "description": "backend.auth.utils",
         "peekOfCode": "def generate_user_id() -> str:\n    \"\"\"Generate a unique user ID\"\"\"\n    return str(uuid.uuid4())",
         "detail": "backend.auth.utils",
+        "documentation": {}
+    },
+    {
+        "label": "AgentMemoryManager",
+        "kind": 6,
+        "importPath": "backend.client.agent_memory",
+        "description": "backend.client.agent_memory",
+        "peekOfCode": "class AgentMemoryManager:\n    \"\"\"\n    Singleton manager for agent memory storage.\n    Provides thread-safe lazy initialization for MongoDB connections.\n    \"\"\"\n    _instance: Optional['AgentMemoryManager'] = None\n    _lock = threading.Lock()\n    def __new__(cls) -> 'AgentMemoryManager':\n        \"\"\"Ensure only one instance exists (singleton pattern).\"\"\"\n        if cls._instance is None:",
+        "detail": "backend.client.agent_memory",
+        "documentation": {}
+    },
+    {
+        "label": "get_agent_memory_manager",
+        "kind": 2,
+        "importPath": "backend.client.agent_memory",
+        "description": "backend.client.agent_memory",
+        "peekOfCode": "def get_agent_memory_manager() -> AgentMemoryManager:\n    \"\"\"Get the global agent memory manager singleton.\"\"\"\n    global _agent_memory_manager\n    if _agent_memory_manager is None:\n        with _manager_lock:\n            if _agent_memory_manager is None:\n                _agent_memory_manager = AgentMemoryManager()\n    return _agent_memory_manager\ndef get_agent_db() -> MongoDb:\n    \"\"\"Convenience function to get MongoDB instance.\"\"\"",
+        "detail": "backend.client.agent_memory",
+        "documentation": {}
+    },
+    {
+        "label": "get_agent_db",
+        "kind": 2,
+        "importPath": "backend.client.agent_memory",
+        "description": "backend.client.agent_memory",
+        "peekOfCode": "def get_agent_db() -> MongoDb:\n    \"\"\"Convenience function to get MongoDB instance.\"\"\"\n    return get_agent_memory_manager().get_db()\ndef get_memory_manager() -> MemoryManager:\n    \"\"\"Convenience function to get memory manager.\"\"\"\n    return get_agent_memory_manager().get_memory_manager()",
+        "detail": "backend.client.agent_memory",
+        "documentation": {}
+    },
+    {
+        "label": "get_memory_manager",
+        "kind": 2,
+        "importPath": "backend.client.agent_memory",
+        "description": "backend.client.agent_memory",
+        "peekOfCode": "def get_memory_manager() -> MemoryManager:\n    \"\"\"Convenience function to get memory manager.\"\"\"\n    return get_agent_memory_manager().get_memory_manager()",
+        "detail": "backend.client.agent_memory",
+        "documentation": {}
+    },
+    {
+        "label": "_manager_lock",
+        "kind": 5,
+        "importPath": "backend.client.agent_memory",
+        "description": "backend.client.agent_memory",
+        "peekOfCode": "_manager_lock = threading.Lock()\ndef get_agent_memory_manager() -> AgentMemoryManager:\n    \"\"\"Get the global agent memory manager singleton.\"\"\"\n    global _agent_memory_manager\n    if _agent_memory_manager is None:\n        with _manager_lock:\n            if _agent_memory_manager is None:\n                _agent_memory_manager = AgentMemoryManager()\n    return _agent_memory_manager\ndef get_agent_db() -> MongoDb:",
+        "detail": "backend.client.agent_memory",
         "documentation": {}
     },
     {
