@@ -1,0 +1,153 @@
+GOVERNMENT CONTRACT PROPOSAL
+LABOR REQUIREMENTS WITH SURGE PRICING
+
+PERIOD OF PERFORMANCE: Base Period + 4 Option Years
+
+========================================================================================
+SECTION 1: PRIME LABOR POSITIONS
+========================================================================================
+
+POSITION 1: Senior Software Engineer
+- Location: Washington, DC (On-Site)
+- Experience: 7+ years
+- Education: Bachelor's degree in Computer Science
+- Base Period Hours: 2080
+- Option Year 1 Hours: 2080
+- Option Year 2 Hours: 2080
+- Option Year 3 Hours: 2080
+- Option Year 4 Hours: 2080
+- SURGE REQUIREMENT: Additional 520 hours per year for critical deployments
+- Surge Description: Emergency software releases and critical system maintenance windows
+
+POSITION 2: Cybersecurity Analyst
+- Location: Remote (Off-Site)
+- Experience: 5 years
+- Education: Bachelor's degree in Information Security or related field
+- Base Period Hours: 2080
+- Option Year 1 Hours: 2080
+- Option Year 2 Hours: 2080
+- Option Year 3 Hours: 2080
+- Option Year 4 Hours: 2080
+- SURGE REQUIREMENT: Up to 400 hours per year for incident response
+- Surge Description: 24/7 security incident response and threat mitigation
+
+POSITION 3: Project Manager
+- Location: Washington, DC (On-Site)
+- Experience: 8 years of project management
+- Education: Bachelor's degree, PMP Certification required
+- Base Period Hours: 2080
+- Option Year 1 Hours: 2080
+- Option Year 2 Hours: 2080
+- Option Year 3 Hours: 2080
+- Option Year 4 Hours: 2080
+- SURGE REQUIREMENT: 300 hours per year during critical milestones
+- Surge Description: Extended hours during major deliverables and audits
+
+POSITION 4: Database Administrator
+- Location: Remote (Off-Site)
+- Experience: 6 years
+- Education: Bachelor's degree in Computer Science
+- Base Period Hours: 2080
+- Option Year 1 Hours: 2080
+- Option Year 2 Hours: 2080
+- Option Year 3 Hours: 2080
+- Option Year 4 Hours: 2080
+- SURGE REQUIREMENT: 450 hours per year for emergency maintenance
+- Surge Description: After-hours database maintenance and disaster recovery operations
+
+POSITION 5: DevOps Engineer
+- Location: Hybrid (On-Site)
+- Experience: 5 years
+- Education: Bachelor's degree in Computer Science or related field
+- Base Period Hours: 2080
+- Option Year 1 Hours: 2080
+- Option Year 2 Hours: 2080
+- Option Year 3 Hours: 2080
+- Option Year 4 Hours: 2080
+- SURGE REQUIREMENT: 500 hours per year for deployment support
+- Surge Description: Weekend deployments and production support during releases
+
+POSITION 6: Business Analyst
+- Location: Washington, DC (On-Site)
+- Experience: 4 years
+- Education: Bachelor's degree in Business Administration
+- Base Period Hours: 2080
+- Option Year 1 Hours: 2080
+- Option Year 2 Hours: 2080
+- Option Year 3 Hours: 2080
+- Option Year 4 Hours: 2080
+- No surge requirements
+
+POSITION 7: Network Engineer
+- Location: Remote (Off-Site)
+- Experience: 6 years
+- Education: Bachelor's degree, CCNA/CCNP Certification
+- Base Period Hours: 2080
+- Option Year 1 Hours: 2080
+- Option Year 2 Hours: 2080
+- Option Year 3 Hours: 2080
+- Option Year 4 Hours: 2080
+- SURGE REQUIREMENT: 350 hours per year for network upgrades
+- Surge Description: After-hours network maintenance and emergency troubleshooting
+
+POSITION 8: Technical Writer
+- Location: Remote (Off-Site)
+- Experience: 3 years
+- Education: Bachelor's degree in Technical Communication or English
+- Base Period Hours: 2080
+- Option Year 1 Hours: 2080
+- Option Year 2 Hours: 2080
+- Option Year 3 Hours: 2080
+- Option Year 4 Hours: 2080
+- No surge requirements
+
+========================================================================================
+SECTION 2: SURGE PRICING DETAILS
+========================================================================================
+
+SURGE PRICING JUSTIFICATION:
+Surge pricing is required to maintain 24/7 operational readiness and respond to:
+- Emergency security incidents
+- Critical system failures
+- Urgent deployment windows
+- After-hours maintenance
+- Weekend production support
+- Holiday coverage requirements
+
+ESTIMATED ANNUAL SURGE HOURS BY POSITION:
+1. Senior Software Engineer: 520 hours
+2. Cybersecurity Analyst: 400 hours
+3. Project Manager: 300 hours
+4. Database Administrator: 450 hours
+5. DevOps Engineer: 500 hours
+6. Business Analyst: 0 hours (no surge)
+7. Network Engineer: 350 hours
+8. Technical Writer: 0 hours (no surge)
+
+TOTAL ESTIMATED ANNUAL SURGE HOURS: 2,520 hours
+
+NOTE: Surge multiplier rates will be determined based on operational requirements and approved by the Contracting Officer.
+
+========================================================================================
+SECTION 3: TRAVEL REQUIREMENTS
+========================================================================================
+
+- Government Estimated Travel: $75,000 per year
+- Per Diem (DC Area): $50,000 per year
+- Airfare for Site Visits: $25,000 per year
+
+========================================================================================
+SECTION 4: OTHER DIRECT COSTS
+========================================================================================
+
+MATERIALS:
+- Software Licenses and Subscriptions: $120,000 per year
+- Hardware and Computing Equipment: $80,000 per year
+
+EQUIPMENT:
+- Network Infrastructure Equipment: $150,000 per year
+- Testing and Development Equipment: $90,000 per year
+
+========================================================================================
+END OF DOCUMENT
+========================================================================================

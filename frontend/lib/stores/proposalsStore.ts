@@ -297,14 +297,14 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
       });
     }
 
-    // Don't fetch if already loading or no more data
-    if (state.isLoading || (!sortChanged && !state.hasMore && append)) {
+    // Don't fetch if already fetching or no more data
+    if (!sortChanged && !state.hasMore && append) {
       return;
     }
 
     try {
-      set({ isLoading: true, error: null });
-
+      // DON'T set global isLoading - use local loading state in components
+      // This prevents re-rendering other components that subscribe to proposals store
       const currentState = get();
       const skip = append && !sortChanged ? currentState.currentPage * 20 : 0;
       const limit = 20;
@@ -330,23 +330,40 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
         hasMoreData = proposalsArray.length === limit;
       }
 
-      // Deduplicate proposals by ID to prevent duplicates
+      // Deduplicate incoming proposals first (in case API returns duplicates)
+      const uniqueProposalsArray = Array.from(
+        new Map(proposalsArray.map((p) => [p.id, p])).values()
+      );
+
+      // Then deduplicate against existing state (for append mode)
       const existingIds = new Set(state.proposals.map((p) => p.id));
-      const uniqueNewProposals = proposalsArray.filter((p) => !existingIds.has(p.id));
+      const uniqueNewProposals = uniqueProposalsArray.filter((p) => !existingIds.has(p.id));
+
+      // Final deduplicated list
+      let finalProposals: typeof proposalsArray;
+      if (append && !sortChanged) {
+        // Append mode: add only new unique proposals
+        finalProposals = [...state.proposals, ...uniqueNewProposals];
+      } else {
+        // Replace mode: use deduplicated incoming proposals
+        finalProposals = uniqueProposalsArray;
+      }
+
+      // Final safety check: ensure no duplicates in final array
+      const deduplicatedFinalProposals = Array.from(
+        new Map(finalProposals.map((p) => [p.id, p])).values()
+      );
 
       set((state) => ({
-        proposals:
-          append && !sortChanged
-            ? [...state.proposals, ...uniqueNewProposals]
-            : proposalsArray,
+        proposals: deduplicatedFinalProposals,
         hasMore: hasMoreData,
         currentPage: sortChanged ? 1 : state.currentPage + 1,
-        isLoading: false,
+        // DON'T set isLoading here - pagination should use local loading state
       }));
     } catch (error: any) {
       set({
         error: error.response?.data?.detail || 'Failed to fetch proposals',
-        isLoading: false,
+        // DON'T set isLoading here either
       });
     }
   },

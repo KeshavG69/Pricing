@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDropzone } from 'react-dropzone';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -9,6 +9,7 @@ import { useCompanyRepositoryStore } from '@/lib/stores/companyRepositoryStore';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useBillingStore } from '@/lib/stores/billingStore';
 import { useProposalPolling } from '@/lib/hooks/useProposalPolling';
+import { chargeForProposal } from '@/lib/api/billing';
 import Button from '@/components/ui/Button';
 import Card, { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
@@ -76,6 +77,7 @@ export default function UploadPage() {
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx'],
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
       'application/vnd.ms-excel': ['.xls'],
+      'text/plain': ['.txt'],
     },
     multiple: true,
   });
@@ -146,11 +148,38 @@ export default function UploadPage() {
     }
   };
 
-  // Redirect when processing is complete
+  // Track if we've triggered advanced analysis to avoid duplicate calls
+  const hasTriggeredAdvanced = useRef(false);
+
+  // Auto-trigger advanced analysis for free first proposal
   useEffect(() => {
-    if (status?.status === 'completed' && uploadedProposalId) {
-      router.push(`/proposals/${uploadedProposalId}`);
-    }
+    const autoTriggerAdvanced = async () => {
+      if (
+        status?.status === 'completed' &&
+        uploadedProposalId &&
+        status?.should_trigger_advanced &&
+        !hasTriggeredAdvanced.current
+      ) {
+        hasTriggeredAdvanced.current = true;
+
+        try {
+          console.log('[UPLOAD] Auto-triggering advanced analysis for free first proposal...');
+          await chargeForProposal(uploadedProposalId, 'advanced');
+          console.log('[UPLOAD] Advanced analysis triggered successfully');
+        } catch (error) {
+          console.error('[UPLOAD] Failed to trigger advanced analysis:', error);
+          // Continue to redirect even if advanced trigger fails
+        }
+
+        // Redirect to proposal page
+        router.push(`/proposals/${uploadedProposalId}`);
+      } else if (status?.status === 'completed' && uploadedProposalId && !status?.should_trigger_advanced) {
+        // Normal redirect for non-free proposals
+        router.push(`/proposals/${uploadedProposalId}`);
+      }
+    };
+
+    autoTriggerAdvanced();
   }, [status, uploadedProposalId, router]);
 
   // Show polling error only if it's from backend (not network errors)

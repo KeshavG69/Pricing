@@ -426,22 +426,49 @@ async def process_proposal_documents(
             key = f"{year}_to_{year + 1}"
             escalation_rates[key] = default_escalation_rate
 
-        # Charge for basic proposal (if payment method configured)
+        # Charge for basic proposal (with free first proposal logic)
         billing_status = "unpaid"
         billing_message = None
+        should_trigger_advanced = False
 
         try:
             stripe_service = get_stripe_service()
             billing_crud = get_billing_crud()
 
-            if stripe_service.is_configured and org and org.get("stripe_customer_id") and org.get("default_payment_method_id"):
-                # Check if already charged (idempotent)
-                if not billing_crud.is_proposal_charged(proposal_id, "basic"):
-                    # Get proposal name for description
-                    proposal_doc = crud.get_by_id(ObjectId(proposal_id))
-                    proposal_name = proposal_doc.get("name", "Untitled") if proposal_doc else "Untitled"
+            # Check if already charged (idempotent)
+            if not billing_crud.is_proposal_charged(proposal_id, "basic"):
+                # Get proposal name for description
+                proposal_doc = crud.get_by_id(ObjectId(proposal_id))
+                proposal_name = proposal_doc.get("name", "Untitled") if proposal_doc else "Untitled"
 
-                    # Create billing record
+                # Check for free first proposal
+                first_free_proposal_id = org.get("first_free_proposal_id") if org else None
+                is_first_proposal = first_free_proposal_id is None
+
+                if is_first_proposal:
+                    # FREE FIRST PROPOSAL
+                    billing_id = billing_crud.create_billing_record(
+                        organization_id=str(org["_id"]),
+                        proposal_id=proposal_id,
+                        charge_type="basic",
+                        amount_cents=0,
+                        description=f"PriceIQ Basic (Free First Proposal): {proposal_name[:50]}",
+                        triggered_by_user_id=user_id,
+                        status="succeeded"
+                    )
+
+                    # Set first_free_proposal_id
+                    org_crud = get_organization_crud()
+                    org_crud.collection.update_one(
+                        {"_id": org["_id"]},
+                        {"$set": {"first_free_proposal_id": ObjectId(proposal_id), "updated_at": datetime.utcnow()}}
+                    )
+
+                    billing_status = "paid"
+                    should_trigger_advanced = True  # Auto-trigger advanced for free first proposal
+
+                elif stripe_service.is_configured and org and org.get("stripe_customer_id") and org.get("default_payment_method_id"):
+                    # PAID PROPOSAL (not first)
                     amount_cents = stripe_service.get_price(ChargeType.BASIC)
                     billing_id = billing_crud.create_billing_record(
                         organization_id=str(org["_id"]),
@@ -485,7 +512,11 @@ async def process_proposal_documents(
                             }}
                         )
                 else:
-                    billing_status = "paid"  # Already charged
+                    # No payment method and not first proposal
+                    billing_status = "unpaid"
+                    billing_message = "Payment method required"
+            else:
+                billing_status = "paid"  # Already charged
         except Exception as billing_error:
             import traceback
             traceback.print_exc()
@@ -502,6 +533,7 @@ async def process_proposal_documents(
                 "progress": 100,
                 "message": billing_message or "Processing complete",
                 "billing_status": billing_status,
+                "should_trigger_advanced": should_trigger_advanced,  # Flag for frontend to auto-trigger advanced
                 "jobs": cleaned_jobs,
                 "metadata": {
                     "total_jobs": len(cleaned_jobs),

@@ -42,6 +42,8 @@ class OrganizationCRUD:
             # Stripe billing fields (set when admin adds payment method)
             "stripe_customer_id": None,
             "default_payment_method_id": None,
+            # Free proposal tracking - set to true after first proposal is created
+            "first_proposal_used": False,
             "settings": {
                 "default_rates": {
                     "fringe": 0.247,
