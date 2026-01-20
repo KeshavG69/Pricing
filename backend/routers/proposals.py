@@ -159,6 +159,9 @@ def convert_intelligent_output_to_dataframe(intelligent_result: Dict[str, Any]) 
         # Extract hours_per_year dict
         hours_per_year = pos.get("hours_per_year", {})
 
+        # Extract ot_hours_per_year if present (optional field)
+        ot_hours_per_year = pos.get("ot_hours_per_year", None)
+
         row = {
             "labor_category": pos.get("labor_category", ""),
             "description": pos.get("description", ""),
@@ -166,7 +169,9 @@ def convert_intelligent_output_to_dataframe(intelligent_result: Dict[str, Any]) 
             "location": pos.get("location"),
             "location_type": pos.get("location_type", "On-Site"),
             "is_key_position": pos.get("is_key_position", False),
+            "is_surge": pos.get("is_surge", False),  # NEW: Surge position flag
             "hours_per_year": hours_per_year,
+            "ot_hours_per_year": ot_hours_per_year,  # NEW: Overtime hours per year
 
             # Metadata (document-level info)
             "base_years": metadata.get("base_years", 1),
@@ -258,7 +263,9 @@ async def process_proposal_documents(
             "smh": 0.065,
             "sub_fee": 0.05,
             "ga_passthrough": 0.025,
-            "ga_adder": 0.0
+            "ga_adder": 0.0,
+            "ot_multiplier": 1.5,  # Overtime multiplier (1.5 = time-and-a-half)
+            "surge_multiplier": 1.15  # Surge pricing multiplier (15% premium)
         }
 
         if organization_id:
@@ -288,6 +295,7 @@ async def process_proposal_documents(
         extracted_travel = parse_result.get("travel", [])
         extracted_odcs = parse_result.get("odcs", [])
         extracted_extensions = parse_result.get("extensions", [])
+        extracted_surge = intelligent_result.get("surge", None)  # Extract surge from raw result
 
         crud.update_proposal(
             proposal_id,
@@ -507,7 +515,8 @@ async def process_proposal_documents(
                 "spreadsheet_data": {
                     "travel": extracted_travel,
                     "odcs": extracted_odcs,
-                    "extensions": extracted_extensions
+                    "extensions": extracted_extensions,
+                    "surge": extracted_surge  # Surge option data (percentage + description)
                 }
             }
         )

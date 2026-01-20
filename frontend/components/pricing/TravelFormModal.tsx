@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { TravelItem } from '@/types';
+import { TravelItem, EscalationRates } from '@/types';
 
 interface TravelFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (travel: Omit<TravelItem, 'id'>) => void;
   totalYears: number;
+  escalationRates: EscalationRates;
   existingTravel?: TravelItem | null;
 }
 
@@ -16,6 +17,7 @@ export const TravelFormModal = ({
   onClose,
   onSave,
   totalYears,
+  escalationRates,
   existingTravel = null,
 }: TravelFormModalProps) => {
   const [description, setDescription] = useState<string>('');
@@ -38,6 +40,25 @@ export const TravelFormModal = ({
       setAmountsByYear(initialAmounts);
     }
   }, [existingTravel, totalYears, isOpen]);
+
+  // Auto-calculate years when escalate is enabled and base year has a value
+  useEffect(() => {
+    if (escalate && amountsByYear['1'] > 0) {
+      const baseAmount = amountsByYear['1'];
+      const newAmounts: Record<string, number> = { '1': baseAmount };
+
+      // Calculate escalated amounts for subsequent years
+      let currentAmount = baseAmount;
+      for (let year = 2; year <= totalYears; year++) {
+        const escKey = `${year - 1}_to_${year}`;
+        const escRate = escalationRates[escKey] || 0;
+        currentAmount = currentAmount * (1 + escRate);
+        newAmounts[year.toString()] = currentAmount;
+      }
+
+      setAmountsByYear(newAmounts);
+    }
+  }, [escalate, totalYears, escalationRates]);
 
   // Calculate total cost
   const totalCost = useMemo(() => {
@@ -95,10 +116,28 @@ export const TravelFormModal = ({
     // If empty string, set to 0
     // Otherwise parse the number (parseFloat will return NaN for invalid input, fallback to 0)
     const numValue = value === '' ? 0 : (parseFloat(value) || 0);
-    setAmountsByYear((prev) => ({
-      ...prev,
-      [year]: numValue,
-    }));
+
+    // If escalate is enabled and this is the base year, recalculate all years
+    if (escalate && year === '1' && numValue > 0) {
+      const newAmounts: Record<string, number> = { '1': numValue };
+
+      // Calculate escalated amounts for subsequent years
+      let currentAmount = numValue;
+      for (let y = 2; y <= totalYears; y++) {
+        const escKey = `${y - 1}_to_${y}`;
+        const escRate = escalationRates[escKey] || 0;
+        currentAmount = currentAmount * (1 + escRate);
+        newAmounts[y.toString()] = currentAmount;
+      }
+
+      setAmountsByYear(newAmounts);
+    } else {
+      // Normal update for single year
+      setAmountsByYear((prev) => ({
+        ...prev,
+        [year]: numValue,
+      }));
+    }
   };
 
   if (!isOpen) return null;
@@ -159,11 +198,15 @@ export const TravelFormModal = ({
               {Array.from({ length: totalYears }, (_, i) => {
                 const year = (i + 1).toString();
                 const label = i === 0 ? 'Base Period' : `Option Year ${i}`;
+                const isDisabled = escalate && i > 0; // Disable non-base years when escalate is on
 
                 return (
                   <div key={year}>
                     <label className="block text-xs text-muted-foreground mb-1">
                       {label}
+                      {isDisabled && (
+                        <span className="ml-1 text-xs text-blue-600">(auto-calculated)</span>
+                      )}
                     </label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -176,7 +219,10 @@ export const TravelFormModal = ({
                         value={amountsByYear[year] === 0 ? '' : amountsByYear[year]}
                         placeholder="0"
                         onChange={(e) => handleAmountChange(year, e.target.value)}
-                        className="w-full pl-7 pr-3 py-2 bg-background border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        disabled={isDisabled}
+                        className={`w-full pl-7 pr-3 py-2 bg-background border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+                          isDisabled ? 'opacity-60 cursor-not-allowed bg-muted' : ''
+                        }`}
                       />
                     </div>
                   </div>

@@ -144,6 +144,7 @@ interface PrimeLaborSectionProps {
   onDeletePosition: (positionId: string) => void;
   onUpdatePosition: (id: string, updates: Partial<AdvancedPosition>) => void;
   isAdvancedMode?: boolean; // Controls whether Convert to Subcontractor is available
+  hasOvertimeHours?: boolean; // Whether to show OT hours columns
 }
 
 export const PrimeLaborSection = ({
@@ -159,6 +160,7 @@ export const PrimeLaborSection = ({
   onDeletePosition,
   onUpdatePosition,
   isAdvancedMode = true, // Default to true for backwards compatibility
+  hasOvertimeHours = true, // Default to true for backwards compatibility
 }: PrimeLaborSectionProps) => {
   // Get wage source and subcontractors from store
   const wageSource = usePricingStore((state) => state.wageSource);
@@ -585,10 +587,20 @@ export const PrimeLaborSection = ({
         const yearStr = year.toString();
         const breakdown = pos.breakdown[yearStr];
         if (!totals.byYear[yearStr]) {
-          totals.byYear[yearStr] = { hours: 0, amount: 0, rate: 0 };
+          totals.byYear[yearStr] = { hours: 0, ot_hours: 0, ot_cost: 0, amount: 0, rate: 0 };  // NEW: Added ot_hours and ot_cost
         }
         if (breakdown) {
           totals.byYear[yearStr].hours += breakdown.hours;
+          const otHours = pos.ot_hours_per_year?.[yearStr] || 0;
+          totals.byYear[yearStr].ot_hours += otHours;  // NEW: Sum OT hours
+
+          // Calculate OT cost: OT hours × FBLR × OT multiplier
+          if (otHours > 0) {
+            const otMultiplier = rates.ot_multiplier || 1.5;
+            const otCost = otHours * breakdown.fblr * otMultiplier;
+            totals.byYear[yearStr].ot_cost += otCost;  // NEW: Sum OT costs
+          }
+
           totals.byYear[yearStr].amount += breakdown.totalAmount;
           totals.byYear[yearStr].rate += breakdown.fblr;
         }
@@ -614,9 +626,10 @@ export const PrimeLaborSection = ({
           const yearStr = year.toString();
           const hours = subPos.hours_per_year[yearStr] || 0;
           if (!totals.byYear[yearStr]) {
-            totals.byYear[yearStr] = { hours: 0, amount: 0, rate: 0 };
+            totals.byYear[yearStr] = { hours: 0, ot_hours: 0, ot_cost: 0, amount: 0, rate: 0 };  // NEW: Added ot_hours and ot_cost
           }
           totals.byYear[yearStr].hours += hours;
+          // Note: Subcontractors don't have OT hours - they use fixed rates
 
           // Calculate amount for this year with escalation
           const escalatedRate = getEscalatedRate(subPos.rate, year);
@@ -627,6 +640,13 @@ export const PrimeLaborSection = ({
         }
       });
     });
+
+    // Add total OT cost to grand total amount
+    let totalOTCost = 0;
+    Object.values(totals.byYear).forEach((yearData: any) => {
+      totalOTCost += yearData.ot_cost || 0;
+    });
+    totals.totalAmount += totalOTCost;
 
     return totals;
   }, [positions, rates, escalationRates, totalYears, advancedModeVersion, subcontractors]);
@@ -1822,6 +1842,109 @@ export const PrimeLaborSection = ({
         },
       });
 
+      // NEW: OT Hours column (only show if proposal has OT hours)
+      if (hasOvertimeHours) {
+        cols.push({
+        key: `year${year}_ot_hours`,
+        name: `${label}\nOT Hours`,
+        width: 108,
+        resizable: true,
+        editable: true,
+        renderEditCell: (props: RenderEditCellProps<GridRow>) => {
+          // Only allow editing for position rows
+          if (props.row.type !== 'position') {
+            props.onClose(false);
+            return null;
+          }
+
+          const pos = props.row.data as AdvancedPosition;
+          const currentOTHours = pos.ot_hours_per_year?.[yearStr] || 0;
+
+          const EditInput = () => {
+            const [inputValue, setInputValue] = React.useState(currentOTHours.toString());
+
+            const handleSave = () => {
+              const newOTHours = parseFloat(inputValue) || 0;
+
+              // Build complete ot_hours_per_year
+              const otHoursPerYear: Record<string, number> = { ...pos.ot_hours_per_year };
+              otHoursPerYear[yearStr] = newOTHours;
+
+              console.log('[PrimeLaborSection] Updating position OT hours:', {
+                positionId: pos.id,
+                year: yearStr,
+                newOTHours,
+                otHoursPerYear
+              });
+
+              onUpdatePosition(pos.id, { ot_hours_per_year: otHoursPerYear } as any);
+              props.onClose(true);
+            };
+
+            return (
+              <input
+                type="text"
+                inputMode="decimal"
+                className="w-full h-full px-2 bg-transparent text-foreground outline-none text-right font-mono"
+                value={inputValue}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  if (value === '' || /^\d*\.?\d*$/.test(value)) {
+                    setInputValue(value);
+                  }
+                }}
+                onBlur={handleSave}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSave();
+                  } else if (e.key === 'Escape') {
+                    props.onClose(false);
+                  }
+                }}
+                autoFocus
+                onFocus={(e) => e.target.select()}
+              />
+            );
+          };
+
+          return <EditInput />;
+        },
+        renderCell: ({ row }) => {
+          if (row.type === 'subtotal') {
+            // Subtotal row - show sum of OT hours for this year
+            const totals = row.data as any;
+            const yearOTTotal = totals.byYear[yearStr]?.ot_hours || 0;
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-blue-50 border-t-2 border-blue-200">
+                <span className="text-blue-700 font-bold">
+                  {yearOTTotal.toLocaleString()}
+                </span>
+              </div>
+            );
+          } else if (row.type === 'subcontractor-header') {
+            return <div className="h-full bg-muted/30" />;
+          } else if (row.type === 'subcontractor') {
+            // Subcontractor row - OT hours not applicable
+            return <div className="flex items-center justify-end h-full px-2 bg-muted/30"><span className="text-muted-foreground text-sm">—</span></div>;
+          } else if (row.type === 'subcontractor-breakdown') {
+            return <div className="flex items-center justify-end h-full px-2 bg-blue-50/20"><span className="text-muted-foreground text-sm">—</span></div>;
+          } else if (row.type === 'position') {
+            const pos = row.data as AdvancedPosition;
+            const otHours = pos.ot_hours_per_year?.[yearStr] || 0;
+            return (
+              <div className="flex items-center justify-end h-full px-2">
+                <span className={otHours > 0 ? "text-foreground" : "text-muted-foreground"}>
+                  {otHours > 0 ? otHours.toLocaleString() : '—'}
+                </span>
+              </div>
+            );
+          }
+          return <div className="h-full bg-muted/30" />;
+        },
+      });
+      }
+
       // Amount column
       cols.push({
         key: `year${year}_amount`,
@@ -1830,14 +1953,31 @@ export const PrimeLaborSection = ({
         resizable: true,
         renderCell: ({ row }) => {
           if (row.type === 'subtotal') {
-            // Subtotal row - show sum of amounts for this year
+            // Subtotal row - show sum of amounts for this year (with OT cost breakdown)
             const totals = row.data as any;
-            const yearTotal = totals.byYear[yearStr]?.amount || 0;
+            const regularAmount = totals.byYear[yearStr]?.amount || 0;
+            const otCost = totals.byYear[yearStr]?.ot_cost || 0;
+            const grandTotal = regularAmount + otCost;
+
             return (
-              <div className="flex items-center justify-end h-full px-2 bg-blue-50 border-t-2 border-blue-200">
-                <span className="text-blue-700 font-bold">
-                  {formatCurrency(yearTotal)}
-                </span>
+              <div className="flex flex-col items-end justify-center h-full px-2 bg-blue-50 border-t-2 border-blue-200 py-1">
+                {otCost > 0 ? (
+                  <>
+                    <div className="text-xs text-blue-600">
+                      Labor: {formatCurrency(regularAmount)}
+                    </div>
+                    <div className="text-xs text-blue-600">
+                      OT: {formatCurrency(otCost)}
+                    </div>
+                    <div className="text-blue-700 font-bold border-t border-blue-300 pt-0.5">
+                      {formatCurrency(grandTotal)}
+                    </div>
+                  </>
+                ) : (
+                  <span className="text-blue-700 font-bold">
+                    {formatCurrency(regularAmount)}
+                  </span>
+                )}
               </div>
             );
           }
@@ -2317,7 +2457,15 @@ export const PrimeLaborSection = ({
           rowKeyGetter={(row) => `${row.positionId}_${row.type}_${row.breakdownType || ''}`}
           className={styles.excelGrid}
           style={{ height: '100%' }}
-          rowHeight={45}
+          rowHeight={(row) => {
+            // Make subtotal row taller to show OT breakdown
+            if (row.type === 'subtotal') {
+              const totals = row.data as any;
+              const hasOT = Object.values(totals.byYear || {}).some((yearData: any) => (yearData.ot_cost || 0) > 0);
+              return hasOT ? 75 : 45; // Taller if has OT
+            }
+            return 45;
+          }}
         />
       </div>
 

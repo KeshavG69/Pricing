@@ -171,11 +171,9 @@ async def create_gsa_pricing_agent(
     contract = crud.get_by_file_id(file_id, organization_id)
     contract_start_date = contract.get("contract_start_date", "") if contract else ""
 
-    # Create GSA tools
-    gsa_retriever = create_gsa_retriever(organization_id, file_id)
+    # Create GSA tools with description for better matching
+    gsa_retriever = create_gsa_retriever(organization_id, file_id, description)
     gsa_rate_tool = create_gsa_rate_tool(organization_id, file_id, contract_start_date)
-
-    search_context = f"{labor_category}. {description}" if description else labor_category
 
     instructions = [
         f"""You are a GSA Pricing Agent. Your ONLY job is to:
