@@ -533,6 +533,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
         onClose={handleCloseTravelModal}
         onSave={handleSaveTravel}
         totalYears={totalYears}
+        escalationRates={escalationRates}
         existingTravel={editingTravel}
       />
 
@@ -542,6 +543,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
         onClose={handleCloseODCModal}
         onSave={handleSaveODC}
         totalYears={totalYears}
+        escalationRates={escalationRates}
         existingODC={editingODC}
       />
     </div>
