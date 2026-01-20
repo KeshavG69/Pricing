@@ -22,7 +22,7 @@ class UserCRUD:
         self.collection = self.mongodb.get_users_collection()
         self.db = self.mongodb.get_database()
     @staticmethod
-    def create_user(user_data: UserSignup) -> UserResponse:
+    def create_user(user_data: UserSignup, email_verified: bool = True) -> UserResponse:
         """Create a new user with default organization"""
         from utils.organizations import get_organization_crud
         from auth import config
@@ -53,6 +53,9 @@ class UserCRUD:
             {"$set": {"name": organization["slug"]}}
         )
 
+        # Determine user status based on email verification
+        user_status = "active" if email_verified else "pending_verification"
+
         user_doc = {
             "_id": user_id,
             "firstName": user_data.firstName,
@@ -60,6 +63,9 @@ class UserCRUD:
             "email": user_data.email,
             "password": hashed_password,
             "auth_method": "email",
+            "email_verified": email_verified,
+            "verified_at": now if email_verified else None,
+            "status": user_status,
             "current_organization_id": org_id,
             "organizations": [{
                 "organization_id": org_id,
@@ -168,22 +174,28 @@ class UserCRUD:
 
         if existing_user:
             # Update existing user with Google profile data
+            update_data = {
+                "google_id": google_profile.sub,
+                "google_profile": {
+                    "name": google_profile.name,
+                    "given_name": google_profile.given_name,
+                    "family_name": google_profile.family_name,
+                    "picture": google_profile.picture,
+                    "email_verified": google_profile.email_verified
+                },
+                "auth_method": "google",
+                "email_verified": True,  # Mark as verified when using Google OAuth
+                "status": "active",
+                "updatedAt": datetime.utcnow()
+            }
+
+            # Set verified_at only if not already set
+            if not existing_user.get("verified_at"):
+                update_data["verified_at"] = datetime.utcnow()
+
             users_collection.update_one(
                 {"_id": existing_user["_id"]},
-                {
-                    "$set": {
-                        "google_id": google_profile.sub,
-                        "google_profile": {
-                            "name": google_profile.name,
-                            "given_name": google_profile.given_name,
-                            "family_name": google_profile.family_name,
-                            "picture": google_profile.picture,
-                            "email_verified": google_profile.email_verified
-                        },
-                        "auth_method": "google",
-                        "updatedAt": datetime.utcnow()
-                    }
-                }
+                {"$set": update_data}
             )
 
             return UserResponse(
@@ -228,6 +240,9 @@ class UserCRUD:
                     "email_verified": google_profile.email_verified
                 },
                 "auth_method": "google",
+                "email_verified": True,  # Google OAuth users are pre-verified
+                "verified_at": now,
+                "status": "active",
                 "current_organization_id": org_id,
                 "organizations": [{
                     "organization_id": org_id,
