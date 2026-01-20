@@ -7,6 +7,7 @@ import { BarChart3, LayoutGrid, FileText, Building, Building2, Menu, ChevronDown
 import { isAdmin } from '@/lib/utils/permissions';
 import { useAuthStore } from '@/lib/stores/authStore';
 import RoleBadge from '../ui/RoleBadge';
+import HelpCenterButton from '../help/HelpCenterButton';
 
 interface TopNavBarProps {
   user: any;
@@ -153,8 +154,11 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
           )}
         </nav>
 
-        {/* Right: User Profile Menu */}
-        <div className="flex items-center justify-end">
+        {/* Right: Help Center + User Profile Menu */}
+        <div className="flex items-center justify-end gap-2">
+          {/* Help Center Button */}
+          <HelpCenterButton />
+
           <div ref={profileMenuRef} className="relative">
           <button
             onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}

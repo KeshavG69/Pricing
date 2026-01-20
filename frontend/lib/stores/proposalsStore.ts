@@ -297,14 +297,14 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
       });
     }
 
-    // Don't fetch if already loading or no more data
-    if (state.isLoading || (!sortChanged && !state.hasMore && append)) {
+    // Don't fetch if already fetching or no more data
+    if (!sortChanged && !state.hasMore && append) {
       return;
     }
 
     try {
-      set({ isLoading: true, error: null });
-
+      // DON'T set global isLoading - use local loading state in components
+      // This prevents re-rendering other components that subscribe to proposals store
       const currentState = get();
       const skip = append && !sortChanged ? currentState.currentPage * 20 : 0;
       const limit = 20;
@@ -341,12 +341,12 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
             : proposalsArray,
         hasMore: hasMoreData,
         currentPage: sortChanged ? 1 : state.currentPage + 1,
-        isLoading: false,
+        // DON'T set isLoading here - pagination should use local loading state
       }));
     } catch (error: any) {
       set({
         error: error.response?.data?.detail || 'Failed to fetch proposals',
-        isLoading: false,
+        // DON'T set isLoading here either
       });
     }
   },

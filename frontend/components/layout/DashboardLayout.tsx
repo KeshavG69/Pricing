@@ -9,6 +9,7 @@ import TopNavBar from './TopNavBar';
 import ProposalsSidebar from './ProposalsSidebar';
 import { AddPaymentPrompt, PaymentRequiredModal } from '@/components/billing';
 import { TermsBlockingModal } from '@/components/terms/TermsBlockingModal';
+import HelpCenterModal from '@/components/help/HelpCenterModal';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -17,7 +18,6 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const { user, isInitializing } = useAuthStore();
-  const { fetchProposals } = useProposalsStore();
   const { fetchBillingStatus } = useBillingStore();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
@@ -28,14 +28,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
   }, [user, isInitializing, router]);
 
-  // Fetch proposals on mount
-  useEffect(() => {
-    if (user) {
-      fetchProposals();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.organization_id]);
-
   // Fetch billing status on mount (shows payment prompt for admins)
   useEffect(() => {
     if (user) {
@@ -43,24 +35,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.organization_id]);
-
-  // Focus refresh: Fetch fresh data when user returns to tab
-  useEffect(() => {
-    const handleFocus = () => {
-      console.log('[FOCUS] Tab gained focus, refreshing proposals...');
-
-      // Fetch fresh proposals when user returns
-      if (user) {
-        fetchProposals();
-      }
-    };
-
-    window.addEventListener('focus', handleFocus);
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
 
   // Show loading spinner during auth initialization
   if (isInitializing) {
@@ -103,6 +77,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Terms and Conditions Blocking Modal */}
       <TermsBlockingModal />
+
+      {/* Help Center Modal */}
+      <HelpCenterModal />
     </div>
   );
 }

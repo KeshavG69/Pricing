@@ -17,6 +17,8 @@ interface YearData {
   rate: number;      // Escalated rate for this year
   hours: number;     // Hours for this year
   amount: number;    // rate × hours
+  otHours: number;   // OT hours for this year
+  otAmount: number;  // rate × OT multiplier × OT hours
 }
 
 interface SubcontractorGridRow {
@@ -26,7 +28,8 @@ interface SubcontractorGridRow {
   baseRate: number; // Base rate (Year 1)
   originalBaseRate: number; // Original rate at conversion (immutable)
   hours_per_year: Record<string, number>;
-  yearData: Record<string, YearData>; // Per-year rate, hours, amount
+  ot_hours_per_year?: Record<string, number>;
+  yearData: Record<string, YearData>; // Per-year rate, hours, amount, OT
 }
 
 interface ContextMenuState {
@@ -64,6 +67,25 @@ export const SubcontractorSection = () => {
     }
     return rate;
   }, [escalationRates]);
+
+  // Check if proposal has any OT hours (to conditionally show OT columns)
+  const hasOvertimeHours = useMemo(() => {
+    // Check prime positions
+    const primeHasOT = positions.some(pos => {
+      if (!pos.ot_hours_per_year) return false;
+      return Object.values(pos.ot_hours_per_year).some(hours => hours > 0);
+    });
+
+    // Check subcontractor positions
+    const subHasOT = subcontractors.some(sub =>
+      sub.positions.some(pos => {
+        if (!pos.ot_hours_per_year) return false;
+        return Object.values(pos.ot_hours_per_year).some(hours => hours > 0);
+      })
+    );
+
+    return primeHasOT || subHasOT;
+  }, [positions, subcontractors]);
 
   // Delete confirmation state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -165,6 +187,9 @@ export const SubcontractorSection = () => {
   const gridRows: SubcontractorGridRow[] = useMemo(() => {
     if (!selectedSub) return [];
 
+    // Get OT multiplier from rates (default 1.5x)
+    const otMultiplier = rates.ot_multiplier || 1.5;
+
     return selectedSub.positions.map((pos, index) => {
       const baseRate = pos.rate;
       const originalBaseRate = pos.original_base_rate || pos.rate; // Fallback for old data
@@ -177,10 +202,16 @@ export const SubcontractorSection = () => {
         const hours = pos.hours_per_year[yearStr] || 0;
         const amount = escalatedRate * hours;
 
+        // Calculate OT costs
+        const otHours = pos.ot_hours_per_year?.[yearStr] || 0;
+        const otAmount = escalatedRate * otMultiplier * otHours;
+
         yearData[yearStr] = {
           rate: escalatedRate,
           hours,
           amount,
+          otHours,
+          otAmount,
         };
       }
 
@@ -191,10 +222,11 @@ export const SubcontractorSection = () => {
         baseRate,
         originalBaseRate,
         hours_per_year: pos.hours_per_year,
+        ot_hours_per_year: pos.ot_hours_per_year,
         yearData,
       };
     });
-  }, [selectedSub, totalYears, escalationRates, getEscalatedRate]);
+  }, [selectedSub, totalYears, escalationRates, getEscalatedRate, rates.ot_multiplier]);
 
   // Context menu handlers
   const handleContextMenu = useCallback((event: React.MouseEvent, row: SubcontractorGridRow) => {
@@ -419,8 +451,7 @@ export const SubcontractorSection = () => {
         name: `${label}\nAmount ($)`,
         width: 120,
         resizable: true,
-        headerCellClass: 'bg-purple-50 font-medium text-purple-600 border-r border-border',
-        cellClass: 'border-r border-border',
+        headerCellClass: 'bg-purple-50 font-medium text-purple-600',
         renderCell: ({ row }) => {
           const yearData = row.yearData[yearStr];
           return (
@@ -432,24 +463,101 @@ export const SubcontractorSection = () => {
           );
         },
       });
+
+      // OT Hours column (editable) - only show if proposal has OT hours
+      if (hasOvertimeHours) {
+        cols.push({
+          key: `ot_hours_${year}`,
+          name: `${label}\nOT Hours`,
+          width: 100,
+          resizable: true,
+          headerCellClass: 'bg-amber-50 font-medium text-amber-600',
+          renderCell: ({ row }) => {
+            const yearData = row.yearData[yearStr];
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-amber-50/30">
+                <span className="text-sm font-semibold text-amber-600">
+                  {(yearData?.otHours || 0).toLocaleString('en-US')}
+                </span>
+              </div>
+            );
+          },
+          editable: true,
+          renderEditCell: (props: RenderEditCellProps<SubcontractorGridRow>) => {
+            const currentOTHours = props.row.ot_hours_per_year?.[yearStr] || 0;
+            const [inputValue, setInputValue] = useState(currentOTHours.toString());
+
+            const handleSave = () => {
+              const newOTHours = parseFloat(inputValue) || 0;
+              if (!selectedSub) return;
+
+              const posIndex = selectedSub.positions.findIndex(p => p.labor_category === props.row.labor_category);
+              if (posIndex >= 0) {
+                const updatedOTHours = { ...props.row.ot_hours_per_year, [yearStr]: newOTHours };
+                updateSubcontractorPosition(selectedSub.id, posIndex, { ot_hours_per_year: updatedOTHours });
+              }
+              props.onClose(true);
+            };
+
+            return (
+              <input
+                className="w-full h-full px-2 border-2 border-amber-500 focus:outline-none text-right font-semibold text-amber-600 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                type="number"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onBlur={handleSave}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') handleSave();
+                  if (e.key === 'Escape') props.onClose(false);
+                }}
+                autoFocus
+              />
+            );
+          },
+        });
+      }
+
+      // OT Amount column (read-only, rate × OT multiplier × OT hours) - only show if proposal has OT hours
+      if (hasOvertimeHours) {
+        cols.push({
+          key: `ot_amount_${year}`,
+          name: `${label}\nOT Amount ($)`,
+          width: 120,
+          resizable: true,
+          headerCellClass: 'bg-amber-50 font-medium text-amber-600 border-r border-border',
+          cellClass: 'border-r border-border',
+          renderCell: ({ row }) => {
+            const yearData = row.yearData[yearStr];
+            return (
+              <div className="flex items-center justify-end h-full px-2 bg-amber-50/30">
+                <span className="text-sm font-bold text-amber-600">
+                  ${(yearData?.otAmount || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </div>
+            );
+          },
+        });
+      }
     }
 
     return cols;
   }, [totalYears, selectedSub, updateSubcontractorPosition]);
 
-  // Calculate grand total for selected subcontractor
+  // Calculate grand total for selected subcontractor (including OT)
   const grandTotal = useMemo(() => {
     return gridRows.reduce((sum, row) => {
-      // Sum all amounts from yearData
+      // Sum all amounts from yearData (regular + OT)
       const rowTotal = Object.values(row.yearData).reduce((yearSum, yearData) => {
-        return yearSum + yearData.amount;
+        return yearSum + yearData.amount + yearData.otAmount;
       }, 0);
       return sum + rowTotal;
     }, 0);
   }, [gridRows]);
 
-  // Calculate total for all subcontractors (with escalation)
+  // Calculate total for all subcontractors (with escalation and OT)
   const allSubsTotal = useMemo(() => {
+    const otMultiplier = rates.ot_multiplier || 1.5;
+
     return subcontractors.reduce((sum, sub) => {
       const subTotal = sub.positions.reduce((posSum, pos) => {
         let positionTotal = 0;
@@ -457,13 +565,14 @@ export const SubcontractorSection = () => {
           const yearStr = year.toString();
           const escalatedRate = getEscalatedRate(pos.rate, year);
           const hours = pos.hours_per_year[yearStr] || 0;
-          positionTotal += escalatedRate * hours;
+          const otHours = pos.ot_hours_per_year?.[yearStr] || 0;
+          positionTotal += escalatedRate * hours + escalatedRate * otMultiplier * otHours;
         }
         return posSum + positionTotal;
       }, 0);
       return sum + subTotal;
     }, 0);
-  }, [subcontractors, totalYears, escalationRates, getEscalatedRate]);
+  }, [subcontractors, totalYears, escalationRates, getEscalatedRate, rates.ot_multiplier]);
 
   // Calculate percentage of dollars allocated to subcontractors
   // Formula: (Subcontractor Total + Passthrough) / (Total Contract Value - ODC - Travel)

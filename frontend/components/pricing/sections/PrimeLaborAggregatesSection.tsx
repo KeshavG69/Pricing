@@ -19,7 +19,7 @@ interface PrimeLaborAggregatesSectionProps {
 interface AggregateRow {
   id: string;
   label: string;
-  type: 'dl' | 'fringe' | 'oh' | 'ga' | 'fee' | 'fblr' | 'separator' |
+  type: 'dl' | 'fringe' | 'oh' | 'ga' | 'fee' | 'ot' | 'fblr' | 'separator' |
         'sub_labor' | 'passthrough' | 'sub_fee' | 'sub_total' | 'grand_total';
 }
 
@@ -47,7 +47,7 @@ export const PrimeLaborAggregatesSection = ({
     const passthroughTotal = Object.values(passthroughByYear).reduce((sum, val) => sum + val, 0);
     const subFeeTotal = Object.values(subFeeByYear).reduce((sum, val) => sum + val, 0);
     const subContractorTotal = subLaborTotal + passthroughTotal + subFeeTotal;
-    const grandTotal = aggregates.totalFBLR + subContractorTotal;
+    const grandTotal = aggregates.totalFBLR + aggregates.totalOT + subContractorTotal;
 
     return {
       subLaborTotal,
@@ -56,7 +56,7 @@ export const PrimeLaborAggregatesSection = ({
       subContractorTotal,
       grandTotal,
     };
-  }, [subLaborByYear, passthroughByYear, subFeeByYear, aggregates.totalFBLR]);
+  }, [subLaborByYear, passthroughByYear, subFeeByYear, aggregates.totalFBLR, aggregates.totalOT]);
 
   // Create aggregate rows
   const rows = useMemo<AggregateRow[]>(() => [
@@ -65,6 +65,7 @@ export const PrimeLaborAggregatesSection = ({
     { id: 'oh', label: 'Total Overhead (Prime)', type: 'oh' },
     { id: 'ga', label: 'Total G&A (Prime)', type: 'ga' },
     { id: 'fee', label: 'Total Prime Fee', type: 'fee' },
+    { id: 'ot', label: 'Total Overtime (Prime)', type: 'ot' },
     { id: 'fblr', label: 'Total Prime Labor (FBLR)', type: 'fblr' },
     { id: 'separator1', label: '', type: 'separator' },
     { id: 'sub_labor', label: 'Total Subcontractor Labor (Base)', type: 'sub_labor' },
@@ -82,7 +83,7 @@ export const PrimeLaborAggregatesSection = ({
       {
         key: 'label',
         name: 'Cost Category',
-        width: 320,
+        width: 380,
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => {
@@ -123,7 +124,7 @@ export const PrimeLaborAggregatesSection = ({
       cols.push({
         key: `year${year}`,
         name: `${label}\nAmount ($)`,
-        width: 150,
+        width: 180,
         resizable: true,
         renderCell: ({ row }) => {
           if (row.type === 'separator') {
@@ -157,8 +158,12 @@ export const PrimeLaborAggregatesSection = ({
               value = yearData?.fee || 0;
               textClass = 'text-purple-600 font-semibold';
               break;
+            case 'ot':
+              value = yearData?.ot || 0;
+              textClass = 'text-purple-600 font-semibold';
+              break;
             case 'fblr':
-              value = yearData?.totalAmount || 0;
+              value = (yearData?.totalAmount || 0) + (yearData?.ot || 0);
               bgClass = 'bg-emerald-50';
               textClass = 'text-emerald-600 font-bold';
               break;
@@ -181,6 +186,7 @@ export const PrimeLaborAggregatesSection = ({
               break;
             case 'grand_total':
               value = (yearData?.totalAmount || 0) +
+                     (yearData?.ot || 0) +
                      (subLaborByYear[yearStr] || 0) +
                      (passthroughByYear[yearStr] || 0) +
                      (subFeeByYear[yearStr] || 0);
@@ -204,7 +210,7 @@ export const PrimeLaborAggregatesSection = ({
     cols.push({
       key: 'total',
       name: 'Total Amount ($)',
-      width: 180,
+      width: 220,
       resizable: true,
       frozen: true,
       renderCell: ({ row }) => {
@@ -237,8 +243,12 @@ export const PrimeLaborAggregatesSection = ({
             value = aggregates.totalFee;
             textClass = 'text-purple-600 font-semibold';
             break;
+          case 'ot':
+            value = aggregates.totalOT;
+            textClass = 'text-purple-600 font-semibold';
+            break;
           case 'fblr':
-            value = aggregates.totalFBLR;
+            value = aggregates.totalFBLR + aggregates.totalOT;
             bgClass = 'bg-emerald-50';
             textClass = 'text-emerald-600 font-bold text-lg';
             break;

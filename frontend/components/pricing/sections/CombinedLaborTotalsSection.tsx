@@ -11,6 +11,7 @@ interface CombinedLaborTotalsSectionProps {
   primeHoursByYear: Record<string, number>;
   subHoursByYear: Record<string, number>;
   primeLaborByYear: Record<string, number>;
+  otCostsByYear: Record<string, number>;
   subLaborByYear: Record<string, number>;
   passthroughByYear: Record<string, number>;
   feeByYear: Record<string, number>;
@@ -22,13 +23,14 @@ interface CombinedRow {
   id: string;
   label: string;
   type: 'prime_hours' | 'sub_hours' | 'total_hours' | 'separator' |
-        'prime_labor' | 'sub_labor' | 'passthrough' | 'fee' | 'total_labor';
+        'prime_labor' | 'ot_cost' | 'sub_labor' | 'passthrough' | 'fee' | 'total_labor';
 }
 
 export const CombinedLaborTotalsSection = ({
   primeHoursByYear,
   subHoursByYear,
   primeLaborByYear,
+  otCostsByYear,
   subLaborByYear,
   passthroughByYear,
   feeByYear,
@@ -58,6 +60,7 @@ export const CombinedLaborTotalsSection = ({
     const primeHoursTotal = Object.values(primeHoursByYear).reduce((sum, val) => sum + val, 0);
     const subHoursTotal = Object.values(subHoursByYear).reduce((sum, val) => sum + val, 0);
     const primeLaborTotal = Object.values(primeLaborByYear).reduce((sum, val) => sum + val, 0);
+    const otCostTotal = Object.values(otCostsByYear).reduce((sum, val) => sum + val, 0);
     const subLaborTotal = Object.values(subLaborByYear).reduce((sum, val) => sum + val, 0);
     const passthroughTotal = Object.values(passthroughByYear).reduce((sum, val) => sum + val, 0);
     const feeTotal = Object.values(feeByYear).reduce((sum, val) => sum + val, 0);
@@ -66,11 +69,12 @@ export const CombinedLaborTotalsSection = ({
       primeHoursTotal,
       subHoursTotal,
       primeLaborTotal,
+      otCostTotal,
       subLaborTotal,
       passthroughTotal,
       feeTotal
     };
-  }, [primeHoursByYear, subHoursByYear, primeLaborByYear, subLaborByYear, passthroughByYear, feeByYear]);
+  }, [primeHoursByYear, subHoursByYear, primeLaborByYear, otCostsByYear, subLaborByYear, passthroughByYear, feeByYear]);
 
   // Create breakdown rows
   const rows = useMemo<CombinedRow[]>(() => [
@@ -79,6 +83,7 @@ export const CombinedLaborTotalsSection = ({
     { id: 'total_hours', label: 'Total Hours', type: 'total_hours' },
     { id: 'separator1', label: '', type: 'separator' }, // Visual separator
     { id: 'prime_labor', label: 'Prime Labor (with FBLR)', type: 'prime_labor' },
+    { id: 'ot_cost', label: 'Overtime Cost', type: 'ot_cost' },
     { id: 'sub_labor', label: 'Subcontractor Labor (Base)', type: 'sub_labor' },
     { id: 'passthrough', label: 'Passthrough (S&MH + G&A)', type: 'passthrough' },
     { id: 'fee', label: 'Fee (Prime + Sub)', type: 'fee' },
@@ -92,7 +97,7 @@ export const CombinedLaborTotalsSection = ({
       {
         key: 'label',
         name: '',
-        width: 300,
+        width: 350,
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => {
@@ -130,7 +135,7 @@ export const CombinedLaborTotalsSection = ({
       cols.push({
         key: `year${year}`,
         name: `${label}`,
-        width: 150,
+        width: 180,
         resizable: true,
         renderCell: ({ row }) => {
           if (row.type === 'separator') {
@@ -166,6 +171,11 @@ export const CombinedLaborTotalsSection = ({
               bgClass = 'bg-purple-50/50';
               textClass = 'text-purple-600';
               break;
+            case 'ot_cost':
+              value = otCostsByYear[yearStr] || 0;
+              bgClass = 'bg-purple-50/50';
+              textClass = 'text-purple-600';
+              break;
             case 'sub_labor':
               value = subLaborByYear[yearStr] || 0;
               bgClass = 'bg-purple-50/50';
@@ -183,6 +193,7 @@ export const CombinedLaborTotalsSection = ({
               break;
             case 'total_labor':
               value = (primeLaborByYear[yearStr] || 0) +
+                     (otCostsByYear[yearStr] || 0) +
                      (subLaborByYear[yearStr] || 0) +
                      (passthroughByYear[yearStr] || 0) +
                      (feeByYear[yearStr] || 0);
@@ -206,7 +217,7 @@ export const CombinedLaborTotalsSection = ({
     cols.push({
       key: 'total',
       name: 'Total',
-      width: 200,
+      width: 220,
       resizable: true,
       frozen: true,
       renderCell: ({ row }) => {
@@ -243,6 +254,11 @@ export const CombinedLaborTotalsSection = ({
             bgClass = 'bg-purple-50';
             textClass = 'text-purple-600 font-semibold';
             break;
+          case 'ot_cost':
+            value = totals.otCostTotal;
+            bgClass = 'bg-purple-50';
+            textClass = 'text-purple-600 font-semibold';
+            break;
           case 'sub_labor':
             value = totals.subLaborTotal;
             bgClass = 'bg-purple-50';
@@ -259,7 +275,7 @@ export const CombinedLaborTotalsSection = ({
             textClass = 'text-purple-600 font-semibold';
             break;
           case 'total_labor':
-            value = totals.primeLaborTotal + totals.subLaborTotal +
+            value = totals.primeLaborTotal + totals.otCostTotal + totals.subLaborTotal +
                    totals.passthroughTotal + totals.feeTotal;
             bgClass = 'bg-emerald-100';
             textClass = 'text-emerald-600 font-bold text-2xl';
@@ -277,7 +293,7 @@ export const CombinedLaborTotalsSection = ({
     });
 
     return cols;
-  }, [totalYears, extensions, primeHoursByYear, subHoursByYear, primeLaborByYear,
+  }, [totalYears, extensions, primeHoursByYear, subHoursByYear, primeLaborByYear, otCostsByYear,
       subLaborByYear, passthroughByYear, feeByYear, totals, formatNumber, formatCurrency]);
 
   return (
