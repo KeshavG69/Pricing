@@ -10,7 +10,7 @@ interface AuthState {
 
   // Actions
   login: (credentials: LoginCredentials | { access_token: string; refresh_token: string; user: User }) => Promise<void>;
-  signup: (data: SignupData) => Promise<{ email: string; message: string }>;
+  signup: (data: SignupData) => Promise<{ email: string; message: string; requires_verification: boolean }>;
   googleLogin: (credential: string) => Promise<void>;
   logout: () => Promise<void>;
   fetchUser: () => Promise<void>;
