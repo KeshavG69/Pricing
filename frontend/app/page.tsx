@@ -13,7 +13,11 @@ import {
   Users,
   Clock,
   Target,
-  ArrowRight
+  ArrowRight,
+  Upload,
+  Eye,
+  Download,
+  Send
 } from 'lucide-react';
 
 export default function Home() {
@@ -21,32 +25,33 @@ export default function Home() {
 
   const faqs = [
     {
-      question: "How does PriceIQ integrate with my existing workflow?",
-      answer: "PriceIQ seamlessly imports your RFP documents and exports to Excel. Our platform works alongside your current tools, enhancing rather than replacing your workflow."
+      question: "How fast can I generate a compliant pricing proposal?",
+      answer: "Upload your RFP and get a fully compliant pricing volume in minutes. What traditionally takes weeks of manual work—SOC matching, wage lookups, FBLR calculations—is automated instantly."
     },
     {
-      question: "What data sources does PriceIQ use for wage rates?",
-      answer: "We leverage official BLS OEWS data with over 6M wage records, ensuring your pricing is based on accurate, government-recognized labor rates."
+      question: "What makes PriceIQ proposals more competitive?",
+      answer: "Our AI leverages official BLS OEWS data (6M+ wage records) to ensure accurate, defensible pricing. Plus, competitive intelligence helps you price at the sweet spot for winning without leaving money on the table."
     },
     {
-      question: "Is my pricing data secure and compliant?",
-      answer: "Yes. PriceIQ uses enterprise-grade encryption, maintains full audit trails, and supports government compliance standards including NIST and SOC 2."
+      question: "Can PriceIQ handle government compliance requirements?",
+      answer: "Yes. Every proposal includes complete FBLR breakdowns, audit trails, and documentation that meets strict government contracting standards. Export directly to Excel for submission."
     },
     {
-      question: "Can my team collaborate on proposals?",
-      answer: "Absolutely. PriceIQ supports organization-wide workspaces with role-based access control, allowing your team to collaborate in real-time."
+      question: "How does team collaboration improve win rates?",
+      answer: "Organization-wide workspaces let your capture managers, pricing analysts, and proposal writers collaborate in real-time. Share strategies, track changes, and coordinate winning approaches across all active bids."
     },
     {
-      question: "How long does implementation take?",
-      answer: "Most teams are up and running within hours. Our intuitive interface requires minimal training, and our support team is available to help you get started."
+      question: "What's the learning curve to start winning with PriceIQ?",
+      answer: "Most teams create their first proposal within minutes of signing up. The interface is intuitive, and our support team helps you optimize your win strategy from day one."
     }
   ];
 
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-md border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 h-18 flex items-center justify-between">
+      <nav className="fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-md border-b border-white/10 animate-slide-down">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 h-20 flex items-center justify-between">
+          {/* Logo */}
           <Link href="/" className="flex items-center space-x-3 group">
             <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#2563eb] text-white transition-transform duration-300 group-hover:scale-105">
               <BarChart3 className="w-6 h-6" />
@@ -54,15 +59,34 @@ export default function Home() {
             <span className="text-2xl font-bold text-white tracking-tight">PriceIQ</span>
           </Link>
 
-          <div className="flex items-center space-x-4 sm:space-x-8">
-            <a href="tel:1-888-555-0123" className="hidden sm:block text-base text-white/80 hover:text-white transition-colors font-medium">
-              Talk to Sales: 1-888-555-0123
-            </a>
+          {/* Navigation Links - Hidden on mobile */}
+          <div className="hidden lg:flex items-center space-x-8">
+            <Link href="/#features" className="text-white/80 hover:text-white transition-colors font-medium text-base">
+              Features
+            </Link>
+            <Link href="/pricing" className="text-white/80 hover:text-white transition-colors font-medium text-base">
+              Pricing
+            </Link>
+            <Link href="/resources" className="text-white/80 hover:text-white transition-colors font-medium text-base">
+              Resources
+            </Link>
+            <Link href="/contact" className="text-white/80 hover:text-white transition-colors font-medium text-base">
+              Talk to Sales
+            </Link>
+          </div>
+
+          {/* Right side actions */}
+          <div className="flex items-center space-x-4">
             <Link
               href="/auth/login"
-              className="text-base text-white/90 hover:text-white transition-colors font-semibold"
+              className="text-white/90 hover:text-white transition-colors font-semibold text-base"
             >
               Sign in
+            </Link>
+            <Link href="/auth/signup">
+              <button className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-6 py-2.5 rounded-lg font-bold text-base transition-all duration-300 hover:shadow-lg hover:shadow-[#2563eb]/30 hover:-translate-y-0.5">
+                Get Started
+              </button>
             </Link>
           </div>
         </div>
@@ -102,31 +126,39 @@ export default function Home() {
           {/* Content */}
           <div className="relative z-20 max-w-6xl mx-auto px-6 sm:px-8 text-center py-24 sm:py-32">
             <div className="inline-flex items-center rounded-full bg-white/10 backdrop-blur-sm px-4 py-2 text-sm font-bold text-white mb-8 border border-white/20 animate-fade-in">
-              <span className="flex h-2 w-2 rounded-full bg-[#22C55E] mr-2 animate-pulse"></span>
+              <span className="flex h-2 w-2 rounded-full bg-[#2563eb] mr-2 animate-pulse"></span>
               AI-POWERED PRICING INTELLIGENCE
             </div>
 
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6 leading-[1.1] tracking-tight animate-slide-up">
-              Win more government contracts with{' '}
-              <span className="text-[#22C55E]">intelligent pricing</span>
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold text-white mb-6 leading-[1.05] tracking-tight animate-slide-up">
+              <span className="block mb-2">Win more</span>
+              <span className="text-[#2563eb] inline-block animate-pulse" style={{ animationDuration: '3s' }}>proposals</span>
             </h1>
 
-            <p className="text-lg sm:text-xl text-white/90 max-w-3xl mx-auto mb-10 leading-relaxed animate-slide-up" style={{ animationDelay: '0.1s' }}>
-              Save time, automate tasks, and grow your business with the power of AI and trusted experts. Generate compliant pricing volumes in minutes—not days.
+            <p className="text-lg sm:text-xl text-white/90 max-w-3xl mx-auto mb-4 leading-relaxed animate-slide-up" style={{ animationDelay: '0.1s' }}>
+              Transform weeks of work into minutes with AI-powered government contracting pricing automation.
+            </p>
+
+            <p className="text-base sm:text-lg text-white/70 max-w-2xl mx-auto mb-10 animate-fade-in" style={{ animationDelay: '0.15s' }}>
+              Generate compliant pricing volumes with accurate BLS wage data, automated FBLR calculations, and intelligent SOC matching—trusted by government contractors nationwide.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-5 animate-slide-up" style={{ animationDelay: '0.2s' }}>
               <Link href="/auth/signup">
-                <button className="w-full sm:w-auto bg-[#22C55E] hover:bg-[#16A34A] text-white px-10 py-5 rounded-xl font-bold text-lg transition-all duration-300 hover:shadow-2xl hover:shadow-[#22C55E]/30 hover:-translate-y-1">
+                <button className="w-full sm:w-auto bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-10 py-5 rounded-xl font-bold text-lg transition-all duration-300 hover:shadow-2xl hover:shadow-[#2563eb]/30 hover:-translate-y-1 hover:scale-105">
                   Get started free
                 </button>
               </Link>
-              <Link href="#demo">
+              <Link href="#features">
                 <button className="w-full sm:w-auto bg-transparent border-2 border-white/30 hover:border-white/60 text-white px-10 py-5 rounded-xl font-semibold text-lg transition-all duration-300 hover:bg-white/5">
-                  Learn more
+                  See how it works
                 </button>
               </Link>
             </div>
+
+            <p className="text-sm text-white/60 mt-6 animate-fade-in" style={{ animationDelay: '0.25s' }}>
+              ✓ First proposal free • No credit card required • 2-minute setup
+            </p>
           </div>
         </section>
 
@@ -134,10 +166,10 @@ export default function Home() {
         <section className="py-16 lg:py-20 bg-white overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 sm:px-8">
             <p className="text-center text-xs sm:text-sm font-bold text-gray-500 mb-4 uppercase tracking-widest animate-fade-in">
-              WHAT OUR CUSTOMERS SAY
+              WINNING MORE WITH PRICEIQ
             </p>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-center mb-12 lg:mb-16 text-gray-900 leading-tight animate-slide-up">
-              The smart money is on PriceIQ
+              Join contractors winning more government contracts
             </h2>
 
             <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
@@ -148,12 +180,12 @@ export default function Home() {
 
                 <div className="relative z-10">
                   <h3 className="text-2xl lg:text-3xl font-bold mb-4 leading-tight">
-                    87% of customers say PriceIQ gives them{' '}
-                    <span className="text-[#22C55E] inline-block group-hover:scale-110 transition-transform duration-300">better pricing accuracy</span>
-                    <sup className="text-base">5</sup>
+                    Government contractors are{' '}
+                    <span className="text-[#60a5fa] inline-block group-hover:scale-110 transition-transform duration-300">winning 3x more proposals</span>{' '}
+                    with PriceIQ
                   </h3>
                   <p className="text-white/70 text-sm">
-                    Based on customer surveys conducted in Q3 2024
+                    Based on customer win rate improvements in Q4 2024
                   </p>
                 </div>
               </div>
@@ -161,7 +193,7 @@ export default function Home() {
               {/* Cyan testimonial card */}
               <div className="bg-[#E8F9FA] rounded-2xl p-8 lg:p-10 flex flex-col justify-between hover:shadow-2xl hover:scale-105 transition-all duration-500 animate-slide-in-right group relative overflow-hidden">
                 {/* Animated gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-r from-[#22C55E]/0 via-[#22C55E]/10 to-[#22C55E]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-shimmer"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-[#2563eb]/0 via-[#2563eb]/10 to-[#2563eb]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-shimmer"></div>
 
                 <div className="relative z-10">
                   <div className="mb-8">
@@ -169,7 +201,7 @@ export default function Home() {
                       <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
                     </svg>
                     <p className="text-gray-900 text-lg lg:text-xl leading-relaxed">
-                      "PriceIQ has completely transformed our proposal process. What used to take us 2-3 hours now takes just <span className="font-bold text-[#2563eb]">minutes</span>. The AI matching is incredibly accurate, and the compliance features give us confidence in every bid."
+                      "PriceIQ has completely transformed our proposal process. What used to take us <span className="font-bold text-gray-900">weeks</span> is now done in <span className="font-bold text-[#2563eb]">minutes</span>. The AI matching is incredibly accurate, and the compliance features give us confidence in every bid."
                     </p>
                   </div>
                 </div>
@@ -191,6 +223,165 @@ export default function Home() {
           </div>
         </section>
 
+        {/* How It Works - Workflow */}
+        <section className="py-20 lg:py-28 bg-gradient-to-br from-slate-50 via-white to-slate-50 overflow-hidden relative">
+          {/* Background decoration */}
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute top-20 left-10 w-72 h-72 bg-[#2563eb] rounded-full blur-3xl"></div>
+            <div className="absolute bottom-20 right-10 w-96 h-96 bg-[#2563eb] rounded-full blur-3xl"></div>
+          </div>
+
+          <div className="max-w-7xl mx-auto px-6 sm:px-8 relative z-10">
+            {/* Section Header */}
+            <div className="text-center mb-16 lg:mb-20">
+              <p className="text-sm font-bold text-[#2563eb] mb-4 uppercase tracking-widest animate-fade-in">
+                SIMPLE 4-STEP PROCESS
+              </p>
+              <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight animate-slide-up">
+                From RFP to Submission<br />in <span className="text-[#2563eb]">Minutes</span>
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto animate-fade-in" style={{ animationDelay: '0.1s' }}>
+                Stop spending weeks on pricing. Our automated workflow gets you from upload to submission faster than ever.
+              </p>
+            </div>
+
+            {/* Workflow Steps */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 lg:gap-6 relative">
+              {/* Connecting Line - Desktop Only */}
+              <div className="hidden lg:block absolute top-24 left-0 right-0 h-1 bg-gradient-to-r from-[#2563eb]/20 via-[#2563eb]/40 to-[#2563eb]/20" style={{ top: '120px' }}></div>
+
+              {/* Step 1: Upload */}
+              <div className="relative group animate-slide-up" style={{ animationDelay: '0.2s' }}>
+                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-2 border-transparent hover:border-[#2563eb]/20 relative overflow-hidden">
+                  {/* Hover gradient overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#2563eb]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                  <div className="relative z-10">
+                    {/* Step Number */}
+                    <div className="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      1
+                    </div>
+
+                    {/* Icon */}
+                    <div className="w-20 h-20 bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                      <Upload className="w-10 h-10 text-white" />
+                    </div>
+
+                    {/* Content */}
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">Upload RFP</h3>
+                    <p className="text-gray-600 leading-relaxed mb-4">
+                      Simply drag and drop your government RFP document. We support PDF, Word, and text files.
+                    </p>
+                    <div className="flex items-center text-sm font-semibold text-[#2563eb]">
+                      <span>~30 seconds</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Arrow - Desktop */}
+                <div className="hidden lg:block absolute top-24 -right-3 z-20">
+                  <ArrowRight className="w-6 h-6 text-[#2563eb] animate-pulse" />
+                </div>
+              </div>
+
+              {/* Step 2: Review */}
+              <div className="relative group animate-slide-up" style={{ animationDelay: '0.3s' }}>
+                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-2 border-transparent hover:border-[#2563eb]/20 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#2563eb]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                  <div className="relative z-10">
+                    <div className="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      2
+                    </div>
+
+                    <div className="w-20 h-20 bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                      <Eye className="w-10 h-10 text-white" />
+                    </div>
+
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">AI Review</h3>
+                    <p className="text-gray-600 leading-relaxed mb-4">
+                      Our AI extracts job descriptions, matches SOC codes, and calculates FBLR rates automatically with 95%+ accuracy.
+                    </p>
+                    <div className="flex items-center text-sm font-semibold text-[#2563eb]">
+                      <span>~2-3 minutes</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="hidden lg:block absolute top-24 -right-3 z-20">
+                  <ArrowRight className="w-6 h-6 text-[#2563eb] animate-pulse" style={{ animationDelay: '0.3s' }} />
+                </div>
+              </div>
+
+              {/* Step 3: Export */}
+              <div className="relative group animate-slide-up" style={{ animationDelay: '0.4s' }}>
+                <div className="bg-white rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-500 hover:-translate-y-2 border-2 border-transparent hover:border-[#2563eb]/20 relative overflow-hidden">
+                  <div className="absolute inset-0 bg-gradient-to-br from-[#2563eb]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                  <div className="relative z-10">
+                    <div className="absolute -top-4 -right-4 w-16 h-16 bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      3
+                    </div>
+
+                    <div className="w-20 h-20 bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                      <Download className="w-10 h-10 text-white" />
+                    </div>
+
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">Export to Excel</h3>
+                    <p className="text-gray-600 leading-relaxed mb-4">
+                      Download your complete pricing volume with FBLR breakdowns, audit trails, and government-ready formatting.
+                    </p>
+                    <div className="flex items-center text-sm font-semibold text-[#2563eb]">
+                      <span>~10 seconds</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="hidden lg:block absolute top-24 -right-3 z-20">
+                  <ArrowRight className="w-6 h-6 text-[#2563eb] animate-pulse" style={{ animationDelay: '0.6s' }} />
+                </div>
+              </div>
+
+              {/* Step 4: Submit */}
+              <div className="relative group animate-slide-up" style={{ animationDelay: '0.5s' }}>
+                <div className="bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] rounded-2xl p-8 shadow-2xl hover:shadow-3xl transition-all duration-500 hover:-translate-y-2 relative overflow-hidden">
+                  {/* Animated background */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                  <div className="relative z-10">
+                    <div className="absolute -top-4 -right-4 w-16 h-16 bg-white rounded-full flex items-center justify-center text-[#2563eb] font-bold text-2xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                      4
+                    </div>
+
+                    <div className="w-20 h-20 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+                      <Send className="w-10 h-10 text-white" />
+                    </div>
+
+                    <h3 className="text-2xl font-bold text-white mb-3">Submit & Win</h3>
+                    <p className="text-white/90 leading-relaxed mb-4">
+                      Submit your compliant, competitive proposal with confidence. Your weeks of work—done in minutes.
+                    </p>
+                    <div className="flex items-center text-sm font-bold text-white">
+                      <CheckCircle2 className="w-5 h-5 mr-2" />
+                      <span>Ready to submit!</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* CTA */}
+            <div className="text-center mt-16 lg:mt-20 animate-slide-up" style={{ animationDelay: '0.6s' }}>
+              <Link href="/auth/signup">
+                <button className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-12 py-5 rounded-xl font-bold text-lg transition-all duration-300 hover:shadow-2xl hover:shadow-[#2563eb]/30 hover:-translate-y-1 hover:scale-105">
+                  Start Your First Proposal Free
+                </button>
+              </Link>
+              <p className="text-sm text-gray-500 mt-4">No credit card required • First proposal free • 2-minute setup</p>
+            </div>
+          </div>
+        </section>
+
         {/* Product Showcase */}
         <section className="py-16 lg:py-24 bg-white overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -198,10 +389,10 @@ export default function Home() {
               {/* Left feature */}
               <div className="text-center lg:text-right animate-slide-in-left">
                 <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 leading-tight">
-                  Create and send proposals from anywhere
+                  Win proposals faster than ever
                 </h3>
                 <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
-                  Upload RFPs, extract job descriptions, and generate pricing with our intelligent automation—whether you're in the office or on the go.
+                  Upload government RFPs, extract requirements, and generate compliant pricing in minutes—giving you more time to focus on winning.
                 </p>
               </div>
 
@@ -221,7 +412,7 @@ export default function Home() {
                             <div className="w-3 h-3 rounded-full bg-green-400"></div>
                           </div>
                           <div className="flex-1 bg-white rounded px-3 py-1 text-xs text-gray-500 ml-2">
-                            priceiq.com/workspace
+                            priceiq.org/proposal
                           </div>
                         </div>
 
@@ -251,7 +442,7 @@ export default function Home() {
                                 <div key={i} className="grid grid-cols-3 gap-2">
                                   <div className="h-2 w-full bg-gray-100 rounded"></div>
                                   <div className="h-2 w-full bg-blue-100 rounded"></div>
-                                  <div className="h-2 w-full bg-[#22C55E]/20 rounded"></div>
+                                  <div className="h-2 w-full bg-blue-200 rounded"></div>
                                 </div>
                               ))}
                             </div>
@@ -270,10 +461,10 @@ export default function Home() {
               {/* Right feature */}
               <div className="text-center lg:text-left animate-slide-in-right" style={{ animationDelay: '0.1s' }}>
                 <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 leading-tight">
-                  Automation you can always count on
+                  Precision automation for government contracts
                 </h3>
                 <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
-                  Our AI agents categorize positions, match to wage data, and calculate rates automatically—so you can focus on strategy, not spreadsheets.
+                  AI-powered SOC matching, BLS wage data, and FBLR calculations ensure every proposal meets strict compliance requirements automatically.
                 </p>
               </div>
             </div>
@@ -282,27 +473,27 @@ export default function Home() {
             <div className="grid md:grid-cols-2 gap-8 lg:gap-10">
               <div className="text-center md:text-left animate-fade-in" style={{ animationDelay: '0.3s' }}>
                 <h3 className="text-xl sm:text-2xl font-bold text-[#2563eb] mb-4 leading-tight">
-                  Stay in control with real-time collaboration
+                  Collaborate to win more together
                 </h3>
                 <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
-                  Your team's workspace is the home base for efficiency. Share proposals, track changes, and collaborate with confidence.
+                  Share proposals across your team, track changes in real-time, and coordinate winning strategies with organization-wide workspaces.
                 </p>
               </div>
 
               <div className="text-center md:text-left animate-fade-in" style={{ animationDelay: '0.4s' }}>
                 <h3 className="text-xl sm:text-2xl font-bold text-[#2563eb] mb-4 leading-tight">
-                  Set your path to winning more contracts
+                  Data-driven insights to maximize win rates
                 </h3>
                 <p className="text-base sm:text-lg text-gray-600 leading-relaxed">
-                  Access historical data, benchmark against competitors, and optimize your pricing strategy with data-driven insights.
+                  Analyze historical wins, benchmark against market rates, and refine your pricing strategy to consistently beat competitors.
                 </p>
               </div>
             </div>
 
             <div className="text-center mt-12 animate-slide-up" style={{ animationDelay: '0.5s' }}>
               <Link href="/auth/signup">
-                <button className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 hover:shadow-lg hover:shadow-[#22C55E]/30 hover:-translate-y-0.5">
-                  Learn more
+                <button className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 hover:shadow-lg hover:shadow-[#2563eb]/30 hover:-translate-y-0.5">
+                  Start winning more proposals
                 </button>
               </Link>
             </div>
@@ -336,13 +527,13 @@ export default function Home() {
 
           <div className="relative z-20 max-w-5xl mx-auto px-6 sm:px-8 text-center">
             <p className="text-sm sm:text-base font-bold text-white/90 mb-6 uppercase tracking-widest">
-              AI-POWERED AUTOMATION
+              FROM WEEKS TO MINUTES
             </p>
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-8 leading-tight">
-              Pricing intelligence, automated
+              Accelerate your path to winning
             </h2>
             <p className="text-lg sm:text-xl text-white/90 max-w-3xl mx-auto mb-12 leading-relaxed">
-              Transform your pricing process with AI that learns from BLS data, understands government contracting, and delivers accurate rates every time.
+              Stop losing opportunities to slow proposal processes. Our AI-powered platform turns government RFPs into compliant, competitive pricing in minutes—not weeks.
             </p>
             <Link href="/pricing">
               <button className="bg-white hover:bg-gray-100 text-gray-900 px-12 py-5 rounded-xl font-bold text-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
@@ -353,7 +544,7 @@ export default function Home() {
         </section>
 
         {/* Feature Grid */}
-        <section className="py-16 lg:py-24 bg-white overflow-hidden">
+        <section id="features" className="py-16 lg:py-24 bg-white overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
               {/* Feature 1 */}
@@ -362,18 +553,18 @@ export default function Home() {
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-5">
                     <Target className="w-6 h-6 text-[#2563eb]" />
-                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">TRACK PERFORMANCE</p>
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">MAXIMIZE WIN RATES</p>
                   </div>
                   <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-5 leading-tight">
-                    Stay on top of your pipeline
+                    Track and improve your success
                   </h3>
                   <p className="text-base text-gray-600 mb-6 leading-relaxed">
-                    Monitor all active proposals, track win rates, and identify trends that help you refine your pricing strategy over time.
+                    Monitor proposal performance, analyze win rates by contract type, and identify patterns that lead to more awarded contracts.
                   </p>
                   <ul className="space-y-3">
-                    {['Real-time proposal tracking', 'Win rate analytics', 'Historical comparisons'].map((item, i) => (
+                    {['Win/loss tracking', 'Performance analytics', 'Success pattern insights'].map((item, i) => (
                       <li key={i} className="flex items-center text-base text-gray-700">
-                        <CheckCircle2 className="w-6 h-6 text-[#22C55E] mr-3 flex-shrink-0" />
+                        <CheckCircle2 className="w-6 h-6 text-[#2563eb] mr-3 flex-shrink-0" />
                         {item}
                       </li>
                     ))}
@@ -383,22 +574,22 @@ export default function Home() {
 
               {/* Feature 2 */}
               <div className="bg-white border-2 border-gray-200 rounded-2xl p-10 lg:p-12 hover:shadow-xl hover:scale-105 transition-all duration-500 animate-slide-in-right group relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-[#22C55E]/0 via-[#22C55E]/5 to-[#22C55E]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-shimmer"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-[#2563eb]/0 via-[#2563eb]/5 to-[#2563eb]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-shimmer"></div>
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-5">
                     <TrendingUp className="w-6 h-6 text-[#2563eb]" />
-                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">SEE INSIGHTS</p>
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">COMPETITIVE EDGE</p>
                   </div>
                   <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-5 leading-tight">
-                    Spot growth opportunities
+                    Price to win every time
                   </h3>
                   <p className="text-base text-gray-600 mb-6 leading-relaxed">
-                    Leverage wage data trends, market analysis, and competitive intelligence to position your bids for maximum success.
+                    Leverage real-time BLS wage data, market intelligence, and competitive analysis to price your proposals at the sweet spot for winning.
                   </p>
                   <ul className="space-y-3">
-                    {['Market trend analysis', 'Competitive benchmarking', 'Smart recommendations'].map((item, i) => (
+                    {['Market rate intelligence', 'Competitive positioning', 'Win probability scoring'].map((item, i) => (
                       <li key={i} className="flex items-center text-base text-gray-700">
-                        <CheckCircle2 className="w-6 h-6 text-[#22C55E] mr-3 flex-shrink-0" />
+                        <CheckCircle2 className="w-6 h-6 text-[#2563eb] mr-3 flex-shrink-0" />
                         {item}
                       </li>
                     ))}
@@ -412,18 +603,18 @@ export default function Home() {
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-5">
                     <FileText className="w-6 h-6 text-[#2563eb]" />
-                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">RUN REPORTS</p>
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">SUBMIT WITH CONFIDENCE</p>
                   </div>
                   <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-5 leading-tight">
-                    Insightful reports in seconds
+                    Compliant proposals, every time
                   </h3>
                   <p className="text-base text-gray-600 mb-6 leading-relaxed">
-                    Generate compliance-ready pricing volumes with detailed breakdowns, audit trails, and exportable formats your clients expect.
+                    Export government-ready pricing volumes with complete FBLR breakdowns, audit trails, and documentation that pass the strictest reviews.
                   </p>
                   <ul className="space-y-3">
-                    {['One-click exports', 'Compliance documentation', 'Audit trail tracking'].map((item, i) => (
+                    {['Excel export ready', 'Full compliance docs', 'Complete audit trails'].map((item, i) => (
                       <li key={i} className="flex items-center text-base text-gray-700">
-                        <CheckCircle2 className="w-6 h-6 text-[#22C55E] mr-3 flex-shrink-0" />
+                        <CheckCircle2 className="w-6 h-6 text-[#2563eb] mr-3 flex-shrink-0" />
                         {item}
                       </li>
                     ))}
@@ -433,22 +624,22 @@ export default function Home() {
 
               {/* Feature 4 */}
               <div className="bg-[#E8F9FA] rounded-2xl p-10 lg:p-12 hover:shadow-xl hover:scale-105 transition-all duration-500 animate-slide-in-right group relative overflow-hidden" style={{ animationDelay: '0.2s' }}>
-                <div className="absolute inset-0 bg-gradient-to-r from-[#22C55E]/0 via-[#22C55E]/5 to-[#22C55E]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-shimmer"></div>
+                <div className="absolute inset-0 bg-gradient-to-r from-[#2563eb]/0 via-[#2563eb]/5 to-[#2563eb]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-shimmer"></div>
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-5">
                     <Clock className="w-6 h-6 text-[#2563eb]" />
-                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">SAVE TIME</p>
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">SPEED WINS</p>
                   </div>
                   <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-5 leading-tight">
-                    Accelerate your proposal process
+                    From weeks to minutes
                   </h3>
                   <p className="text-base text-gray-600 mb-6 leading-relaxed">
-                    Reduce proposal development time from days to hours with intelligent automation and pre-built compliance templates.
+                    Submit more proposals and win more contracts. What used to take weeks of manual work now takes minutes with AI-powered automation.
                   </p>
                   <ul className="space-y-3">
-                    {['Automated calculations', 'Template library', 'Bulk processing'].map((item, i) => (
+                    {['Instant SOC matching', 'Auto FBLR calculation', 'Batch RFP processing'].map((item, i) => (
                       <li key={i} className="flex items-center text-base text-gray-700">
-                        <CheckCircle2 className="w-6 h-6 text-[#22C55E] mr-3 flex-shrink-0" />
+                        <CheckCircle2 className="w-6 h-6 text-[#2563eb] mr-3 flex-shrink-0" />
                         {item}
                       </li>
                     ))}
@@ -460,7 +651,7 @@ export default function Home() {
         </section>
 
         {/* FAQ Section */}
-        <section className="py-20 lg:py-28 bg-gray-50 overflow-hidden">
+        <section id="faq" className="py-20 lg:py-28 bg-gray-50 overflow-hidden">
           <div className="max-w-4xl mx-auto px-6 sm:px-8">
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-center mb-16 text-gray-900 leading-tight animate-slide-up">
               Frequently asked questions
@@ -534,10 +725,10 @@ export default function Home() {
 
           <div className="max-w-5xl mx-auto px-6 sm:px-8 text-center relative z-10">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-8 leading-tight animate-scale-in">
-              Ready to transform your pricing?
+              Start winning more proposals today
             </h2>
             <p className="text-lg sm:text-xl text-white/95 mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: '0.1s' }}>
-              Join hundreds of government contractors who are winning more business with PriceIQ's intelligent automation.
+              Join hundreds of government contractors turning weeks of pricing work into minutes—and dramatically improving their win rates.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
@@ -548,7 +739,7 @@ export default function Home() {
               </Link>
               <div className="flex items-center gap-3 text-white/95">
                 <CheckCircle2 className="w-6 h-6 animate-pulse" />
-                <span className="text-base font-medium">No credit card required</span>
+                <span className="text-base font-medium">First proposal free • No credit card required</span>
               </div>
             </div>
           </div>
@@ -557,8 +748,8 @@ export default function Home() {
         {/* Footer */}
         <footer className="bg-black text-white py-12 lg:py-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
-            <div className="grid grid-cols-2 md:grid-cols-5 gap-8 lg:gap-12 mb-12">
-              <div className="col-span-2 md:col-span-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12 mb-12">
+              <div className="md:col-span-2 lg:col-span-1">
                 <Link href="/" className="flex items-center space-x-3 mb-4">
                   <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#2563eb] text-white">
                     <BarChart3 className="w-6 h-6" />
@@ -590,58 +781,44 @@ export default function Home() {
               <div>
                 <h3 className="font-bold mb-4 text-sm uppercase tracking-wider">Product</h3>
                 <ul className="space-y-3 text-sm">
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Features</Link></li>
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Pricing</Link></li>
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Integrations</Link></li>
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">API</Link></li>
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Security</Link></li>
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Roadmap</Link></li>
+                  <li><Link href="/#features" className="text-gray-400 hover:text-white transition-colors">Features</Link></li>
+                  <li><Link href="/pricing" className="text-gray-400 hover:text-white transition-colors">Pricing</Link></li>
+                  <li><Link href="/security" className="text-gray-400 hover:text-white transition-colors">Security</Link></li>
                 </ul>
               </div>
 
               <div>
                 <h3 className="font-bold mb-4 text-sm uppercase tracking-wider">Resources</h3>
                 <ul className="space-y-3 text-sm">
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Documentation</Link></li>
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Tutorials</Link></li>
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Blog</Link></li>
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Case Studies</Link></li>
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Webinars</Link></li>
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Templates</Link></li>
+                  <li><Link href="/resources" className="text-gray-400 hover:text-white transition-colors">Blog & Resources</Link></li>
+                  <li><Link href="/#faq" className="text-gray-400 hover:text-white transition-colors">FAQ</Link></li>
                 </ul>
               </div>
 
               <div>
                 <h3 className="font-bold mb-4 text-sm uppercase tracking-wider">Company</h3>
                 <ul className="space-y-3 text-sm">
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">About Us</Link></li>
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Customers</Link></li>
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Careers</Link></li>
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Partners</Link></li>
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Press Kit</Link></li>
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Contact</Link></li>
+                  <li><Link href="/about" className="text-gray-400 hover:text-white transition-colors">About Us</Link></li>
+                  <li><Link href="/contact" className="text-gray-400 hover:text-white transition-colors">Contact</Link></li>
                 </ul>
               </div>
 
               <div>
-                <h3 className="font-bold mb-4 text-sm uppercase tracking-wider">Support</h3>
+                <h3 className="font-bold mb-4 text-sm uppercase tracking-wider">Legal</h3>
                 <ul className="space-y-3 text-sm">
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Help Center</Link></li>
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Community</Link></li>
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Status</Link></li>
-                  <li><Link href="/legal/terms" className="text-gray-400 hover:text-white transition-colors">Terms</Link></li>
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Privacy</Link></li>
-                  <li><Link href="#" className="text-gray-400 hover:text-white transition-colors">Compliance</Link></li>
+                  <li><Link href="/support" className="text-gray-400 hover:text-white transition-colors">Help Center</Link></li>
+                  <li><Link href="/legal/terms?tab=terms" className="text-gray-400 hover:text-white transition-colors">Terms & Conditions</Link></li>
+                  <li><Link href="/legal/privacy" className="text-gray-400 hover:text-white transition-colors">Privacy Policy</Link></li>
                 </ul>
               </div>
             </div>
 
             <div className="pt-8 border-t border-white/10 flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-400">
-              <p>© 2024 PriceIQ. All rights reserved.</p>
+              <p>© 2026 PriceIQ by Intrepix LLC. All rights reserved.</p>
               <div className="flex items-center gap-6">
-                <Link href="#" className="hover:text-white transition-colors">Privacy Policy</Link>
-                <Link href="/legal/terms" className="hover:text-white transition-colors">Terms of Service</Link>
-                <Link href="#" className="hover:text-white transition-colors">Cookie Settings</Link>
+                <Link href="/legal/privacy" className="hover:text-white transition-colors">Privacy Policy</Link>
+                <Link href="/legal/terms?tab=terms" className="hover:text-white transition-colors">Terms & Conditions</Link>
+                <Link href="/security" className="hover:text-white transition-colors">Security</Link>
               </div>
             </div>
           </div>

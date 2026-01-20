@@ -2395,6 +2395,14 @@
         "documentation": {}
     },
     {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
         "label": "timedelta",
         "importPath": "datetime",
         "description": "datetime",
@@ -2881,6 +2889,14 @@
         "description": "auth",
         "isExtraImport": true,
         "detail": "auth",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
         "documentation": {}
     },
     {
@@ -4077,6 +4093,14 @@
     },
     {
         "label": "ProposalCRUD",
+        "importPath": "utils.proposals",
+        "description": "utils.proposals",
+        "isExtraImport": true,
+        "detail": "utils.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "get_proposal_crud",
         "importPath": "utils.proposals",
         "description": "utils.proposals",
         "isExtraImport": true,
@@ -6525,6 +6549,15 @@
         "description": "backend.scripts.migrate_business_status",
         "peekOfCode": "def migrate_business_status():\n    \"\"\"\n    Add business_status field to all completed proposals.\n    Sets business_status = \"active\" for all completed proposals that don't have one yet.\n    Also creates necessary database indexes.\n    \"\"\"\n    mongodb_url = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\n    database_name = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\n    client = MongoClient(mongodb_url)\n    db = client.get_database(database_name)",
         "detail": "backend.scripts.migrate_business_status",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_first_proposal_flag",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_first_proposal_flag",
+        "description": "backend.scripts.migrate_first_proposal_flag",
+        "peekOfCode": "def migrate_first_proposal_flag():\n    \"\"\"Add first_proposal_used flag to all organizations.\"\"\"\n    mongodb = get_mongodb_client()\n    db = mongodb.get_database()\n    orgs_collection = db[\"organizations\"]\n    proposal_crud = get_proposal_crud()\n    print(\"=\" * 80)\n    print(\"MIGRATING ORGANIZATIONS - Adding first_proposal_used flag\")\n    print(\"=\" * 80)\n    # Get all organizations",
+        "detail": "backend.scripts.migrate_first_proposal_flag",
         "documentation": {}
     },
     {
