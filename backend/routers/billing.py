@@ -224,9 +224,9 @@ async def get_billing_status(current_user: dict = Depends(get_current_user)):
     )
 
     # Check if org qualifies for free first proposal
-    # Use flag to track if they've EVER used free proposal (not current count)
-    first_proposal_used = org.get("first_proposal_used", False)
-    free_proposal_available = not first_proposal_used
+    # Check if they've used their free proposal (tracked by first_free_proposal_id)
+    first_free_proposal_id = org.get("first_free_proposal_id")
+    free_proposal_available = first_free_proposal_id is None
 
     # Also get current count for display purposes
     proposal_count = proposal_crud.get_org_proposal_count(current_user["organization_id"])
@@ -279,9 +279,14 @@ async def charge_for_proposal(data: ChargeRequest, current_user: dict = Depends(
         raise HTTPException(403, "Proposal does not belong to your organization")
 
     # Check if this is the org's first proposal (free)
-    # Use flag to check if they've EVER used their free proposal
-    first_proposal_used = org.get("first_proposal_used", False)
-    is_first_proposal = not first_proposal_used and charge_type == ChargeType.BASIC
+    # We track the first_free_proposal_id to allow BOTH basic AND advanced to be free
+    first_free_proposal_id = org.get("first_free_proposal_id")
+
+    # Determine if this charge should be free:
+    # 1. No free proposal used yet AND this is a BASIC charge (first time)
+    # 2. OR this is the same proposal that got free basic (allows free advanced too)
+    is_first_proposal = (first_free_proposal_id is None and charge_type == ChargeType.BASIC) or \
+                       (first_free_proposal_id is not None and str(first_free_proposal_id) == data.proposal_id)
 
     # Only require payment method if not first proposal
     if not is_first_proposal:
@@ -307,27 +312,38 @@ async def charge_for_proposal(data: ChargeRequest, current_user: dict = Depends(
             status="succeeded"
         )
 
-        # Mark first proposal as used (permanent flag, even if they delete it later)
-        # Update proposal billing status + set first_proposal_used flag
+        # Mark first proposal as used (only on first BASIC charge)
+        # Update proposal billing status + set first_free_proposal_id
         now = datetime.utcnow()
-        await asyncio.gather(
-            asyncio.to_thread(
+
+        # Only set first_free_proposal_id if it's not already set (first basic charge)
+        if first_free_proposal_id is None:
+            await asyncio.gather(
+                asyncio.to_thread(
+                    proposal_crud.collection.update_one,
+                    {"_id": ObjectId(data.proposal_id)},
+                    {"$set": {"billing_status": "paid", "updated_at": now}}
+                ),
+                asyncio.to_thread(
+                    org_crud.collection.update_one,
+                    {"_id": org["_id"]},
+                    {"$set": {"first_free_proposal_id": ObjectId(data.proposal_id), "updated_at": now}}
+                )
+            )
+        else:
+            # Advanced analysis on already-free proposal, just update proposal status
+            await asyncio.to_thread(
                 proposal_crud.collection.update_one,
                 {"_id": ObjectId(data.proposal_id)},
                 {"$set": {"billing_status": "paid", "updated_at": now}}
-            ),
-            asyncio.to_thread(
-                org_crud.collection.update_one,
-                {"_id": org["_id"]},
-                {"$set": {"first_proposal_used": True, "updated_at": now}}
             )
-        )
 
         return {
             "success": True,
             "billing_id": billing_id,
             "free_proposal": True,
-            "amount_cents": 0
+            "amount_cents": 0,
+            "auto_trigger_advanced": first_free_proposal_id is None and charge_type == ChargeType.BASIC
         }
 
     # Get price and create billing record

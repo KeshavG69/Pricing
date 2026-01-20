@@ -736,6 +736,8 @@ export default function CompanyRepositoryPage() {
         sub_fee: editPresetRates.sub_fee / 100,
         ga_passthrough: editPresetRates.ga_passthrough / 100,
         escalation_rate: editPresetRates.escalation_rate / 100,
+        ot_multiplier: editPresetRates.ot_multiplier / 100,
+        surge_multiplier: editPresetRates.surge_multiplier / 100,
       };
 
       await apiClient.put(`/organizations/me/rate-presets/${editingPreset.id}`, presetData);
@@ -1239,6 +1241,14 @@ export default function CompanyRepositoryPage() {
                       <div>
                         <span className="text-muted-foreground">Escalation: </span>
                         <span className="font-mono font-semibold">{toPercentageDisplay(preset.escalation_rate || 0)}%</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">OT Mult: </span>
+                        <span className="font-mono font-semibold">{preset.ot_multiplier ? toPercentageDisplay(preset.ot_multiplier) + '%' : '-'}</span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Surge Mult: </span>
+                        <span className="font-mono font-semibold">{preset.surge_multiplier ? toPercentageDisplay(preset.surge_multiplier) + '%' : '-'}</span>
                       </div>
                     </div>
                   </div>

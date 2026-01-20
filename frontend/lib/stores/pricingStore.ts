@@ -325,6 +325,112 @@ const setCachedProposal = (proposalId: string, data: any) => {
 };
 
 export const usePricingStore = create<PricingState>((set, get) => {
+  // Calculate grand total contract value (all components)
+  const calculateGrandTotal = (): number => {
+    const state = get();
+
+    // Calculate prime labor by year (DL + Fringe + OH + G&A from aggregates)
+    const primeLaborTotal = Object.values(state.aggregates.byYear).reduce((sum, yearData) => {
+      return sum + (yearData.dl + yearData.fringe + yearData.oh + yearData.ga);
+    }, 0);
+
+    // Calculate overtime costs
+    const otTotal = Object.values(state.aggregates.byYear).reduce((sum, yearData) => {
+      return sum + (yearData.ot || 0);
+    }, 0);
+
+    // Calculate subcontractor costs with escalation
+    let subTotal = 0;
+    state.subcontractors.forEach(sub => {
+      sub.positions.forEach(pos => {
+        Object.entries(pos.hours_per_year || {}).forEach(([year, hours]) => {
+          const yearNum = parseInt(year, 10);
+
+          // Apply compound escalation
+          let escalationMultiplier = 1;
+          for (let y = 2; y <= yearNum; y++) {
+            const escalationKey = `${y - 1}_to_${y}` as keyof typeof state.escalationRates;
+            const escalationRate = state.escalationRates[escalationKey] || 0;
+            escalationMultiplier *= (1 + escalationRate);
+          }
+
+          const escalatedRate = pos.rate * escalationMultiplier;
+          subTotal += hours * escalatedRate;
+
+          // Add overtime if exists
+          const otHours = (pos.ot_hours_per_year || {})[year] || 0;
+          const otMultiplier = state.rates.ot_multiplier || 1.5;
+          subTotal += otHours * escalatedRate * otMultiplier;
+        });
+      });
+    });
+
+    // Calculate passthrough (SMH + G&A on subcontractor costs)
+    const passthroughTotal = subTotal * ((state.rates.smh || 0) + (state.rates.ga_passthrough || 0));
+
+    // Calculate fee (on prime + subcontractor labor)
+    const primeFee = primeLaborTotal * (state.rates.fee || 0);
+    const subFee = subTotal * (state.rates.sub_fee || state.rates.fee || 0);
+    const feeTotal = primeFee + subFee;
+
+    // Calculate travel costs with escalation and G&A
+    let travelTotal = 0;
+    state.travel.forEach(item => {
+      Object.entries(item.amount_per_year || {}).forEach(([year, amount]) => {
+        const yearNum = parseInt(year, 10);
+        let finalAmount = amount;
+
+        if (item.escalate) {
+          let escalationMultiplier = 1;
+          for (let y = 2; y <= yearNum; y++) {
+            const escalationKey = `${y - 1}_to_${y}` as keyof typeof state.escalationRates;
+            const escalationRate = state.escalationRates[escalationKey] || 0;
+            escalationMultiplier *= (1 + escalationRate);
+          }
+          finalAmount = amount * escalationMultiplier;
+        }
+
+        // Apply G&A markup
+        const gaRate = state.rates.ga || 0;
+        travelTotal += finalAmount * (1 + gaRate);
+      });
+    });
+
+    // Calculate ODC costs with escalation and S&MH
+    let odcTotal = 0;
+    state.odcs.forEach(item => {
+      Object.entries(item.amount_per_year || {}).forEach(([year, amount]) => {
+        const yearNum = parseInt(year, 10);
+        let finalAmount = amount;
+
+        if (item.escalate) {
+          let escalationMultiplier = 1;
+          for (let y = 2; y <= yearNum; y++) {
+            const escalationKey = `${y - 1}_to_${y}` as keyof typeof state.escalationRates;
+            const escalationRate = state.escalationRates[escalationKey] || 0;
+            escalationMultiplier *= (1 + escalationRate);
+          }
+          finalAmount = amount * escalationMultiplier;
+        }
+
+        // Apply S&MH markup
+        const smhRate = state.rates.smh || 0;
+        odcTotal += finalAmount * (1 + smhRate);
+      });
+    });
+
+    // Calculate surge costs (if surge option exists)
+    let surgeTotal = 0;
+    if (state.surge && state.surge.percentage !== null) {
+      const surgePercentage = state.surge.percentage;
+      const surgeMultiplier = state.rates.surge_multiplier || 1.15;
+      surgeTotal = primeLaborTotal * surgePercentage * surgeMultiplier;
+    }
+
+    // Grand total
+    return primeLaborTotal + otTotal + subTotal + passthroughTotal + feeTotal + travelTotal + odcTotal + surgeTotal;
+  };
+
   // Helper function for actual transformation logic
   const performTransformToAdvanced = (options?: { skipVersionIncrement?: boolean }) => {
     const state = get();
@@ -637,15 +743,12 @@ export const usePricingStore = create<PricingState>((set, get) => {
     console.log('💾 Attempting auto-save to MongoDB...');
 
     try {
-      // Calculate total cost from all positions
-      const totalCost = state.positions.reduce((sum, position) => {
-        const positionTotal = position.total_amount || 0;
-        return sum + positionTotal;
-      }, 0);
+      // Calculate grand total contract value (all components)
+      const totalCost = calculateGrandTotal();
 
       await proposalsApi.update(state.proposalId, {
         prime_contractor_name: state.primeContractorName,  // Save at proposal level
-        total_cost: totalCost,  // Add total cost calculation
+        total_cost: totalCost,  // Grand total contract value
         spreadsheet_data: {
           positions: state.positions,
           subcontractors: state.subcontractors,
@@ -900,7 +1003,6 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
         // Ensure rates object exists
         if (!rates) {
-          console.log('[MIGRATION] No rates found, creating default rates');
           rates = {
             fringe: 0.247,
             oh_onsite: 0.0711,
@@ -911,7 +1013,6 @@ export const usePricingStore = create<PricingState>((set, get) => {
         } else {
           // Migrate old 'oh' to new structure
           if (rates.oh !== undefined && rates.oh !== null && !rates.oh_onsite && !rates.oh_offsite) {
-            console.log('[MIGRATION] Migrating old OH rate to on-site/off-site rates', rates.oh);
             rates = {
               ...rates,
               oh_onsite: rates.oh,
@@ -922,14 +1023,12 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
           // Ensure oh_onsite and oh_offsite always exist (fallback to defaults)
           if (rates.oh_onsite === undefined || rates.oh_onsite === null) {
-            console.log('[MIGRATION] Adding missing oh_onsite with default value');
             rates = {
               ...rates,
               oh_onsite: 0.0711,
             };
           }
           if (rates.oh_offsite === undefined || rates.oh_offsite === null) {
-            console.log('[MIGRATION] Adding missing oh_offsite with default value');
             rates = {
               ...rates,
               oh_offsite: 0.0711,

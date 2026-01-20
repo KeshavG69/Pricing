@@ -2331,6 +2331,14 @@
         "documentation": {}
     },
     {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
         "label": "timezone",
         "importPath": "datetime",
         "description": "datetime",
@@ -2464,6 +2472,22 @@
         "description": "dotenv",
         "isExtraImport": true,
         "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
         "documentation": {}
     },
     {
@@ -2601,6 +2625,14 @@
         "importPath": "bcrypt",
         "description": "bcrypt",
         "detail": "bcrypt",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
         "documentation": {}
     },
     {
@@ -6381,6 +6413,33 @@
         "documentation": {}
     },
     {
+        "label": "check_billing_issue",
+        "kind": 2,
+        "importPath": "backend.scripts.check_free_proposal_issue",
+        "description": "backend.scripts.check_free_proposal_issue",
+        "peekOfCode": "def check_billing_issue():\n    print(\"Connecting to MongoDB...\")\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    # Find user with \"rajesh\" in email\n    print(\"=\" * 80)\n    print(\"SEARCHING FOR USER WITH 'rajesh' IN EMAIL\")\n    print(\"=\" * 80)\n    users = list(db.users.find({\"email\": {\"$regex\": \"rajesh\", \"$options\": \"i\"}}))\n    if not users:",
+        "detail": "backend.scripts.check_free_proposal_issue",
+        "documentation": {}
+    },
+    {
+        "label": "MONGODB_URL",
+        "kind": 5,
+        "importPath": "backend.scripts.check_free_proposal_issue",
+        "description": "backend.scripts.check_free_proposal_issue",
+        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef check_billing_issue():\n    print(\"Connecting to MongoDB...\")\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    # Find user with \"rajesh\" in email\n    print(\"=\" * 80)\n    print(\"SEARCHING FOR USER WITH 'rajesh' IN EMAIL\")\n    print(\"=\" * 80)",
+        "detail": "backend.scripts.check_free_proposal_issue",
+        "documentation": {}
+    },
+    {
+        "label": "MONGODB_DATABASE",
+        "kind": 5,
+        "importPath": "backend.scripts.check_free_proposal_issue",
+        "description": "backend.scripts.check_free_proposal_issue",
+        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef check_billing_issue():\n    print(\"Connecting to MongoDB...\")\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    # Find user with \"rajesh\" in email\n    print(\"=\" * 80)\n    print(\"SEARCHING FOR USER WITH 'rajesh' IN EMAIL\")\n    print(\"=\" * 80)\n    users = list(db.users.find({\"email\": {\"$regex\": \"rajesh\", \"$options\": \"i\"}}))",
+        "detail": "backend.scripts.check_free_proposal_issue",
+        "documentation": {}
+    },
+    {
         "label": "safe_create_index",
         "kind": 2,
         "importPath": "backend.scripts.create_indexes",
@@ -6556,7 +6615,7 @@
         "kind": 2,
         "importPath": "backend.scripts.migrate_first_proposal_flag",
         "description": "backend.scripts.migrate_first_proposal_flag",
-        "peekOfCode": "def migrate_first_proposal_flag():\n    \"\"\"Add first_proposal_used flag to all organizations.\"\"\"\n    mongodb = get_mongodb_client()\n    db = mongodb.get_database()\n    orgs_collection = db[\"organizations\"]\n    proposal_crud = get_proposal_crud()\n    print(\"=\" * 80)\n    print(\"MIGRATING ORGANIZATIONS - Adding first_proposal_used flag\")\n    print(\"=\" * 80)\n    # Get all organizations",
+        "peekOfCode": "def migrate_first_proposal_flag():\n    \"\"\"Add first_free_proposal_id to all organizations (except Rajesh's).\"\"\"\n    mongodb = get_mongodb_client()\n    db = mongodb.get_database()\n    orgs_collection = db[\"organizations\"]\n    proposals_collection = db[\"proposals\"]\n    users_collection = db[\"users\"]\n    print(\"=\" * 80)\n    print(\"MIGRATING ORGANIZATIONS - Adding first_free_proposal_id\")\n    print(\"=\" * 80)",
         "detail": "backend.scripts.migrate_first_proposal_flag",
         "documentation": {}
     },
