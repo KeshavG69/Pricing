@@ -220,6 +220,7 @@ export interface ProposalStatus {
   status: 'processing' | 'completed' | 'error';
   progress: number;
   message?: string;
+  should_trigger_advanced?: boolean;
 }
 
 export interface BusinessStatusAnalytics {

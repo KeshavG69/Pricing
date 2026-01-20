@@ -9,8 +9,8 @@ interface AuthState {
   isInitializing: boolean;
 
   // Actions
-  login: (credentials: LoginCredentials) => Promise<void>;
-  signup: (data: SignupData) => Promise<void>;
+  login: (credentials: LoginCredentials | { access_token: string; refresh_token: string; user: User }) => Promise<void>;
+  signup: (data: SignupData) => Promise<{ email: string; message: string }>;
   googleLogin: (credential: string) => Promise<void>;
   logout: () => Promise<void>;
   fetchUser: () => Promise<void>;
@@ -28,7 +28,15 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       set({ isLoading: true, error: null });
 
-      const response = await authApi.login(credentials);
+      // Support both login credentials and direct token login (for email verification)
+      let response;
+      if ('access_token' in credentials) {
+        // Direct token login (from email verification)
+        response = credentials;
+      } else {
+        // Regular email/password login
+        response = await authApi.login(credentials);
+      }
 
       // Store tokens in localStorage
       localStorage.setItem('access_token', response.access_token);
@@ -48,15 +56,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   signup: async (data) => {
     try {
       set({ isLoading: true, error: null });
-      await authApi.signup(data);
+      const response = await authApi.signup(data);
 
-      // After signup, login automatically
-      await get().login({
-        email: data.email,
-        password: data.password,
-      });
-
+      // No longer auto-login - user must verify email first
       set({ isLoading: false });
+
+      // Return response for redirect to check-email page
+      return response;
     } catch (error: any) {
       set({
         error: error.response?.data?.detail || 'Signup failed',
@@ -142,8 +148,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       } else {
         set({ user });
       }
-    } catch (error) {
-      console.error('Failed to fetch user:', error);
+    } catch (error: any) {
+      // Don't log 401 errors (user not authenticated) - this is expected
+      if (error?.response?.status !== 401) {
+        console.error('Failed to fetch user:', error);
+      }
       set({ user: null });
     }
   },
@@ -163,8 +172,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         // No token, user not authenticated
         set({ user: null });
       }
-    } catch (error) {
-      // Token invalid or expired, clear storage
+    } catch (error: any) {
+      // Token invalid or expired, clear storage (but don't log 401s)
+      if (error?.response?.status !== 401) {
+        console.error('Auth initialization error:', error);
+      }
       localStorage.removeItem('access_token');
       localStorage.removeItem('refresh_token');
       set({ user: null });

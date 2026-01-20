@@ -2010,6 +2010,14 @@
         "documentation": {}
     },
     {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
         "label": "pricing",
         "importPath": "routers",
         "description": "routers",
@@ -2331,6 +2339,14 @@
         "documentation": {}
     },
     {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
         "label": "timezone",
         "importPath": "datetime",
         "description": "datetime",
@@ -2427,11 +2443,27 @@
         "documentation": {}
     },
     {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
         "isExtraImport": true,
-        "detail": "dotenv",
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
         "documentation": {}
     },
     {
@@ -2464,6 +2496,38 @@
         "description": "dotenv",
         "isExtraImport": true,
         "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
         "documentation": {}
     },
     {
@@ -2601,6 +2665,14 @@
         "importPath": "bcrypt",
         "description": "bcrypt",
         "detail": "bcrypt",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
         "documentation": {}
     },
     {
@@ -2996,6 +3068,22 @@
         "documentation": {}
     },
     {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
         "label": "requests",
         "importPath": "google.auth.transport",
         "description": "google.auth.transport",
@@ -3101,6 +3189,22 @@
     },
     {
         "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "EmailStr",
         "importPath": "pydantic",
         "description": "pydantic",
         "isExtraImport": true,
@@ -3988,6 +4092,14 @@
         "documentation": {}
     },
     {
+        "label": "get_email_verification_crud",
+        "importPath": "utils.email_verification",
+        "description": "utils.email_verification",
+        "isExtraImport": true,
+        "detail": "utils.email_verification",
+        "documentation": {}
+    },
+    {
         "label": "get_stripe_service",
         "importPath": "client.stripe_client",
         "description": "client.stripe_client",
@@ -4592,6 +4704,14 @@
         "documentation": {}
     },
     {
+        "label": "EmailService",
+        "importPath": "client.email_service",
+        "description": "client.email_service",
+        "isExtraImport": true,
+        "detail": "client.email_service",
+        "documentation": {}
+    },
+    {
         "label": "create_pricing_agent",
         "importPath": "agent.agent",
         "description": "agent.agent",
@@ -4981,7 +5101,7 @@
         "kind": 6,
         "importPath": "backend.auth.crud",
         "description": "backend.auth.crud",
-        "peekOfCode": "class UserCRUD:\n    \"\"\"Sync UserCRUD with PyMongo driver\"\"\"\n    def __init__(self):\n        \"\"\"Initialize UserCRUD\"\"\"\n        self.mongodb = get_mongodb_client()\n        self.collection = self.mongodb.get_users_collection()\n        self.db = self.mongodb.get_database()\n    @staticmethod\n    def create_user(user_data: UserSignup) -> UserResponse:\n        \"\"\"Create a new user with default organization\"\"\"",
+        "peekOfCode": "class UserCRUD:\n    \"\"\"Sync UserCRUD with PyMongo driver\"\"\"\n    def __init__(self):\n        \"\"\"Initialize UserCRUD\"\"\"\n        self.mongodb = get_mongodb_client()\n        self.collection = self.mongodb.get_users_collection()\n        self.db = self.mongodb.get_database()\n    @staticmethod\n    def create_user(user_data: UserSignup, email_verified: bool = True) -> UserResponse:\n        \"\"\"Create a new user with default organization\"\"\"",
         "detail": "backend.auth.crud",
         "documentation": {}
     },
@@ -5008,7 +5128,7 @@
         "kind": 5,
         "importPath": "backend.auth.crud",
         "description": "backend.auth.crud",
-        "peekOfCode": "_lock = threading.RLock()\nclass UserCRUD:\n    \"\"\"Sync UserCRUD with PyMongo driver\"\"\"\n    def __init__(self):\n        \"\"\"Initialize UserCRUD\"\"\"\n        self.mongodb = get_mongodb_client()\n        self.collection = self.mongodb.get_users_collection()\n        self.db = self.mongodb.get_database()\n    @staticmethod\n    def create_user(user_data: UserSignup) -> UserResponse:",
+        "peekOfCode": "_lock = threading.RLock()\nclass UserCRUD:\n    \"\"\"Sync UserCRUD with PyMongo driver\"\"\"\n    def __init__(self):\n        \"\"\"Initialize UserCRUD\"\"\"\n        self.mongodb = get_mongodb_client()\n        self.collection = self.mongodb.get_users_collection()\n        self.db = self.mongodb.get_database()\n    @staticmethod\n    def create_user(user_data: UserSignup, email_verified: bool = True) -> UserResponse:",
         "detail": "backend.auth.crud",
         "documentation": {}
     },
@@ -5904,11 +6024,29 @@
         "documentation": {}
     },
     {
+        "label": "VerifyEmailRequest",
+        "kind": 6,
+        "importPath": "backend.routers.auth",
+        "description": "backend.routers.auth",
+        "peekOfCode": "class VerifyEmailRequest(BaseModel):\n    \"\"\"Request body for email verification\"\"\"\n    token: str\nclass ResendVerificationRequest(BaseModel):\n    \"\"\"Request body for resending verification email\"\"\"\n    email: EmailStr\n@router.post(\"/signup\")\nasync def signup(user_data: UserSignup):\n    \"\"\"\n    Register a new user and send email verification",
+        "detail": "backend.routers.auth",
+        "documentation": {}
+    },
+    {
+        "label": "ResendVerificationRequest",
+        "kind": 6,
+        "importPath": "backend.routers.auth",
+        "description": "backend.routers.auth",
+        "peekOfCode": "class ResendVerificationRequest(BaseModel):\n    \"\"\"Request body for resending verification email\"\"\"\n    email: EmailStr\n@router.post(\"/signup\")\nasync def signup(user_data: UserSignup):\n    \"\"\"\n    Register a new user and send email verification\n    Args:\n        user_data: User signup data including firstName, lastName, email, password, terms_accepted\n    Returns:",
+        "detail": "backend.routers.auth",
+        "documentation": {}
+    },
+    {
         "label": "router",
         "kind": 5,
         "importPath": "backend.routers.auth",
         "description": "backend.routers.auth",
-        "peekOfCode": "router = APIRouter(prefix=\"/auth\", tags=[\"authentication\"])\n@router.post(\"/signup\", response_model=UserResponse)\nasync def signup(user_data: UserSignup):\n    \"\"\"\n    Register a new user\n    Args:\n        user_data: User signup data including firstName, lastName, email, password, terms_accepted\n    Returns:\n        UserResponse: Created user information\n    \"\"\"",
+        "peekOfCode": "router = APIRouter(prefix=\"/auth\", tags=[\"authentication\"])\nclass VerifyEmailRequest(BaseModel):\n    \"\"\"Request body for email verification\"\"\"\n    token: str\nclass ResendVerificationRequest(BaseModel):\n    \"\"\"Request body for resending verification email\"\"\"\n    email: EmailStr\n@router.post(\"/signup\")\nasync def signup(user_data: UserSignup):\n    \"\"\"",
         "detail": "backend.routers.auth",
         "documentation": {}
     },
@@ -6381,6 +6519,33 @@
         "documentation": {}
     },
     {
+        "label": "check_billing_issue",
+        "kind": 2,
+        "importPath": "backend.scripts.check_free_proposal_issue",
+        "description": "backend.scripts.check_free_proposal_issue",
+        "peekOfCode": "def check_billing_issue():\n    print(\"Connecting to MongoDB...\")\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    # Find user with \"rajesh\" in email\n    print(\"=\" * 80)\n    print(\"SEARCHING FOR USER WITH 'rajesh' IN EMAIL\")\n    print(\"=\" * 80)\n    users = list(db.users.find({\"email\": {\"$regex\": \"rajesh\", \"$options\": \"i\"}}))\n    if not users:",
+        "detail": "backend.scripts.check_free_proposal_issue",
+        "documentation": {}
+    },
+    {
+        "label": "MONGODB_URL",
+        "kind": 5,
+        "importPath": "backend.scripts.check_free_proposal_issue",
+        "description": "backend.scripts.check_free_proposal_issue",
+        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef check_billing_issue():\n    print(\"Connecting to MongoDB...\")\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    # Find user with \"rajesh\" in email\n    print(\"=\" * 80)\n    print(\"SEARCHING FOR USER WITH 'rajesh' IN EMAIL\")\n    print(\"=\" * 80)",
+        "detail": "backend.scripts.check_free_proposal_issue",
+        "documentation": {}
+    },
+    {
+        "label": "MONGODB_DATABASE",
+        "kind": 5,
+        "importPath": "backend.scripts.check_free_proposal_issue",
+        "description": "backend.scripts.check_free_proposal_issue",
+        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef check_billing_issue():\n    print(\"Connecting to MongoDB...\")\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    # Find user with \"rajesh\" in email\n    print(\"=\" * 80)\n    print(\"SEARCHING FOR USER WITH 'rajesh' IN EMAIL\")\n    print(\"=\" * 80)\n    users = list(db.users.find({\"email\": {\"$regex\": \"rajesh\", \"$options\": \"i\"}}))",
+        "detail": "backend.scripts.check_free_proposal_issue",
+        "documentation": {}
+    },
+    {
         "label": "safe_create_index",
         "kind": 2,
         "importPath": "backend.scripts.create_indexes",
@@ -6552,11 +6717,47 @@
         "documentation": {}
     },
     {
+        "label": "migrate_existing_users",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_email_verification",
+        "description": "backend.scripts.migrate_email_verification",
+        "peekOfCode": "def migrate_existing_users():\n    \"\"\"Add email verification fields to existing users\"\"\"\n    mongodb = get_mongodb_client()\n    users_collection = mongodb.get_users_collection()\n    db = mongodb.get_database()\n    print(\"Starting email verification migration...\")\n    # Get count of users needing migration\n    users_needing_migration = users_collection.count_documents({\n        \"email_verified\": {\"$exists\": False}\n    })",
+        "detail": "backend.scripts.migrate_email_verification",
+        "documentation": {}
+    },
+    {
+        "label": "create_verification_indexes",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_email_verification",
+        "description": "backend.scripts.migrate_email_verification",
+        "peekOfCode": "def create_verification_indexes(db):\n    \"\"\"Create indexes for email_verifications collection\"\"\"\n    verifications_collection = db[\"email_verifications\"]\n    print(\"Creating indexes for email_verifications collection...\")\n    # Index on token_hash for fast token lookup (unique)\n    verifications_collection.create_index(\n        \"token_hash\",\n        unique=True,\n        name=\"token_hash_unique\"\n    )",
+        "detail": "backend.scripts.migrate_email_verification",
+        "documentation": {}
+    },
+    {
+        "label": "verify_migration",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_email_verification",
+        "description": "backend.scripts.migrate_email_verification",
+        "peekOfCode": "def verify_migration():\n    \"\"\"Verify migration was successful\"\"\"\n    mongodb = get_mongodb_client()\n    users_collection = mongodb.get_users_collection()\n    # Count users with email_verified\n    verified_count = users_collection.count_documents({\n        \"email_verified\": True\n    })\n    unverified_count = users_collection.count_documents({\n        \"email_verified\": {\"$exists\": False}",
+        "detail": "backend.scripts.migrate_email_verification",
+        "documentation": {}
+    },
+    {
+        "label": "backend_dir",
+        "kind": 5,
+        "importPath": "backend.scripts.migrate_email_verification",
+        "description": "backend.scripts.migrate_email_verification",
+        "peekOfCode": "backend_dir = Path(__file__).resolve().parent.parent\nsys.path.insert(0, str(backend_dir))\nfrom datetime import datetime\nfrom auth.database import get_mongodb_client\ndef migrate_existing_users():\n    \"\"\"Add email verification fields to existing users\"\"\"\n    mongodb = get_mongodb_client()\n    users_collection = mongodb.get_users_collection()\n    db = mongodb.get_database()\n    print(\"Starting email verification migration...\")",
+        "detail": "backend.scripts.migrate_email_verification",
+        "documentation": {}
+    },
+    {
         "label": "migrate_first_proposal_flag",
         "kind": 2,
         "importPath": "backend.scripts.migrate_first_proposal_flag",
         "description": "backend.scripts.migrate_first_proposal_flag",
-        "peekOfCode": "def migrate_first_proposal_flag():\n    \"\"\"Add first_proposal_used flag to all organizations.\"\"\"\n    mongodb = get_mongodb_client()\n    db = mongodb.get_database()\n    orgs_collection = db[\"organizations\"]\n    proposal_crud = get_proposal_crud()\n    print(\"=\" * 80)\n    print(\"MIGRATING ORGANIZATIONS - Adding first_proposal_used flag\")\n    print(\"=\" * 80)\n    # Get all organizations",
+        "peekOfCode": "def migrate_first_proposal_flag():\n    \"\"\"Add first_free_proposal_id to all organizations (except Rajesh's).\"\"\"\n    mongodb = get_mongodb_client()\n    db = mongodb.get_database()\n    orgs_collection = db[\"organizations\"]\n    proposals_collection = db[\"proposals\"]\n    users_collection = db[\"users\"]\n    print(\"=\" * 80)\n    print(\"MIGRATING ORGANIZATIONS - Adding first_free_proposal_id\")\n    print(\"=\" * 80)",
         "detail": "backend.scripts.migrate_first_proposal_flag",
         "documentation": {}
     },
@@ -7035,6 +7236,42 @@
         "description": "backend.utils.company_repository",
         "peekOfCode": "_lock = threading.RLock()\ndef get_company_repository_crud() -> CompanyRepositoryCRUD:\n    \"\"\"Get or create CompanyRepositoryCRUD instance.\"\"\"\n    global _company_repo_crud\n    with _lock:\n        if _company_repo_crud is None:\n            _company_repo_crud = CompanyRepositoryCRUD()\n        return _company_repo_crud",
         "detail": "backend.utils.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "EmailVerificationCRUD",
+        "kind": 6,
+        "importPath": "backend.utils.email_verification",
+        "description": "backend.utils.email_verification",
+        "peekOfCode": "class EmailVerificationCRUD:\n    \"\"\"Email Verification CRUD operations with token hashing (Sync Singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize EmailVerificationCRUD\"\"\"\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"email_verifications\"]\n        self.users_collection = mongodb.get_users_collection()\n        self.email_service = EmailService()\n    @staticmethod",
+        "detail": "backend.utils.email_verification",
+        "documentation": {}
+    },
+    {
+        "label": "get_email_verification_crud",
+        "kind": 2,
+        "importPath": "backend.utils.email_verification",
+        "description": "backend.utils.email_verification",
+        "peekOfCode": "def get_email_verification_crud() -> EmailVerificationCRUD:\n    \"\"\"\n    Get or create EmailVerificationCRUD instance (singleton pattern)\n    Returns:\n        EmailVerificationCRUD instance\n    \"\"\"\n    global _email_verification_crud\n    with _lock:\n        if _email_verification_crud is None:\n            _email_verification_crud = EmailVerificationCRUD()",
+        "detail": "backend.utils.email_verification",
+        "documentation": {}
+    },
+    {
+        "label": "_email_verification_crud",
+        "kind": 5,
+        "importPath": "backend.utils.email_verification",
+        "description": "backend.utils.email_verification",
+        "peekOfCode": "_email_verification_crud = None\n_lock = threading.RLock()\nclass EmailVerificationCRUD:\n    \"\"\"Email Verification CRUD operations with token hashing (Sync Singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize EmailVerificationCRUD\"\"\"\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"email_verifications\"]\n        self.users_collection = mongodb.get_users_collection()",
+        "detail": "backend.utils.email_verification",
+        "documentation": {}
+    },
+    {
+        "label": "_lock",
+        "kind": 5,
+        "importPath": "backend.utils.email_verification",
+        "description": "backend.utils.email_verification",
+        "peekOfCode": "_lock = threading.RLock()\nclass EmailVerificationCRUD:\n    \"\"\"Email Verification CRUD operations with token hashing (Sync Singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize EmailVerificationCRUD\"\"\"\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"email_verifications\"]\n        self.users_collection = mongodb.get_users_collection()\n        self.email_service = EmailService()",
+        "detail": "backend.utils.email_verification",
         "documentation": {}
     },
     {

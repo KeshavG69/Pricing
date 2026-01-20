@@ -6,6 +6,7 @@ Cookie-based authentication with refresh token rotation.
 from fastapi import APIRouter, HTTPException, Depends, status, Response, Request, Cookie
 from datetime import timedelta, datetime
 from typing import Optional
+from pydantic import BaseModel, EmailStr
 
 # Authentication imports
 from auth.models import UserSignup, UserLogin, UserResponse, LogoutResponse, GoogleLoginRequest, TokenRefreshResponse
@@ -26,20 +27,31 @@ from auth.refresh_token import (
 )
 from auth.google_auth import GoogleAuthService
 from auth.dependencies import get_current_user as get_current_user_from_deps
+from utils.email_verification import get_email_verification_crud
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
 
-@router.post("/signup", response_model=UserResponse)
+class VerifyEmailRequest(BaseModel):
+    """Request body for email verification"""
+    token: str
+
+
+class ResendVerificationRequest(BaseModel):
+    """Request body for resending verification email"""
+    email: EmailStr
+
+
+@router.post("/signup")
 async def signup(user_data: UserSignup):
     """
-    Register a new user
+    Register a new user and send email verification
 
     Args:
         user_data: User signup data including firstName, lastName, email, password, terms_accepted
 
     Returns:
-        UserResponse: Created user information
+        Message and email address for verification
     """
     try:
         # Validate terms acceptance
@@ -49,9 +61,24 @@ async def signup(user_data: UserSignup):
                 detail="You must accept the Terms and Conditions to create an account"
             )
 
-        # Create user (terms acceptance recorded in CRUD)
-        user = UserCRUD.create_user(user_data)
-        return user
+        # Create user with unverified status
+        user = UserCRUD.create_user(user_data, email_verified=False)
+
+        # Create verification token and send email
+        verification_crud = get_email_verification_crud()
+
+        try:
+            # user.id is a UUID string, pass it directly
+            verification_crud.create_verification(user.id, user.email)
+        except Exception as e:
+            print(f"Failed to send verification email: {e}")
+            # Continue even if email fails - user can resend later
+
+        return {
+            "message": "Account created successfully. Please check your email to verify your account.",
+            "email": user.email,
+            "requires_verification": True
+        }
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -88,6 +115,13 @@ async def login(user_data: UserLogin, request: Request):
         from auth.database import get_mongodb_client
         users_collection = get_mongodb_client().get_users_collection()
         user_doc = users_collection.find_one({"email": user_data.email})
+
+        # Check email verification status
+        if not user_doc.get("email_verified", False):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Please verify your email address before logging in. Check your inbox for the verification link."
+            )
 
         # Extract role and organization from organizations array
         current_org_id = user_doc.get("current_organization_id")
@@ -374,4 +408,141 @@ async def logout(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Logout failed: {str(e)}"
+        )
+
+
+@router.post("/verify-email")
+async def verify_email(verify_data: VerifyEmailRequest, request: Request):
+    """
+    Verify email address using magic link token (public endpoint)
+
+    Args:
+        verify_data: Verification token from email link
+        request: FastAPI Request object for device info
+
+    Returns:
+        Dict with authentication tokens and user info
+    """
+    verification_crud = get_email_verification_crud()
+
+    try:
+        # Validate token
+        verification = verification_crud.validate_token(verify_data.token)
+
+        # Get user (user_id is a UUID string)
+        from auth.database import get_mongodb_client
+        users_collection = get_mongodb_client().get_users_collection()
+        user = users_collection.find_one({"_id": verification["user_id"]})
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        # Mark as verified
+        verification_crud.mark_verified(verify_data.token, verification["user_id"])
+
+        # Get updated user document
+        user = users_collection.find_one({"_id": verification["user_id"]})
+
+        # Extract organization info
+        current_org_id = user.get("current_organization_id")
+        organizations = user.get("organizations", [])
+
+        # Create user response object
+        from auth.models import UserResponse
+        user_response = UserResponse(
+            id=str(user["_id"]),
+            email=user["email"],
+            firstName=user["firstName"],
+            lastName=user["lastName"],
+            organization_id=str(current_org_id) if current_org_id else None,
+            role=None,
+            status=None,
+            createdAt=user["createdAt"]
+        )
+
+        if organizations and current_org_id:
+            current_org = next(
+                (org for org in organizations if org["organization_id"] == current_org_id),
+                None
+            )
+            if current_org:
+                user_response.organization_id = str(current_org["organization_id"])
+                user_response.role = current_org["role"]
+                user_response.status = current_org["status"]
+
+        # Generate authentication tokens
+        access_token = create_access_token(
+            data={"sub": user["email"]},
+            expires_delta=timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+        )
+
+        device_info = request.headers.get("User-Agent", "Unknown")
+        ip_address = request.client.host if request.client else "Unknown"
+
+        refresh_token = await create_refresh_token(
+            user_email=user["email"],
+            device_info=device_info,
+            ip_address=ip_address
+        )
+
+        return {
+            "message": "Email verified successfully",
+            "access_token": access_token,
+            "refresh_token": refresh_token,
+            "token_type": "bearer",
+            "user": user_response
+        }
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Email verification failed: {str(e)}"
+        )
+
+
+@router.post("/resend-verification")
+async def resend_verification(resend_data: ResendVerificationRequest):
+    """
+    Resend verification email to unverified user (public endpoint)
+
+    Args:
+        resend_data: Email address to resend verification to
+
+    Returns:
+        Success message
+    """
+    verification_crud = get_email_verification_crud()
+
+    try:
+        # Resend verification email
+        verification_crud.resend_verification(resend_data.email)
+
+        return {
+            "message": "Verification email sent successfully. Please check your inbox.",
+            "email": resend_data.email
+        }
+
+    except ValueError as e:
+        # Don't reveal if user exists or not (security)
+        if "not found" in str(e).lower():
+            return {
+                "message": "If an account exists with this email, a verification link has been sent.",
+                "email": resend_data.email
+            }
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to resend verification: {str(e)}"
         )

@@ -130,6 +130,7 @@ export async function chargeForProposal(
   amount_cents?: number;
   already_charged?: boolean;
   free_proposal?: boolean;
+  auto_trigger_advanced?: boolean;
 }> {
   const response = await apiClient.post('/billing/charge', {
     proposal_id: proposalId,
