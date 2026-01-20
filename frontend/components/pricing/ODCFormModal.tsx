@@ -1,30 +1,38 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { ODCItem } from '@/types';
+import { useState, useEffect, useMemo, useRef } from 'react';
+import ReactDOM from 'react-dom';
+import { ODCItem, EscalationRates } from '@/types';
+import { ChevronDown, Check } from 'lucide-react';
 
 interface ODCFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (odc: Omit<ODCItem, 'id'>) => void;
   totalYears: number;
+  escalationRates: EscalationRates;
   existingODC?: ODCItem | null;
 }
 
-const ODC_CATEGORIES = ['Travel', 'Materials', 'Equipment', 'Other'] as const;
+const ODC_CATEGORIES = ['Materials', 'Equipment', 'Other'] as const;
 
 export const ODCFormModal = ({
   isOpen,
   onClose,
   onSave,
   totalYears,
+  escalationRates,
   existingODC = null,
 }: ODCFormModalProps) => {
-  const [category, setCategory] = useState<string>('Travel');
+  const [category, setCategory] = useState<string>('Materials');
   const [description, setDescription] = useState<string>('');
   const [amountsByYear, setAmountsByYear] = useState<Record<string, number>>({});
   const [escalate, setEscalate] = useState<boolean>(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const dropdownButtonRef = useRef<HTMLButtonElement>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0 });
 
   // Initialize form with existing ODC data if editing
   useEffect(() => {
@@ -42,6 +50,52 @@ export const ODCFormModal = ({
       setAmountsByYear(initialAmounts);
     }
   }, [existingODC, totalYears, isOpen]);
+
+  // Auto-calculate years when escalate is enabled and base year has a value
+  useEffect(() => {
+    if (escalate && amountsByYear['1'] > 0) {
+      const baseAmount = amountsByYear['1'];
+      const newAmounts: Record<string, number> = { '1': baseAmount };
+
+      // Calculate escalated amounts for subsequent years
+      let currentAmount = baseAmount;
+      for (let year = 2; year <= totalYears; year++) {
+        const escKey = `${year - 1}_to_${year}`;
+        const escRate = escalationRates[escKey] || 0;
+        currentAmount = currentAmount * (1 + escRate);
+        newAmounts[year.toString()] = currentAmount;
+      }
+
+      setAmountsByYear(newAmounts);
+    }
+  }, [escalate, totalYears, escalationRates]);
+
+  // Calculate dropdown position when opening
+  useEffect(() => {
+    if (isDropdownOpen && dropdownButtonRef.current) {
+      const rect = dropdownButtonRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + 4,
+        left: rect.left,
+      });
+    }
+  }, [isDropdownOpen]);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        dropdownButtonRef.current && !dropdownButtonRef.current.contains(event.target as Node) &&
+        dropdownRef.current && !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsDropdownOpen(false);
+      }
+    };
+    if (isDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [isDropdownOpen]);
 
   // Calculate total cost
   const totalCost = useMemo(() => {
@@ -90,22 +144,46 @@ export const ODCFormModal = ({
 
   const handleClose = () => {
     // Reset form
-    setCategory('Travel');
+    setCategory('Materials');
     setDescription('');
     setAmountsByYear({});
     setEscalate(false);
     setErrors({});
+    setIsDropdownOpen(false);
     onClose();
+  };
+
+  const handleCategorySelect = (newCategory: string) => {
+    setCategory(newCategory);
+    setIsDropdownOpen(false);
   };
 
   const handleAmountChange = (year: string, value: string) => {
     // If empty string, set to 0
     // Otherwise parse the number (parseFloat will return NaN for invalid input, fallback to 0)
     const numValue = value === '' ? 0 : (parseFloat(value) || 0);
-    setAmountsByYear((prev) => ({
-      ...prev,
-      [year]: numValue,
-    }));
+
+    // If escalate is enabled and this is the base year, recalculate all years
+    if (escalate && year === '1' && numValue > 0) {
+      const newAmounts: Record<string, number> = { '1': numValue };
+
+      // Calculate escalated amounts for subsequent years
+      let currentAmount = numValue;
+      for (let y = 2; y <= totalYears; y++) {
+        const escKey = `${y - 1}_to_${y}`;
+        const escRate = escalationRates[escKey] || 0;
+        currentAmount = currentAmount * (1 + escRate);
+        newAmounts[y.toString()] = currentAmount;
+      }
+
+      setAmountsByYear(newAmounts);
+    } else {
+      // Normal update for single year
+      setAmountsByYear((prev) => ({
+        ...prev,
+        [year]: numValue,
+      }));
+    }
   };
 
   if (!isOpen) return null;
@@ -145,17 +223,47 @@ export const ODCFormModal = ({
             <label className="block text-sm font-medium text-muted-foreground mb-2">
               Category *
             </label>
-            <select
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              className="w-full px-3 py-2 bg-background border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            >
-              {ODC_CATEGORIES.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
+            <div className="relative">
+              <button
+                ref={dropdownButtonRef}
+                type="button"
+                onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                className="w-full flex items-center justify-between px-3 py-2 bg-background border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring hover:bg-muted/30 transition-colors"
+              >
+                <span className="text-sm font-medium">{category}</span>
+                <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isDropdownOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {isDropdownOpen && typeof window !== 'undefined' && ReactDOM.createPortal(
+                <div
+                  ref={dropdownRef}
+                  className="fixed z-[9999] w-[calc(100%-3rem)] max-w-[672px] bg-card border border-border rounded-lg shadow-lg overflow-hidden"
+                  style={{
+                    top: `${dropdownPosition.top}px`,
+                    left: `${dropdownPosition.left}px`,
+                  }}
+                >
+                  {ODC_CATEGORIES.map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => handleCategorySelect(cat)}
+                      className={`w-full flex items-center justify-between px-4 py-3 text-sm hover:bg-muted transition-colors ${
+                        cat !== ODC_CATEGORIES[0] ? 'border-t border-border' : ''
+                      } ${
+                        category === cat ? 'text-foreground font-medium bg-muted/50' : 'text-foreground'
+                      }`}
+                    >
+                      <span>{cat}</span>
+                      {category === cat && (
+                        <Check className="w-4 h-4 text-primary" />
+                      )}
+                    </button>
+                  ))}
+                </div>,
+                document.body
+              )}
+            </div>
           </div>
 
           {/* Description */}
@@ -184,11 +292,15 @@ export const ODCFormModal = ({
               {Array.from({ length: totalYears }, (_, i) => {
                 const year = (i + 1).toString();
                 const label = i === 0 ? 'Base Period' : `Option Year ${i}`;
+                const isDisabled = escalate && i > 0; // Disable non-base years when escalate is on
 
                 return (
                   <div key={year}>
                     <label className="block text-xs text-muted-foreground mb-1">
                       {label}
+                      {isDisabled && (
+                        <span className="ml-1 text-xs text-blue-600">(auto-calculated)</span>
+                      )}
                     </label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -201,7 +313,10 @@ export const ODCFormModal = ({
                         value={amountsByYear[year] === 0 ? '' : amountsByYear[year]}
                         placeholder="0"
                         onChange={(e) => handleAmountChange(year, e.target.value)}
-                        className="w-full pl-7 pr-3 py-2 bg-background border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+                        disabled={isDisabled}
+                        className={`w-full pl-7 pr-3 py-2 bg-background border border-input rounded-md text-foreground focus:outline-none focus:ring-2 focus:ring-ring ${
+                          isDisabled ? 'opacity-60 cursor-not-allowed bg-muted' : ''
+                        }`}
                       />
                     </div>
                   </div>

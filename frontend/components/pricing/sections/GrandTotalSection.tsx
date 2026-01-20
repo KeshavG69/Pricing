@@ -13,11 +13,13 @@ interface GrandTotalSectionProps {
     total: number;
   };
   primeLaborByYear?: Record<string, number>;
+  otCostsByYear?: Record<string, number>;
   subLaborByYear?: Record<string, number>;
   passthroughByYear?: Record<string, number>;
   feeByYear?: Record<string, number>;
   travelByYear?: Record<string, number>;
   odcByYear?: Record<string, number>;
+  surgeByYear?: Record<string, number>;  // NEW: Surge capacity costs
   totalYears: number;
   extensions?: Extension[];
 }
@@ -25,17 +27,19 @@ interface GrandTotalSectionProps {
 interface GrandTotalRow {
   id: string;
   label: string;
-  type: 'prime' | 'sub' | 'passthrough' | 'fee' | 'travel' | 'odc' | 'total';
+  type: 'prime' | 'ot' | 'sub' | 'passthrough' | 'fee' | 'travel' | 'odc' | 'surge' | 'total';
 }
 
 export const GrandTotalSection = ({
   grandTotal,
   primeLaborByYear = {},
+  otCostsByYear = {},
   subLaborByYear = {},
   passthroughByYear = {},
   feeByYear = {},
   travelByYear = {},
   odcByYear = {},
+  surgeByYear = {},  // NEW: Surge capacity costs
   totalYears,
   extensions = [],
 }: GrandTotalSectionProps) => {
@@ -52,23 +56,27 @@ export const GrandTotalSection = ({
   // Calculate totals for each category
   const totals = useMemo(() => {
     const primeTotal = Object.values(primeLaborByYear).reduce((sum, val) => sum + val, 0);
+    const otTotal = Object.values(otCostsByYear).reduce((sum, val) => sum + val, 0);
     const subTotal = Object.values(subLaborByYear).reduce((sum, val) => sum + val, 0);
     const passthroughTotal = Object.values(passthroughByYear).reduce((sum, val) => sum + val, 0);
     const feeTotal = Object.values(feeByYear).reduce((sum, val) => sum + val, 0);
     const travelTotal = Object.values(travelByYear).reduce((sum, val) => sum + val, 0);
     const odcTotal = Object.values(odcByYear).reduce((sum, val) => sum + val, 0);
+    const surgeTotal = Object.values(surgeByYear).reduce((sum, val) => sum + val, 0);  // NEW: Surge total
 
-    return { primeTotal, subTotal, passthroughTotal, feeTotal, travelTotal, odcTotal };
-  }, [primeLaborByYear, subLaborByYear, passthroughByYear, feeByYear, travelByYear, odcByYear]);
+    return { primeTotal, otTotal, subTotal, passthroughTotal, feeTotal, travelTotal, odcTotal, surgeTotal };
+  }, [primeLaborByYear, otCostsByYear, subLaborByYear, passthroughByYear, feeByYear, travelByYear, odcByYear, surgeByYear]);
 
   // Create breakdown rows - Prime Labor is base (DL+Fringe+OH+G&A), Fee shown separately
   const rows = useMemo<GrandTotalRow[]>(() => [
     { id: 'prime', label: 'Prime Labor (Base)', type: 'prime' },
+    { id: 'ot', label: 'Overtime (Prime)', type: 'ot' },
     { id: 'sub', label: 'Subcontractor Labor', type: 'sub' },
     { id: 'passthrough', label: 'Passthrough (S&MH + G&A)', type: 'passthrough' },
     { id: 'fee', label: 'Fee (Profit)', type: 'fee' },
     { id: 'travel', label: 'Travel (with G&A)', type: 'travel' },
     { id: 'odc', label: 'ODCs (with S&MH)', type: 'odc' },
+    { id: 'surge', label: 'Surge Capacity', type: 'surge' },  // NEW: Surge capacity row
     { id: 'grand_total', label: 'Grand Total Contract Value', type: 'total' },
   ], []);
 
@@ -79,7 +87,7 @@ export const GrandTotalSection = ({
       {
         key: 'label',
         name: '',
-        width: 300,
+        width: 350,
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => {
@@ -87,6 +95,8 @@ export const GrandTotalSection = ({
             ? 'text-emerald-600 text-xl'
             : row.type === 'prime'
             ? 'text-emerald-600'
+            : row.type === 'ot'
+            ? 'text-purple-600'
             : row.type === 'sub'
             ? 'text-purple-600'
             : row.type === 'passthrough'
@@ -97,6 +107,8 @@ export const GrandTotalSection = ({
             ? 'text-sky-600'
             : row.type === 'odc'
             ? 'text-orange-600'
+            : row.type === 'surge'
+            ? 'text-red-600'
             : 'text-gray-600';
 
           return (
@@ -123,7 +135,7 @@ export const GrandTotalSection = ({
       cols.push({
         key: `year${year}`,
         name: `${label}`,
-        width: 150,
+        width: 180,
         resizable: true,
         renderCell: ({ row }) => {
           let value = 0;
@@ -135,6 +147,11 @@ export const GrandTotalSection = ({
               value = primeLaborByYear[yearStr] || 0;
               bgClass = 'bg-emerald-50/50';
               textClass = 'text-emerald-600';
+              break;
+            case 'ot':
+              value = otCostsByYear[yearStr] || 0;
+              bgClass = 'bg-purple-50/50';
+              textClass = 'text-purple-600';
               break;
             case 'sub':
               value = subLaborByYear[yearStr] || 0;
@@ -161,6 +178,11 @@ export const GrandTotalSection = ({
               bgClass = 'bg-orange-50/50';
               textClass = 'text-orange-600';
               break;
+            case 'surge':
+              value = surgeByYear[yearStr] || 0;
+              bgClass = 'bg-red-50/50';
+              textClass = 'text-red-600';
+              break;
             case 'total':
               value = grandTotal.byYear[yearStr] || 0;
               bgClass = 'bg-emerald-100/50';
@@ -183,7 +205,7 @@ export const GrandTotalSection = ({
     cols.push({
       key: 'total',
       name: 'Total',
-      width: 200,
+      width: 220,
       resizable: true,
       frozen: true,
       renderCell: ({ row }) => {
@@ -196,6 +218,11 @@ export const GrandTotalSection = ({
             value = totals.primeTotal;
             bgClass = 'bg-emerald-50';
             textClass = 'text-emerald-600 font-semibold';
+            break;
+          case 'ot':
+            value = totals.otTotal;
+            bgClass = 'bg-purple-50';
+            textClass = 'text-purple-600 font-semibold';
             break;
           case 'sub':
             value = totals.subTotal;
@@ -222,6 +249,11 @@ export const GrandTotalSection = ({
             bgClass = 'bg-orange-50';
             textClass = 'text-orange-600 font-semibold';
             break;
+          case 'surge':
+            value = totals.surgeTotal;
+            bgClass = 'bg-red-50';
+            textClass = 'text-red-600 font-semibold';
+            break;
           case 'total':
             value = grandTotal.total;
             bgClass = 'bg-emerald-100';
@@ -240,7 +272,7 @@ export const GrandTotalSection = ({
     });
 
     return cols;
-  }, [totalYears, grandTotal, primeLaborByYear, subLaborByYear, passthroughByYear, feeByYear, odcByYear, totals]);
+  }, [totalYears, grandTotal, primeLaborByYear, otCostsByYear, subLaborByYear, passthroughByYear, feeByYear, travelByYear, odcByYear, surgeByYear, totals]);
 
   return (
     <div className="space-y-4">
@@ -250,7 +282,7 @@ export const GrandTotalSection = ({
           Complete contract value breakdown
         </p>
       </div>
-      <div className="h-[300px] overflow-auto border-2 border-emerald-100 rounded-lg shadow-lg shadow-emerald-50">
+      <div className="h-auto min-h-[550px] overflow-auto border-2 border-emerald-100 rounded-lg shadow-lg shadow-emerald-50">
         <DataGrid
           columns={columns}
           rows={rows}

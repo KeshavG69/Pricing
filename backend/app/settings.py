@@ -34,6 +34,9 @@ class Settings(BaseSettings):
     PINECONE_API_KEY: str = ""
     PINECONE_INDEX_NAME: str = "gsa-labor-categories"
 
+    # Help Center Pinecone index (separate from GSA)
+    HELP_CENTER_PINECONE_INDEX_NAME: str = "help-center"
+
     class Config:
         env_file = ".env"
 

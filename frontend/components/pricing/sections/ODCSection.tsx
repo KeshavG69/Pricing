@@ -363,12 +363,12 @@ export const ODCSection = ({
             Other Direct Costs (ODCs)
           </h3>
           <p className="text-xs text-muted-foreground mt-1">
-            Travel, materials, equipment, and other costs
+            Materials, equipment, and other direct costs
           </p>
         </div>
         <button
           onClick={onAdd}
-          className="px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors flex items-center gap-2"
+          className="min-w-[140px] px-4 py-2 text-sm font-medium text-white bg-orange-600 hover:bg-orange-700 rounded-md transition-colors flex items-center justify-center gap-2"
         >
           <svg
             className="w-4 h-4"
@@ -404,7 +404,7 @@ export const ODCSection = ({
           </svg>
           <p className="text-muted-foreground mb-2">No ODCs added yet</p>
           <p className="text-sm text-muted-foreground">
-            Click "Add ODC" to add travel, materials, equipment, or other costs
+            Click "Add ODC" to add materials, equipment, or other costs
           </p>
         </div>
       ) : (

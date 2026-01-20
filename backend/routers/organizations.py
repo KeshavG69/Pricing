@@ -30,6 +30,8 @@ class RatePreset(BaseModel):
     sub_fee: float = 0.0
     ga_passthrough: float = 0.0
     escalation_rate: float = 0.0
+    ot_multiplier: float = 1.5  # Overtime multiplier (default: time-and-a-half)
+    surge_multiplier: float = 1.15  # Surge pricing multiplier (default: 15% premium)
 
 
 class CreateRatePresetRequest(BaseModel):
@@ -44,6 +46,8 @@ class CreateRatePresetRequest(BaseModel):
     sub_fee: float = 0.0
     ga_passthrough: float = 0.0
     escalation_rate: float = 0.0
+    ot_multiplier: float = 1.5  # Overtime multiplier (default: time-and-a-half)
+    surge_multiplier: float = 1.15  # Surge pricing multiplier (default: 15% premium)
 
 
 class UpdateRatePresetRequest(BaseModel):
@@ -58,6 +62,8 @@ class UpdateRatePresetRequest(BaseModel):
     sub_fee: Optional[float] = None
     ga_passthrough: Optional[float] = None
     escalation_rate: Optional[float] = None
+    ot_multiplier: Optional[float] = None
+    surge_multiplier: Optional[float] = None
 
 
 class UpdateSettingsRequest(BaseModel):
@@ -230,7 +236,9 @@ async def create_rate_preset(
         "smh": preset.smh,
         "sub_fee": preset.sub_fee,
         "ga_passthrough": preset.ga_passthrough,
-        "escalation_rate": preset.escalation_rate
+        "escalation_rate": preset.escalation_rate,
+        "ot_multiplier": preset.ot_multiplier,
+        "surge_multiplier": preset.surge_multiplier
     }
 
     rate_presets.append(new_preset)
@@ -306,6 +314,10 @@ async def update_rate_preset(
         preset["ga_passthrough"] = preset_update.ga_passthrough
     if preset_update.escalation_rate is not None:
         preset["escalation_rate"] = preset_update.escalation_rate
+    if preset_update.ot_multiplier is not None:
+        preset["ot_multiplier"] = preset_update.ot_multiplier
+    if preset_update.surge_multiplier is not None:
+        preset["surge_multiplier"] = preset_update.surge_multiplier
 
     rate_presets[preset_index] = preset
     settings["rate_presets"] = rate_presets
@@ -418,6 +430,8 @@ async def apply_preset_as_default(
         "sub_fee": preset.get("sub_fee", 0),
         "ga_passthrough": preset.get("ga_passthrough", 0),
         "ga_adder": preset.get("ga_adder", 0),
+        "ot_multiplier": preset.get("ot_multiplier", 1.5),
+        "surge_multiplier": preset.get("surge_multiplier", 1.15),
     }
 
     # Also update default escalation rate if preset has it

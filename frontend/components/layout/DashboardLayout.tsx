@@ -9,6 +9,7 @@ import TopNavBar from './TopNavBar';
 import ProposalsSidebar from './ProposalsSidebar';
 import { AddPaymentPrompt, PaymentRequiredModal } from '@/components/billing';
 import { TermsBlockingModal } from '@/components/terms/TermsBlockingModal';
+import HelpCenterModal from '@/components/help/HelpCenterModal';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -103,6 +104,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Terms and Conditions Blocking Modal */}
       <TermsBlockingModal />
+
+      {/* Help Center Modal */}
+      <HelpCenterModal />
     </div>
   );
 }
