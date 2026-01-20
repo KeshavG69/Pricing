@@ -59,6 +59,8 @@ export interface RatePreset {
   sub_fee: number;
   ga_passthrough: number;
   escalation_rate: number;
+  ot_multiplier?: number;  // Overtime multiplier (e.g., 1.5)
+  surge_multiplier?: number;  // Surge pricing multiplier (e.g., 1.15)
   oh?: number;  // Deprecated
 }
 
@@ -248,6 +250,7 @@ export interface JobPosition {
   location_type?: string; // 'On-Site' or 'Off-Site'
   hours?: number;
   hours_per_year?: Record<string, number>;
+  ot_hours_per_year?: Record<string, number>; // Overtime hours per year {"1": 200, "2": 200, ...}
   standard_fte_hours?: number;  // Standard full-time hours from contract
   soc_code?: string;
   soc_title?: string;
@@ -278,6 +281,8 @@ export interface JobPosition {
   bls_comparison_percentile?: string; // BLS percentile selected
   // Key position flag (cannot be auto-allocated to subcontractors)
   is_key_position?: boolean;
+  // Surge position flag (Scenario 1: specific surge positions)
+  is_surge?: boolean;
 }
 
 // Rates types
@@ -292,6 +297,8 @@ export interface IndirectRates {
   ga_passthrough?: number;
   ga_adder?: number;
   oh?: number;  // Deprecated (for backward compatibility)
+  ot_multiplier?: number;  // NEW: Overtime multiplier (e.g., 1.5 for time-and-a-half)
+  surge_multiplier?: number;  // NEW: Surge pricing multiplier (e.g., 1.15 for 15% premium)
 }
 
 export interface EscalationRates {
@@ -327,7 +334,9 @@ export interface SpreadsheetPosition {
     custom_amounts: number[]; // Custom salary amounts
   };
   hours_per_year: Record<string, number>; // {"1": 1880, "2": 1880, ...}
+  ot_hours_per_year?: Record<string, number>; // NEW: Overtime hours per year {"1": 200, "2": 200, ...}
   standard_fte_hours?: number; // Full-time equivalent hours (e.g., 1880, 1920, 2080)
+  is_surge?: boolean; // NEW: True if this is a surge position (Scenario 1)
   // GSA fields
   wage_source?: 'bls' | 'gsa';
   gsa_lcat_id?: string;
@@ -371,6 +380,7 @@ export interface SubcontractorPosition {
   rate: number;
   original_base_rate?: number; // Immutable rate at time of conversion
   hours_per_year: Record<string, number>;
+  ot_hours_per_year?: Record<string, number>; // Overtime hours per year
   original_position_id?: string; // Links to prime position ID this was converted from
   original_total_hours?: Record<string, number>; // Original prime hours before any sub allocation
   location_type?: string; // 'On-Site' or 'Off-Site'
@@ -406,6 +416,12 @@ export interface Extension {
   label: string;  // Display label (e.g., "6 Month Extension", "12 Month Extension")
   duration_months: number;  // Duration in months (e.g., 6, 12)
   description?: string;  // Optional description
+}
+
+// NEW: Surge option (Scenario 2: percentage-based)
+export interface SurgeOption {
+  percentage: number | null;  // Decimal form (0.20 for 20%), null if no surge
+  description?: string;  // Context from document
 }
 
 // Advanced Analysis Mode types
@@ -465,6 +481,8 @@ export interface AdvancedPosition {
   bls_comparison_percentile?: string;
   // Key position flag (cannot be auto-allocated to subcontractors)
   is_key_position?: boolean;
+  // Surge position flag (Scenario 1: specific surge positions)
+  is_surge?: boolean;
   // Assigned subcontractor (if this position is handled by a subcontractor via dropdown)
   assigned_subcontractor_id?: string;
 
@@ -476,6 +494,7 @@ export interface AdvancedPosition {
   total_hours: number;
   total_amount: number;
   standard_fte_hours?: number; // Full-time equivalent hours (e.g., 1880, 1920, 2080)
+  ot_hours_per_year?: Record<string, number>; // Overtime hours per year {"1": 200, "2": 200, ...}
 }
 
 export interface Aggregates {
@@ -485,6 +504,7 @@ export interface Aggregates {
   totalGA: number;
   totalFee: number;
   totalFBLR: number;
+  totalOT: number; // Total overtime cost across all years
   byYear: {
     [year: string]: {
       dl: number;
@@ -493,6 +513,7 @@ export interface Aggregates {
       ga: number;
       fee: number;
       fblr: number;
+      ot: number; // Overtime cost for this year
       totalAmount: number;
     };
   };

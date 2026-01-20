@@ -163,6 +163,8 @@ export const RatesReferencePanel = ({
       smh: preset.smh,
       sub_fee: preset.sub_fee,
       ga_passthrough: preset.ga_passthrough,
+      ot_multiplier: preset.ot_multiplier,
+      surge_multiplier: preset.surge_multiplier,
     };
 
     onUpdateRates(newRates);
@@ -300,6 +302,30 @@ export const RatesReferencePanel = ({
               value={formatRateValue(rates.ga_passthrough || 0)}
               onChange={(e) => updateDefaultRate('ga_passthrough', e.target.value)}
               placeholder="0"
+              suffix="%"
+              size="sm"
+            />
+            <Input
+              label="OT Multiplier"
+              type="number"
+              value={formatRateValue(rates.ot_multiplier || 1.5)}
+              onChange={(e) => {
+                const value = e.target.value === '' ? '' : parseFloat(e.target.value) / 100;
+                updateDefaultRate('ot_multiplier', e.target.value);
+              }}
+              placeholder="150"
+              suffix="%"
+              size="sm"
+            />
+            <Input
+              label="Surge Multiplier"
+              type="number"
+              value={formatRateValue(rates.surge_multiplier || 1.15)}
+              onChange={(e) => {
+                const value = e.target.value === '' ? '' : parseFloat(e.target.value) / 100;
+                updateDefaultRate('surge_multiplier', e.target.value);
+              }}
+              placeholder="115"
               suffix="%"
               size="sm"
             />
@@ -441,6 +467,18 @@ export const RatesReferencePanel = ({
                         <div className="text-muted-foreground mb-0.5">Escalation</div>
                         <div className="font-mono font-semibold text-foreground">
                           {toPercentageDisplay(preset.escalation_rate || 0)}%
+                        </div>
+                      </div>
+                      <div className="bg-muted/50 rounded px-2 py-1.5">
+                        <div className="text-muted-foreground mb-0.5">OT Multiplier</div>
+                        <div className="font-mono font-semibold text-foreground">
+                          {toPercentageDisplay(preset.ot_multiplier || 1.5)}%
+                        </div>
+                      </div>
+                      <div className="bg-muted/50 rounded px-2 py-1.5">
+                        <div className="text-muted-foreground mb-0.5">Surge Mult.</div>
+                        <div className="font-mono font-semibold text-foreground">
+                          {toPercentageDisplay(preset.surge_multiplier || 1.15)}%
                         </div>
                       </div>
                     </div>

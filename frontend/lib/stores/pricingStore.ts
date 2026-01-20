@@ -6,6 +6,7 @@ import {
   TravelItem,
   ODCItem,
   Extension,
+  SurgeOption,
   IndirectRates,
   EscalationRates,
   JobPosition,
@@ -33,6 +34,7 @@ interface PricingState {
   travel: TravelItem[];
   odcs: ODCItem[];
   extensions: Extension[];  // Extension periods beyond regular contract years
+  surge: SurgeOption | null;  // NEW: Surge option (Scenario 2: percentage-based)
   rates: IndirectRates;
   escalationRates: EscalationRates;
   wageSource: WageSource;  // BLS or GSA wage source configuration
@@ -218,6 +220,7 @@ const mapJobToPosition = (job: JobPosition, index: number): SpreadsheetPosition 
     wage_90th: job.wage_90th,
     selected_wage: selectedWage,
     hours_per_year: job.hours_per_year || { '1': job.hours || 1880 },
+    ot_hours_per_year: job.ot_hours_per_year, // Overtime hours per year
     standard_fte_hours: job.standard_fte_hours,
     yearly_amounts: [],
     total_amount: 0,
@@ -229,6 +232,8 @@ const mapJobToPosition = (job: JobPosition, index: number): SpreadsheetPosition 
     gsa_current_year: job.gsa_current_year,
     // Key position flag
     is_key_position: job.is_key_position,
+    // Surge flag
+    is_surge: job.is_surge,
   };
 };
 
@@ -481,6 +486,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
       totalGA: 0,
       totalFee: 0,
       totalFBLR: 0,
+      totalOT: 0,
       byYear: {},
     };
 
@@ -494,6 +500,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
             ga: 0,
             fee: 0,
             fblr: 0,
+            ot: 0,
             totalAmount: 0,
           };
         }
@@ -504,6 +511,16 @@ export const usePricingStore = create<PricingState>((set, get) => {
         aggregates.byYear[year].ga += breakdown.gaAmount;
         aggregates.byYear[year].fee += breakdown.feeAmount;
         aggregates.byYear[year].fblr += breakdown.totalAmount;
+
+        // Calculate OT cost: OT hours × FBLR × OT multiplier
+        const otHours = pos.ot_hours_per_year?.[year] || 0;
+        if (otHours > 0) {
+          const otMultiplier = state.rates.ot_multiplier || 1.5;
+          const otCost = otHours * breakdown.fblr * otMultiplier;
+          aggregates.byYear[year].ot += otCost;
+          aggregates.totalOT += otCost;
+        }
+
         aggregates.byYear[year].totalAmount += breakdown.totalAmount;
 
         aggregates.totalDL += breakdown.dlAmount;
@@ -684,6 +701,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
     travel: [],
     odcs: [],
     extensions: [],
+    surge: null,  // NEW: Surge option (populated from proposal data)
     rates: {} as IndirectRates,  // Will be populated from backend (org settings)
     escalationRates: {} as EscalationRates,  // Will be populated from backend (org settings)
     wageSource: { type: 'bls' } as WageSource,  // Default to BLS, updated from proposal
@@ -710,6 +728,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
       totalGA: 0,
       totalFee: 0,
       totalFBLR: 0,
+      totalOT: 0,
       byYear: {},
     },
     ratesReferenceExpanded: false,
@@ -725,6 +744,13 @@ export const usePricingStore = create<PricingState>((set, get) => {
           const cachedData = getCachedProposal(proposalId);
           if (cachedData) {
             set(cachedData);
+
+            // If proposal was saved in advanced mode, restore the advanced view
+            if (cachedData.advancedMode) {
+              console.log('[LOAD FROM CACHE] Restoring advanced mode view...');
+              performTransformToAdvanced();
+            }
+
             return;
           }
         }
@@ -748,6 +774,44 @@ export const usePricingStore = create<PricingState>((set, get) => {
             standard_fte_hours: standardFteHours || pos.standard_fte_hours
           }));
 
+          // MIGRATION: Copy ot_hours_per_year and is_surge from jobs if missing
+          if (proposal.jobs && proposal.jobs.length > 0) {
+            const needsOTMigration = positions.some(pos => !pos.ot_hours_per_year && pos.labor_category);
+            const needsSurgeMigration = positions.some(pos => pos.is_surge === undefined && pos.labor_category);
+
+            if (needsOTMigration || needsSurgeMigration) {
+              console.log('[MIGRATION] Copying OT hours and surge flags from jobs to positions');
+
+              // Build lookup map for O(n) instead of O(n²)
+              const jobsMap = new Map(
+                proposal.jobs.map(job => [
+                  `${job.labor_category}_${job.hours_per_year?.['1']}`,
+                  job
+                ])
+              );
+
+              positions = positions.map((pos) => {
+                const lookupKey = `${pos.labor_category}_${pos.hours_per_year?.['1']}`;
+                const matchingJob = jobsMap.get(lookupKey);
+
+                if (matchingJob) {
+                  const updates: any = { ...pos };
+                  if (!pos.ot_hours_per_year && matchingJob.ot_hours_per_year) {
+                    console.log(`[MIGRATION] Copying OT hours for: ${pos.labor_category}`);
+                    updates.ot_hours_per_year = matchingJob.ot_hours_per_year;
+                  }
+                  if (pos.is_surge === undefined && matchingJob.is_surge !== undefined) {
+                    console.log(`[MIGRATION] Copying surge flag for: ${pos.labor_category}`);
+                    updates.is_surge = matchingJob.is_surge;
+                  }
+                  return updates;
+                }
+                return pos;
+              });
+              positionsFromJobs = true; // Mark as needing save
+            }
+          }
+
           // Migration: Copy descriptions from jobs to positions if missing
           if (proposal.jobs && Array.isArray(proposal.jobs) && proposal.jobs.length > 0) {
             const positionsNeedDescriptions = positions.some(pos => !pos.description);
@@ -756,14 +820,17 @@ export const usePricingStore = create<PricingState>((set, get) => {
             if (positionsNeedDescriptions && jobsHaveDescriptions) {
               console.log('[MIGRATION] Copying descriptions from jobs to positions');
 
+              // Build lookup map for O(n) instead of O(n²)
+              const jobsByCategory = new Map(
+                proposal.jobs.map(job => [job.labor_category, job])
+              );
+
               positions = positions.map((pos) => {
                 // If position already has description, skip
                 if (pos.description) return pos;
 
-                // Try to find matching job by labor_category
-                const matchingJob = proposal.jobs!.find(
-                  job => job.labor_category === pos.labor_category
-                );
+                // Lookup matching job by labor_category
+                const matchingJob = jobsByCategory.get(pos.labor_category);
 
                 if (matchingJob?.description) {
                   console.log(`[MIGRATION] Copied description for position: ${pos.labor_category}`);
@@ -908,6 +975,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
                   id: subPos.original_position_id,
                   labor_category: subPos.labor_category,
                   hours_per_year: { ...subPos.hours_per_year },
+                  ot_hours_per_year: subPos.ot_hours_per_year ? { ...subPos.ot_hours_per_year } : undefined,
                   assigned_subcontractor_id: sub.id,
                   location_type: subPos.location_type || 'On-Site',
                   standard_fte_hours: standardFteHours,
@@ -952,6 +1020,46 @@ export const usePricingStore = create<PricingState>((set, get) => {
           }
         }
 
+        // MIGRATION: Copy ot_hours_per_year from main positions to subcontractor positions
+        const needsSubOTMigration = subcontractors.some((sub: Subcontractor) =>
+          sub.positions.some((subPos: SubcontractorPosition) =>
+            !subPos.ot_hours_per_year && subPos.original_position_id
+          )
+        );
+
+        if (needsSubOTMigration) {
+          console.log('[MIGRATION] Copying OT hours from main positions to subcontractor positions');
+
+          // Build lookup map of position ID -> position
+          const positionsMap = new Map(
+            positions.map(p => [p.id, p])
+          );
+
+          subcontractors = subcontractors.map((sub: Subcontractor) => ({
+            ...sub,
+            positions: sub.positions.map((subPos: SubcontractorPosition) => {
+              // Skip if already has OT hours or no link to main position
+              if (subPos.ot_hours_per_year || !subPos.original_position_id) {
+                return subPos;
+              }
+
+              // Find linked main position
+              const mainPos = positionsMap.get(subPos.original_position_id);
+              if (mainPos?.ot_hours_per_year) {
+                console.log(`[MIGRATION] Copying OT hours for subcontractor position: ${subPos.labor_category} in ${sub.name}`);
+                return {
+                  ...subPos,
+                  ot_hours_per_year: { ...mainPos.ot_hours_per_year },
+                };
+              }
+
+              return subPos;
+            }),
+          }));
+
+          positionsFromJobs = true; // Mark as needing save
+        }
+
         set({
           proposalId,
           proposalName: proposal.name,
@@ -963,6 +1071,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           travel: proposal.spreadsheet_data?.travel || [],
           odcs: proposal.spreadsheet_data?.odcs || [],
           extensions: proposal.spreadsheet_data?.extensions || [],
+          surge: proposal.spreadsheet_data?.surge || null,  // NEW: Load surge option
           rates: rates,  // Use migrated rates
           escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Try spreadsheet_data first
           wageSource: proposal.wage_source || { type: 'bls' },  // Load wage source from proposal
@@ -990,6 +1099,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           travel: proposal.spreadsheet_data?.travel || [],
           odcs: proposal.spreadsheet_data?.odcs || [],
           extensions: proposal.spreadsheet_data?.extensions || [],
+          surge: proposal.spreadsheet_data?.surge || null,  // NEW: Load surge option
           rates: rates,  // Use migrated rates
           escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Try spreadsheet_data first
           wageSource: proposal.wage_source || { type: 'bls' },  // Cache wage source
@@ -1537,6 +1647,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           labor_category: sourcePos.labor_category,
           rate: sourcePos.rate,
           hours_per_year: { ...data.hoursAllocation },
+          ot_hours_per_year: sourcePos.ot_hours_per_year ? { ...sourcePos.ot_hours_per_year } : undefined,
           original_position_id: sourcePos.original_position_id,
           original_total_hours: sourcePos.original_total_hours,
           location_type: sourcePos.location_type,
@@ -1665,6 +1776,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         rate: data.rate,
         original_base_rate: data.rate, // Store original rate chosen at conversion (immutable)
         hours_per_year: data.hoursAllocation,
+        ot_hours_per_year: position.ot_hours_per_year ? { ...position.ot_hours_per_year } : undefined,
         original_position_id: position.id, // Link back to prime position
         original_total_hours: originalTotalHours, // Track original hours for hour return on delete
         location_type: position.location_type || 'On-Site', // Inherit from prime position
@@ -1755,6 +1867,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
               travel: get().travel,
               odcs: get().odcs,
               extensions: get().extensions,
+              surge: get().surge,  // NEW: Save surge option
               rates: get().rates,
               escalation_rates: get().escalationRates,
               months_per_year: get().monthsPerYear,
@@ -2366,6 +2479,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
             labor_category: currentPosition.labor_category,
             rate: subRate,
             hours_per_year: hoursAllocation,
+            ot_hours_per_year: currentPosition.ot_hours_per_year ? { ...currentPosition.ot_hours_per_year } : undefined,
           };
 
           // Add to subcontractor
@@ -2562,6 +2676,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         rate: baseRate,
         original_base_rate: baseRate,
         hours_per_year: { ...position.hours_per_year },
+        ot_hours_per_year: position.ot_hours_per_year ? { ...position.ot_hours_per_year } : undefined,
         original_position_id: position.id,
         original_total_hours: { ...position.hours_per_year },
         location_type: position.location_type,
@@ -2689,6 +2804,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         travel: [],
         odcs: [],
         extensions: [],
+        surge: null,  // NEW: Surge option reset to null
         rates: {} as IndirectRates,  // Will be populated from backend (org settings)
         escalationRates: {} as EscalationRates,  // Will be populated from backend (org settings)
         wageSource: { type: 'bls' } as WageSource,  // Reset to default BLS
@@ -2713,6 +2829,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           totalGA: 0,
           totalFee: 0,
           totalFBLR: 0,
+          totalOT: 0,
           byYear: {},
         },
         ratesReferenceExpanded: false,

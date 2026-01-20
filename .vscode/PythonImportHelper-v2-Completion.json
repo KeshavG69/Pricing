@@ -119,6 +119,30 @@
         "documentation": {}
     },
     {
+        "label": "Agent",
+        "importPath": "agno.agent",
+        "description": "agno.agent",
+        "isExtraImport": true,
+        "detail": "agno.agent",
+        "documentation": {}
+    },
+    {
+        "label": "Agent",
+        "importPath": "agno.agent",
+        "description": "agno.agent",
+        "isExtraImport": true,
+        "detail": "agno.agent",
+        "documentation": {}
+    },
+    {
+        "label": "get_chat_llm_agno",
+        "importPath": "client.llm_client",
+        "description": "client.llm_client",
+        "isExtraImport": true,
+        "detail": "client.llm_client",
+        "documentation": {}
+    },
+    {
         "label": "get_chat_llm_agno",
         "importPath": "client.llm_client",
         "description": "client.llm_client",
@@ -128,6 +152,14 @@
     },
     {
         "label": "get_chat_llm",
+        "importPath": "client.llm_client",
+        "description": "client.llm_client",
+        "isExtraImport": true,
+        "detail": "client.llm_client",
+        "documentation": {}
+    },
+    {
+        "label": "get_embeddings",
         "importPath": "client.llm_client",
         "description": "client.llm_client",
         "isExtraImport": true,
@@ -183,11 +215,11 @@
         "documentation": {}
     },
     {
-        "label": "get_company_repository_crud",
-        "importPath": "utils.company_repository",
-        "description": "utils.company_repository",
+        "label": "create_help_center_retriever",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
         "isExtraImport": true,
-        "detail": "utils.company_repository",
+        "detail": "utils.agno_tools",
         "documentation": {}
     },
     {
@@ -204,6 +236,984 @@
         "description": "utils.company_repository",
         "isExtraImport": true,
         "detail": "utils.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "get_company_repository_crud",
+        "importPath": "utils.company_repository",
+        "description": "utils.company_repository",
+        "isExtraImport": true,
+        "detail": "utils.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "threading",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "threading",
+        "description": "threading",
+        "detail": "threading",
+        "documentation": {}
+    },
+    {
+        "label": "logging",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "logging",
+        "description": "logging",
+        "detail": "logging",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Tuple",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Tuple",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "AsyncGenerator",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "AsyncIterator",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Iterable",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "get_agent_db",
+        "importPath": "client.agent_memory",
+        "description": "client.agent_memory",
+        "isExtraImport": true,
+        "detail": "client.agent_memory",
+        "documentation": {}
+    },
+    {
+        "label": "get_memory_manager",
+        "importPath": "client.agent_memory",
+        "description": "client.agent_memory",
+        "isExtraImport": true,
+        "detail": "client.agent_memory",
         "documentation": {}
     },
     {
@@ -217,6 +1227,14 @@
     },
     {
         "label": "asynccontextmanager",
+        "importPath": "contextlib",
+        "description": "contextlib",
+        "isExtraImport": true,
+        "detail": "contextlib",
+        "documentation": {}
+    },
+    {
+        "label": "suppress",
         "importPath": "contextlib",
         "description": "contextlib",
         "isExtraImport": true,
@@ -449,6 +1467,22 @@
     },
     {
         "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
         "importPath": "fastapi",
         "description": "fastapi",
         "isExtraImport": true,
@@ -768,11 +1802,35 @@
         "documentation": {}
     },
     {
+        "label": "StreamingResponse",
+        "importPath": "fastapi.responses",
+        "description": "fastapi.responses",
+        "isExtraImport": true,
+        "detail": "fastapi.responses",
+        "documentation": {}
+    },
+    {
         "label": "JSONResponse",
         "importPath": "fastapi.responses",
         "description": "fastapi.responses",
         "isExtraImport": true,
         "detail": "fastapi.responses",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
         "documentation": {}
     },
     {
@@ -1048,6 +2106,14 @@
         "documentation": {}
     },
     {
+        "label": "help_center",
+        "importPath": "routers",
+        "description": "routers",
+        "isExtraImport": true,
+        "detail": "routers",
+        "documentation": {}
+    },
+    {
         "label": "FRONTEND_URL",
         "importPath": "auth.config",
         "description": "auth.config",
@@ -1078,831 +2144,6 @@
         "importPath": "time",
         "description": "time",
         "detail": "time",
-        "documentation": {}
-    },
-    {
-        "label": "logging",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "logging",
-        "description": "logging",
-        "detail": "logging",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Tuple",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Tuple",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
         "documentation": {}
     },
     {
@@ -2210,6 +2451,14 @@
         "documentation": {}
     },
     {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
         "label": "ObjectId",
         "importPath": "bson",
         "description": "bson",
@@ -2347,15 +2596,6 @@
         "documentation": {}
     },
     {
-        "label": "threading",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "threading",
-        "description": "threading",
-        "detail": "threading",
-        "documentation": {}
-    },
-    {
         "label": "MongoClient",
         "importPath": "pymongo",
         "description": "pymongo",
@@ -2449,6 +2689,22 @@
         "description": "pymongo",
         "isExtraImport": true,
         "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
         "documentation": {}
     },
     {
@@ -2884,6 +3140,14 @@
         "documentation": {}
     },
     {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
         "label": "EmailStr",
         "importPath": "pydantic",
         "description": "pydantic",
@@ -2955,6 +3219,22 @@
         "importPath": "hashlib",
         "description": "hashlib",
         "detail": "hashlib",
+        "documentation": {}
+    },
+    {
+        "label": "MongoDb",
+        "importPath": "agno.db.mongo",
+        "description": "agno.db.mongo",
+        "isExtraImport": true,
+        "detail": "agno.db.mongo",
+        "documentation": {}
+    },
+    {
+        "label": "MemoryManager",
+        "importPath": "agno.memory.manager",
+        "description": "agno.memory.manager",
+        "isExtraImport": true,
+        "detail": "agno.memory.manager",
         "documentation": {}
     },
     {
@@ -3152,6 +3432,54 @@
         "documentation": {}
     },
     {
+        "label": "Pinecone",
+        "importPath": "pinecone",
+        "description": "pinecone",
+        "isExtraImport": true,
+        "detail": "pinecone",
+        "documentation": {}
+    },
+    {
+        "label": "ServerlessSpec",
+        "importPath": "pinecone",
+        "description": "pinecone",
+        "isExtraImport": true,
+        "detail": "pinecone",
+        "documentation": {}
+    },
+    {
+        "label": "Pinecone",
+        "importPath": "pinecone",
+        "description": "pinecone",
+        "isExtraImport": true,
+        "detail": "pinecone",
+        "documentation": {}
+    },
+    {
+        "label": "ServerlessSpec",
+        "importPath": "pinecone",
+        "description": "pinecone",
+        "isExtraImport": true,
+        "detail": "pinecone",
+        "documentation": {}
+    },
+    {
+        "label": "PineconeVectorStore",
+        "importPath": "langchain_pinecone",
+        "description": "langchain_pinecone",
+        "isExtraImport": true,
+        "detail": "langchain_pinecone",
+        "documentation": {}
+    },
+    {
+        "label": "PineconeVectorStore",
+        "importPath": "langchain_pinecone",
+        "description": "langchain_pinecone",
+        "isExtraImport": true,
+        "detail": "langchain_pinecone",
+        "documentation": {}
+    },
+    {
         "label": "PineconeVectorStore",
         "importPath": "langchain_pinecone",
         "description": "langchain_pinecone",
@@ -3243,6 +3571,14 @@
     },
     {
         "label": "ChatOpenAI",
+        "importPath": "langchain_openai",
+        "description": "langchain_openai",
+        "isExtraImport": true,
+        "detail": "langchain_openai",
+        "documentation": {}
+    },
+    {
+        "label": "OpenAIEmbeddings",
         "importPath": "langchain_openai",
         "description": "langchain_openai",
         "isExtraImport": true,
@@ -3950,6 +4286,46 @@
         "documentation": {}
     },
     {
+        "label": "get_help_center_agent",
+        "importPath": "agent.help_center_agent",
+        "description": "agent.help_center_agent",
+        "isExtraImport": true,
+        "detail": "agent.help_center_agent",
+        "documentation": {}
+    },
+    {
+        "label": "stream_agent_response",
+        "importPath": "utils.agent_streaming",
+        "description": "utils.agent_streaming",
+        "isExtraImport": true,
+        "detail": "utils.agent_streaming",
+        "documentation": {}
+    },
+    {
+        "label": "create_sse_event_stream",
+        "importPath": "utils.streaming",
+        "description": "utils.streaming",
+        "isExtraImport": true,
+        "detail": "utils.streaming",
+        "documentation": {}
+    },
+    {
+        "label": "extract_text",
+        "importPath": "utils.streaming",
+        "description": "utils.streaming",
+        "isExtraImport": true,
+        "detail": "utils.streaming",
+        "documentation": {}
+    },
+    {
+        "label": "sanitize_payload",
+        "importPath": "utils.streaming",
+        "description": "utils.streaming",
+        "isExtraImport": true,
+        "detail": "utils.streaming",
+        "documentation": {}
+    },
+    {
         "label": "get_invitation_crud",
         "importPath": "utils.invitations",
         "description": "utils.invitations",
@@ -3995,6 +4371,14 @@
         "description": "models.proposal",
         "isExtraImport": true,
         "detail": "models.proposal",
+        "documentation": {}
+    },
+    {
+        "label": "parse_document_intelligent",
+        "importPath": "client.intelligent_parser",
+        "description": "client.intelligent_parser",
+        "isExtraImport": true,
+        "detail": "client.intelligent_parser",
         "documentation": {}
     },
     {
@@ -4102,6 +4486,22 @@
         "documentation": {}
     },
     {
+        "label": "RecursiveCharacterTextSplitter",
+        "importPath": "langchain_text_splitters",
+        "description": "langchain_text_splitters",
+        "isExtraImport": true,
+        "detail": "langchain_text_splitters",
+        "documentation": {}
+    },
+    {
+        "label": "Document",
+        "importPath": "langchain_core.documents",
+        "description": "langchain_core.documents",
+        "isExtraImport": true,
+        "detail": "langchain_core.documents",
+        "documentation": {}
+    },
+    {
         "label": "requests",
         "kind": 6,
         "isExtraImport": true,
@@ -4111,11 +4511,43 @@
         "documentation": {}
     },
     {
+        "label": "RunEvent",
+        "importPath": "agno.run.agent",
+        "description": "agno.run.agent",
+        "isExtraImport": true,
+        "detail": "agno.run.agent",
+        "documentation": {}
+    },
+    {
+        "label": "RunOutput",
+        "importPath": "agno.run.agent",
+        "description": "agno.run.agent",
+        "isExtraImport": true,
+        "detail": "agno.run.agent",
+        "documentation": {}
+    },
+    {
+        "label": "RunOutputEvent",
+        "importPath": "agno.run.agent",
+        "description": "agno.run.agent",
+        "isExtraImport": true,
+        "detail": "agno.run.agent",
+        "documentation": {}
+    },
+    {
         "label": "tool",
         "importPath": "agno.tools",
         "description": "agno.tools",
         "isExtraImport": true,
         "detail": "agno.tools",
+        "documentation": {}
+    },
+    {
+        "label": "get_help_center_pinecone_client",
+        "importPath": "client.help_center_pinecone",
+        "description": "client.help_center_pinecone",
+        "isExtraImport": true,
+        "detail": "client.help_center_pinecone",
         "documentation": {}
     },
     {
@@ -4239,6 +4671,42 @@
         "description": "backend..venv.bin.jp",
         "peekOfCode": "def main():\n    parser = argparse.ArgumentParser()\n    parser.add_argument('expression')\n    parser.add_argument('-f', '--filename',\n                        help=('The filename containing the input data.  '\n                              'If a filename is not given then data is '\n                              'read from stdin.'))\n    parser.add_argument('--ast', action='store_true',\n                        help=('Pretty print the AST, do not search the data.'))\n    args = parser.parse_args()",
         "detail": "backend..venv.bin.jp",
+        "documentation": {}
+    },
+    {
+        "label": "get_help_center_agent",
+        "kind": 2,
+        "importPath": "backend.agent.help_center_agent",
+        "description": "backend.agent.help_center_agent",
+        "peekOfCode": "def get_help_center_agent(session_id: str) -> Agent:\n    \"\"\"\n    Get cached help center agent singleton with session-specific binding.\n    Since the help center agent has no user-specific context, we cache\n    a single instance and reuse it across all requests. Session ID is\n    dynamically bound for conversation tracking and memory.\n    Args:\n        session_id: Session ID for this request\n    Returns:\n        Cached Agent instance with updated session_id",
+        "detail": "backend.agent.help_center_agent",
+        "documentation": {}
+    },
+    {
+        "label": "clear_cache",
+        "kind": 2,
+        "importPath": "backend.agent.help_center_agent",
+        "description": "backend.agent.help_center_agent",
+        "peekOfCode": "def clear_cache():\n    \"\"\"Clear the cached help center agent (for testing/maintenance).\"\"\"\n    global _help_center_agent\n    with _agent_lock:\n        _help_center_agent = None\n        logger.info(\"Cleared help center agent cache\")",
+        "detail": "backend.agent.help_center_agent",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.agent.help_center_agent",
+        "description": "backend.agent.help_center_agent",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# Global singleton for help center agent\n_help_center_agent: Optional[Agent] = None\n_agent_lock = threading.Lock()\ndef get_help_center_agent(session_id: str) -> Agent:\n    \"\"\"\n    Get cached help center agent singleton with session-specific binding.\n    Since the help center agent has no user-specific context, we cache\n    a single instance and reuse it across all requests. Session ID is\n    dynamically bound for conversation tracking and memory.",
+        "detail": "backend.agent.help_center_agent",
+        "documentation": {}
+    },
+    {
+        "label": "_agent_lock",
+        "kind": 5,
+        "importPath": "backend.agent.help_center_agent",
+        "description": "backend.agent.help_center_agent",
+        "peekOfCode": "_agent_lock = threading.Lock()\ndef get_help_center_agent(session_id: str) -> Agent:\n    \"\"\"\n    Get cached help center agent singleton with session-specific binding.\n    Since the help center agent has no user-specific context, we cache\n    a single instance and reuse it across all requests. Session ID is\n    dynamically bound for conversation tracking and memory.\n    Args:\n        session_id: Session ID for this request\n    Returns:",
+        "detail": "backend.agent.help_center_agent",
         "documentation": {}
     },
     {
@@ -4809,6 +5277,51 @@
         "documentation": {}
     },
     {
+        "label": "AgentMemoryManager",
+        "kind": 6,
+        "importPath": "backend.client.agent_memory",
+        "description": "backend.client.agent_memory",
+        "peekOfCode": "class AgentMemoryManager:\n    \"\"\"\n    Singleton manager for agent memory storage.\n    Provides thread-safe lazy initialization for MongoDB connections.\n    \"\"\"\n    _instance: Optional['AgentMemoryManager'] = None\n    _lock = threading.Lock()\n    def __new__(cls) -> 'AgentMemoryManager':\n        \"\"\"Ensure only one instance exists (singleton pattern).\"\"\"\n        if cls._instance is None:",
+        "detail": "backend.client.agent_memory",
+        "documentation": {}
+    },
+    {
+        "label": "get_agent_memory_manager",
+        "kind": 2,
+        "importPath": "backend.client.agent_memory",
+        "description": "backend.client.agent_memory",
+        "peekOfCode": "def get_agent_memory_manager() -> AgentMemoryManager:\n    \"\"\"Get the global agent memory manager singleton.\"\"\"\n    global _agent_memory_manager\n    if _agent_memory_manager is None:\n        with _manager_lock:\n            if _agent_memory_manager is None:\n                _agent_memory_manager = AgentMemoryManager()\n    return _agent_memory_manager\ndef get_agent_db() -> MongoDb:\n    \"\"\"Convenience function to get MongoDB instance.\"\"\"",
+        "detail": "backend.client.agent_memory",
+        "documentation": {}
+    },
+    {
+        "label": "get_agent_db",
+        "kind": 2,
+        "importPath": "backend.client.agent_memory",
+        "description": "backend.client.agent_memory",
+        "peekOfCode": "def get_agent_db() -> MongoDb:\n    \"\"\"Convenience function to get MongoDB instance.\"\"\"\n    return get_agent_memory_manager().get_db()\ndef get_memory_manager() -> MemoryManager:\n    \"\"\"Convenience function to get memory manager.\"\"\"\n    return get_agent_memory_manager().get_memory_manager()",
+        "detail": "backend.client.agent_memory",
+        "documentation": {}
+    },
+    {
+        "label": "get_memory_manager",
+        "kind": 2,
+        "importPath": "backend.client.agent_memory",
+        "description": "backend.client.agent_memory",
+        "peekOfCode": "def get_memory_manager() -> MemoryManager:\n    \"\"\"Convenience function to get memory manager.\"\"\"\n    return get_agent_memory_manager().get_memory_manager()",
+        "detail": "backend.client.agent_memory",
+        "documentation": {}
+    },
+    {
+        "label": "_manager_lock",
+        "kind": 5,
+        "importPath": "backend.client.agent_memory",
+        "description": "backend.client.agent_memory",
+        "peekOfCode": "_manager_lock = threading.Lock()\ndef get_agent_memory_manager() -> AgentMemoryManager:\n    \"\"\"Get the global agent memory manager singleton.\"\"\"\n    global _agent_memory_manager\n    if _agent_memory_manager is None:\n        with _manager_lock:\n            if _agent_memory_manager is None:\n                _agent_memory_manager = AgentMemoryManager()\n    return _agent_memory_manager\ndef get_agent_db() -> MongoDb:",
+        "detail": "backend.client.agent_memory",
+        "documentation": {}
+    },
+    {
         "label": "Calculator",
         "kind": 6,
         "importPath": "backend.client.calculation_service",
@@ -4887,6 +5400,33 @@
         "description": "backend.client.gsa_pinecone",
         "peekOfCode": "_client_lock = threading.RLock()\ndef get_gsa_pinecone_client() -> GSAPineconeClient:\n    \"\"\"Get or create GSA Pinecone client.\"\"\"\n    global _gsa_pinecone_client\n    with _client_lock:\n        if _gsa_pinecone_client is None:\n            _gsa_pinecone_client = GSAPineconeClient()\n        return _gsa_pinecone_client",
         "detail": "backend.client.gsa_pinecone",
+        "documentation": {}
+    },
+    {
+        "label": "HelpCenterPineconeClient",
+        "kind": 6,
+        "importPath": "backend.client.help_center_pinecone",
+        "description": "backend.client.help_center_pinecone",
+        "peekOfCode": "class HelpCenterPineconeClient:\n    \"\"\"Client for storing and searching help center documentation in Pinecone.\"\"\"\n    def __init__(self):\n        self._lock = threading.RLock()\n        self._pc = None\n        self._index = None\n        self._embeddings = None\n    def _get_pinecone(self):\n        \"\"\"Get or create Pinecone client.\"\"\"\n        if self._pc is None:",
+        "detail": "backend.client.help_center_pinecone",
+        "documentation": {}
+    },
+    {
+        "label": "get_help_center_pinecone_client",
+        "kind": 2,
+        "importPath": "backend.client.help_center_pinecone",
+        "description": "backend.client.help_center_pinecone",
+        "peekOfCode": "def get_help_center_pinecone_client() -> HelpCenterPineconeClient:\n    \"\"\"Get or create help center Pinecone client singleton.\"\"\"\n    global _help_center_pinecone_client\n    with _client_lock:\n        if _help_center_pinecone_client is None:\n            _help_center_pinecone_client = HelpCenterPineconeClient()\n        return _help_center_pinecone_client",
+        "detail": "backend.client.help_center_pinecone",
+        "documentation": {}
+    },
+    {
+        "label": "_client_lock",
+        "kind": 5,
+        "importPath": "backend.client.help_center_pinecone",
+        "description": "backend.client.help_center_pinecone",
+        "peekOfCode": "_client_lock = threading.RLock()\ndef get_help_center_pinecone_client() -> HelpCenterPineconeClient:\n    \"\"\"Get or create help center Pinecone client singleton.\"\"\"\n    global _help_center_pinecone_client\n    with _client_lock:\n        if _help_center_pinecone_client is None:\n            _help_center_pinecone_client = HelpCenterPineconeClient()\n        return _help_center_pinecone_client",
+        "detail": "backend.client.help_center_pinecone",
         "documentation": {}
     },
     {
@@ -5484,6 +6024,33 @@
         "documentation": {}
     },
     {
+        "label": "HelpCenterQuery",
+        "kind": 6,
+        "importPath": "backend.routers.help_center",
+        "description": "backend.routers.help_center",
+        "peekOfCode": "class HelpCenterQuery(BaseModel):\n    \"\"\"Request model for help center queries.\"\"\"\n    query: str\n    session_id: str\n@router.post(\"/ask\")\nasync def ask_help_center(request: HelpCenterQuery):\n    \"\"\"\n    Ask a question to the help center agent with streaming response.\n    This endpoint uses Server-Sent Events (SSE) to stream the agent's response in real-time.\n    Request body:",
+        "detail": "backend.routers.help_center",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.routers.help_center",
+        "description": "backend.routers.help_center",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nrouter = APIRouter(prefix=\"/api/help\", tags=[\"help-center\"])\nclass HelpCenterQuery(BaseModel):\n    \"\"\"Request model for help center queries.\"\"\"\n    query: str\n    session_id: str\n@router.post(\"/ask\")\nasync def ask_help_center(request: HelpCenterQuery):\n    \"\"\"\n    Ask a question to the help center agent with streaming response.",
+        "detail": "backend.routers.help_center",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.routers.help_center",
+        "description": "backend.routers.help_center",
+        "peekOfCode": "router = APIRouter(prefix=\"/api/help\", tags=[\"help-center\"])\nclass HelpCenterQuery(BaseModel):\n    \"\"\"Request model for help center queries.\"\"\"\n    query: str\n    session_id: str\n@router.post(\"/ask\")\nasync def ask_help_center(request: HelpCenterQuery):\n    \"\"\"\n    Ask a question to the help center agent with streaming response.\n    This endpoint uses Server-Sent Events (SSE) to stream the agent's response in real-time.",
+        "detail": "backend.routers.help_center",
+        "documentation": {}
+    },
+    {
         "label": "InviteUserRequest",
         "kind": 6,
         "importPath": "backend.routers.invitations",
@@ -6006,6 +6573,159 @@
         "documentation": {}
     },
     {
+        "label": "validate_environment",
+        "kind": 2,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "def validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENROUTER_API_KEY:\n        raise ValueError(\"OPENROUTER_API_KEY not found in environment\")\n    if not PINECONE_API_KEY:\n        raise ValueError(\"PINECONE_API_KEY not found in environment\")\n    print(\"✓ Environment variables validated\")\ndef initialize_pinecone():\n    \"\"\"Initialize Pinecone client and create index if it doesn't exist.\"\"\"\n    print(f\"\\nInitializing Pinecone...\")",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "initialize_pinecone",
+        "kind": 2,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "def initialize_pinecone():\n    \"\"\"Initialize Pinecone client and create index if it doesn't exist.\"\"\"\n    print(f\"\\nInitializing Pinecone...\")\n    print(f\"Index: {PINECONE_INDEX_NAME}\")\n    print(f\"Namespace: {PINECONE_NAMESPACE}\")\n    pc = Pinecone(api_key=PINECONE_API_KEY)\n    # Check if index exists\n    existing_indexes = pc.list_indexes()\n    index_names = [index['name'] for index in existing_indexes]\n    if PINECONE_INDEX_NAME not in index_names:",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "extract_metadata_from_content",
+        "kind": 2,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "def extract_metadata_from_content(content: str) -> dict:\n    \"\"\"\n    Extract article_type and priority from markdown content.\n    Looks for lines like:\n    **Article Type:** Tutorial | **Priority:** P0 | **Reading Time:** 5 minutes\n    \"\"\"\n    metadata = {\n        \"article_type\": \"Unknown\",\n        \"priority\": \"Unknown\"\n    }",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "load_markdown_files",
+        "kind": 2,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "def load_markdown_files() -> List[Document]:\n    \"\"\"Load all markdown files from help center directory.\"\"\"\n    print(f\"\\nLoading markdown files from: {DOCS_PATH}\")\n    if not DOCS_PATH.exists():\n        raise ValueError(f\"Documentation path does not exist: {DOCS_PATH}\")\n    documents = []\n    markdown_files = list(DOCS_PATH.rglob(\"*.md\"))\n    # Filter out certain files\n    excluded_files = {\n        \"DOCUMENTATION_STATUS.md\",",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "split_documents",
+        "kind": 2,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "def split_documents(documents: List[Document]) -> List[Document]:\n    \"\"\"Split documents into chunks and add chunk_index metadata.\"\"\"\n    print(f\"\\nSplitting documents into chunks...\")\n    text_splitter = RecursiveCharacterTextSplitter(\n        chunk_size=CHUNK_SIZE,\n        chunk_overlap=CHUNK_OVERLAP,\n        length_function=len,\n        separators=[\n            \"\\n## \",  # Split on H2 headers first\n            \"\\n### \",  # Then H3 headers",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "upload_to_pinecone",
+        "kind": 2,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "def upload_to_pinecone(chunks: List[Document]):\n    \"\"\"Generate embeddings and upload to Pinecone namespace.\"\"\"\n    print(f\"\\nGenerating embeddings and uploading to Pinecone...\")\n    print(f\"Using model: {EMBEDDING_MODEL}\")\n    print(f\"Target: Index '{PINECONE_INDEX_NAME}' → Namespace '{PINECONE_NAMESPACE}'\")\n    # Initialize embeddings (using OpenRouter)\n    embeddings = OpenAIEmbeddings(\n        model=EMBEDDING_MODEL,\n        openai_api_key=OPENROUTER_API_KEY,\n        openai_api_base=\"https://openrouter.ai/api/v1\"",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "print_summary",
+        "kind": 2,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "def print_summary(chunks: List[Document]):\n    \"\"\"Print summary statistics.\"\"\"\n    print(\"\\n\" + \"=\"*60)\n    print(\"SUMMARY\")\n    print(\"=\"*60)\n    # Count by category\n    categories = {}\n    for chunk in chunks:\n        cat = chunk.metadata.get('category', 'unknown')\n        categories[cat] = categories.get(cat, 0) + 1",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "def main():\n    \"\"\"Main execution function.\"\"\"\n    print(\"=\"*60)\n    print(\"PRICEIQ HELP CENTER RAG SETUP\")\n    print(\"=\"*60)\n    try:\n        # Step 1: Validate environment\n        validate_environment()\n        # Step 2: Initialize Pinecone\n        initialize_pinecone()",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "OPENROUTER_API_KEY",
+        "kind": 5,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "OPENROUTER_API_KEY = os.getenv(\"OPENROUTER_API_KEY\")\nPINECONE_API_KEY = os.getenv(\"PINECONE_API_KEY\")\nPINECONE_INDEX_NAME = os.getenv(\"HELP_CENTER_PINECONE_INDEX_NAME\", \"help-center\")  # Separate index for help center\nPINECONE_NAMESPACE = \"help-center\"  # Namespace within the index\nDOCS_PATH = Path(__file__).parent.parent.parent / \"docs\" / \"help-center\"\n# Embedding configuration\nEMBEDDING_MODEL = \"openai/text-embedding-3-small\"  # Via OpenRouter\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "PINECONE_API_KEY",
+        "kind": 5,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "PINECONE_API_KEY = os.getenv(\"PINECONE_API_KEY\")\nPINECONE_INDEX_NAME = os.getenv(\"HELP_CENTER_PINECONE_INDEX_NAME\", \"help-center\")  # Separate index for help center\nPINECONE_NAMESPACE = \"help-center\"  # Namespace within the index\nDOCS_PATH = Path(__file__).parent.parent.parent / \"docs\" / \"help-center\"\n# Embedding configuration\nEMBEDDING_MODEL = \"openai/text-embedding-3-small\"  # Via OpenRouter\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "PINECONE_INDEX_NAME",
+        "kind": 5,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "PINECONE_INDEX_NAME = os.getenv(\"HELP_CENTER_PINECONE_INDEX_NAME\", \"help-center\")  # Separate index for help center\nPINECONE_NAMESPACE = \"help-center\"  # Namespace within the index\nDOCS_PATH = Path(__file__).parent.parent.parent / \"docs\" / \"help-center\"\n# Embedding configuration\nEMBEDDING_MODEL = \"openai/text-embedding-3-small\"  # Via OpenRouter\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "PINECONE_NAMESPACE",
+        "kind": 5,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "PINECONE_NAMESPACE = \"help-center\"  # Namespace within the index\nDOCS_PATH = Path(__file__).parent.parent.parent / \"docs\" / \"help-center\"\n# Embedding configuration\nEMBEDDING_MODEL = \"openai/text-embedding-3-small\"  # Via OpenRouter\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "DOCS_PATH",
+        "kind": 5,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "DOCS_PATH = Path(__file__).parent.parent.parent / \"docs\" / \"help-center\"\n# Embedding configuration\nEMBEDDING_MODEL = \"openai/text-embedding-3-small\"  # Via OpenRouter\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENROUTER_API_KEY:",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "EMBEDDING_MODEL",
+        "kind": 5,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "EMBEDDING_MODEL = \"openai/text-embedding-3-small\"  # Via OpenRouter\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENROUTER_API_KEY:\n        raise ValueError(\"OPENROUTER_API_KEY not found in environment\")\n    if not PINECONE_API_KEY:",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "EMBEDDING_DIMENSION",
+        "kind": 5,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "EMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENROUTER_API_KEY:\n        raise ValueError(\"OPENROUTER_API_KEY not found in environment\")\n    if not PINECONE_API_KEY:\n        raise ValueError(\"PINECONE_API_KEY not found in environment\")",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "CHUNK_SIZE",
+        "kind": 5,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "CHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENROUTER_API_KEY:\n        raise ValueError(\"OPENROUTER_API_KEY not found in environment\")\n    if not PINECONE_API_KEY:\n        raise ValueError(\"PINECONE_API_KEY not found in environment\")\n    print(\"✓ Environment variables validated\")\ndef initialize_pinecone():",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
+        "label": "CHUNK_OVERLAP",
+        "kind": 5,
+        "importPath": "backend.scripts.setup_help_center_rag",
+        "description": "backend.scripts.setup_help_center_rag",
+        "peekOfCode": "CHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENROUTER_API_KEY:\n        raise ValueError(\"OPENROUTER_API_KEY not found in environment\")\n    if not PINECONE_API_KEY:\n        raise ValueError(\"PINECONE_API_KEY not found in environment\")\n    print(\"✓ Environment variables validated\")\ndef initialize_pinecone():\n    \"\"\"Initialize Pinecone client and create index if it doesn't exist.\"\"\"",
+        "detail": "backend.scripts.setup_help_center_rag",
+        "documentation": {}
+    },
+    {
         "label": "download_file",
         "kind": 2,
         "importPath": "backend.scripts.setup_oews_data",
@@ -6150,6 +6870,15 @@
         "documentation": {}
     },
     {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.utils.agent_streaming",
+        "description": "backend.utils.agent_streaming",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nasync def stream_agent_response(\n    query: str,\n    agent: Agent,\n) -> AsyncGenerator[Dict[str, Any], None]:\n    \"\"\"Stream Agno agent events as structured payloads.\"\"\"\n    if not query or not query.strip():\n        yield {\n            \"event\": \"error\",\n            \"error\": \"Query cannot be empty\",",
+        "detail": "backend.utils.agent_streaming",
+        "documentation": {}
+    },
+    {
         "label": "create_custom_retreiver",
         "kind": 2,
         "importPath": "backend.utils.agno_tools",
@@ -6191,6 +6920,15 @@
         "importPath": "backend.utils.agno_tools",
         "description": "backend.utils.agno_tools",
         "peekOfCode": "def create_gsa_rate_tool(organization_id: str, file_id: str, contract_start_date: str):\n    \"\"\"\n    Create a tool for retrieving GSA rates from MongoDB.\n    Args:\n        organization_id: Organization ID\n        file_id: GSA contract file ID\n        contract_start_date: Contract start date for year calculation\n    Returns:\n        Callable tool function for agno agents\n    \"\"\"",
+        "detail": "backend.utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_help_center_retriever",
+        "kind": 2,
+        "importPath": "backend.utils.agno_tools",
+        "description": "backend.utils.agno_tools",
+        "peekOfCode": "def create_help_center_retriever():\n    \"\"\"\n    Create a retriever for help center documentation search.\n    Args:\n        category: Optional category filter (e.g., \"getting-started\", \"pricing\")\n    Returns:\n        Callable retriever function for agno agents\n    \"\"\"\n    pinecone_client = get_help_center_pinecone_client()\n    def help_center_retriever(",
         "detail": "backend.utils.agno_tools",
         "documentation": {}
     },
@@ -6417,6 +7155,42 @@
         "description": "backend.utils.proposals",
         "peekOfCode": "_lock = threading.RLock()\ndef get_proposal_crud() -> ProposalCRUD:\n    \"\"\"\n    Get or create ProposalCRUD instance (singleton pattern)\n    Returns:\n        ProposalCRUD instance\n    \"\"\"\n    global _proposal_crud\n    with _lock:\n        if _proposal_crud is None:",
         "detail": "backend.utils.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "extract_text",
+        "kind": 2,
+        "importPath": "backend.utils.streaming",
+        "description": "backend.utils.streaming",
+        "peekOfCode": "def extract_text(content: Any) -> Optional[str]:\n    \"\"\"Best-effort extraction of textual content from heterogeneous payloads.\"\"\"\n    if content is None:\n        return None\n    if isinstance(content, str):\n        return content\n    if isinstance(content, dict):\n        if \"text\" in content and isinstance(content[\"text\"], str):\n            return content[\"text\"]\n        if \"content\" in content and isinstance(content[\"content\"], str):",
+        "detail": "backend.utils.streaming",
+        "documentation": {}
+    },
+    {
+        "label": "sanitize_payload",
+        "kind": 2,
+        "importPath": "backend.utils.streaming",
+        "description": "backend.utils.streaming",
+        "peekOfCode": "def sanitize_payload(data: Dict[str, Any]) -> Dict[str, Any]:\n    \"\"\"Ensure payload is JSON-serializable without mutating the original dict.\"\"\"\n    try:\n        json.dumps(data)\n        return data\n    except TypeError:\n        def _coerce(value: Any) -> Any:\n            if isinstance(value, dict):\n                return {k: _coerce(v) for k, v in value.items()}\n            if isinstance(value, list):",
+        "detail": "backend.utils.streaming",
+        "documentation": {}
+    },
+    {
+        "label": "create_sse_event_stream",
+        "kind": 2,
+        "importPath": "backend.utils.streaming",
+        "description": "backend.utils.streaming",
+        "peekOfCode": "def create_sse_event_stream(\n    events: AsyncIterator[Dict[str, Any]],\n) -> AsyncIterator[str]:\n    \"\"\"Convert structured events into SSE frames with keepalive heartbeats.\"\"\"\n    async def _run():\n        iterator = events.__aiter__()\n        pending = asyncio.create_task(iterator.__anext__())\n        event_id = 0\n        keepalive_interval = 300  # seconds\n        try:",
+        "detail": "backend.utils.streaming",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.utils.streaming",
+        "description": "backend.utils.streaming",
+        "peekOfCode": "logger = logging.getLogger(__name__)\ndef extract_text(content: Any) -> Optional[str]:\n    \"\"\"Best-effort extraction of textual content from heterogeneous payloads.\"\"\"\n    if content is None:\n        return None\n    if isinstance(content, str):\n        return content\n    if isinstance(content, dict):\n        if \"text\" in content and isinstance(content[\"text\"], str):\n            return content[\"text\"]",
+        "detail": "backend.utils.streaming",
         "documentation": {}
     },
     {

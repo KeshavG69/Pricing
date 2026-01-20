@@ -342,7 +342,7 @@ export const TravelSection = ({
         </div>
         <button
           onClick={onAdd}
-          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors flex items-center gap-2"
+          className="min-w-[140px] px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-md transition-colors flex items-center justify-center gap-2"
         >
           <svg
             className="w-4 h-4"
