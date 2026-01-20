@@ -45,8 +45,9 @@ export default function SignupPage() {
     }
 
     try {
-      await signup({ firstName, lastName, email, password, terms_accepted: termsAccepted });
-      router.push('/dashboard');
+      const response = await signup({ firstName, lastName, email, password, terms_accepted: termsAccepted });
+      // Redirect to check-email page with email parameter
+      router.push(`/auth/check-email?email=${encodeURIComponent(response.email)}`);
     } catch (err) {
       console.error('Signup failed:', err);
     }
