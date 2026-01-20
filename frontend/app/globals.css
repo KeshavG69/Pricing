@@ -88,6 +88,9 @@
   --animate-slide-left: slide-left 0.4s ease-out;
   --animate-slide-right: slide-right 0.4s ease-out;
   --animate-scale-in: scale-in 0.3s ease-out;
+  --animate-slide-in-left: slide-in-left 0.6s ease-out;
+  --animate-slide-in-right: slide-in-right 0.6s ease-out;
+  --animate-shimmer: shimmer 3s ease-in-out infinite;
 
   @keyframes fade-in {
     from { opacity: 0; }
@@ -117,6 +120,37 @@
   @keyframes scale-in {
     from { transform: scale(0.95); opacity: 0; }
     to { transform: scale(1); opacity: 1; }
+  }
+
+  @keyframes slide-in-left {
+    from {
+      transform: translateX(-50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-in-right {
+    from {
+      transform: translateX(50px);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
+
+  @keyframes shimmer {
+    0% {
+      transform: translateX(-100%);
+    }
+    100% {
+      transform: translateX(100%);
+    }
   }
 }
 
@@ -162,6 +196,18 @@ body {
 
   .animate-scale-in {
     animation: var(--animate-scale-in);
+  }
+
+  .animate-slide-in-left {
+    animation: var(--animate-slide-in-left);
+  }
+
+  .animate-slide-in-right {
+    animation: var(--animate-slide-in-right);
+  }
+
+  .animate-shimmer {
+    animation: var(--animate-shimmer);
   }
 
   /* Smooth transitions */
