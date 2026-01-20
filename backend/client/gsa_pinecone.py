@@ -172,15 +172,17 @@ class GSAPineconeClient:
         query: str,
         organization_id: str,
         file_id: str,
+        description: Optional[str] = None,
         top_k: int = 5
     ) -> List[Dict]:
         """
         Search for matching labor categories.
 
         Args:
-            query: Job description or title
+            query: Job title
             organization_id: Organization ID to filter
             file_id: GSA contract file ID to filter
+            description: Optional full job description for better semantic matching
             top_k: Number of results
 
         Returns:
@@ -196,8 +198,14 @@ class GSAPineconeClient:
                 pinecone_api_key=settings.PINECONE_API_KEY
             )
 
+            # Combine job title and description for better matching (same as BLS)
+            if description:
+                search_query = f"Job Title: {query}. Description: {description}"
+            else:
+                search_query = query
+
             results = vectorstore.similarity_search_with_score(
-                query,
+                search_query,
                 k=top_k,
                 filter={
                     "organization_id": {"$eq": organization_id},

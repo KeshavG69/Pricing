@@ -15,7 +15,7 @@ interface WorkspaceSwitcherProps {
 export default function WorkspaceSwitcher({ isCollapsed = false }: WorkspaceSwitcherProps) {
   const router = useRouter();
   const { user, fetchUser } = useAuthStore();
-  const { resetPagination, fetchProposals } = useProposalsStore();
+  const { resetPagination } = useProposalsStore();
   const [organizations, setOrganizations] = useState<UserOrganization[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);

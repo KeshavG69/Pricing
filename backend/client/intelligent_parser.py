@@ -275,6 +275,10 @@ WORKFLOW:
    - Are there positions that scale up over time?
    - Are there roles that appear only in later years?
    - Are there "combined teams" that later split into specialized roles?
+   - Is there an overtime (OT) provision or multiplier mentioned?
+   - Is there a surge option or capacity increase clause?
+   - Are surge positions listed separately or is it just a percentage?
+   - How can you identify which positions are surge vs base positions?
    - What data is present vs missing?
    - Do you need web search to fill gaps?
 
@@ -303,13 +307,21 @@ WORKFLOW:
       "location": "California",  # REQUIRED: Actual state name from document (e.g., "California", "Virginia", "Texas")
       "location_type": "On-Site", # REQUIRED: MUST be exactly "On-Site" or "Off-Site" (no "Remote", "Hybrid", etc.)
       "is_key_position": false,
+      "is_surge": false,  # REQUIRED: true if this is a surge position, false if base position
       "hours_per_year": {{
-        "1": 1920,    # REQUIRED: Year-specific hours. Use "1", "2", "3", etc. as keys
+        "1": 1920,    # REQUIRED: Year-specific regular hours. Use "1", "2", "3", etc. as keys
         "2": 1920,    # If hours are constant: repeat same value for all years
         "3": 1920,
         "4": 1920,
         "5": 1920,
         "6": 960      # CRITICAL: If extensions exist (year 6 in this case), MUST include extension year hours! Prorate based on duration_months if not specified.
+      }},
+      "ot_hours_per_year": {{
+        "1": 200,     # OPTIONAL: Overtime hours per year (if mentioned in document)
+        "2": 200,     # Set to 0 or omit years with no OT
+        "3": 0,
+        "4": 0,
+        "5": 0
       }},
       "data_source": "document" or "web_research"
     }}
@@ -337,7 +349,12 @@ WORKFLOW:
       "duration_months": 6,  # Duration in months (typically 6 or 12)
       "description": "Extension Period 6"  # Description or notes about this extension
     }}
-  ]
+  ],
+
+  "surge": {{
+    "percentage": 0.20,  # Decimal form (20% = 0.20). Set to null if no surge option.
+    "description": "Government has option to increase contract by up to 20%"  # Full context from document
+  }}
 }}
 
 IMPORTANT:
@@ -370,6 +387,32 @@ IMPORTANT:
   * Example: 6-month extension → year_6_hours = (6 / 12) × year_5_hours = 0.5 × year_5_hours
   * Example: 12-month extension → year_6_hours = year_5_hours (same as regular year)
   * NEVER leave extension years out of hours_per_year dict!
+- Overtime (OT) hours extraction (optional - only extract if mentioned in document):
+  * Look for phrases like: "overtime hours", "OT", "beyond 40 hours/week", "additional hours"
+  * Extract OT hours per position per year in ot_hours_per_year field (same format as hours_per_year)
+  * If document specifies OT hours by position and year, extract them
+  * If NO OT hours mentioned, omit ot_hours_per_year field entirely (do not set to 0)
+  * ONLY extract OT HOURS - do NOT extract multipliers (like "time-and-a-half", "1.5x", "double-time")
+- Surge option extraction (TWO SCENARIOS - extract what's in the document):
+  * SCENARIO 1: Surge Positions (specific labor categories with hours)
+    - Look for separate staffing sections: "Surge Staffing", "Surge Positions", "Surge Capacity"
+    - Look for position names indicating surge: "Surge [Role]", "[Role] (Surge)", "[Role] - Surge"
+    - Look for phrases: "surge positions", "additional surge staff", "surge labor"
+    - For these positions, set is_surge: true in the position object
+    - Common pattern: document lists base staffing, then separate section for surge staffing
+    - Example: "Base: 5 Engineers, Surge: 3 additional Engineers" → extract 5 base + 3 surge positions
+  * SCENARIO 2: Percentage-based Surge (no specific positions, just %)
+    - Look for phrases like: "surge option", "increase contract by X%", "up to X% additional capacity"
+    - Look for DFARS clause references: "252.217-7001", "FAR 52.217-7", "surge clause"
+    - Extract percentage as DECIMAL: 20% → 0.20, 50% → 0.50
+    - Include full description/context from document
+    - Common surge percentages: 20%, 25%, 50% (up to 50% is standard, over 50% is rare)
+  * CRITICAL RULES:
+    - If document has BOTH surge positions AND percentage, extract positions (Scenario 1 takes precedence)
+    - If document ONLY has percentage, set surge.percentage and all positions get is_surge: false
+    - If document has NEITHER, set surge: null and all positions get is_surge: false
+    - ONLY extract surge PERCENTAGE - do NOT extract multipliers, premiums, or pricing details
+    - Default all positions to is_surge: false unless clear evidence they are surge positions
 
 Return ONLY valid JSON, no markdown code blocks.
 """
@@ -403,7 +446,8 @@ Return ONLY valid JSON, no markdown code blocks.
             'positions': [],
             'travel': [],
             'odcs': [],
-            'extensions': []
+            'extensions': [],
+            'surge': None
         }
 
     # Summary
@@ -416,13 +460,25 @@ Return ONLY valid JSON, no markdown code blocks.
     travel = result.get('travel', [])
     odcs = result.get('odcs', [])
     extensions = result.get('extensions', [])
+    surge = result.get('surge', None)
 
     print(f"\n  Project: {metadata.get('project_name', 'Unknown')}")
     print(f"  Location: {metadata.get('location', 'Unknown')}")
     print(f"  Duration: {metadata.get('total_years', default_years)} years")
     if extensions:
         print(f"  Extensions: {len(extensions)} period(s)")
-    print(f"\n  Positions extracted: {len(positions)}")
+
+    # Surge detection summary
+    surge_positions = [p for p in positions if p.get('is_surge', False)]
+    if surge_positions:
+        print(f"  Surge: {len(surge_positions)} surge position(s) detected (Scenario 1: Specific positions)")
+    elif surge and surge.get('percentage'):
+        print(f"  Surge: {surge.get('percentage') * 100:.1f}% option (Scenario 2: Percentage-based) - {surge.get('description', 'No description')}")
+
+    print(f"\n  Positions extracted: {len(positions)} total")
+    if surge_positions:
+        print(f"    - Base positions: {len(positions) - len(surge_positions)}")
+        print(f"    - Surge positions: {len(surge_positions)}")
     print(f"  Travel items: {len(travel)}")
     print(f"  ODC items: {len(odcs)}")
 
@@ -432,7 +488,9 @@ Return ONLY valid JSON, no markdown code blocks.
             labor_cat = pos.get('labor_category', 'Unknown')
             hours_y1 = pos.get('hours_per_year', {}).get('1', 0)
             source = pos.get('data_source', 'document')
-            print(f"    {i+1}. {labor_cat[:50]} (Year 1: {hours_y1} hrs, Source: {source})")
+            is_surge = pos.get('is_surge', False)
+            surge_tag = " [SURGE]" if is_surge else ""
+            print(f"    {i+1}. {labor_cat[:50]}{surge_tag} (Year 1: {hours_y1} hrs, Source: {source})")
 
         if len(positions) > 5:
             print(f"    ... and {len(positions) - 5} more positions")

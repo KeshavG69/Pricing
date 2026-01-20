@@ -176,6 +176,28 @@ function TextPreview({ url, filename }: { url: string; filename: string }) {
   );
 }
 
+// Helper to format cell values (round numbers with long decimals to 2 decimal places)
+const formatCellValue = (value: string): string => {
+  if (!value || value.trim() === '') return value;
+
+  // Check if value has a decimal point
+  if (!value.includes('.')) return value;
+
+  // Try to parse as a number
+  const num = parseFloat(value);
+  if (isNaN(num) || !isFinite(num)) return value;
+
+  // Count decimal places in original value
+  const decimalPart = value.split('.')[1];
+  if (!decimalPart || decimalPart.length <= 2) {
+    // Already 2 or fewer decimal places, leave as-is
+    return value;
+  }
+
+  // Has more than 2 decimal places, round to 2
+  return num.toFixed(2);
+};
+
 // Spreadsheet Preview Component (handles XLSX, XLS, CSV)
 const MAX_ROWS = 1000; // Limit rows to prevent browser freeze
 
@@ -306,7 +328,7 @@ function SpreadsheetPreview({ url, filename }: { url: string; filename: string }
                       key={colIndex}
                       className="border-b border-r border-border px-3 py-1.5 whitespace-nowrap"
                     >
-                      {String(row[colIndex] ?? '')}
+                      {formatCellValue(String(row[colIndex] ?? ''))}
                     </td>
                   ))}
                 </tr>

@@ -66,6 +66,7 @@ export default function OverviewTab() {
     subcontractors,
     travel,
     odcs,
+    surge,  // NEW: Surge option data
     rates,
     escalationRates,
     totalYears,
@@ -100,10 +101,7 @@ export default function OverviewTab() {
           const discountRate = pos.gsa_discount_rate || 0;
           const gsaRate = originalGsaRate * (1 - discountRate);
 
-          console.log(`[OVERVIEW GSA] ${pos.labor_category} Year ${yearNum}: originalRate=$${originalGsaRate}, discount=${discountRate}, finalRate=$${gsaRate}`);
-          console.log(`[OVERVIEW GSA] Rates for reverse engineer:`, rates);
           const breakdown = reverseEngineerGSARate(gsaRate, rates);
-          console.log(`[OVERVIEW GSA] Breakdown result:`, breakdown);
 
           // IMPORTANT: For GSA, the breakdown is ONLY for display purposes
           // The actual cost is ALWAYS gsaRate * hours (independent of indirect rates)
@@ -174,7 +172,6 @@ export default function OverviewTab() {
           directLaborTotal += dlAmount;
           fringeTotal += fringeAmount;
           // Track OH by location type
-          console.log(`[OVERVIEW] Position ${pos.labor_category}: location_type="${locType}", ohAmount=$${ohAmount.toFixed(2)}`);
           if (locType === 'On-Site') {
             ohOnsiteTotal += ohAmount;
           } else {
@@ -188,8 +185,10 @@ export default function OverviewTab() {
     });
 
 
-    // Subcontractor costs with escalation
+    // Subcontractor costs with escalation (including OT)
     let subcontractorTotal = 0;
+    const subOTMultiplier = rates.ot_multiplier || 1.5;
+
     subcontractors.forEach((sub) => {
       sub.positions.forEach((pos) => {
         Object.entries(pos.hours_per_year).forEach(([yearStr, hours]) => {
@@ -201,7 +200,15 @@ export default function OverviewTab() {
             const escRate = escalationRates[escKey] || 0;
             escalatedRate *= (1 + escRate);
           }
+
+          // Regular hours cost
           subcontractorTotal += escalatedRate * hours;
+
+          // OT hours cost
+          const otHours = pos.ot_hours_per_year?.[yearStr] || 0;
+          if (otHours > 0) {
+            subcontractorTotal += escalatedRate * subOTMultiplier * otHours;
+          }
         });
       });
     });
@@ -256,8 +263,67 @@ export default function OverviewTab() {
       });
     });
 
+    // NEW: Overtime (OT) costs - Calculate from OT hours × OT multiplier
+    let otTotal = 0;
+    const otMultiplier = rates.ot_multiplier || 1.5;  // Default 1.5x (time-and-a-half)
+
+    positions.forEach((pos) => {
+      const isGSA = isGSAPosition(pos);
+
+      Object.entries(pos.ot_hours_per_year || {}).forEach(([yearStr, otHours]) => {
+        if (otHours <= 0) return;
+
+        const yearNum = parseInt(yearStr);
+
+        if (isGSA) {
+          // GSA: Use discounted GSA rate
+          const originalGsaRate = getGSARateForYear(pos, yearNum);
+          const discountRate = pos.gsa_discount_rate || 0;
+          const discountedGsaRate = originalGsaRate * (1 - discountRate);
+
+          // OT cost = Discounted GSA Rate × OT Multiplier × OT Hours
+          otTotal += discountedGsaRate * otMultiplier * otHours;
+        } else {
+          // BLS: Calculate FBLR with escalation, then apply OT multiplier
+          const baseWage = getEffectiveSalary(pos);
+          const fteHours = pos.standard_fte_hours || 2080;
+
+          // Get escalated wage for this year
+          let escalatedWage = baseWage;
+          for (let y = 1; y < yearNum; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = escalationRates[escKey] || 0;
+            escalatedWage *= (1 + escRate);
+          }
+
+          // Calculate FBLR
+          const dlRate = escalatedWage / fteHours;
+          const fringe = dlRate * rates.fringe;
+          const locationType = pos.location_type || 'On-Site';
+          const ohRate = locationType === 'On-Site' ? rates.oh_onsite : rates.oh_offsite;
+          const oh = (dlRate + fringe) * ohRate;
+          const ga = (dlRate + fringe + oh) * rates.ga;
+          const fee = (dlRate + fringe + oh + ga) * rates.fee;
+          const fblr = dlRate + fringe + oh + ga + fee;
+
+          // OT cost = FBLR × OT Multiplier × OT Hours
+          otTotal += fblr * otMultiplier * otHours;
+        }
+      });
+    });
+
+    // NEW: Surge costs - Calculate from base prime labor × surge percentage × surge multiplier
+    let surgeTotal = 0;
+    if (surge && surge.percentage) {
+      const surgePercentage = surge.percentage;
+      const surgeMultiplier = rates.surge_multiplier || 1.15;  // Default 1.15x (15% premium)
+
+      // Surge is based on base prime labor cost (not including OT)
+      surgeTotal = primeLaborTotal * surgePercentage * surgeMultiplier;
+    }
+
     // Grand total: primeLaborTotal already includes prime fee (via FBLR), so only add subFee
-    const grandTotal = primeLaborTotal + subFee + subcontractorTotal + passthroughTotal + travelTotal + odcTotal;
+    const grandTotal = primeLaborTotal + subFee + subcontractorTotal + passthroughTotal + travelTotal + odcTotal + otTotal + surgeTotal;
 
     return {
       directLaborTotal,
@@ -272,9 +338,11 @@ export default function OverviewTab() {
       feeTotal,
       travelTotal,
       odcTotal,
+      otTotal,  // NEW: Overtime costs
+      surgeTotal,  // NEW: Surge costs
       grandTotal,
     };
-  }, [positions, subcontractors, travel, odcs, rates, escalationRates, advancedModeVersion]);
+  }, [positions, subcontractors, travel, odcs, surge, rates, escalationRates, advancedModeVersion]);
 
   // Calculate year-by-year breakdown
   const yearBreakdown = useMemo(() => {
@@ -290,6 +358,8 @@ export default function OverviewTab() {
       fee: number;
       travel: number;
       odc: number;
+      ot: number;
+      surge: number;
       total: number;
     }> = {};
 
@@ -307,9 +377,14 @@ export default function OverviewTab() {
         fee: 0,
         travel: 0,
         odc: 0,
+        ot: 0,
+        surge: 0,
         total: 0,
       };
     }
+
+    // Define OT multiplier for use throughout calculations
+    const otMultiplier = rates.ot_multiplier || 1.5;
 
     // Prime labor components by year (DL, Fringe, OH, G&A) - calculate directly from positions
     positions.forEach((pos) => {
@@ -391,7 +466,7 @@ export default function OverviewTab() {
       });
     });
 
-    // Subcontractor by year with escalation
+    // Subcontractor by year with escalation (including OT)
     subcontractors.forEach((sub) => {
       sub.positions.forEach((pos) => {
         Object.entries(pos.hours_per_year).forEach(([year, hours]) => {
@@ -404,7 +479,15 @@ export default function OverviewTab() {
               const escRate = escalationRates[escKey] || 0;
               escalatedRate *= (1 + escRate);
             }
+
+            // Regular hours cost
             breakdown[year].subcontractor += escalatedRate * hours;
+
+            // OT hours cost
+            const otHours = pos.ot_hours_per_year?.[year] || 0;
+            if (otHours > 0) {
+              breakdown[year].subcontractor += escalatedRate * otMultiplier * otHours;
+            }
           }
         });
       });
@@ -469,15 +552,68 @@ export default function OverviewTab() {
       });
     });
 
+    // Calculate OT costs by year
+    positions.forEach((pos) => {
+      const isGSA = isGSAPosition(pos);
+
+      Object.entries(pos.ot_hours_per_year || {}).forEach(([yearStr, otHours]) => {
+        if (otHours <= 0 || !breakdown[yearStr]) return;
+        const yearNum = parseInt(yearStr);
+
+        if (isGSA) {
+          const originalGsaRate = getGSARateForYear(pos, yearNum);
+          const discountRate = pos.gsa_discount_rate || 0;
+          const discountedGsaRate = originalGsaRate * (1 - discountRate);
+          breakdown[yearStr].ot += discountedGsaRate * otMultiplier * otHours;
+        } else {
+          const baseWage = getEffectiveSalary(pos);
+          const fteHours = pos.standard_fte_hours || 2080;
+
+          // Get escalated wage for this year
+          let escalatedWage = baseWage;
+          for (let y = 1; y < yearNum; y++) {
+            const escKey = `${y}_to_${y + 1}`;
+            const escRate = escalationRates[escKey] || 0;
+            escalatedWage *= (1 + escRate);
+          }
+
+          // Calculate FBLR
+          const dlRate = escalatedWage / fteHours;
+          const fringe = dlRate * rates.fringe;
+          const locationType = pos.location_type || 'On-Site';
+          const ohRate = locationType === 'On-Site' ? rates.oh_onsite : rates.oh_offsite;
+          const oh = (dlRate + fringe) * ohRate;
+          const ga = (dlRate + fringe + oh) * rates.ga;
+          const fee = (dlRate + fringe + oh + ga) * rates.fee;
+          const fblr = dlRate + fringe + oh + ga + fee;
+
+          breakdown[yearStr].ot += fblr * otMultiplier * otHours;
+        }
+      });
+    });
+
+    // Calculate surge costs by year
+    if (surge && surge.percentage) {
+      const surgePercentage = surge.percentage;
+      const surgeMultiplier = rates.surge_multiplier || 1.15;
+
+      Object.keys(breakdown).forEach((year) => {
+        // Surge is based on base prime labor cost (not including OT)
+        const primeLaborForYear = breakdown[year].directLabor + breakdown[year].fringe +
+                                  breakdown[year].oh + breakdown[year].ga + breakdown[year].fee;
+        breakdown[year].surge = primeLaborForYear * surgePercentage * surgeMultiplier;
+      });
+    }
+
     // Calculate totals
     Object.keys(breakdown).forEach((year) => {
       const data = breakdown[year];
       const primeLabor = data.directLabor + data.fringe + data.oh + data.ga;
-      data.total = primeLabor + data.subcontractor + data.passthrough + data.fee + data.travel + data.odc;
+      data.total = primeLabor + data.subcontractor + data.passthrough + data.fee + data.travel + data.odc + data.ot + data.surge;
     });
 
     return breakdown;
-  }, [positions, subcontractors, travel, odcs, rates, escalationRates, totalYears, advancedModeVersion]);
+  }, [positions, subcontractors, travel, odcs, surge, rates, escalationRates, totalYears, advancedModeVersion]);
 
   const formatCurrency = (value: number) => {
     return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -581,6 +717,22 @@ export default function OverviewTab() {
               amount={costMetrics.odcTotal}
               percentage={(costMetrics.odcTotal / costMetrics.grandTotal) * 100}
               color="bg-blue-600"
+            />
+          )}
+          {costMetrics.otTotal > 0 && (
+            <CostBreakdownBar
+              label="Overtime (OT)"
+              amount={costMetrics.otTotal}
+              percentage={(costMetrics.otTotal / costMetrics.grandTotal) * 100}
+              color="bg-amber-600"
+            />
+          )}
+          {costMetrics.surgeTotal > 0 && (
+            <CostBreakdownBar
+              label="Surge Capacity"
+              amount={costMetrics.surgeTotal}
+              percentage={(costMetrics.surgeTotal / costMetrics.grandTotal) * 100}
+              color="bg-red-600"
             />
           )}
         </CardContent>

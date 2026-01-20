@@ -159,6 +159,9 @@ def convert_intelligent_output_to_dataframe(intelligent_result: Dict[str, Any]) 
         # Extract hours_per_year dict
         hours_per_year = pos.get("hours_per_year", {})
 
+        # Extract ot_hours_per_year if present (optional field)
+        ot_hours_per_year = pos.get("ot_hours_per_year", None)
+
         row = {
             "labor_category": pos.get("labor_category", ""),
             "description": pos.get("description", ""),
@@ -166,7 +169,9 @@ def convert_intelligent_output_to_dataframe(intelligent_result: Dict[str, Any]) 
             "location": pos.get("location"),
             "location_type": pos.get("location_type", "On-Site"),
             "is_key_position": pos.get("is_key_position", False),
+            "is_surge": pos.get("is_surge", False),  # NEW: Surge position flag
             "hours_per_year": hours_per_year,
+            "ot_hours_per_year": ot_hours_per_year,  # NEW: Overtime hours per year
 
             # Metadata (document-level info)
             "base_years": metadata.get("base_years", 1),
@@ -258,7 +263,9 @@ async def process_proposal_documents(
             "smh": 0.065,
             "sub_fee": 0.05,
             "ga_passthrough": 0.025,
-            "ga_adder": 0.0
+            "ga_adder": 0.0,
+            "ot_multiplier": 1.5,  # Overtime multiplier (1.5 = time-and-a-half)
+            "surge_multiplier": 1.15  # Surge pricing multiplier (15% premium)
         }
 
         if organization_id:
@@ -288,6 +295,7 @@ async def process_proposal_documents(
         extracted_travel = parse_result.get("travel", [])
         extracted_odcs = parse_result.get("odcs", [])
         extracted_extensions = parse_result.get("extensions", [])
+        extracted_surge = intelligent_result.get("surge", None)  # Extract surge from raw result
 
         crud.update_proposal(
             proposal_id,
@@ -418,22 +426,49 @@ async def process_proposal_documents(
             key = f"{year}_to_{year + 1}"
             escalation_rates[key] = default_escalation_rate
 
-        # Charge for basic proposal (if payment method configured)
+        # Charge for basic proposal (with free first proposal logic)
         billing_status = "unpaid"
         billing_message = None
+        should_trigger_advanced = False
 
         try:
             stripe_service = get_stripe_service()
             billing_crud = get_billing_crud()
 
-            if stripe_service.is_configured and org and org.get("stripe_customer_id") and org.get("default_payment_method_id"):
-                # Check if already charged (idempotent)
-                if not billing_crud.is_proposal_charged(proposal_id, "basic"):
-                    # Get proposal name for description
-                    proposal_doc = crud.get_by_id(ObjectId(proposal_id))
-                    proposal_name = proposal_doc.get("name", "Untitled") if proposal_doc else "Untitled"
+            # Check if already charged (idempotent)
+            if not billing_crud.is_proposal_charged(proposal_id, "basic"):
+                # Get proposal name for description
+                proposal_doc = crud.get_by_id(ObjectId(proposal_id))
+                proposal_name = proposal_doc.get("name", "Untitled") if proposal_doc else "Untitled"
 
-                    # Create billing record
+                # Check for free first proposal
+                first_free_proposal_id = org.get("first_free_proposal_id") if org else None
+                is_first_proposal = first_free_proposal_id is None
+
+                if is_first_proposal:
+                    # FREE FIRST PROPOSAL
+                    billing_id = billing_crud.create_billing_record(
+                        organization_id=str(org["_id"]),
+                        proposal_id=proposal_id,
+                        charge_type="basic",
+                        amount_cents=0,
+                        description=f"PriceIQ Basic (Free First Proposal): {proposal_name[:50]}",
+                        triggered_by_user_id=user_id,
+                        status="succeeded"
+                    )
+
+                    # Set first_free_proposal_id
+                    org_crud = get_organization_crud()
+                    org_crud.collection.update_one(
+                        {"_id": org["_id"]},
+                        {"$set": {"first_free_proposal_id": ObjectId(proposal_id), "updated_at": datetime.utcnow()}}
+                    )
+
+                    billing_status = "paid"
+                    should_trigger_advanced = True  # Auto-trigger advanced for free first proposal
+
+                elif stripe_service.is_configured and org and org.get("stripe_customer_id") and org.get("default_payment_method_id"):
+                    # PAID PROPOSAL (not first)
                     amount_cents = stripe_service.get_price(ChargeType.BASIC)
                     billing_id = billing_crud.create_billing_record(
                         organization_id=str(org["_id"]),
@@ -477,7 +512,11 @@ async def process_proposal_documents(
                             }}
                         )
                 else:
-                    billing_status = "paid"  # Already charged
+                    # No payment method and not first proposal
+                    billing_status = "unpaid"
+                    billing_message = "Payment method required"
+            else:
+                billing_status = "paid"  # Already charged
         except Exception as billing_error:
             import traceback
             traceback.print_exc()
@@ -494,6 +533,7 @@ async def process_proposal_documents(
                 "progress": 100,
                 "message": billing_message or "Processing complete",
                 "billing_status": billing_status,
+                "should_trigger_advanced": should_trigger_advanced,  # Flag for frontend to auto-trigger advanced
                 "jobs": cleaned_jobs,
                 "metadata": {
                     "total_jobs": len(cleaned_jobs),
@@ -507,7 +547,8 @@ async def process_proposal_documents(
                 "spreadsheet_data": {
                     "travel": extracted_travel,
                     "odcs": extracted_odcs,
-                    "extensions": extracted_extensions
+                    "extensions": extracted_extensions,
+                    "surge": extracted_surge  # Surge option data (percentage + description)
                 }
             }
         )

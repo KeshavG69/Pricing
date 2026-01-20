@@ -11,7 +11,7 @@ from client.soc_vector_search import get_soc_vector_search_client
 from client.oews_mongodb import get_oews_mongo_client
 from client.gsa_pinecone import get_gsa_pinecone_client
 from utils.company_repository import get_company_repository_crud
-
+from client.help_center_pinecone import get_help_center_pinecone_client
 
 def create_custom_retreiver(description: Optional[str] = None):
     """
@@ -289,5 +289,51 @@ def create_gsa_rate_tool(organization_id: str, file_id: str, contract_start_date
     return gsa_rate_tool
 
 
+# ============================================================================
+# HELP CENTER TOOLS
+# ============================================================================
+
+def create_help_center_retriever():
+    """
+    Create a retriever for help center documentation search.
+
+    Args:
+        category: Optional category filter (e.g., "getting-started", "pricing")
+
+    Returns:
+        Callable retriever function for agno agents
+    """
+    
+
+    pinecone_client = get_help_center_pinecone_client()
+
+    def help_center_retriever(
+        query: str,
+        agent: Optional[Agent] = None,
+        num_documents: int = 5,
+        **kwargs
+    ) -> List[Dict[str, Any]]:
+        """
+        Search help center documentation using Pinecone vector search.
+
+        Args:
+            query: User question or search query
+            num_documents: Maximum number of results to return
+
+        Returns:
+            List of dicts with content, metadata, and score
+        """
+        # Handle None value from agno (use default of 5)
+        k = num_documents if num_documents is not None else 5
+
+        results = pinecone_client.search(
+            query=query,
+            namespace="help-center",
+            top_k=k
+        )
+
+        return results
+
+    return help_center_retriever
 
 
