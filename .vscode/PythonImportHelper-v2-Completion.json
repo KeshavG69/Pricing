@@ -2002,6 +2002,14 @@
         "documentation": {}
     },
     {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
         "label": "pricing",
         "importPath": "routers",
         "description": "routers",
@@ -4363,6 +4371,14 @@
         "description": "models.proposal",
         "isExtraImport": true,
         "detail": "models.proposal",
+        "documentation": {}
+    },
+    {
+        "label": "parse_document_intelligent",
+        "importPath": "client.intelligent_parser",
+        "description": "client.intelligent_parser",
+        "isExtraImport": true,
+        "detail": "client.intelligent_parser",
         "documentation": {}
     },
     {

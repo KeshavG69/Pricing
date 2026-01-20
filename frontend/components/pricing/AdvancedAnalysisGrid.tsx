@@ -25,6 +25,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     subcontractors,
     travel,
     odcs,
+    surge,  // NEW: Surge option data
     extensions,
     rates,
     escalationRates,
@@ -55,6 +56,25 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     totalOH: aggregates.totalOH,
     totalGA: aggregates.totalGA
   });
+
+  // Check if proposal has any OT hours (to conditionally show OT columns)
+  const hasOvertimeHours = useMemo(() => {
+    // Check prime positions
+    const primeHasOT = positionsAdvanced.some(pos => {
+      if (!pos.ot_hours_per_year) return false;
+      return Object.values(pos.ot_hours_per_year).some(hours => hours > 0);
+    });
+
+    // Check subcontractor positions
+    const subHasOT = subcontractors.some(sub =>
+      sub.positions.some(pos => {
+        if (!pos.ot_hours_per_year) return false;
+        return Object.values(pos.ot_hours_per_year).some(hours => hours > 0);
+      })
+    );
+
+    return primeHasOT || subHasOT;
+  }, [positionsAdvanced, subcontractors]);
 
   // Travel modal state
   const [isTravelModalOpen, setIsTravelModalOpen] = useState(false);
@@ -158,9 +178,20 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     return result;
   }, [aggregates]);
 
-  // Calculate subcontractor costs by year with compound escalation
+  // Calculate OT costs by year
+  const otCostsByYear = useMemo(() => {
+    const result: Record<string, number> = {};
+    Object.entries(aggregates.byYear).forEach(([year, yearData]) => {
+      result[year] = yearData.ot || 0;
+    });
+    return result;
+  }, [aggregates]);
+
+  // Calculate subcontractor costs by year with compound escalation (including OT)
   const subcontractorCostsByYear = useMemo(() => {
     const result: Record<string, number> = {};
+    const otMultiplier = rates.ot_multiplier || 1.5;
+
     subcontractors.forEach((sub) => {
       sub.positions.forEach((pos) => {
         Object.entries(pos.hours_per_year).forEach(([yearStr, hours]) => {
@@ -175,12 +206,19 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
             escalatedRate *= (1 + escRate);
           }
 
+          // Regular hours cost
           result[yearStr] += hours * escalatedRate;
+
+          // OT hours cost
+          const otHours = pos.ot_hours_per_year?.[yearStr] || 0;
+          if (otHours > 0) {
+            result[yearStr] += otHours * escalatedRate * otMultiplier;
+          }
         });
       });
     });
     return result;
-  }, [subcontractors, escalationRates]);
+  }, [subcontractors, escalationRates, rates.ot_multiplier]);
 
   // Calculate prime hours by year from positionsAdvanced
   const primeHoursByYear = useMemo(() => {
@@ -194,7 +232,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     return result;
   }, [positionsAdvanced]);
 
-  // Calculate subcontractor hours by year
+  // Calculate subcontractor hours by year (regular hours only, OT tracked separately)
   const subcontractorHoursByYear = useMemo(() => {
     const result: Record<string, number> = {};
     subcontractors.forEach((sub) => {
@@ -309,8 +347,35 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     return result;
   }, [odcs, rates.smh, totalYears, escalationRates]);
 
-  // Calculate grand total (includes prime labor, subcontractors, passthrough, fee, Travel, and ODCs)
-  // Formula: Grand Total = Labor CPFF (prime + sub + passthrough + fee) + Total Travel (with G&A) + Total ODCs (with S&MH)
+  // Calculate Surge costs by year (base labor cost × surge percentage × surge multiplier)
+  // Formula: Surge Cost = Base Prime Labor Cost × Surge Percentage × Surge Multiplier
+  const surgeCostsByYear = useMemo(() => {
+    const result: Record<string, number> = {};
+
+    // If no surge option or no percentage, return zero costs
+    if (!surge || !surge.percentage) {
+      for (let year = 1; year <= totalYears; year++) {
+        result[year.toString()] = 0;
+      }
+      return result;
+    }
+
+    const surgePercentage = surge.percentage;
+    const surgeMultiplier = rates.surge_multiplier || 1.15;  // Default 1.15x (15% premium)
+
+    for (let year = 1; year <= totalYears; year++) {
+      const yearStr = year.toString();
+      const baseLaborCost = primeLaborByYear[yearStr] || 0;
+
+      // Surge = Base Labor × Percentage × Multiplier
+      result[yearStr] = baseLaborCost * surgePercentage * surgeMultiplier;
+    }
+
+    return result;
+  }, [surge, primeLaborByYear, rates.surge_multiplier, totalYears]);
+
+  // Calculate grand total (includes prime labor, subcontractors, passthrough, fee, Travel, ODCs, and Surge)
+  // Formula: Grand Total = Labor CPFF (prime + OT + sub + passthrough + fee) + Total Travel (with G&A) + Total ODCs (with S&MH) + Surge
   const grandTotal = useMemo(() => {
     const byYear: { [year: string]: number } = {};
     let total = 0;
@@ -318,27 +383,31 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     // Get all years
     const allYears = new Set([
       ...Object.keys(primeLaborByYear),
+      ...Object.keys(otCostsByYear),
       ...Object.keys(subcontractorCostsByYear),
       ...Object.keys(passthroughByYear),
       ...Object.keys(feeByYear),
       ...Object.keys(travelCostsByYear),
       ...Object.keys(odcCostsByYear),
+      ...Object.keys(surgeCostsByYear),  // NEW: Include surge costs
     ]);
 
     allYears.forEach((year) => {
       const primeLabor = primeLaborByYear[year] || 0;
+      const otCost = otCostsByYear[year] || 0;
       const subLabor = subcontractorCostsByYear[year] || 0;
       const passthrough = passthroughByYear[year] || 0;
       const fee = feeByYear[year] || 0;
       const travelCost = travelCostsByYear[year] || 0;
       const odc = odcCostsByYear[year] || 0;
+      const surgeCost = surgeCostsByYear[year] || 0;  // NEW: Add surge costs
 
-      byYear[year] = primeLabor + subLabor + passthrough + fee + travelCost + odc;
+      byYear[year] = primeLabor + otCost + subLabor + passthrough + fee + travelCost + odc + surgeCost;
       total += byYear[year];
     });
 
     return { byYear, total };
-  }, [primeLaborByYear, subcontractorCostsByYear, passthroughByYear, feeByYear, travelCostsByYear, odcCostsByYear]);
+  }, [primeLaborByYear, otCostsByYear, subcontractorCostsByYear, passthroughByYear, feeByYear, travelCostsByYear, odcCostsByYear, surgeCostsByYear]);
 
   return (
     <div className="space-y-1">
@@ -367,6 +436,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
         manualOverrides={manualOverrides}
         onToggleExpand={togglePositionExpansion}
         onCellChange={handleCellChange}
+        hasOvertimeHours={hasOvertimeHours}
         onDeletePosition={handleDeletePosition}
         onUpdatePosition={updateAdvancedPosition}
         isAdvancedMode={isAdvancedMode}
@@ -387,6 +457,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
         primeHoursByYear={primeHoursByYear}
         subHoursByYear={subcontractorHoursByYear}
         primeLaborByYear={primeLaborByYear}
+        otCostsByYear={otCostsByYear}
         subLaborByYear={subcontractorCostsByYear}
         passthroughByYear={passthroughByYear}
         feeByYear={feeByYear}
@@ -417,43 +488,41 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
         extensions={extensions}
       />
 
-      {/* Travel Section - SEPARATE from ODCs, uses G&A Rate - Only show if travel items exist */}
-      {travel.length > 0 && (
-        <TravelSection
-          travel={travel}
-          totalYears={totalYears}
-          extensions={extensions}
-          gaRate={rates.ga}
-          escalationRates={escalationRates}
-          onAdd={handleAddTravel}
-          onEdit={handleEditTravel}
-          onDelete={deleteTravel}
-        />
-      )}
+      {/* Travel Section - SEPARATE from ODCs, uses G&A Rate */}
+      <TravelSection
+        travel={travel}
+        totalYears={totalYears}
+        extensions={extensions}
+        gaRate={rates.ga}
+        escalationRates={escalationRates}
+        onAdd={handleAddTravel}
+        onEdit={handleEditTravel}
+        onDelete={deleteTravel}
+      />
 
-      {/* ODC Section - Materials, Equipment, etc., uses SMH Rate - Only show if ODC items exist */}
-      {odcs.length > 0 && (
-        <ODCSection
-          odcs={odcs}
-          totalYears={totalYears}
-          extensions={extensions}
-          smhRate={rates.smh || 0}
-          escalationRates={escalationRates}
-          onAdd={handleAddODC}
-          onEdit={handleEditODC}
-          onDelete={deleteODC}
-        />
-      )}
+      {/* ODC Section - Materials, Equipment, etc., uses SMH Rate */}
+      <ODCSection
+        odcs={odcs}
+        totalYears={totalYears}
+        extensions={extensions}
+        smhRate={rates.smh || 0}
+        escalationRates={escalationRates}
+        onAdd={handleAddODC}
+        onEdit={handleEditODC}
+        onDelete={deleteODC}
+      />
 
           {/* Grand Total */}
           <GrandTotalSection
             grandTotal={grandTotal}
             primeLaborByYear={primeLaborByYear}
+            otCostsByYear={otCostsByYear}
             subLaborByYear={subcontractorCostsByYear}
             passthroughByYear={passthroughByYear}
             feeByYear={feeByYear}
             travelByYear={travelCostsByYear}
             odcByYear={odcCostsByYear}
+            surgeByYear={surgeCostsByYear}  // NEW: Pass surge costs
             totalYears={totalYears}
             extensions={extensions}
           />
