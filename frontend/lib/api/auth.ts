@@ -9,10 +9,16 @@ interface LoginResponse {
   user: User;
 }
 
+interface SignupResponse {
+  email: string;
+  message: string;
+  requires_verification: boolean;
+}
+
 export const authApi = {
   // Sign up new user
-  signup: async (data: SignupData): Promise<User> => {
-    const response = await apiClient.post<User>('/auth/signup', data);
+  signup: async (data: SignupData): Promise<SignupResponse> => {
+    const response = await apiClient.post<SignupResponse>('/auth/signup', data);
     return response.data;
   },
 
