@@ -375,8 +375,8 @@ export default function CompanyRepositoryPage() {
     sub_fee: 0,
     ga_passthrough: 0,
     escalation_rate: 0,
-    ot_multiplier: 1.5,  // NEW: Default 1.5x (time-and-a-half)
-    surge_multiplier: 1.15,  // NEW: Default 1.15x (15% premium)
+    ot_multiplier: 0,
+    surge_multiplier: 0,
   });
 
   // Edit preset dialog state
@@ -408,8 +408,8 @@ export default function CompanyRepositoryPage() {
     sub_fee: 0,
     ga_passthrough: 0,
     escalation_rate: 0,
-    ot_multiplier: 1.5,  // NEW: Default 1.5x (time-and-a-half)
-    surge_multiplier: 1.15,  // NEW: Default 1.15x (15% premium)
+    ot_multiplier: 0,
+    surge_multiplier: 0,
   });
 
   // Organization settings state (for user overrides)
@@ -648,8 +648,8 @@ export default function CompanyRepositoryPage() {
         sub_fee: 0,
         ga_passthrough: 0,
         escalation_rate: 0,
-        ot_multiplier: 1.5,
-        surge_multiplier: 1.15,
+        ot_multiplier: 0,
+        surge_multiplier: 0,
       });
 
       // Invalidate cache and force refresh to get updated presets
@@ -755,8 +755,8 @@ export default function CompanyRepositoryPage() {
         sub_fee: 0,
         ga_passthrough: 0,
         escalation_rate: 0,
-        ot_multiplier: 1.5,
-        surge_multiplier: 1.15,
+        ot_multiplier: 0,
+        surge_multiplier: 0,
       });
 
       // Invalidate cache and force refresh to get updated presets
@@ -1244,11 +1244,11 @@ export default function CompanyRepositoryPage() {
                       </div>
                       <div>
                         <span className="text-muted-foreground">OT Mult: </span>
-                        <span className="font-mono font-semibold">{preset.ot_multiplier ? toPercentageDisplay(preset.ot_multiplier) + '%' : '-'}</span>
+                        <span className="font-mono font-semibold">{toPercentageDisplay(preset.ot_multiplier || 1.5)}%</span>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Surge Mult: </span>
-                        <span className="font-mono font-semibold">{preset.surge_multiplier ? toPercentageDisplay(preset.surge_multiplier) + '%' : '-'}</span>
+                        <span className="font-mono font-semibold">{toPercentageDisplay(preset.surge_multiplier || 1.15)}%</span>
                       </div>
                     </div>
                   </div>
@@ -1531,8 +1531,8 @@ export default function CompanyRepositoryPage() {
             sub_fee: 0,
             ga_passthrough: 0,
             escalation_rate: 0,
-            ot_multiplier: 1.5,
-            surge_multiplier: 1.15,
+            ot_multiplier: 0,
+            surge_multiplier: 0,
           });
         }}
         title="Create New Rate Preset"
@@ -1553,8 +1553,8 @@ export default function CompanyRepositoryPage() {
                   sub_fee: 0,
                   ga_passthrough: 0,
                   escalation_rate: 0,
-                  ot_multiplier: 1.5,
-                  surge_multiplier: 1.15,
+                  ot_multiplier: 0,
+                  surge_multiplier: 0,
                 });
               }}
             >
@@ -1648,7 +1648,7 @@ export default function CompanyRepositoryPage() {
                 label="OT Multiplier"
                 type="number"
                 value={manualPresetRates.ot_multiplier || ''}
-                onChange={(e) => setManualPresetRates({ ...manualPresetRates, ot_multiplier: parseFloat(e.target.value) || 1.5 })}
+                onChange={(e) => setManualPresetRates({ ...manualPresetRates, ot_multiplier: parseFloat(e.target.value) || 0 })}
                 placeholder="150.00"
                 helperText="Overtime multiplier (e.g., 150 for 1.5x time-and-a-half)"
               />
@@ -1656,7 +1656,7 @@ export default function CompanyRepositoryPage() {
                 label="Surge Multiplier"
                 type="number"
                 value={manualPresetRates.surge_multiplier || ''}
-                onChange={(e) => setManualPresetRates({ ...manualPresetRates, surge_multiplier: parseFloat(e.target.value) || 1.15 })}
+                onChange={(e) => setManualPresetRates({ ...manualPresetRates, surge_multiplier: parseFloat(e.target.value) || 0 })}
                 placeholder="115.00"
                 helperText="Surge pricing premium (e.g., 115 for 1.15x or 15% premium)"
               />
@@ -1682,8 +1682,8 @@ export default function CompanyRepositoryPage() {
             sub_fee: 0,
             ga_passthrough: 0,
             escalation_rate: 0,
-            ot_multiplier: 1.5,
-            surge_multiplier: 1.15,
+            ot_multiplier: 0,
+            surge_multiplier: 0,
           });
         }}
         title="Edit Rate Preset"
@@ -1705,8 +1705,8 @@ export default function CompanyRepositoryPage() {
                   sub_fee: 0,
                   ga_passthrough: 0,
                   escalation_rate: 0,
-                  ot_multiplier: 1.5,
-                  surge_multiplier: 1.15,
+                  ot_multiplier: 0,
+                  surge_multiplier: 0,
                 });
               }}
             >
@@ -1800,7 +1800,7 @@ export default function CompanyRepositoryPage() {
                 label="OT Multiplier"
                 type="number"
                 value={editPresetRates.ot_multiplier || ''}
-                onChange={(e) => setEditPresetRates({ ...editPresetRates, ot_multiplier: parseFloat(e.target.value) || 1.5 })}
+                onChange={(e) => setEditPresetRates({ ...editPresetRates, ot_multiplier: parseFloat(e.target.value) || 0 })}
                 placeholder="150.00"
                 helperText="Overtime multiplier (e.g., 150 for 1.5x time-and-a-half)"
               />
@@ -1808,7 +1808,7 @@ export default function CompanyRepositoryPage() {
                 label="Surge Multiplier"
                 type="number"
                 value={editPresetRates.surge_multiplier || ''}
-                onChange={(e) => setEditPresetRates({ ...editPresetRates, surge_multiplier: parseFloat(e.target.value) || 1.15 })}
+                onChange={(e) => setEditPresetRates({ ...editPresetRates, surge_multiplier: parseFloat(e.target.value) || 0 })}
                 placeholder="115.00"
                 helperText="Surge pricing premium (e.g., 115 for 1.15x or 15% premium)"
               />

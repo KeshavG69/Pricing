@@ -472,13 +472,13 @@ export const RatesReferencePanel = ({
                       <div className="bg-muted/50 rounded px-2 py-1.5">
                         <div className="text-muted-foreground mb-0.5">OT Multiplier</div>
                         <div className="font-mono font-semibold text-foreground">
-                          {preset.ot_multiplier ? toPercentageDisplay(preset.ot_multiplier) + '%' : '-'}
+                          {toPercentageDisplay(preset.ot_multiplier || 1.5)}%
                         </div>
                       </div>
                       <div className="bg-muted/50 rounded px-2 py-1.5">
                         <div className="text-muted-foreground mb-0.5">Surge Mult.</div>
                         <div className="font-mono font-semibold text-foreground">
-                          {preset.surge_multiplier ? toPercentageDisplay(preset.surge_multiplier) + '%' : '-'}
+                          {toPercentageDisplay(preset.surge_multiplier || 1.15)}%
                         </div>
                       </div>
                     </div>
