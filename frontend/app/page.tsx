@@ -131,47 +131,59 @@ export default function Home() {
         </section>
 
         {/* Testimonial Section */}
-        <section className="py-16 lg:py-20 bg-white">
+        <section className="py-16 lg:py-20 bg-white overflow-hidden">
           <div className="max-w-7xl mx-auto px-6 sm:px-8">
-            <p className="text-center text-xs sm:text-sm font-bold text-gray-500 mb-4 uppercase tracking-widest">
+            <p className="text-center text-xs sm:text-sm font-bold text-gray-500 mb-4 uppercase tracking-widest animate-fade-in">
               WHAT OUR CUSTOMERS SAY
             </p>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-center mb-12 lg:mb-16 text-gray-900 leading-tight">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-center mb-12 lg:mb-16 text-gray-900 leading-tight animate-slide-up">
               The smart money is on PriceIQ
             </h2>
 
             <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
               {/* Navy stat card */}
-              <div className="bg-[#0D2B50] text-white rounded-2xl p-8 lg:p-10 hover:shadow-2xl transition-shadow duration-300">
-                <h3 className="text-2xl lg:text-3xl font-bold mb-4 leading-tight">
-                  87% of customers say PriceIQ gives them{' '}
-                  <span className="text-[#22C55E]">better pricing accuracy</span>
-                  <sup className="text-base">5</sup>
-                </h3>
-                <p className="text-white/70 text-sm">
-                  Based on customer surveys conducted in Q3 2024
-                </p>
+              <div className="bg-[#0D2B50] text-white rounded-2xl p-8 lg:p-10 hover:shadow-2xl hover:scale-105 transition-all duration-500 animate-slide-in-left group relative overflow-hidden">
+                {/* Animated gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-[#2563eb]/0 via-[#2563eb]/10 to-[#2563eb]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-shimmer"></div>
+
+                <div className="relative z-10">
+                  <h3 className="text-2xl lg:text-3xl font-bold mb-4 leading-tight">
+                    87% of customers say PriceIQ gives them{' '}
+                    <span className="text-[#22C55E] inline-block group-hover:scale-110 transition-transform duration-300">better pricing accuracy</span>
+                    <sup className="text-base">5</sup>
+                  </h3>
+                  <p className="text-white/70 text-sm">
+                    Based on customer surveys conducted in Q3 2024
+                  </p>
+                </div>
               </div>
 
               {/* Cyan testimonial card */}
-              <div className="bg-[#E8F9FA] rounded-2xl p-8 lg:p-10 flex flex-col justify-between hover:shadow-2xl transition-shadow duration-300">
-                <div>
-                  <p className="text-gray-900 text-lg lg:text-xl mb-8 leading-relaxed">
-                    "PriceIQ has completely transformed our proposal process. What used to take us 2-3 days now takes just a few hours. The AI matching is incredibly accurate, and the compliance features give us confidence in every bid."
-                  </p>
-                </div>
-                <div className="flex items-center gap-4">
-                  {/* TODO: Replace with actual customer photo */}
-                  {/* <img src="/images/testimonials/customer-1.jpg" alt="Michael Johnson" className="w-14 h-14 rounded-full object-cover" /> */}
+              <div className="bg-[#E8F9FA] rounded-2xl p-8 lg:p-10 flex flex-col justify-between hover:shadow-2xl hover:scale-105 transition-all duration-500 animate-slide-in-right group relative overflow-hidden">
+                {/* Animated gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-r from-[#22C55E]/0 via-[#22C55E]/10 to-[#22C55E]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-shimmer"></div>
 
-                  {/* Placeholder avatar (remove when real photo is added) */}
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] flex items-center justify-center text-white font-bold text-2xl">
-                    MJ
+                <div className="relative z-10">
+                  <div className="mb-8">
+                    <svg className="w-12 h-12 text-[#2563eb] mb-4 opacity-50" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z" />
+                    </svg>
+                    <p className="text-gray-900 text-lg lg:text-xl leading-relaxed">
+                      "PriceIQ has completely transformed our proposal process. What used to take us 2-3 hours now takes just <span className="font-bold text-[#2563eb]">minutes</span>. The AI matching is incredibly accurate, and the compliance features give us confidence in every bid."
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 relative z-10">
+                  {/* Placeholder avatar with pulse animation */}
+                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] flex items-center justify-center text-white font-bold text-2xl relative group-hover:scale-110 transition-transform duration-300">
+                    <div className="absolute inset-0 rounded-full bg-[#2563eb] animate-ping opacity-20"></div>
+                    <span className="relative z-10">MJ</span>
                   </div>
 
                   <div>
                     <p className="font-bold text-gray-900 text-lg">Michael Johnson</p>
-                    <p className="text-base text-gray-600">Capture Manager, Federal Solutions Inc</p>
+                    <p className="text-base text-gray-600">Capture Manager, NexaGen</p>
                   </div>
                 </div>
               </div>
@@ -180,11 +192,11 @@ export default function Home() {
         </section>
 
         {/* Product Showcase */}
-        <section className="py-16 lg:py-24 bg-white">
+        <section className="py-16 lg:py-24 bg-white overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="grid lg:grid-cols-3 gap-8 lg:gap-12 items-center mb-16">
               {/* Left feature */}
-              <div className="text-center lg:text-right">
+              <div className="text-center lg:text-right animate-slide-in-left">
                 <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 leading-tight">
                   Create and send proposals from anywhere
                 </h3>
@@ -193,55 +205,70 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Center iPhone mockup */}
-              <div className="flex justify-center">
-                <div className="relative w-[280px] h-[560px]">
-                  {/* iPhone frame */}
-                  <div className="absolute inset-0 bg-black rounded-[3rem] shadow-2xl p-3">
+              {/* Center Laptop mockup */}
+              <div className="flex justify-center animate-scale-in" style={{ animationDelay: '0.2s' }}>
+                <div className="relative w-full max-w-[480px]">
+                  {/* Laptop */}
+                  <div className="relative">
                     {/* Screen */}
-                    <div className="w-full h-full bg-white rounded-[2.5rem] overflow-hidden relative">
-                      {/* Status bar */}
-                      <div className="h-6 bg-white flex items-center justify-between px-6 text-xs font-semibold">
-                        <span>9:41</span>
-                        <div className="flex gap-1">
-                          <div className="w-4 h-4 bg-gray-900 rounded-sm"></div>
-                        </div>
-                      </div>
-
-                      {/* App content */}
-                      <div className="p-4 bg-gradient-to-br from-blue-50 to-cyan-50 h-full">
-                        <div className="bg-white rounded-xl p-4 shadow-sm mb-4">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="h-3 w-24 bg-gray-200 rounded"></div>
-                            <div className="h-8 w-16 bg-[#22C55E] rounded-lg"></div>
+                    <div className="bg-gray-900 rounded-t-2xl p-3 shadow-2xl">
+                      <div className="bg-white rounded-lg overflow-hidden aspect-[16/10] relative">
+                        {/* Browser chrome */}
+                        <div className="bg-gray-100 px-4 py-2 flex items-center gap-2 border-b border-gray-200">
+                          <div className="flex gap-1.5">
+                            <div className="w-3 h-3 rounded-full bg-red-400"></div>
+                            <div className="w-3 h-3 rounded-full bg-yellow-400"></div>
+                            <div className="w-3 h-3 rounded-full bg-green-400"></div>
                           </div>
-                          <div className="space-y-2">
-                            <div className="h-2 w-full bg-gray-100 rounded"></div>
-                            <div className="h-2 w-3/4 bg-gray-100 rounded"></div>
+                          <div className="flex-1 bg-white rounded px-3 py-1 text-xs text-gray-500 ml-2">
+                            priceiq.com/workspace
                           </div>
                         </div>
 
-                        <div className="bg-white rounded-xl p-4 shadow-sm">
-                          <div className="h-3 w-20 bg-gray-200 rounded mb-3"></div>
-                          <div className="space-y-3">
-                            {[1,2,3].map((i) => (
-                              <div key={i} className="flex items-center justify-between">
-                                <div className="h-2 w-24 bg-gray-100 rounded"></div>
-                                <div className="h-2 w-16 bg-[#2563eb] rounded"></div>
-                              </div>
-                            ))}
+                        {/* App content */}
+                        <div className="p-4 bg-gradient-to-br from-slate-50 to-blue-50 h-full">
+                          {/* Header */}
+                          <div className="bg-white rounded-lg p-3 shadow-sm mb-3">
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="h-4 w-32 bg-gray-200 rounded"></div>
+                              <div className="h-6 w-20 bg-[#2563eb] rounded"></div>
+                            </div>
+                            <div className="space-y-1.5">
+                              <div className="h-2 w-full bg-gray-100 rounded"></div>
+                              <div className="h-2 w-3/4 bg-gray-100 rounded"></div>
+                            </div>
+                          </div>
+
+                          {/* Data grid */}
+                          <div className="bg-white rounded-lg p-3 shadow-sm">
+                            <div className="grid grid-cols-3 gap-2 mb-2">
+                              <div className="h-2 w-full bg-gray-300 rounded"></div>
+                              <div className="h-2 w-full bg-gray-300 rounded"></div>
+                              <div className="h-2 w-full bg-gray-300 rounded"></div>
+                            </div>
+                            <div className="space-y-2">
+                              {[1,2,3,4].map((i) => (
+                                <div key={i} className="grid grid-cols-3 gap-2">
+                                  <div className="h-2 w-full bg-gray-100 rounded"></div>
+                                  <div className="h-2 w-full bg-blue-100 rounded"></div>
+                                  <div className="h-2 w-full bg-[#22C55E]/20 rounded"></div>
+                                </div>
+                              ))}
+                            </div>
                           </div>
                         </div>
                       </div>
                     </div>
+
+                    {/* Laptop base */}
+                    <div className="h-3 bg-gradient-to-b from-gray-700 to-gray-800 rounded-b-xl"></div>
+                    <div className="h-2 bg-gradient-to-b from-gray-800 to-gray-900 mx-auto w-[60%] rounded-b-lg"></div>
                   </div>
-                  {/* Notch */}
-                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-1/3 h-7 bg-black rounded-b-3xl z-10"></div>
                 </div>
               </div>
 
               {/* Right feature */}
-              <div className="text-center lg:text-left">
+              <div className="text-center lg:text-left animate-slide-in-right" style={{ animationDelay: '0.1s' }}>
                 <h3 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 leading-tight">
                   Automation you can always count on
                 </h3>
@@ -253,7 +280,7 @@ export default function Home() {
 
             {/* Bottom feature boxes */}
             <div className="grid md:grid-cols-2 gap-8 lg:gap-10">
-              <div className="text-center md:text-left">
+              <div className="text-center md:text-left animate-fade-in" style={{ animationDelay: '0.3s' }}>
                 <h3 className="text-xl sm:text-2xl font-bold text-[#2563eb] mb-4 leading-tight">
                   Stay in control with real-time collaboration
                 </h3>
@@ -262,7 +289,7 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="text-center md:text-left">
+              <div className="text-center md:text-left animate-fade-in" style={{ animationDelay: '0.4s' }}>
                 <h3 className="text-xl sm:text-2xl font-bold text-[#2563eb] mb-4 leading-tight">
                   Set your path to winning more contracts
                 </h3>
@@ -272,7 +299,7 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="text-center mt-12">
+            <div className="text-center mt-12 animate-slide-up" style={{ animationDelay: '0.5s' }}>
               <Link href="/auth/signup">
                 <button className="bg-[#22C55E] hover:bg-[#16A34A] text-white px-10 py-4 rounded-xl font-bold text-lg transition-all duration-300 hover:shadow-lg hover:shadow-[#22C55E]/30 hover:-translate-y-0.5">
                   Learn more
@@ -326,119 +353,131 @@ export default function Home() {
         </section>
 
         {/* Feature Grid */}
-        <section className="py-16 lg:py-24 bg-white">
+        <section className="py-16 lg:py-24 bg-white overflow-hidden">
           <div className="max-w-7xl mx-auto px-4 sm:px-6">
             <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
               {/* Feature 1 */}
-              <div className="bg-[#E8F9FA] rounded-2xl p-10 lg:p-12 hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-2 mb-5">
-                  <Target className="w-6 h-6 text-[#2563eb]" />
-                  <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">TRACK PERFORMANCE</p>
+              <div className="bg-[#E8F9FA] rounded-2xl p-10 lg:p-12 hover:shadow-xl hover:scale-105 transition-all duration-500 animate-slide-in-left group relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#2563eb]/0 via-[#2563eb]/5 to-[#2563eb]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-shimmer"></div>
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-5">
+                    <Target className="w-6 h-6 text-[#2563eb]" />
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">TRACK PERFORMANCE</p>
+                  </div>
+                  <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-5 leading-tight">
+                    Stay on top of your pipeline
+                  </h3>
+                  <p className="text-base text-gray-600 mb-6 leading-relaxed">
+                    Monitor all active proposals, track win rates, and identify trends that help you refine your pricing strategy over time.
+                  </p>
+                  <ul className="space-y-3">
+                    {['Real-time proposal tracking', 'Win rate analytics', 'Historical comparisons'].map((item, i) => (
+                      <li key={i} className="flex items-center text-base text-gray-700">
+                        <CheckCircle2 className="w-6 h-6 text-[#22C55E] mr-3 flex-shrink-0" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-5 leading-tight">
-                  Stay on top of your pipeline
-                </h3>
-                <p className="text-base text-gray-600 mb-6 leading-relaxed">
-                  Monitor all active proposals, track win rates, and identify trends that help you refine your pricing strategy over time.
-                </p>
-                <ul className="space-y-3">
-                  {['Real-time proposal tracking', 'Win rate analytics', 'Historical comparisons'].map((item, i) => (
-                    <li key={i} className="flex items-center text-base text-gray-700">
-                      <CheckCircle2 className="w-6 h-6 text-[#22C55E] mr-3 flex-shrink-0" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
               </div>
 
               {/* Feature 2 */}
-              <div className="bg-white border-2 border-gray-200 rounded-2xl p-10 lg:p-12 hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-2 mb-5">
-                  <TrendingUp className="w-6 h-6 text-[#2563eb]" />
-                  <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">SEE INSIGHTS</p>
+              <div className="bg-white border-2 border-gray-200 rounded-2xl p-10 lg:p-12 hover:shadow-xl hover:scale-105 transition-all duration-500 animate-slide-in-right group relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-r from-[#22C55E]/0 via-[#22C55E]/5 to-[#22C55E]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-shimmer"></div>
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-5">
+                    <TrendingUp className="w-6 h-6 text-[#2563eb]" />
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">SEE INSIGHTS</p>
+                  </div>
+                  <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-5 leading-tight">
+                    Spot growth opportunities
+                  </h3>
+                  <p className="text-base text-gray-600 mb-6 leading-relaxed">
+                    Leverage wage data trends, market analysis, and competitive intelligence to position your bids for maximum success.
+                  </p>
+                  <ul className="space-y-3">
+                    {['Market trend analysis', 'Competitive benchmarking', 'Smart recommendations'].map((item, i) => (
+                      <li key={i} className="flex items-center text-base text-gray-700">
+                        <CheckCircle2 className="w-6 h-6 text-[#22C55E] mr-3 flex-shrink-0" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-5 leading-tight">
-                  Spot growth opportunities
-                </h3>
-                <p className="text-base text-gray-600 mb-6 leading-relaxed">
-                  Leverage wage data trends, market analysis, and competitive intelligence to position your bids for maximum success.
-                </p>
-                <ul className="space-y-3">
-                  {['Market trend analysis', 'Competitive benchmarking', 'Smart recommendations'].map((item, i) => (
-                    <li key={i} className="flex items-center text-base text-gray-700">
-                      <CheckCircle2 className="w-6 h-6 text-[#22C55E] mr-3 flex-shrink-0" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
               </div>
 
               {/* Feature 3 */}
-              <div className="bg-white border-2 border-gray-200 rounded-2xl p-10 lg:p-12 hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-2 mb-5">
-                  <FileText className="w-6 h-6 text-[#2563eb]" />
-                  <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">RUN REPORTS</p>
+              <div className="bg-white border-2 border-gray-200 rounded-2xl p-10 lg:p-12 hover:shadow-xl hover:scale-105 transition-all duration-500 animate-slide-in-left group relative overflow-hidden" style={{ animationDelay: '0.2s' }}>
+                <div className="absolute inset-0 bg-gradient-to-r from-[#2563eb]/0 via-[#2563eb]/5 to-[#2563eb]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-shimmer"></div>
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-5">
+                    <FileText className="w-6 h-6 text-[#2563eb]" />
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">RUN REPORTS</p>
+                  </div>
+                  <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-5 leading-tight">
+                    Insightful reports in seconds
+                  </h3>
+                  <p className="text-base text-gray-600 mb-6 leading-relaxed">
+                    Generate compliance-ready pricing volumes with detailed breakdowns, audit trails, and exportable formats your clients expect.
+                  </p>
+                  <ul className="space-y-3">
+                    {['One-click exports', 'Compliance documentation', 'Audit trail tracking'].map((item, i) => (
+                      <li key={i} className="flex items-center text-base text-gray-700">
+                        <CheckCircle2 className="w-6 h-6 text-[#22C55E] mr-3 flex-shrink-0" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-5 leading-tight">
-                  Insightful reports in seconds
-                </h3>
-                <p className="text-base text-gray-600 mb-6 leading-relaxed">
-                  Generate compliance-ready pricing volumes with detailed breakdowns, audit trails, and exportable formats your clients expect.
-                </p>
-                <ul className="space-y-3">
-                  {['One-click exports', 'Compliance documentation', 'Audit trail tracking'].map((item, i) => (
-                    <li key={i} className="flex items-center text-base text-gray-700">
-                      <CheckCircle2 className="w-6 h-6 text-[#22C55E] mr-3 flex-shrink-0" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
               </div>
 
               {/* Feature 4 */}
-              <div className="bg-[#E8F9FA] rounded-2xl p-10 lg:p-12 hover:shadow-xl transition-all duration-300">
-                <div className="flex items-center gap-2 mb-5">
-                  <Clock className="w-6 h-6 text-[#2563eb]" />
-                  <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">SAVE TIME</p>
+              <div className="bg-[#E8F9FA] rounded-2xl p-10 lg:p-12 hover:shadow-xl hover:scale-105 transition-all duration-500 animate-slide-in-right group relative overflow-hidden" style={{ animationDelay: '0.2s' }}>
+                <div className="absolute inset-0 bg-gradient-to-r from-[#22C55E]/0 via-[#22C55E]/5 to-[#22C55E]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-shimmer"></div>
+                <div className="relative z-10">
+                  <div className="flex items-center gap-2 mb-5">
+                    <Clock className="w-6 h-6 text-[#2563eb]" />
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">SAVE TIME</p>
+                  </div>
+                  <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-5 leading-tight">
+                    Accelerate your proposal process
+                  </h3>
+                  <p className="text-base text-gray-600 mb-6 leading-relaxed">
+                    Reduce proposal development time from days to hours with intelligent automation and pre-built compliance templates.
+                  </p>
+                  <ul className="space-y-3">
+                    {['Automated calculations', 'Template library', 'Bulk processing'].map((item, i) => (
+                      <li key={i} className="flex items-center text-base text-gray-700">
+                        <CheckCircle2 className="w-6 h-6 text-[#22C55E] mr-3 flex-shrink-0" />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-5 leading-tight">
-                  Accelerate your proposal process
-                </h3>
-                <p className="text-base text-gray-600 mb-6 leading-relaxed">
-                  Reduce proposal development time from days to hours with intelligent automation and pre-built compliance templates.
-                </p>
-                <ul className="space-y-3">
-                  {['Automated calculations', 'Template library', 'Bulk processing'].map((item, i) => (
-                    <li key={i} className="flex items-center text-base text-gray-700">
-                      <CheckCircle2 className="w-6 h-6 text-[#22C55E] mr-3 flex-shrink-0" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
               </div>
             </div>
           </div>
         </section>
 
         {/* FAQ Section */}
-        <section className="py-20 lg:py-28 bg-gray-50">
+        <section className="py-20 lg:py-28 bg-gray-50 overflow-hidden">
           <div className="max-w-4xl mx-auto px-6 sm:px-8">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-center mb-16 text-gray-900 leading-tight">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-center mb-16 text-gray-900 leading-tight animate-slide-up">
               Frequently asked questions
             </h2>
 
-            <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl shadow-sm overflow-hidden animate-scale-in" style={{ animationDelay: '0.1s' }}>
               {faqs.map((faq, index) => (
-                <div key={index} className="border-b border-gray-200 last:border-b-0">
+                <div key={index} className="border-b border-gray-200 last:border-b-0 hover:bg-gray-50/50 transition-all duration-200">
                   <button
                     onClick={() => setOpenFaq(openFaq === index ? null : index)}
-                    className="w-full px-8 lg:px-10 py-7 flex items-center justify-between text-left hover:bg-gray-50 transition-colors duration-200"
+                    className="w-full px-8 lg:px-10 py-7 flex items-center justify-between text-left group"
                   >
-                    <span className="text-base lg:text-lg font-semibold text-gray-900 pr-8 leading-tight">
+                    <span className="text-base lg:text-lg font-semibold text-gray-900 pr-8 leading-tight group-hover:text-[#2563eb] transition-colors duration-200">
                       {faq.question}
                     </span>
                     <ChevronDown
-                      className={`w-6 h-6 text-gray-500 flex-shrink-0 transition-transform duration-200 ${
+                      className={`w-6 h-6 text-gray-500 flex-shrink-0 transition-all duration-300 group-hover:text-[#2563eb] ${
                         openFaq === index ? 'rotate-180' : ''
                       }`}
                     />
@@ -455,16 +494,16 @@ export default function Home() {
         </section>
 
         {/* Integrations Section */}
-        <section className="py-20 lg:py-28 bg-white">
+        <section className="py-20 lg:py-28 bg-white overflow-hidden">
           <div className="max-w-6xl mx-auto px-6 sm:px-8 text-center">
-            <p className="text-xs sm:text-sm font-bold text-gray-500 mb-6 uppercase tracking-widest">
+            <p className="text-xs sm:text-sm font-bold text-gray-500 mb-6 uppercase tracking-widest animate-fade-in">
               SEAMLESSLY CONNECT APPS
             </p>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-10 text-gray-900 leading-tight">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-10 text-gray-900 leading-tight animate-slide-up" style={{ animationDelay: '0.1s' }}>
               Dozens of integrations
             </h2>
 
-            <button className="mb-16 bg-black hover:bg-gray-800 text-white px-10 py-4 rounded-xl font-bold text-base transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5">
+            <button className="mb-16 bg-black hover:bg-gray-800 text-white px-10 py-4 rounded-xl font-bold text-base transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:scale-105 animate-scale-in" style={{ animationDelay: '0.2s' }}>
               See all integrations
             </button>
 
@@ -473,7 +512,8 @@ export default function Home() {
               {Array.from({ length: 10 }).map((_, i) => (
                 <div
                   key={i}
-                  className="flex items-center justify-center h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg hover:from-gray-200 hover:to-gray-300 transition-all duration-300 hover:scale-105 cursor-pointer"
+                  className="flex items-center justify-center h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg hover:from-gray-200 hover:to-gray-300 transition-all duration-300 hover:scale-110 hover:shadow-lg cursor-pointer animate-fade-in"
+                  style={{ animationDelay: `${0.3 + i * 0.05}s` }}
                 >
                   <div className="w-12 h-12 bg-white/50 rounded-lg flex items-center justify-center">
                     <div className="w-8 h-8 bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] rounded"></div>
@@ -482,7 +522,7 @@ export default function Home() {
               ))}
             </div>
 
-            <p className="text-xl lg:text-2xl font-semibold text-gray-900 leading-tight">
+            <p className="text-xl lg:text-2xl font-semibold text-gray-900 leading-tight animate-slide-up" style={{ animationDelay: '0.8s' }}>
               Unlock ways to work smarter and save time
             </p>
           </div>
@@ -493,21 +533,21 @@ export default function Home() {
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff12_1px,transparent_1px),linear-gradient(to_bottom,#ffffff12_1px,transparent_1px)] bg-[size:32px_32px] opacity-20"></div>
 
           <div className="max-w-5xl mx-auto px-6 sm:px-8 text-center relative z-10">
-            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-8 leading-tight">
+            <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-8 leading-tight animate-scale-in">
               Ready to transform your pricing?
             </h2>
-            <p className="text-lg sm:text-xl text-white/95 mb-12 max-w-3xl mx-auto leading-relaxed">
+            <p className="text-lg sm:text-xl text-white/95 mb-12 max-w-3xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: '0.1s' }}>
               Join hundreds of government contractors who are winning more business with PriceIQ's intelligent automation.
             </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-6 animate-slide-up" style={{ animationDelay: '0.2s' }}>
               <Link href="/auth/signup">
-                <button className="bg-white hover:bg-gray-100 text-[#2563eb] px-12 py-5 rounded-xl font-bold text-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+                <button className="bg-white hover:bg-gray-100 text-[#2563eb] px-12 py-5 rounded-xl font-bold text-lg transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 hover:scale-105">
                   Get started for free
                 </button>
               </Link>
               <div className="flex items-center gap-3 text-white/95">
-                <CheckCircle2 className="w-6 h-6" />
+                <CheckCircle2 className="w-6 h-6 animate-pulse" />
                 <span className="text-base font-medium">No credit card required</span>
               </div>
             </div>
