@@ -15,6 +15,25 @@ interface SignupResponse {
   requires_verification: boolean;
 }
 
+interface ForgotPasswordResponse {
+  message: string;
+  email: string;
+}
+
+interface ResetPasswordResponse {
+  message: string;
+}
+
+interface ChangePasswordResponse {
+  message: string;
+}
+
+interface UpdateProfileResponse {
+  message: string;
+  firstName: string;
+  lastName: string;
+}
+
 export const authApi = {
   // Sign up new user
   signup: async (data: SignupData): Promise<SignupResponse> => {
@@ -48,5 +67,39 @@ export const authApi = {
     await apiClient.post('/auth/logout', {
       refresh_token: refreshToken
     });
+  },
+
+  // Request password reset
+  forgotPassword: async (email: string): Promise<ForgotPasswordResponse> => {
+    const response = await apiClient.post<ForgotPasswordResponse>('/auth/forgot-password', {
+      email,
+    });
+    return response.data;
+  },
+
+  // Reset password with token
+  resetPassword: async (token: string, newPassword: string): Promise<ResetPasswordResponse> => {
+    const response = await apiClient.post<ResetPasswordResponse>('/auth/reset-password', {
+      token,
+      new_password: newPassword,
+    });
+    return response.data;
+  },
+
+  // Change password (authenticated)
+  changePassword: async (currentPassword: string, newPassword: string): Promise<ChangePasswordResponse> => {
+    const response = await apiClient.post<ChangePasswordResponse>('/auth/change-password', {
+      current_password: currentPassword,
+      new_password: newPassword,
+    });
+    return response.data;
+  },
+
+  // Update profile (authenticated)
+  updateProfile: async (name: string): Promise<UpdateProfileResponse> => {
+    const response = await apiClient.put<UpdateProfileResponse>('/auth/profile', {
+      name,
+    });
+    return response.data;
   },
 };

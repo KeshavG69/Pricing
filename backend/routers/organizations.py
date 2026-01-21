@@ -537,6 +537,107 @@ async def remove_organization_member(
     }
 
 
+@router.post("/members/{user_id}/promote")
+async def promote_member_to_admin(
+    user_id: str,
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Promote a user to admin role (admin only).
+
+    Used when an admin needs to promote someone before deleting their own account.
+
+    Checks:
+    - Current user is admin in organization
+    - Target user is active member
+    - Target user is not already admin
+
+    Args:
+        user_id: User's ObjectId as string
+
+    Returns:
+        {
+            "success": true,
+            "user_id": str,
+            "new_role": "admin"
+        }
+
+    Raises:
+        HTTPException 400: If user is already admin or invalid ID
+        HTTPException 403: If user not in your organization
+        HTTPException 404: If user not found
+    """
+    from datetime import datetime
+    from auth.database import get_mongodb_client
+
+    # Get target user
+    user_crud = get_user_crud()
+
+    try:
+        user_oid = ObjectId(user_id)
+        target_user = user_crud.collection.find_one({"_id": user_oid})
+    except:
+        target_user = user_crud.collection.find_one({
+            "$or": [
+                {"_id": user_id},
+                {"id": user_id}
+            ]
+        })
+
+    if not target_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+
+    org_id = current_user["organization_id"]
+
+    # Find user's membership in this organization
+    user_org_membership = None
+    for org in target_user.get("organizations", []):
+        if org["organization_id"] == org_id:
+            user_org_membership = org
+            break
+
+    if not user_org_membership:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="User is not a member of your organization"
+        )
+
+    if user_org_membership["status"] != "active":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User is not an active member"
+        )
+
+    if user_org_membership["role"] == "admin":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="User is already an admin"
+        )
+
+    # Promote user to admin
+    user_crud.collection.update_one(
+        {
+            "_id": target_user["_id"],
+            "organizations.organization_id": org_id
+        },
+        {
+            "$set": {
+                "organizations.$.role": "admin",
+                "updatedAt": datetime.utcnow()
+            }
+        }
+    )
+
+    return {
+        "success": True,
+        "user_id": user_id,
+        "new_role": "admin"
+    }
+
+
 @router.get("/me/stats")
 async def get_organization_stats(current_user: dict = Depends(get_current_user)):
     """

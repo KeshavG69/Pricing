@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
 
-from routers import pricing, auth, excel_export, proposals, organizations, invitations, workspace, soc, company_repository, billing, stripe_webhooks, terms, help_center
+from routers import pricing, auth, excel_export, proposals, organizations, invitations, workspace, soc, company_repository, billing, stripe_webhooks, terms, help_center, users
 from auth.config import FRONTEND_URL
 from app.startup import startup_manager
 
@@ -67,6 +67,7 @@ app.add_middleware(
 
 # Include routers
 app.include_router(auth.router, prefix="/api", tags=["authentication"])
+app.include_router(users.router, prefix="/api/users", tags=["users"])
 app.include_router(terms.router, tags=["terms"])
 app.include_router(organizations.router, tags=["organizations"])
 app.include_router(invitations.router, tags=["invitations"])
