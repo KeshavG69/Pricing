@@ -118,3 +118,62 @@ class EmailService:
         except Exception as e:
             print(f"Failed to send verification email: {e}")
             raise
+
+    def send_password_reset_email(
+        self,
+        to_email: str,
+        token: str,
+        user_name: str = None
+    ):
+        """Send password reset email with secure token link"""
+        reset_url = f"{self.frontend_url}/auth/reset-password?token={token}"
+
+        greeting = f"Hi {user_name}," if user_name else "Hello,"
+
+        html = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #4CAF50;">Reset Your Password</h2>
+                <p>{greeting}</p>
+                <p>We received a request to reset your password for your PriceIQ account. Click the button below to create a new password.</p>
+                <p style="margin: 30px 0;">
+                    <a href="{reset_url}"
+                       style="background-color: #4CAF50; color: white; padding: 14px 28px;
+                              text-decoration: none; border-radius: 4px; display: inline-block;
+                              font-weight: bold;">
+                        Reset Password
+                    </a>
+                </p>
+                <p style="color: #666; font-size: 14px;">
+                    Or copy and paste this link into your browser:<br>
+                    <a href="{reset_url}" style="color: #4CAF50; word-break: break-all;">
+                        {reset_url}
+                    </a>
+                </p>
+                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+                <p style="color: #999; font-size: 12px;">
+                    This password reset link expires in 1 hour.<br>
+                    If you didn't request a password reset, you can safely ignore this email. Your password will not be changed.
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "Reset your password - PriceIQ"
+        message["From"] = self.from_email
+        message["To"] = to_email
+
+        html_part = MIMEText(html, "html")
+        message.attach(html_part)
+
+        try:
+            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+                server.starttls()
+                server.login(self.smtp_user, self.smtp_password)
+                server.send_message(message)
+        except Exception as e:
+            print(f"Failed to send password reset email: {e}")
+            raise

@@ -255,7 +255,7 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
       </div>
 
       {/* New Proposal Button */}
-      <div className="p-4 border-b border-border">
+      <div className="p-4 border-b border-border" data-tour="upload-button">
         <Link href="/dashboard/upload">
           <Button variant="primary" fullWidth className="shadow-md shadow-primary/10 hover-lift transition-all duration-300">
             <Plus className="w-4 h-4 mr-2 transition-transform duration-200 group-hover:rotate-90" />
@@ -265,7 +265,7 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
       </div>
 
       {/* Proposals List - Middle Section (Scrollable) */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto" data-tour="proposals-list">
         <div className="p-4">
           <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">
             Active Proposals

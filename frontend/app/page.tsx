@@ -684,41 +684,6 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Integrations Section */}
-        <section className="py-20 lg:py-28 bg-white overflow-hidden">
-          <div className="max-w-6xl mx-auto px-6 sm:px-8 text-center">
-            <p className="text-xs sm:text-sm font-bold text-gray-500 mb-6 uppercase tracking-widest animate-fade-in">
-              SEAMLESSLY CONNECT APPS
-            </p>
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-10 text-gray-900 leading-tight animate-slide-up" style={{ animationDelay: '0.1s' }}>
-              Dozens of integrations
-            </h2>
-
-            <button className="mb-16 bg-black hover:bg-gray-800 text-white px-10 py-4 rounded-xl font-bold text-base transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:scale-105 animate-scale-in" style={{ animationDelay: '0.2s' }}>
-              See all integrations
-            </button>
-
-            {/* Integration logo grid */}
-            <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-5 gap-8 lg:gap-12 mb-12">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <div
-                  key={i}
-                  className="flex items-center justify-center h-16 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg hover:from-gray-200 hover:to-gray-300 transition-all duration-300 hover:scale-110 hover:shadow-lg cursor-pointer animate-fade-in"
-                  style={{ animationDelay: `${0.3 + i * 0.05}s` }}
-                >
-                  <div className="w-12 h-12 bg-white/50 rounded-lg flex items-center justify-center">
-                    <div className="w-8 h-8 bg-gradient-to-br from-[#2563eb] to-[#1d4ed8] rounded"></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <p className="text-xl lg:text-2xl font-semibold text-gray-900 leading-tight animate-slide-up" style={{ animationDelay: '0.8s' }}>
-              Unlock ways to work smarter and save time
-            </p>
-          </div>
-        </section>
-
         {/* Final CTA */}
         <section className="py-24 lg:py-32 bg-[#2563eb] relative overflow-hidden">
           <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff12_1px,transparent_1px),linear-gradient(to_bottom,#ffffff12_1px,transparent_1px)] bg-[size:32px_32px] opacity-20"></div>

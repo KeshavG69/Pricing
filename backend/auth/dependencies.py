@@ -57,6 +57,13 @@ async def get_current_user(
                 detail="User not found"
             )
 
+        # Check if user account is deleted
+        if user.get("status") == "deleted":
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Account has been deleted"
+            )
+
         # Check blacklist in-memory (no extra DB call)
         blacklisted_tokens = user.get("blacklisted_tokens", [])
         for bt in blacklisted_tokens:

@@ -28,6 +28,9 @@ from auth.refresh_token import (
 from auth.google_auth import GoogleAuthService
 from auth.dependencies import get_current_user as get_current_user_from_deps
 from utils.email_verification import get_email_verification_crud
+from utils.password_reset import get_password_reset_crud
+from utils.onboarding import get_onboarding_crud
+from utils.helpers import serialize_doc
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -40,6 +43,28 @@ class VerifyEmailRequest(BaseModel):
 class ResendVerificationRequest(BaseModel):
     """Request body for resending verification email"""
     email: EmailStr
+
+
+class ForgotPasswordRequest(BaseModel):
+    """Request body for password reset request"""
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    """Request body for password reset"""
+    token: str
+    new_password: str
+
+
+class ChangePasswordRequest(BaseModel):
+    """Request body for authenticated password change"""
+    current_password: str
+    new_password: str
+
+
+class UpdateProfileRequest(BaseModel):
+    """Request body for updating user profile"""
+    name: str
 
 
 @router.post("/signup")
@@ -164,12 +189,40 @@ async def login(user_data: UserLogin, request: Request):
         user.terms_accepted_at = user_doc.get("terms_accepted_at")
         user.needs_terms_acceptance = needs_terms_acceptance
 
+        # Fetch onboarding progress (single query, indexed)
+        onboarding_progress = None
+        if user.organization_id and user.role:
+            onboarding_crud = get_onboarding_crud()
+            progress = onboarding_crud.get_or_create_progress(
+                user_id=str(user_doc["_id"]),
+                organization_id=str(user.organization_id),
+                role=user.role
+            )
+            if progress:
+                onboarding_progress = serialize_doc(progress)
+
+        # Convert user to dict and add onboarding_progress
+        user_dict = {
+            "id": str(user_doc["_id"]),
+            "email": user.email,
+            "firstName": user.firstName,
+            "lastName": user.lastName,
+            "organization_id": user.organization_id,
+            "role": user.role,
+            "status": user.status,
+            "created_at": user_doc["createdAt"].isoformat() if user_doc.get("createdAt") else None,
+            "terms_accepted_version": user.terms_accepted_version,
+            "terms_accepted_at": user.terms_accepted_at.isoformat() if user.terms_accepted_at else None,
+            "needs_terms_acceptance": user.needs_terms_acceptance,
+            "onboarding_progress": onboarding_progress
+        }
+
         # Return tokens in response body (not cookies)
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
             "token_type": "bearer",
-            "user": user
+            "user": user_dict
         }
     except HTTPException:
         raise
@@ -256,12 +309,40 @@ async def google_login(
         user.terms_accepted_at = user_doc.get("terms_accepted_at")
         user.needs_terms_acceptance = needs_terms_acceptance
 
+        # Fetch onboarding progress (single query, indexed)
+        onboarding_progress = None
+        if user.organization_id and user.role:
+            onboarding_crud = get_onboarding_crud()
+            progress = onboarding_crud.get_or_create_progress(
+                user_id=str(user_doc["_id"]),
+                organization_id=str(user.organization_id),
+                role=user.role
+            )
+            if progress:
+                onboarding_progress = serialize_doc(progress)
+
+        # Convert user to dict and add onboarding_progress
+        user_dict = {
+            "id": str(user_doc["_id"]),
+            "email": user.email,
+            "firstName": user.firstName,
+            "lastName": user.lastName,
+            "organization_id": user.organization_id,
+            "role": user.role,
+            "status": user.status,
+            "created_at": user_doc["createdAt"].isoformat() if user_doc.get("createdAt") else None,
+            "terms_accepted_version": user.terms_accepted_version,
+            "terms_accepted_at": user.terms_accepted_at.isoformat() if user.terms_accepted_at else None,
+            "needs_terms_acceptance": user.needs_terms_acceptance,
+            "onboarding_progress": onboarding_progress
+        }
+
         # Return tokens in response body
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
             "token_type": "bearer",
-            "user": user
+            "user": user_dict
         }
 
     except HTTPException:
@@ -276,12 +357,24 @@ async def google_login(
 @router.get("/me")
 async def get_current_user_info(current_user: dict = Depends(get_current_user_from_deps)):
     """
-    Get current authenticated user information
+    Get current authenticated user information including onboarding progress
 
     Returns:
-        User information with current organization role
+        User information with current organization role and onboarding progress
     """
-    # Return user info with organization-specific fields
+    # Fetch onboarding progress (single query, indexed)
+    onboarding_progress = None
+    if current_user.get("organization_id") and current_user.get("role"):
+        onboarding_crud = get_onboarding_crud()
+        progress = onboarding_crud.get_or_create_progress(
+            user_id=str(current_user["_id"]),
+            organization_id=str(current_user["organization_id"]),
+            role=current_user["role"]
+        )
+        if progress:
+            onboarding_progress = serialize_doc(progress)
+
+    # Return user info with organization-specific fields and onboarding progress
     return {
         "id": str(current_user["_id"]),
         "email": current_user["email"],
@@ -294,7 +387,9 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user_fr
         # Terms and conditions
         "terms_accepted_version": current_user.get("terms_accepted_version"),
         "terms_accepted_at": current_user.get("terms_accepted_at").isoformat() if current_user.get("terms_accepted_at") else None,
-        "needs_terms_acceptance": current_user.get("needs_terms_acceptance", False)
+        "needs_terms_acceptance": current_user.get("needs_terms_acceptance", False),
+        # Onboarding progress (included to avoid separate API call)
+        "onboarding_progress": onboarding_progress
     }
 
 
@@ -545,4 +640,239 @@ async def resend_verification(resend_data: ResendVerificationRequest):
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to resend verification: {str(e)}"
+        )
+
+
+@router.post("/forgot-password")
+async def forgot_password(request_data: ForgotPasswordRequest):
+    """
+    Request password reset email (public endpoint)
+
+    Args:
+        request_data: Email address to send reset link to
+
+    Returns:
+        Success message (same response whether user exists or not for security)
+    """
+    password_reset_crud = get_password_reset_crud()
+
+    try:
+        # Create reset request and send email
+        password_reset_crud.create_reset_request(request_data.email)
+
+        # Always return success to prevent user enumeration
+        return {
+            "message": "If an account exists with this email, a password reset link has been sent.",
+            "email": request_data.email
+        }
+
+    except ValueError as e:
+        # Rate limiting error - show to user
+        if "Too many" in str(e):
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=str(e)
+            )
+        # Other errors - generic response for security
+        return {
+            "message": "If an account exists with this email, a password reset link has been sent.",
+            "email": request_data.email
+        }
+    except Exception as e:
+        # Log error but don't expose details
+        print(f"Password reset request error: {e}")
+        return {
+            "message": "If an account exists with this email, a password reset link has been sent.",
+            "email": request_data.email
+        }
+
+
+@router.post("/reset-password")
+async def reset_password(reset_data: ResetPasswordRequest):
+    """
+    Reset password using token from email (public endpoint)
+
+    Args:
+        reset_data: Token and new password
+
+    Returns:
+        Success message
+    """
+    password_reset_crud = get_password_reset_crud()
+
+    try:
+        # Validate token and reset password
+        password_reset_crud.reset_password(
+            token=reset_data.token,
+            new_password=reset_data.new_password
+        )
+
+        return {
+            "message": "Password has been reset successfully. You can now login with your new password."
+        }
+
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e)
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Password reset failed: {str(e)}"
+        )
+
+
+@router.post("/change-password")
+async def change_password(
+    change_data: ChangePasswordRequest,
+    current_user: dict = Depends(get_current_user_from_deps)
+):
+    """
+    Change password for authenticated user (requires current password)
+
+    Args:
+        change_data: Current password and new password
+        current_user: Current authenticated user
+
+    Returns:
+        Success message
+    """
+    import bcrypt
+    from auth.database import get_mongodb_client
+
+    try:
+        # Validate new password strength
+        if len(change_data.new_password) < 8:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="New password must be at least 8 characters long"
+            )
+
+        # Get user from database
+        users_collection = get_mongodb_client().get_users_collection()
+        user = users_collection.find_one({"_id": current_user["_id"]})
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found"
+            )
+
+        # Verify current password
+        if not bcrypt.checkpw(
+            change_data.current_password.encode('utf-8'),
+            user["password"].encode('utf-8')
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Current password is incorrect"
+            )
+
+        # Check if new password is same as current
+        if change_data.current_password == change_data.new_password:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="New password must be different from current password"
+            )
+
+        # Hash new password
+        hashed_password = bcrypt.hashpw(
+            change_data.new_password.encode('utf-8'),
+            bcrypt.gensalt()
+        )
+
+        # Update password
+        result = users_collection.update_one(
+            {"_id": current_user["_id"]},
+            {
+                "$set": {
+                    "password": hashed_password.decode('utf-8'),
+                    "updatedAt": datetime.utcnow()
+                }
+            }
+        )
+
+        if result.modified_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update password"
+            )
+
+        return {
+            "message": "Password changed successfully"
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Password change failed: {str(e)}"
+        )
+
+
+@router.put("/profile")
+async def update_profile(
+    profile_data: UpdateProfileRequest,
+    current_user: dict = Depends(get_current_user_from_deps)
+):
+    """
+    Update user profile name (requires authentication)
+
+    Args:
+        profile_data: Updated name
+        current_user: Current authenticated user
+
+    Returns:
+        Updated user info
+    """
+    from auth.database import get_mongodb_client
+
+    try:
+        # Validate name
+        name = profile_data.name.strip()
+        if not name:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Name cannot be empty"
+            )
+
+        # Split name into first and last (simple split on space)
+        name_parts = name.split(maxsplit=1)
+        firstName = name_parts[0]
+        lastName = name_parts[1] if len(name_parts) > 1 else ""
+
+        # Update user in database
+        users_collection = get_mongodb_client().get_users_collection()
+        result = users_collection.update_one(
+            {"_id": current_user["_id"]},
+            {
+                "$set": {
+                    "firstName": firstName,
+                    "lastName": lastName,
+                    "updatedAt": datetime.utcnow()
+                }
+            }
+        )
+
+        if result.modified_count == 0:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update profile"
+            )
+
+        # Return updated user info
+        return {
+            "message": "Profile updated successfully",
+            "firstName": firstName,
+            "lastName": lastName
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Profile update failed: {str(e)}"
         )

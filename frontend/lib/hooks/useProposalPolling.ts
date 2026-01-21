@@ -4,13 +4,13 @@ import { proposalsApi } from '../api/proposals';
 
 /**
  * Custom hook to poll proposal processing status
- * Polls the backend every 10 seconds until status is 'completed' or 'error'
+ * Polls the backend every 30 seconds until status is 'completed' or 'error'
  *
  * @param proposalId - The ID of the proposal to poll
- * @param interval - Polling interval in milliseconds (default: 10000ms / 10 seconds)
+ * @param interval - Polling interval in milliseconds (default: 30000ms / 30 seconds)
  * @returns Object containing status, isPolling flag, and error
  */
-export function useProposalPolling(proposalId: string | null, interval = 10000) {
+export function useProposalPolling(proposalId: string | null, interval = 30000) {
   const [status, setStatus] = useState<ProposalStatus | null>(null);
   const [isPolling, setIsPolling] = useState(false);
   const [error, setError] = useState<string | null>(null);
