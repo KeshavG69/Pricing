@@ -10,6 +10,7 @@ export interface TaskDefinition {
   label: string;
   description: string;
   order: number;
+  required_role?: 'admin' | null; // null means both admin and user can see it
 }
 
 export interface CompletionStats {
@@ -17,6 +18,55 @@ export interface CompletionStats {
   total_count: number;
   percentage: number;
 }
+
+// Static task definitions (no API call needed)
+export const ONBOARDING_TASKS: TaskDefinition[] = [
+  {
+    id: "tour_completed",
+    label: "Complete product tour",
+    description: "Take a guided tour of PriceIQ features",
+    order: 1,
+    required_role: null, // Both admin and user
+  },
+  {
+    id: "first_proposal_uploaded",
+    label: "Upload your first proposal",
+    description: "Upload a contract document to get started",
+    order: 2,
+    required_role: null, // Both admin and user
+  },
+  {
+    id: "rates_configured",
+    label: "Configure default rates",
+    description: "Set your organization's Fringe, OH, G&A, and Fee rates",
+    order: 3,
+    required_role: 'admin', // Admin only
+  },
+  {
+    id: "payment_added",
+    label: "Add payment method",
+    description: "Add a credit card to enable proposal generation",
+    order: 4,
+    required_role: 'admin', // Admin only
+  },
+  {
+    id: "team_invited",
+    label: "Invite team members",
+    description: "Collaborate by inviting colleagues to your workspace",
+    order: 5,
+    required_role: 'admin', // Admin only
+  },
+];
+
+/**
+ * Filter tasks by user role (client-side)
+ */
+export const getTaskDefinitionsByRole = (role: 'admin' | 'user'): TaskDefinition[] => {
+  return ONBOARDING_TASKS.filter(task => {
+    // Include task if no role requirement or user is admin and task requires admin
+    return task.required_role === null || (role === 'admin' && task.required_role === 'admin');
+  });
+};
 
 export interface OnboardingProgress {
   id: string;
@@ -108,6 +158,14 @@ export const completeTour = async (skipped: boolean = false): Promise<{ message:
   const response = await apiClient.post<{ message: string; progress: OnboardingProgress }>('/onboarding/tour/complete', {
     skipped
   });
+  return response.data;
+};
+
+/**
+ * Restart the product tour
+ */
+export const restartTour = async (): Promise<{ message: string; progress: OnboardingProgress }> => {
+  const response = await apiClient.post<{ message: string; progress: OnboardingProgress }>('/onboarding/tour/restart');
   return response.data;
 };
 

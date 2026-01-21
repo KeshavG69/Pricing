@@ -12,6 +12,9 @@ This script creates indexes on:
 8. token_blacklist collection - for JWT logout
 9. company_repositories collection - for GSA contract queries
 10. billing collection - for billing history and payment tracking
+11. refresh_tokens collection - for OAuth refresh token management
+12. datatypes collection - for BLS data type lookups
+13. onboarding_progress collection - for user onboarding state tracking
 
 Run this script to create all indexes:
     uv run python scripts/create_indexes.py
@@ -432,6 +435,21 @@ def create_indexes():
         print("   ⚠ Already exists: datatype_code")
 
     # =====================================================================
+    # ONBOARDING_PROGRESS COLLECTION
+    # =====================================================================
+    print("\n13. ONBOARDING_PROGRESS Collection:")
+    onboarding_progress = db.onboarding_progress
+
+    # Compound unique index for user + organization (ALL queries use this pattern)
+    # Query pattern: {"user_id": user_id, "organization_id": organization_id}
+    # Used by: get_progress, update_task, start_tour, update_tour_step, complete_tour,
+    #          restart_tour, dismiss_checklist, toggle_checklist_collapsed
+    if safe_create_index(onboarding_progress, [("user_id", ASCENDING), ("organization_id", ASCENDING)], "user_org_unique_index", unique=True):
+        print("   ✓ Created: user_id + organization_id (unique)")
+    else:
+        print("   ⚠ Already exists: user_id + organization_id (unique)")
+
+    # =====================================================================
     # SUMMARY
     # =====================================================================
     print("\n" + "=" * 60)
@@ -439,7 +457,7 @@ def create_indexes():
     print("=" * 60)
 
     # List all indexes per collection
-    collections = ["proposals", "wage_data", "areas", "occupations", "users", "organizations", "invitations", "token_blacklist", "company_repositories", "billing", "refresh_tokens", "datatypes"]
+    collections = ["proposals", "wage_data", "areas", "occupations", "users", "organizations", "invitations", "token_blacklist", "company_repositories", "billing", "refresh_tokens", "datatypes", "onboarding_progress"]
     for coll_name in collections:
         coll = db[coll_name]
         indexes = list(coll.list_indexes())

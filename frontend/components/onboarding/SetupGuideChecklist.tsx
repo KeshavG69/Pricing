@@ -15,13 +15,24 @@ const TASK_NAVIGATION: Record<string, string> = {
 
 export function SetupGuideChecklist() {
   const router = useRouter();
-  const { progress, taskDefinitions, isLoading, fetchProgress, fetchTaskDefinitions, toggleCollapse, dismissChecklist } = useOnboardingStore();
+  const { progress, taskDefinitions, isLoading, toggleCollapse, getCollapseState, dismissChecklist, getDismissState } = useOnboardingStore();
 
+  // Initialize UI state from localStorage on mount
   useEffect(() => {
-    // Fetch progress and task definitions on mount
-    fetchProgress();
-    fetchTaskDefinitions();
-  }, [fetchProgress, fetchTaskDefinitions]);
+    if (progress) {
+      // Initialize collapse state
+      const storedCollapsed = getCollapseState();
+      if (progress.checklist_collapsed !== storedCollapsed) {
+        toggleCollapse(storedCollapsed);
+      }
+
+      // Initialize dismiss state
+      const storedDismissed = getDismissState();
+      if (progress.checklist_dismissed !== storedDismissed) {
+        dismissChecklist(storedDismissed);
+      }
+    }
+  }, [progress?.id]); // Only run when progress changes
 
   // Don't render if dismissed or no progress yet
   if (!progress || progress.checklist_dismissed) {
@@ -36,20 +47,12 @@ export function SetupGuideChecklist() {
   const isCollapsed = progress.checklist_collapsed;
   const stats = progress.completion_stats;
 
-  const handleToggleCollapse = async () => {
-    try {
-      await toggleCollapse(!isCollapsed);
-    } catch (error) {
-      console.error('Failed to toggle collapse:', error);
-    }
+  const handleToggleCollapse = () => {
+    toggleCollapse(!isCollapsed);
   };
 
-  const handleDismiss = async () => {
-    try {
-      await dismissChecklist(true);
-    } catch (error) {
-      console.error('Failed to dismiss checklist:', error);
-    }
+  const handleDismiss = () => {
+    dismissChecklist(true);
   };
 
   const handleTaskClick = (taskId: string) => {

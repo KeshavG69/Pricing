@@ -244,6 +244,49 @@ async def complete_tour(
         )
 
 
+@router.post("/tour/restart")
+async def restart_tour(current_user: dict = Depends(get_current_user)):
+    """
+    Reset tour state to allow user to replay the tour
+
+    Returns:
+        Success message with updated progress (role-filtered)
+    """
+    try:
+        onboarding_crud = get_onboarding_crud()
+
+        success = onboarding_crud.restart_tour(
+            user_id=str(current_user["_id"]),
+            organization_id=str(current_user["organization_id"])
+        )
+
+        if not success:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Failed to restart tour"
+            )
+
+        # Get updated progress (filtered by role)
+        progress = onboarding_crud.get_or_create_progress(
+            user_id=str(current_user["_id"]),
+            organization_id=str(current_user["organization_id"]),
+            role=current_user.get("role", "user")
+        )
+
+        return {
+            "message": "Tour restarted successfully",
+            "progress": serialize_doc(progress)
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to restart tour: {str(e)}"
+        )
+
+
 @router.put("/checklist/dismiss")
 async def dismiss_checklist(
     request: DismissChecklistRequest,

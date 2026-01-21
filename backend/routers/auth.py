@@ -29,6 +29,8 @@ from auth.google_auth import GoogleAuthService
 from auth.dependencies import get_current_user as get_current_user_from_deps
 from utils.email_verification import get_email_verification_crud
 from utils.password_reset import get_password_reset_crud
+from utils.onboarding import get_onboarding_crud
+from utils.helpers import serialize_doc
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
 
@@ -187,12 +189,40 @@ async def login(user_data: UserLogin, request: Request):
         user.terms_accepted_at = user_doc.get("terms_accepted_at")
         user.needs_terms_acceptance = needs_terms_acceptance
 
+        # Fetch onboarding progress (single query, indexed)
+        onboarding_progress = None
+        if user.organization_id and user.role:
+            onboarding_crud = get_onboarding_crud()
+            progress = onboarding_crud.get_or_create_progress(
+                user_id=str(user_doc["_id"]),
+                organization_id=str(user.organization_id),
+                role=user.role
+            )
+            if progress:
+                onboarding_progress = serialize_doc(progress)
+
+        # Convert user to dict and add onboarding_progress
+        user_dict = {
+            "id": str(user_doc["_id"]),
+            "email": user.email,
+            "firstName": user.firstName,
+            "lastName": user.lastName,
+            "organization_id": user.organization_id,
+            "role": user.role,
+            "status": user.status,
+            "created_at": user_doc["createdAt"].isoformat() if user_doc.get("createdAt") else None,
+            "terms_accepted_version": user.terms_accepted_version,
+            "terms_accepted_at": user.terms_accepted_at.isoformat() if user.terms_accepted_at else None,
+            "needs_terms_acceptance": user.needs_terms_acceptance,
+            "onboarding_progress": onboarding_progress
+        }
+
         # Return tokens in response body (not cookies)
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
             "token_type": "bearer",
-            "user": user
+            "user": user_dict
         }
     except HTTPException:
         raise
@@ -279,12 +309,40 @@ async def google_login(
         user.terms_accepted_at = user_doc.get("terms_accepted_at")
         user.needs_terms_acceptance = needs_terms_acceptance
 
+        # Fetch onboarding progress (single query, indexed)
+        onboarding_progress = None
+        if user.organization_id and user.role:
+            onboarding_crud = get_onboarding_crud()
+            progress = onboarding_crud.get_or_create_progress(
+                user_id=str(user_doc["_id"]),
+                organization_id=str(user.organization_id),
+                role=user.role
+            )
+            if progress:
+                onboarding_progress = serialize_doc(progress)
+
+        # Convert user to dict and add onboarding_progress
+        user_dict = {
+            "id": str(user_doc["_id"]),
+            "email": user.email,
+            "firstName": user.firstName,
+            "lastName": user.lastName,
+            "organization_id": user.organization_id,
+            "role": user.role,
+            "status": user.status,
+            "created_at": user_doc["createdAt"].isoformat() if user_doc.get("createdAt") else None,
+            "terms_accepted_version": user.terms_accepted_version,
+            "terms_accepted_at": user.terms_accepted_at.isoformat() if user.terms_accepted_at else None,
+            "needs_terms_acceptance": user.needs_terms_acceptance,
+            "onboarding_progress": onboarding_progress
+        }
+
         # Return tokens in response body
         return {
             "access_token": access_token,
             "refresh_token": refresh_token,
             "token_type": "bearer",
-            "user": user
+            "user": user_dict
         }
 
     except HTTPException:
@@ -299,12 +357,24 @@ async def google_login(
 @router.get("/me")
 async def get_current_user_info(current_user: dict = Depends(get_current_user_from_deps)):
     """
-    Get current authenticated user information
+    Get current authenticated user information including onboarding progress
 
     Returns:
-        User information with current organization role
+        User information with current organization role and onboarding progress
     """
-    # Return user info with organization-specific fields
+    # Fetch onboarding progress (single query, indexed)
+    onboarding_progress = None
+    if current_user.get("organization_id") and current_user.get("role"):
+        onboarding_crud = get_onboarding_crud()
+        progress = onboarding_crud.get_or_create_progress(
+            user_id=str(current_user["_id"]),
+            organization_id=str(current_user["organization_id"]),
+            role=current_user["role"]
+        )
+        if progress:
+            onboarding_progress = serialize_doc(progress)
+
+    # Return user info with organization-specific fields and onboarding progress
     return {
         "id": str(current_user["_id"]),
         "email": current_user["email"],
@@ -317,7 +387,9 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user_fr
         # Terms and conditions
         "terms_accepted_version": current_user.get("terms_accepted_version"),
         "terms_accepted_at": current_user.get("terms_accepted_at").isoformat() if current_user.get("terms_accepted_at") else None,
-        "needs_terms_acceptance": current_user.get("needs_terms_acceptance", False)
+        "needs_terms_acceptance": current_user.get("needs_terms_acceptance", False),
+        # Onboarding progress (included to avoid separate API call)
+        "onboarding_progress": onboarding_progress
     }
 
 

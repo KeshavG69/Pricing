@@ -3,31 +3,34 @@ import {
   OnboardingProgress,
   TaskDefinition,
   getOnboardingProgress,
-  getTaskDefinitions,
+  getTaskDefinitionsByRole,
   updateTask as updateTaskApi,
   startTour as startTourApi,
   completeTour as completeTourApi,
-  dismissChecklist as dismissChecklistApi,
-  toggleChecklistCollapse as toggleChecklistCollapseApi,
+  restartTour as restartTourApi,
 } from '@/lib/api/onboarding';
 
 interface OnboardingState {
   // Data
   progress: OnboardingProgress | null;
-  taskDefinitions: TaskDefinition[];
+  taskDefinitions: TaskDefinition[]; // Computed from static data + user role
 
   // UI state
   isLoading: boolean;
   error: string | null;
 
   // Actions
-  fetchProgress: () => Promise<void>;
-  fetchTaskDefinitions: () => Promise<void>;
+  syncProgress: (progress: OnboardingProgress | null) => void; // Sync from user data (no API call)
+  syncTaskDefinitions: (role: 'admin' | 'user') => void; // Sync from static data (no API call)
+  fetchProgress: () => Promise<void>; // Legacy - kept for backward compatibility
   updateTask: (taskId: string, completed: boolean) => Promise<void>;
   startTour: () => Promise<void>;
   completeTour: (skipped?: boolean) => Promise<void>;
-  dismissChecklist: (dismissed?: boolean) => Promise<void>;
-  toggleCollapse: (collapsed: boolean) => Promise<void>;
+  restartTour: () => Promise<void>;
+  dismissChecklist: (dismissed?: boolean) => void; // localStorage only - no API call
+  getDismissState: () => boolean; // Read from localStorage
+  toggleCollapse: (collapsed: boolean) => void; // localStorage only - no API call
+  getCollapseState: () => boolean; // Read from localStorage
   clearError: () => void;
 }
 
@@ -39,7 +42,23 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   error: null,
 
   /**
+   * Sync progress from user data (no API call - progress comes from /api/auth/me)
+   */
+  syncProgress: (progress: OnboardingProgress | null) => {
+    set({ progress, isLoading: false, error: null });
+  },
+
+  /**
+   * Sync task definitions from static data filtered by role (no API call)
+   */
+  syncTaskDefinitions: (role: 'admin' | 'user') => {
+    const taskDefinitions = getTaskDefinitionsByRole(role);
+    set({ taskDefinitions });
+  },
+
+  /**
    * Fetch user's onboarding progress (role-filtered)
+   * LEGACY: Kept for backward compatibility, but prefer syncProgress from user data
    */
   fetchProgress: async () => {
     try {
@@ -52,18 +71,6 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
         isLoading: false,
       });
       console.error('Failed to fetch onboarding progress:', error);
-    }
-  },
-
-  /**
-   * Fetch task definitions (metadata) filtered by role
-   */
-  fetchTaskDefinitions: async () => {
-    try {
-      const response = await getTaskDefinitions();
-      set({ taskDefinitions: response.tasks });
-    } catch (error: any) {
-      console.error('Failed to fetch task definitions:', error);
     }
   },
 
@@ -108,49 +115,82 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   },
 
   /**
-   * Dismiss or restore setup guide checklist
+   * Restart the product tour
    */
-  dismissChecklist: async (dismissed: boolean = true) => {
+  restartTour: async () => {
     try {
-      await dismissChecklistApi(dismissed);
-
-      // Update local state optimistically
-      const currentProgress = get().progress;
-      if (currentProgress) {
-        set({
-          progress: {
-            ...currentProgress,
-            checklist_dismissed: dismissed,
-          },
-        });
-      }
+      const response = await restartTourApi();
+      set({ progress: response.progress });
+      // Note: Navigation should be handled by the calling component
     } catch (error: any) {
-      console.error('Failed to dismiss checklist:', error);
+      set({ error: error.response?.data?.detail || 'Failed to restart tour' });
+      console.error('Failed to restart tour:', error);
       throw error;
     }
   },
 
   /**
-   * Toggle checklist collapsed state
+   * Dismiss or restore setup guide checklist (localStorage only - no API call)
    */
-  toggleCollapse: async (collapsed: boolean) => {
-    try {
-      await toggleChecklistCollapseApi(collapsed);
-
-      // Update local state optimistically
-      const currentProgress = get().progress;
-      if (currentProgress) {
-        set({
-          progress: {
-            ...currentProgress,
-            checklist_collapsed: collapsed,
-          },
-        });
-      }
-    } catch (error: any) {
-      console.error('Failed to toggle checklist:', error);
-      throw error;
+  dismissChecklist: (dismissed: boolean = true) => {
+    // Store in localStorage (UI preference only)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('checklist_dismissed', dismissed.toString());
     }
+
+    // Update local state
+    const currentProgress = get().progress;
+    if (currentProgress) {
+      set({
+        progress: {
+          ...currentProgress,
+          checklist_dismissed: dismissed,
+        },
+      });
+    }
+  },
+
+  /**
+   * Get dismiss state from localStorage
+   */
+  getDismissState: (): boolean => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('checklist_dismissed');
+      return stored === 'true';
+    }
+    return false;
+  },
+
+  /**
+   * Toggle checklist collapsed state (localStorage only - no API call)
+   */
+  toggleCollapse: (collapsed: boolean) => {
+    // Store in localStorage (UI preference only)
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('checklist_collapsed', collapsed.toString());
+    }
+
+    // Update local state
+    const currentProgress = get().progress;
+    if (currentProgress) {
+      set({
+        progress: {
+          ...currentProgress,
+          checklist_collapsed: collapsed,
+        },
+      });
+    }
+  },
+
+  /**
+   * Get collapse state from localStorage
+   */
+  getCollapseState: (): boolean => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('checklist_collapsed');
+      return stored === 'true';
+    }
+    return false;
   },
 
   /**

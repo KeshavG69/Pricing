@@ -4388,6 +4388,102 @@
         "documentation": {}
     },
     {
+        "label": "get_onboarding_crud",
+        "importPath": "utils.onboarding",
+        "description": "utils.onboarding",
+        "isExtraImport": true,
+        "detail": "utils.onboarding",
+        "documentation": {}
+    },
+    {
+        "label": "get_onboarding_crud",
+        "importPath": "utils.onboarding",
+        "description": "utils.onboarding",
+        "isExtraImport": true,
+        "detail": "utils.onboarding",
+        "documentation": {}
+    },
+    {
+        "label": "ONBOARDING_TASKS",
+        "importPath": "utils.onboarding",
+        "description": "utils.onboarding",
+        "isExtraImport": true,
+        "detail": "utils.onboarding",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_doc",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_doc",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_doc",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_docs",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_doc",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_doc",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_docs",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_doc",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_docs",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
         "label": "get_stripe_service",
         "importPath": "client.stripe_client",
         "description": "client.stripe_client",
@@ -4662,70 +4758,6 @@
         "documentation": {}
     },
     {
-        "label": "serialize_doc",
-        "importPath": "utils.helpers",
-        "description": "utils.helpers",
-        "isExtraImport": true,
-        "detail": "utils.helpers",
-        "documentation": {}
-    },
-    {
-        "label": "serialize_doc",
-        "importPath": "utils.helpers",
-        "description": "utils.helpers",
-        "isExtraImport": true,
-        "detail": "utils.helpers",
-        "documentation": {}
-    },
-    {
-        "label": "serialize_docs",
-        "importPath": "utils.helpers",
-        "description": "utils.helpers",
-        "isExtraImport": true,
-        "detail": "utils.helpers",
-        "documentation": {}
-    },
-    {
-        "label": "serialize_doc",
-        "importPath": "utils.helpers",
-        "description": "utils.helpers",
-        "isExtraImport": true,
-        "detail": "utils.helpers",
-        "documentation": {}
-    },
-    {
-        "label": "serialize_doc",
-        "importPath": "utils.helpers",
-        "description": "utils.helpers",
-        "isExtraImport": true,
-        "detail": "utils.helpers",
-        "documentation": {}
-    },
-    {
-        "label": "serialize_docs",
-        "importPath": "utils.helpers",
-        "description": "utils.helpers",
-        "isExtraImport": true,
-        "detail": "utils.helpers",
-        "documentation": {}
-    },
-    {
-        "label": "serialize_doc",
-        "importPath": "utils.helpers",
-        "description": "utils.helpers",
-        "isExtraImport": true,
-        "detail": "utils.helpers",
-        "documentation": {}
-    },
-    {
-        "label": "serialize_docs",
-        "importPath": "utils.helpers",
-        "description": "utils.helpers",
-        "isExtraImport": true,
-        "detail": "utils.helpers",
-        "documentation": {}
-    },
-    {
         "label": "get_help_center_agent",
         "importPath": "agent.help_center_agent",
         "description": "agent.help_center_agent",
@@ -4771,22 +4803,6 @@
         "description": "utils.invitations",
         "isExtraImport": true,
         "detail": "utils.invitations",
-        "documentation": {}
-    },
-    {
-        "label": "get_onboarding_crud",
-        "importPath": "utils.onboarding",
-        "description": "utils.onboarding",
-        "isExtraImport": true,
-        "detail": "utils.onboarding",
-        "documentation": {}
-    },
-    {
-        "label": "ONBOARDING_TASKS",
-        "importPath": "utils.onboarding",
-        "description": "utils.onboarding",
-        "isExtraImport": true,
-        "detail": "utils.onboarding",
         "documentation": {}
     },
     {

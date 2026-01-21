@@ -323,6 +323,42 @@ class OnboardingCRUD:
 
         return result.modified_count > 0 or result.upserted_id is not None
 
+    def restart_tour(
+        self,
+        user_id: str,
+        organization_id: str
+    ) -> bool:
+        """
+        Reset tour state to allow user to replay the tour
+
+        Args:
+            user_id: User's ID
+            organization_id: Organization ID
+
+        Returns:
+            True if successful
+        """
+        result = self.collection.update_one(
+            {
+                "user_id": user_id,
+                "organization_id": organization_id
+            },
+            {
+                "$set": {
+                    "tour_completed": False,
+                    "tour_skipped": False,
+                    "tour_last_step": 0,
+                    "tour_started_at": None,
+                    "tour_completed_at": None,
+                    "tasks.tour_completed": False,
+                    "updated_at": datetime.utcnow()
+                }
+            },
+            upsert=True
+        )
+
+        return result.modified_count > 0 or result.upserted_id is not None
+
     def dismiss_checklist(
         self,
         user_id: str,
