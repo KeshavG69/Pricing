@@ -100,6 +100,20 @@ async def send_invitation(
         invitation_response = serialize_doc(invitation)
         invitation_response.pop("token_hash", None)
 
+        # Auto-completion hook: Mark team invited
+        try:
+            from utils.onboarding import get_onboarding_crud
+            onboarding_crud = get_onboarding_crud()
+            onboarding_crud.update_task(
+                user_id=str(current_user["_id"]),
+                organization_id=str(current_user["organization_id"]),
+                task_id="team_invited",
+                completed=True
+            )
+        except Exception as e:
+            # Don't fail request if onboarding update fails
+            print(f"Failed to update onboarding progress: {e}")
+
         return {
             "message": "Invitation sent successfully",
             "invitation": invitation_response
