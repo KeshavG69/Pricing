@@ -486,20 +486,6 @@ async def generate_excel_from_proposal(
         timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
         filename = f"cost_proposal_{project_config['solicitation_number']}_{timestamp}.xlsx"
 
-        # Auto-completion hook: Mark proposal exported
-        try:
-            from utils.onboarding import get_onboarding_crud
-            onboarding_crud = get_onboarding_crud()
-            onboarding_crud.update_task(
-                user_id=str(current_user["_id"]),
-                organization_id=str(current_user.get("organization_id")),
-                task_id="proposal_exported",
-                completed=True
-            )
-        except Exception as e:
-            # Don't fail request if onboarding update fails
-            print(f"Failed to update onboarding progress: {e}")
-
         # Return as downloadable file
         return StreamingResponse(
             output,

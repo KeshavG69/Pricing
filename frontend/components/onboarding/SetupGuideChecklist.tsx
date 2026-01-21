@@ -1,10 +1,20 @@
 'use client';
 
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useOnboardingStore } from '@/lib/stores/onboardingStore';
 import { Check, ChevronDown, ChevronUp, X } from 'lucide-react';
 
+// Navigation mapping for each task
+const TASK_NAVIGATION: Record<string, string> = {
+  first_proposal_uploaded: '/dashboard/upload',
+  rates_configured: '/dashboard/company-repository',
+  payment_added: '/dashboard/settings/organization?tab=billing',
+  team_invited: '/dashboard/settings/organization?tab=members',
+};
+
 export function SetupGuideChecklist() {
+  const router = useRouter();
   const { progress, taskDefinitions, isLoading, fetchProgress, fetchTaskDefinitions, toggleCollapse, dismissChecklist } = useOnboardingStore();
 
   useEffect(() => {
@@ -39,6 +49,19 @@ export function SetupGuideChecklist() {
       await dismissChecklist(true);
     } catch (error) {
       console.error('Failed to dismiss checklist:', error);
+    }
+  };
+
+  const handleTaskClick = (taskId: string) => {
+    // Don't navigate if task is completed or it's the tour task
+    if (progress?.tasks[taskId] || taskId === 'tour_completed') {
+      return;
+    }
+
+    // Navigate to the appropriate page
+    const navigationPath = TASK_NAVIGATION[taskId];
+    if (navigationPath) {
+      router.push(navigationPath);
     }
   };
 
@@ -94,14 +117,18 @@ export function SetupGuideChecklist() {
           ) : (
             taskDefinitions.map((task) => {
               const isCompleted = progress.tasks[task.id] || false;
+              const isClickable = !isCompleted && task.id !== 'tour_completed' && TASK_NAVIGATION[task.id];
 
               return (
                 <div
                   key={task.id}
+                  onClick={() => handleTaskClick(task.id)}
                   className={`flex items-start gap-3 p-3 rounded-lg transition-all ${
                     isCompleted
                       ? 'bg-green-50 border border-green-100'
-                      : 'bg-gray-50 border border-gray-100 hover:bg-gray-100'
+                      : isClickable
+                      ? 'bg-gray-50 border border-gray-100 hover:bg-blue-50 hover:border-blue-200 cursor-pointer'
+                      : 'bg-gray-50 border border-gray-100'
                   }`}
                 >
                   {/* Checkbox */}

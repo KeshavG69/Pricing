@@ -82,6 +82,7 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
             return (
               <Link key={item.href} href={item.href}>
                 <div
+                  data-tour={item.href === '/dashboard/company-repository' ? 'company-repository' : undefined}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
                     isActive
                       ? 'bg-primary/10 text-primary font-bold shadow-sm'
@@ -184,7 +185,7 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
 
           {/* Dropdown menu */}
           {isProfileMenuOpen && (
-            <div className="absolute top-full right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-2xl py-1 z-50 animate-scale-in">
+            <div className="absolute top-full right-0 mt-2 w-56 bg-card border border-border rounded-lg shadow-2xl py-1 z-50 animate-scale-in" data-tour="settings-menu">
               <Link href="/dashboard/settings">
                 <button
                   onClick={() => setIsProfileMenuOpen(false)}

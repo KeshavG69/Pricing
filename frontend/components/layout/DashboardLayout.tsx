@@ -10,7 +10,7 @@ import ProposalsSidebar from './ProposalsSidebar';
 import { AddPaymentPrompt, PaymentRequiredModal } from '@/components/billing';
 import { TermsBlockingModal } from '@/components/terms/TermsBlockingModal';
 import HelpCenterModal from '@/components/help/HelpCenterModal';
-import { SetupGuideChecklist } from '@/components/onboarding/SetupGuideChecklist';
+import { SetupGuideChecklist, ProductTour } from '@/components/onboarding';
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -84,6 +84,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
       {/* Onboarding Setup Guide Checklist */}
       <SetupGuideChecklist />
+
+      {/* Product Tour */}
+      <ProductTour />
     </div>
   );
 }

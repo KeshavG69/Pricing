@@ -42,18 +42,6 @@ ONBOARDING_TASKS = {
         "description": "Collaborate by inviting colleagues to your workspace",
         "required_role": "admin",
         "order": 5
-    },
-    "workspace_reviewed": {
-        "label": "Review pricing workspace",
-        "description": "Explore the Excel-like pricing editor",
-        "required_role": None,
-        "order": 6
-    },
-    "proposal_exported": {
-        "label": "Export proposal to Excel",
-        "description": "Download your first cost proposal",
-        "required_role": None,
-        "order": 7
     }
 }
 
