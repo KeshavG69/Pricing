@@ -833,6 +833,30 @@
         "documentation": {}
     },
     {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "List",
         "importPath": "typing",
         "description": "typing",
@@ -1106,6 +1130,38 @@
     },
     {
         "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -1554,6 +1610,38 @@
         "documentation": {}
     },
     {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "status",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
         "label": "Depends",
         "importPath": "fastapi",
         "description": "fastapi",
@@ -1563,6 +1651,14 @@
     },
     {
         "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Query",
         "importPath": "fastapi",
         "description": "fastapi",
         "isExtraImport": true,
@@ -2194,6 +2290,14 @@
         "documentation": {}
     },
     {
+        "label": "onboarding",
+        "importPath": "routers",
+        "description": "routers",
+        "isExtraImport": true,
+        "detail": "routers",
+        "documentation": {}
+    },
+    {
         "label": "FRONTEND_URL",
         "importPath": "auth.config",
         "description": "auth.config",
@@ -2524,6 +2628,14 @@
     },
     {
         "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
         "isExtraImport": true,
@@ -3212,6 +3324,14 @@
         "documentation": {}
     },
     {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
         "label": "requests",
         "importPath": "google.auth.transport",
         "description": "google.auth.transport",
@@ -3405,6 +3525,14 @@
     },
     {
         "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
         "importPath": "pydantic",
         "description": "pydantic",
         "isExtraImport": true,
@@ -4180,6 +4308,14 @@
         "documentation": {}
     },
     {
+        "label": "get_current_user",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
         "label": "require_admin",
         "importPath": "auth.dependencies",
         "description": "auth.dependencies",
@@ -4558,6 +4694,14 @@
         "documentation": {}
     },
     {
+        "label": "serialize_doc",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
         "label": "serialize_docs",
         "importPath": "utils.helpers",
         "description": "utils.helpers",
@@ -4627,6 +4771,22 @@
         "description": "utils.invitations",
         "isExtraImport": true,
         "detail": "utils.invitations",
+        "documentation": {}
+    },
+    {
+        "label": "get_onboarding_crud",
+        "importPath": "utils.onboarding",
+        "description": "utils.onboarding",
+        "isExtraImport": true,
+        "detail": "utils.onboarding",
+        "documentation": {}
+    },
+    {
+        "label": "ONBOARDING_TASKS",
+        "importPath": "utils.onboarding",
+        "description": "utils.onboarding",
+        "isExtraImport": true,
+        "detail": "utils.onboarding",
         "documentation": {}
     },
     {
@@ -6444,6 +6604,51 @@
         "documentation": {}
     },
     {
+        "label": "UpdateTaskRequest",
+        "kind": 6,
+        "importPath": "backend.routers.onboarding",
+        "description": "backend.routers.onboarding",
+        "peekOfCode": "class UpdateTaskRequest(BaseModel):\n    \"\"\"Request body for updating a task\"\"\"\n    task_id: str\n    completed: bool\nclass CompleteTourRequest(BaseModel):\n    \"\"\"Request body for completing/skipping tour\"\"\"\n    skipped: bool = False\nclass DismissChecklistRequest(BaseModel):\n    \"\"\"Request body for dismissing checklist\"\"\"\n    dismissed: bool = True",
+        "detail": "backend.routers.onboarding",
+        "documentation": {}
+    },
+    {
+        "label": "CompleteTourRequest",
+        "kind": 6,
+        "importPath": "backend.routers.onboarding",
+        "description": "backend.routers.onboarding",
+        "peekOfCode": "class CompleteTourRequest(BaseModel):\n    \"\"\"Request body for completing/skipping tour\"\"\"\n    skipped: bool = False\nclass DismissChecklistRequest(BaseModel):\n    \"\"\"Request body for dismissing checklist\"\"\"\n    dismissed: bool = True\nclass CollapseChecklistRequest(BaseModel):\n    \"\"\"Request body for toggling checklist collapse\"\"\"\n    collapsed: bool\n@router.get(\"/tasks\")",
+        "detail": "backend.routers.onboarding",
+        "documentation": {}
+    },
+    {
+        "label": "DismissChecklistRequest",
+        "kind": 6,
+        "importPath": "backend.routers.onboarding",
+        "description": "backend.routers.onboarding",
+        "peekOfCode": "class DismissChecklistRequest(BaseModel):\n    \"\"\"Request body for dismissing checklist\"\"\"\n    dismissed: bool = True\nclass CollapseChecklistRequest(BaseModel):\n    \"\"\"Request body for toggling checklist collapse\"\"\"\n    collapsed: bool\n@router.get(\"/tasks\")\nasync def get_task_definitions(current_user: dict = Depends(get_current_user)):\n    \"\"\"\n    Get task definitions (metadata) filtered by user's role",
+        "detail": "backend.routers.onboarding",
+        "documentation": {}
+    },
+    {
+        "label": "CollapseChecklistRequest",
+        "kind": 6,
+        "importPath": "backend.routers.onboarding",
+        "description": "backend.routers.onboarding",
+        "peekOfCode": "class CollapseChecklistRequest(BaseModel):\n    \"\"\"Request body for toggling checklist collapse\"\"\"\n    collapsed: bool\n@router.get(\"/tasks\")\nasync def get_task_definitions(current_user: dict = Depends(get_current_user)):\n    \"\"\"\n    Get task definitions (metadata) filtered by user's role\n    Returns:\n        List of task definitions with labels, descriptions, and order\n    \"\"\"",
+        "detail": "backend.routers.onboarding",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.routers.onboarding",
+        "description": "backend.routers.onboarding",
+        "peekOfCode": "router = APIRouter(prefix=\"/onboarding\", tags=[\"onboarding\"])\nclass UpdateTaskRequest(BaseModel):\n    \"\"\"Request body for updating a task\"\"\"\n    task_id: str\n    completed: bool\nclass CompleteTourRequest(BaseModel):\n    \"\"\"Request body for completing/skipping tour\"\"\"\n    skipped: bool = False\nclass DismissChecklistRequest(BaseModel):\n    \"\"\"Request body for dismissing checklist\"\"\"",
+        "detail": "backend.routers.onboarding",
+        "documentation": {}
+    },
+    {
         "label": "RatePreset",
         "kind": 6,
         "importPath": "backend.routers.organizations",
@@ -7557,6 +7762,51 @@
         "description": "backend.utils.invitations",
         "peekOfCode": "_lock = threading.RLock()\nclass InvitationCRUD:\n    \"\"\"Invitation CRUD operations with token hashing (Sync Singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize InvitationCRUD\"\"\"\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"invitations\"]\n        self.users_collection = mongodb.get_users_collection()\n        self.orgs_collection = self.db[\"organizations\"]",
         "detail": "backend.utils.invitations",
+        "documentation": {}
+    },
+    {
+        "label": "OnboardingCRUD",
+        "kind": 6,
+        "importPath": "backend.utils.onboarding",
+        "description": "backend.utils.onboarding",
+        "peekOfCode": "class OnboardingCRUD:\n    \"\"\"Onboarding Progress CRUD operations (Singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize OnboardingCRUD\"\"\"\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"onboarding_progress\"]\n    def get_applicable_tasks(self, role: str) -> List[str]:\n        \"\"\"\n        Get list of task IDs applicable for a given role",
+        "detail": "backend.utils.onboarding",
+        "documentation": {}
+    },
+    {
+        "label": "get_onboarding_crud",
+        "kind": 2,
+        "importPath": "backend.utils.onboarding",
+        "description": "backend.utils.onboarding",
+        "peekOfCode": "def get_onboarding_crud() -> OnboardingCRUD:\n    \"\"\"\n    Get or create OnboardingCRUD instance (singleton pattern)\n    Returns:\n        OnboardingCRUD instance\n    \"\"\"\n    global _onboarding_crud\n    with _lock:\n        if _onboarding_crud is None:\n            _onboarding_crud = OnboardingCRUD()",
+        "detail": "backend.utils.onboarding",
+        "documentation": {}
+    },
+    {
+        "label": "ONBOARDING_TASKS",
+        "kind": 5,
+        "importPath": "backend.utils.onboarding",
+        "description": "backend.utils.onboarding",
+        "peekOfCode": "ONBOARDING_TASKS = {\n    \"tour_completed\": {\n        \"label\": \"Complete product tour\",\n        \"description\": \"Take a guided tour of PriceIQ features\",\n        \"required_role\": None,\n        \"order\": 1\n    },\n    \"first_proposal_uploaded\": {\n        \"label\": \"Upload your first proposal\",\n        \"description\": \"Upload a contract document to get started\",",
+        "detail": "backend.utils.onboarding",
+        "documentation": {}
+    },
+    {
+        "label": "_onboarding_crud",
+        "kind": 5,
+        "importPath": "backend.utils.onboarding",
+        "description": "backend.utils.onboarding",
+        "peekOfCode": "_onboarding_crud = None\n_lock = threading.RLock()\nclass OnboardingCRUD:\n    \"\"\"Onboarding Progress CRUD operations (Singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize OnboardingCRUD\"\"\"\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"onboarding_progress\"]\n    def get_applicable_tasks(self, role: str) -> List[str]:",
+        "detail": "backend.utils.onboarding",
+        "documentation": {}
+    },
+    {
+        "label": "_lock",
+        "kind": 5,
+        "importPath": "backend.utils.onboarding",
+        "description": "backend.utils.onboarding",
+        "peekOfCode": "_lock = threading.RLock()\nclass OnboardingCRUD:\n    \"\"\"Onboarding Progress CRUD operations (Singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize OnboardingCRUD\"\"\"\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"onboarding_progress\"]\n    def get_applicable_tasks(self, role: str) -> List[str]:\n        \"\"\"",
+        "detail": "backend.utils.onboarding",
         "documentation": {}
     },
     {

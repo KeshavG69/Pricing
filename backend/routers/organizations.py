@@ -3,7 +3,7 @@ Organization management router.
 Handles organization settings, member management, and admin operations.
 """
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from bson import ObjectId
 from pydantic import BaseModel
 from typing import List, Dict, Any, Optional
@@ -191,6 +191,21 @@ async def update_organization_settings(
         )
 
     updated_org = org_crud.update_settings(current_user["organization_id"], settings)
+
+    # Auto-completion hook: Mark rates configured if default_rates were updated
+    if settings_update.default_rates is not None:
+        try:
+            from utils.onboarding import get_onboarding_crud
+            onboarding_crud = get_onboarding_crud()
+            onboarding_crud.update_task(
+                user_id=str(current_user["_id"]),
+                organization_id=str(current_user["organization_id"]),
+                task_id="rates_configured",
+                completed=True
+            )
+        except Exception as e:
+            # Don't fail request if onboarding update fails
+            print(f"Failed to update onboarding progress: {e}")
 
     return serialize_doc(updated_org)
 
@@ -688,4 +703,209 @@ async def get_organization_stats(current_user: dict = Depends(get_current_user))
             "seats_used": active_members,
             "seats_available": 5  # This would come from org.subscription
         }
+    }
+
+
+@router.get("/deletion-check")
+async def check_organization_deletion(
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Check what will happen if organization is deleted.
+
+    Returns information about:
+    - Members who will have their accounts deleted (only have this org)
+    - Members who will just be removed (have other orgs)
+    - Number of proposals that will be deleted
+
+    Returns:
+    {
+        "can_delete": true,
+        "organization_name": str,
+        "member_count": int,
+        "proposal_count": int,
+        "accounts_to_delete": [
+            {
+                "id": str,
+                "name": str,
+                "email": str,
+                "is_current_user": bool
+            }
+        ],
+        "members_to_remove": [
+            {
+                "id": str,
+                "name": str,
+                "email": str
+            }
+        ]
+    }
+    """
+    from auth.database import get_mongodb_client
+    from datetime import datetime
+
+    db = get_mongodb_client().get_database()
+    users_collection = db["users"]
+    orgs_collection = db["organizations"]
+    proposals_collection = db["proposals"]
+
+    org_id = current_user["organization_id"]
+
+    # Get organization
+    org = orgs_collection.find_one({"_id": org_id})
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found")
+
+    # Count proposals
+    proposal_count = proposals_collection.count_documents({
+        "organization_id": org_id
+    })
+
+    # Get all members of this organization
+    members = list(users_collection.find({
+        "organizations.organization_id": org_id,
+        "status": "active"
+    }))
+
+    accounts_to_delete = []
+    members_to_remove = []
+
+    for member in members:
+        # Count how many active orgs this member has
+        active_org_count = sum(
+            1 for org in member.get("organizations", [])
+            if org.get("status") == "active"
+        )
+
+        member_info = {
+            "id": str(member["_id"]),
+            "name": f"{member.get('firstName', '')} {member.get('lastName', '')}".strip(),
+            "email": member.get("email", "")
+        }
+
+        if active_org_count == 1:
+            # This is their only org - account will be deleted
+            member_info["is_current_user"] = str(member["_id"]) == str(current_user["_id"])
+            accounts_to_delete.append(member_info)
+        else:
+            # Member has other orgs - will just be removed from this org
+            members_to_remove.append(member_info)
+
+    return {
+        "can_delete": True,
+        "organization_name": org.get("name", "Unknown"),
+        "member_count": len(members),
+        "proposal_count": proposal_count,
+        "accounts_to_delete": accounts_to_delete,
+        "members_to_remove": members_to_remove
+    }
+
+
+@router.delete("/")
+async def delete_organization(
+    confirm: bool = Query(..., description="Must be true to confirm deletion"),
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Delete organization and all associated data (admin only).
+
+    Actions:
+    1. Delete all proposals in org (hard delete)
+    2. Delete organization (hard delete)
+    3. For members with ONLY this org: Delete their accounts (soft delete)
+    4. For members with other orgs: Remove this org from their organizations array
+
+    Returns:
+    {
+        "success": true,
+        "message": "Organization deleted successfully",
+        "proposals_deleted": int,
+        "accounts_deleted": int,
+        "members_removed": int,
+        "admin_account_deleted": bool
+    }
+    """
+    from auth.database import get_mongodb_client
+    from datetime import datetime
+
+    if not confirm:
+        raise HTTPException(
+            status_code=400,
+            detail="Confirmation required. Set confirm=true query parameter."
+        )
+
+    db = get_mongodb_client().get_database()
+    users_collection = db["users"]
+    orgs_collection = db["organizations"]
+    proposals_collection = db["proposals"]
+
+    org_id = current_user["organization_id"]
+    now = datetime.utcnow()
+
+    # Get all members
+    members = list(users_collection.find({
+        "organizations.organization_id": org_id,
+        "status": "active"
+    }))
+
+    accounts_deleted = 0
+    members_removed = 0
+    admin_account_deleted = False
+
+    # Process each member
+    for member in members:
+        active_org_count = sum(
+            1 for org in member.get("organizations", [])
+            if org.get("status") == "active"
+        )
+
+        if active_org_count == 1:
+            # This is their only org - delete account (soft delete)
+            user_id = str(member["_id"])
+            users_collection.update_one(
+                {"_id": member["_id"]},
+                {
+                    "$set": {
+                        "email": f"deleted_user_{user_id}@deleted.local",
+                        "firstName": "Deleted",
+                        "lastName": "User",
+                        "password": None,
+                        "status": "deleted",
+                        "deleted_at": now,
+                        "updatedAt": now
+                    }
+                }
+            )
+            accounts_deleted += 1
+
+            if str(member["_id"]) == str(current_user["_id"]):
+                admin_account_deleted = True
+        else:
+            # Member has other orgs - just remove this org
+            users_collection.update_one(
+                {"_id": member["_id"]},
+                {
+                    "$pull": {
+                        "organizations": {"organization_id": org_id}
+                    },
+                    "$set": {"updatedAt": now}
+                }
+            )
+            members_removed += 1
+
+    # Delete all proposals in organization
+    proposals_result = proposals_collection.delete_many({
+        "organization_id": org_id
+    })
+
+    # Delete organization
+    orgs_collection.delete_one({"_id": org_id})
+
+    return {
+        "success": True,
+        "message": "Organization deleted successfully",
+        "proposals_deleted": proposals_result.deleted_count,
+        "accounts_deleted": accounts_deleted,
+        "members_removed": members_removed,
+        "admin_account_deleted": admin_account_deleted
     }
