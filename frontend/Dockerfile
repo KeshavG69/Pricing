@@ -1,17 +1,14 @@
 # Use Node.js 20 Alpine for smaller image size
 FROM node:20-alpine
 
-# Install dependencies needed for Next.js on Alpine
-RUN apk add --no-cache libc6-compat
-
 # Set working directory
 WORKDIR /app
 
 # Copy package files
 COPY package.json package-lock.json* ./
 
-# Install dependencies (use ci for production builds)
-RUN npm ci
+# Install dependencies
+RUN npm install
 
 # Copy all files
 COPY . .
@@ -36,10 +33,6 @@ ENV NEXT_PUBLIC_BASIC_PROPOSAL_PRICE=$NEXT_PUBLIC_BASIC_PROPOSAL_PRICE
 ENV NEXT_PUBLIC_ADVANCED_ANALYSIS_PRICE=$NEXT_PUBLIC_ADVANCED_ANALYSIS_PRICE
 ENV NEXT_PUBLIC_TERMS_VERSION=$NEXT_PUBLIC_TERMS_VERSION
 
-# Set production environment and disable telemetry
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-
 # Build the Next.js app with env vars
 RUN npm run build
 
@@ -47,4 +40,5 @@ RUN npm run build
 EXPOSE 3000
 
 # Start the app
-CMD ["npm", "start"]
+# Railway proxies this to external port automatically
+CMD ["npm", "start", "--", "-p", "3000"]
