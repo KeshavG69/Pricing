@@ -2996,6 +2996,22 @@
         "documentation": {}
     },
     {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
         "label": "settings",
         "importPath": "app.settings",
         "description": "app.settings",
@@ -3636,6 +3652,15 @@
         "description": "email.mime.multipart",
         "isExtraImport": true,
         "detail": "email.mime.multipart",
+        "documentation": {}
+    },
+    {
+        "label": "openpyxl",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "openpyxl",
+        "description": "openpyxl",
+        "detail": "openpyxl",
         "documentation": {}
     },
     {
@@ -5069,6 +5094,14 @@
         "description": "agent.agent",
         "isExtraImport": true,
         "detail": "agent.agent",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson.objectid",
+        "description": "bson.objectid",
+        "isExtraImport": true,
+        "detail": "bson.objectid",
         "documentation": {}
     },
     {
@@ -8075,6 +8108,69 @@
         "description": "backend.test_pdf_to_word",
         "peekOfCode": "def main():\n    pdf_path = \"/Users/keshav/Downloads/PriceIQ Personnel Qualifications (1) (1).pdf\"\n    # Check if PDF exists\n    if not os.path.exists(pdf_path):\n        print(f\"❌ PDF not found: {pdf_path}\")\n        return\n    # Output DOCX path\n    docx_path = pdf_path.replace(\".pdf\", \"_converted.docx\")\n    print(\"=\"*60)\n    print(\"PDF to DOCX Conversion & Parsing Test\")",
         "detail": "backend.test_pdf_to_word",
+        "documentation": {}
+    },
+    {
+        "label": "fetch_proposal_from_mongo",
+        "kind": 2,
+        "importPath": "backend.verify_proposal",
+        "description": "backend.verify_proposal",
+        "peekOfCode": "def fetch_proposal_from_mongo():\n    \"\"\"Fetch proposal data from MongoDB.\"\"\"\n    client = MongoClient(settings.MONGODB_URL)\n    db = client[settings.MONGODB_DATABASE]\n    proposal = db.proposals.find_one({\"_id\": ObjectId(PROPOSAL_ID)})\n    if not proposal:\n        print(f\"❌ Proposal {PROPOSAL_ID} not found!\")\n        return None\n    return proposal\ndef analyze_excel(excel_path):",
+        "detail": "backend.verify_proposal",
+        "documentation": {}
+    },
+    {
+        "label": "analyze_excel",
+        "kind": 2,
+        "importPath": "backend.verify_proposal",
+        "description": "backend.verify_proposal",
+        "peekOfCode": "def analyze_excel(excel_path):\n    \"\"\"Analyze the exported Excel file.\"\"\"\n    wb = openpyxl.load_workbook(excel_path, data_only=True)\n    print(\"=\" * 80)\n    print(\"EXCEL FILE ANALYSIS\")\n    print(\"=\" * 80)\n    print(f\"\\n📊 Sheets: {len(wb.sheetnames)}\")\n    for idx, name in enumerate(wb.sheetnames, 1):\n        print(f\"  {idx}. {name}\")\n    # CE Summary",
+        "detail": "backend.verify_proposal",
+        "documentation": {}
+    },
+    {
+        "label": "analyze_proposal",
+        "kind": 2,
+        "importPath": "backend.verify_proposal",
+        "description": "backend.verify_proposal",
+        "peekOfCode": "def analyze_proposal(proposal):\n    \"\"\"Analyze proposal data from MongoDB.\"\"\"\n    print(\"\\n\" + \"=\" * 80)\n    print(\"MONGODB PROPOSAL DATA\")\n    print(\"=\" * 80)\n    spreadsheet_data = proposal.get('spreadsheet_data', {})\n    print(f\"\\n📄 Proposal Info:\")\n    print(f\"  Name: {proposal.get('name', 'N/A')}\")\n    print(f\"  Prime Contractor: {spreadsheet_data.get('prime_contractor_name', 'N/A')}\")\n    print(f\"  Solicitation: {spreadsheet_data.get('solicitation_number', 'N/A')}\")",
+        "detail": "backend.verify_proposal",
+        "documentation": {}
+    },
+    {
+        "label": "compare_values",
+        "kind": 2,
+        "importPath": "backend.verify_proposal",
+        "description": "backend.verify_proposal",
+        "peekOfCode": "def compare_values(proposal, excel_path):\n    \"\"\"Compare MongoDB values with Excel values.\"\"\"\n    print(\"\\n\" + \"=\" * 80)\n    print(\"COMPARISON - MongoDB vs Excel\")\n    print(\"=\" * 80)\n    wb = openpyxl.load_workbook(excel_path, data_only=True)\n    ws_ce = wb[\"CE Summary\"]\n    spreadsheet_data = proposal.get('spreadsheet_data', {})\n    aggregates = spreadsheet_data.get('aggregates', {})\n    year_1 = aggregates.get('year_1', {}) if aggregates else {}",
+        "detail": "backend.verify_proposal",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "backend.verify_proposal",
+        "description": "backend.verify_proposal",
+        "peekOfCode": "def main():\n    \"\"\"Main verification function.\"\"\"\n    print(\"=\" * 80)\n    print(\"PROPOSAL VERIFICATION SCRIPT\")\n    print(\"=\" * 80)\n    print(f\"\\nProposal ID: {PROPOSAL_ID}\")\n    print(f\"Excel File: {EXCEL_PATH}\")\n    print(f\"MongoDB URL: {settings.MONGODB_URL}\")\n    print(f\"Database: {settings.MONGODB_DATABASE}\")\n    # Fetch proposal",
+        "detail": "backend.verify_proposal",
+        "documentation": {}
+    },
+    {
+        "label": "PROPOSAL_ID",
+        "kind": 5,
+        "importPath": "backend.verify_proposal",
+        "description": "backend.verify_proposal",
+        "peekOfCode": "PROPOSAL_ID = \"6971506b72ec4b0d0502c3b2\"\nEXCEL_PATH = \"/Users/keshav/Downloads/PriceIQ Pricing.xlsx\"\ndef fetch_proposal_from_mongo():\n    \"\"\"Fetch proposal data from MongoDB.\"\"\"\n    client = MongoClient(settings.MONGODB_URL)\n    db = client[settings.MONGODB_DATABASE]\n    proposal = db.proposals.find_one({\"_id\": ObjectId(PROPOSAL_ID)})\n    if not proposal:\n        print(f\"❌ Proposal {PROPOSAL_ID} not found!\")\n        return None",
+        "detail": "backend.verify_proposal",
+        "documentation": {}
+    },
+    {
+        "label": "EXCEL_PATH",
+        "kind": 5,
+        "importPath": "backend.verify_proposal",
+        "description": "backend.verify_proposal",
+        "peekOfCode": "EXCEL_PATH = \"/Users/keshav/Downloads/PriceIQ Pricing.xlsx\"\ndef fetch_proposal_from_mongo():\n    \"\"\"Fetch proposal data from MongoDB.\"\"\"\n    client = MongoClient(settings.MONGODB_URL)\n    db = client[settings.MONGODB_DATABASE]\n    proposal = db.proposals.find_one({\"_id\": ObjectId(PROPOSAL_ID)})\n    if not proposal:\n        print(f\"❌ Proposal {PROPOSAL_ID} not found!\")\n        return None\n    return proposal",
+        "detail": "backend.verify_proposal",
         "documentation": {}
     },
     {
