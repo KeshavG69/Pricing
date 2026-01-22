@@ -15,6 +15,7 @@ import RoleBadge from '@/components/ui/RoleBadge';
 import StatusBadge from '@/components/ui/StatusBadge';
 import { StripeProvider } from '@/components/billing/StripeProvider';
 import { PaymentMethodForm } from '@/components/billing/PaymentMethodForm';
+import OrganizationDeletionModal from '@/components/settings/OrganizationDeletionModal';
 import {
   Building,
   Save,
@@ -127,6 +128,9 @@ function OrganizationPageContent() {
   const [websiteInput, setWebsiteInput] = useState('');
   const [editingAddress, setEditingAddress] = useState(false);
   const [addressInput, setAddressInput] = useState('');
+
+  // Organization deletion modal state
+  const [showDeleteOrgModal, setShowDeleteOrgModal] = useState(false);
   const [isSavingCompanyInfo, setIsSavingCompanyInfo] = useState(false);
 
   // Billing state
@@ -1304,6 +1308,33 @@ function OrganizationPageContent() {
             </Card>
           </div>
         )}
+
+        {/* Danger Zone - Admin Only */}
+        {isAdmin(user) && (
+          <div className="mt-8">
+            <Card className="border-red-200 bg-red-50/50">
+              <CardHeader>
+                <CardTitle className="text-red-600">Danger Zone</CardTitle>
+                <CardDescription className="text-red-600/80">
+                  Irreversible actions that will permanently affect this organization
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="p-4 bg-background rounded-lg border border-red-200">
+                  <h3 className="font-medium mb-2">Delete Organization</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Permanently delete this organization and all associated data.
+                    All proposals will be deleted. Members with only this organization will have their accounts deleted.
+                  </p>
+                  <Button variant="danger" onClick={() => setShowDeleteOrgModal(true)}>
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Delete Organization
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
 
       {/* Delete Team Member Confirmation Dialog */}
@@ -1437,6 +1468,12 @@ function OrganizationPageContent() {
         confirmText="Remove"
         confirmVariant="danger"
         isLoading={isDeletingCard}
+      />
+
+      {/* Organization Deletion Modal */}
+      <OrganizationDeletionModal
+        isOpen={showDeleteOrgModal}
+        onClose={() => setShowDeleteOrgModal(false)}
       />
     </DashboardLayout>
   );

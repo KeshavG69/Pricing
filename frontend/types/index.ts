@@ -12,6 +12,8 @@ export interface User {
   terms_accepted_version: string;
   terms_accepted_at: string;
   needs_terms_acceptance: boolean;
+  // Onboarding progress (included from /api/auth/me to avoid separate API call)
+  onboarding_progress?: any; // OnboardingProgress type from lib/api/onboarding
 }
 
 export interface LoginCredentials {

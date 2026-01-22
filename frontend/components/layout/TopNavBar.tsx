@@ -82,6 +82,11 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
             return (
               <Link key={item.href} href={item.href}>
                 <div
+                  data-tour={
+                    item.href === '/dashboard/company-repository' ? 'company-repository' :
+                    item.href === '/dashboard/proposals' ? 'proposals-tab' :
+                    undefined
+                  }
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
                     isActive
                       ? 'bg-primary/10 text-primary font-bold shadow-sm'
@@ -107,6 +112,7 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
                   return (
                     <Link key={item.href} href={item.href}>
                       <div
+                        data-tour={item.label === 'Organization' ? 'organization-link' : undefined}
                         className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-all duration-300 hover:scale-105 active:scale-95 ${
                           isActive
                             ? 'bg-primary/10 text-primary font-bold shadow-sm'
@@ -139,6 +145,7 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
                     return (
                       <Link key={item.href} href={item.href}>
                         <div
+                          data-tour={item.label === 'Organization' ? 'organization-link' : undefined}
                           className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200 hover:translate-x-1"
                           style={{ animationDelay: `${index * 30}ms` }}
                         >
@@ -163,6 +170,7 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
           <button
             onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
             className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted transition-all duration-200 hover:scale-105 active:scale-95 group"
+            data-tour="settings-menu"
           >
             <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center border border-border text-primary font-semibold text-sm transition-all duration-300 group-hover:scale-110 group-hover:shadow-md">
               {user.firstName[0]}{user.lastName[0]}

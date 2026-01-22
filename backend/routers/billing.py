@@ -105,6 +105,20 @@ async def save_payment_method(data: PaymentMethodRequest, current_user: dict = D
             {"$set": {"default_payment_method_id": data.payment_method_id, "updated_at": datetime.utcnow()}}
         )
 
+        # Auto-completion hook: Mark payment added
+        try:
+            from utils.onboarding import get_onboarding_crud
+            onboarding_crud = get_onboarding_crud()
+            onboarding_crud.update_task(
+                user_id=str(current_user["_id"]),
+                organization_id=str(current_user["organization_id"]),
+                task_id="payment_added",
+                completed=True
+            )
+        except Exception as e:
+            # Don't fail request if onboarding update fails
+            print(f"Failed to update onboarding progress: {e}")
+
         return {"message": "Payment method saved"}
 
     except StripeError as e:
