@@ -360,13 +360,39 @@ async def generate_excel_from_proposal(
         # Extract spreadsheet data
         spreadsheet_data = proposal.get('spreadsheet_data', {})
 
+        # Infer total_years from data if not explicitly set
+        total_years = spreadsheet_data.get('total_years')
+        if not total_years:
+            # Try to infer from positions' hours_per_year
+            positions = spreadsheet_data.get('positions', [])
+            max_year = 1
+            for pos in positions:
+                hours_per_year = pos.get('hours_per_year', {})
+                if hours_per_year:
+                    year_nums = [int(y) for y in hours_per_year.keys() if y.isdigit()]
+                    if year_nums:
+                        max_year = max(max_year, max(year_nums))
+
+            # Also check escalation_rates
+            escalation_rates = spreadsheet_data.get('escalation_rates', {})
+            if escalation_rates:
+                # Escalation rates are like "1_to_2", "2_to_3", etc.
+                # Number of years = max "to" number
+                for key in escalation_rates.keys():
+                    if '_to_' in key:
+                        parts = key.split('_to_')
+                        if len(parts) == 2 and parts[1].isdigit():
+                            max_year = max(max_year, int(parts[1]))
+
+            total_years = max_year
+
         # Build project_config from proposal data
         project_config = {
             'solicitation_number': proposal.get('solicitation_number', 'N/A'),
             'prime_contractor_name': proposal.get('prime_contractor_name', 'N/A'),
             'subcontractor_names': [sub['name'] for sub in spreadsheet_data.get('subcontractors', [])],
             'dcaa_contact': spreadsheet_data.get('dcaa_contact', ''),
-            'total_years': spreadsheet_data.get('total_years', 1),
+            'total_years': total_years,
             'base_years': 1,  # Default to 1 base year
             'task_order_number': proposal.get('task_order_number', ''),
 
