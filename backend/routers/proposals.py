@@ -684,6 +684,20 @@ async def upload_proposal_documents(
             wage_source
         )
 
+        # Auto-completion hook: Mark first proposal uploaded
+        try:
+            from utils.onboarding import get_onboarding_crud
+            onboarding_crud = get_onboarding_crud()
+            onboarding_crud.update_task(
+                user_id=str(current_user["_id"]),
+                organization_id=str(current_user.get("organization_id")),
+                task_id="first_proposal_uploaded",
+                completed=True
+            )
+        except Exception as e:
+            # Don't fail request if onboarding update fails
+            print(f"Failed to update onboarding progress: {e}")
+
         return {
             "proposal_id": proposal_id,
             "status": "processing",
@@ -1039,14 +1053,20 @@ async def get_business_status_analytics(
     # Serialize proposals
     proposals = []
     for prop in data["proposals"]:
+        # Format dates with timezone (MongoDB datetimes are UTC)
+        created_at = prop.get("created_at")
+        updated_at = prop.get("updated_at")
+        created_iso = created_at.isoformat() + 'Z' if created_at else None
+        updated_iso = updated_at.isoformat() + 'Z' if updated_at else None
+
         proposals.append({
             "id": str(prop["_id"]),
             "name": prop.get("name", "Untitled"),
             "solicitation_number": prop.get("solicitation_number"),
             "total_cost": prop.get("total_cost"),
             "business_status": prop.get("business_status"),  # Include for tab filtering
-            "created_at": prop.get("created_at").isoformat() if prop.get("created_at") else None,
-            "updated_at": prop.get("updated_at").isoformat() if prop.get("updated_at") else None,
+            "created_at": created_iso,
+            "updated_at": updated_iso,
             "user_id": prop.get("user_id")
         })
 
