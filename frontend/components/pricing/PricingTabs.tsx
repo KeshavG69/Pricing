@@ -7,7 +7,6 @@ export type PricingTabType = 'files' | 'overview' | 'main' | 'subcontractors' | 
 interface PricingTabsProps {
   activeTab: PricingTabType;
   onTabChange: (tab: PricingTabType) => void;
-  hasSubcontractors: boolean;
   hasFiles?: boolean;
   mode?: 'initial' | 'advanced'; // initial = only Overview + Pricing Workspace, advanced = all tabs
 }
@@ -15,7 +14,6 @@ interface PricingTabsProps {
 export const PricingTabs = ({
   activeTab,
   onTabChange,
-  hasSubcontractors,
   hasFiles = true,
   mode = 'advanced', // default to advanced for backwards compatibility
 }: PricingTabsProps) => {
@@ -50,7 +48,7 @@ export const PricingTabs = ({
       label: 'Subcontractor Labor',
       description: 'Subcontractor positions & costs',
       icon: <Building2 className="w-5 h-5" />,
-      hidden: mode === 'initial' || !hasSubcontractors, // Hide in initial mode or when no subcontractors
+      hidden: mode === 'initial', // Only hide in initial mode, always show in advanced mode
     },
   ];
 

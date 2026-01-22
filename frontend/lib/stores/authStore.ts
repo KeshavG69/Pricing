@@ -10,7 +10,7 @@ interface AuthState {
 
   // Actions
   login: (credentials: LoginCredentials | { access_token: string; refresh_token: string; user: User }) => Promise<void>;
-  signup: (data: SignupData) => Promise<{ email: string; message: string }>;
+  signup: (data: SignupData) => Promise<{ email: string; message: string; requires_verification: boolean }>;
   googleLogin: (credential: string) => Promise<void>;
   logout: () => Promise<void>;
   fetchUser: () => Promise<void>;
@@ -41,6 +41,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Store tokens in localStorage
       localStorage.setItem('access_token', response.access_token);
       localStorage.setItem('refresh_token', response.refresh_token);
+
+      // Sync onboarding data to onboarding store (no separate API calls)
+      if (typeof window !== 'undefined') {
+        try {
+          const { useOnboardingStore } = await import('@/lib/stores/onboardingStore');
+          const onboardingStore = useOnboardingStore.getState();
+
+          // Sync progress from user data
+          onboardingStore.syncProgress(response.user.onboarding_progress || null);
+
+          // Sync task definitions filtered by role
+          if (response.user.role) {
+            onboardingStore.syncTaskDefinitions(response.user.role);
+          }
+        } catch (error) {
+          console.error('[AUTH] Failed to sync onboarding data:', error);
+        }
+      }
 
       // Store user in state
       set({ user: response.user, isLoading: false });
@@ -81,6 +99,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Store tokens in localStorage
       localStorage.setItem('access_token', response.access_token);
       localStorage.setItem('refresh_token', response.refresh_token);
+
+      // Sync onboarding data to onboarding store (no separate API calls)
+      if (typeof window !== 'undefined') {
+        try {
+          const { useOnboardingStore } = await import('@/lib/stores/onboardingStore');
+          const onboardingStore = useOnboardingStore.getState();
+
+          // Sync progress from user data
+          onboardingStore.syncProgress(response.user.onboarding_progress || null);
+
+          // Sync task definitions filtered by role
+          if (response.user.role) {
+            onboardingStore.syncTaskDefinitions(response.user.role);
+          }
+        } catch (error) {
+          console.error('[AUTH] Failed to sync onboarding data:', error);
+        }
+      }
 
       // Store user in state
       set({ user: response.user, isLoading: false });
@@ -123,6 +159,24 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     try {
       const previousUser = get().user;
       const user = await authApi.getCurrentUser();
+
+      // Sync onboarding data to onboarding store (no separate API calls)
+      if (typeof window !== 'undefined') {
+        try {
+          const { useOnboardingStore } = await import('@/lib/stores/onboardingStore');
+          const onboardingStore = useOnboardingStore.getState();
+
+          // Sync progress from user data
+          onboardingStore.syncProgress(user.onboarding_progress || null);
+
+          // Sync task definitions filtered by role
+          if (user.role) {
+            onboardingStore.syncTaskDefinitions(user.role);
+          }
+        } catch (error) {
+          console.error('[AUTH] Failed to sync onboarding data:', error);
+        }
+      }
 
       // Check if organization changed (user was removed from org and switched to another)
       if (previousUser && user && previousUser.organization_id !== user.organization_id) {

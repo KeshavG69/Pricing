@@ -1224,7 +1224,15 @@ export const usePricingStore = create<PricingState>((set, get) => {
         if (positionsFromJobs && positions.length > 0) {
           console.log('[LOAD] Positions loaded from jobs, saving to spreadsheet_data immediately...');
           try {
-            const totalCost = positions.reduce((sum, pos) => sum + (pos.total_amount || 0), 0);
+            // IMPORTANT: Transform to advanced mode first to calculate aggregates
+            // This populates the aggregates needed for calculateGrandTotal()
+            console.log('[LOAD] Transforming to calculate aggregates before save...');
+            performTransformToAdvanced();
+
+            // Use calculateGrandTotal() which calculates from aggregates
+            const totalCost = calculateGrandTotal();
+            console.log('[LOAD] Calculated total_cost:', totalCost);
+
             await proposalsApi.update(proposalId, {
               prime_contractor_name: primeContractorName,
               total_cost: totalCost,
@@ -1241,7 +1249,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
                 advanced_mode: advancedMode,
               },
             });
-            console.log('[LOAD] ✅ Positions saved to spreadsheet_data');
+            console.log('[LOAD] ✅ Positions saved to spreadsheet_data with total_cost:', totalCost);
           } catch (saveError) {
             console.error('[LOAD] ❌ Failed to save positions:', saveError);
           }

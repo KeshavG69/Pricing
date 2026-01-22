@@ -562,7 +562,6 @@ export default function ProposalPage() {
         <PricingTabs
           activeTab={activeTab}
           onTabChange={setActiveTab}
-          hasSubcontractors={subcontractors.length > 0}
           hasFiles={(currentProposal?.documents?.length ?? 0) > 0}
           mode={advancedMode ? 'advanced' : 'initial'}
         />
