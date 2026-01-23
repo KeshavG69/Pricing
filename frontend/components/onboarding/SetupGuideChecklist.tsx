@@ -64,7 +64,7 @@ export function SetupGuideChecklist() {
 
   // Create default progress for new users without backend progress
   const effectiveProgress = progress || {
-    tasks: {},
+    tasks: {} as Record<string, boolean>,
     checklist_dismissed: false,
     checklist_collapsed: getCollapseState(),
     completion_stats: {
