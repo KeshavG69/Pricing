@@ -13,35 +13,29 @@ from auth.database import get_mongodb_client
 # Task definitions with role requirements
 # required_role: None = both admin and user, "admin" = admin only
 ONBOARDING_TASKS = {
-    "tour_completed": {
-        "label": "Complete product tour",
-        "description": "Take a guided tour of PriceIQ features",
-        "required_role": None,
-        "order": 1
-    },
-    "first_proposal_uploaded": {
-        "label": "Upload your first proposal",
-        "description": "Upload a contract document to get started",
-        "required_role": None,
-        "order": 2
-    },
     "rates_configured": {
-        "label": "Configure default rates",
+        "label": "Configure your rates",
         "description": "Set your organization's Fringe, OH, G&A, and Fee rates",
         "required_role": "admin",
-        "order": 3
+        "order": 1
     },
     "payment_added": {
         "label": "Add payment method",
         "description": "Add a credit card to enable proposal generation",
         "required_role": "admin",
-        "order": 4
+        "order": 2
     },
     "team_invited": {
         "label": "Invite team members",
         "description": "Collaborate by inviting colleagues to your workspace",
         "required_role": "admin",
-        "order": 5
+        "order": 3
+    },
+    "first_proposal_uploaded": {
+        "label": "Upload your first proposal",
+        "description": "Upload a contract document to get started",
+        "required_role": None,
+        "order": 4
     }
 }
 
@@ -198,7 +192,7 @@ class OnboardingCRUD:
         completed: bool
     ) -> bool:
         """
-        Update a specific task completion status
+        Update a specific task completion status and recalculate completion stats
 
         Args:
             user_id: User's ID
@@ -209,6 +203,7 @@ class OnboardingCRUD:
         Returns:
             True if successful
         """
+        # First update the task
         result = self.collection.update_one(
             {
                 "user_id": user_id,
@@ -222,6 +217,51 @@ class OnboardingCRUD:
             },
             upsert=True
         )
+
+        # Get updated progress to calculate stats
+        progress = self.collection.find_one({
+            "user_id": user_id,
+            "organization_id": organization_id
+        })
+
+        if progress:
+            # Get user's role to determine applicable tasks
+            from auth.database import get_mongodb_client
+            db = get_mongodb_client().get_database()
+            user = db["users"].find_one({"_id": user_id})
+
+            if user:
+                # Get role from organizations array
+                role = "user"  # default
+                for org in user.get("organizations", []):
+                    if str(org.get("organization_id")) == organization_id:
+                        role = org.get("role", "user")
+                        break
+
+                # Calculate completion stats based on role
+                applicable_tasks = self.get_applicable_tasks(role)
+                all_tasks = progress.get("tasks", {})
+
+                completed_count = sum(1 for task_id in applicable_tasks if all_tasks.get(task_id, False))
+                total_count = len(applicable_tasks)
+                percentage = (completed_count / total_count * 100) if total_count > 0 else 0
+
+                # Update completion stats
+                self.collection.update_one(
+                    {
+                        "user_id": user_id,
+                        "organization_id": organization_id
+                    },
+                    {
+                        "$set": {
+                            "completion_stats": {
+                                "completed_count": completed_count,
+                                "total_count": total_count,
+                                "percentage": percentage
+                            }
+                        }
+                    }
+                )
 
         return result.modified_count > 0 or result.upserted_id is not None
 
