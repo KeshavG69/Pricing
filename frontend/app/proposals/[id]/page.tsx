@@ -381,7 +381,7 @@ export default function ProposalPage() {
 
   if (isLoading || !currentProposal) {
     return (
-      <DashboardLayout>
+      <DashboardLayout hideChecklist>
         <div className="flex items-center justify-center h-screen">
           <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
         </div>
@@ -595,7 +595,7 @@ export default function ProposalPage() {
   );
 
   return (
-    <DashboardLayout>
+    <DashboardLayout hideChecklist>
       <div className="w-full px-6">
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-6 flex-wrap mt-2">

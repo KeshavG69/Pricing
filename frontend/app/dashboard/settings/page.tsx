@@ -3,12 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
-import { useOnboardingStore } from '@/lib/stores/onboardingStore';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import Card, { CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
-import { User, Lock, Mail, Shield, CheckCircle2, Trash2, PlayCircle } from 'lucide-react';
+import { User, Lock, Mail, CheckCircle2, Trash2 } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
 import { authApi } from '@/lib/api/auth';
 import AccountDeletionModal from '@/components/settings/AccountDeletionModal';
@@ -16,16 +15,12 @@ import AccountDeletionModal from '@/components/settings/AccountDeletionModal';
 export default function SettingsPage() {
   const router = useRouter();
   const { user } = useAuthStore();
-  const { restartTour } = useOnboardingStore();
   const toast = useToast();
 
   // Name edit state
   const [isEditingName, setIsEditingName] = useState(false);
   const [nameInput, setNameInput] = useState('');
   const [isSavingName, setIsSavingName] = useState(false);
-
-  // Tour restart state
-  const [isRestartingTour, setIsRestartingTour] = useState(false);
 
   // Password change form state
   const [currentPassword, setCurrentPassword] = useState('');
@@ -111,18 +106,6 @@ export default function SettingsPage() {
       toast.error(errorMessage);
     } finally {
       setIsChangingPassword(false);
-    }
-  };
-
-  const handleRestartTour = async () => {
-    setIsRestartingTour(true);
-    try {
-      await restartTour();
-      // Navigate to dashboard using client-side routing (no page reload)
-      router.push('/dashboard');
-    } catch (error: any) {
-      toast.error(error.response?.data?.detail || 'Failed to restart tour');
-      setIsRestartingTour(false);
     }
   };
 
@@ -300,58 +283,6 @@ export default function SettingsPage() {
                 </Button>
               </div>
             </form>
-          </CardContent>
-        </Card>
-
-        {/* Security Info Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Security</CardTitle>
-            <CardDescription>
-              Keep your account secure
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-                <Shield className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="text-sm font-medium text-blue-900 mb-1">Password Security Tips</p>
-                  <ul className="text-sm text-blue-700 space-y-1">
-                    <li>• Use a unique password you don't use elsewhere</li>
-                    <li>• Consider using a password manager</li>
-                    <li>• Change your password regularly</li>
-                    <li>• Never share your password with anyone</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Help & Support Card */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Help & Support</CardTitle>
-            <CardDescription>
-              Get help and learn how to use PriceIQ
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="p-4 bg-muted/30 rounded-lg border border-border">
-              <h3 className="font-medium mb-2">Product Tour</h3>
-              <p className="text-sm text-muted-foreground mb-4">
-                Replay the interactive product tour to learn about PriceIQ features and how to use them.
-              </p>
-              <Button
-                variant="outline"
-                onClick={handleRestartTour}
-                isLoading={isRestartingTour}
-              >
-                <PlayCircle className="w-4 h-4 mr-2" />
-                Restart Product Tour
-              </Button>
-            </div>
           </CardContent>
         </Card>
 
