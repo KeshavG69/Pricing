@@ -3,7 +3,8 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOnboardingStore } from '@/lib/stores/onboardingStore';
-import { Check, ChevronDown, ChevronUp, X } from 'lucide-react';
+import { useAuthStore } from '@/lib/stores/authStore';
+import { Check, ChevronDown, ChevronUp } from 'lucide-react';
 
 // Navigation mapping for each task
 const TASK_NAVIGATION: Record<string, string> = {
@@ -15,9 +16,33 @@ const TASK_NAVIGATION: Record<string, string> = {
 
 export function SetupGuideChecklist() {
   const router = useRouter();
-  const { progress, taskDefinitions, isLoading, toggleCollapse, getCollapseState, dismissChecklist, getDismissState } = useOnboardingStore();
+  const { user } = useAuthStore();
+  const { progress, taskDefinitions, isLoading, toggleCollapse, getCollapseState, syncTaskDefinitions } = useOnboardingStore();
 
-  // Initialize UI state from localStorage on mount
+  console.log('[Checklist] Render check:', {
+    user: !!user,
+    role: user?.role,
+    progress: !!progress,
+    taskDefinitions: taskDefinitions?.length,
+    isCollapsed: progress?.checklist_collapsed
+  });
+
+  // Clear old localStorage dismissed state (one-time cleanup)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('checklist_dismissed');
+    }
+  }, []);
+
+  // Ensure task definitions are loaded for the user's role
+  useEffect(() => {
+    if (user?.role && (!taskDefinitions || taskDefinitions.length === 0)) {
+      console.log('[Checklist] Loading task definitions for role:', user.role);
+      syncTaskDefinitions(user.role);
+    }
+  }, [user?.role, taskDefinitions]);
+
+  // Initialize collapse state from localStorage on mount (keep collapse, remove dismiss)
   useEffect(() => {
     if (progress) {
       // Initialize collapse state
@@ -25,39 +50,45 @@ export function SetupGuideChecklist() {
       if (progress.checklist_collapsed !== storedCollapsed) {
         toggleCollapse(storedCollapsed);
       }
-
-      // Initialize dismiss state
-      const storedDismissed = getDismissState();
-      if (progress.checklist_dismissed !== storedDismissed) {
-        dismissChecklist(storedDismissed);
-      }
     }
   }, [progress?.id]); // Only run when progress changes
 
-  // Don't render if dismissed or no progress yet
-  if (!progress || progress.checklist_dismissed) {
+  // Don't render if no task definitions loaded yet or user not loaded
+  if (!user || !taskDefinitions || taskDefinitions.length === 0) {
+    console.log('[Checklist] Not rendering - missing data:', { user: !!user, taskDefinitions: taskDefinitions?.length });
     return null;
   }
+
+  // ALWAYS show checklist - boss wants it visible for all users
+  console.log('[Checklist] Showing checklist for user:', user.email);
+
+  // Create default progress for new users without backend progress
+  const effectiveProgress = progress || {
+    tasks: {},
+    checklist_dismissed: false,
+    checklist_collapsed: getCollapseState(),
+    completion_stats: {
+      completed_count: 0,
+      total_count: taskDefinitions.length,
+      percentage: 0,
+    },
+  };
 
   // Don't render if all tasks completed
-  if (progress.completion_stats.percentage === 100) {
+  if (effectiveProgress.completion_stats.percentage === 100) {
     return null;
   }
 
-  const isCollapsed = progress.checklist_collapsed;
-  const stats = progress.completion_stats;
+  const isCollapsed = effectiveProgress.checklist_collapsed;
+  const stats = effectiveProgress.completion_stats;
 
   const handleToggleCollapse = () => {
     toggleCollapse(!isCollapsed);
   };
 
-  const handleDismiss = () => {
-    dismissChecklist(true);
-  };
-
   const handleTaskClick = (taskId: string) => {
-    // Don't navigate if task is completed or it's the tour task
-    if (progress?.tasks[taskId] || taskId === 'tour_completed') {
+    // Don't navigate if task is completed
+    if (effectiveProgress.tasks[taskId]) {
       return;
     }
 
@@ -69,43 +100,36 @@ export function SetupGuideChecklist() {
   };
 
   return (
-    <div className="fixed bottom-6 right-6 w-96 bg-white rounded-lg shadow-xl border border-gray-200 z-40">
+    <div className="fixed bottom-6 right-6 w-80 bg-white rounded-xl shadow-lg border border-gray-200 z-40">
       {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-200">
-        <div className="flex items-center gap-3 flex-1">
-          <button
-            onClick={handleToggleCollapse}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
-            aria-label={isCollapsed ? 'Expand checklist' : 'Collapse checklist'}
-          >
-            {isCollapsed ? (
-              <ChevronUp className="w-5 h-5 text-gray-600" />
-            ) : (
-              <ChevronDown className="w-5 h-5 text-gray-600" />
-            )}
-          </button>
-          <div className="flex-1">
-            <h3 className="text-sm font-semibold text-gray-900">Setup Guide</h3>
-            <p className="text-xs text-gray-500 mt-0.5">
-              {stats.completed_count} of {stats.total_count} completed · {Math.round(stats.percentage)}%
-            </p>
-          </div>
-        </div>
+      <div
+        className="flex items-center gap-3 p-3 cursor-pointer hover:bg-gray-50 transition-colors rounded-t-xl"
+        onClick={handleToggleCollapse}
+      >
         <button
-          onClick={handleDismiss}
           className="p-1 hover:bg-gray-100 rounded transition-colors"
-          aria-label="Dismiss setup guide"
+          aria-label={isCollapsed ? 'Expand checklist' : 'Collapse checklist'}
         >
-          <X className="w-4 h-4 text-gray-500" />
+          {isCollapsed ? (
+            <ChevronUp className="w-4 h-4 text-gray-600" />
+          ) : (
+            <ChevronDown className="w-4 h-4 text-gray-600" />
+          )}
         </button>
+        <div className="flex-1">
+          <h3 className="text-sm font-semibold text-gray-900">Setup Guide</h3>
+          <p className="text-xs text-gray-500">
+            {stats.completed_count} of {stats.total_count} · {Math.round(stats.percentage)}%
+          </p>
+        </div>
       </div>
 
       {/* Progress Bar */}
       {!isCollapsed && (
-        <div className="px-4 pt-3 pb-2">
-          <div className="w-full h-2 bg-gray-100 rounded-full overflow-hidden">
+        <div className="px-3 pb-2">
+          <div className="w-full h-1.5 bg-gray-100 rounded-full overflow-hidden">
             <div
-              className="h-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-500 ease-out"
+              className="h-full bg-blue-500 transition-all duration-500 ease-out"
               style={{ width: `${stats.percentage}%` }}
             />
           </div>
@@ -114,63 +138,51 @@ export function SetupGuideChecklist() {
 
       {/* Task List */}
       {!isCollapsed && (
-        <div className="p-4 space-y-2 max-h-80 overflow-y-auto">
+        <div className="px-3 pb-3 space-y-1.5 max-h-80 overflow-y-auto">
           {isLoading && taskDefinitions.length === 0 ? (
             <div className="text-center py-4 text-sm text-gray-500">Loading...</div>
           ) : (
             taskDefinitions.map((task) => {
-              const isCompleted = progress.tasks[task.id] || false;
-              const isClickable = !isCompleted && task.id !== 'tour_completed' && TASK_NAVIGATION[task.id];
+              const isCompleted = effectiveProgress.tasks[task.id] || false;
+              const isClickable = !isCompleted && TASK_NAVIGATION[task.id];
 
               return (
                 <div
                   key={task.id}
                   onClick={() => handleTaskClick(task.id)}
-                  className={`flex items-start gap-3 p-3 rounded-lg transition-all ${
+                  className={`flex items-center gap-2.5 p-2.5 rounded-lg transition-all ${
                     isCompleted
-                      ? 'bg-green-50 border border-green-100'
+                      ? 'bg-green-50/50'
                       : isClickable
-                      ? 'bg-gray-50 border border-gray-100 hover:bg-blue-50 hover:border-blue-200 cursor-pointer'
-                      : 'bg-gray-50 border border-gray-100'
+                      ? 'hover:bg-gray-50 cursor-pointer'
+                      : ''
                   }`}
                 >
                   {/* Checkbox */}
                   <div
-                    className={`flex-shrink-0 w-5 h-5 rounded-full flex items-center justify-center mt-0.5 transition-colors ${
+                    className={`flex-shrink-0 w-4 h-4 rounded-full flex items-center justify-center transition-colors ${
                       isCompleted
                         ? 'bg-green-500'
                         : 'bg-white border-2 border-gray-300'
                     }`}
                   >
-                    {isCompleted && <Check className="w-3 h-3 text-white" strokeWidth={3} />}
+                    {isCompleted && <Check className="w-2.5 h-2.5 text-white" strokeWidth={3} />}
                   </div>
 
                   {/* Task Content */}
                   <div className="flex-1 min-w-0">
                     <h4
-                      className={`text-sm font-medium transition-colors ${
-                        isCompleted ? 'text-green-900 line-through' : 'text-gray-900'
+                      className={`text-xs font-medium transition-colors ${
+                        isCompleted ? 'text-gray-500 line-through' : 'text-gray-900'
                       }`}
                     >
                       {task.label}
                     </h4>
-                    {!isCompleted && (
-                      <p className="text-xs text-gray-500 mt-1">{task.description}</p>
-                    )}
                   </div>
                 </div>
               );
             })
           )}
-        </div>
-      )}
-
-      {/* Footer (collapsed state) */}
-      {isCollapsed && (
-        <div className="px-4 pb-4">
-          <p className="text-xs text-center text-gray-500">
-            Click to expand setup guide
-          </p>
         </div>
       )}
     </div>
