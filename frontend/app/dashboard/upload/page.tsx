@@ -399,21 +399,13 @@ export default function UploadPage() {
                     <label className="block text-sm font-medium text-muted-foreground mb-2">
                       Select GSA Contract <span className="text-red-500">*</span>
                     </label>
-                    <select
+                    <CustomSelect
+                      options={contractOptions}
                       value={selectedGsaContract || ''}
-                      onChange={(e) => setSelectedGsaContract(e.target.value || null)}
-                      className="w-full px-3 py-2 rounded-lg border border-border bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
-                    >
-                      <option value="">Select a contract...</option>
-                      {activeContracts.map((contract) => (
-                        <option key={contract.file_id} value={contract.file_id}>
-                          {contract.name}
-                          {contract.contract_number && ` (${contract.contract_number})`}
-                          {' - '}
-                          {contract.labor_categories_count} labor categories
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(value) => setSelectedGsaContract(value || null)}
+                      placeholder="Select a contract..."
+                      disabled={activeContracts.length === 0}
+                    />
                   </div>
                 )}
               </div>
