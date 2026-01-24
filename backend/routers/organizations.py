@@ -545,8 +545,15 @@ async def remove_organization_member(
             detail="User not found"
         )
 
-    # Verify user belongs to same organization
-    if target_user.get("organization_id") != current_user["organization_id"]:
+    # Verify user belongs to same organization by checking organizations array
+    org_id = current_user["organization_id"]
+    user_org_membership = None
+    for org in target_user.get("organizations", []):
+        if org["organization_id"] == org_id:
+            user_org_membership = org
+            break
+
+    if not user_org_membership:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User does not belong to your organization"

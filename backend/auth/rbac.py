@@ -117,8 +117,8 @@ def can_manage_user(target_user: dict, current_user: dict) -> bool:
     3. Cannot manage yourself (prevent self-removal)
 
     Args:
-        target_user: Target user document dict
-        current_user: Current user document dict
+        target_user: Target user document dict (raw from DB, with organizations array)
+        current_user: Current user document dict (from get_current_user, with flat organization_id)
 
     Returns:
         True if current user can manage target user, False otherwise
@@ -127,8 +127,15 @@ def can_manage_user(target_user: dict, current_user: dict) -> bool:
     if current_user.get("role") != "admin":
         return False
 
-    # Must be same organization
-    if target_user.get("organization_id") != current_user.get("organization_id"):
+    # Must be same organization - check if target user has membership in current user's org
+    current_org_id = current_user.get("organization_id")
+    target_user_orgs = target_user.get("organizations", [])
+    has_membership = any(
+        org["organization_id"] == current_org_id
+        for org in target_user_orgs
+    )
+
+    if not has_membership:
         return False
 
     # Cannot manage yourself (handle both ObjectId and string ID formats)
