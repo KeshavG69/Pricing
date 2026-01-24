@@ -98,7 +98,7 @@ export default function AboutPage() {
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-4">Our Vision</h3>
                 <p className="text-lg text-gray-600 leading-relaxed">
-                  To become the essential platform for every government contractor, transforming how the industry approaches pricing and making competitive, compliant proposals accessible to all.
+                  To become the essential platform for every government contractor, transforming how the industry approaches pricing and making competitive, professional proposals accessible to all.
                 </p>
               </div>
             </div>
