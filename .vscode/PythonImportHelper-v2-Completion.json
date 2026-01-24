@@ -833,30 +833,6 @@
         "documentation": {}
     },
     {
-        "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
         "label": "List",
         "importPath": "typing",
         "description": "typing",
@@ -1610,38 +1586,6 @@
         "documentation": {}
     },
     {
-        "label": "HTTPException",
-        "importPath": "fastapi",
-        "description": "fastapi",
-        "isExtraImport": true,
-        "detail": "fastapi",
-        "documentation": {}
-    },
-    {
-        "label": "Depends",
-        "importPath": "fastapi",
-        "description": "fastapi",
-        "isExtraImport": true,
-        "detail": "fastapi",
-        "documentation": {}
-    },
-    {
-        "label": "status",
-        "importPath": "fastapi",
-        "description": "fastapi",
-        "isExtraImport": true,
-        "detail": "fastapi",
-        "documentation": {}
-    },
-    {
-        "label": "APIRouter",
-        "importPath": "fastapi",
-        "description": "fastapi",
-        "isExtraImport": true,
-        "detail": "fastapi",
-        "documentation": {}
-    },
-    {
         "label": "Depends",
         "importPath": "fastapi",
         "description": "fastapi",
@@ -2290,14 +2234,6 @@
         "documentation": {}
     },
     {
-        "label": "onboarding",
-        "importPath": "routers",
-        "description": "routers",
-        "isExtraImport": true,
-        "detail": "routers",
-        "documentation": {}
-    },
-    {
         "label": "FRONTEND_URL",
         "importPath": "auth.config",
         "description": "auth.config",
@@ -2571,6 +2507,14 @@
         "documentation": {}
     },
     {
+        "label": "timezone",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
         "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
@@ -2580,6 +2524,38 @@
     },
     {
         "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timedelta",
         "importPath": "datetime",
         "description": "datetime",
         "isExtraImport": true,
@@ -2627,30 +2603,6 @@
         "documentation": {}
     },
     {
-        "label": "timedelta",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
         "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
@@ -2672,6 +2624,14 @@
         "description": "datetime",
         "isExtraImport": true,
         "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
         "documentation": {}
     },
     {
@@ -2965,6 +2925,14 @@
     },
     {
         "label": "TEXT",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
         "importPath": "pymongo",
         "description": "pymongo",
         "isExtraImport": true,
@@ -3541,14 +3509,6 @@
     },
     {
         "label": "Field",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
         "importPath": "pydantic",
         "description": "pydantic",
         "isExtraImport": true,
@@ -4333,14 +4293,6 @@
         "documentation": {}
     },
     {
-        "label": "get_current_user",
-        "importPath": "auth.dependencies",
-        "description": "auth.dependencies",
-        "isExtraImport": true,
-        "detail": "auth.dependencies",
-        "documentation": {}
-    },
-    {
         "label": "require_admin",
         "importPath": "auth.dependencies",
         "description": "auth.dependencies",
@@ -4421,22 +4373,6 @@
         "documentation": {}
     },
     {
-        "label": "get_onboarding_crud",
-        "importPath": "utils.onboarding",
-        "description": "utils.onboarding",
-        "isExtraImport": true,
-        "detail": "utils.onboarding",
-        "documentation": {}
-    },
-    {
-        "label": "ONBOARDING_TASKS",
-        "importPath": "utils.onboarding",
-        "description": "utils.onboarding",
-        "isExtraImport": true,
-        "detail": "utils.onboarding",
-        "documentation": {}
-    },
-    {
         "label": "serialize_doc",
         "importPath": "utils.helpers",
         "description": "utils.helpers",
@@ -4462,14 +4398,6 @@
     },
     {
         "label": "serialize_docs",
-        "importPath": "utils.helpers",
-        "description": "utils.helpers",
-        "isExtraImport": true,
-        "detail": "utils.helpers",
-        "documentation": {}
-    },
-    {
-        "label": "serialize_doc",
         "importPath": "utils.helpers",
         "description": "utils.helpers",
         "isExtraImport": true,
@@ -6653,51 +6581,6 @@
         "documentation": {}
     },
     {
-        "label": "UpdateTaskRequest",
-        "kind": 6,
-        "importPath": "backend.routers.onboarding",
-        "description": "backend.routers.onboarding",
-        "peekOfCode": "class UpdateTaskRequest(BaseModel):\n    \"\"\"Request body for updating a task\"\"\"\n    task_id: str\n    completed: bool\nclass CompleteTourRequest(BaseModel):\n    \"\"\"Request body for completing/skipping tour\"\"\"\n    skipped: bool = False\nclass DismissChecklistRequest(BaseModel):\n    \"\"\"Request body for dismissing checklist\"\"\"\n    dismissed: bool = True",
-        "detail": "backend.routers.onboarding",
-        "documentation": {}
-    },
-    {
-        "label": "CompleteTourRequest",
-        "kind": 6,
-        "importPath": "backend.routers.onboarding",
-        "description": "backend.routers.onboarding",
-        "peekOfCode": "class CompleteTourRequest(BaseModel):\n    \"\"\"Request body for completing/skipping tour\"\"\"\n    skipped: bool = False\nclass DismissChecklistRequest(BaseModel):\n    \"\"\"Request body for dismissing checklist\"\"\"\n    dismissed: bool = True\nclass CollapseChecklistRequest(BaseModel):\n    \"\"\"Request body for toggling checklist collapse\"\"\"\n    collapsed: bool\n@router.get(\"/tasks\")",
-        "detail": "backend.routers.onboarding",
-        "documentation": {}
-    },
-    {
-        "label": "DismissChecklistRequest",
-        "kind": 6,
-        "importPath": "backend.routers.onboarding",
-        "description": "backend.routers.onboarding",
-        "peekOfCode": "class DismissChecklistRequest(BaseModel):\n    \"\"\"Request body for dismissing checklist\"\"\"\n    dismissed: bool = True\nclass CollapseChecklistRequest(BaseModel):\n    \"\"\"Request body for toggling checklist collapse\"\"\"\n    collapsed: bool\n@router.get(\"/tasks\")\nasync def get_task_definitions(current_user: dict = Depends(get_current_user)):\n    \"\"\"\n    Get task definitions (metadata) filtered by user's role",
-        "detail": "backend.routers.onboarding",
-        "documentation": {}
-    },
-    {
-        "label": "CollapseChecklistRequest",
-        "kind": 6,
-        "importPath": "backend.routers.onboarding",
-        "description": "backend.routers.onboarding",
-        "peekOfCode": "class CollapseChecklistRequest(BaseModel):\n    \"\"\"Request body for toggling checklist collapse\"\"\"\n    collapsed: bool\n@router.get(\"/tasks\")\nasync def get_task_definitions(current_user: dict = Depends(get_current_user)):\n    \"\"\"\n    Get task definitions (metadata) filtered by user's role\n    Returns:\n        List of task definitions with labels, descriptions, and order\n    \"\"\"",
-        "detail": "backend.routers.onboarding",
-        "documentation": {}
-    },
-    {
-        "label": "router",
-        "kind": 5,
-        "importPath": "backend.routers.onboarding",
-        "description": "backend.routers.onboarding",
-        "peekOfCode": "router = APIRouter(prefix=\"/onboarding\", tags=[\"onboarding\"])\nclass UpdateTaskRequest(BaseModel):\n    \"\"\"Request body for updating a task\"\"\"\n    task_id: str\n    completed: bool\nclass CompleteTourRequest(BaseModel):\n    \"\"\"Request body for completing/skipping tour\"\"\"\n    skipped: bool = False\nclass DismissChecklistRequest(BaseModel):\n    \"\"\"Request body for dismissing checklist\"\"\"",
-        "detail": "backend.routers.onboarding",
-        "documentation": {}
-    },
-    {
         "label": "RatePreset",
         "kind": 6,
         "importPath": "backend.routers.organizations",
@@ -7262,6 +7145,15 @@
         "description": "backend.scripts.migrate_oh_rates",
         "peekOfCode": "def migrate_rate_presets():\n    \"\"\"Migrate rate presets from 'oh' to 'oh_onsite' and 'oh_offsite'\"\"\"\n    print(\"\\n=== Migrating Rate Presets ===\")\n    mongodb = get_mongodb_client()\n    db = mongodb.get_database()\n    orgs = db[\"organizations\"]\n    # Find organizations with rate presets containing old 'oh' field\n    cursor = orgs.find({\"settings.rate_presets\": {\"$exists\": True, \"$ne\": []}})\n    orgs_updated = 0\n    presets_migrated = 0",
         "detail": "backend.scripts.migrate_oh_rates",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_onboarding_progress",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_onboarding_progress",
+        "description": "backend.scripts.migrate_onboarding_progress",
+        "peekOfCode": "def migrate_onboarding_progress():\n    \"\"\"\n    Update onboarding progress for existing users based on actual completed actions:\n    - rates_configured: Check if organization has custom rates\n    - payment_added: Check if organization has Stripe customer_id\n    - team_invited: Check if organization has multiple users or sent invitations\n    - first_proposal_uploaded: Check if user has any proposals\n    \"\"\"\n    mongodb_url = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\n    database_name = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")",
+        "detail": "backend.scripts.migrate_onboarding_progress",
         "documentation": {}
     },
     {
@@ -7836,7 +7728,7 @@
         "kind": 5,
         "importPath": "backend.utils.onboarding",
         "description": "backend.utils.onboarding",
-        "peekOfCode": "ONBOARDING_TASKS = {\n    \"tour_completed\": {\n        \"label\": \"Complete product tour\",\n        \"description\": \"Take a guided tour of PriceIQ features\",\n        \"required_role\": None,\n        \"order\": 1\n    },\n    \"first_proposal_uploaded\": {\n        \"label\": \"Upload your first proposal\",\n        \"description\": \"Upload a contract document to get started\",",
+        "peekOfCode": "ONBOARDING_TASKS = {\n    \"rates_configured\": {\n        \"label\": \"Configure your rates\",\n        \"description\": \"Set your organization's Fringe, OH, G&A, and Fee rates\",\n        \"required_role\": \"admin\",\n        \"order\": 1\n    },\n    \"payment_added\": {\n        \"label\": \"Add payment method\",\n        \"description\": \"Add a credit card to enable proposal generation\",",
         "detail": "backend.utils.onboarding",
         "documentation": {}
     },

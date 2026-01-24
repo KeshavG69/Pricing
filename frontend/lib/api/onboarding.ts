@@ -22,39 +22,32 @@ export interface CompletionStats {
 // Static task definitions (no API call needed)
 export const ONBOARDING_TASKS: TaskDefinition[] = [
   {
-    id: "tour_completed",
-    label: "Complete product tour",
-    description: "Take a guided tour of PriceIQ features",
-    order: 1,
-    required_role: null, // Both admin and user
-  },
-  {
-    id: "first_proposal_uploaded",
-    label: "Upload your first proposal",
-    description: "Upload a contract document to get started",
-    order: 2,
-    required_role: null, // Both admin and user
-  },
-  {
     id: "rates_configured",
-    label: "Configure default rates",
+    label: "Configure your rates",
     description: "Set your organization's Fringe, OH, G&A, and Fee rates",
-    order: 3,
+    order: 1,
     required_role: 'admin', // Admin only
   },
   {
     id: "payment_added",
     label: "Add payment method",
     description: "Add a credit card to enable proposal generation",
-    order: 4,
+    order: 2,
     required_role: 'admin', // Admin only
   },
   {
     id: "team_invited",
     label: "Invite team members",
     description: "Collaborate by inviting colleagues to your workspace",
-    order: 5,
+    order: 3,
     required_role: 'admin', // Admin only
+  },
+  {
+    id: "first_proposal_uploaded",
+    label: "Upload your first proposal",
+    description: "Upload a contract document to get started",
+    order: 4,
+    required_role: null, // Both admin and user
   },
 ];
 
@@ -104,10 +97,6 @@ export interface UpdateTaskRequest {
   completed: boolean;
 }
 
-export interface CompleteTourRequest {
-  skipped: boolean;
-}
-
 export interface DismissChecklistRequest {
   dismissed: boolean;
 }
@@ -140,32 +129,6 @@ export const updateTask = async (taskId: string, completed: boolean): Promise<{ 
     task_id: taskId,
     completed
   });
-  return response.data;
-};
-
-/**
- * Mark product tour as started
- */
-export const startTour = async (): Promise<{ message: string }> => {
-  const response = await apiClient.post<{ message: string }>('/onboarding/tour/start');
-  return response.data;
-};
-
-/**
- * Mark product tour as completed or skipped
- */
-export const completeTour = async (skipped: boolean = false): Promise<{ message: string; progress: OnboardingProgress }> => {
-  const response = await apiClient.post<{ message: string; progress: OnboardingProgress }>('/onboarding/tour/complete', {
-    skipped
-  });
-  return response.data;
-};
-
-/**
- * Restart the product tour
- */
-export const restartTour = async (): Promise<{ message: string; progress: OnboardingProgress }> => {
-  const response = await apiClient.post<{ message: string; progress: OnboardingProgress }>('/onboarding/tour/restart');
   return response.data;
 };
 
