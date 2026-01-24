@@ -153,7 +153,7 @@ def _create_intelligent_parser() -> Agent:
     """Create intelligent parser with reasoning and web search capabilities."""
 
     # Use a powerful model that can reason
-    llm=get_chat_llm_agno(model="anthropic/claude-sonnet-4.5",api_key=settings.OPENROUTER_API_KEY,base_url="https://openrouter.ai/api/v1",max_tokens=32000)
+    llm=get_chat_llm_agno(model="anthropic/claude-sonnet-4.5",api_key=settings.OPENROUTER_API_KEY,base_url="https://openrouter.ai/api/v1",max_tokens=16000)
 
 
     # Create reasoning tool with few-shot example for combined team pattern

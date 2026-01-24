@@ -185,7 +185,7 @@ def _extract_metadata_with_llm(full_text: str) -> GSAContractMetadata:
     Returns:
         GSAContractMetadata instance
     """
-    llm = get_chat_llm(model="gpt-4.1-mini",api_key=settings.OPENAI_API_KEY,base_url="https://api.openai.com/v1", max_tokens=10000)
+    llm = get_chat_llm(model="gpt-4.1",api_key=settings.OPENAI_API_KEY,base_url="https://api.openai.com/v1", max_tokens=10000)
 
     prompt = f"""Extract metadata from this GSA contract document.
 
@@ -271,7 +271,7 @@ def _extract_descriptions_with_llm(full_text: str) -> List[dict]:
     Returns:
         List of dicts with title, sin, description, experience
     """
-    llm = get_chat_llm(model="gpt-4.1",api_key=settings.OPENAI_API_KEY,base_url="https://api.openai.com/v1", max_tokens=30000)
+    llm = get_chat_llm(model="gpt-5-mini-2025-08-07",api_key=settings.OPENAI_API_KEY,base_url="https://api.openai.com/v1", max_tokens=30000)
 
     prompt = f"""Extract job descriptions and qualifications from this GSA contract document.
 
@@ -368,7 +368,7 @@ def _extract_rates_with_llm(full_text: str, year_columns: Optional[List[str]] = 
     Returns:
         List of dicts with title, sin, rates_by_year
     """
-    llm = get_chat_llm(model="gpt-4.1",api_key=settings.OPENAI_API_KEY,base_url="https://api.openai.com/v1", max_tokens=30000)
+    llm = get_chat_llm(model="gpt-5-mini-2025-08-07",api_key=settings.OPENAI_API_KEY,base_url="https://api.openai.com/v1", max_tokens=30000)
 
     # Build year context from metadata
     if year_columns and len(year_columns) > 0:
