@@ -9,6 +9,8 @@ class Settings(BaseSettings):
     OPENROUTER_API_KEY: str
     OPENROUTER_MODEL: str = "openai/gpt-4o"
     OPENAI_API_KEY: str
+    CLAUDE_API_KEY: str
+    CLAUDE_BASE_URL: str = "https://api.anthropic.com/v1"
 
     # LlamaCloud API for document extraction
     LLAMA_CLOUD_API_KEY: str

@@ -199,13 +199,14 @@ def calculate_gsa_year(contract_start_date: str) -> int:
         return 1
 
 
-def create_gsa_retriever(organization_id: str, file_id: str):
+def create_gsa_retriever(organization_id: str, file_id: str, description: Optional[str] = None):
     """
     Create a retriever for GSA labor category search using Pinecone.
 
     Args:
         organization_id: Organization ID to filter results
         file_id: GSA contract file ID to filter results
+        description: Optional job description for enhanced semantic matching
 
     Returns:
         Callable retriever function for agno agents
@@ -230,8 +231,13 @@ def create_gsa_retriever(organization_id: str, file_id: str):
         """
         k = 30
 
+        # Enhance query with description for better semantic matching (like BLS retriever)
+        search_query = query
+        if description:
+            search_query = f"{query}. {description}"
+
         results = pinecone_client.search_labor_categories(
-            query=query,
+            query=search_query,
             organization_id=organization_id,
             file_id=file_id,
             top_k=k
