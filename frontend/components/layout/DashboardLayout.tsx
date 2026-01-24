@@ -10,13 +10,14 @@ import ProposalsSidebar from './ProposalsSidebar';
 import { AddPaymentPrompt, PaymentRequiredModal } from '@/components/billing';
 import { TermsBlockingModal } from '@/components/terms/TermsBlockingModal';
 import HelpCenterModal from '@/components/help/HelpCenterModal';
-import { SetupGuideChecklist, ProductTour } from '@/components/onboarding';
+import { SetupGuideChecklist } from '@/components/onboarding';
 
 interface DashboardLayoutProps {
   children: ReactNode;
+  hideChecklist?: boolean;
 }
 
-export default function DashboardLayout({ children }: DashboardLayoutProps) {
+export default function DashboardLayout({ children, hideChecklist = false }: DashboardLayoutProps) {
   const router = useRouter();
   const { user, isInitializing } = useAuthStore();
   const { fetchBillingStatus } = useBillingStore();
@@ -82,11 +83,8 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* Help Center Modal */}
       <HelpCenterModal />
 
-      {/* Onboarding Setup Guide Checklist */}
-      <SetupGuideChecklist />
-
-      {/* Product Tour */}
-      <ProductTour />
+      {/* Onboarding Setup Guide Checklist - hide on spreadsheet UI page */}
+      {!hideChecklist && <SetupGuideChecklist />}
     </div>
   );
 }
