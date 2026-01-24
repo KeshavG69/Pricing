@@ -219,7 +219,7 @@ export default function SecurityPage() {
                   <li>Employee security training and background checks</li>
                 </ul>
                 <p className="text-gray-600 leading-relaxed">
-                  Have questions about our security practices? Contact our security team at <a href="mailto:security@priceiq.com" className="text-[#2563eb] hover:underline font-semibold">security@priceiq.com</a>
+                  Have questions about our security practices? Contact our security team at <a href="mailto:service@priceiq.org" className="text-[#2563eb] hover:underline font-semibold">service@priceiq.org</a>
                 </p>
               </div>
             </div>
@@ -235,7 +235,7 @@ export default function SecurityPage() {
             </p>
             <div className="bg-gray-50 rounded-2xl p-8 text-left">
               <h3 className="text-xl font-bold text-gray-900 mb-4">How to Report</h3>
-              <p className="text-gray-600 mb-4">Email us at <a href="mailto:security@priceiq.com" className="text-[#2563eb] hover:underline font-semibold">security@priceiq.com</a> with:</p>
+              <p className="text-gray-600 mb-4">Email us at <a href="mailto:service@priceiq.org" className="text-[#2563eb] hover:underline font-semibold">service@priceiq.org</a> with:</p>
               <ul className="space-y-2 text-gray-600 list-disc pl-6">
                 <li>Detailed description of the vulnerability</li>
                 <li>Steps to reproduce the issue</li>
@@ -251,7 +251,7 @@ export default function SecurityPage() {
         <section className="py-24 lg:py-32 bg-[#2563eb]">
           <div className="max-w-4xl mx-auto px-6 sm:px-8 text-center text-white">
             <h2 className="text-4xl sm:text-5xl font-bold mb-6">
-              Secure, Compliant, Trusted
+              Secure, Reliable, Trusted
             </h2>
             <p className="text-xl text-white/90 mb-10 leading-relaxed">
               Join hundreds of government contractors who trust PriceIQ with their most sensitive proposal data.
