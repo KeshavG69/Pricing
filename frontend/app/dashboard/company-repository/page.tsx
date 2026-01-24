@@ -1063,15 +1063,6 @@ export default function CompanyRepositoryPage() {
                             <h5 className="text-sm font-medium text-foreground">
                               Labor Categories ({expandedContract.labor_categories.length})
                             </h5>
-                            {userIsAdmin && (
-                              <button
-                                onClick={() => setShowCreatePresetDialog(true)}
-                                className="flex items-center gap-2 px-3 py-1.5 bg-primary text-primary-foreground rounded-md text-sm hover:bg-primary/90 transition-colors"
-                              >
-                                <Plus className="w-4 h-4" />
-                                Create Preset
-                              </button>
-                            )}
                           </div>
                           <div className="overflow-x-auto">
                             <table className="w-full text-sm">
@@ -1096,19 +1087,21 @@ export default function CompanyRepositoryPage() {
                                   >
                                     <td className="py-2 px-3 text-foreground">{lc.title}</td>
                                     <td className="py-2 px-3 text-muted-foreground">{lc.sin || '-'}</td>
-                                    <td
-                                      className="py-2 px-3 text-muted-foreground max-w-[200px] truncate cursor-pointer hover:bg-muted/50"
-                                      title={lc.description || '-'}
-                                      onDoubleClick={() => lc.description && setTextModal({ title: `${lc.title} - Description`, content: lc.description })}
-                                    >
-                                      {lc.description || '-'}
+                                    <td className="py-2 px-3 text-muted-foreground">
+                                      <div
+                                        className="max-w-[300px] max-h-[80px] overflow-auto text-sm cursor-pointer hover:bg-muted/50 p-1 rounded"
+                                        onDoubleClick={() => lc.description && setTextModal({ title: `${lc.title} - Description`, content: lc.description })}
+                                      >
+                                        {lc.description || '-'}
+                                      </div>
                                     </td>
-                                    <td
-                                      className="py-2 px-3 text-muted-foreground max-w-[200px] truncate cursor-pointer hover:bg-muted/50"
-                                      title={lc.experience || '-'}
-                                      onDoubleClick={() => lc.experience && setTextModal({ title: `${lc.title} - Experience`, content: lc.experience })}
-                                    >
-                                      {lc.experience || '-'}
+                                    <td className="py-2 px-3 text-muted-foreground">
+                                      <div
+                                        className="max-w-[250px] max-h-[80px] overflow-auto text-sm cursor-pointer hover:bg-muted/50 p-1 rounded"
+                                        onDoubleClick={() => lc.experience && setTextModal({ title: `${lc.title} - Experience`, content: lc.experience })}
+                                      >
+                                        {lc.experience || '-'}
+                                      </div>
                                     </td>
                                     {getYearColumns(expandedContract.labor_categories, contract).map(({ yearNum }) => (
                                       <td key={yearNum} className="py-2 px-3 text-right text-foreground font-mono">

@@ -9,6 +9,7 @@ import threading
 import logging
 from typing import Optional
 from agno.agent import Agent
+from app.settings import settings
 from client.llm_client import get_chat_llm_agno
 from client.agent_memory import get_agent_db, get_memory_manager
 from utils.agno_tools import create_help_center_retriever
@@ -63,7 +64,11 @@ def _create_help_center_agent() -> Agent:
     Returns:
         Agent instance configured for help center Q&A
     """
-    llm = get_chat_llm_agno(model="google/gemini-3-flash-preview")
+    llm = get_chat_llm_agno(
+        model="claude-haiku-4-5",
+        api_key=settings.CLAUDE_API_KEY,
+        base_url=settings.CLAUDE_BASE_URL,
+    )
 
     # Create help center retriever (singleton - same for all users)
     help_retriever = create_help_center_retriever()
@@ -81,7 +86,6 @@ Your task:
 3. Provide a clear, step-by-step answer
 4. Include specific examples when helpful
 5. Cite which help articles you're referencing""",
-
         """<guidelines>
 1. ALWAYS search the knowledge base first before answering
 2. Use information ONLY from the retrieved documentation
@@ -95,7 +99,6 @@ Your task:
    - Use code blocks for examples
 7. Cite your sources: mention article titles or categories
 </guidelines>""",
-
         """<response_structure>
 For "how-to" questions:
 1. Brief overview (1 sentence)
@@ -117,7 +120,6 @@ For troubleshooting questions:
 4. Preventive measures
 5. Source citation
 </response_structure>""",
-
         """<important>
 - If you don't find relevant information, say: "I don't have specific documentation about that. Could you rephrase your question or ask about something else?"
 - If question is ambiguous, ask clarifying questions
@@ -125,7 +127,7 @@ For troubleshooting questions:
 - Always be helpful and encouraging
 - Use the search_knowledge_base tool to retrieve relevant articles
 - You dont have to take the users request literaly understand the intent behind the request and provide the most relevant information from the knowledge base
-</important>"""
+</important>""",
     ]
 
     agent = Agent(
@@ -143,7 +145,7 @@ For troubleshooting questions:
         id="HelpCenterAgent",
         description="PriceIQ Help Center Assistant that answers user questions using documentation.",
         instructions=instructions,
-        debug_mode=True
+        debug_mode=True,
     )
 
     logger.info("Created help center agent (singleton) with memory enabled")

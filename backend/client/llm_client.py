@@ -37,61 +37,106 @@ class LLMClient:
         Get ChatOpenAI instance for structured output and chat operations (LangChain)
 
         Args:
-            model: Model name (defaults to settings.OPENROUTER_MODEL)
-            api_key: API key (defaults to settings.OPENROUTER_API_KEY)
-            base_url: Base URL (defaults to OpenRouter)
+            model: Model name (defaults to Claude Sonnet 4.5)
+            api_key: API key (defaults to settings.CLAUDE_API_KEY)
+            base_url: Base URL (defaults to Claude)
+            max_tokens: Maximum tokens (defaults to 10000, ignored for GPT-5 models)
 
         Returns:
             ChatOpenAI instance
         """
-        model = model or settings.OPENROUTER_MODEL
-        api_key = api_key or settings.OPENROUTER_API_KEY
-        base_url = base_url or "https://openrouter.ai/api/v1"
+        model = model or "claude-sonnet-4-5"
+        api_key = api_key or settings.CLAUDE_API_KEY
+        base_url = base_url or settings.CLAUDE_BASE_URL
 
-        cache_key = f"{model}:{base_url}"
+        # Check if model is GPT-5 (gpt-5, gpt-5-mini, gpt-5-turbo, etc.)
+        is_gpt5 = model.lower().startswith("gpt-5")
+
+        # Adjust cache key based on whether max_tokens is used
+        if is_gpt5:
+            cache_key = f"{model}:{base_url}"
+        else:
+            cache_key = f"{model}:{base_url}:{max_tokens}"
 
         with self._lock:
             if cache_key not in self._chat_llm_cache:
-                self._chat_llm_cache[cache_key] = ChatOpenAI(
-                    model=model,
-                    openai_api_key=api_key,
-                    openai_api_base=base_url,
-                    max_tokens=max_tokens
-                )
+                # Add 1M context header only for Claude Sonnet 4.5
+                headers = {}
+                if "claude-sonnet-4" in model.lower():
+                    headers["anthropic-beta"] = "context-1m-2025-08-07"
+
+                # Build kwargs dynamically
+                llm_kwargs = {
+                    "model": model,
+                    "openai_api_key": api_key,
+                    "openai_api_base": base_url,
+                    "default_headers": headers if headers else None
+                }
+
+                # Only add max_tokens if NOT GPT-5
+                if not is_gpt5 and max_tokens is not None:
+                    llm_kwargs["max_tokens"] = max_tokens
+
+                self._chat_llm_cache[cache_key] = ChatOpenAI(**llm_kwargs)
             return self._chat_llm_cache[cache_key]
 
     def get_chat_llm_agno(
         self,
         model: Optional[str] = None,
         api_key: Optional[str] = None,
-        base_url: Optional[str] = None
+        base_url: Optional[str] = None,
+        max_tokens: Optional[int] = None,
+        temperature: Optional[float] = 0.1
     ) -> OpenAIChat:
         """
         Get OpenAIChat instance for Agno framework operations
 
         Args:
-            model: Model name (defaults to settings.OPENROUTER_MODEL)
-            api_key: API key (defaults to settings.OPENROUTER_API_KEY)
-            base_url: Base URL (defaults to OpenRouter)
+            model: Model name (defaults to Claude Sonnet 4.5)
+            api_key: API key (defaults to settings.CLAUDE_API_KEY)
+            base_url: Base URL (defaults to Claude)
+            temperature: Sampling temperature (defaults to 0.1, ignored for GPT-5 models)
+            max_tokens: Maximum tokens (defaults to 10000, ignored for GPT-5 models)
 
         Returns:
             OpenAIChat instance
         """
-        model = model or settings.OPENROUTER_MODEL
-        api_key = api_key or settings.OPENROUTER_API_KEY
-        base_url = base_url or "https://openrouter.ai/api/v1"
+        model = model or "claude-sonnet-4-5"
+        api_key = api_key or settings.CLAUDE_API_KEY
+        base_url = base_url or settings.CLAUDE_BASE_URL
+        max_tokens = max_tokens or 10000
+        temperature = temperature if temperature is not None else 0.1
 
-        cache_key = f"{model}:{base_url}"
+        # Check if model is GPT-5 (gpt-5, gpt-5-mini, gpt-5-turbo, etc.)
+        is_gpt5 = model.lower().startswith("gpt-5")
+
+        # Adjust cache key based on whether params are used
+        if is_gpt5:
+            cache_key = f"{model}:{base_url}"
+        else:
+            cache_key = f"{model}:{base_url}:{max_tokens}:{temperature}"
 
         with self._lock:
             if cache_key not in self._chat_llm_agno_cache:
-                self._chat_llm_agno_cache[cache_key] = OpenAIChat(
-                    id=model,
-                    api_key=api_key,
-                    max_tokens=10000,
-                    base_url=base_url,
-                    temperature=0,  # Deterministic responses for consistent SOC matching
-                )
+                # Add 1M context header only for Claude Sonnet 4.5
+                extra_headers = {}
+                if "claude-sonnet-4" in model.lower():
+                    extra_headers["anthropic-beta"] = "context-1m-2025-08-07"
+
+                # Build kwargs dynamically
+                llm_kwargs = {
+                    "id": model,
+                    "api_key": api_key,
+                    "base_url": base_url,
+                    "extra_headers": extra_headers if extra_headers else None
+                }
+
+                # Only add max_tokens and temperature if NOT GPT-5
+                if not is_gpt5:
+                    llm_kwargs["max_tokens"] = max_tokens
+                    llm_kwargs["temperature"] = temperature
+
+                self._chat_llm_agno_cache[cache_key] = OpenAIChat(**llm_kwargs)
             return self._chat_llm_agno_cache[cache_key]
 
     def get_embeddings(
@@ -107,8 +152,8 @@ class LLMClient:
         Returns:
             OpenAIEmbeddings instance
         """
-        model =  "openai/text-embedding-3-small"
-        api_key =  settings.OPENROUTER_API_KEY
+        model =  "text-embedding-3-small"
+        api_key =  settings.OPENAI_API_KEY
 
         cache_key = model
 
@@ -119,7 +164,7 @@ class LLMClient:
                     model=model,
                     dimensions=1536,
                     request_timeout=60,  # 60 second timeout
-                    base_url="https://openrouter.ai/api/v1",
+                    
                     max_retries=3  # Retry up to 3 times
                 )
             return self._embeddings_cache[cache_key]
@@ -161,9 +206,10 @@ def get_chat_llm(
     Convenience function to get ChatOpenAI instance directly (LangChain)
 
     Args:
-        model: Model name (defaults to settings.OPENROUTER_MODEL)
-        api_key: API key (defaults to settings.OPENROUTER_API_KEY)
-        base_url: Base URL (defaults to OpenRouter)
+        model: Model name (defaults to Claude Sonnet 4.5)
+        api_key: API key (defaults to settings.CLAUDE_API_KEY)
+        base_url: Base URL (defaults to Claude)
+        max_tokens: Maximum tokens (defaults to 10000)
 
     Returns:
         ChatOpenAI instance
@@ -174,20 +220,24 @@ def get_chat_llm(
 def get_chat_llm_agno(
     model: Optional[str] = None,
     api_key: Optional[str] = None,
-    base_url: Optional[str] = None
+    base_url: Optional[str] = None,
+    max_tokens: Optional[int] = None,
+    temperature: Optional[float] = 0.1
 ) -> OpenAIChat:
     """
     Convenience function to get OpenAIChat instance directly (Agno)
 
     Args:
-        model: Model name (defaults to settings.OPENROUTER_MODEL)
-        api_key: API key (defaults to settings.OPENROUTER_API_KEY)
-        base_url: Base URL (defaults to OpenRouter)
+        model: Model name (defaults to Claude Sonnet 4.5)
+        api_key: API key (defaults to settings.CLAUDE_API_KEY)
+        base_url: Base URL (defaults to Claude)
+        temperature: Sampling temperature (defaults to 0.1)
+        max_tokens: Maximum tokens (defaults to 10000)
 
     Returns:
         OpenAIChat instance
     """
-    return get_llm_client().get_chat_llm_agno(model=model, api_key=api_key, base_url=base_url)
+    return get_llm_client().get_chat_llm_agno(model=model, api_key=api_key, base_url=base_url,max_tokens=max_tokens, temperature=temperature)
 
 
 def get_embeddings() -> OpenAIEmbeddings:

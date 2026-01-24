@@ -4,7 +4,7 @@ Setup Help Center RAG Pipeline
 This script:
 1. Reads all markdown files from docs/help-center/
 2. Splits them into chunks
-3. Generates embeddings using OpenAI (via OpenRouter)
+3. Generates embeddings using OpenAI
 4. Uploads to Pinecone vector store (separate index from GSA, uses HELP_CENTER_PINECONE_INDEX_NAME)
 
 Metadata fields per chunk:
@@ -20,7 +20,7 @@ Usage:
     uv run python scripts/setup_help_center_rag.py
 
 Requirements:
-    - OPENROUTER_API_KEY in .env
+    - OPENAI_API_KEY in .env
     - PINECONE_API_KEY in .env
 """
 
@@ -45,14 +45,14 @@ from pinecone import Pinecone, ServerlessSpec
 load_dotenv()
 
 # Configuration
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 PINECONE_API_KEY = os.getenv("PINECONE_API_KEY")
 PINECONE_INDEX_NAME = os.getenv("HELP_CENTER_PINECONE_INDEX_NAME", "help-center")  # Separate index for help center
 PINECONE_NAMESPACE = "help-center"  # Namespace within the index
 DOCS_PATH = Path(__file__).parent.parent.parent / "docs" / "help-center"
 
 # Embedding configuration
-EMBEDDING_MODEL = "openai/text-embedding-3-small"  # Via OpenRouter
+EMBEDDING_MODEL = "text-embedding-3-small"
 EMBEDDING_DIMENSION = 1536
 
 # Chunking configuration
@@ -62,8 +62,8 @@ CHUNK_OVERLAP = 200  # Overlap to preserve context
 
 def validate_environment():
     """Validate required environment variables."""
-    if not OPENROUTER_API_KEY:
-        raise ValueError("OPENROUTER_API_KEY not found in environment")
+    if not OPENAI_API_KEY:
+        raise ValueError("OPENAI_API_KEY not found in environment")
     if not PINECONE_API_KEY:
         raise ValueError("PINECONE_API_KEY not found in environment")
 
@@ -249,11 +249,10 @@ def upload_to_pinecone(chunks: List[Document]):
     print(f"Using model: {EMBEDDING_MODEL}")
     print(f"Target: Index '{PINECONE_INDEX_NAME}' → Namespace '{PINECONE_NAMESPACE}'")
 
-    # Initialize embeddings (using OpenRouter)
+    # Initialize embeddings (using OpenAI directly)
     embeddings = OpenAIEmbeddings(
         model=EMBEDDING_MODEL,
-        openai_api_key=OPENROUTER_API_KEY,
-        openai_api_base="https://openrouter.ai/api/v1"
+        openai_api_key=OPENAI_API_KEY
     )
 
     # Augment chunks with metadata for better vector search
