@@ -79,33 +79,49 @@ Upload → Parse (LlamaExtract + GPT-4) → Agent Processing (10 parallel)
 
 **Key Backend Files**:
 - `backend/app/server.py` - FastAPI app initialization, CORS, routers
-- `backend/routers/` - API endpoints (pricing, proposals, organizations, invitations, auth)
-- `backend/client/` - External services (LlamaExtract, FAISS, MongoDB, OpenAI)
-- `backend/agent/` - Agno-based pricing agent (SOC search → wage lookup)
-- `backend/utils/` - CRUD operations (proposals, organizations, invitations)
+- `backend/routers/` - API endpoints (pricing, proposals, organizations, invitations, auth, billing, help_center, company_repository, excel_export, terms, stripe_webhooks)
+- `backend/client/` - External services (LlamaExtract, FAISS, MongoDB, OpenAI, Stripe, Pinecone, iDrive)
+  - `intelligent_parser.py` - AI agent with reasoning and web search for contract analysis
+  - `gsa_parser.py` - Specialized parser for GSA contract documents (RTF, DOCX, XLSX, PDF)
+  - `calculation_service.py` - FBLR calculation engine (static methods)
+  - `excel_generator.py` - Excel export with formulas and formatting
+  - `email_service.py` - SMTP email service for invitations
+  - `stripe_client.py` - Stripe payment integration
+- `backend/agent/` - Agno-based agents (pricing, help center)
+- `backend/utils/` - CRUD operations (proposals, organizations, invitations, billing)
 - `backend/auth/` - JWT authentication, RBAC, user management
 - `backend/scripts/` - Data setup and migration scripts
 
 **Database Collections** (MongoDB):
-- `users` - User accounts (email, password, organization_id, role)
-- `organizations` - Multi-tenant workspaces (settings, subscription, owner_id)
+- `users` - User accounts (email, password, organization_id, role, email_verified, account_deletion_requested_at)
+- `organizations` - Multi-tenant workspaces (settings, subscription, owner_id, stripe_customer_id)
 - `proposals` - Pricing proposals (jobs, rates, organization_id, shared_with)
 - `invitations` - Email invitations (token_hash, organization_id, expires_at)
 - `occupations` - SOC codes (~1,100, cached in FAISS)
 - `areas` - Geographic areas (~700)
 - `wage_data` - BLS OEWS data (6M+ wage records)
 - `token_blacklist` - Invalidated JWTs
+- `charges` - Billing records (Stripe payment intents, proposal_id, amount)
+- `help_center_articles` - Support documentation (indexed in Pinecone)
+- `company_repositories` - Organization-specific GSA contracts and labor categories
+- `terms_acceptances` - Terms of service acceptance tracking
 
 ### Frontend Architecture
 
 **State Management** (Zustand):
 - `frontend/lib/stores/pricingStore.ts` - Core pricing workspace state (positions, subcontractors, ODCs, rates)
 - `frontend/lib/stores/proposalsStore.ts` - Proposals list, upload, delete
-- `frontend/lib/stores/authStore.ts` - User authentication, organization context
+- `frontend/lib/stores/authStore.ts` - User authentication, organization context, email verification
 - `frontend/lib/stores/organizationStore.ts` - Organization settings, members
+- `frontend/lib/stores/billingStore.ts` - Stripe payment methods, charges, billing history
+- `frontend/lib/stores/companyRepositoryStore.ts` - Organization GSA contracts and labor categories
+- `frontend/lib/stores/helpCenterStore.ts` - Help articles, search, AI chat
+- `frontend/lib/stores/onboardingStore.ts` - User onboarding tasks and progress
+- `frontend/lib/stores/accountDeletionStore.ts` - Account deletion requests
+- `frontend/lib/stores/organizationDeletionStore.ts` - Organization deletion requests
 
 **Key Frontend Files**:
-- `frontend/app/` - Next.js 16 App Router pages
+- `frontend/app/` - Next.js 16 App Router pages (auth, dashboard, pricing, proposals, settings, billing, help, terms)
 - `frontend/components/pricing/` - Excel-like pricing workspace
   - `PricingWorkspace.tsx` - Main container with tabbed interface
   - `PositionsGrid.tsx` - Basic mode positions table (react-data-grid)
@@ -115,10 +131,55 @@ Upload → Parse (LlamaExtract + GPT-4) → Agent Processing (10 parallel)
   - `sections/PassthroughSection.tsx` - Prime contractor passthrough calculations
 - `frontend/components/layout/` - DashboardLayout, navigation
 - `frontend/components/workspace/` - WorkspaceSwitcher (organization switching)
+- `frontend/components/billing/` - Stripe payment UI (PaymentMethodForm, BillingHistory)
+- `frontend/components/help/` - Help center with AI chat, article search
+- `frontend/components/onboarding/` - User onboarding checklist and tours
+- `frontend/components/terms/` - Terms of service viewer and acceptance
+- `frontend/components/settings/` - Organization settings, user management, account deletion
 
 **Pricing Workspace Modes**:
 - **Basic Mode**: Simple positions table with labor category, hours, rates
 - **Advanced Mode**: Expandable rows showing FBLR breakdown (Direct Labor → Fringe → OH → G&A → Fee)
+
+## Document Parsing Methods
+
+PriceIQ supports multiple document parsing approaches, each optimized for different scenarios:
+
+### 1. Intelligent Parser (Default)
+**File**: `backend/client/intelligent_parser.py`
+
+Uses Agno agent with Claude/GPT-4 + reasoning + web search:
+- **Best for**: Complex contracts with narrative descriptions
+- **Supports**: PDF, DOCX, XLSX, XLS, TXT, CSV
+- **Features**:
+  - Reads and understands entire contract context
+  - Reasons about staffing patterns and evolution
+  - Uses web search only when document lacks data
+  - Extracts year-specific staffing intelligently
+- **Usage**: Default parser for `/api/pricing/process` endpoint
+
+### 2. GSA Contract Parser
+**File**: `backend/client/gsa_parser.py`
+
+Specialized parser for GSA Schedule contracts:
+- **Best for**: GSA rate cards with structured tables
+- **Supports**: RTF, DOCX, XLSX, PDF
+- **Features**:
+  - Dual-parser approach (metadata + labor categories)
+  - Extracts contract number, dates, company name
+  - Parses SINs (Special Item Numbers)
+  - Handles multi-year rate tables
+  - Retry logic with model fallback (GPT-4o → Claude Sonnet)
+- **Usage**: Used for company repository uploads
+
+### 3. Legacy Job Description Parser
+**File**: `backend/client/jd_parser.py`
+
+Original LlamaExtract-based parser:
+- **Best for**: Simple job description lists
+- **Supports**: PDF, DOCX, XLSX
+- **Features**: Fast extraction of position titles, hours, experience
+- **Usage**: Fallback for simple documents
 
 ## Critical Implementation Details
 
@@ -237,6 +298,116 @@ FBLR = DL + Fringe + OH + G&A + Fee
 - For GSA: Always use `gsaRate × hours` for totals (NOT reverse-engineered FBLR)
 - GSA breakdown (`reverseEngineerGSARate`) is purely cosmetic for UI consistency
 - GSA totals MUST NOT change when indirect rates are modified
+
+### Backend: Billing & Stripe Integration
+
+**Architecture** (`routers/billing.py` + `client/stripe_client.py`):
+- Stripe integration for payment processing
+- Per-proposal charges (Basic: $10, Advanced: $20)
+- Payment method management (add, remove, set default)
+- Billing history with charge records in MongoDB
+
+**Key Endpoints**:
+- `POST /api/billing/setup-intent` - Create SetupIntent for adding payment method (admin only)
+- `POST /api/billing/payment-method` - Attach payment method to customer
+- `POST /api/billing/charge` - Charge for proposal (records in `charges` collection)
+- `GET /api/billing/payment-methods` - List payment methods
+- `DELETE /api/billing/payment-method/{pm_id}` - Remove payment method
+- `GET /api/billing/charges` - Get billing history
+
+**Critical Pattern**:
+- Always check `stripe_service.is_configured` before operations
+- Stripe customer ID stored in `organizations` collection
+- Payment intents created with `automatic_payment_methods` enabled
+- Charges linked to proposals via `proposal_id` field
+
+### Backend: Company Repository (GSA Contracts)
+
+**Purpose**: Organization-specific repository of GSA contracts and pre-approved labor categories.
+
+**Architecture** (`routers/company_repository.py` + `client/gsa_parser.py`):
+- Upload GSA contract documents (RTF, DOCX, XLSX, PDF)
+- Parse and extract labor categories with rates
+- Store in MongoDB `company_repositories` collection
+- Users can select from repository when creating proposals
+
+**Key Fields**:
+```python
+{
+  "_id": ObjectId,
+  "organization_id": ObjectId,
+  "name": str,  # Display name
+  "contract_metadata": {
+    "contract_number": str,
+    "company_name": str,
+    "start_date": str,
+    "end_date": str,
+    "year_columns": [str]  # e.g., ["Year 1", "Year 2"]
+  },
+  "labor_categories": [{
+    "sin": str,  # Special Item Number
+    "labor_category": str,
+    "rates": {
+      "year_1": float,
+      "year_2": float,
+      ...
+    }
+  }],
+  "created_at": datetime,
+  "updated_at": datetime
+}
+```
+
+**GSA Parsing Flow**:
+1. Upload document → `POST /api/company-repository/contracts`
+2. Parse with `gsa_parser.py` (dual-parser: metadata + labor categories)
+3. Store in database with organization_id
+4. Frontend displays in company repository UI
+5. Users can add GSA positions to proposals
+
+### Backend: Help Center & AI Support
+
+**Architecture** (`routers/help_center.py` + `agent/help_center_agent.py`):
+- Pinecone vector database for article storage and search
+- Agno-based AI agent for intelligent help responses
+- Semantic search across help articles
+
+**Key Features**:
+- Article management (CRUD operations, admin only)
+- Vector similarity search for relevant articles
+- AI chat agent with RAG (Retrieval Augmented Generation)
+- Organization-scoped or global articles
+
+**Pinecone Integration**:
+- Index name: configurable via `settings.PINECONE_INDEX_NAME`
+- Namespace: `help-center`
+- Embedding model: OpenAI text-embedding-3-small
+- Metadata: title, content, article_id, organization_id
+
+### Frontend: Email Verification
+
+**Flow** (`authStore.ts` + `app/auth/verify-email/page.tsx`):
+1. User signs up → Email sent with verification link
+2. Click link → Redirects to `/auth/verify-email?token={token}`
+3. Frontend calls `POST /api/auth/verify-email` with token
+4. Backend sets `email_verified: true` in user document
+5. User can now access full application
+
+**Critical**: Some features may require email verification (configurable)
+
+### Frontend: Onboarding System
+
+**Purpose**: Guide new users through initial setup and key features.
+
+**Architecture** (`onboardingStore.ts` + `components/onboarding/`):
+- Role-based task lists (admin vs user)
+- Task completion tracking in localStorage
+- Progress indicators
+- Links to relevant pages
+
+**Default Tasks**:
+- Admin: Create organization, invite team members, upload first document
+- User: Complete profile, explore pricing workspace, create first proposal
 
 ## Common Tasks
 
@@ -396,7 +567,7 @@ MONGODB_DATABASE=oews_data
 SECRET_KEY=your-secret-key-change-in-production
 GOOGLE_CLIENT_ID=your-google-client-id
 
-# Email (for invitations)
+# Email (for invitations & verification)
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
@@ -407,8 +578,23 @@ FRONTEND_URL=http://localhost:3000
 
 **Optional**:
 ```bash
+# BLS API (legacy, not actively used)
 BLS_API_KEY=your_bls_key
 CAREERONESTOP_API_KEY=your_careeronestop_key
+
+# Stripe (payment processing)
+STRIPE_SECRET_KEY=sk_test_xxxxxxxxxxxxx
+STRIPE_PUBLISHABLE_KEY=pk_test_xxxxxxxxxxxxx
+
+# Pinecone (help center vector search)
+PINECONE_API_KEY=xxxxxxxxxxxxx
+PINECONE_INDEX_NAME=help-center
+
+# iDrive (cloud storage, not actively used)
+IDRIVE_ACCESS_KEY=xxxxxxxxxxxxx
+IDRIVE_SECRET_KEY=xxxxxxxxxxxxx
+IDRIVE_BUCKET_NAME=your-bucket
+IDRIVE_ENDPOINT=https://xxxxxxxxxxxxx
 ```
 
 ### Frontend (.env.local)
@@ -418,6 +604,9 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 NEXT_PUBLIC_APP_NAME=PriceIQ
 NEXTAUTH_SECRET=your-nextauth-secret
 NEXTAUTH_URL=http://localhost:3000
+
+# Stripe (optional, for payment UI)
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxxxxxxxxxx
 ```
 
 ## Testing
@@ -448,12 +637,14 @@ curl -X POST http://localhost:8000/api/invitations \
 2. Start frontend dev server: `cd frontend && npm run dev`
 3. Open http://localhost:3000
 4. Test flows:
-   - Signup/Login
-   - Upload document
-   - Edit pricing workspace
-   - Convert position to subcontractor
-   - Share proposal (admin only)
-   - Switch workspace/organization
+   - **Authentication**: Signup/Login, email verification, password reset
+   - **Proposals**: Upload document, edit pricing workspace, convert to subcontractor
+   - **Organization**: Share proposal (admin only), switch workspace, invite members
+   - **Billing**: Add payment method, charge for proposal, view billing history
+   - **Company Repository**: Upload GSA contract, select from repository
+   - **Help Center**: Search articles, ask AI assistant
+   - **Onboarding**: Complete tasks, view progress
+   - **Settings**: Update organization settings, manage members, request account deletion
 
 ## Troubleshooting
 
@@ -481,6 +672,29 @@ curl -X POST http://localhost:8000/api/invitations \
 - Ensure `WorkspaceSwitcher.tsx` uses `router.push()` not `window.location.reload()`
 - Check cache invalidation for old organization
 
+**Stripe payment errors**
+- Verify `STRIPE_SECRET_KEY` is set in backend `.env`
+- Check Stripe dashboard for webhook events
+- Test with Stripe test cards: `4242 4242 4242 4242`
+- Ensure organization has `stripe_customer_id` set
+
+**GSA contract parsing failures**
+- Check file format (RTF, DOCX, XLSX, PDF supported)
+- Verify LLM API keys are configured (OpenAI or OpenRouter)
+- Review parser logs for retry attempts
+- Ensure contract has structured table format
+
+**Email not sending (invitations/verification)**
+- Verify SMTP credentials in `.env`
+- Check SMTP server allows less secure apps (Gmail)
+- Use app-specific password for Gmail
+- Check spam folder for test emails
+
+**Pinecone vector search errors**
+- Verify `PINECONE_API_KEY` and `PINECONE_INDEX_NAME` in `.env`
+- Check index exists in Pinecone dashboard
+- Ensure index dimension matches embedding model (1536 for text-embedding-3-small)
+
 ## Performance Optimization
 
 **Backend Pre-warming** (startup.py):
@@ -494,10 +708,15 @@ curl -X POST http://localhost:8000/api/invitations \
 - 5-minute TTL for proposals list
 - Invalidate on mutations and workspace switch
 
-**Database Indexes**:
-- Users: `(email, unique)`, `(organization_id, role)`, `(organization_id, status)`
+**Database Indexes** (created via `scripts/create_indexes.py`):
+- Users: `(email, unique)`, `(organization_id, role)`, `(organization_id, status)`, `(email_verified)`
 - Proposals: `(organization_id, created_at)`, `(shared_with)`, `(user_id, created_at)`
 - Invitations: `(token_hash, unique)`, `(expires_at, TTL)`, `(organization_id, status)`
+- Organizations: `(owner_id)`, `(stripe_customer_id)`
+- Charges: `(organization_id, created_at)`, `(proposal_id)`
+- Company Repositories: `(organization_id, created_at)`
+- Help Center Articles: `(organization_id)`, `(created_at)`
+- Terms Acceptances: `(user_id, version)`, `(organization_id, version)`
 
 ## Security Considerations
 
@@ -506,46 +725,97 @@ curl -X POST http://localhost:8000/api/invitations \
 - Token blacklist for logout (MongoDB collection)
 - Password hashing with bcrypt
 - Invitation tokens hashed with SHA-256 (never store plain)
+- Email verification tokens hashed with SHA-256
 - Organization isolation in all queries
-- RBAC checks before mutations
+- RBAC checks before mutations (admin vs user)
 - CORS configured (update for production in `app/server.py`)
+- Stripe webhook signature verification (when webhooks enabled)
 
 **Frontend**:
 - JWT stored in memory (not localStorage)
 - HTTPS only in production
 - Input validation with Zod schemas
 - XSS prevention via React's default escaping
+- Stripe Elements for PCI-compliant card input
+
+**Data Privacy**:
+- Account deletion: 30-day grace period before permanent deletion
+- Organization deletion: Requires admin role
+- Email verification required for sensitive operations (configurable)
+- Terms of service acceptance tracking with versioning
 
 ## Known Limitations
 
 1. **Job Store**: In-memory (lost on server restart). Consider Redis for production.
 2. **File Size**: Default 2MB limit per file (FastAPI default).
-3. **Processing Time**: Large documents may take 2-5 minutes.
-4. **Vector Index**: Regenerates if cache cleared (~30 seconds).
+3. **Processing Time**: Large documents may take 2-5 minutes (intelligent parser).
+4. **Vector Index**: FAISS index regenerates if cache cleared (~30 seconds).
 5. **No WebSockets**: Progress updates require polling (no real-time).
 6. **Proposal Cache**: Browser localStorage (5-10MB limit).
+7. **Email Service**: SMTP only (no SendGrid/AWS SES integration yet).
+8. **Stripe Webhooks**: Not implemented (manual charge creation only).
+9. **GSA Parser**: Requires structured table format (may fail on free-form text).
+10. **Pinecone**: Single index for all organizations (namespace-based isolation).
+11. **Onboarding**: Tasks stored in localStorage (not synced across devices).
 
 ## Production Deployment
 
 **Backend**:
 1. Update CORS origins in `app/server.py` (specify domain, not `*`)
-2. Change `SECRET_KEY` in `.env` (generate random key)
-3. Use MongoDB Atlas (update `MONGODB_URL`)
-4. Enable HTTPS (reverse proxy: nginx, Caddy)
+2. Change `SECRET_KEY` in `.env` (generate random 32+ character key)
+3. Use MongoDB Atlas (update `MONGODB_URL`, enable IP whitelist)
+4. Enable HTTPS (reverse proxy: nginx, Caddy, or cloud load balancer)
 5. Add rate limiting (e.g., slowapi)
 6. Use Redis for job store (replace in-memory dict)
 7. Run with multiple workers: `--workers 4`
+8. Configure Stripe webhooks (implement `routers/stripe_webhooks.py` handlers)
+9. Set up email service (consider SendGrid/AWS SES for production)
+10. Create Pinecone indexes (separate for help-center)
+11. Run database index creation: `uv run python scripts/create_indexes.py`
+12. Set up monitoring/logging (e.g., Sentry, CloudWatch)
 
 **Frontend**:
 1. Build: `npm run build`
-2. Set `NEXT_PUBLIC_API_URL` to production backend
+2. Set `NEXT_PUBLIC_API_URL` to production backend URL
 3. Configure NEXTAUTH_URL to production domain
-4. Deploy to Vercel/AWS/Docker
-5. Enable CDN for static assets
+4. Set Stripe publishable key: `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
+5. Deploy to Vercel/AWS/Docker
+6. Enable CDN for static assets
+7. Configure custom domain with SSL
+8. Set up error tracking (e.g., Sentry)
+
+**Docker Deployment** (optional):
+- Backend Dockerfile: `backend/Dockerfile`
+- Frontend Dockerfile: `frontend/Dockerfile`
+- Use docker-compose for local testing
+- Consider Kubernetes for production scaling
 
 ## Additional Documentation
 
-- Backend OEWS pipeline: `backend/CLAUDE.md`
-- Organization system: `ORGANIZATION_SYSTEM_EXPLAINED.md`
-- Backend implementation plan: `BACKEND_PLAN.md`
-- Performance optimization plan: `.claude/plans/cosmic-crafting-shore.md`
+**Project Planning**:
+- `ACCOUNT_DELETION_PLAN.md` - Account deletion feature design and implementation
+- `GSA_COMPANY_REPOSITORY_PLAN.md` - Company repository feature planning
+- `GSA_INTEGRATION_CHANGES.md` - GSA contract integration changes
+- `GSA_WAGE_REPOSITORY_PLAN.md` - GSA wage repository architecture
+- `TERMS_IMPLEMENTATION_GUIDE.md` - Terms of service implementation guide
+
+**Backend Documentation**:
+- `backend/API_DOCUMENTATION.md` - API endpoint reference
+- `backend/BOSS_REQUIREMENTS_EXPLAINED.md` - Business requirements documentation
+- `backend/EXCEL_FORMULA_ANALYSIS.md` - Excel formula implementation details
+- `backend/FRONTEND_INTEGRATION.md` - Frontend-backend integration guide
+- `backend/MONGODB_SCHEMA.md` - Database schema documentation
+- `backend/PIPELINE_FLOW.md` - Document processing pipeline flow
+- `backend/QUICK_START.md` - Quick start guide
+- `backend/UI_GUIDE.md` - UI component guide
+
+**Sample Files**:
+- `backend/Labor Information.pdf` - Sample labor information document
+- `backend/Example Output.xlsx` - Sample Excel export output
+- `backend/Intprepix Volume III.xlsx` - Sample pricing spreadsheet
+- `Performance Work Statement C.json` - Sample PWS JSON output
+- `Sample_Surge_Pricing_Document.txt` - Sample pricing document
+
+**Terms of Service**:
+- `frontend/public/legal/terms_v1.0.0.md` - Terms of service (version 1.0.0)
+- `frontend/components/terms/content/TermsContent.tsx` - Terms viewer component

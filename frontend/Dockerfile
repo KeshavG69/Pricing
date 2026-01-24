@@ -33,12 +33,15 @@ ENV NEXT_PUBLIC_BASIC_PROPOSAL_PRICE=$NEXT_PUBLIC_BASIC_PROPOSAL_PRICE
 ENV NEXT_PUBLIC_ADVANCED_ANALYSIS_PRICE=$NEXT_PUBLIC_ADVANCED_ANALYSIS_PRICE
 ENV NEXT_PUBLIC_TERMS_VERSION=$NEXT_PUBLIC_TERMS_VERSION
 
+# Increase Node.js memory for build process
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
 # Build the Next.js app with env vars
 RUN npm run build
 
 # Expose port
 EXPOSE 3000
 
-# Start the app
+# Start the app with increased memory
 # Railway proxies this to external port automatically
-CMD ["npm", "start", "--", "-p", "3000"]
+CMD ["node", "--max-old-space-size=4096", "node_modules/.bin/next", "start", "-p", "3000"]
