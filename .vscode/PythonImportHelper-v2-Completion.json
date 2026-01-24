@@ -2539,6 +2539,54 @@
         "documentation": {}
     },
     {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
+        "documentation": {}
+    },
+    {
         "label": "ObjectId",
         "importPath": "bson",
         "description": "bson",
@@ -2749,6 +2797,30 @@
     },
     {
         "label": "TEXT",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
         "importPath": "pymongo",
         "description": "pymongo",
         "isExtraImport": true,
@@ -6419,6 +6491,114 @@
         "description": "backend.scripts.import_oews_to_mongo",
         "peekOfCode": "DATA_DIR = Path(\"data/oews\")\ndef create_mongo_client() -> Tuple[MongoClient, Database]:\n    \"\"\"Create MongoDB client and return client + database.\"\"\"\n    print(f\"Connecting to MongoDB at {settings.MONGODB_URL}...\")\n    client = MongoClient(settings.MONGODB_URL)\n    # Test connection\n    client.server_info()\n    print(\"  ✓ Connected to MongoDB\")\n    db = client[settings.MONGODB_DATABASE]\n    print(f\"  ✓ Using database: {settings.MONGODB_DATABASE}\")",
         "detail": "backend.scripts.import_oews_to_mongo",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_business_status",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_business_status",
+        "description": "backend.scripts.migrate_business_status",
+        "peekOfCode": "def migrate_business_status():\n    \"\"\"\n    Add business_status field to all completed proposals.\n    Sets business_status = \"active\" for all completed proposals that don't have one yet.\n    Also creates necessary database indexes.\n    \"\"\"\n    mongodb_url = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\n    database_name = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\n    client = MongoClient(mongodb_url)\n    db = client.get_database(database_name)",
+        "detail": "backend.scripts.migrate_business_status",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_existing_users",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_email_verification",
+        "description": "backend.scripts.migrate_email_verification",
+        "peekOfCode": "def migrate_existing_users():\n    \"\"\"Add email verification fields to existing users\"\"\"\n    mongodb = get_mongodb_client()\n    users_collection = mongodb.get_users_collection()\n    db = mongodb.get_database()\n    print(\"Starting email verification migration...\")\n    # Get count of users needing migration\n    users_needing_migration = users_collection.count_documents({\n        \"email_verified\": {\"$exists\": False}\n    })",
+        "detail": "backend.scripts.migrate_email_verification",
+        "documentation": {}
+    },
+    {
+        "label": "create_verification_indexes",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_email_verification",
+        "description": "backend.scripts.migrate_email_verification",
+        "peekOfCode": "def create_verification_indexes(db):\n    \"\"\"Create indexes for email_verifications collection\"\"\"\n    verifications_collection = db[\"email_verifications\"]\n    print(\"Creating indexes for email_verifications collection...\")\n    # Index on token_hash for fast token lookup (unique)\n    verifications_collection.create_index(\n        \"token_hash\",\n        unique=True,\n        name=\"token_hash_unique\"\n    )",
+        "detail": "backend.scripts.migrate_email_verification",
+        "documentation": {}
+    },
+    {
+        "label": "verify_migration",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_email_verification",
+        "description": "backend.scripts.migrate_email_verification",
+        "peekOfCode": "def verify_migration():\n    \"\"\"Verify migration was successful\"\"\"\n    mongodb = get_mongodb_client()\n    users_collection = mongodb.get_users_collection()\n    # Count users with email_verified\n    verified_count = users_collection.count_documents({\n        \"email_verified\": True\n    })\n    unverified_count = users_collection.count_documents({\n        \"email_verified\": {\"$exists\": False}",
+        "detail": "backend.scripts.migrate_email_verification",
+        "documentation": {}
+    },
+    {
+        "label": "backend_dir",
+        "kind": 5,
+        "importPath": "backend.scripts.migrate_email_verification",
+        "description": "backend.scripts.migrate_email_verification",
+        "peekOfCode": "backend_dir = Path(__file__).resolve().parent.parent\nsys.path.insert(0, str(backend_dir))\nfrom datetime import datetime\nfrom auth.database import get_mongodb_client\ndef migrate_existing_users():\n    \"\"\"Add email verification fields to existing users\"\"\"\n    mongodb = get_mongodb_client()\n    users_collection = mongodb.get_users_collection()\n    db = mongodb.get_database()\n    print(\"Starting email verification migration...\")",
+        "detail": "backend.scripts.migrate_email_verification",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_first_proposal_flag",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_first_proposal_flag",
+        "description": "backend.scripts.migrate_first_proposal_flag",
+        "peekOfCode": "def migrate_first_proposal_flag():\n    \"\"\"Add first_free_proposal_id to all organizations (except Rajesh's).\"\"\"\n    mongodb = get_mongodb_client()\n    db = mongodb.get_database()\n    orgs_collection = db[\"organizations\"]\n    proposals_collection = db[\"proposals\"]\n    users_collection = db[\"users\"]\n    print(\"=\" * 80)\n    print(\"MIGRATING ORGANIZATIONS - Adding first_free_proposal_id\")\n    print(\"=\" * 80)",
+        "detail": "backend.scripts.migrate_first_proposal_flag",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_organizations",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_oh_rates",
+        "description": "backend.scripts.migrate_oh_rates",
+        "peekOfCode": "def migrate_organizations():\n    \"\"\"Migrate organization default_rates from 'oh' to 'oh_onsite' and 'oh_offsite'\"\"\"\n    print(\"\\n=== Migrating Organizations ===\")\n    mongodb = get_mongodb_client()\n    db = mongodb.get_database()\n    orgs = db[\"organizations\"]\n    # Find organizations with old 'oh' field\n    cursor = orgs.find({\"settings.default_rates.oh\": {\"$exists\": True}})\n    count = 0\n    for org in cursor:",
+        "detail": "backend.scripts.migrate_oh_rates",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_proposals_rates",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_oh_rates",
+        "description": "backend.scripts.migrate_oh_rates",
+        "peekOfCode": "def migrate_proposals_rates():\n    \"\"\"Migrate proposal.rates from 'oh' to 'oh_onsite' and 'oh_offsite'\"\"\"\n    print(\"\\n=== Migrating Proposal Rates ===\")\n    mongodb = get_mongodb_client()\n    db = mongodb.get_database()\n    proposals = db[\"proposals\"]\n    # Find proposals with old 'oh' field in rates\n    cursor = proposals.find({\"rates.oh\": {\"$exists\": True}})\n    count = 0\n    for prop in cursor:",
+        "detail": "backend.scripts.migrate_oh_rates",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_proposals_spreadsheet_data",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_oh_rates",
+        "description": "backend.scripts.migrate_oh_rates",
+        "peekOfCode": "def migrate_proposals_spreadsheet_data():\n    \"\"\"Migrate proposal.spreadsheet_data.rates from 'oh' to 'oh_onsite' and 'oh_offsite'\"\"\"\n    print(\"\\n=== Migrating Proposal Spreadsheet Data Rates ===\")\n    mongodb = get_mongodb_client()\n    db = mongodb.get_database()\n    proposals = db[\"proposals\"]\n    # Find proposals with old 'oh' field in spreadsheet_data.rates\n    cursor = proposals.find({\"spreadsheet_data.rates.oh\": {\"$exists\": True}})\n    count = 0\n    for prop in cursor:",
+        "detail": "backend.scripts.migrate_oh_rates",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_rate_presets",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_oh_rates",
+        "description": "backend.scripts.migrate_oh_rates",
+        "peekOfCode": "def migrate_rate_presets():\n    \"\"\"Migrate rate presets from 'oh' to 'oh_onsite' and 'oh_offsite'\"\"\"\n    print(\"\\n=== Migrating Rate Presets ===\")\n    mongodb = get_mongodb_client()\n    db = mongodb.get_database()\n    orgs = db[\"organizations\"]\n    # Find organizations with rate presets containing old 'oh' field\n    cursor = orgs.find({\"settings.rate_presets\": {\"$exists\": True, \"$ne\": []}})\n    orgs_updated = 0\n    presets_migrated = 0",
+        "detail": "backend.scripts.migrate_oh_rates",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_onboarding_progress",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_onboarding_progress",
+        "description": "backend.scripts.migrate_onboarding_progress",
+        "peekOfCode": "def migrate_onboarding_progress():\n    \"\"\"\n    Update onboarding progress for existing users based on actual completed actions:\n    - rates_configured: Check if organization has custom rates\n    - payment_added: Check if organization has Stripe customer_id\n    - team_invited: Check if organization has multiple users or sent invitations\n    - first_proposal_uploaded: Check if user has any proposals\n    \"\"\"\n    mongodb_url = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\n    database_name = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")",
+        "detail": "backend.scripts.migrate_onboarding_progress",
+        "documentation": {}
+    },
+    {
+        "label": "migrate_existing_users",
+        "kind": 2,
+        "importPath": "backend.scripts.migrate_terms",
+        "description": "backend.scripts.migrate_terms",
+        "peekOfCode": "def migrate_existing_users():\n    \"\"\"\n    Add terms acceptance fields to all existing users.\n    Sets them to current version with createdAt timestamp (grandfathered).\n    \"\"\"\n    print(f\"🚀 Starting terms acceptance migration...\")\n    print(f\"📌 Current terms version: {config.CURRENT_TERMS_VERSION}\")\n    users_collection = get_mongodb_client().get_users_collection()\n    # Find users without terms acceptance fields\n    users_to_migrate = users_collection.count_documents({",
+        "detail": "backend.scripts.migrate_terms",
         "documentation": {}
     },
     {
