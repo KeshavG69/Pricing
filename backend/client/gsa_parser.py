@@ -1,31 +1,22 @@
-"""GSA Contract parsing using LlamaExtract API."""
+"""GSA Contract parsing using LLM (GPT-4o/Claude)."""
 
 import re
 from typing import List, Optional
 from pydantic import BaseModel, Field
 import json
-
+from app.settings import settings
 from client.jd_parser import _convert_excel_to_csv
 from client.llm_client import get_chat_llm
-from client.llama_client import get_llama_extract
-
-try:
-    from llama_cloud import ExtractConfig, ExtractMode
-except ImportError:
-    raise ImportError(
-        "llama-cloud not installed. "
-        "Run: pip install llama-cloud"
-    )
 
 
 # =====================================================================
-# LLAMAEXTRACT SCHEMA (Metadata Only)
+# METADATA SCHEMA
 # =====================================================================
 
 class GSAContractMetadata(BaseModel):
     """
     Metadata extraction for GSA contract (contract number, dates, company name).
-    Labor categories are extracted separately using GPT-4 with intelligent chunking.
+    Labor categories are extracted separately using dual-parser approach.
     """
     contract_number: Optional[str] = Field(
         None,
@@ -55,7 +46,7 @@ class GSAContractMetadata(BaseModel):
 
 def _convert_rtf_to_txt(rtf_path: str) -> str:
     """
-    Convert RTF file to TXT for LlamaExtract compatibility.
+    Convert RTF file to TXT for text extraction.
 
     Args:
         rtf_path: Path to the RTF file
@@ -93,28 +84,21 @@ def _convert_rtf_to_txt(rtf_path: str) -> str:
             raise ValueError("Cannot convert RTF. Install striprtf: pip install striprtf")
 
 
-def _extract_and_chunk_by_file_type(file_path: str, chunk: bool = True) -> List[str]:
+def _extract_full_text(file_path: str) -> str:
     """
-    Extract text from file, optionally chunk it.
-
-    Chunking Strategy (when chunk=True):
-    - PDF: By pages (1 page = 1 chunk)
-    - DOCX: By paragraphs (5-10 paragraphs or 4000 chars = 1 chunk)
-    - CSV: By rows (50 rows = 1 chunk)
-    - TXT/RTF: By character count (4000 chars = 1 chunk)
+    Extract full text from file (no chunking).
 
     Args:
         file_path: Path to file
-        chunk: If True, chunk text. If False, return full text as single item.
 
     Returns:
-        List with 1 item (full text) if chunk=False, or list of chunks if chunk=True
+        Full document text as single string
     """
     import os
     file_ext = os.path.splitext(file_path)[1].lower()
 
     # =========================================================================
-    # PDF: Extract pages, optionally chunk
+    # PDF: Extract all pages
     # =========================================================================
     if file_ext == '.pdf':
         try:
@@ -127,18 +111,14 @@ def _extract_and_chunk_by_file_type(file_path: str, chunk: bool = True) -> List[
                     if text.strip():
                         pages.append(text)
 
-            if not chunk:
-                full_text = '\n\n'.join(pages)
-                print(f"     [PDF] Extracted full document: {len(full_text)} characters")
-                return [full_text]
-            else:
-                print(f"     [PDF] Extracted {len(pages)} pages as chunks")
-                return pages
+            full_text = '\n\n'.join(pages)
+            print(f"     [PDF] Extracted {len(full_text):,} characters from {len(pages)} pages")
+            return full_text
         except ImportError:
             raise ImportError("PyPDF2 not installed. Run: pip install PyPDF2")
 
     # =========================================================================
-    # DOCX: Extract content, optionally chunk
+    # DOCX: Extract paragraphs and tables
     # =========================================================================
     elif file_ext == '.docx':
         try:
@@ -158,38 +138,14 @@ def _extract_and_chunk_by_file_type(file_path: str, chunk: bool = True) -> List[
                     if row_text.strip():
                         all_content.append(row_text)
 
-            if not chunk:
-                full_text = '\n'.join(all_content)
-                print(f"     [DOCX] Extracted full document: {len(full_text)} characters")
-                return [full_text]
-
-            # Chunk by paragraphs (5-10 paragraphs or 4000 chars)
-            chunks = []
-            current_chunk = []
-            current_size = 0
-
-            for content in all_content:
-                content_size = len(content)
-
-                # If adding this would exceed 4000 chars and we have 5+ paragraphs, start new chunk
-                if (current_size + content_size > 4000 and len(current_chunk) >= 5) or len(current_chunk) >= 10:
-                    chunks.append('\n'.join(current_chunk))
-                    current_chunk = [content]
-                    current_size = content_size
-                else:
-                    current_chunk.append(content)
-                    current_size += content_size
-
-            if current_chunk:
-                chunks.append('\n'.join(current_chunk))
-
-            print(f"     [DOCX] Created {len(chunks)} chunks from {len(all_content)} paragraphs")
-            return chunks
+            full_text = '\n'.join(all_content)
+            print(f"     [DOCX] Extracted {len(full_text):,} characters")
+            return full_text
         except ImportError:
             raise ImportError("python-docx not installed. Run: pip install python-docx")
 
     # =========================================================================
-    # CSV: Extract rows, optionally chunk
+    # CSV: Extract all rows
     # =========================================================================
     elif file_ext == '.csv':
         import csv
@@ -202,89 +158,131 @@ def _extract_and_chunk_by_file_type(file_path: str, chunk: bool = True) -> List[
                 if line:
                     all_lines.append(line)
 
-        if not chunk:
-            full_text = '\n'.join(all_lines)
-            print(f"     [CSV] Extracted full document: {len(full_text)} characters")
-            return [full_text]
-
-        # Chunk by rows (50 rows per chunk)
-        chunks = []
-        for i in range(0, len(all_lines), 50):
-            chunk_lines = all_lines[i:i+50]
-            chunks.append('\n'.join(chunk_lines))
-
-        print(f"     [CSV] Created {len(chunks)} chunks from {len(all_lines)} rows")
-        return chunks
+        full_text = '\n'.join(all_lines)
+        print(f"     [CSV] Extracted {len(full_text):,} characters from {len(all_lines)} rows")
+        return full_text
 
     # =========================================================================
-    # TXT/RTF: Extract text, optionally chunk
+    # TXT/RTF: Extract all text
     # =========================================================================
     else:
         with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
             full_text = f.read()
 
-        if not chunk:
-            print(f"     [TXT] Extracted full document: {len(full_text)} characters")
-            return [full_text]
-
-        chunks = _chunk_text_simple(full_text, chunk_size=4000)
-        print(f"     [TXT] Created {len(chunks)} chunks from {len(full_text):,} characters")
-        return chunks
+        print(f"     [TXT] Extracted {len(full_text):,} characters")
+        return full_text
 
 
-def _chunk_text_simple(text: str, chunk_size: int = 4000) -> List[str]:
+
+
+def _extract_metadata_with_llm(full_text: str) -> GSAContractMetadata:
     """
-    Split text into chunks by character count (no overlap).
+    Extract metadata from full document text using LLM.
 
     Args:
-        text: Full text content
-        chunk_size: Max characters per chunk (default 4000)
+        full_text: Complete document text
 
     Returns:
-        List of text chunks
+        GSAContractMetadata instance
     """
-    if len(text) <= chunk_size:
-        return [text] if text.strip() else []
+    llm = get_chat_llm(model="gpt-4.1",api_key=settings.OPENAI_API_KEY,base_url="https://api.openai.com/v1", max_tokens=10000)
 
-    chunks = []
-    lines = text.split('\n')
+    prompt = f"""Extract metadata from this GSA contract document.
 
-    # Build chunks (no overlap)
-    current_chunk_lines = []
-    current_size = 0
+FIELDS TO EXTRACT:
+1. contract_number: GSA contract number (e.g., 'GS-35F-0119Y', '47QRCA25DS242', '47QTCA20D003R')
+2. contract_start_date: Contract start date or period of performance start
+3. contract_end_date: Contract end date or period of performance end
+4. company_name: Contractor/company name
+5. year_columns: List of year column headers from rate tables (e.g., ['Year 6', 'Year 7', 'Year 8'] or ['Year 1', 'Year 2'])
 
-    for line in lines:
-        line_size = len(line) + 1  # +1 for newline
+Look at the BEGINNING of the document for contract number, dates, and company name.
+Look at RATE TABLES for year column headers.
 
-        if current_size + line_size > chunk_size and current_chunk_lines:
-            # Save current chunk
-            chunks.append('\n'.join(current_chunk_lines))
+Return ONLY valid JSON in this format:
+{{
+  "contract_number": "GS-35F-0119Y",
+  "contract_start_date": "January 1, 2025",
+  "contract_end_date": "December 31, 2030",
+  "company_name": "ACME Corporation",
+  "year_columns": ["Year 6", "Year 7", "Year 8", "Year 9", "Year 10"]
+}}
 
-            # Start new chunk
-            current_chunk_lines = [line]
-            current_size = line_size
-        else:
-            current_chunk_lines.append(line)
-            current_size += line_size
+If a field is not found, use null.
 
-    if current_chunk_lines:
-        chunks.append('\n'.join(current_chunk_lines))
+DOCUMENT TEXT :
+{full_text}
 
-    return chunks
+Return ONLY valid JSON:"""
+
+    max_retries = 3
+    for retry_count in range(max_retries):
+        try:
+            # Add retry guidance to prompt if this is a retry
+            current_prompt = prompt
+            if retry_count > 0:
+                current_prompt = f"{prompt}\n\nIMPORTANT: Your previous response was malformed. Please provide COMPLETE valid JSON with all brackets and quotes closed properly."
+                print(f"     [Metadata] 🔄 Retry {retry_count}/{max_retries - 1} due to JSON error...")
+
+            response = llm.invoke(current_prompt)
+            response_text = response.content.strip()
+
+            # Remove markdown code blocks if present
+            if response_text.startswith('```'):
+                # Find the first ``` and last ```
+                parts = response_text.split('```')
+                if len(parts) >= 3:
+                    response_text = parts[1]
+                    if response_text.startswith('json'):
+                        response_text = response_text[4:]
+                response_text = response_text.strip()
+
+            # Additional cleanup for common JSON issues
+            # Remove any trailing commas before ] or }
+            response_text = re.sub(r',\s*([}\]])', r'\1', response_text)
+
+            # Try to find JSON object in response if it's wrapped in other text
+            if not response_text.startswith('{'):
+                match = re.search(r'\{.*\}', response_text, re.DOTALL)
+                if match:
+                    response_text = match.group(0)
+
+            # Parse JSON
+            metadata_dict = json.loads(response_text)
+            metadata = GSAContractMetadata(**metadata_dict)
+
+            print(f"     [Metadata] ✓ Extracted via LLM")
+            if metadata.year_columns:
+                print(f"     [Metadata] Year columns: {metadata.year_columns}")
+            else:
+                print(f"     [Metadata] ⚠️  No year columns detected")
+
+            return metadata
+
+        except json.JSONDecodeError as e:
+            print(f"     [Metadata] ❌ JSON Error (attempt {retry_count + 1}/{max_retries}): {e}")
+            print(f"     [Metadata] Response preview: {response_text[:500] if 'response_text' in locals() else 'N/A'}...")
+            if retry_count >= max_retries - 1:
+                print(f"     [Metadata] ❌ Failed after {max_retries} attempts")
+                return GSAContractMetadata()
+        except Exception as e:
+            print(f"     [Metadata] ❌ Error: {e}")
+            return GSAContractMetadata()
+
+    return GSAContractMetadata()
 
 
-def _extract_descriptions_with_llm(text_chunk: str, chunk_index: int) -> List[dict]:
+def _extract_descriptions_with_llm(full_text: str) -> List[dict]:
     """
     Extract ONLY job descriptions, qualifications, and experience (NO RATES).
 
     Args:
-        text_chunk: Text content from a page/chunk
-        chunk_index: Index of the chunk (for debugging)
+        full_text: Complete document text
 
     Returns:
         List of dicts with title, sin, description, experience
     """
-    llm = get_chat_llm(max_tokens=30000)
+    llm = get_chat_llm(model="gpt-5-mini-2025-08-07",api_key=settings.OPENAI_API_KEY,base_url="https://api.openai.com/v1", max_tokens=30000)
 
     prompt = f"""Extract job descriptions and qualifications from this GSA contract document.
 
@@ -323,49 +321,77 @@ OUTPUT FORMAT:
   }}
 ]
 
-TEXT CHUNK:
-{text_chunk}
+DOCUMENT TEXT:
+{full_text}
 
 Return ONLY valid JSON array. If no job descriptions found, return empty array []:"""
 
-    try:
-        response = llm.invoke(prompt)
-        response_text = response.content.strip()
+    max_retries = 3
+    for retry_count in range(max_retries):
+        try:
+            # Add retry guidance to prompt if this is a retry
+            current_prompt = prompt
+            if retry_count > 0:
+                current_prompt = f"{prompt}\n\nIMPORTANT: Your previous response was incomplete or malformed. Please provide the COMPLETE valid JSON array with all entries fully formed. Do not truncate the output."
+                print(f"     [Descriptions] 🔄 Retry {retry_count}/{max_retries - 1} due to JSON error...")
 
-        # Remove markdown code blocks if present
-        if response_text.startswith('```'):
-            response_text = response_text.split('```')[1]
-            if response_text.startswith('json'):
-                response_text = response_text[4:]
-            response_text = response_text.strip()
+            response = llm.invoke(current_prompt)
+            response_text = response.content.strip()
 
-        # Parse JSON
-        descriptions = json.loads(response_text)
+            # Remove markdown code blocks if present
+            if response_text.startswith('```'):
+                # Find the first ``` and last ```
+                parts = response_text.split('```')
+                if len(parts) >= 3:
+                    response_text = parts[1]
+                    if response_text.startswith('json'):
+                        response_text = response_text[4:]
+                response_text = response_text.strip()
 
-        if not isinstance(descriptions, list):
-            descriptions = [descriptions]
+            # Additional cleanup for common JSON issues
+            # Remove any trailing commas before ] or }
+            response_text = re.sub(r',\s*([}\]])', r'\1', response_text)
 
-        print(f"     [Descriptions] Chunk {chunk_index + 1}: Extracted {len(descriptions)} job descriptions")
-        return descriptions
+            # Try to find JSON array in response if it's wrapped in other text
+            if not response_text.startswith('['):
+                match = re.search(r'\[.*\]', response_text, re.DOTALL)
+                if match:
+                    response_text = match.group(0)
 
-    except Exception as e:
-        print(f"     [Descriptions] ❌ Chunk {chunk_index + 1}: Error: {e}")
-        return []
+            # Parse JSON
+            descriptions = json.loads(response_text)
+
+            if not isinstance(descriptions, list):
+                descriptions = [descriptions]
+
+            print(f"     [Descriptions] ✓ Extracted {len(descriptions)} job descriptions")
+            return descriptions
+
+        except json.JSONDecodeError as e:
+            print(f"     [Descriptions] ❌ JSON Error (attempt {retry_count + 1}/{max_retries}): {e}")
+            print(f"     [Descriptions] Response preview: {response_text[:500] if 'response_text' in locals() else 'N/A'}...")
+            if retry_count >= max_retries - 1:
+                print(f"     [Descriptions] ❌ Failed after {max_retries} attempts")
+                return []
+        except Exception as e:
+            print(f"     [Descriptions] ❌ Error: {e}")
+            return []
+
+    return []
 
 
-def _extract_rates_with_llm(text_chunk: str, chunk_index: int, year_columns: Optional[List[str]] = None) -> List[dict]:
+def _extract_rates_with_llm(full_text: str, year_columns: Optional[List[str]] = None) -> List[dict]:
     """
     Extract ONLY rate tables with dollar amounts (NO DESCRIPTIONS).
 
     Args:
-        text_chunk: Text content from a page/chunk
-        chunk_index: Index of the chunk (for debugging)
+        full_text: Complete document text
         year_columns: List of year column headers from metadata
 
     Returns:
         List of dicts with title, sin, rates_by_year
     """
-    llm = get_chat_llm(max_tokens=30000)
+    llm = get_chat_llm(model="gpt-5-mini-2025-08-07",api_key=settings.OPENAI_API_KEY,base_url="https://api.openai.com/v1", max_tokens=30000)
 
     # Build year context from metadata
     if year_columns and len(year_columns) > 0:
@@ -452,36 +478,65 @@ Example 3 - Multiple years:
 IMPORTANT:
 - Focus ONLY on finding rate tables (rows with $ amounts)
 - Ignore any text paragraphs, descriptions, or qualifications
-- If this chunk has no rate tables, return empty array: []
+- If this document has no rate tables, return empty array: []
 
-TEXT CHUNK TO ANALYZE:
-{text_chunk}
+DOCUMENT TEXT:
+{full_text}
 
 Return ONLY valid JSON array:"""
 
-    try:
-        response = llm.invoke(prompt)
-        response_text = response.content.strip()
+    max_retries = 3
+    for retry_count in range(max_retries):
+        try:
+            # Add retry guidance to prompt if this is a retry
+            current_prompt = prompt
+            if retry_count > 0:
+                current_prompt = f"{prompt}\n\nIMPORTANT: Your previous response was truncated or malformed. Please provide the COMPLETE valid JSON array. Ensure ALL labor categories are included and the JSON is not cut off."
+                print(f"     [Rates] 🔄 Retry {retry_count}/{max_retries - 1} due to JSON error...")
 
-        # Remove markdown code blocks if present
-        if response_text.startswith('```'):
-            response_text = response_text.split('```')[1]
-            if response_text.startswith('json'):
-                response_text = response_text[4:]
-            response_text = response_text.strip()
+            response = llm.invoke(current_prompt)
+            response_text = response.content.strip()
 
-        # Parse JSON
-        rates = json.loads(response_text)
+            # Remove markdown code blocks if present
+            if response_text.startswith('```'):
+                # Find the first ``` and last ```
+                parts = response_text.split('```')
+                if len(parts) >= 3:
+                    response_text = parts[1]
+                    if response_text.startswith('json'):
+                        response_text = response_text[4:]
+                response_text = response_text.strip()
 
-        if not isinstance(rates, list):
-            rates = [rates]
+            # Additional cleanup for common JSON issues
+            # Remove any trailing commas before ] or }
+            response_text = re.sub(r',\s*([}\]])', r'\1', response_text)
 
-        print(f"     [Rates] Chunk {chunk_index + 1}: Extracted {len(rates)} rate entries")
-        return rates
+            # Try to find JSON array in response if it's wrapped in other text
+            if not response_text.startswith('['):
+                match = re.search(r'\[.*\]', response_text, re.DOTALL)
+                if match:
+                    response_text = match.group(0)
 
-    except Exception as e:
-        print(f"     [Rates] ❌ Chunk {chunk_index + 1}: Error: {e}")
-        return []
+            # Parse JSON
+            rates = json.loads(response_text)
+
+            if not isinstance(rates, list):
+                rates = [rates]
+
+            print(f"     [Rates] ✓ Extracted {len(rates)} rate entries")
+            return rates
+
+        except json.JSONDecodeError as e:
+            print(f"     [Rates] ❌ JSON Error (attempt {retry_count + 1}/{max_retries}): {e}")
+            print(f"     [Rates] Response preview: {response_text[:500] if 'response_text' in locals() else 'N/A'}...")
+            if retry_count >= max_retries - 1:
+                print(f"     [Rates] ❌ Failed after {max_retries} attempts")
+                return []
+        except Exception as e:
+            print(f"     [Rates] ❌ Error: {e}")
+            return []
+
+    return []
 
 
 def _merge_descriptions_and_rates(descriptions: List[dict], rates: List[dict]) -> List[dict]:
@@ -607,56 +662,6 @@ def _merge_descriptions_and_rates(descriptions: List[dict], rates: List[dict]) -
 
 
 # =====================================================================
-# PAGE COUNTING FOR ADAPTIVE ROUTING
-# =====================================================================
-
-def estimate_page_count(file_path: str) -> int:
-    """
-    Estimate page count for routing decision.
-    Returns: Estimated page count (±20% accuracy is acceptable)
-    """
-    import os
-    ext = os.path.splitext(file_path)[1].lower()
-
-    try:
-        if ext == '.pdf':
-            import PyPDF2
-            with open(file_path, 'rb') as f:
-                return len(PyPDF2.PdfReader(f).pages)
-
-        elif ext == '.docx':
-            import docx
-            doc = docx.Document(file_path)
-            word_count = sum(len(p.text.split()) for p in doc.paragraphs)
-            return max(1, word_count // 500)  # ~500 words/page
-
-        elif ext == '.rtf':
-            from striprtf.striprtf import rtf_to_text
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                text = rtf_to_text(f.read())
-            return max(1, len(text) // 3000)  # ~3000 chars/page
-
-        elif ext == '.txt':
-            with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                return max(1, len(f.read()) // 3000)  # ~3000 chars/page
-
-        elif ext in ['.csv', '.xlsx', '.xls']:
-            if ext == '.csv':
-                with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-                    row_count = sum(1 for _ in f)
-            else:
-                file_size_mb = os.path.getsize(file_path) / (1024 * 1024)
-                row_count = int(file_size_mb * 1000)
-            return max(1, row_count // 50)  # ~50 rows/page
-
-        else:
-            return 100  # Unknown format → force chunking
-
-    except Exception:
-        return 100  # Error → force chunking
-
-
-# =====================================================================
 # MAIN FUNCTION
 # =====================================================================
 
@@ -689,163 +694,69 @@ def parse_gsa_contract(file_path: str) -> dict:
 
     try:
         # ========================================================================
-        # STEP 0: Adaptive routing based on document size
+        # STEP 1: Extract full document text (no chunking)
         # ========================================================================
-        page_count = estimate_page_count(file_path)
-        use_full_doc = page_count < 50
-        strategy = "Full Document" if use_full_doc else "Chunking"
-        print(f"  📊 Document size: ~{page_count} pages → {strategy} strategy")
+        print("  📄 Extracting full document...")
+        full_text = _extract_full_text(file_path)
 
-        # Get singleton LlamaExtract instance
-        extractor = get_llama_extract()
+        if not full_text.strip():
+            raise ValueError("Failed to extract text from document")
 
         # ========================================================================
-        # PARALLEL STEP 1: Metadata + Text Extraction (in parallel)
+        # STEP 2: Extract metadata first (needed for year_columns)
         # ========================================================================
-        import concurrent.futures as cf
-
-        print("  🚀 Starting parallel preparation:")
-        print("     Task 1: LlamaExtract → Document metadata (including year columns)")
-        print(f"     Task 2: Text extraction → {strategy}")
-
-        def extract_metadata():
-            """Extract metadata using LlamaExtract."""
-            print("     [Metadata] Starting...")
-            metadata_config = ExtractConfig(extraction_mode=ExtractMode.PREMIUM)
-            metadata_run = extractor.extract(
-                GSAContractMetadata,
-                metadata_config,
-                file_path
-            )
-            metadata = metadata_run.data
-            if isinstance(metadata, dict):
-                metadata = GSAContractMetadata(**metadata)
-
-            print(f"     [Metadata] ✓ Complete")
-            if metadata.year_columns:
-                print(f"     [Metadata] Year columns found: {metadata.year_columns}")
-            else:
-                print(f"     [Metadata] ⚠️ No year columns detected")
-
-            return metadata
-
-        def extract_and_chunk():
-            """Extract text based on file type and routing decision."""
-            # Pass chunk=False for full doc, chunk=True for chunking
-            return _extract_and_chunk_by_file_type(file_path, chunk=not use_full_doc)
-
-        # Run metadata extraction and chunking in parallel
-        with cf.ThreadPoolExecutor(max_workers=2) as executor:
-            metadata_future = executor.submit(extract_metadata)
-            chunks_future = executor.submit(extract_and_chunk)
-
-            # Wait for both to complete
-            metadata = metadata_future.result()
-            chunks = chunks_future.result()
-
+        print("  🔍 Step 1: Extracting metadata...")
+        metadata = _extract_metadata_with_llm(full_text)
         year_columns = metadata.year_columns or []
 
         # ========================================================================
-        # STEP 2: TWO-PARSER EXTRACTION (Descriptions + Rates in parallel)
+        # STEP 3: Parallel extraction of descriptions + rates (using metadata)
         # ========================================================================
-        chunk_info = f"{len(chunks)} chunk(s)" if len(chunks) == 1 else f"{len(chunks)} chunks"
-        print(f"  🎯 Step 2: Dual-Parser Extraction ({chunk_info})")
+        import concurrent.futures as cf
 
-        def extract_with_two_parsers(chunks: List[str], year_cols: List[str]):
-            """
-            Extract labor categories using TWO separate parsers:
-            1. Description parser (titles, SINs, descriptions, experience)
-            2. Rate parser (titles, SINs, rates_by_year)
-            Then merge results by matching title + SIN.
-            """
-            import concurrent.futures as chunk_cf
+        print("  🚀 Step 2: Dual-parser extraction (2 parallel workers)...")
+        print("     Worker 1: Job descriptions")
+        print("     Worker 2: Rate tables")
 
-            print("     [Dual-Parser] Starting parallel extraction...")
-            if len(chunks) == 1:
-                print(f"     [Dual-Parser] Processing full document")
-            else:
-                print(f"     [Dual-Parser] Processing {len(chunks)} chunks")
-            print(f"     [Dual-Parser] Using 5 dedicated workers for descriptions + 5 for rates (10 total)")
+        # Run descriptions and rates extraction in parallel
+        with cf.ThreadPoolExecutor(max_workers=2) as executor:
+            desc_future = executor.submit(_extract_descriptions_with_llm, full_text)
+            rates_future = executor.submit(_extract_rates_with_llm, full_text, year_columns)
 
-            # Storage for both parsers
-            all_descriptions = []
-            all_rates = []
+            all_descriptions = desc_future.result()
+            all_rates = rates_future.result()
 
-            # ================================================================
-            # Run BOTH parsers on ALL chunks in parallel (DEDICATED WORKERS)
-            # ================================================================
-            def process_chunk_descriptions(args):
-                """Extract descriptions from a chunk."""
-                chunk_idx, chunk_text = args
-                return _extract_descriptions_with_llm(chunk_text, chunk_idx)
+        print(f"     [Descriptions] Found {len(all_descriptions)} entries")
+        print(f"     [Rates] Found {len(all_rates)} entries")
 
-            def process_chunk_rates(args):
-                """Extract rates from a chunk."""
-                chunk_idx, chunk_text = args
-                return _extract_rates_with_llm(chunk_text, chunk_idx, year_cols)
+        # ========================================================================
+        # STEP 4: MERGE descriptions + rates by title/SIN matching
+        # ========================================================================
+        print(f"  🔗 Step 3: Merging descriptions with rates...")
+        merged = _merge_descriptions_and_rates(all_descriptions, all_rates)
+        print(f"     ✓ Merged: {len(merged)} labor categories")
 
-            # TWO SEPARATE EXECUTORS: 5 workers for descriptions + 5 workers for rates
-            # This ensures TRUE parallel processing with dedicated resources for each parser
-            with chunk_cf.ThreadPoolExecutor(max_workers=5) as desc_executor, \
-                 chunk_cf.ThreadPoolExecutor(max_workers=5) as rate_executor:
+        # ========================================================================
+        # STEP 5: Deduplicate and format for storage
+        # ========================================================================
+        seen_titles = set()
+        labor_categories = []
 
-                # Submit description extraction for all chunks (5 parallel workers)
-                desc_futures = [
-                    desc_executor.submit(process_chunk_descriptions, (i, chunk))
-                    for i, chunk in enumerate(chunks)
-                ]
+        for cat in merged:
+            title = cat.get('title', '').strip()
+            title_lower = title.lower()
 
-                # Submit rate extraction for all chunks (5 parallel workers)
-                rate_futures = [
-                    rate_executor.submit(process_chunk_rates, (i, chunk))
-                    for i, chunk in enumerate(chunks)
-                ]
+            if title and title_lower not in seen_titles:
+                seen_titles.add(title_lower)
 
-                # Collect descriptions as they complete
-                for future in chunk_cf.as_completed(desc_futures):
-                    chunk_descriptions = future.result()
-                    all_descriptions.extend(chunk_descriptions)
-
-                # Collect rates as they complete
-                for future in chunk_cf.as_completed(rate_futures):
-                    chunk_rates = future.result()
-                    all_rates.extend(chunk_rates)
-
-            print(f"     [Dual-Parser] Description parser: {len(all_descriptions)} entries")
-            print(f"     [Dual-Parser] Rate parser: {len(all_rates)} entries")
-
-            # ================================================================
-            # MERGE descriptions + rates by title/SIN matching
-            # ================================================================
-            print(f"     [Merge] Matching descriptions with rates...")
-            merged = _merge_descriptions_and_rates(all_descriptions, all_rates)
-            print(f"     [Merge] ✓ Complete: {len(merged)} labor categories")
-
-            # ================================================================
-            # Convert to storage format with deduplication
-            # ================================================================
-            seen_titles = set()
-            final_categories = []
-
-            for cat in merged:
-                title = cat.get('title', '').strip()
-                title_lower = title.lower()
-
-                if title and title_lower not in seen_titles:
-                    seen_titles.add(title_lower)
-
-                    final_categories.append({
-                        "lcat_id": f"lcat_{len(final_categories)}",
-                        "sin": cat.get('sin'),
-                        "title": title,
-                        "description": cat.get('description'),
-                        "experience": cat.get('experience'),
-                        "rates_by_year": cat.get('rates_by_year', {})
-                    })
-
-            return final_categories
-
-        labor_categories = extract_with_two_parsers(chunks, year_columns)
+                labor_categories.append({
+                    "lcat_id": f"lcat_{len(labor_categories)}",
+                    "sin": cat.get('sin'),
+                    "title": title,
+                    "description": cat.get('description'),
+                    "experience": cat.get('experience'),
+                    "rates_by_year": cat.get('rates_by_year', {})
+                })
 
         # ========================================================================
         # RESULTS SUMMARY
