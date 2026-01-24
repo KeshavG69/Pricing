@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { BarChart3, Mail, Phone, MapPin, Send } from 'lucide-react';
+import { BarChart3, Mail, MapPin, Send } from 'lucide-react';
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -204,25 +204,12 @@ export default function ContactPage() {
                 <div className="space-y-6">
                   <div className="flex items-start gap-4">
                     <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                      <Phone className="w-6 h-6 text-[#2563eb]" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">Phone</h3>
-                      <a href="tel:1-888-555-0123" className="text-gray-600 hover:text-[#2563eb] transition-colors">
-                        1-888-555-0123
-                      </a>
-                      <p className="text-sm text-gray-500 mt-1">Mon-Fri, 9am-6pm EST</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
                       <Mail className="w-6 h-6 text-[#2563eb]" />
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900 mb-1">Email</h3>
-                      <a href="mailto:sales@priceiq.com" className="text-gray-600 hover:text-[#2563eb] transition-colors">
-                        sales@priceiq.com
+                      <a href="mailto:service@priceiq.org" className="text-gray-600 hover:text-[#2563eb] transition-colors">
+                        service@priceiq.org
                       </a>
                       <p className="text-sm text-gray-500 mt-1">We'll respond within 24 hours</p>
                     </div>

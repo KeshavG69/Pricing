@@ -137,7 +137,7 @@ function CheckEmailContent() {
         <div className="text-center mt-6">
           <p className="text-sm text-gray-600">
             Need help?{' '}
-            <a href="mailto:support@priceiq.com" className="text-blue-600 hover:text-blue-700 font-medium">
+            <a href="mailto:service@priceiq.org" className="text-blue-600 hover:text-blue-700 font-medium">
               Contact support
             </a>
           </p>
