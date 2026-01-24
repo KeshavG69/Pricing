@@ -262,6 +262,20 @@ async def create_rate_preset(
     # Update organization
     updated_org = org_crud.update_settings(current_user["organization_id"], settings)
 
+    # Auto-completion hook: Mark rates configured when creating a rate preset
+    try:
+        from utils.onboarding import get_onboarding_crud
+        onboarding_crud = get_onboarding_crud()
+        onboarding_crud.update_task(
+            user_id=str(current_user["_id"]),
+            organization_id=str(current_user["organization_id"]),
+            task_id="rates_configured",
+            completed=True
+        )
+    except Exception as e:
+        # Don't fail request if onboarding update fails
+        print(f"Failed to update onboarding progress: {e}")
+
     return new_preset
 
 
@@ -339,6 +353,20 @@ async def update_rate_preset(
 
     # Update organization
     updated_org = org_crud.update_settings(current_user["organization_id"], settings)
+
+    # Auto-completion hook: Mark rates configured when updating a rate preset
+    try:
+        from utils.onboarding import get_onboarding_crud
+        onboarding_crud = get_onboarding_crud()
+        onboarding_crud.update_task(
+            user_id=str(current_user["_id"]),
+            organization_id=str(current_user["organization_id"]),
+            task_id="rates_configured",
+            completed=True
+        )
+    except Exception as e:
+        # Don't fail request if onboarding update fails
+        print(f"Failed to update onboarding progress: {e}")
 
     return preset
 
