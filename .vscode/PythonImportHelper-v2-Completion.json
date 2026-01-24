@@ -5103,7 +5103,7 @@
         "kind": 2,
         "importPath": "backend.auth.rbac",
         "description": "backend.auth.rbac",
-        "peekOfCode": "def can_manage_user(target_user: dict, current_user: dict) -> bool:\n    \"\"\"\n    Check if current user can manage target user (remove, change role, etc.).\n    Management rules:\n    1. Must be admin\n    2. Must be same organization\n    3. Cannot manage yourself (prevent self-removal)\n    Args:\n        target_user: Target user document dict\n        current_user: Current user document dict",
+        "peekOfCode": "def can_manage_user(target_user: dict, current_user: dict) -> bool:\n    \"\"\"\n    Check if current user can manage target user (remove, change role, etc.).\n    Management rules:\n    1. Must be admin\n    2. Must be same organization\n    3. Cannot manage yourself (prevent self-removal)\n    Args:\n        target_user: Target user document dict (raw from DB, with organizations array)\n        current_user: Current user document dict (from get_current_user, with flat organization_id)",
         "detail": "backend.auth.rbac",
         "documentation": {}
     },
