@@ -1,8 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BarChart3, Mail, MapPin, Send } from 'lucide-react';
+
+// Extend Window interface to include Calendly
+declare global {
+  interface Window {
+    Calendly?: {
+      initPopupWidget: (options: { url: string }) => void;
+    };
+  }
+}
 
 export default function ContactPage() {
   const [formData, setFormData] = useState({
@@ -15,16 +24,69 @@ export default function ContactPage() {
 
   const [status, setStatus] = useState<'idle' | 'sending' | 'success' | 'error'>('idle');
 
+  // Load Calendly widget script
+  useEffect(() => {
+    // Load Calendly CSS
+    const link = document.createElement('link');
+    link.href = 'https://assets.calendly.com/assets/external/widget.css';
+    link.rel = 'stylesheet';
+    document.head.appendChild(link);
+
+    // Load Calendly JS
+    const script = document.createElement('script');
+    script.src = 'https://assets.calendly.com/assets/external/widget.js';
+    script.async = true;
+    document.body.appendChild(script);
+
+    return () => {
+      // Cleanup on unmount
+      document.head.removeChild(link);
+      document.body.removeChild(script);
+    };
+  }, []);
+
+  const handleScheduleDemo = () => {
+    const calendlyUrl = process.env.NEXT_PUBLIC_CALENDLY_URL;
+    if (calendlyUrl && window.Calendly) {
+      window.Calendly.initPopupWidget({ url: calendlyUrl });
+    } else {
+      console.error('Calendly is not loaded or URL is not configured');
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('sending');
 
-    // Simulate form submission
-    setTimeout(() => {
+    try {
+      // Call backend API to send contact form email
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/contact/send`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.detail || 'Failed to send message');
+      }
+
+      // Success - show confirmation and reset form
       setStatus('success');
       setFormData({ name: '', email: '', company: '', phone: '', message: '' });
-      setTimeout(() => setStatus('idle'), 3000);
-    }, 1000);
+
+      // Reset status after 5 seconds
+      setTimeout(() => setStatus('idle'), 5000);
+    } catch (error) {
+      console.error('Failed to send contact form:', error);
+      setStatus('error');
+
+      // Reset error status after 5 seconds
+      setTimeout(() => setStatus('idle'), 5000);
+    }
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -181,7 +243,9 @@ export default function ContactPage() {
                     {status === 'sending' ? (
                       'Sending...'
                     ) : status === 'success' ? (
-                      'Message Sent!'
+                      '✓ Message Sent!'
+                    ) : status === 'error' ? (
+                      '✗ Failed - Please try again'
                     ) : (
                       <>
                         <Send className="w-5 h-5" />
@@ -189,6 +253,18 @@ export default function ContactPage() {
                       </>
                     )}
                   </button>
+
+                  {status === 'success' && (
+                    <p className="text-sm text-green-600 mt-2 text-center">
+                      Thank you! We'll respond within 24 hours. Check your email for confirmation.
+                    </p>
+                  )}
+
+                  {status === 'error' && (
+                    <p className="text-sm text-red-600 mt-2 text-center">
+                      Failed to send message. Please try again or email us directly at service@priceiq.org
+                    </p>
+                  )}
                 </form>
               </div>
 
@@ -234,7 +310,10 @@ export default function ContactPage() {
                   <p className="text-gray-600 mb-6">
                     Book a 15-minute call with our team to see how PriceIQ can help you win more proposals.
                   </p>
-                  <button className="w-full bg-white border-2 border-[#2563eb] text-[#2563eb] hover:bg-[#2563eb] hover:text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300">
+                  <button
+                    onClick={handleScheduleDemo}
+                    className="w-full bg-white border-2 border-[#2563eb] text-[#2563eb] hover:bg-[#2563eb] hover:text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300"
+                  >
                     Schedule a Demo
                   </button>
                 </div>
