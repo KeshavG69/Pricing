@@ -40,7 +40,7 @@ class LLMClient:
             model: Model name (defaults to Claude Sonnet 4.5)
             api_key: API key (defaults to settings.CLAUDE_API_KEY)
             base_url: Base URL (defaults to Claude)
-            max_tokens: Maximum tokens (defaults to 10000)
+            max_tokens: Maximum tokens (defaults to 10000, ignored for GPT-5 models)
 
         Returns:
             ChatOpenAI instance
@@ -49,7 +49,14 @@ class LLMClient:
         api_key = api_key or settings.CLAUDE_API_KEY
         base_url = base_url or settings.CLAUDE_BASE_URL
 
-        cache_key = f"{model}:{base_url}"
+        # Check if model is GPT-5 (gpt-5, gpt-5-mini, gpt-5-turbo, etc.)
+        is_gpt5 = model.lower().startswith("gpt-5")
+
+        # Adjust cache key based on whether max_tokens is used
+        if is_gpt5:
+            cache_key = f"{model}:{base_url}"
+        else:
+            cache_key = f"{model}:{base_url}:{max_tokens}"
 
         with self._lock:
             if cache_key not in self._chat_llm_cache:
@@ -58,13 +65,19 @@ class LLMClient:
                 if "claude-sonnet-4" in model.lower():
                     headers["anthropic-beta"] = "context-1m-2025-08-07"
 
-                self._chat_llm_cache[cache_key] = ChatOpenAI(
-                    model=model,
-                    openai_api_key=api_key,
-                    openai_api_base=base_url,
-                    max_tokens=max_tokens,
-                    default_headers=headers if headers else None
-                )
+                # Build kwargs dynamically
+                llm_kwargs = {
+                    "model": model,
+                    "openai_api_key": api_key,
+                    "openai_api_base": base_url,
+                    "default_headers": headers if headers else None
+                }
+
+                # Only add max_tokens if NOT GPT-5
+                if not is_gpt5 and max_tokens is not None:
+                    llm_kwargs["max_tokens"] = max_tokens
+
+                self._chat_llm_cache[cache_key] = ChatOpenAI(**llm_kwargs)
             return self._chat_llm_cache[cache_key]
 
     def get_chat_llm_agno(
@@ -82,8 +95,8 @@ class LLMClient:
             model: Model name (defaults to Claude Sonnet 4.5)
             api_key: API key (defaults to settings.CLAUDE_API_KEY)
             base_url: Base URL (defaults to Claude)
-            temperature: Sampling temperature (defaults to 0.1)
-            max_tokens: Maximum tokens (defaults to 10000)
+            temperature: Sampling temperature (defaults to 0.1, ignored for GPT-5 models)
+            max_tokens: Maximum tokens (defaults to 10000, ignored for GPT-5 models)
 
         Returns:
             OpenAIChat instance
@@ -94,7 +107,14 @@ class LLMClient:
         max_tokens = max_tokens or 10000
         temperature = temperature if temperature is not None else 0.1
 
-        cache_key = f"{model}:{base_url}:{max_tokens}:{temperature}"
+        # Check if model is GPT-5 (gpt-5, gpt-5-mini, gpt-5-turbo, etc.)
+        is_gpt5 = model.lower().startswith("gpt-5")
+
+        # Adjust cache key based on whether params are used
+        if is_gpt5:
+            cache_key = f"{model}:{base_url}"
+        else:
+            cache_key = f"{model}:{base_url}:{max_tokens}:{temperature}"
 
         with self._lock:
             if cache_key not in self._chat_llm_agno_cache:
@@ -103,14 +123,20 @@ class LLMClient:
                 if "claude-sonnet-4" in model.lower():
                     extra_headers["anthropic-beta"] = "context-1m-2025-08-07"
 
-                self._chat_llm_agno_cache[cache_key] = OpenAIChat(
-                    id=model,
-                    api_key=api_key,
-                    max_tokens=max_tokens,
-                    base_url=base_url,
-                    temperature=temperature,  # Deterministic responses for consistent SOC matching
-                    extra_headers=extra_headers if extra_headers else None
-                )
+                # Build kwargs dynamically
+                llm_kwargs = {
+                    "id": model,
+                    "api_key": api_key,
+                    "base_url": base_url,
+                    "extra_headers": extra_headers if extra_headers else None
+                }
+
+                # Only add max_tokens and temperature if NOT GPT-5
+                if not is_gpt5:
+                    llm_kwargs["max_tokens"] = max_tokens
+                    llm_kwargs["temperature"] = temperature
+
+                self._chat_llm_agno_cache[cache_key] = OpenAIChat(**llm_kwargs)
             return self._chat_llm_agno_cache[cache_key]
 
     def get_embeddings(

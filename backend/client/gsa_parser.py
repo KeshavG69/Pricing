@@ -215,50 +215,61 @@ DOCUMENT TEXT :
 
 Return ONLY valid JSON:"""
 
-    try:
-        response = llm.invoke(prompt)
-        response_text = response.content.strip()
+    max_retries = 3
+    for retry_count in range(max_retries):
+        try:
+            # Add retry guidance to prompt if this is a retry
+            current_prompt = prompt
+            if retry_count > 0:
+                current_prompt = f"{prompt}\n\nIMPORTANT: Your previous response was malformed. Please provide COMPLETE valid JSON with all brackets and quotes closed properly."
+                print(f"     [Metadata] 🔄 Retry {retry_count}/{max_retries - 1} due to JSON error...")
 
-        # Remove markdown code blocks if present
-        if response_text.startswith('```'):
-            # Find the first ``` and last ```
-            parts = response_text.split('```')
-            if len(parts) >= 3:
-                response_text = parts[1]
-                if response_text.startswith('json'):
-                    response_text = response_text[4:]
-            response_text = response_text.strip()
+            response = llm.invoke(current_prompt)
+            response_text = response.content.strip()
 
-        # Additional cleanup for common JSON issues
-        # Remove any trailing commas before ] or }
-        response_text = re.sub(r',\s*([}\]])', r'\1', response_text)
+            # Remove markdown code blocks if present
+            if response_text.startswith('```'):
+                # Find the first ``` and last ```
+                parts = response_text.split('```')
+                if len(parts) >= 3:
+                    response_text = parts[1]
+                    if response_text.startswith('json'):
+                        response_text = response_text[4:]
+                response_text = response_text.strip()
 
-        # Try to find JSON object in response if it's wrapped in other text
-        if not response_text.startswith('{'):
-            match = re.search(r'\{.*\}', response_text, re.DOTALL)
-            if match:
-                response_text = match.group(0)
+            # Additional cleanup for common JSON issues
+            # Remove any trailing commas before ] or }
+            response_text = re.sub(r',\s*([}\]])', r'\1', response_text)
 
-        # Parse JSON
-        metadata_dict = json.loads(response_text)
-        metadata = GSAContractMetadata(**metadata_dict)
+            # Try to find JSON object in response if it's wrapped in other text
+            if not response_text.startswith('{'):
+                match = re.search(r'\{.*\}', response_text, re.DOTALL)
+                if match:
+                    response_text = match.group(0)
 
-        print(f"     [Metadata] ✓ Extracted via LLM")
-        if metadata.year_columns:
-            print(f"     [Metadata] Year columns: {metadata.year_columns}")
-        else:
-            print(f"     [Metadata] ⚠️  No year columns detected")
+            # Parse JSON
+            metadata_dict = json.loads(response_text)
+            metadata = GSAContractMetadata(**metadata_dict)
 
-        return metadata
+            print(f"     [Metadata] ✓ Extracted via LLM")
+            if metadata.year_columns:
+                print(f"     [Metadata] Year columns: {metadata.year_columns}")
+            else:
+                print(f"     [Metadata] ⚠️  No year columns detected")
 
-    except json.JSONDecodeError as e:
-        print(f"     [Metadata] ⚠️  JSON Error: {e}")
-        print(f"     [Metadata] Response preview: {response_text[:500] if 'response_text' in locals() else 'N/A'}...")
-        return GSAContractMetadata()
-    except Exception as e:
-        print(f"     [Metadata] ⚠️  Error extracting metadata: {e}")
-        # Return empty metadata
-        return GSAContractMetadata()
+            return metadata
+
+        except json.JSONDecodeError as e:
+            print(f"     [Metadata] ❌ JSON Error (attempt {retry_count + 1}/{max_retries}): {e}")
+            print(f"     [Metadata] Response preview: {response_text[:500] if 'response_text' in locals() else 'N/A'}...")
+            if retry_count >= max_retries - 1:
+                print(f"     [Metadata] ❌ Failed after {max_retries} attempts")
+                return GSAContractMetadata()
+        except Exception as e:
+            print(f"     [Metadata] ❌ Error: {e}")
+            return GSAContractMetadata()
+
+    return GSAContractMetadata()
 
 
 def _extract_descriptions_with_llm(full_text: str) -> List[dict]:
@@ -315,46 +326,58 @@ DOCUMENT TEXT:
 
 Return ONLY valid JSON array. If no job descriptions found, return empty array []:"""
 
-    try:
-        response = llm.invoke(prompt)
-        response_text = response.content.strip()
+    max_retries = 3
+    for retry_count in range(max_retries):
+        try:
+            # Add retry guidance to prompt if this is a retry
+            current_prompt = prompt
+            if retry_count > 0:
+                current_prompt = f"{prompt}\n\nIMPORTANT: Your previous response was incomplete or malformed. Please provide the COMPLETE valid JSON array with all entries fully formed. Do not truncate the output."
+                print(f"     [Descriptions] 🔄 Retry {retry_count}/{max_retries - 1} due to JSON error...")
 
-        # Remove markdown code blocks if present
-        if response_text.startswith('```'):
-            # Find the first ``` and last ```
-            parts = response_text.split('```')
-            if len(parts) >= 3:
-                response_text = parts[1]
-                if response_text.startswith('json'):
-                    response_text = response_text[4:]
-            response_text = response_text.strip()
+            response = llm.invoke(current_prompt)
+            response_text = response.content.strip()
 
-        # Additional cleanup for common JSON issues
-        # Remove any trailing commas before ] or }
-        response_text = re.sub(r',\s*([}\]])', r'\1', response_text)
+            # Remove markdown code blocks if present
+            if response_text.startswith('```'):
+                # Find the first ``` and last ```
+                parts = response_text.split('```')
+                if len(parts) >= 3:
+                    response_text = parts[1]
+                    if response_text.startswith('json'):
+                        response_text = response_text[4:]
+                response_text = response_text.strip()
 
-        # Try to find JSON array in response if it's wrapped in other text
-        if not response_text.startswith('['):
-            match = re.search(r'\[.*\]', response_text, re.DOTALL)
-            if match:
-                response_text = match.group(0)
+            # Additional cleanup for common JSON issues
+            # Remove any trailing commas before ] or }
+            response_text = re.sub(r',\s*([}\]])', r'\1', response_text)
 
-        # Parse JSON
-        descriptions = json.loads(response_text)
+            # Try to find JSON array in response if it's wrapped in other text
+            if not response_text.startswith('['):
+                match = re.search(r'\[.*\]', response_text, re.DOTALL)
+                if match:
+                    response_text = match.group(0)
 
-        if not isinstance(descriptions, list):
-            descriptions = [descriptions]
+            # Parse JSON
+            descriptions = json.loads(response_text)
 
-        print(f"     [Descriptions] Extracted {len(descriptions)} job descriptions")
-        return descriptions
+            if not isinstance(descriptions, list):
+                descriptions = [descriptions]
 
-    except json.JSONDecodeError as e:
-        print(f"     [Descriptions] ❌ JSON Error: {e}")
-        print(f"     [Descriptions] Response preview: {response_text[:500] if 'response_text' in locals() else 'N/A'}...")
-        return []
-    except Exception as e:
-        print(f"     [Descriptions] ❌ Error: {e}")
-        return []
+            print(f"     [Descriptions] ✓ Extracted {len(descriptions)} job descriptions")
+            return descriptions
+
+        except json.JSONDecodeError as e:
+            print(f"     [Descriptions] ❌ JSON Error (attempt {retry_count + 1}/{max_retries}): {e}")
+            print(f"     [Descriptions] Response preview: {response_text[:500] if 'response_text' in locals() else 'N/A'}...")
+            if retry_count >= max_retries - 1:
+                print(f"     [Descriptions] ❌ Failed after {max_retries} attempts")
+                return []
+        except Exception as e:
+            print(f"     [Descriptions] ❌ Error: {e}")
+            return []
+
+    return []
 
 
 def _extract_rates_with_llm(full_text: str, year_columns: Optional[List[str]] = None) -> List[dict]:
@@ -462,46 +485,58 @@ DOCUMENT TEXT:
 
 Return ONLY valid JSON array:"""
 
-    try:
-        response = llm.invoke(prompt)
-        response_text = response.content.strip()
+    max_retries = 3
+    for retry_count in range(max_retries):
+        try:
+            # Add retry guidance to prompt if this is a retry
+            current_prompt = prompt
+            if retry_count > 0:
+                current_prompt = f"{prompt}\n\nIMPORTANT: Your previous response was truncated or malformed. Please provide the COMPLETE valid JSON array. Ensure ALL labor categories are included and the JSON is not cut off."
+                print(f"     [Rates] 🔄 Retry {retry_count}/{max_retries - 1} due to JSON error...")
 
-        # Remove markdown code blocks if present
-        if response_text.startswith('```'):
-            # Find the first ``` and last ```
-            parts = response_text.split('```')
-            if len(parts) >= 3:
-                response_text = parts[1]
-                if response_text.startswith('json'):
-                    response_text = response_text[4:]
-            response_text = response_text.strip()
+            response = llm.invoke(current_prompt)
+            response_text = response.content.strip()
 
-        # Additional cleanup for common JSON issues
-        # Remove any trailing commas before ] or }
-        response_text = re.sub(r',\s*([}\]])', r'\1', response_text)
+            # Remove markdown code blocks if present
+            if response_text.startswith('```'):
+                # Find the first ``` and last ```
+                parts = response_text.split('```')
+                if len(parts) >= 3:
+                    response_text = parts[1]
+                    if response_text.startswith('json'):
+                        response_text = response_text[4:]
+                response_text = response_text.strip()
 
-        # Try to find JSON array in response if it's wrapped in other text
-        if not response_text.startswith('['):
-            match = re.search(r'\[.*\]', response_text, re.DOTALL)
-            if match:
-                response_text = match.group(0)
+            # Additional cleanup for common JSON issues
+            # Remove any trailing commas before ] or }
+            response_text = re.sub(r',\s*([}\]])', r'\1', response_text)
 
-        # Parse JSON
-        rates = json.loads(response_text)
+            # Try to find JSON array in response if it's wrapped in other text
+            if not response_text.startswith('['):
+                match = re.search(r'\[.*\]', response_text, re.DOTALL)
+                if match:
+                    response_text = match.group(0)
 
-        if not isinstance(rates, list):
-            rates = [rates]
+            # Parse JSON
+            rates = json.loads(response_text)
 
-        print(f"     [Rates] Extracted {len(rates)} rate entries")
-        return rates
+            if not isinstance(rates, list):
+                rates = [rates]
 
-    except json.JSONDecodeError as e:
-        print(f"     [Rates] ❌ JSON Error: {e}")
-        print(f"     [Rates] Response preview: {response_text[:500] if 'response_text' in locals() else 'N/A'}...")
-        return []
-    except Exception as e:
-        print(f"     [Rates] ❌ Error: {e}")
-        return []
+            print(f"     [Rates] ✓ Extracted {len(rates)} rate entries")
+            return rates
+
+        except json.JSONDecodeError as e:
+            print(f"     [Rates] ❌ JSON Error (attempt {retry_count + 1}/{max_retries}): {e}")
+            print(f"     [Rates] Response preview: {response_text[:500] if 'response_text' in locals() else 'N/A'}...")
+            if retry_count >= max_retries - 1:
+                print(f"     [Rates] ❌ Failed after {max_retries} attempts")
+                return []
+        except Exception as e:
+            print(f"     [Rates] ❌ Error: {e}")
+            return []
+
+    return []
 
 
 def _merge_descriptions_and_rates(descriptions: List[dict], rates: List[dict]) -> List[dict]:
