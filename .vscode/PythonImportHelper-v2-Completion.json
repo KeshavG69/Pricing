@@ -127,14 +127,6 @@
         "documentation": {}
     },
     {
-        "label": "Agent",
-        "importPath": "agno.agent",
-        "description": "agno.agent",
-        "isExtraImport": true,
-        "detail": "agno.agent",
-        "documentation": {}
-    },
-    {
         "label": "get_chat_llm_agno",
         "importPath": "client.llm_client",
         "description": "client.llm_client",
@@ -168,6 +160,14 @@
     },
     {
         "label": "get_embeddings",
+        "importPath": "client.llm_client",
+        "description": "client.llm_client",
+        "isExtraImport": true,
+        "detail": "client.llm_client",
+        "documentation": {}
+    },
+    {
+        "label": "get_chat_llm_agno",
         "importPath": "client.llm_client",
         "description": "client.llm_client",
         "isExtraImport": true,
@@ -244,6 +244,118 @@
         "description": "utils.company_repository",
         "isExtraImport": true,
         "detail": "utils.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
         "documentation": {}
     },
     {
@@ -626,30 +738,6 @@
     },
     {
         "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "List",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -1234,22 +1322,6 @@
     },
     {
         "label": "Optional",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Dict",
-        "importPath": "typing",
-        "description": "typing",
-        "isExtraImport": true,
-        "detail": "typing",
-        "documentation": {}
-    },
-    {
-        "label": "Any",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -2010,118 +2082,6 @@
         "documentation": {}
     },
     {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
         "label": "pricing",
         "importPath": "routers",
         "description": "routers",
@@ -2436,78 +2396,6 @@
     },
     {
         "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "timezone",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "timezone",
         "importPath": "datetime",
         "description": "datetime",
         "isExtraImport": true,
@@ -2868,14 +2756,6 @@
         "documentation": {}
     },
     {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
         "label": "ASCENDING",
         "importPath": "pymongo",
         "description": "pymongo",
@@ -2885,14 +2765,6 @@
     },
     {
         "label": "DESCENDING",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "MongoClient",
         "importPath": "pymongo",
         "description": "pymongo",
         "isExtraImport": true,
@@ -2961,118 +2833,6 @@
         "description": "pymongo",
         "isExtraImport": true,
         "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
         "documentation": {}
     },
     {
@@ -3161,54 +2921,6 @@
         "description": "auth",
         "isExtraImport": true,
         "detail": "auth",
-        "documentation": {}
-    },
-    {
-        "label": "config",
-        "importPath": "auth",
-        "description": "auth",
-        "isExtraImport": true,
-        "detail": "auth",
-        "documentation": {}
-    },
-    {
-        "label": "get_mongodb_client",
-        "importPath": "auth.database",
-        "description": "auth.database",
-        "isExtraImport": true,
-        "detail": "auth.database",
-        "documentation": {}
-    },
-    {
-        "label": "get_mongodb_client",
-        "importPath": "auth.database",
-        "description": "auth.database",
-        "isExtraImport": true,
-        "detail": "auth.database",
-        "documentation": {}
-    },
-    {
-        "label": "get_mongodb_client",
-        "importPath": "auth.database",
-        "description": "auth.database",
-        "isExtraImport": true,
-        "detail": "auth.database",
-        "documentation": {}
-    },
-    {
-        "label": "get_mongodb_client",
-        "importPath": "auth.database",
-        "description": "auth.database",
-        "isExtraImport": true,
-        "detail": "auth.database",
-        "documentation": {}
-    },
-    {
-        "label": "get_mongodb_client",
-        "importPath": "auth.database",
-        "description": "auth.database",
-        "isExtraImport": true,
-        "detail": "auth.database",
         "documentation": {}
     },
     {
@@ -3615,15 +3327,6 @@
         "documentation": {}
     },
     {
-        "label": "openpyxl",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "openpyxl",
-        "description": "openpyxl",
-        "detail": "openpyxl",
-        "documentation": {}
-    },
-    {
         "label": "Workbook",
         "importPath": "openpyxl",
         "description": "openpyxl",
@@ -3702,78 +3405,6 @@
         "description": "client.jd_parser",
         "isExtraImport": true,
         "detail": "client.jd_parser",
-        "documentation": {}
-    },
-    {
-        "label": "extract_with_llamaextract",
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
-        "isExtraImport": true,
-        "detail": "client.jd_parser",
-        "documentation": {}
-    },
-    {
-        "label": "parse_documents_to_dataframe",
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
-        "isExtraImport": true,
-        "detail": "client.jd_parser",
-        "documentation": {}
-    },
-    {
-        "label": "parse_documents_to_dataframe",
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
-        "isExtraImport": true,
-        "detail": "client.jd_parser",
-        "documentation": {}
-    },
-    {
-        "label": "extract_with_llamaextract",
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
-        "isExtraImport": true,
-        "detail": "client.jd_parser",
-        "documentation": {}
-    },
-    {
-        "label": "parse_documents_to_dataframe",
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
-        "isExtraImport": true,
-        "detail": "client.jd_parser",
-        "documentation": {}
-    },
-    {
-        "label": "parse_documents_to_dataframe",
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
-        "isExtraImport": true,
-        "detail": "client.jd_parser",
-        "documentation": {}
-    },
-    {
-        "label": "extract_with_llamaextract",
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
-        "isExtraImport": true,
-        "detail": "client.jd_parser",
-        "documentation": {}
-    },
-    {
-        "label": "get_llama_extract",
-        "importPath": "client.llama_client",
-        "description": "client.llama_client",
-        "isExtraImport": true,
-        "detail": "client.llama_client",
-        "documentation": {}
-    },
-    {
-        "label": "get_llama_extract",
-        "importPath": "client.llama_client",
-        "description": "client.llama_client",
-        "isExtraImport": true,
-        "detail": "client.llama_client",
         "documentation": {}
     },
     {
@@ -3866,43 +3497,11 @@
         "documentation": {}
     },
     {
-        "label": "OpenAIChat",
-        "importPath": "agno.models.openai",
-        "description": "agno.models.openai",
-        "isExtraImport": true,
-        "detail": "agno.models.openai",
-        "documentation": {}
-    },
-    {
-        "label": "OpenAIChat",
-        "importPath": "agno.models.openai",
-        "description": "agno.models.openai",
-        "isExtraImport": true,
-        "detail": "agno.models.openai",
-        "documentation": {}
-    },
-    {
-        "label": "OpenAIChat",
-        "importPath": "agno.models.openai",
-        "description": "agno.models.openai",
-        "isExtraImport": true,
-        "detail": "agno.models.openai",
-        "documentation": {}
-    },
-    {
         "label": "ReasoningTools",
         "importPath": "agno.tools.reasoning",
         "description": "agno.tools.reasoning",
         "isExtraImport": true,
         "detail": "agno.tools.reasoning",
-        "documentation": {}
-    },
-    {
-        "label": "ExaTools",
-        "importPath": "agno.tools.exa",
-        "description": "agno.tools.exa",
-        "isExtraImport": true,
-        "detail": "agno.tools.exa",
         "documentation": {}
     },
     {
@@ -3931,6 +3530,14 @@
         "documentation": {}
     },
     {
+        "label": "get_llama_extract",
+        "importPath": "client.llama_client",
+        "description": "client.llama_client",
+        "isExtraImport": true,
+        "detail": "client.llama_client",
+        "documentation": {}
+    },
+    {
         "label": "ChatOpenAI",
         "importPath": "langchain_openai",
         "description": "langchain_openai",
@@ -3952,6 +3559,14 @@
         "description": "langchain_openai",
         "isExtraImport": true,
         "detail": "langchain_openai",
+        "documentation": {}
+    },
+    {
+        "label": "OpenAIChat",
+        "importPath": "agno.models.openai",
+        "description": "agno.models.openai",
+        "isExtraImport": true,
+        "detail": "agno.models.openai",
         "documentation": {}
     },
     {
@@ -4573,14 +4188,6 @@
         "documentation": {}
     },
     {
-        "label": "get_proposal_crud",
-        "importPath": "utils.proposals",
-        "description": "utils.proposals",
-        "isExtraImport": true,
-        "detail": "utils.proposals",
-        "documentation": {}
-    },
-    {
         "label": "tempfile",
         "kind": 6,
         "isExtraImport": true,
@@ -4680,22 +4287,6 @@
     },
     {
         "label": "process_dataframe_with_agents",
-        "importPath": "utils.pipeline",
-        "description": "utils.pipeline",
-        "isExtraImport": true,
-        "detail": "utils.pipeline",
-        "documentation": {}
-    },
-    {
-        "label": "process_dataframe_with_agents",
-        "importPath": "utils.pipeline",
-        "description": "utils.pipeline",
-        "isExtraImport": true,
-        "detail": "utils.pipeline",
-        "documentation": {}
-    },
-    {
-        "label": "build_project_data_from_dataframe",
         "importPath": "utils.pipeline",
         "description": "utils.pipeline",
         "isExtraImport": true,
@@ -4807,55 +4398,7 @@
         "documentation": {}
     },
     {
-        "label": "parse_document_intelligent",
-        "importPath": "client.intelligent_parser",
-        "description": "client.intelligent_parser",
-        "isExtraImport": true,
-        "detail": "client.intelligent_parser",
-        "documentation": {}
-    },
-    {
-        "label": "parse_document_intelligent",
-        "importPath": "client.intelligent_parser",
-        "description": "client.intelligent_parser",
-        "isExtraImport": true,
-        "detail": "client.intelligent_parser",
-        "documentation": {}
-    },
-    {
-        "label": "parse_document_intelligent",
-        "importPath": "client.intelligent_parser",
-        "description": "client.intelligent_parser",
-        "isExtraImport": true,
-        "detail": "client.intelligent_parser",
-        "documentation": {}
-    },
-    {
         "label": "split_position_by_hours",
-        "importPath": "routers.pricing",
-        "description": "routers.pricing",
-        "isExtraImport": true,
-        "detail": "routers.pricing",
-        "documentation": {}
-    },
-    {
-        "label": "split_multi_year_position",
-        "importPath": "routers.pricing",
-        "description": "routers.pricing",
-        "isExtraImport": true,
-        "detail": "routers.pricing",
-        "documentation": {}
-    },
-    {
-        "label": "split_multi_year_position",
-        "importPath": "routers.pricing",
-        "description": "routers.pricing",
-        "isExtraImport": true,
-        "detail": "routers.pricing",
-        "documentation": {}
-    },
-    {
-        "label": "split_multi_year_position",
         "importPath": "routers.pricing",
         "description": "routers.pricing",
         "isExtraImport": true,
@@ -5025,14 +4568,6 @@
         "documentation": {}
     },
     {
-        "label": "ObjectId",
-        "importPath": "bson.objectid",
-        "description": "bson.objectid",
-        "isExtraImport": true,
-        "detail": "bson.objectid",
-        "documentation": {}
-    },
-    {
         "label": "bin_dir",
         "kind": 5,
         "importPath": "backend..venv.bin.activate_this",
@@ -5172,7 +4707,7 @@
         "kind": 6,
         "importPath": "backend.app.settings",
         "description": "backend.app.settings",
-        "peekOfCode": "class Settings(BaseSettings):\n    \"\"\"Application configuration from environment variables.\"\"\"\n    OPENROUTER_API_KEY: str\n    OPENROUTER_MODEL: str = \"openai/gpt-4o\"\n    OPENAI_API_KEY: str\n    # LlamaCloud API for document extraction\n    LLAMA_CLOUD_API_KEY: str\n    # MongoDB configuration\n    MONGODB_URL: str = \"mongodb://localhost:27017\"\n    MONGODB_DATABASE: str = \"testing\"",
+        "peekOfCode": "class Settings(BaseSettings):\n    \"\"\"Application configuration from environment variables.\"\"\"\n    OPENROUTER_API_KEY: str\n    OPENROUTER_MODEL: str = \"openai/gpt-4o\"\n    OPENAI_API_KEY: str\n    CLAUDE_API_KEY: str\n    CLAUDE_BASE_URL: str = \"https://api.anthropic.com/v1\"\n    # LlamaCloud API for document extraction\n    LLAMA_CLOUD_API_KEY: str\n    # MongoDB configuration",
         "detail": "backend.app.settings",
         "documentation": {}
     },
@@ -5802,16 +5337,7 @@
         "kind": 6,
         "importPath": "backend.client.gsa_parser",
         "description": "backend.client.gsa_parser",
-        "peekOfCode": "class GSAContractMetadata(BaseModel):\n    \"\"\"\n    Metadata extraction for GSA contract (contract number, dates, company name).\n    Labor categories are extracted separately using GPT-4 with intelligent chunking.\n    \"\"\"\n    contract_number: Optional[str] = Field(\n        None,\n        description=\"GSA contract number (e.g., 'GS-35F-0119Y', '47QRCA25DS242', '47QTCA20D003R')\"\n    )\n    contract_start_date: Optional[str] = Field(",
-        "detail": "backend.client.gsa_parser",
-        "documentation": {}
-    },
-    {
-        "label": "estimate_page_count",
-        "kind": 2,
-        "importPath": "backend.client.gsa_parser",
-        "description": "backend.client.gsa_parser",
-        "peekOfCode": "def estimate_page_count(file_path: str) -> int:\n    \"\"\"\n    Estimate page count for routing decision.\n    Returns: Estimated page count (±20% accuracy is acceptable)\n    \"\"\"\n    import os\n    ext = os.path.splitext(file_path)[1].lower()\n    try:\n        if ext == '.pdf':\n            import PyPDF2",
+        "peekOfCode": "class GSAContractMetadata(BaseModel):\n    \"\"\"\n    Metadata extraction for GSA contract (contract number, dates, company name).\n    Labor categories are extracted separately using dual-parser approach.\n    \"\"\"\n    contract_number: Optional[str] = Field(\n        None,\n        description=\"GSA contract number (e.g., 'GS-35F-0119Y', '47QRCA25DS242', '47QTCA20D003R')\"\n    )\n    contract_start_date: Optional[str] = Field(",
         "detail": "backend.client.gsa_parser",
         "documentation": {}
     },
@@ -6054,7 +5580,7 @@
         "kind": 2,
         "importPath": "backend.client.llm_client",
         "description": "backend.client.llm_client",
-        "peekOfCode": "def get_chat_llm(\n    model: Optional[str] = None,\n    api_key: Optional[str] = None,\n    base_url: Optional[str] = None,\n    max_tokens: Optional[int] = None\n) -> ChatOpenAI:\n    \"\"\"\n    Convenience function to get ChatOpenAI instance directly (LangChain)\n    Args:\n        model: Model name (defaults to settings.OPENROUTER_MODEL)",
+        "peekOfCode": "def get_chat_llm(\n    model: Optional[str] = None,\n    api_key: Optional[str] = None,\n    base_url: Optional[str] = None,\n    max_tokens: Optional[int] = None\n) -> ChatOpenAI:\n    \"\"\"\n    Convenience function to get ChatOpenAI instance directly (LangChain)\n    Args:\n        model: Model name (defaults to Claude Sonnet 4.5)",
         "detail": "backend.client.llm_client",
         "documentation": {}
     },
@@ -6063,7 +5589,7 @@
         "kind": 2,
         "importPath": "backend.client.llm_client",
         "description": "backend.client.llm_client",
-        "peekOfCode": "def get_chat_llm_agno(\n    model: Optional[str] = None,\n    api_key: Optional[str] = None,\n    base_url: Optional[str] = None\n) -> OpenAIChat:\n    \"\"\"\n    Convenience function to get OpenAIChat instance directly (Agno)\n    Args:\n        model: Model name (defaults to settings.OPENROUTER_MODEL)\n        api_key: API key (defaults to settings.OPENROUTER_API_KEY)",
+        "peekOfCode": "def get_chat_llm_agno(\n    model: Optional[str] = None,\n    api_key: Optional[str] = None,\n    base_url: Optional[str] = None,\n    max_tokens: Optional[int] = None,\n    temperature: Optional[float] = 0.1\n) -> OpenAIChat:\n    \"\"\"\n    Convenience function to get OpenAIChat instance directly (Agno)\n    Args:",
         "detail": "backend.client.llm_client",
         "documentation": {}
     },
@@ -6119,15 +5645,6 @@
         "description": "backend.client.oews_mongodb",
         "peekOfCode": "_client_lock = None  # Will be initialized when needed\ndef get_oews_mongo_client() -> OEWSMongoLookup:\n    \"\"\"\n    Get or create OEWS MongoDB client (singleton pattern).\n    Thread-safe synchronous getter. The client itself uses async methods\n    with lazy initialization via _ensure_initialized().\n    Returns:\n        OEWSMongoLookup instance\n    \"\"\"\n    global _oews_mongo_client, _client_lock",
         "detail": "backend.client.oews_mongodb",
-        "documentation": {}
-    },
-    {
-        "label": "test_smart_parser",
-        "kind": 2,
-        "importPath": "backend.client.smart_pdf_parser",
-        "description": "backend.client.smart_pdf_parser",
-        "peekOfCode": "def test_smart_parser(file_path: str) -> Dict[str, Any]:\n    \"\"\"Test the smart parser on a file.\"\"\"\n    import asyncio\n    return asyncio.run(parse_pdf_smart(file_path))\nif __name__ == \"__main__\":\n    import sys\n    if len(sys.argv) > 1:\n        result = test_smart_parser(sys.argv[1])\n        print(f\"\\n\\n=== FINAL JSON ===\")\n        print(json.dumps(result, indent=2, default=str))",
-        "detail": "backend.client.smart_pdf_parser",
         "documentation": {}
     },
     {
@@ -6500,29 +6017,11 @@
         "documentation": {}
     },
     {
-        "label": "ProjectConfig",
-        "kind": 6,
-        "importPath": "backend.routers.excel_export",
-        "description": "backend.routers.excel_export",
-        "peekOfCode": "class ProjectConfig(BaseModel):\n    \"\"\"Project configuration for cost proposal generation.\"\"\"\n    solicitation_number: str = Field(..., description=\"Solicitation number (e.g., N0017825R3013)\")\n    prime_contractor_name: str = Field(..., description=\"Prime contractor company name\")\n    subcontractor_names: List[str] = Field(default_factory=list, description=\"List of subcontractor names\")\n    dcaa_contact: str = Field(default=\"\", description=\"DCAA point of contact information\")\n    total_years: int = Field(..., ge=1, le=10, description=\"Total contract years (1-10)\")\n    base_years: int = Field(..., ge=1, description=\"Number of base years\")\n    # Escalation rates (year-over-year wage increases)\n    escalation_rates: Dict[str, float] = Field(",
-        "detail": "backend.routers.excel_export",
-        "documentation": {}
-    },
-    {
-        "label": "ExcelGenerationRequest",
-        "kind": 6,
-        "importPath": "backend.routers.excel_export",
-        "description": "backend.routers.excel_export",
-        "peekOfCode": "class ExcelGenerationRequest(BaseModel):\n    \"\"\"Request body for generating Excel from job data.\"\"\"\n    jobs: List[Dict[str, Any]] = Field(..., description=\"List of job records with wage data\")\n    project_config: ProjectConfig = Field(..., description=\"Project configuration\")\n@router.post(\"/generate-from-data\")\nasync def generate_excel_from_data(request: ExcelGenerationRequest):\n    \"\"\"\n    Generate Excel cost proposal from pre-processed job data.\n    Use this endpoint when you already have job data with wage information\n    (e.g., from the /api/pricing/process endpoint).",
-        "detail": "backend.routers.excel_export",
-        "documentation": {}
-    },
-    {
         "label": "router",
         "kind": 5,
         "importPath": "backend.routers.excel_export",
         "description": "backend.routers.excel_export",
-        "peekOfCode": "router = APIRouter()\nclass ProjectConfig(BaseModel):\n    \"\"\"Project configuration for cost proposal generation.\"\"\"\n    solicitation_number: str = Field(..., description=\"Solicitation number (e.g., N0017825R3013)\")\n    prime_contractor_name: str = Field(..., description=\"Prime contractor company name\")\n    subcontractor_names: List[str] = Field(default_factory=list, description=\"List of subcontractor names\")\n    dcaa_contact: str = Field(default=\"\", description=\"DCAA point of contact information\")\n    total_years: int = Field(..., ge=1, le=10, description=\"Total contract years (1-10)\")\n    base_years: int = Field(..., ge=1, description=\"Number of base years\")\n    # Escalation rates (year-over-year wage increases)",
+        "peekOfCode": "router = APIRouter()\n@router.get(\"/generate-from-proposal/{proposal_id}\")\nasync def generate_excel_from_proposal(\n    proposal_id: str,\n    current_user: dict = Depends(get_current_user)\n):\n    \"\"\"\n    Generate Excel cost proposal from a saved proposal ID.\n    Fetches the proposal data from MongoDB and generates an Excel file.\n    This is the recommended endpoint for exporting existing proposals.",
         "detail": "backend.routers.excel_export",
         "documentation": {}
     },
@@ -6860,42 +6359,6 @@
         "documentation": {}
     },
     {
-        "label": "analyze_pdf",
-        "kind": 2,
-        "importPath": "backend.scripts.analyze_personnel_pdf",
-        "description": "backend.scripts.analyze_personnel_pdf",
-        "peekOfCode": "def analyze_pdf():\n    \"\"\"Analyze Personnel Qualifications PDF in detail.\"\"\"\n    print('Extracting raw data from Personnel Qualifications PDF...')\n    print('='*80)\n    extraction = extract_with_llamaextract('/Users/keshav/Downloads/Personnel Qualifications.pdf', mode='balanced')\n    print(f'\\nDocument Metadata:')\n    print(f'  Location: {extraction.metadata.location}')\n    print(f'  Project: {extraction.metadata.project_name}')\n    print(f'  Base Years: {extraction.metadata.base_years}')\n    print(f'  Option Years: {extraction.metadata.option_years}')",
-        "detail": "backend.scripts.analyze_personnel_pdf",
-        "documentation": {}
-    },
-    {
-        "label": "check_billing_issue",
-        "kind": 2,
-        "importPath": "backend.scripts.check_free_proposal_issue",
-        "description": "backend.scripts.check_free_proposal_issue",
-        "peekOfCode": "def check_billing_issue():\n    print(\"Connecting to MongoDB...\")\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    # Find user with \"rajesh\" in email\n    print(\"=\" * 80)\n    print(\"SEARCHING FOR USER WITH 'rajesh' IN EMAIL\")\n    print(\"=\" * 80)\n    users = list(db.users.find({\"email\": {\"$regex\": \"rajesh\", \"$options\": \"i\"}}))\n    if not users:",
-        "detail": "backend.scripts.check_free_proposal_issue",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_URL",
-        "kind": 5,
-        "importPath": "backend.scripts.check_free_proposal_issue",
-        "description": "backend.scripts.check_free_proposal_issue",
-        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef check_billing_issue():\n    print(\"Connecting to MongoDB...\")\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    # Find user with \"rajesh\" in email\n    print(\"=\" * 80)\n    print(\"SEARCHING FOR USER WITH 'rajesh' IN EMAIL\")\n    print(\"=\" * 80)",
-        "detail": "backend.scripts.check_free_proposal_issue",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_DATABASE",
-        "kind": 5,
-        "importPath": "backend.scripts.check_free_proposal_issue",
-        "description": "backend.scripts.check_free_proposal_issue",
-        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef check_billing_issue():\n    print(\"Connecting to MongoDB...\")\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    # Find user with \"rajesh\" in email\n    print(\"=\" * 80)\n    print(\"SEARCHING FOR USER WITH 'rajesh' IN EMAIL\")\n    print(\"=\" * 80)\n    users = list(db.users.find({\"email\": {\"$regex\": \"rajesh\", \"$options\": \"i\"}}))",
-        "detail": "backend.scripts.check_free_proposal_issue",
-        "documentation": {}
-    },
-    {
         "label": "safe_create_index",
         "kind": 2,
         "importPath": "backend.scripts.create_indexes",
@@ -6956,33 +6419,6 @@
         "description": "backend.scripts.create_soc_indexes",
         "peekOfCode": "backend_dir = Path(__file__).parent.parent\nsys.path.insert(0, str(backend_dir))\nfrom pymongo import MongoClient\nfrom app.settings import settings\ndef get_mongodb_connection():\n    \"\"\"Get synchronous MongoDB connection for this script.\"\"\"\n    client = MongoClient(\n        settings.MONGODB_URL,\n        serverSelectionTimeoutMS=20000\n    )",
         "detail": "backend.scripts.create_soc_indexes",
-        "documentation": {}
-    },
-    {
-        "label": "fix_index",
-        "kind": 2,
-        "importPath": "backend.scripts.fix_billing_index",
-        "description": "backend.scripts.fix_billing_index",
-        "peekOfCode": "def fix_index():\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    billing = db[\"billing\"]\n    print(f\"Connected to database: {MONGODB_DATABASE}\")\n    # Check existing indexes\n    print(\"\\nExisting indexes on billing collection:\")\n    for idx in billing.list_indexes():\n        print(f\"  - {idx['name']}: {idx.get('key')}, sparse={idx.get('sparse', False)}, unique={idx.get('unique', False)}\")\n    # Drop the old index if it exists",
-        "detail": "backend.scripts.fix_billing_index",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_URL",
-        "kind": 5,
-        "importPath": "backend.scripts.fix_billing_index",
-        "description": "backend.scripts.fix_billing_index",
-        "peekOfCode": "MONGODB_URL = os.getenv(\"MONGODB_URL\", \"mongodb://localhost:27017\")\nMONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef fix_index():\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    billing = db[\"billing\"]\n    print(f\"Connected to database: {MONGODB_DATABASE}\")\n    # Check existing indexes\n    print(\"\\nExisting indexes on billing collection:\")\n    for idx in billing.list_indexes():",
-        "detail": "backend.scripts.fix_billing_index",
-        "documentation": {}
-    },
-    {
-        "label": "MONGODB_DATABASE",
-        "kind": 5,
-        "importPath": "backend.scripts.fix_billing_index",
-        "description": "backend.scripts.fix_billing_index",
-        "peekOfCode": "MONGODB_DATABASE = os.getenv(\"MONGODB_DATABASE\", \"oews_data\")\ndef fix_index():\n    client = MongoClient(MONGODB_URL)\n    db = client[MONGODB_DATABASE]\n    billing = db[\"billing\"]\n    print(f\"Connected to database: {MONGODB_DATABASE}\")\n    # Check existing indexes\n    print(\"\\nExisting indexes on billing collection:\")\n    for idx in billing.list_indexes():\n        print(f\"  - {idx['name']}: {idx.get('key')}, sparse={idx.get('sparse', False)}, unique={idx.get('unique', False)}\")",
-        "detail": "backend.scripts.fix_billing_index",
         "documentation": {}
     },
     {
@@ -7170,7 +6606,7 @@
         "kind": 2,
         "importPath": "backend.scripts.setup_help_center_rag",
         "description": "backend.scripts.setup_help_center_rag",
-        "peekOfCode": "def validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENROUTER_API_KEY:\n        raise ValueError(\"OPENROUTER_API_KEY not found in environment\")\n    if not PINECONE_API_KEY:\n        raise ValueError(\"PINECONE_API_KEY not found in environment\")\n    print(\"✓ Environment variables validated\")\ndef initialize_pinecone():\n    \"\"\"Initialize Pinecone client and create index if it doesn't exist.\"\"\"\n    print(f\"\\nInitializing Pinecone...\")",
+        "peekOfCode": "def validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENAI_API_KEY:\n        raise ValueError(\"OPENAI_API_KEY not found in environment\")\n    if not PINECONE_API_KEY:\n        raise ValueError(\"PINECONE_API_KEY not found in environment\")\n    print(\"✓ Environment variables validated\")\ndef initialize_pinecone():\n    \"\"\"Initialize Pinecone client and create index if it doesn't exist.\"\"\"\n    print(f\"\\nInitializing Pinecone...\")",
         "detail": "backend.scripts.setup_help_center_rag",
         "documentation": {}
     },
@@ -7215,7 +6651,7 @@
         "kind": 2,
         "importPath": "backend.scripts.setup_help_center_rag",
         "description": "backend.scripts.setup_help_center_rag",
-        "peekOfCode": "def upload_to_pinecone(chunks: List[Document]):\n    \"\"\"Generate embeddings and upload to Pinecone namespace.\"\"\"\n    print(f\"\\nGenerating embeddings and uploading to Pinecone...\")\n    print(f\"Using model: {EMBEDDING_MODEL}\")\n    print(f\"Target: Index '{PINECONE_INDEX_NAME}' → Namespace '{PINECONE_NAMESPACE}'\")\n    # Initialize embeddings (using OpenRouter)\n    embeddings = OpenAIEmbeddings(\n        model=EMBEDDING_MODEL,\n        openai_api_key=OPENROUTER_API_KEY,\n        openai_api_base=\"https://openrouter.ai/api/v1\"",
+        "peekOfCode": "def upload_to_pinecone(chunks: List[Document]):\n    \"\"\"Generate embeddings and upload to Pinecone namespace.\"\"\"\n    print(f\"\\nGenerating embeddings and uploading to Pinecone...\")\n    print(f\"Using model: {EMBEDDING_MODEL}\")\n    print(f\"Target: Index '{PINECONE_INDEX_NAME}' → Namespace '{PINECONE_NAMESPACE}'\")\n    # Initialize embeddings (using OpenAI directly)\n    embeddings = OpenAIEmbeddings(\n        model=EMBEDDING_MODEL,\n        openai_api_key=OPENAI_API_KEY\n    )",
         "detail": "backend.scripts.setup_help_center_rag",
         "documentation": {}
     },
@@ -7238,11 +6674,11 @@
         "documentation": {}
     },
     {
-        "label": "OPENROUTER_API_KEY",
+        "label": "OPENAI_API_KEY",
         "kind": 5,
         "importPath": "backend.scripts.setup_help_center_rag",
         "description": "backend.scripts.setup_help_center_rag",
-        "peekOfCode": "OPENROUTER_API_KEY = os.getenv(\"OPENROUTER_API_KEY\")\nPINECONE_API_KEY = os.getenv(\"PINECONE_API_KEY\")\nPINECONE_INDEX_NAME = os.getenv(\"HELP_CENTER_PINECONE_INDEX_NAME\", \"help-center\")  # Separate index for help center\nPINECONE_NAMESPACE = \"help-center\"  # Namespace within the index\nDOCS_PATH = Path(__file__).parent.parent.parent / \"docs\" / \"help-center\"\n# Embedding configuration\nEMBEDDING_MODEL = \"openai/text-embedding-3-small\"  # Via OpenRouter\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk",
+        "peekOfCode": "OPENAI_API_KEY = os.getenv(\"OPENAI_API_KEY\")\nPINECONE_API_KEY = os.getenv(\"PINECONE_API_KEY\")\nPINECONE_INDEX_NAME = os.getenv(\"HELP_CENTER_PINECONE_INDEX_NAME\", \"help-center\")  # Separate index for help center\nPINECONE_NAMESPACE = \"help-center\"  # Namespace within the index\nDOCS_PATH = Path(__file__).parent.parent.parent / \"docs\" / \"help-center\"\n# Embedding configuration\nEMBEDDING_MODEL = \"text-embedding-3-small\"\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk",
         "detail": "backend.scripts.setup_help_center_rag",
         "documentation": {}
     },
@@ -7251,7 +6687,7 @@
         "kind": 5,
         "importPath": "backend.scripts.setup_help_center_rag",
         "description": "backend.scripts.setup_help_center_rag",
-        "peekOfCode": "PINECONE_API_KEY = os.getenv(\"PINECONE_API_KEY\")\nPINECONE_INDEX_NAME = os.getenv(\"HELP_CENTER_PINECONE_INDEX_NAME\", \"help-center\")  # Separate index for help center\nPINECONE_NAMESPACE = \"help-center\"  # Namespace within the index\nDOCS_PATH = Path(__file__).parent.parent.parent / \"docs\" / \"help-center\"\n# Embedding configuration\nEMBEDDING_MODEL = \"openai/text-embedding-3-small\"  # Via OpenRouter\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context",
+        "peekOfCode": "PINECONE_API_KEY = os.getenv(\"PINECONE_API_KEY\")\nPINECONE_INDEX_NAME = os.getenv(\"HELP_CENTER_PINECONE_INDEX_NAME\", \"help-center\")  # Separate index for help center\nPINECONE_NAMESPACE = \"help-center\"  # Namespace within the index\nDOCS_PATH = Path(__file__).parent.parent.parent / \"docs\" / \"help-center\"\n# Embedding configuration\nEMBEDDING_MODEL = \"text-embedding-3-small\"\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context",
         "detail": "backend.scripts.setup_help_center_rag",
         "documentation": {}
     },
@@ -7260,7 +6696,7 @@
         "kind": 5,
         "importPath": "backend.scripts.setup_help_center_rag",
         "description": "backend.scripts.setup_help_center_rag",
-        "peekOfCode": "PINECONE_INDEX_NAME = os.getenv(\"HELP_CENTER_PINECONE_INDEX_NAME\", \"help-center\")  # Separate index for help center\nPINECONE_NAMESPACE = \"help-center\"  # Namespace within the index\nDOCS_PATH = Path(__file__).parent.parent.parent / \"docs\" / \"help-center\"\n# Embedding configuration\nEMBEDDING_MODEL = \"openai/text-embedding-3-small\"  # Via OpenRouter\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():",
+        "peekOfCode": "PINECONE_INDEX_NAME = os.getenv(\"HELP_CENTER_PINECONE_INDEX_NAME\", \"help-center\")  # Separate index for help center\nPINECONE_NAMESPACE = \"help-center\"  # Namespace within the index\nDOCS_PATH = Path(__file__).parent.parent.parent / \"docs\" / \"help-center\"\n# Embedding configuration\nEMBEDDING_MODEL = \"text-embedding-3-small\"\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():",
         "detail": "backend.scripts.setup_help_center_rag",
         "documentation": {}
     },
@@ -7269,7 +6705,7 @@
         "kind": 5,
         "importPath": "backend.scripts.setup_help_center_rag",
         "description": "backend.scripts.setup_help_center_rag",
-        "peekOfCode": "PINECONE_NAMESPACE = \"help-center\"  # Namespace within the index\nDOCS_PATH = Path(__file__).parent.parent.parent / \"docs\" / \"help-center\"\n# Embedding configuration\nEMBEDDING_MODEL = \"openai/text-embedding-3-small\"  # Via OpenRouter\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"",
+        "peekOfCode": "PINECONE_NAMESPACE = \"help-center\"  # Namespace within the index\nDOCS_PATH = Path(__file__).parent.parent.parent / \"docs\" / \"help-center\"\n# Embedding configuration\nEMBEDDING_MODEL = \"text-embedding-3-small\"\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"",
         "detail": "backend.scripts.setup_help_center_rag",
         "documentation": {}
     },
@@ -7278,7 +6714,7 @@
         "kind": 5,
         "importPath": "backend.scripts.setup_help_center_rag",
         "description": "backend.scripts.setup_help_center_rag",
-        "peekOfCode": "DOCS_PATH = Path(__file__).parent.parent.parent / \"docs\" / \"help-center\"\n# Embedding configuration\nEMBEDDING_MODEL = \"openai/text-embedding-3-small\"  # Via OpenRouter\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENROUTER_API_KEY:",
+        "peekOfCode": "DOCS_PATH = Path(__file__).parent.parent.parent / \"docs\" / \"help-center\"\n# Embedding configuration\nEMBEDDING_MODEL = \"text-embedding-3-small\"\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENAI_API_KEY:",
         "detail": "backend.scripts.setup_help_center_rag",
         "documentation": {}
     },
@@ -7287,7 +6723,7 @@
         "kind": 5,
         "importPath": "backend.scripts.setup_help_center_rag",
         "description": "backend.scripts.setup_help_center_rag",
-        "peekOfCode": "EMBEDDING_MODEL = \"openai/text-embedding-3-small\"  # Via OpenRouter\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENROUTER_API_KEY:\n        raise ValueError(\"OPENROUTER_API_KEY not found in environment\")\n    if not PINECONE_API_KEY:",
+        "peekOfCode": "EMBEDDING_MODEL = \"text-embedding-3-small\"\nEMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENAI_API_KEY:\n        raise ValueError(\"OPENAI_API_KEY not found in environment\")\n    if not PINECONE_API_KEY:",
         "detail": "backend.scripts.setup_help_center_rag",
         "documentation": {}
     },
@@ -7296,7 +6732,7 @@
         "kind": 5,
         "importPath": "backend.scripts.setup_help_center_rag",
         "description": "backend.scripts.setup_help_center_rag",
-        "peekOfCode": "EMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENROUTER_API_KEY:\n        raise ValueError(\"OPENROUTER_API_KEY not found in environment\")\n    if not PINECONE_API_KEY:\n        raise ValueError(\"PINECONE_API_KEY not found in environment\")",
+        "peekOfCode": "EMBEDDING_DIMENSION = 1536\n# Chunking configuration\nCHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENAI_API_KEY:\n        raise ValueError(\"OPENAI_API_KEY not found in environment\")\n    if not PINECONE_API_KEY:\n        raise ValueError(\"PINECONE_API_KEY not found in environment\")",
         "detail": "backend.scripts.setup_help_center_rag",
         "documentation": {}
     },
@@ -7305,7 +6741,7 @@
         "kind": 5,
         "importPath": "backend.scripts.setup_help_center_rag",
         "description": "backend.scripts.setup_help_center_rag",
-        "peekOfCode": "CHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENROUTER_API_KEY:\n        raise ValueError(\"OPENROUTER_API_KEY not found in environment\")\n    if not PINECONE_API_KEY:\n        raise ValueError(\"PINECONE_API_KEY not found in environment\")\n    print(\"✓ Environment variables validated\")\ndef initialize_pinecone():",
+        "peekOfCode": "CHUNK_SIZE = 1000  # Characters per chunk\nCHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENAI_API_KEY:\n        raise ValueError(\"OPENAI_API_KEY not found in environment\")\n    if not PINECONE_API_KEY:\n        raise ValueError(\"PINECONE_API_KEY not found in environment\")\n    print(\"✓ Environment variables validated\")\ndef initialize_pinecone():",
         "detail": "backend.scripts.setup_help_center_rag",
         "documentation": {}
     },
@@ -7314,7 +6750,7 @@
         "kind": 5,
         "importPath": "backend.scripts.setup_help_center_rag",
         "description": "backend.scripts.setup_help_center_rag",
-        "peekOfCode": "CHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENROUTER_API_KEY:\n        raise ValueError(\"OPENROUTER_API_KEY not found in environment\")\n    if not PINECONE_API_KEY:\n        raise ValueError(\"PINECONE_API_KEY not found in environment\")\n    print(\"✓ Environment variables validated\")\ndef initialize_pinecone():\n    \"\"\"Initialize Pinecone client and create index if it doesn't exist.\"\"\"",
+        "peekOfCode": "CHUNK_OVERLAP = 200  # Overlap to preserve context\ndef validate_environment():\n    \"\"\"Validate required environment variables.\"\"\"\n    if not OPENAI_API_KEY:\n        raise ValueError(\"OPENAI_API_KEY not found in environment\")\n    if not PINECONE_API_KEY:\n        raise ValueError(\"PINECONE_API_KEY not found in environment\")\n    print(\"✓ Environment variables validated\")\ndef initialize_pinecone():\n    \"\"\"Initialize Pinecone client and create index if it doesn't exist.\"\"\"",
         "detail": "backend.scripts.setup_help_center_rag",
         "documentation": {}
     },
@@ -7400,69 +6836,6 @@
         "documentation": {}
     },
     {
-        "label": "print_header",
-        "kind": 2,
-        "importPath": "backend.scripts.test_gsa_flow",
-        "description": "backend.scripts.test_gsa_flow",
-        "peekOfCode": "def print_header(title: str):\n    print(f\"\\n{'='*60}\")\n    print(f\"  {title}\")\n    print(f\"{'='*60}\\n\")\ndef test_gsa_flow():\n    \"\"\"Run all GSA tests in order (synchronous).\"\"\"\n    # =========================================================================\n    # TEST 1: GSA Year Calculation\n    # =========================================================================\n    print_header(\"TEST 1: GSA Year Calculation\")",
-        "detail": "backend.scripts.test_gsa_flow",
-        "documentation": {}
-    },
-    {
-        "label": "test_gsa_flow",
-        "kind": 2,
-        "importPath": "backend.scripts.test_gsa_flow",
-        "description": "backend.scripts.test_gsa_flow",
-        "peekOfCode": "def test_gsa_flow():\n    \"\"\"Run all GSA tests in order (synchronous).\"\"\"\n    # =========================================================================\n    # TEST 1: GSA Year Calculation\n    # =========================================================================\n    print_header(\"TEST 1: GSA Year Calculation\")\n    from utils.agno_tools import calculate_gsa_year\n    test_cases = [\n        (\"2020-01-15\", \"Contract started Jan 2020\"),\n        (\"2023-06-01\", \"Contract started Jun 2023\"),",
-        "detail": "backend.scripts.test_gsa_flow",
-        "documentation": {}
-    },
-    {
-        "label": "TEST_ORG_ID",
-        "kind": 5,
-        "importPath": "backend.scripts.test_gsa_flow",
-        "description": "backend.scripts.test_gsa_flow",
-        "peekOfCode": "TEST_ORG_ID = \"test_org_123\"\nTEST_USER_ID = \"test_user_123\"\n# Mock labor categories (simulate parsed GSA contract data)\nMOCK_LABOR_CATEGORIES = [\n    {\n        \"lcat_id\": \"LC001\",\n        \"title\": \"Program Manager\",\n        \"sin\": \"54151S\",\n        \"education\": \"Bachelor's Degree\",\n        \"experience\": \"10+ years\",",
-        "detail": "backend.scripts.test_gsa_flow",
-        "documentation": {}
-    },
-    {
-        "label": "TEST_USER_ID",
-        "kind": 5,
-        "importPath": "backend.scripts.test_gsa_flow",
-        "description": "backend.scripts.test_gsa_flow",
-        "peekOfCode": "TEST_USER_ID = \"test_user_123\"\n# Mock labor categories (simulate parsed GSA contract data)\nMOCK_LABOR_CATEGORIES = [\n    {\n        \"lcat_id\": \"LC001\",\n        \"title\": \"Program Manager\",\n        \"sin\": \"54151S\",\n        \"education\": \"Bachelor's Degree\",\n        \"experience\": \"10+ years\",\n        \"rates_by_year\": {",
-        "detail": "backend.scripts.test_gsa_flow",
-        "documentation": {}
-    },
-    {
-        "label": "MOCK_LABOR_CATEGORIES",
-        "kind": 5,
-        "importPath": "backend.scripts.test_gsa_flow",
-        "description": "backend.scripts.test_gsa_flow",
-        "peekOfCode": "MOCK_LABOR_CATEGORIES = [\n    {\n        \"lcat_id\": \"LC001\",\n        \"title\": \"Program Manager\",\n        \"sin\": \"54151S\",\n        \"education\": \"Bachelor's Degree\",\n        \"experience\": \"10+ years\",\n        \"rates_by_year\": {\n            \"1\": 185.50,\n            \"2\": 190.25,",
-        "detail": "backend.scripts.test_gsa_flow",
-        "documentation": {}
-    },
-    {
-        "label": "test_raw_extraction",
-        "kind": 2,
-        "importPath": "backend.scripts.test_llamaextract_raw",
-        "description": "backend.scripts.test_llamaextract_raw",
-        "peekOfCode": "def test_raw_extraction():\n    \"\"\"Test raw LlamaExtract output.\"\"\"\n    file_path = \"/Users/keshav/Downloads/SURFLANT Ingestion.xlsx\"\n    print(\"Testing RAW LlamaExtract output (before FTE multiplication)...\")\n    print(\"=\" * 80)\n    # Extract directly\n    extraction = extract_with_llamaextract(file_path, mode=\"balanced\")\n    print(f\"\\nExtracted {len(extraction.positions)} positions\\n\")\n    for idx, position in enumerate(extraction.positions[:5], 1):\n        print(f\"{idx}. {position.labor_category}\")",
-        "detail": "backend.scripts.test_llamaextract_raw",
-        "documentation": {}
-    },
-    {
-        "label": "test_splitting",
-        "kind": 2,
-        "importPath": "backend.scripts.test_splitting",
-        "description": "backend.scripts.test_splitting",
-        "peekOfCode": "def test_splitting():\n    \"\"\"Test that positions split correctly.\"\"\"\n    print('Testing position splitting...')\n    print('='*80)\n    # Test case 1: Senior Infrastructure Design Engineer (5640 hrs = 3 FTEs)\n    position1 = {\n        'labor_category': 'Senior Infrastructure Design Engineer',\n        'hours_per_year': {'1': 5640, '2': 5640, '3': 5640, '4': 5640, '5': 5640},\n        'location': 'Virginia',\n        'soc_code': '151241',",
-        "detail": "backend.scripts.test_splitting",
-        "documentation": {}
-    },
-    {
         "label": "logger",
         "kind": 5,
         "importPath": "backend.utils.agent_streaming",
@@ -7503,7 +6876,7 @@
         "kind": 2,
         "importPath": "backend.utils.agno_tools",
         "description": "backend.utils.agno_tools",
-        "peekOfCode": "def create_gsa_retriever(organization_id: str, file_id: str):\n    \"\"\"\n    Create a retriever for GSA labor category search using Pinecone.\n    Args:\n        organization_id: Organization ID to filter results\n        file_id: GSA contract file ID to filter results\n    Returns:\n        Callable retriever function for agno agents\n    \"\"\"\n    pinecone_client = get_gsa_pinecone_client()",
+        "peekOfCode": "def create_gsa_retriever(organization_id: str, file_id: str, description: Optional[str] = None):\n    \"\"\"\n    Create a retriever for GSA labor category search using Pinecone.\n    Args:\n        organization_id: Organization ID to filter results\n        file_id: GSA contract file ID to filter results\n        description: Optional job description for enhanced semantic matching\n    Returns:\n        Callable retriever function for agno agents\n    \"\"\"",
         "detail": "backend.utils.agno_tools",
         "documentation": {}
     },
@@ -7919,150 +7292,6 @@
         "description": "backend.utils.streaming",
         "peekOfCode": "logger = logging.getLogger(__name__)\ndef extract_text(content: Any) -> Optional[str]:\n    \"\"\"Best-effort extraction of textual content from heterogeneous payloads.\"\"\"\n    if content is None:\n        return None\n    if isinstance(content, str):\n        return content\n    if isinstance(content, dict):\n        if \"text\" in content and isinstance(content[\"text\"], str):\n            return content[\"text\"]",
         "detail": "backend.utils.streaming",
-        "documentation": {}
-    },
-    {
-        "label": "mongodb",
-        "kind": 5,
-        "importPath": "backend.check_proposal",
-        "description": "backend.check_proposal",
-        "peekOfCode": "mongodb = get_mongodb_client()\ndb = mongodb.get_database()\nproposals_collection = db['proposals']\n# Query the proposal\nproposal_id = \"6959c65efd0a29c39050bbbd\"\nproposal = proposals_collection.find_one({\"_id\": ObjectId(proposal_id)})\nif proposal:\n    print(f\"=== PROPOSAL: {proposal.get('name', 'Unnamed')} ===\")\n    print()\n    # Check spreadsheet_data for travel and ODCs",
-        "detail": "backend.check_proposal",
-        "documentation": {}
-    },
-    {
-        "label": "db",
-        "kind": 5,
-        "importPath": "backend.check_proposal",
-        "description": "backend.check_proposal",
-        "peekOfCode": "db = mongodb.get_database()\nproposals_collection = db['proposals']\n# Query the proposal\nproposal_id = \"6959c65efd0a29c39050bbbd\"\nproposal = proposals_collection.find_one({\"_id\": ObjectId(proposal_id)})\nif proposal:\n    print(f\"=== PROPOSAL: {proposal.get('name', 'Unnamed')} ===\")\n    print()\n    # Check spreadsheet_data for travel and ODCs\n    spreadsheet_data = proposal.get('spreadsheet_data', {})",
-        "detail": "backend.check_proposal",
-        "documentation": {}
-    },
-    {
-        "label": "proposals_collection",
-        "kind": 5,
-        "importPath": "backend.check_proposal",
-        "description": "backend.check_proposal",
-        "peekOfCode": "proposals_collection = db['proposals']\n# Query the proposal\nproposal_id = \"6959c65efd0a29c39050bbbd\"\nproposal = proposals_collection.find_one({\"_id\": ObjectId(proposal_id)})\nif proposal:\n    print(f\"=== PROPOSAL: {proposal.get('name', 'Unnamed')} ===\")\n    print()\n    # Check spreadsheet_data for travel and ODCs\n    spreadsheet_data = proposal.get('spreadsheet_data', {})\n    print(\"TRAVEL ITEMS:\")",
-        "detail": "backend.check_proposal",
-        "documentation": {}
-    },
-    {
-        "label": "proposal_id",
-        "kind": 5,
-        "importPath": "backend.check_proposal",
-        "description": "backend.check_proposal",
-        "peekOfCode": "proposal_id = \"6959c65efd0a29c39050bbbd\"\nproposal = proposals_collection.find_one({\"_id\": ObjectId(proposal_id)})\nif proposal:\n    print(f\"=== PROPOSAL: {proposal.get('name', 'Unnamed')} ===\")\n    print()\n    # Check spreadsheet_data for travel and ODCs\n    spreadsheet_data = proposal.get('spreadsheet_data', {})\n    print(\"TRAVEL ITEMS:\")\n    travel_items = spreadsheet_data.get('travel', [])\n    if travel_items:",
-        "detail": "backend.check_proposal",
-        "documentation": {}
-    },
-    {
-        "label": "proposal",
-        "kind": 5,
-        "importPath": "backend.check_proposal",
-        "description": "backend.check_proposal",
-        "peekOfCode": "proposal = proposals_collection.find_one({\"_id\": ObjectId(proposal_id)})\nif proposal:\n    print(f\"=== PROPOSAL: {proposal.get('name', 'Unnamed')} ===\")\n    print()\n    # Check spreadsheet_data for travel and ODCs\n    spreadsheet_data = proposal.get('spreadsheet_data', {})\n    print(\"TRAVEL ITEMS:\")\n    travel_items = spreadsheet_data.get('travel', [])\n    if travel_items:\n        for idx, item in enumerate(travel_items, 1):",
-        "detail": "backend.check_proposal",
-        "documentation": {}
-    },
-    {
-        "label": "convert_intelligent_output_to_dataframe",
-        "kind": 2,
-        "importPath": "backend.test_intelligent_pipeline",
-        "description": "backend.test_intelligent_pipeline",
-        "peekOfCode": "def convert_intelligent_output_to_dataframe(intelligent_result: Dict[str, Any]) -> Dict[str, Any]:\n    \"\"\"\n    Convert intelligent parser output to the same format as jd_parser output.\n    Args:\n        intelligent_result: Output from parse_document_intelligent()\n    Returns:\n        Dict with keys: df, travel, odcs, extensions (same as parse_documents_to_dataframe)\n    \"\"\"\n    metadata = intelligent_result.get(\"metadata\", {})\n    positions = intelligent_result.get(\"positions\", [])",
-        "detail": "backend.test_intelligent_pipeline",
-        "documentation": {}
-    },
-    {
-        "label": "convert_pdf_to_docx",
-        "kind": 2,
-        "importPath": "backend.test_pdf_to_word",
-        "description": "backend.test_pdf_to_word",
-        "peekOfCode": "def convert_pdf_to_docx(pdf_path: str, output_docx_path: str) -> bool:\n    \"\"\"\n    Convert PDF to DOCX using pdf2docx library.\n    Install: pip install pdf2docx\n    \"\"\"\n    try:\n        from pdf2docx import Converter\n        print(f\"Converting PDF to DOCX...\")\n        print(f\"  Input:  {pdf_path}\")\n        print(f\"  Output: {output_docx_path}\")",
-        "detail": "backend.test_pdf_to_word",
-        "documentation": {}
-    },
-    {
-        "label": "test_parsing",
-        "kind": 2,
-        "importPath": "backend.test_pdf_to_word",
-        "description": "backend.test_pdf_to_word",
-        "peekOfCode": "def test_parsing(file_path: str, label: str):\n    \"\"\"Test parsing a document and print summary.\"\"\"\n    print(f\"\\n{'='*60}\")\n    print(f\"Testing {label}: {Path(file_path).name}\")\n    print(f\"{'='*60}\")\n    try:\n        extraction = extract_with_llamaextract(file_path, mode=\"premium\")\n        print(f\"\\n✓ Extraction successful!\")\n        print(f\"\\nMetadata:\")\n        print(f\"  Location: {extraction.metadata.location}\")",
-        "detail": "backend.test_pdf_to_word",
-        "documentation": {}
-    },
-    {
-        "label": "main",
-        "kind": 2,
-        "importPath": "backend.test_pdf_to_word",
-        "description": "backend.test_pdf_to_word",
-        "peekOfCode": "def main():\n    pdf_path = \"/Users/keshav/Downloads/PriceIQ Personnel Qualifications (1) (1).pdf\"\n    # Check if PDF exists\n    if not os.path.exists(pdf_path):\n        print(f\"❌ PDF not found: {pdf_path}\")\n        return\n    # Output DOCX path\n    docx_path = pdf_path.replace(\".pdf\", \"_converted.docx\")\n    print(\"=\"*60)\n    print(\"PDF to DOCX Conversion & Parsing Test\")",
-        "detail": "backend.test_pdf_to_word",
-        "documentation": {}
-    },
-    {
-        "label": "fetch_proposal_from_mongo",
-        "kind": 2,
-        "importPath": "backend.verify_proposal",
-        "description": "backend.verify_proposal",
-        "peekOfCode": "def fetch_proposal_from_mongo():\n    \"\"\"Fetch proposal data from MongoDB.\"\"\"\n    client = MongoClient(settings.MONGODB_URL)\n    db = client[settings.MONGODB_DATABASE]\n    proposal = db.proposals.find_one({\"_id\": ObjectId(PROPOSAL_ID)})\n    if not proposal:\n        print(f\"❌ Proposal {PROPOSAL_ID} not found!\")\n        return None\n    return proposal\ndef analyze_excel(excel_path):",
-        "detail": "backend.verify_proposal",
-        "documentation": {}
-    },
-    {
-        "label": "analyze_excel",
-        "kind": 2,
-        "importPath": "backend.verify_proposal",
-        "description": "backend.verify_proposal",
-        "peekOfCode": "def analyze_excel(excel_path):\n    \"\"\"Analyze the exported Excel file.\"\"\"\n    wb = openpyxl.load_workbook(excel_path, data_only=True)\n    print(\"=\" * 80)\n    print(\"EXCEL FILE ANALYSIS\")\n    print(\"=\" * 80)\n    print(f\"\\n📊 Sheets: {len(wb.sheetnames)}\")\n    for idx, name in enumerate(wb.sheetnames, 1):\n        print(f\"  {idx}. {name}\")\n    # CE Summary",
-        "detail": "backend.verify_proposal",
-        "documentation": {}
-    },
-    {
-        "label": "analyze_proposal",
-        "kind": 2,
-        "importPath": "backend.verify_proposal",
-        "description": "backend.verify_proposal",
-        "peekOfCode": "def analyze_proposal(proposal):\n    \"\"\"Analyze proposal data from MongoDB.\"\"\"\n    print(\"\\n\" + \"=\" * 80)\n    print(\"MONGODB PROPOSAL DATA\")\n    print(\"=\" * 80)\n    spreadsheet_data = proposal.get('spreadsheet_data', {})\n    print(f\"\\n📄 Proposal Info:\")\n    print(f\"  Name: {proposal.get('name', 'N/A')}\")\n    print(f\"  Prime Contractor: {spreadsheet_data.get('prime_contractor_name', 'N/A')}\")\n    print(f\"  Solicitation: {spreadsheet_data.get('solicitation_number', 'N/A')}\")",
-        "detail": "backend.verify_proposal",
-        "documentation": {}
-    },
-    {
-        "label": "compare_values",
-        "kind": 2,
-        "importPath": "backend.verify_proposal",
-        "description": "backend.verify_proposal",
-        "peekOfCode": "def compare_values(proposal, excel_path):\n    \"\"\"Compare MongoDB values with Excel values.\"\"\"\n    print(\"\\n\" + \"=\" * 80)\n    print(\"COMPARISON - MongoDB vs Excel\")\n    print(\"=\" * 80)\n    wb = openpyxl.load_workbook(excel_path, data_only=True)\n    ws_ce = wb[\"CE Summary\"]\n    spreadsheet_data = proposal.get('spreadsheet_data', {})\n    aggregates = spreadsheet_data.get('aggregates', {})\n    year_1 = aggregates.get('year_1', {}) if aggregates else {}",
-        "detail": "backend.verify_proposal",
-        "documentation": {}
-    },
-    {
-        "label": "main",
-        "kind": 2,
-        "importPath": "backend.verify_proposal",
-        "description": "backend.verify_proposal",
-        "peekOfCode": "def main():\n    \"\"\"Main verification function.\"\"\"\n    print(\"=\" * 80)\n    print(\"PROPOSAL VERIFICATION SCRIPT\")\n    print(\"=\" * 80)\n    print(f\"\\nProposal ID: {PROPOSAL_ID}\")\n    print(f\"Excel File: {EXCEL_PATH}\")\n    print(f\"MongoDB URL: {settings.MONGODB_URL}\")\n    print(f\"Database: {settings.MONGODB_DATABASE}\")\n    # Fetch proposal",
-        "detail": "backend.verify_proposal",
-        "documentation": {}
-    },
-    {
-        "label": "PROPOSAL_ID",
-        "kind": 5,
-        "importPath": "backend.verify_proposal",
-        "description": "backend.verify_proposal",
-        "peekOfCode": "PROPOSAL_ID = \"6971506b72ec4b0d0502c3b2\"\nEXCEL_PATH = \"/Users/keshav/Downloads/PriceIQ Pricing.xlsx\"\ndef fetch_proposal_from_mongo():\n    \"\"\"Fetch proposal data from MongoDB.\"\"\"\n    client = MongoClient(settings.MONGODB_URL)\n    db = client[settings.MONGODB_DATABASE]\n    proposal = db.proposals.find_one({\"_id\": ObjectId(PROPOSAL_ID)})\n    if not proposal:\n        print(f\"❌ Proposal {PROPOSAL_ID} not found!\")\n        return None",
-        "detail": "backend.verify_proposal",
-        "documentation": {}
-    },
-    {
-        "label": "EXCEL_PATH",
-        "kind": 5,
-        "importPath": "backend.verify_proposal",
-        "description": "backend.verify_proposal",
-        "peekOfCode": "EXCEL_PATH = \"/Users/keshav/Downloads/PriceIQ Pricing.xlsx\"\ndef fetch_proposal_from_mongo():\n    \"\"\"Fetch proposal data from MongoDB.\"\"\"\n    client = MongoClient(settings.MONGODB_URL)\n    db = client[settings.MONGODB_DATABASE]\n    proposal = db.proposals.find_one({\"_id\": ObjectId(PROPOSAL_ID)})\n    if not proposal:\n        print(f\"❌ Proposal {PROPOSAL_ID} not found!\")\n        return None\n    return proposal",
-        "detail": "backend.verify_proposal",
         "documentation": {}
     },
     {

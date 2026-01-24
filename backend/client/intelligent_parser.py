@@ -14,10 +14,10 @@ from typing import Dict, Any, List, Optional
 from pathlib import Path
 
 from agno.agent import Agent
-from agno.models.openai import OpenAIChat
 from agno.tools.reasoning import ReasoningTools
 from agno.tools.exa import ExaTools
 from app.settings import settings
+from client.llm_client import get_chat_llm_agno
 
 
 def create_reasoning_tool(
@@ -153,13 +153,8 @@ def _create_intelligent_parser() -> Agent:
     """Create intelligent parser with reasoning and web search capabilities."""
 
     # Use a powerful model that can reason
-    llm = OpenAIChat(
-        id="anthropic/claude-sonnet-4.5",  # Smart model like Claude Code
-        api_key=settings.OPENROUTER_API_KEY,
-        base_url="https://openrouter.ai/api/v1",
-        max_tokens=16000,
-        temperature=0.1,
-    )
+    llm=get_chat_llm_agno(model="anthropic/claude-sonnet-4.5",api_key=settings.OPENROUTER_API_KEY,base_url="https://openrouter.ai/api/v1",max_tokens=32000,temperature=0.1)
+
 
     # Create reasoning tool with few-shot example for combined team pattern
     few_shot_example = [
@@ -417,36 +412,56 @@ IMPORTANT:
 Return ONLY valid JSON, no markdown code blocks.
 """
 
-    # Run agent
+    # Run agent with retry logic for malformed JSON
     print(f"\n🔍 Step 3: Running agent (will reason, search if needed, then extract)...\n")
-    response = await agent.arun(prompt)
 
-    # Parse JSON response
-    response_text = response.content if hasattr(response, 'content') else str(response)
+    max_retries = 3
+    retry_count = 0
+    result = None
 
-    # Clean up markdown if present
-    if '```json' in response_text:
-        response_text = response_text.split('```json')[1].split('```')[0]
-    elif '```' in response_text:
-        response_text = response_text.split('```')[1].split('```')[0]
+    while retry_count < max_retries:
+        try:
+            # Add retry context to prompt if this is a retry
+            current_prompt = prompt
+            if retry_count > 0:
+                current_prompt = f"{prompt}\n\nIMPORTANT: Your previous response was truncated or malformed. Please provide COMPLETE valid JSON. Ensure all brackets and quotes are closed properly."
+                print(f"  🔄 Retry attempt {retry_count}/{max_retries - 1} due to malformed JSON...")
 
-    response_text = response_text.strip()
+            response = await agent.arun(current_prompt)
 
-    try:
-        result = json.loads(response_text)
-    except json.JSONDecodeError as e:
-        print(f"\n  ❌ JSON parsing error: {e}")
-        print(f"  Response preview: {response_text[:500]}...")
-        # Return empty result on error
-        result = {
-            'metadata': {
-                'total_years': default_years,
-                'standard_fte_hours': default_fte_hours
-            },
-            'positions': [],
-            'travel': [],
-            'odcs': [],
-            'extensions': [],
+            # Parse JSON response
+            response_text = response.content if hasattr(response, 'content') else str(response)
+
+            # Clean up markdown if present
+            if '```json' in response_text:
+                response_text = response_text.split('```json')[1].split('```')[0]
+            elif '```' in response_text:
+                response_text = response_text.split('```')[1].split('```')[0]
+
+            response_text = response_text.strip()
+
+            # Try to parse JSON
+            result = json.loads(response_text)
+            print(f"  ✅ JSON parsed successfully")
+            break  # Success! Exit retry loop
+
+        except json.JSONDecodeError as e:
+            print(f"\n  ❌ JSON parsing error (attempt {retry_count + 1}/{max_retries}): {e}")
+            print(f"  Response preview: {response_text[:500] if 'response_text' in locals() else 'N/A'}...")
+            retry_count += 1
+
+            # If we've exhausted retries, return empty result
+            if retry_count >= max_retries:
+                print(f"  ❌ Failed after {max_retries} attempts. Returning empty result.")
+                result = {
+                    'metadata': {
+                        'total_years': default_years,
+                        'standard_fte_hours': default_fte_hours
+                    },
+                    'positions': [],
+                    'travel': [],
+                    'odcs': [],
+                    'extensions': [],
             'surge': None
         }
 

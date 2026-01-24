@@ -4,15 +4,14 @@ from utils.agno_tools import (
     create_custom_retreiver,
     create_wage_tool,
     create_gsa_retriever,
-    create_gsa_rate_tool
+    create_gsa_rate_tool,
 )
 from utils.company_repository import get_company_repository_crud
+from app.settings import settings
 
 
 async def create_pricing_agent(
-    labor_category: str,
-    description: str = None,
-    location: str = "National"
+    labor_category: str, description: str = None, location: str = "National"
 ) -> Agent:
     """
     Create a stateless pricing agent for wage lookup based on job descriptions.
@@ -35,7 +34,7 @@ async def create_pricing_agent(
         >>> result = await agent.run(f"Find wage data for {labor_category} in {location}")
         >>> # Returns: {"soc_code": "151252", "occupation_name": "...", "area": "...", "wages": {...}}
     """
-    llm = get_chat_llm_agno()
+    llm = get_chat_llm_agno(model="gpt-5-mini-2025-08-07",api_key=settings.OPENAI_API_KEY,base_url="https://api.openai.com/v1", max_tokens=10000)
 
     # Create SOC code retriever (searches 1,105 occupations with vector similarity)
     # Pass description to retriever so it can use it for better semantic matching
@@ -61,7 +60,6 @@ Your task:
 The labor category to search for is: {labor_category}
 {f"Job description: {description}" if description else ""}
 The location to search in is: {location}""",
-
         """<critical_context>
 You are matching GOVERNMENT and MILITARY contractor job titles. These often contain:
 - Military/agency acronyms (NMCI, VTC, IW, etc.)
@@ -83,7 +81,6 @@ Key reasoning principles:
 - "Technician" or "Specialist" in government IT context typically means technical support, not physical trades
 - Administrative roles in technical contexts are usually technical administrators, not clerical staff
 </critical_context>""",
-
         """<workflow>
 Step 1: Use the search_knowledge_base tool to find matching SOC codes.
         - This returns 30 results with soc_code, occupation name, and similarity scores
@@ -112,7 +109,6 @@ Step 4: Use the wage_tool with the selected soc_code and location
 
 Step 5: The wage_tool will return the final result and stop execution
 </workflow>""",
-
         """<selection_rules>
 1. SEMANTIC UNDERSTANDING > TEXT SIMILARITY: The highest-scored result may be wrong if it doesn't match the actual job domain
 2. ANALYZE CONTEXT: Government contractor terminology often needs translation to standard occupations
@@ -126,7 +122,7 @@ Step 5: The wage_tool will return the final result and stop execution
 6. THINK LIKE A HUMAN: Ask yourself "Does this occupation make sense for this job title?"
 7. The wage_tool will stop execution and return the result directly
 8. Do not add any additional commentary or formatting
-</selection_rules>"""
+</selection_rules>""",
     ]
 
     agent = Agent(
@@ -140,7 +136,7 @@ Step 5: The wage_tool will return the final result and stop execution
         id="PricingAgent",
         description="Pricing Agent that finds SOC codes and retrieves wage data for government contractor pricing.",
         instructions=instructions,
-        debug_mode=True
+        debug_mode=True,
     )
 
     return agent
@@ -150,7 +146,7 @@ async def create_gsa_pricing_agent(
     labor_category: str,
     description: str = None,
     organization_id: str = None,
-    file_id: str = None
+    file_id: str = None,
 ) -> Agent:
     """
     Create a pricing agent for GSA contract rate lookup.
@@ -164,7 +160,7 @@ async def create_gsa_pricing_agent(
     Returns:
         Agent instance configured for GSA rate lookup
     """
-    llm = get_chat_llm_agno()
+    llm = get_chat_llm_agno(model="gpt-5-mini-2025-08-07",api_key=settings.OPENAI_API_KEY,base_url="https://api.openai.com/v1", max_tokens=10000)
 
     # Get contract start date for year calculation
     crud = get_company_repository_crud()
@@ -181,7 +177,6 @@ async def create_gsa_pricing_agent(
 2. Call gsa_rate_tool with the lcat_id from search results
 
 YOU MUST ALWAYS CALL gsa_rate_tool. Never respond with text.""",
-
         """<strict_rules>
 1. ALWAYS call gsa_rate_tool after search - NO EXCEPTIONS
 2. Use the lcat_id field from search results (e.g., "lcat_0", "lcat_5")
@@ -189,14 +184,13 @@ YOU MUST ALWAYS CALL gsa_rate_tool. Never respond with text.""",
 4. NEVER ask questions or provide explanations
 5. NEVER respond with text - ONLY make tool calls
 </strict_rules>""",
-
         """<workflow>
 Step 1: search_knowledge_base → get results with lcat_id, title, score
 Step 2: gsa_rate_tool(lcat_id=<best_match_lcat_id>)
 
 Example: search returns [{"lcat_id": "lcat_3", "title": "Analyst", "score": 0.8}]
 → Call: gsa_rate_tool(lcat_id="lcat_3")
-</workflow>"""
+</workflow>""",
     ]
 
     agent = Agent(
@@ -210,7 +204,7 @@ Example: search returns [{"lcat_id": "lcat_3", "title": "Analyst", "score": 0.8}
         id="GSAPricingAgent",
         description="GSA Pricing Agent for GSA contract rates.",
         instructions=instructions,
-        debug_mode=True
+        debug_mode=True,
     )
 
     return agent
