@@ -15,6 +15,7 @@ import Card, { CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import Input from '@/components/ui/Input';
 import ProcessingLoader from '@/components/ui/ProcessingLoader';
 import ChargeConfirmationModal from '@/components/ui/ChargeConfirmationModal';
+import { CustomSelect, SelectOption } from '@/components/ui/CustomSelect';
 import { Upload, File, X, AlertCircle, Database, Building2 } from 'lucide-react';
 import { isAdmin } from '@/lib/utils/permissions';
 
@@ -61,6 +62,13 @@ export default function UploadPage() {
 
   // Filter to only active GSA contracts
   const activeContracts = contracts.filter((c) => c.status === 'active');
+
+  // Transform contracts into SelectOption format
+  const contractOptions: SelectOption[] = activeContracts.map((contract) => ({
+    value: contract.file_id,
+    label: contract.name,
+    subtitle: `${contract.contract_number ? `${contract.contract_number} - ` : ''}${contract.labor_categories_count} labor categories`,
+  }));
 
   // Poll status after upload
   const { status, isPolling, error: pollingError } = useProposalPolling(uploadedProposalId);
