@@ -45,6 +45,11 @@ export const WageDataSection = ({ positions }: WageDataSectionProps) => {
     }).format(value);
   };
 
+  // Check if all positions are GSA
+  const isAllGSA = useMemo(() => {
+    return positions.length > 0 && positions.every(pos => pos.wage_source === 'gsa');
+  }, [positions]);
+
   // Convert positions to wage data rows
   const rows = useMemo<WageDataRow[]>(() => {
     return positions.map((pos) => {
@@ -88,19 +93,22 @@ export const WageDataSection = ({ positions }: WageDataSectionProps) => {
   }, [positions]);
 
   // Define columns
-  const columns = useMemo<Column<WageDataRow>[]>(() => [
-    {
-      key: 'labor_category',
-      name: 'Labor Category',
-      width: 250,
-      resizable: true,
-      frozen: true,
-      renderCell: ({ row }) => (
-        <div className="flex items-center h-full px-2">
-          <span className="font-semibold text-foreground">{row.labor_category}</span>
-        </div>
-      ),
-    },
+  const columns = useMemo<Column<WageDataRow>[]>(() => {
+    const baseColumns: Column<WageDataRow>[] = [
+      {
+        key: 'labor_category',
+        name: 'Labor Category',
+        width: 250,
+        resizable: true,
+        frozen: true,
+        renderCell: ({ row }) => (
+          <div className="flex items-center h-full px-2 py-2">
+            <span className="font-semibold text-foreground whitespace-pre-wrap break-words leading-relaxed">
+              {row.labor_category}
+            </span>
+          </div>
+        ),
+      },
     {
       key: 'location',
       name: 'Location',
@@ -108,8 +116,10 @@ export const WageDataSection = ({ positions }: WageDataSectionProps) => {
       resizable: true,
       frozen: true,
       renderCell: ({ row }) => (
-        <div className="flex items-center h-full px-2">
-          <span className="text-sm text-foreground">{row.location || '-'}</span>
+        <div className="flex items-center h-full px-2 py-2">
+          <span className="text-sm text-foreground whitespace-pre-wrap break-words leading-relaxed">
+            {row.location || '-'}
+          </span>
         </div>
       ),
     },
@@ -119,8 +129,8 @@ export const WageDataSection = ({ positions }: WageDataSectionProps) => {
       width: 500,
       resizable: true,
       renderCell: ({ row }) => (
-        <div className="h-full px-3 py-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100 hover:scrollbar-thumb-gray-400">
-          <span className="text-sm text-foreground whitespace-normal break-words leading-relaxed block">
+        <div className="flex items-start h-full px-3 py-2">
+          <span className="text-sm text-foreground whitespace-pre-wrap break-words leading-relaxed">
             {row.description || '-'}
           </span>
         </div>
@@ -143,6 +153,10 @@ export const WageDataSection = ({ positions }: WageDataSectionProps) => {
         </div>
       ),
     },
+  ];
+
+  // SOC Code column - only show for BLS contracts
+  const socCodeColumn: Column<WageDataRow>[] = !isAllGSA ? [
     {
       key: 'soc_code',
       name: 'SOC Code',
@@ -156,19 +170,26 @@ export const WageDataSection = ({ positions }: WageDataSectionProps) => {
         </div>
       ),
     },
+  ] : [];
+
+  const socTitleColumn: Column<WageDataRow>[] = [
     {
       key: 'soc_title',
       name: 'SOC Title / GSA Labor Category',
       width: 280,
       resizable: true,
       renderCell: ({ row }) => (
-        <div className="flex items-center h-full px-2">
-          <span className="text-sm text-muted-foreground whitespace-normal break-words">
+        <div className="flex items-center h-full px-2 py-2">
+          <span className="text-sm text-muted-foreground whitespace-pre-wrap break-words leading-relaxed">
             {row.wage_source === 'gsa' ? row.gsa_title : row.soc_title}
           </span>
         </div>
       ),
     },
+  ];
+
+  // Percentile columns - only show for BLS contracts
+  const percentileColumns: Column<WageDataRow>[] = !isAllGSA ? [
     {
       key: 'wage_10th',
       name: '10th\nPercentile',
@@ -246,6 +267,13 @@ export const WageDataSection = ({ positions }: WageDataSectionProps) => {
         );
       },
     },
+  ] : [];
+
+  const finalColumns: Column<WageDataRow>[] = [
+    ...baseColumns,
+    ...socCodeColumn,
+    ...socTitleColumn,
+    ...percentileColumns,
     {
       key: 'selected_wage',
       name: 'Selected\nWage/Rate',
@@ -270,7 +298,10 @@ export const WageDataSection = ({ positions }: WageDataSectionProps) => {
         );
       },
     },
-  ], []);
+  ];
+
+  return finalColumns;
+  }, [isAllGSA]);
 
   return (
     <div className="space-y-4">
@@ -288,7 +319,7 @@ export const WageDataSection = ({ positions }: WageDataSectionProps) => {
           rowKeyGetter={(row) => row.id}
           className={styles.excelGrid}
           style={{ height: '100%' }}
-          rowHeight={80}
+          rowHeight={150}
         />
       </div>
     </div>
