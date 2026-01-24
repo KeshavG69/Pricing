@@ -5,9 +5,6 @@ import {
   getOnboardingProgress,
   getTaskDefinitionsByRole,
   updateTask as updateTaskApi,
-  startTour as startTourApi,
-  completeTour as completeTourApi,
-  restartTour as restartTourApi,
 } from '@/lib/api/onboarding';
 
 interface OnboardingState {
@@ -24,9 +21,6 @@ interface OnboardingState {
   syncTaskDefinitions: (role: 'admin' | 'user') => void; // Sync from static data (no API call)
   fetchProgress: () => Promise<void>; // Legacy - kept for backward compatibility
   updateTask: (taskId: string, completed: boolean) => Promise<void>;
-  startTour: () => Promise<void>;
-  completeTour: (skipped?: boolean) => Promise<void>;
-  restartTour: () => Promise<void>;
   dismissChecklist: (dismissed?: boolean) => void; // localStorage only - no API call
   getDismissState: () => boolean; // Read from localStorage
   toggleCollapse: (collapsed: boolean) => void; // localStorage only - no API call
@@ -84,47 +78,6 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     } catch (error: any) {
       set({ error: error.response?.data?.detail || 'Failed to update task' });
       console.error('Failed to update task:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Mark product tour as started
-   */
-  startTour: async () => {
-    try {
-      await startTourApi();
-      // Refetch progress to get updated state
-      await get().fetchProgress();
-    } catch (error: any) {
-      console.error('Failed to start tour:', error);
-    }
-  },
-
-  /**
-   * Mark product tour as completed or skipped
-   */
-  completeTour: async (skipped: boolean = false) => {
-    try {
-      const response = await completeTourApi(skipped);
-      set({ progress: response.progress });
-    } catch (error: any) {
-      console.error('Failed to complete tour:', error);
-      throw error;
-    }
-  },
-
-  /**
-   * Restart the product tour
-   */
-  restartTour: async () => {
-    try {
-      const response = await restartTourApi();
-      set({ progress: response.progress });
-      // Note: Navigation should be handled by the calling component
-    } catch (error: any) {
-      set({ error: error.response?.data?.detail || 'Failed to restart tour' });
-      console.error('Failed to restart tour:', error);
       throw error;
     }
   },
