@@ -607,6 +607,12 @@ NEXTAUTH_URL=http://localhost:3000
 
 # Stripe (optional, for payment UI)
 NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxxxxxxxxxxxx
+
+# Calendly (optional, for contact page demo scheduling)
+# IMPORTANT: Use DIRECT event URL (not scheduling page URL)
+# ❌ Wrong: https://calendly.com/username (shows event selection)
+# ✅ Correct: https://calendly.com/username/30min (direct to booking)
+NEXT_PUBLIC_CALENDLY_URL=https://calendly.com/username/30min
 ```
 
 ## Testing
@@ -694,6 +700,12 @@ curl -X POST http://localhost:8000/api/invitations \
 - Verify `PINECONE_API_KEY` and `PINECONE_INDEX_NAME` in `.env`
 - Check index exists in Pinecone dashboard
 - Ensure index dimension matches embedding model (1536 for text-embedding-3-small)
+
+**Calendly showing event selection screen instead of direct booking**
+- Check `NEXT_PUBLIC_CALENDLY_URL` in frontend `.env`
+- Use direct event URL (e.g., `https://calendly.com/username/30min`), not scheduling page URL (e.g., `https://calendly.com/username`)
+- Get direct event URL from Calendly dashboard → Event Type → Copy Link
+- Event slug appears at the end (e.g., `/30min`, `/15min`, `/discovery-call`)
 
 ## Performance Optimization
 
