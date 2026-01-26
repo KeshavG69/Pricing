@@ -21,6 +21,7 @@ import { pricingApi } from '../api/pricing';
 import { proposalsApi } from '../api/proposals';
 import { useOrganizationStore } from './organizationStore';
 import { getEffectiveSalary, isGSAPosition, getGSARateForYear, reverseEngineerGSARate } from '../utils/salaryHelpers';
+import { trackHubSpotEvent } from '../utils/hubspot';
 
 interface PricingState {
   // Data
@@ -2977,6 +2978,12 @@ export const usePricingStore = create<PricingState>((set, get) => {
           isDirty: false,
           isSaving: false,
           lastSaved: new Date(),
+        });
+
+        // Track proposal creation/save event in HubSpot
+        trackHubSpotEvent('proposal_created', {
+          position_count: state.positions.length,
+          mode: state.advancedMode ? 'advanced' : 'basic',
         });
 
         return { success: true };
