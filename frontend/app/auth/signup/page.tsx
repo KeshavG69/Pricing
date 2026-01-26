@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuthStore } from '@/lib/stores/authStore';
@@ -8,6 +8,7 @@ import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Card, { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import { BarChart3 } from 'lucide-react';
+import { trackHubSpotEvent } from '@/lib/utils/hubspot';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -20,6 +21,13 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [validationError, setValidationError] = useState('');
+
+  // Track signup page view
+  useEffect(() => {
+    trackHubSpotEvent('signup_page_viewed', {
+      referrer: typeof document !== 'undefined' ? document.referrer : '',
+    });
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
