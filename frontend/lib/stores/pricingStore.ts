@@ -862,7 +862,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
         // Use existing proposal data if provided, otherwise fetch
         const proposal = existingProposal || await proposalsApi.get(proposalId);
 
-        // Extract positions from jobs or spreadsheet_data
+        // Extract positions from spreadsheet_data (single source of truth)
+        // NOTE: jobs fallback is ONLY for old proposals (pre-refactor). New proposals write directly to spreadsheet_data.positions
         let positions: SpreadsheetPosition[] = [];
         let positionsFromJobs = false; // Track if we need to save new IDs
 
@@ -999,7 +1000,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
         const hasSubcontractors = proposal.spreadsheet_data?.subcontractors && proposal.spreadsheet_data.subcontractors.length > 0;
         const advancedMode = proposal.spreadsheet_data?.advanced_mode || subcontractorConfigured || hasSubcontractors || false;
 
-        // Migrate old 'oh' field to 'oh_onsite' and 'oh_offsite'
+        // Load rates from spreadsheet_data (single source of truth)
+        // Fallback to top-level for old proposals (pre-refactor)
         let rates = proposal.spreadsheet_data?.rates || proposal.rates;
 
         // Ensure rates object exists
@@ -1173,7 +1175,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           extensions: proposal.spreadsheet_data?.extensions || [],
           surge: proposal.spreadsheet_data?.surge || null,  // NEW: Load surge option
           rates: rates,  // Use migrated rates
-          escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Try spreadsheet_data first
+          escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Load from spreadsheet_data (fallback to top-level for old proposals)
           wageSource: proposal.wage_source || { type: 'bls' },  // Load wage source from proposal
           totalYears,
           baseYears: proposal.metadata?.base_years || 1,
@@ -1201,7 +1203,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           extensions: proposal.spreadsheet_data?.extensions || [],
           surge: proposal.spreadsheet_data?.surge || null,  // NEW: Load surge option
           rates: rates,  // Use migrated rates
-          escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Try spreadsheet_data first
+          escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Load from spreadsheet_data (fallback to top-level for old proposals)
           wageSource: proposal.wage_source || { type: 'bls' },  // Cache wage source
           totalYears,
           baseYears: proposal.metadata?.base_years || 1,
