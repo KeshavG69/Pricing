@@ -71,7 +71,7 @@ export default function Home() {
               Resources
             </Link>
             <Link href="/contact" className="text-white/80 hover:text-white transition-colors font-medium text-base">
-              Talk to Sales
+              Schedule A Demo
             </Link>
           </div>
 
