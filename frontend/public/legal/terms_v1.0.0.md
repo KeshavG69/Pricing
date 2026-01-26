@@ -207,5 +207,4 @@ Use of the Services does not imply government approval or endorsement.
 ## Questions or Contact
 
 **Intrepix LLC**
-<ParthParikh@Intrepix.org>
-908-670-2578
+<service@priceiq.org>

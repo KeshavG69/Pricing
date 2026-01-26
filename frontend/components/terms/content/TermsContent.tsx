@@ -320,8 +320,7 @@ export function TermsContent() {
 
       <p>
         <strong>Intrepix LLC</strong><br />
-        <a href="mailto:ParthParikh@Intrepix.org">ParthParikh@Intrepix.org</a><br />
-        908-670-2578
+        <a href="mailto:service@priceiq.org">service@priceiq.org</a>
       </p>
     </div>
   );

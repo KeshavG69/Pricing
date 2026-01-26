@@ -72,7 +72,7 @@ export default function SupportPage() {
           a: "Yes. We use enterprise-grade encryption, maintain complete audit trails, and implement role-based access control. Our security standards align with NIST guidelines."
         },
         {
-          q: "Are proposals compliant with government requirements?",
+          q: "Do proposals meet government requirements?",
           a: "Yes. PriceIQ generates proposals with complete FBLR breakdowns, audit trails, and documentation that meet federal contracting standards."
         },
         {
@@ -122,8 +122,8 @@ export default function SupportPage() {
     {
       icon: <Mail className="w-6 h-6" />,
       title: "Email Support",
-      description: "support@priceiq.com",
-      link: "mailto:support@priceiq.com"
+      description: "service@priceiq.org",
+      link: "mailto:service@priceiq.org"
     }
   ];
 
@@ -150,7 +150,7 @@ export default function SupportPage() {
               Resources
             </Link>
             <Link href="/contact" className="text-white/80 hover:text-white transition-colors font-medium text-base">
-              Talk to Sales
+              Schedule A Demo
             </Link>
           </div>
 
@@ -258,7 +258,7 @@ export default function SupportPage() {
                   Contact Support
                 </button>
               </Link>
-              <a href="mailto:support@priceiq.com">
+              <a href="mailto:service@priceiq.org">
                 <button className="bg-white border-2 border-[#2563eb] text-[#2563eb] hover:bg-[#2563eb] hover:text-white px-10 py-4 rounded-xl font-semibold text-lg transition-all duration-300">
                   Email Us
                 </button>
