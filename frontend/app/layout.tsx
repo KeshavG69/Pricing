@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import AuthProvider from "@/components/layout/AuthProvider";
 import { ToastContainer } from "@/components/ui/Toast";
+import CookieBanner from "@/components/cookie/CookieBanner";
 
 export const metadata: Metadata = {
   title: "PriceIQ - Government Pricing Intelligence",
@@ -19,6 +20,7 @@ export default function RootLayout({
         <AuthProvider>
           {children}
           <ToastContainer />
+          <CookieBanner />
         </AuthProvider>
       </body>
     </html>

@@ -2106,6 +2106,14 @@
         "documentation": {}
     },
     {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
         "label": "pricing",
         "importPath": "routers",
         "description": "routers",
@@ -2491,22 +2499,6 @@
         "documentation": {}
     },
     {
-        "label": "timedelta",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
         "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
@@ -2539,6 +2531,30 @@
         "documentation": {}
     },
     {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
         "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
@@ -2624,6 +2640,14 @@
         "description": "dotenv",
         "isExtraImport": true,
         "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
         "documentation": {}
     },
     {
@@ -3089,6 +3113,14 @@
         "description": "auth",
         "isExtraImport": true,
         "detail": "auth",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
         "documentation": {}
     },
     {
@@ -6575,6 +6607,42 @@
         "description": "backend.routers.workspace",
         "peekOfCode": "router = APIRouter(prefix=\"/api/workspace\", tags=[\"workspace\"])\nclass SwitchOrganizationRequest(BaseModel):\n    \"\"\"Request body for switching organization\"\"\"\n    organization_id: str\n@router.get(\"/organizations\")\nasync def get_user_organizations(current_user: dict = Depends(get_current_user)):\n    \"\"\"\n    Get all organizations the current user belongs to.\n    Returns:\n        List of organizations with user's role in each",
         "detail": "backend.routers.workspace",
+        "documentation": {}
+    },
+    {
+        "label": "cleanup_single_proposal",
+        "kind": 2,
+        "importPath": "backend.scripts.cleanup_proposal_duplicates",
+        "description": "backend.scripts.cleanup_proposal_duplicates",
+        "peekOfCode": "def cleanup_single_proposal(proposals, proposal_id: str):\n    \"\"\"Remove duplicate jobs array and should_trigger_advanced flag for a single proposal.\"\"\"\n    # Find the proposal\n    proposal = proposals.find_one({\"_id\": ObjectId(proposal_id)})\n    if not proposal:\n        return {\"error\": f\"Proposal {proposal_id} not found\"}\n    stats = {\n        \"proposal_id\": proposal_id,\n        \"name\": proposal.get('name', 'Untitled'),\n        \"removed\": [],",
+        "detail": "backend.scripts.cleanup_proposal_duplicates",
+        "documentation": {}
+    },
+    {
+        "label": "cleanup_all_proposals",
+        "kind": 2,
+        "importPath": "backend.scripts.cleanup_proposal_duplicates",
+        "description": "backend.scripts.cleanup_proposal_duplicates",
+        "peekOfCode": "def cleanup_all_proposals():\n    \"\"\"Clean up all proposals in the database.\"\"\"\n    # Connect to MongoDB\n    mongodb = get_mongodb_client()\n    db = mongodb.get_database()\n    proposals = db[\"proposals\"]\n    # Get all proposal IDs\n    all_proposals = list(proposals.find({}, {\"_id\": 1, \"name\": 1}))\n    total = len(all_proposals)\n    print(f\"\\n📋 Found {total} proposals to process\")",
+        "detail": "backend.scripts.cleanup_proposal_duplicates",
+        "documentation": {}
+    },
+    {
+        "label": "backend_dir",
+        "kind": 5,
+        "importPath": "backend.scripts.cleanup_proposal_duplicates",
+        "description": "backend.scripts.cleanup_proposal_duplicates",
+        "peekOfCode": "backend_dir = Path(__file__).parent.parent\nsys.path.insert(0, str(backend_dir))\nfrom bson import ObjectId\nfrom auth.database import get_mongodb_client\nfrom datetime import datetime\n# Set to True to skip confirmation prompt (for non-interactive execution)\nAUTO_CONFIRM = True\ndef cleanup_single_proposal(proposals, proposal_id: str):\n    \"\"\"Remove duplicate jobs array and should_trigger_advanced flag for a single proposal.\"\"\"\n    # Find the proposal",
+        "detail": "backend.scripts.cleanup_proposal_duplicates",
+        "documentation": {}
+    },
+    {
+        "label": "AUTO_CONFIRM",
+        "kind": 5,
+        "importPath": "backend.scripts.cleanup_proposal_duplicates",
+        "description": "backend.scripts.cleanup_proposal_duplicates",
+        "peekOfCode": "AUTO_CONFIRM = True\ndef cleanup_single_proposal(proposals, proposal_id: str):\n    \"\"\"Remove duplicate jobs array and should_trigger_advanced flag for a single proposal.\"\"\"\n    # Find the proposal\n    proposal = proposals.find_one({\"_id\": ObjectId(proposal_id)})\n    if not proposal:\n        return {\"error\": f\"Proposal {proposal_id} not found\"}\n    stats = {\n        \"proposal_id\": proposal_id,\n        \"name\": proposal.get('name', 'Untitled'),",
+        "detail": "backend.scripts.cleanup_proposal_duplicates",
         "documentation": {}
     },
     {
