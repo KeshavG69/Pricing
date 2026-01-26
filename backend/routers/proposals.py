@@ -523,7 +523,7 @@ async def process_proposal_documents(
             billing_message = f"Billing error: {str(billing_error)}"
             # Don't fail the whole proposal processing for billing errors
 
-        # Update proposal with results (including Travel and ODCs in spreadsheet_data)
+        # Update proposal with results (NO duplication - all data in spreadsheet_data)
         crud.update_proposal(
             proposal_id,
             user_id,
@@ -533,8 +533,6 @@ async def process_proposal_documents(
                 "progress": 100,
                 "message": billing_message or "Processing complete",
                 "billing_status": billing_status,
-                "should_trigger_advanced": should_trigger_advanced,  # Flag for frontend to auto-trigger advanced
-                "jobs": cleaned_jobs,
                 "metadata": {
                     "total_jobs": len(cleaned_jobs),
                     "base_years": base_years,
@@ -542,13 +540,17 @@ async def process_proposal_documents(
                     "total_years": total_years,
                     "fte_hours_threshold": fte_threshold
                 },
-                "rates": default_rates,
-                "escalation_rates": escalation_rates,
                 "spreadsheet_data": {
+                    "positions": cleaned_jobs,  # Single source of truth
                     "travel": extracted_travel,
                     "odcs": extracted_odcs,
                     "extensions": extracted_extensions,
-                    "surge": extracted_surge  # Surge option data (percentage + description)
+                    "surge": extracted_surge,
+                    "rates": default_rates,  # Only in spreadsheet_data
+                    "escalation_rates": escalation_rates,  # Only in spreadsheet_data
+                    "advanced_mode": should_trigger_advanced,  # Auto-enable advanced for free first proposal
+                    "subcontractor_configured": False,
+                    "subcontractors": []
                 }
             }
         )
