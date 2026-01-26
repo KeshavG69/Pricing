@@ -19,12 +19,11 @@ export default function PricingPage() {
       description: 'Essential pricing automation for standard proposals',
       price: 100,
       priceLabel: '$100',
-      priceSubtext: 'per proposal',
+      priceSubtext: 'one-time per proposal (not monthly)',
       icon: Zap,
       color: '#22C55E',
       features: [
-        { name: 'AI-powered SOC matching', included: true },
-        { name: 'BLS wage data access (6M+ records)', included: true },
+        { name: 'SOC matching & BLS wage data (6M+ records)', included: true },
         { name: 'FBLR calculations', included: true },
         { name: 'GSA contract processing', included: true },
         { name: 'Multi-year escalation modeling', included: true },
@@ -41,12 +40,11 @@ export default function PricingPage() {
       description: 'Add Excel export and subcontractor pricing',
       price: 250,
       priceLabel: '+$250',
-      priceSubtext: 'upgrade to Advanced (in addition to Initial)',
+      priceSubtext: 'one-time upgrade per proposal (total: $350)',
       icon: Sparkles,
       color: '#2563eb',
       features: [
-        { name: 'AI-powered SOC matching', included: true },
-        { name: 'BLS wage data access (6M+ records)', included: true },
+        { name: 'SOC matching & BLS wage data (6M+ records)', included: true },
         { name: 'FBLR calculations', included: true },
         { name: 'GSA contract processing', included: true },
         { name: 'Multi-year escalation modeling', included: true },
@@ -56,34 +54,38 @@ export default function PricingPage() {
         { name: 'Subcontractor pricing', included: true }
       ],
       cta: 'Get started',
-      popular: true
+      popular: false
     }
   ];
 
   const faqs = [
     {
-      question: 'How does pay-as-you-go pricing work?',
-      answer: 'You only pay for the proposals you process. Your first proposal is completely free. After that, each proposal starts with Initial Analysis ($100). If you need Excel export and subcontractor pricing, you can upgrade to Advanced Analysis for an additional $250.'
+      question: 'Is this really not a subscription? No monthly fees?',
+      answer: 'Correct! This is 100% pay-per-proposal pricing. You only pay when you process a proposal—$100 for Initial Analysis. There are NO monthly fees, NO recurring charges, and NO subscription plans. If you process 0 proposals in a month, you pay $0.'
     },
     {
       question: 'Is my first proposal really free?',
       answer: 'Yes! Your first proposal is 100% free with no credit card required. This lets you test our platform and see the quality of our analysis before committing to paid proposals.'
     },
     {
+      question: 'How does pay-per-proposal pricing work?',
+      answer: 'You only pay when you process a proposal. Your first proposal is completely free. After that, each proposal costs $100 for Initial Analysis (one-time charge, not monthly). If you need Excel export and subcontractor pricing, you can upgrade to Advanced Analysis for an additional $250 (also one-time per proposal).'
+    },
+    {
       question: 'What\'s the difference between Initial and Advanced Analysis?',
-      answer: 'Both include AI-powered SOC matching, BLS wage data, FBLR calculations, GSA contract processing, and multi-year escalation. Advanced Analysis (additional $250 on top of Initial $100) adds Excel export and subcontractor pricing—essential for complex proposals with multiple vendors.'
+      answer: 'Both include AI-powered SOC matching, BLS wage data, FBLR calculations, GSA contract processing, and multi-year escalation. Advanced Analysis (additional $250 on top of Initial $100, total $350) adds Excel export and subcontractor pricing—essential for complex proposals with multiple vendors.'
     },
     {
       question: 'Can I upgrade from Initial to Advanced Analysis?',
-      answer: 'Yes! Every proposal starts with Initial Analysis ($100). If you need Excel export or subcontractor pricing features, you can upgrade to Advanced Analysis by paying an additional $250.'
+      answer: 'Yes! Every proposal starts with Initial Analysis ($100 one-time). If you need Excel export or subcontractor pricing features, you can upgrade to Advanced Analysis by paying an additional $250 (one-time per proposal, not recurring).'
     },
     {
       question: 'When do I get charged?',
-      answer: 'You\'re charged $100 when you submit a proposal for Initial Analysis. If you decide to upgrade to Advanced Analysis for that proposal, you\'ll be charged an additional $250. No monthly fees or subscriptions.'
+      answer: 'You\'re charged $100 (one-time) when you submit a proposal for Initial Analysis. If you decide to upgrade to Advanced Analysis for that proposal, you\'ll be charged an additional $250 (one-time). These are one-time charges per proposal—no monthly fees, no recurring billing, no subscriptions.'
     },
     {
       question: 'What payment methods do you accept?',
-      answer: 'We accept all major credit cards (Visa, MasterCard, American Express, Discover). Your payment information is securely stored for seamless per-proposal billing.'
+      answer: 'We accept all major credit cards (Visa, MasterCard, American Express, Discover). Your payment information is securely stored for seamless per-proposal billing (not subscription billing).'
     }
   ];
 
@@ -93,7 +95,7 @@ export default function PricingPage() {
     <div className="min-h-screen bg-white">
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-md border-b border-white/10">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 h-18 flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-3 group">
             <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#2563eb] text-white transition-transform duration-300 group-hover:scale-105">
               <BarChart3 className="w-6 h-6" />
@@ -101,18 +103,29 @@ export default function PricingPage() {
             <span className="text-2xl font-bold text-white tracking-tight">PriceIQ</span>
           </Link>
 
-          <div className="flex items-center space-x-4 sm:space-x-8">
-            <Link
-              href="/"
-              className="hidden sm:block text-base text-white/80 hover:text-white transition-colors font-medium"
-            >
-              Home
+          <div className="hidden lg:flex items-center space-x-8">
+            <Link href="/#features" className="text-white/80 hover:text-white transition-colors font-medium text-base">
+              Features
             </Link>
-            <Link
-              href="/auth/login"
-              className="text-base text-white/90 hover:text-white transition-colors font-semibold"
-            >
+            <Link href="/pricing" className="text-white hover:text-white transition-colors font-medium text-base">
+              Pricing
+            </Link>
+            <Link href="/resources" className="text-white/80 hover:text-white transition-colors font-medium text-base">
+              Resources
+            </Link>
+            <Link href="/contact" className="text-white/80 hover:text-white transition-colors font-medium text-base">
+              Schedule A Demo
+            </Link>
+          </div>
+
+          <div className="flex items-center space-x-4">
+            <Link href="/auth/login" className="text-white/90 hover:text-white transition-colors font-semibold text-base">
               Sign in
+            </Link>
+            <Link href="/auth/signup">
+              <button className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-6 py-2.5 rounded-lg font-bold text-base transition-all duration-300 hover:shadow-lg hover:shadow-[#2563eb]/30 hover:-translate-y-0.5">
+                Get Started
+              </button>
             </Link>
           </div>
         </div>
@@ -128,16 +141,95 @@ export default function PricingPage() {
             </div>
 
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 mb-6 leading-tight">
-              Pay only for the proposals you process
+              Pay per proposal, not per month
             </h1>
 
-            <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto mb-4 leading-relaxed">
-              No subscriptions, no monthly fees. Your <span className="font-bold text-[#22C55E]">first proposal is free</span>—then $100 per proposal. Upgrade to Advanced ($250 extra) for Excel export and subcontractor pricing.
+            <p className="text-base sm:text-lg text-gray-600 max-w-3xl mx-auto mb-6 leading-relaxed">
+              <span className="font-bold text-gray-900">No subscriptions. No monthly fees. No recurring charges.</span><br />
+              Your <span className="font-bold text-[#2563eb]">first proposal is 100% free</span>—then you pay only when you process a proposal. $100 for Initial Analysis. Add Advanced features for $250 more.
             </p>
 
-            <div className="inline-flex items-center gap-2 bg-[#22C55E]/10 px-4 py-2 rounded-lg mb-10">
-              <Check className="w-5 h-5 text-[#22C55E]" />
-              <span className="text-sm font-semibold text-gray-700">First proposal free • No credit card required</span>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-10">
+              <div className="inline-flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg">
+                <Check className="w-5 h-5 text-[#2563eb]" />
+                <span className="text-sm font-semibold text-gray-700">First proposal free</span>
+              </div>
+              <div className="inline-flex items-center gap-2 bg-blue-50 px-4 py-2 rounded-lg">
+                <Check className="w-5 h-5 text-[#2563eb]" />
+                <span className="text-sm font-semibold text-gray-700">No credit card required</span>
+              </div>
+              <div className="inline-flex items-center gap-2 bg-purple-50 px-4 py-2 rounded-lg">
+                <Check className="w-5 h-5 text-purple-600" />
+                <span className="text-sm font-semibold text-gray-700">Cancel anytime</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Comparison: Subscription vs Pay-Per-Use */}
+        <section className="py-12 bg-white border-b border-gray-100">
+          <div className="max-w-5xl mx-auto px-6 sm:px-8">
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Traditional Subscription */}
+              <div className="bg-gray-50 rounded-xl p-8 border-2 border-gray-200">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-gray-300 flex items-center justify-center">
+                    <X className="w-6 h-6 text-gray-600" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-700">Traditional SaaS</h3>
+                </div>
+                <ul className="space-y-3 text-sm text-gray-600">
+                  <li className="flex items-start gap-2">
+                    <X className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                    <span>Monthly subscription fees</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <X className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                    <span>Recurring charges even if not used</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <X className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                    <span>Credit card required upfront</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <X className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                    <span>Complex cancellation process</span>
+                  </li>
+                </ul>
+              </div>
+
+              {/* PriceIQ Pay-Per-Use */}
+              <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-8 border-2 border-[#2563eb] relative overflow-hidden">
+                <div className="absolute top-4 right-4">
+                  <div className="bg-[#22C55E] text-white text-xs font-bold px-3 py-1 rounded-full">
+                    BETTER VALUE
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-lg bg-[#2563eb] flex items-center justify-center">
+                    <Check className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-lg font-bold text-gray-900">PriceIQ</h3>
+                </div>
+                <ul className="space-y-3 text-sm text-gray-700">
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-[#22C55E] flex-shrink-0 mt-0.5" />
+                    <span><strong>Pay per proposal only</strong></span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-[#22C55E] flex-shrink-0 mt-0.5" />
+                    <span><strong>No charges when not in use</strong></span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-[#22C55E] flex-shrink-0 mt-0.5" />
+                    <span><strong>First proposal 100% free</strong></span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-[#22C55E] flex-shrink-0 mt-0.5" />
+                    <span><strong>Nothing to cancel</strong></span>
+                  </li>
+                </ul>
+              </div>
             </div>
           </div>
         </section>
@@ -152,19 +244,8 @@ export default function PricingPage() {
                 return (
                   <div
                     key={plan.name}
-                    className={`relative rounded-2xl border-2 p-8 lg:p-10 transition-all duration-300 ${
-                      plan.popular
-                        ? 'border-[#2563eb] shadow-2xl scale-105 bg-gradient-to-br from-blue-50 to-white'
-                        : 'border-gray-200 hover:border-gray-300 hover:shadow-xl bg-white'
-                    }`}
+                    className="relative rounded-2xl border-2 border-gray-200 hover:border-[#2563eb] hover:shadow-xl p-8 lg:p-10 transition-all duration-300 bg-white"
                   >
-                    {plan.popular && (
-                      <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                        <div className="bg-[#2563eb] text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
-                          Most Popular
-                        </div>
-                      </div>
-                    )}
 
                     <div className="flex items-center gap-3 mb-4">
                       <div
@@ -187,19 +268,7 @@ export default function PricingPage() {
                       <p className="text-gray-600 text-sm">{plan.priceSubtext}</p>
                     </div>
 
-                    <Link href="/auth/signup">
-                      <button
-                        className={`w-full py-4 rounded-xl font-bold text-base transition-all duration-300 mb-8 ${
-                          plan.popular
-                            ? 'bg-[#2563eb] text-white hover:bg-[#1d4ed8] shadow-lg hover:shadow-xl hover:-translate-y-1'
-                            : 'bg-gray-900 text-white hover:bg-gray-800 shadow-md hover:shadow-lg hover:-translate-y-1'
-                        }`}
-                      >
-                        {plan.cta}
-                      </button>
-                    </Link>
-
-                    <div className="space-y-4">
+                    <div className="space-y-4 mt-8">
                       <p className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">
                         What's included
                       </p>
@@ -234,8 +303,11 @@ export default function PricingPage() {
               <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4 leading-tight">
                 Feature comparison
               </h2>
-              <p className="text-base text-gray-600 max-w-2xl mx-auto">
-                All proposals start with Initial Analysis—upgrade to Advanced for Excel export and subcontractor pricing
+              <p className="text-base text-gray-600 max-w-2xl mx-auto mb-3">
+                All proposals start with Initial Analysis ($100 one-time)—upgrade to Advanced for Excel export and subcontractor pricing (+$250 one-time)
+              </p>
+              <p className="text-sm font-semibold text-[#2563eb]">
+                No subscriptions • No recurring charges • Pay only when you use it
               </p>
             </div>
 
@@ -342,14 +414,28 @@ export default function PricingPage() {
               </Link>
               <Link href="/contact">
                 <button className="bg-transparent border-2 border-white/30 hover:border-white/60 text-white px-10 py-4 rounded-xl font-semibold text-base transition-all duration-300 hover:bg-white/5">
-                  Talk to sales
+                  Schedule A Demo
                 </button>
               </Link>
             </div>
 
-            <p className="text-xs text-white/80 mt-6">
-              First proposal free • No subscription • Pay only for what you use
-            </p>
+            <div className="flex flex-wrap items-center justify-center gap-4 text-xs text-white/90 mt-6">
+              <span className="flex items-center gap-1">
+                <Check className="w-4 h-4" /> First proposal free
+              </span>
+              <span className="text-white/40">•</span>
+              <span className="flex items-center gap-1">
+                <Check className="w-4 h-4" /> No monthly fees
+              </span>
+              <span className="text-white/40">•</span>
+              <span className="flex items-center gap-1">
+                <Check className="w-4 h-4" /> No subscriptions
+              </span>
+              <span className="text-white/40">•</span>
+              <span className="flex items-center gap-1">
+                <Check className="w-4 h-4" /> Pay only per proposal
+              </span>
+            </div>
           </div>
         </section>
       </main>
@@ -408,7 +494,7 @@ export default function PricingPage() {
           </div>
 
           <div className="pt-8 border-t border-white/10 text-center text-sm text-gray-400">
-            <p>© 2024 PriceIQ. All rights reserved.</p>
+            <p>© 2026 PriceIQ by Intrepix LLC. All rights reserved.</p>
           </div>
         </div>
       </footer>

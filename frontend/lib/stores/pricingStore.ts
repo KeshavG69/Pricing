@@ -1273,6 +1273,50 @@ export const usePricingStore = create<PricingState>((set, get) => {
         Object.keys(updates).length === 1 &&
         updates.location_type !== undefined;
 
+      // Detect if wage-related fields are being updated
+      const wageFields = ['selected_wage', 'selected_salaries', 'percentile', 'gsa_custom_rate',
+                         'wage_10th', 'wage_25th', 'wage_50th', 'wage_75th', 'wage_90th',
+                         'soc_code', 'soc_title'];
+      const hasWageUpdate = Object.keys(updates).some(key => wageFields.includes(key));
+
+      // If wage-related fields are being updated, sync across positions with same labor_category
+      let finalUpdates = updates;
+      if (hasWageUpdate) {
+        const targetPosition = state.positions.find(p => p.id === id);
+        if (targetPosition) {
+          const laborCategory = targetPosition.labor_category;
+          console.log('[WAGE SYNC] Detected wage change for labor_category:', laborCategory);
+
+          // Find all positions with matching labor_category (exact match)
+          const matchingPositions = state.positions.filter(
+            p => p.labor_category === laborCategory && p.id !== id
+          );
+
+          if (matchingPositions.length > 0) {
+            console.log(`[WAGE SYNC] Found ${matchingPositions.length} matching positions to sync`);
+
+            // Extract only wage-related updates to apply to matching positions
+            const wageUpdates: Partial<SpreadsheetPosition> = {};
+            wageFields.forEach(field => {
+              if (updates[field as keyof typeof updates] !== undefined) {
+                wageUpdates[field as keyof SpreadsheetPosition] = updates[field as keyof typeof updates] as any;
+              }
+            });
+
+            // Update matching positions
+            set((prevState) => ({
+              positions: prevState.positions.map((p) => {
+                if (p.labor_category === laborCategory && p.id !== id) {
+                  console.log(`[WAGE SYNC] Syncing to position: ${p.id}`);
+                  return { ...p, ...wageUpdates };
+                }
+                return p;
+              }),
+            }));
+          }
+        }
+      }
+
       // If location_type is being updated, also update linked subcontractor positions
       if (updates.location_type !== undefined) {
         console.log('[UPDATE POSITION] location_type changed, updating linked subcontractors...');
@@ -2338,6 +2382,51 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
     updateAdvancedPosition: (id, updates) => {
       console.log('[ADVANCED MODE] Updating position', { id, updates });
+
+      const state = get();
+
+      // Detect if wage-related fields are being updated
+      const wageFields = ['selected_wage', 'selected_salaries', 'percentile', 'gsa_custom_rate',
+                         'wage_10th', 'wage_25th', 'wage_50th', 'wage_75th', 'wage_90th',
+                         'soc_code', 'soc_title'];
+      const hasWageUpdate = Object.keys(updates).some(key => wageFields.includes(key));
+
+      // If wage-related fields are being updated, sync across positions with same labor_category
+      if (hasWageUpdate) {
+        const targetPosition = state.positions.find(p => p.id === id);
+        if (targetPosition) {
+          const laborCategory = targetPosition.labor_category;
+          console.log('[WAGE SYNC] Detected wage change for labor_category:', laborCategory);
+
+          // Find all positions with matching labor_category (exact match)
+          const matchingPositions = state.positions.filter(
+            p => p.labor_category === laborCategory && p.id !== id
+          );
+
+          if (matchingPositions.length > 0) {
+            console.log(`[WAGE SYNC] Found ${matchingPositions.length} matching positions to sync`);
+
+            // Extract only wage-related updates to apply to matching positions
+            const wageUpdates: Partial<AdvancedPosition> = {};
+            wageFields.forEach(field => {
+              if (updates[field as keyof typeof updates] !== undefined) {
+                wageUpdates[field as keyof AdvancedPosition] = updates[field as keyof typeof updates] as any;
+              }
+            });
+
+            // Update matching positions first
+            set((prevState) => ({
+              positions: prevState.positions.map((p) => {
+                if (p.labor_category === laborCategory && p.id !== id) {
+                  console.log(`[WAGE SYNC] Syncing to position: ${p.id}`);
+                  return { ...p, ...wageUpdates };
+                }
+                return p;
+              }),
+            }));
+          }
+        }
+      }
 
       // Update the underlying positions array first (WITHOUT isDirty)
       set((state) => ({

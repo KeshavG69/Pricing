@@ -1,99 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { BarChart3, BookOpen, Video, FileText, Download, ArrowRight } from 'lucide-react';
+import { BarChart3, BookOpen, Download } from 'lucide-react';
 
 export default function ResourcesPage() {
-  const blogPosts = [
-    {
-      title: "10 Tips for Winning Government Contracts in 2026",
-      excerpt: "Learn the proven strategies that successful contractors use to increase their win rates and grow their business.",
-      category: "Best Practices",
-      date: "January 15, 2026",
-      readTime: "5 min read"
-    },
-    {
-      title: "Understanding FBLR Calculations: A Complete Guide",
-      excerpt: "Master the fundamentals of Fully Burdened Labor Rate calculations and ensure your proposals are always compliant.",
-      category: "Education",
-      date: "January 10, 2026",
-      readTime: "8 min read"
-    },
-    {
-      title: "How AI is Transforming Government Contracting",
-      excerpt: "Discover how artificial intelligence is revolutionizing proposal development and pricing automation.",
-      category: "Industry Trends",
-      date: "January 5, 2026",
-      readTime: "6 min read"
-    },
-    {
-      title: "SOC Code Matching: Best Practices for Accuracy",
-      excerpt: "Learn how to accurately match job descriptions to SOC codes and avoid common pitfalls in the process.",
-      category: "Technical",
-      date: "December 28, 2025",
-      readTime: "7 min read"
-    },
-    {
-      title: "Reducing Proposal Development Time by 90%",
-      excerpt: "Case study: How one contractor went from weeks to minutes using automated pricing tools.",
-      category: "Case Study",
-      date: "December 20, 2025",
-      readTime: "4 min read"
-    },
-    {
-      title: "BLS Wage Data: What You Need to Know",
-      excerpt: "A comprehensive guide to understanding and using Bureau of Labor Statistics wage data in your proposals.",
-      category: "Education",
-      date: "December 15, 2025",
-      readTime: "10 min read"
-    }
-  ];
-
-  const resources = [
-    {
-      title: "Government Contracting 101 Guide",
-      description: "Everything you need to know to get started with government contracts",
-      type: "PDF Guide",
-      icon: <FileText className="w-6 h-6" />
-    },
-    {
-      title: "FBLR Calculation Template",
-      description: "Pre-built Excel template for calculating fully burdened labor rates",
-      type: "Excel Template",
-      icon: <Download className="w-6 h-6" />
-    },
-    {
-      title: "Proposal Checklist",
-      description: "Don't miss any critical steps with our comprehensive proposal checklist",
-      type: "Checklist",
-      icon: <FileText className="w-6 h-6" />
-    },
-    {
-      title: "SOC Code Quick Reference",
-      description: "Searchable database of Standard Occupational Classification codes",
-      type: "Reference",
-      icon: <BookOpen className="w-6 h-6" />
-    }
-  ];
-
-  const webinars = [
-    {
-      title: "Mastering Government Contract Pricing",
-      date: "February 5, 2026 at 2:00 PM EST",
-      status: "Upcoming"
-    },
-    {
-      title: "AI-Powered Proposal Development",
-      date: "January 29, 2026 at 1:00 PM EST",
-      status: "Upcoming"
-    },
-    {
-      title: "Compliance Best Practices for 2026",
-      date: "Watch Recording",
-      status: "On-Demand"
-    }
-  ];
-
   return (
     <div className="min-h-screen bg-white">
       {/* Navigation */}
@@ -117,7 +27,7 @@ export default function ResourcesPage() {
               Resources
             </Link>
             <Link href="/contact" className="text-white/80 hover:text-white transition-colors font-medium text-base">
-              Talk to Sales
+              Schedule A Demo
             </Link>
           </div>
 
@@ -151,27 +61,12 @@ export default function ResourcesPage() {
         <section className="py-16 lg:py-24 bg-white">
           <div className="max-w-7xl mx-auto px-6 sm:px-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-12">Latest Articles</h2>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {blogPosts.map((post, index) => (
-                <article key={index} className="bg-white border-2 border-gray-200 rounded-2xl p-6 hover:shadow-xl hover:scale-105 transition-all duration-300 cursor-pointer group">
-                  <div className="flex items-center gap-3 mb-4">
-                    <span className="text-xs font-bold text-[#2563eb] uppercase tracking-wider">
-                      {post.category}
-                    </span>
-                    <span className="text-xs text-gray-500">{post.readTime}</span>
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-[#2563eb] transition-colors">
-                    {post.title}
-                  </h3>
-                  <p className="text-gray-600 mb-4 leading-relaxed">
-                    {post.excerpt}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-500">{post.date}</span>
-                    <ArrowRight className="w-5 h-5 text-[#2563eb] group-hover:translate-x-1 transition-transform" />
-                  </div>
-                </article>
-              ))}
+            <div className="flex items-center justify-center min-h-[300px]">
+              <div className="text-center">
+                <BookOpen className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-2xl font-semibold text-gray-400">Coming Soon</p>
+                <p className="text-gray-500 mt-2">We're working on bringing you valuable content.</p>
+              </div>
             </div>
           </div>
         </section>
@@ -180,52 +75,12 @@ export default function ResourcesPage() {
         <section className="py-16 lg:py-24 bg-gray-50">
           <div className="max-w-7xl mx-auto px-6 sm:px-8">
             <h2 className="text-3xl font-bold text-gray-900 mb-12">Downloadable Resources</h2>
-            <div className="grid md:grid-cols-2 gap-6">
-              {resources.map((resource, index) => (
-                <div key={index} className="bg-white rounded-2xl p-8 hover:shadow-lg transition-all duration-300 border border-gray-200">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 text-[#2563eb]">
-                      {resource.icon}
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-xl font-bold text-gray-900">{resource.title}</h3>
-                        <span className="text-xs font-semibold text-gray-500 uppercase">{resource.type}</span>
-                      </div>
-                      <p className="text-gray-600 mb-4">{resource.description}</p>
-                      <button className="text-[#2563eb] font-semibold hover:underline flex items-center gap-2">
-                        Download Now
-                        <Download className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Webinars */}
-        <section className="py-16 lg:py-24 bg-white">
-          <div className="max-w-7xl mx-auto px-6 sm:px-8">
-            <h2 className="text-3xl font-bold text-gray-900 mb-12">Upcoming Webinars</h2>
-            <div className="space-y-6">
-              {webinars.map((webinar, index) => (
-                <div key={index} className="bg-gray-50 rounded-2xl p-8 flex items-center justify-between hover:shadow-lg transition-all duration-300">
-                  <div className="flex items-center gap-6">
-                    <div className="w-16 h-16 bg-[#2563eb] rounded-xl flex items-center justify-center flex-shrink-0">
-                      <Video className="w-8 h-8 text-white" />
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-2">{webinar.title}</h3>
-                      <p className="text-gray-600">{webinar.date}</p>
-                    </div>
-                  </div>
-                  <button className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 hover:shadow-lg">
-                    {webinar.status === 'Upcoming' ? 'Register' : 'Watch Now'}
-                  </button>
-                </div>
-              ))}
+            <div className="flex items-center justify-center min-h-[300px]">
+              <div className="text-center">
+                <Download className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                <p className="text-2xl font-semibold text-gray-400">Coming Soon</p>
+                <p className="text-gray-500 mt-2">We're preparing helpful resources for you.</p>
+              </div>
             </div>
           </div>
         </section>

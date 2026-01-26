@@ -177,3 +177,135 @@ class EmailService:
         except Exception as e:
             print(f"Failed to send password reset email: {e}")
             raise
+
+    def send_contact_form_email(
+        self,
+        from_name: str,
+        from_email: str,
+        from_company: str,
+        from_phone: str,
+        message_text: str,
+        to_email: str = "service@priceiq.org"
+    ):
+        """
+        Send contact form submission to support inbox with Reply-To header.
+
+        Args:
+            from_name: User's name
+            from_email: User's email (will be set as Reply-To)
+            from_company: User's company
+            from_phone: User's phone number
+            message_text: User's message
+            to_email: Where to send the email (default: service@priceiq.org)
+        """
+        html = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px; background-color: #f9f9f9; border: 1px solid #ddd; border-radius: 8px;">
+                <h2 style="color: #2563eb; margin-bottom: 20px;">New Contact Form Submission</h2>
+
+                <div style="background-color: white; padding: 20px; border-radius: 6px; margin-bottom: 15px;">
+                    <p style="margin: 10px 0;"><strong style="color: #555;">Name:</strong> {from_name}</p>
+                    <p style="margin: 10px 0;"><strong style="color: #555;">Email:</strong>
+                        <a href="mailto:{from_email}" style="color: #2563eb;">{from_email}</a>
+                    </p>
+                    <p style="margin: 10px 0;"><strong style="color: #555;">Company:</strong> {from_company or 'Not provided'}</p>
+                    <p style="margin: 10px 0;"><strong style="color: #555;">Phone:</strong> {from_phone or 'Not provided'}</p>
+                </div>
+
+                <div style="background-color: white; padding: 20px; border-radius: 6px;">
+                    <p style="margin: 0 0 10px 0;"><strong style="color: #555;">Message:</strong></p>
+                    <p style="margin: 0; white-space: pre-wrap; color: #333;">{message_text}</p>
+                </div>
+
+                <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+
+                <p style="color: #999; font-size: 12px; margin: 0;">
+                    This email was sent from the PriceIQ contact form.<br>
+                    Click "Reply" to respond directly to {from_name}.
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+
+        email_message = MIMEMultipart("alternative")
+        email_message["Subject"] = f"[Contact Form] New inquiry from {from_name}"
+        email_message["From"] = self.from_email
+        email_message["To"] = to_email
+        email_message["Reply-To"] = from_email  # KEY: Reply goes to user!
+
+        html_part = MIMEText(html, "html")
+        email_message.attach(html_part)
+
+        try:
+            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+                server.starttls()
+                server.login(self.smtp_user, self.smtp_password)
+                server.send_message(email_message)
+        except Exception as e:
+            print(f"Failed to send contact form email: {e}")
+            raise
+
+    def send_contact_confirmation_email(
+        self,
+        to_email: str,
+        to_name: str,
+        original_message: str
+    ):
+        """
+        Send confirmation email to user who submitted contact form.
+
+        Args:
+            to_email: User's email address
+            to_name: User's name
+            original_message: Copy of their original message
+        """
+        html = f"""
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #2563eb;">We Received Your Message!</h2>
+                <p>Hi {to_name},</p>
+                <p>Thank you for reaching out to PriceIQ. We've received your message and will respond within 24 hours.</p>
+
+                <div style="background-color: #f9f9f9; padding: 15px; border-left: 4px solid #2563eb; margin: 20px 0;">
+                    <p style="margin: 0 0 10px 0;"><strong>Your message:</strong></p>
+                    <p style="margin: 0; white-space: pre-wrap; color: #555;">{original_message}</p>
+                </div>
+
+                <p>In the meantime, feel free to explore our resources:</p>
+                <ul style="line-height: 1.8;">
+                    <li><a href="{self.frontend_url}/resources" style="color: #2563eb;">Documentation & Guides</a></li>
+                    <li><a href="{self.frontend_url}/support" style="color: #2563eb;">Support Center</a></li>
+                    <li><a href="{self.frontend_url}/pricing" style="color: #2563eb;">Pricing Information</a></li>
+                </ul>
+
+                <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+
+                <p style="color: #999; font-size: 12px;">
+                    Best regards,<br>
+                    The PriceIQ Team<br>
+                    <a href="mailto:service@priceiq.org" style="color: #2563eb;">service@priceiq.org</a>
+                </p>
+            </div>
+        </body>
+        </html>
+        """
+
+        message = MIMEMultipart("alternative")
+        message["Subject"] = "We received your message - PriceIQ"
+        message["From"] = self.from_email
+        message["To"] = to_email
+
+        html_part = MIMEText(html, "html")
+        message.attach(html_part)
+
+        try:
+            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+                server.starttls()
+                server.login(self.smtp_user, self.smtp_password)
+                server.send_message(message)
+        except Exception as e:
+            print(f"Failed to send confirmation email: {e}")
+            raise
