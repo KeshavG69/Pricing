@@ -5343,7 +5343,7 @@
         "kind": 6,
         "importPath": "backend.client.email_service",
         "description": "backend.client.email_service",
-        "peekOfCode": "class EmailService:\n    def __init__(self):\n        self.smtp_host = config.SMTP_HOST\n        self.smtp_port = config.SMTP_PORT\n        self.smtp_user = config.SMTP_USER\n        self.smtp_password = config.SMTP_PASSWORD\n        self.from_email = config.FROM_EMAIL\n        self.frontend_url = config.FRONTEND_URL\n    def send_invitation_email(\n        self,",
+        "peekOfCode": "class EmailService:\n    def __init__(self):\n        self.smtp_host = config.SMTP_HOST\n        self.smtp_port = config.SMTP_PORT\n        self.smtp_user = config.SMTP_USER\n        self.smtp_password = config.SMTP_PASSWORD\n        self.from_email = config.FROM_EMAIL\n        self.frontend_url = config.FRONTEND_URL\n    def send_invitation_email(\n        self, to_email: str, token: str, organization_name: str, invited_by_name: str",
         "detail": "backend.client.email_service",
         "documentation": {}
     },
@@ -6045,7 +6045,7 @@
         "kind": 6,
         "importPath": "backend.routers.contact",
         "description": "backend.routers.contact",
-        "peekOfCode": "class ContactFormRequest(BaseModel):\n    \"\"\"Contact form submission request\"\"\"\n    name: str = Field(..., min_length=1, max_length=100, description=\"Full name\")\n    email: EmailStr = Field(..., description=\"Email address\")\n    company: str = Field(default=\"\", max_length=100, description=\"Company name (optional)\")\n    phone: str = Field(default=\"\", max_length=50, description=\"Phone number (optional)\")\n    message: str = Field(..., min_length=10, max_length=5000, description=\"Message text\")\n@router.post(\"/send\")\nasync def send_contact_form(request: ContactFormRequest):\n    \"\"\"",
+        "peekOfCode": "class ContactFormRequest(BaseModel):\n    \"\"\"Contact form submission request\"\"\"\n    name: str = Field(..., min_length=1, max_length=100, description=\"Full name\")\n    email: EmailStr = Field(..., description=\"Email address\")\n    company: str = Field(\n        default=\"\", max_length=100, description=\"Company name (optional)\"\n    )\n    phone: str = Field(default=\"\", max_length=50, description=\"Phone number (optional)\")\n    message: str = Field(\n        ..., min_length=10, max_length=5000, description=\"Message text\"",
         "detail": "backend.routers.contact",
         "documentation": {}
     },
@@ -6054,7 +6054,7 @@
         "kind": 5,
         "importPath": "backend.routers.contact",
         "description": "backend.routers.contact",
-        "peekOfCode": "router = APIRouter(prefix=\"/api/contact\", tags=[\"contact\"])\n# Initialize email service\nemail_service = EmailService()\nclass ContactFormRequest(BaseModel):\n    \"\"\"Contact form submission request\"\"\"\n    name: str = Field(..., min_length=1, max_length=100, description=\"Full name\")\n    email: EmailStr = Field(..., description=\"Email address\")\n    company: str = Field(default=\"\", max_length=100, description=\"Company name (optional)\")\n    phone: str = Field(default=\"\", max_length=50, description=\"Phone number (optional)\")\n    message: str = Field(..., min_length=10, max_length=5000, description=\"Message text\")",
+        "peekOfCode": "router = APIRouter(prefix=\"/api/contact\", tags=[\"contact\"])\n# Initialize email service\nemail_service = EmailService()\nclass ContactFormRequest(BaseModel):\n    \"\"\"Contact form submission request\"\"\"\n    name: str = Field(..., min_length=1, max_length=100, description=\"Full name\")\n    email: EmailStr = Field(..., description=\"Email address\")\n    company: str = Field(\n        default=\"\", max_length=100, description=\"Company name (optional)\"\n    )",
         "detail": "backend.routers.contact",
         "documentation": {}
     },
@@ -6063,7 +6063,7 @@
         "kind": 5,
         "importPath": "backend.routers.contact",
         "description": "backend.routers.contact",
-        "peekOfCode": "email_service = EmailService()\nclass ContactFormRequest(BaseModel):\n    \"\"\"Contact form submission request\"\"\"\n    name: str = Field(..., min_length=1, max_length=100, description=\"Full name\")\n    email: EmailStr = Field(..., description=\"Email address\")\n    company: str = Field(default=\"\", max_length=100, description=\"Company name (optional)\")\n    phone: str = Field(default=\"\", max_length=50, description=\"Phone number (optional)\")\n    message: str = Field(..., min_length=10, max_length=5000, description=\"Message text\")\n@router.post(\"/send\")\nasync def send_contact_form(request: ContactFormRequest):",
+        "peekOfCode": "email_service = EmailService()\nclass ContactFormRequest(BaseModel):\n    \"\"\"Contact form submission request\"\"\"\n    name: str = Field(..., min_length=1, max_length=100, description=\"Full name\")\n    email: EmailStr = Field(..., description=\"Email address\")\n    company: str = Field(\n        default=\"\", max_length=100, description=\"Company name (optional)\"\n    )\n    phone: str = Field(default=\"\", max_length=50, description=\"Phone number (optional)\")\n    message: str = Field(",
         "detail": "backend.routers.contact",
         "documentation": {}
     },
