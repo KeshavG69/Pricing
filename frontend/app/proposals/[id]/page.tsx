@@ -90,7 +90,9 @@ export default function ProposalPage() {
   useEffect(() => {
     if (proposalId) {
       console.log('[ProposalPage] Fetching proposal:', proposalId);
-      fetchProposal(proposalId).then((proposal) => {
+      fetchProposal(proposalId).then(() => {
+        // fetchProposal updates currentProposal in the store
+        const proposal = useProposalsStore.getState().currentProposal;
         console.log('[ProposalPage] Proposal fetched:', {
           id: proposal?.id,
           status: proposal?.status,
@@ -99,7 +101,7 @@ export default function ProposalPage() {
         });
 
         // Refresh document URLs once after loading proposal (prevent duplicate calls)
-        if (!urlsRefreshedRef.current) {
+        if (!urlsRefreshedRef.current && proposal) {
           urlsRefreshedRef.current = true;
           proposalsApi.refreshDocumentUrls(proposalId).then((updatedProposal) => {
             // Update store directly with fresh URLs (no re-fetch needed)
