@@ -84,6 +84,38 @@ export const proposalsApi = {
     return response.data;
   },
 
+  // Re-ingest documents for existing proposal (preserves mode state)
+  reingest: async (
+    proposalId: string,
+    files: File[],
+    wageSourceType?: 'bls' | 'gsa',
+    wageSourceFileId?: string
+  ): Promise<UploadResponse> => {
+    const formData = new FormData();
+    files.forEach((file) => {
+      formData.append('files', file);
+    });
+
+    // Add wage source parameters for GSA support
+    if (wageSourceType) {
+      formData.append('wage_source_type', wageSourceType);
+    }
+    if (wageSourceFileId) {
+      formData.append('wage_source_file_id', wageSourceFileId);
+    }
+
+    const response = await apiClient.post<UploadResponse>(
+      `/proposals/${proposalId}/reingest`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  },
+
   // Get proposal status (lightweight for polling)
   getStatus: async (proposalId: string): Promise<ProposalStatus> => {
     const response = await apiClient.get<ProposalStatus>(

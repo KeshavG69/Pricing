@@ -276,7 +276,7 @@ export default function ContactPage() {
 
                   {status === 'error' && (
                     <p className="text-sm text-red-600 mt-2 text-center">
-                      Failed to send message. Please try again or email us directly at service@priceiq.org
+                      Failed to send message. Please try again or email us directly at support@priceiq.org
                     </p>
                   )}
                 </form>
@@ -298,8 +298,8 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900 mb-1">Email</h3>
-                      <a href="mailto:service@priceiq.org" className="text-gray-600 hover:text-[#2563eb] transition-colors">
-                        service@priceiq.org
+                      <a href="mailto:support@priceiq.org" className="text-gray-600 hover:text-[#2563eb] transition-colors">
+                        support@priceiq.org
                       </a>
                       <p className="text-sm text-gray-500 mt-1">We'll respond within 24 hours</p>
                     </div>

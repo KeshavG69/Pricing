@@ -96,7 +96,7 @@ To update contact info in the Full Terms:
 
 <p>
   <strong>Intrepix LLC</strong><br />
-  <a href="mailto:service@priceiq.org">service@priceiq.org</a><br />
+  <a href="mailto:support@priceiq.org">support@priceiq.org</a><br />
   555-123-4567
 </p>
 ```

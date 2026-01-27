@@ -3,11 +3,11 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useAuthStore } from '@/lib/stores/authStore';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import Card, { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
-import { BarChart3 } from 'lucide-react';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,13 +33,18 @@ export default function LoginPage() {
     <div className="min-h-screen bg-muted/30 flex items-center justify-center p-4">
       <div className="relative w-full max-w-md">
         {/* Logo */}
-        <Link href="/" className="flex items-center justify-center space-x-2 mb-8">
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground">
-            <BarChart3 className="w-6 h-6" />
-          </div>
+        <Link href="/" className="flex items-center justify-center space-x-3 mb-8">
+          <Image
+            src="/logo.svg"
+            alt="PriceIQ Logo"
+            width={56}
+            height={56}
+          />
           <div className="flex flex-col">
-            <span className="text-lg font-bold tracking-tight text-foreground">PriceIQ</span>
-            <span className="text-xs text-muted-foreground">Gov Pricing Intelligence</span>
+            <span className="text-2xl font-bold tracking-tight text-foreground">
+              Price<span className="text-[#5B7FFF]">IQ</span>
+            </span>
+            <span className="text-sm text-muted-foreground">Gov Pricing Intelligence</span>
           </div>
         </Link>
 

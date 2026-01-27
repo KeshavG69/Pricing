@@ -58,10 +58,9 @@ export default function CookieBanner() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             {/* Message */}
             <div className="flex-1 flex items-start gap-3">
-              <span className="text-2xl">🍪</span>
               <div className="flex-1">
                 <p className="text-white/90 text-sm leading-relaxed">
-                  We use cookies to improve your experience and analyze site traffic.{' '}
+                  We use cookies to improve your experience.{' '}
                   <Link
                     href="/legal/privacy"
                     className="text-[#2563eb] hover:text-[#1d4ed8] underline transition-colors"

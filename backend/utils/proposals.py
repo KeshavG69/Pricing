@@ -656,16 +656,18 @@ class ProposalCRUD:
     def check_for_timeout(self, proposal: dict) -> dict:
         """
         Check if proposal is stuck in processing for >30 min and mark as error.
+        Uses updated_at to handle re-ingested proposals correctly.
         """
         if proposal.get("status") != "processing":
             return proposal
 
-        created_at = proposal.get("created_at")
-        if not created_at:
+        # Use updated_at (for re-ingest) or created_at (for new uploads)
+        timestamp = proposal.get("updated_at") or proposal.get("created_at")
+        if not timestamp:
             return proposal
 
         # 30 minute timeout
-        elapsed = (datetime.utcnow() - created_at).total_seconds()
+        elapsed = (datetime.utcnow() - timestamp).total_seconds()
         if elapsed < 30 * 60:
             return proposal  # Still within timeout
 
