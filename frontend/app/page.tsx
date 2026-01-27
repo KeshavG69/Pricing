@@ -2,8 +2,8 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
-  BarChart3,
   ChevronDown,
   CheckCircle2,
   Zap,
@@ -53,10 +53,16 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-6 sm:px-8 h-20 flex items-center justify-between">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-3 group">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#2563eb] text-white transition-transform duration-300 group-hover:scale-105">
-              <BarChart3 className="w-6 h-6" />
-            </div>
-            <span className="text-2xl font-bold text-white tracking-tight">PriceIQ</span>
+            <Image
+              src="/logo.svg"
+              alt="PriceIQ Logo"
+              width={48}
+              height={48}
+              className="transition-transform duration-300 group-hover:scale-105"
+            />
+            <span className="text-2xl font-bold text-white tracking-tight">
+              Price<span className="text-[#5B7FFF]">IQ</span>
+            </span>
           </Link>
 
           {/* Navigation Links - Hidden on mobile */}
@@ -127,7 +133,7 @@ export default function Home() {
           <div className="relative z-20 max-w-6xl mx-auto px-6 sm:px-8 text-center py-24 sm:py-32">
             <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-bold text-white mb-6 leading-[1.05] tracking-tight animate-slide-up">
               <span className="block mb-2">Win more</span>
-              <span className="text-[#2563eb] inline-block animate-pulse" style={{ animationDuration: '3s' }}>proposals</span>
+              <span className="text-[#2563eb] inline-block animate-pulse" style={{ animationDuration: '3s' }}>Contracts</span>
               <span className="block mt-2 text-4xl sm:text-5xl lg:text-6xl xl:text-7xl">with AI powered pricing</span>
             </h1>
 
@@ -166,12 +172,12 @@ export default function Home() {
 
             <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
               {/* Navy stat card */}
-              <div className="bg-[#0D2B50] text-white rounded-2xl p-8 lg:p-10 hover:shadow-2xl hover:scale-105 transition-all duration-500 animate-slide-in-left group relative overflow-hidden">
+              <div className="bg-[#0D2B50] text-white rounded-2xl p-8 lg:p-10 hover:shadow-2xl hover:scale-105 transition-all duration-500 animate-slide-in-left group relative overflow-hidden flex items-center justify-center min-h-[280px]">
                 {/* Animated gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-r from-[#2563eb]/0 via-[#2563eb]/10 to-[#2563eb]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-shimmer"></div>
 
-                <div className="relative z-10">
-                  <h3 className="text-2xl lg:text-3xl font-bold mb-4 leading-tight">
+                <div className="relative z-10 text-center">
+                  <h3 className="text-2xl lg:text-3xl font-bold leading-tight">
                     Government contractors are{' '}
                     <span className="text-[#60a5fa]">submitting 3x faster</span>{' '}
                     with PriceIQ
@@ -235,9 +241,9 @@ export default function Home() {
             </div>
 
             {/* Workflow Steps - Horizontal Layout */}
-            <div className="flex flex-col lg:flex-row items-end justify-center gap-6 lg:gap-6 max-w-[1700px] mx-auto">
+            <div className="flex flex-col lg:flex-row items-center justify-center gap-6 lg:gap-6 max-w-[1700px] mx-auto">
               {/* Step 1 - Upload RFP */}
-              <div className="bg-white rounded-3xl p-8 shadow-lg flex-shrink-0 w-[260px] mx-auto lg:mx-0 relative">
+              <div className="bg-white rounded-3xl p-8 shadow-lg flex-shrink-0 w-[280px] min-h-[320px] mx-auto lg:mx-0 relative hover:scale-110 hover:shadow-2xl transition-all duration-300">
                 <div className="flex flex-col items-center text-center h-full">
                   <div className="absolute -top-3 -left-3 w-12 h-12 rounded-full bg-[#2563eb] text-white flex items-center justify-center text-lg font-bold shadow-lg">
                     1
@@ -253,7 +259,7 @@ export default function Home() {
               </div>
 
               {/* Step 2 - AI Review */}
-              <div className="bg-white rounded-3xl p-8 shadow-lg flex-shrink-0 w-[260px] mx-auto lg:mx-0 relative">
+              <div className="bg-white rounded-3xl p-8 shadow-lg flex-shrink-0 w-[280px] min-h-[320px] mx-auto lg:mx-0 relative hover:scale-110 hover:shadow-2xl transition-all duration-300">
                 <div className="flex flex-col items-center text-center h-full">
                   <div className="absolute -top-3 -left-3 w-12 h-12 rounded-full bg-[#2563eb] text-white flex items-center justify-center text-lg font-bold shadow-lg">
                     2
@@ -269,7 +275,7 @@ export default function Home() {
               </div>
 
               {/* Step 3 - Human Review */}
-              <div className="bg-white rounded-3xl p-8 shadow-lg flex-shrink-0 w-[260px] mx-auto lg:mx-0 relative">
+              <div className="bg-white rounded-3xl p-8 shadow-lg flex-shrink-0 w-[280px] min-h-[320px] mx-auto lg:mx-0 relative hover:scale-110 hover:shadow-2xl transition-all duration-300">
                 <div className="flex flex-col items-center text-center h-full">
                   <div className="absolute -top-3 -left-3 w-12 h-12 rounded-full bg-[#2563eb] text-white flex items-center justify-center text-lg font-bold shadow-lg">
                     3
@@ -285,7 +291,7 @@ export default function Home() {
               </div>
 
               {/* Step 4 - Export to Excel */}
-              <div className="bg-white rounded-3xl p-8 shadow-lg flex-shrink-0 w-[260px] mx-auto lg:mx-0 relative">
+              <div className="bg-white rounded-3xl p-8 shadow-lg flex-shrink-0 w-[280px] min-h-[320px] mx-auto lg:mx-0 relative hover:scale-110 hover:shadow-2xl transition-all duration-300">
                 <div className="flex flex-col items-center text-center h-full">
                   <div className="absolute -top-3 -left-3 w-12 h-12 rounded-full bg-[#2563eb] text-white flex items-center justify-center text-lg font-bold shadow-lg">
                     4
@@ -300,17 +306,17 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Step 5 - Submit & Win - Large */}
-              <div className="bg-white rounded-3xl p-10 shadow-2xl flex-shrink-0 w-[360px] mx-auto lg:mx-0 relative border-2 border-[#2563eb]">
+              {/* Step 5 - Submit & Win */}
+              <div className="bg-white rounded-3xl p-8 shadow-lg flex-shrink-0 w-[280px] min-h-[320px] mx-auto lg:mx-0 relative hover:scale-110 hover:shadow-2xl transition-all duration-300">
                 <div className="flex flex-col items-center text-center h-full">
-                  <div className="absolute -top-3 -right-3 w-14 h-14 rounded-full bg-[#2563eb] text-white flex items-center justify-center text-xl font-bold shadow-xl">
+                  <div className="absolute -top-3 -left-3 w-12 h-12 rounded-full bg-[#2563eb] text-white flex items-center justify-center text-lg font-bold shadow-lg">
                     5
                   </div>
-                  <div className="w-20 h-20 rounded-3xl bg-[#2563eb] flex items-center justify-center shadow-lg mb-6">
-                    <Send className="w-10 h-10 text-white" />
+                  <div className="w-16 h-16 rounded-2xl bg-[#2563eb] flex items-center justify-center shadow-md mb-5">
+                    <Send className="w-8 h-8 text-white" />
                   </div>
-                  <h3 className="text-3xl font-bold text-gray-900 mb-4">Submit & Win</h3>
-                  <p className="text-gray-600 leading-relaxed text-base">
+                  <h3 className="text-xl font-bold text-gray-900 mb-3">Submit & Win</h3>
+                  <p className="text-gray-600 text-sm leading-relaxed">
                     Submit your professional, competitive proposal with confidence. Your weeks of work done in minutes.
                   </p>
                 </div>
@@ -484,16 +490,16 @@ export default function Home() {
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-5">
                     <Target className="w-6 h-6 text-[#2563eb]" />
-                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">MAXIMIZE WIN RATES</p>
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">PRICE WITH CLARITY</p>
                   </div>
                   <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-5 leading-tight">
-                    Track and improve your success
+                    Turn messy solicitations into structured inputs you can trust
                   </h3>
                   <p className="text-base text-gray-600 mb-6 leading-relaxed">
-                    Monitor proposal performance, analyze win rates by contract type, and identify patterns that lead to more awarded contracts.
+                    Extract key requirements instantly and centralize scattered documents to start pricing with confidence.
                   </p>
                   <ul className="space-y-3">
-                    {['Win/loss tracking', 'Performance analytics', 'Success pattern insights'].map((item, i) => (
+                    {['Extract key requirements instantly', 'Centralize scattered documents', 'Start pricing with confidence'].map((item, i) => (
                       <li key={i} className="flex items-center text-base text-gray-700">
                         <CheckCircle2 className="w-6 h-6 text-[#2563eb] mr-3 flex-shrink-0" />
                         {item}
@@ -508,17 +514,17 @@ export default function Home() {
                 <div className="absolute inset-0 bg-gradient-to-r from-[#2563eb]/0 via-[#2563eb]/5 to-[#2563eb]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-shimmer"></div>
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-5">
-                    <TrendingUp className="w-6 h-6 text-[#2563eb]" />
-                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">COMPETITIVE EDGE</p>
+                    <Shield className="w-6 h-6 text-[#2563eb]" />
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">REDUCE PRICING RISK</p>
                   </div>
                   <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-5 leading-tight">
-                    Price to win every time
+                    Catch problems before they become pricing mistakes
                   </h3>
                   <p className="text-base text-gray-600 mb-6 leading-relaxed">
-                    Leverage real-time BLS wage data, market intelligence, and competitive analysis to price your proposals at the sweet spot for winning.
+                    Flag gaps automatically, surface hidden assumptions, and avoid costly oversights.
                   </p>
                   <ul className="space-y-3">
-                    {['Market rate intelligence', 'Competitive positioning', 'Win probability scoring'].map((item, i) => (
+                    {['Flag gaps automatically', 'Surface hidden assumptions', 'Avoid costly oversights'].map((item, i) => (
                       <li key={i} className="flex items-center text-base text-gray-700">
                         <CheckCircle2 className="w-6 h-6 text-[#2563eb] mr-3 flex-shrink-0" />
                         {item}
@@ -533,17 +539,17 @@ export default function Home() {
                 <div className="absolute inset-0 bg-gradient-to-r from-[#2563eb]/0 via-[#2563eb]/5 to-[#2563eb]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-shimmer"></div>
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-5">
-                    <FileText className="w-6 h-6 text-[#2563eb]" />
-                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">SUBMIT WITH CONFIDENCE</p>
+                    <Clock className="w-6 h-6 text-[#2563eb]" />
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">SPEED WINS</p>
                   </div>
                   <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-5 leading-tight">
-                    Professional proposals, every time
+                    From weeks to minutes
                   </h3>
                   <p className="text-base text-gray-600 mb-6 leading-relaxed">
-                    Export government-ready pricing volumes with complete FBLR breakdowns, audit trails, and documentation that pass the strictest reviews.
+                    Move faster under deadline and submit more proposals. What used to take weeks of manual work can now take minutes with PriceIQ.
                   </p>
                   <ul className="space-y-3">
-                    {['Excel export ready', 'Complete documentation', 'Complete audit trails'].map((item, i) => (
+                    {['Batch RFP processing', 'Instant SOC matching/Auto FBLR calculation', 'Generate pricing-ready tables'].map((item, i) => (
                       <li key={i} className="flex items-center text-base text-gray-700">
                         <CheckCircle2 className="w-6 h-6 text-[#2563eb] mr-3 flex-shrink-0" />
                         {item}
@@ -558,17 +564,17 @@ export default function Home() {
                 <div className="absolute inset-0 bg-gradient-to-r from-[#2563eb]/0 via-[#2563eb]/5 to-[#2563eb]/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 animate-shimmer"></div>
                 <div className="relative z-10">
                   <div className="flex items-center gap-2 mb-5">
-                    <Clock className="w-6 h-6 text-[#2563eb]" />
-                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">SPEED WINS</p>
+                    <FileText className="w-6 h-6 text-[#2563eb]" />
+                    <p className="text-sm font-bold text-gray-600 uppercase tracking-wider">SUBMIT WITH CONFIDENCE</p>
                   </div>
                   <h3 className="text-2xl lg:text-3xl font-bold text-gray-900 mb-5 leading-tight">
-                    From weeks to minutes
+                    Stay in control of every number you deliver
                   </h3>
                   <p className="text-base text-gray-600 mb-6 leading-relaxed">
-                    Submit more proposals and win more contracts. What used to take weeks of manual work now takes minutes with AI powered automation.
+                    Review and edit every assumption and rate, trace inputs back to original sources, and export clean Excel outputs.
                   </p>
                   <ul className="space-y-3">
-                    {['Instant SOC matching', 'Auto FBLR calculation', 'Batch RFP processing'].map((item, i) => (
+                    {['Review and edit every assumption and rate', 'Trace inputs back to original solicitation sources', 'Export clean, editable Excel outputs your team can finalize and submit'].map((item, i) => (
                       <li key={i} className="flex items-center text-base text-gray-700">
                         <CheckCircle2 className="w-6 h-6 text-[#2563eb] mr-3 flex-shrink-0" />
                         {item}
@@ -643,10 +649,15 @@ export default function Home() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-8 lg:gap-12 mb-12">
               <div className="md:col-span-2 lg:col-span-1">
                 <Link href="/" className="flex items-center space-x-3 mb-4">
-                  <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#2563eb] text-white">
-                    <BarChart3 className="w-6 h-6" />
-                  </div>
-                  <span className="text-xl font-bold">PriceIQ</span>
+                  <Image
+                    src="/logo.svg"
+                    alt="PriceIQ Logo"
+                    width={40}
+                    height={40}
+                  />
+                  <span className="text-xl font-bold">
+                    Price<span className="text-[#5B7FFF]">IQ</span>
+                  </span>
                 </Link>
                 <p className="text-sm text-gray-400 leading-relaxed mb-6">
                   AI-native pricing intelligence for government contractors.
