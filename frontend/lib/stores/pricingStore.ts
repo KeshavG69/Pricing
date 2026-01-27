@@ -70,6 +70,7 @@ interface PricingState {
   deletePosition: (id: string) => void;
   addSubcontractor: (subcontractor: Omit<Subcontractor, 'id'>) => void;
   deleteSubcontractor: (id: string) => void;
+  renameSubcontractor: (id: string, newName: string) => void;
   deleteSubcontractorPosition: (subId: string, posIndex: number) => void;
   updateSubcontractorPosition: (subId: string, posIndex: number, updates: Partial<SubcontractorPosition>) => void;
   getLinkedSubcontractorPosition: (positionId: string) => { subId: string; posIndex: number; subPos: SubcontractorPosition } | null;
@@ -1506,6 +1507,46 @@ export const usePricingStore = create<PricingState>((set, get) => {
       }
 
       console.log('[DELETE SUB] Delete complete, triggering auto-save');
+      debouncedAutoSave();
+    },
+
+    renameSubcontractor: (id, newName) => {
+      const state = get();
+
+      // Validate the new name
+      const trimmedName = newName.trim();
+      if (!trimmedName) {
+        console.error('[RENAME SUB] New name cannot be empty');
+        return;
+      }
+
+      // Check if another subcontractor already has this name
+      const existingSubWithName = state.subcontractors.find(
+        sub => sub.id !== id && sub.name.toLowerCase() === trimmedName.toLowerCase()
+      );
+      if (existingSubWithName) {
+        console.error('[RENAME SUB] Another subcontractor already has this name:', trimmedName);
+        return;
+      }
+
+      // Find the subcontractor to rename
+      const subToRename = state.subcontractors.find(s => s.id === id);
+      if (!subToRename) {
+        console.error('[RENAME SUB] Subcontractor not found:', id);
+        return;
+      }
+
+      console.log('[RENAME SUB] Renaming subcontractor:', subToRename.name, '→', trimmedName);
+
+      // Update the subcontractor name
+      set((prevState) => ({
+        subcontractors: prevState.subcontractors.map(sub =>
+          sub.id === id ? { ...sub, name: trimmedName } : sub
+        ),
+        isDirty: true,
+      }));
+
+      console.log('[RENAME SUB] Rename complete, triggering auto-save');
       debouncedAutoSave();
     },
 

@@ -140,7 +140,7 @@ export default function PrivacyPolicyPage() {
                 <li><strong>Opt-out:</strong> Unsubscribe from marketing communications</li>
               </ul>
               <p className="text-gray-600 mb-6 leading-relaxed">
-                To exercise these rights, contact us at <a href="mailto:service@priceiq.org" className="text-[#2563eb] hover:underline">service@priceiq.org</a>
+                To exercise these rights, contact us at <a href="mailto:support@priceiq.org" className="text-[#2563eb] hover:underline">support@priceiq.org</a>
               </p>
 
               <h2 className="text-2xl font-bold text-gray-900 mb-4 mt-8">Data Retention</h2>
@@ -174,7 +174,7 @@ export default function PrivacyPolicyPage() {
               </p>
               <div className="bg-gray-50 rounded-lg p-6 mb-6">
                 <p className="text-gray-900 font-semibold mb-2">Intrepix LLC</p>
-                <p className="text-gray-600">Email: <a href="mailto:service@priceiq.org" className="text-[#2563eb] hover:underline">service@priceiq.org</a></p>
+                <p className="text-gray-600">Email: <a href="mailto:support@priceiq.org" className="text-[#2563eb] hover:underline">support@priceiq.org</a></p>
               </div>
 
               <h2 className="text-2xl font-bold text-gray-900 mb-4 mt-8">Compliance</h2>

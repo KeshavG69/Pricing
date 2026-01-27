@@ -122,8 +122,8 @@ export default function SupportPage() {
     {
       icon: <Mail className="w-6 h-6" />,
       title: "Email Support",
-      description: "service@priceiq.org",
-      link: "mailto:service@priceiq.org"
+      description: "support@priceiq.org",
+      link: "mailto:support@priceiq.org"
     }
   ];
 
@@ -258,7 +258,7 @@ export default function SupportPage() {
                   Contact Support
                 </button>
               </Link>
-              <a href="mailto:service@priceiq.org">
+              <a href="mailto:support@priceiq.org">
                 <button className="bg-white border-2 border-[#2563eb] text-[#2563eb] hover:bg-[#2563eb] hover:text-white px-10 py-4 rounded-xl font-semibold text-lg transition-all duration-300">
                   Email Us
                 </button>

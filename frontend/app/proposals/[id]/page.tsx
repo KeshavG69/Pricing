@@ -89,7 +89,15 @@ export default function ProposalPage() {
 
   useEffect(() => {
     if (proposalId) {
-      fetchProposal(proposalId).then(() => {
+      console.log('[ProposalPage] Fetching proposal:', proposalId);
+      fetchProposal(proposalId).then((proposal) => {
+        console.log('[ProposalPage] Proposal fetched:', {
+          id: proposal?.id,
+          status: proposal?.status,
+          message: proposal?.message,
+          progress: proposal?.progress
+        });
+
         // Refresh document URLs once after loading proposal (prevent duplicate calls)
         if (!urlsRefreshedRef.current) {
           urlsRefreshedRef.current = true;
@@ -133,39 +141,69 @@ export default function ProposalPage() {
       return;
     }
 
+    console.log('[Polling] Starting status polling for proposal:', proposalId);
     setIsPolling(true);
     let isActive = true;
+    let pollCount = 0;
+    let consecutiveErrors = 0;
 
     const poll = async () => {
       if (!isActive) return;
+      pollCount++;
 
       try {
+        console.log(`[Polling] Poll #${pollCount} - Checking status...`);
         const status = await proposalsApi.getStatus(proposalId);
+        console.log(`[Polling] Poll #${pollCount} - Status:`, status);
         setPollingStatus(status);
+
+        // Reset error counter on successful poll
+        consecutiveErrors = 0;
 
         // If completed or error, stop polling and refresh proposal
         if (status.status === 'completed' || status.status === 'error') {
+          console.log(`[Polling] Processing ${status.status}, stopping poll and refreshing proposal`);
           setIsPolling(false);
           await fetchProposal(proposalId);
-          // Don't schedule next poll
+
+          // Reload page on completion to ensure fresh state
+          if (status.status === 'completed') {
+            toast.success('Processing complete! Reloading...');
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+          }
           return;
         }
 
         // Schedule next poll only if still processing
         if (isActive && status.status === 'processing') {
-          setTimeout(poll, 2000);
+          console.log('[Polling] Still processing, scheduling next poll in 30 seconds...');
+          setTimeout(poll, 30000); // Poll every 30 seconds
         }
-      } catch (error) {
-        console.error('Polling error:', error);
-        setIsPolling(false);
+      } catch (error: any) {
+        consecutiveErrors++;
+        console.error(`[Polling] Error (${consecutiveErrors}/3):`, error);
+
+        // After 3 consecutive failures, stop polling and show message
+        if (consecutiveErrors >= 3) {
+          console.error('[Polling] Too many consecutive errors, stopping');
+          setIsPolling(false);
+          toast.error('Unable to check processing status. Please refresh the page.');
+        } else if (isActive) {
+          // Retry after 30 seconds
+          console.log('[Polling] Retrying in 30 seconds...');
+          setTimeout(poll, 30000);
+        }
       }
     };
 
-    // Start polling
+    // Start polling immediately
     poll();
 
     // Cleanup function
     return () => {
+      console.log('[Polling] Cleanup - stopping poll');
       isActive = false;
       setIsPolling(false);
     };
@@ -398,19 +436,22 @@ export default function ProposalPage() {
         <div className="text-center py-12">
           <Loader2 className="w-16 h-16 text-primary animate-spin mx-auto mb-4" />
           <p className="text-lg text-foreground mb-2">
-            {pollingStatus?.message || 'Processing your documents...'}
+            {pollingStatus?.message || currentProposal?.message || 'Processing your documents...'}
           </p>
           <div className="w-full max-w-md mx-auto mt-6">
             <div className="h-2 bg-muted rounded-full overflow-hidden">
               <div
                 className="h-full bg-primary transition-all duration-500"
-                style={{ width: `${pollingStatus?.progress || 0}%` }}
+                style={{ width: `${pollingStatus?.progress || currentProposal?.progress || 0}%` }}
               />
             </div>
             <p className="text-sm text-muted-foreground mt-2">
-              {pollingStatus?.progress || 0}% complete
+              {pollingStatus?.progress || currentProposal?.progress || 0}% complete
             </p>
           </div>
+          <p className="text-xs text-muted-foreground mt-4">
+            You can safely close this page - processing will continue in the background
+          </p>
         </div>
       </CardContent>
     </Card>

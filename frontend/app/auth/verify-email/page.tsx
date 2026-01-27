@@ -205,7 +205,7 @@ function VerifyEmailContent() {
                   Need help?
                 </p>
                 <a
-                  href="mailto:service@priceiq.org"
+                  href="mailto:support@priceiq.org"
                   className="text-sm text-blue-600 hover:text-blue-700 font-medium"
                 >
                   Contact support

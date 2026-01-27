@@ -219,7 +219,7 @@ export default function SecurityPage() {
                   <li>Employee security training and background checks</li>
                 </ul>
                 <p className="text-gray-600 leading-relaxed">
-                  Have questions about our security practices? Contact our security team at <a href="mailto:service@priceiq.org" className="text-[#2563eb] hover:underline font-semibold">service@priceiq.org</a>
+                  Have questions about our security practices? Contact our security team at <a href="mailto:support@priceiq.org" className="text-[#2563eb] hover:underline font-semibold">support@priceiq.org</a>
                 </p>
               </div>
             </div>
@@ -235,7 +235,7 @@ export default function SecurityPage() {
             </p>
             <div className="bg-gray-50 rounded-2xl p-8 text-left">
               <h3 className="text-xl font-bold text-gray-900 mb-4">How to Report</h3>
-              <p className="text-gray-600 mb-4">Email us at <a href="mailto:service@priceiq.org" className="text-[#2563eb] hover:underline font-semibold">service@priceiq.org</a> with:</p>
+              <p className="text-gray-600 mb-4">Email us at <a href="mailto:support@priceiq.org" className="text-[#2563eb] hover:underline font-semibold">support@priceiq.org</a> with:</p>
               <ul className="space-y-2 text-gray-600 list-disc pl-6">
                 <li>Detailed description of the vulnerability</li>
                 <li>Steps to reproduce the issue</li>
