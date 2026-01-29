@@ -53,20 +53,40 @@ export const WageDataSection = ({ positions }: WageDataSectionProps) => {
   // Convert positions to wage data rows
   const rows = useMemo<WageDataRow[]>(() => {
     return positions.map((pos) => {
-      // Calculate selected wage from selected_salaries or breakdown
+      // Calculate selected wage and determine which percentile to highlight
       let selected_wage: number | undefined;
+      let highlighted_percentile: string | undefined;
 
       if (pos.wage_source === 'gsa' && pos.gsa_rates_by_year) {
         // For GSA positions, use the current year's rate
         const currentYear = pos.gsa_current_year || 1;
         selected_wage = pos.gsa_custom_rate ?? pos.gsa_rates_by_year[String(currentYear)];
-      } else if (pos.selected_salaries && pos.selected_salaries.length > 0) {
-        // Average the selected salaries
-        selected_wage = pos.selected_salaries.reduce((sum, sal) => sum + sal, 0) / pos.selected_salaries.length;
       } else {
-        // Fallback to percentile wage
-        const percentileKey = `wage_${pos.percentile}` as keyof AdvancedPosition;
-        selected_wage = pos[percentileKey] as number | undefined;
+        // For BLS positions: check if user manually edited (selected_salaries exists)
+        if (pos.selected_salaries && pos.selected_salaries.length > 0) {
+          // User edited - show average of selected salaries
+          selected_wage = pos.selected_salaries.reduce((sum, sal) => sum + sal, 0) / pos.selected_salaries.length;
+
+          // Determine which percentile the user actually selected by comparing wage values
+          // Round to handle minor floating point differences
+          const roundedWage = Math.round(selected_wage);
+          if (Math.round(pos.wage_10th || 0) === roundedWage) highlighted_percentile = '10th';
+          else if (Math.round(pos.wage_25th || 0) === roundedWage) highlighted_percentile = '25th';
+          else if (Math.round(pos.wage_50th || 0) === roundedWage) highlighted_percentile = '50th';
+          else if (Math.round(pos.wage_75th || 0) === roundedWage) highlighted_percentile = '75th';
+          else if (Math.round(pos.wage_90th || 0) === roundedWage) highlighted_percentile = '90th';
+        } else if (pos.selected_wage) {
+          // Use system's original selected wage
+          selected_wage = pos.selected_wage;
+          // Use system's selected percentile (strip " (default)" suffix)
+          highlighted_percentile = pos.selected_percentile?.replace(' (default)', '') || pos.percentile?.replace(' (default)', '');
+        } else if (pos.percentile) {
+          // Fallback: calculate from percentile (strip " (default)" suffix)
+          const cleanPercentile = pos.percentile.replace(' (default)', '');
+          const percentileKey = `wage_${cleanPercentile}` as keyof AdvancedPosition;
+          selected_wage = pos[percentileKey] as number | undefined;
+          highlighted_percentile = cleanPercentile;
+        }
       }
 
       return {
@@ -82,7 +102,7 @@ export const WageDataSection = ({ positions }: WageDataSectionProps) => {
         wage_50th: pos.wage_50th,
         wage_75th: pos.wage_75th,
         wage_90th: pos.wage_90th,
-        selected_percentile: pos.percentile,
+        selected_percentile: highlighted_percentile,
         selected_wage,
         gsa_title: pos.gsa_title,
         gsa_rates_by_year: pos.gsa_rates_by_year,
