@@ -50,8 +50,10 @@ export const AddPositionModal = ({
       if (selectedPosition) {
         setLaborCategory(selectedPosition.labor_category);
         // Only set percentile if it's a valid option for the modal (exclude 10th)
-        const validPercentile = ['25th', '50th', '75th', '90th'].includes(selectedPosition.percentile)
-          ? selectedPosition.percentile
+        // Strip " (default)" suffix from backend and check if valid
+        const cleanPercentile = selectedPosition.percentile?.replace(' (default)', '');
+        const validPercentile = cleanPercentile && ['25th', '50th', '75th', '90th'].includes(cleanPercentile)
+          ? cleanPercentile
           : '50th';
         setPercentile(validPercentile as '25th' | '50th' | '75th' | '90th');
         // Don't pre-fill hours - let user enter them

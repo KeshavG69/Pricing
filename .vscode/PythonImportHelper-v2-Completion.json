@@ -2491,6 +2491,14 @@
         "documentation": {}
     },
     {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
         "label": "timedelta",
         "importPath": "datetime",
         "description": "datetime",
@@ -2584,6 +2592,38 @@
         "description": "dotenv",
         "isExtraImport": true,
         "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
         "documentation": {}
     },
     {
@@ -2764,6 +2804,14 @@
         "documentation": {}
     },
     {
+        "label": "MongoClient",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
         "label": "ASCENDING",
         "importPath": "pymongo",
         "description": "pymongo",
@@ -2905,6 +2953,30 @@
         "description": "auth",
         "isExtraImport": true,
         "detail": "auth",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
         "documentation": {}
     },
     {
@@ -4499,6 +4571,15 @@
         "description": "pymongo.database",
         "isExtraImport": true,
         "detail": "pymongo.database",
+        "documentation": {}
+    },
+    {
+        "label": "random",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "random",
+        "description": "random",
+        "detail": "random",
         "documentation": {}
     },
     {
@@ -6410,6 +6491,141 @@
         "documentation": {}
     },
     {
+        "label": "mongodb_url",
+        "kind": 5,
+        "importPath": "backend.scripts.check_one_proposal",
+        "description": "backend.scripts.check_one_proposal",
+        "peekOfCode": "mongodb_url = os.getenv('MONGODB_URL', 'mongodb://localhost:27017')\nmongodb_database = os.getenv('MONGODB_DATABASE', 'testing')\nprint(f\"Connecting to: {mongodb_url}\")\nprint(f\"Database: {mongodb_database}\")\nclient = MongoClient(mongodb_url)\ndb = client[mongodb_database]\nproposal_id = '697a5f04350a2a908218607e'\nproposal = db.proposals.find_one({'_id': ObjectId(proposal_id)})\nif not proposal:\n    print(f\"\\n❌ Proposal {proposal_id} not found in database '{mongodb_database}'\")",
+        "detail": "backend.scripts.check_one_proposal",
+        "documentation": {}
+    },
+    {
+        "label": "mongodb_database",
+        "kind": 5,
+        "importPath": "backend.scripts.check_one_proposal",
+        "description": "backend.scripts.check_one_proposal",
+        "peekOfCode": "mongodb_database = os.getenv('MONGODB_DATABASE', 'testing')\nprint(f\"Connecting to: {mongodb_url}\")\nprint(f\"Database: {mongodb_database}\")\nclient = MongoClient(mongodb_url)\ndb = client[mongodb_database]\nproposal_id = '697a5f04350a2a908218607e'\nproposal = db.proposals.find_one({'_id': ObjectId(proposal_id)})\nif not proposal:\n    print(f\"\\n❌ Proposal {proposal_id} not found in database '{mongodb_database}'\")\n    sys.exit(1)",
+        "detail": "backend.scripts.check_one_proposal",
+        "documentation": {}
+    },
+    {
+        "label": "client",
+        "kind": 5,
+        "importPath": "backend.scripts.check_one_proposal",
+        "description": "backend.scripts.check_one_proposal",
+        "peekOfCode": "client = MongoClient(mongodb_url)\ndb = client[mongodb_database]\nproposal_id = '697a5f04350a2a908218607e'\nproposal = db.proposals.find_one({'_id': ObjectId(proposal_id)})\nif not proposal:\n    print(f\"\\n❌ Proposal {proposal_id} not found in database '{mongodb_database}'\")\n    sys.exit(1)\npositions = proposal.get('spreadsheet_data', {}).get('positions', [])\nprint(f\"\\n✅ Found proposal: {proposal.get('name')}\")\nprint(f\"Total positions: {len(positions)}\")",
+        "detail": "backend.scripts.check_one_proposal",
+        "documentation": {}
+    },
+    {
+        "label": "db",
+        "kind": 5,
+        "importPath": "backend.scripts.check_one_proposal",
+        "description": "backend.scripts.check_one_proposal",
+        "peekOfCode": "db = client[mongodb_database]\nproposal_id = '697a5f04350a2a908218607e'\nproposal = db.proposals.find_one({'_id': ObjectId(proposal_id)})\nif not proposal:\n    print(f\"\\n❌ Proposal {proposal_id} not found in database '{mongodb_database}'\")\n    sys.exit(1)\npositions = proposal.get('spreadsheet_data', {}).get('positions', [])\nprint(f\"\\n✅ Found proposal: {proposal.get('name')}\")\nprint(f\"Total positions: {len(positions)}\")\nif positions:",
+        "detail": "backend.scripts.check_one_proposal",
+        "documentation": {}
+    },
+    {
+        "label": "proposal_id",
+        "kind": 5,
+        "importPath": "backend.scripts.check_one_proposal",
+        "description": "backend.scripts.check_one_proposal",
+        "peekOfCode": "proposal_id = '697a5f04350a2a908218607e'\nproposal = db.proposals.find_one({'_id': ObjectId(proposal_id)})\nif not proposal:\n    print(f\"\\n❌ Proposal {proposal_id} not found in database '{mongodb_database}'\")\n    sys.exit(1)\npositions = proposal.get('spreadsheet_data', {}).get('positions', [])\nprint(f\"\\n✅ Found proposal: {proposal.get('name')}\")\nprint(f\"Total positions: {len(positions)}\")\nif positions:\n    print(f\"\\nFirst 3 positions:\")",
+        "detail": "backend.scripts.check_one_proposal",
+        "documentation": {}
+    },
+    {
+        "label": "proposal",
+        "kind": 5,
+        "importPath": "backend.scripts.check_one_proposal",
+        "description": "backend.scripts.check_one_proposal",
+        "peekOfCode": "proposal = db.proposals.find_one({'_id': ObjectId(proposal_id)})\nif not proposal:\n    print(f\"\\n❌ Proposal {proposal_id} not found in database '{mongodb_database}'\")\n    sys.exit(1)\npositions = proposal.get('spreadsheet_data', {}).get('positions', [])\nprint(f\"\\n✅ Found proposal: {proposal.get('name')}\")\nprint(f\"Total positions: {len(positions)}\")\nif positions:\n    print(f\"\\nFirst 3 positions:\")\n    for i, pos in enumerate(positions[:3]):",
+        "detail": "backend.scripts.check_one_proposal",
+        "documentation": {}
+    },
+    {
+        "label": "positions",
+        "kind": 5,
+        "importPath": "backend.scripts.check_one_proposal",
+        "description": "backend.scripts.check_one_proposal",
+        "peekOfCode": "positions = proposal.get('spreadsheet_data', {}).get('positions', [])\nprint(f\"\\n✅ Found proposal: {proposal.get('name')}\")\nprint(f\"Total positions: {len(positions)}\")\nif positions:\n    print(f\"\\nFirst 3 positions:\")\n    for i, pos in enumerate(positions[:3]):\n        has_id = 'id' in pos and pos['id'] is not None\n        id_value = pos.get('id', 'MISSING')\n        status = \"✅\" if has_id else \"❌\"\n        print(f\"  {status} [{i}] id: {id_value} | labor_category: {pos.get('labor_category')}\")",
+        "detail": "backend.scripts.check_one_proposal",
+        "documentation": {}
+    },
+    {
+        "label": "mongo_client",
+        "kind": 5,
+        "importPath": "backend.scripts.check_proposal_structure",
+        "description": "backend.scripts.check_proposal_structure",
+        "peekOfCode": "mongo_client = get_mongodb_client()\ndb = mongo_client.get_database()\n# Get proposal ID from command line or use default\nproposal_id = sys.argv[1] if len(sys.argv) > 1 else '697a5f04350a2a098021860e'\nprint(f\"Checking proposal: {proposal_id}\")\nproposal = db.proposals.find_one({'_id': ObjectId(proposal_id)})\nif not proposal:\n    print('❌ Proposal not found')\n    sys.exit(1)\nprint('\\n=== PROPOSAL STRUCTURE ===')",
+        "detail": "backend.scripts.check_proposal_structure",
+        "documentation": {}
+    },
+    {
+        "label": "db",
+        "kind": 5,
+        "importPath": "backend.scripts.check_proposal_structure",
+        "description": "backend.scripts.check_proposal_structure",
+        "peekOfCode": "db = mongo_client.get_database()\n# Get proposal ID from command line or use default\nproposal_id = sys.argv[1] if len(sys.argv) > 1 else '697a5f04350a2a098021860e'\nprint(f\"Checking proposal: {proposal_id}\")\nproposal = db.proposals.find_one({'_id': ObjectId(proposal_id)})\nif not proposal:\n    print('❌ Proposal not found')\n    sys.exit(1)\nprint('\\n=== PROPOSAL STRUCTURE ===')\nprint(f\"Proposal name: {proposal.get('name')}\")",
+        "detail": "backend.scripts.check_proposal_structure",
+        "documentation": {}
+    },
+    {
+        "label": "proposal_id",
+        "kind": 5,
+        "importPath": "backend.scripts.check_proposal_structure",
+        "description": "backend.scripts.check_proposal_structure",
+        "peekOfCode": "proposal_id = sys.argv[1] if len(sys.argv) > 1 else '697a5f04350a2a098021860e'\nprint(f\"Checking proposal: {proposal_id}\")\nproposal = db.proposals.find_one({'_id': ObjectId(proposal_id)})\nif not proposal:\n    print('❌ Proposal not found')\n    sys.exit(1)\nprint('\\n=== PROPOSAL STRUCTURE ===')\nprint(f\"Proposal name: {proposal.get('name')}\")\nprint(f\"Has 'jobs' field: {'jobs' in proposal}\")\nprint(f\"Has 'spreadsheet_data' field: {'spreadsheet_data' in proposal}\")",
+        "detail": "backend.scripts.check_proposal_structure",
+        "documentation": {}
+    },
+    {
+        "label": "proposal",
+        "kind": 5,
+        "importPath": "backend.scripts.check_proposal_structure",
+        "description": "backend.scripts.check_proposal_structure",
+        "peekOfCode": "proposal = db.proposals.find_one({'_id': ObjectId(proposal_id)})\nif not proposal:\n    print('❌ Proposal not found')\n    sys.exit(1)\nprint('\\n=== PROPOSAL STRUCTURE ===')\nprint(f\"Proposal name: {proposal.get('name')}\")\nprint(f\"Has 'jobs' field: {'jobs' in proposal}\")\nprint(f\"Has 'spreadsheet_data' field: {'spreadsheet_data' in proposal}\")\n# Check jobs field\nif 'jobs' in proposal:",
+        "detail": "backend.scripts.check_proposal_structure",
+        "documentation": {}
+    },
+    {
+        "label": "mongo_client",
+        "kind": 5,
+        "importPath": "backend.scripts.check_wage_sync_bug",
+        "description": "backend.scripts.check_wage_sync_bug",
+        "peekOfCode": "mongo_client = get_mongodb_client()\ndb = mongo_client.get_database()\n# Get proposal ID from command line\nproposal_id = sys.argv[1] if len(sys.argv) > 1 else '697a5f04350a2a908218607e'\nprint(f\"Checking proposal: {proposal_id}\")\nproposal = db.proposals.find_one({'_id': ObjectId(proposal_id)})\nif not proposal:\n    print('❌ Proposal not found')\n    sys.exit(1)\n# Check spreadsheet_data.positions",
+        "detail": "backend.scripts.check_wage_sync_bug",
+        "documentation": {}
+    },
+    {
+        "label": "db",
+        "kind": 5,
+        "importPath": "backend.scripts.check_wage_sync_bug",
+        "description": "backend.scripts.check_wage_sync_bug",
+        "peekOfCode": "db = mongo_client.get_database()\n# Get proposal ID from command line\nproposal_id = sys.argv[1] if len(sys.argv) > 1 else '697a5f04350a2a908218607e'\nprint(f\"Checking proposal: {proposal_id}\")\nproposal = db.proposals.find_one({'_id': ObjectId(proposal_id)})\nif not proposal:\n    print('❌ Proposal not found')\n    sys.exit(1)\n# Check spreadsheet_data.positions\nif 'spreadsheet_data' in proposal and proposal['spreadsheet_data']:",
+        "detail": "backend.scripts.check_wage_sync_bug",
+        "documentation": {}
+    },
+    {
+        "label": "proposal_id",
+        "kind": 5,
+        "importPath": "backend.scripts.check_wage_sync_bug",
+        "description": "backend.scripts.check_wage_sync_bug",
+        "peekOfCode": "proposal_id = sys.argv[1] if len(sys.argv) > 1 else '697a5f04350a2a908218607e'\nprint(f\"Checking proposal: {proposal_id}\")\nproposal = db.proposals.find_one({'_id': ObjectId(proposal_id)})\nif not proposal:\n    print('❌ Proposal not found')\n    sys.exit(1)\n# Check spreadsheet_data.positions\nif 'spreadsheet_data' in proposal and proposal['spreadsheet_data']:\n    sd = proposal['spreadsheet_data']\n    if 'positions' in sd and sd['positions']:",
+        "detail": "backend.scripts.check_wage_sync_bug",
+        "documentation": {}
+    },
+    {
+        "label": "proposal",
+        "kind": 5,
+        "importPath": "backend.scripts.check_wage_sync_bug",
+        "description": "backend.scripts.check_wage_sync_bug",
+        "peekOfCode": "proposal = db.proposals.find_one({'_id': ObjectId(proposal_id)})\nif not proposal:\n    print('❌ Proposal not found')\n    sys.exit(1)\n# Check spreadsheet_data.positions\nif 'spreadsheet_data' in proposal and proposal['spreadsheet_data']:\n    sd = proposal['spreadsheet_data']\n    if 'positions' in sd and sd['positions']:\n        positions = sd['positions']\n        print(f\"\\n📊 Total positions: {len(positions)}\")",
+        "detail": "backend.scripts.check_wage_sync_bug",
+        "documentation": {}
+    },
+    {
         "label": "cleanup_single_proposal",
         "kind": 2,
         "importPath": "backend.scripts.cleanup_proposal_duplicates",
@@ -6578,6 +6794,51 @@
         "description": "backend.scripts.import_oews_to_mongo",
         "peekOfCode": "DATA_DIR = Path(\"data/oews\")\ndef create_mongo_client() -> Tuple[MongoClient, Database]:\n    \"\"\"Create MongoDB client and return client + database.\"\"\"\n    print(f\"Connecting to MongoDB at {settings.MONGODB_URL}...\")\n    client = MongoClient(settings.MONGODB_URL)\n    # Test connection\n    client.server_info()\n    print(\"  ✓ Connected to MongoDB\")\n    db = client[settings.MONGODB_DATABASE]\n    print(f\"  ✓ Using database: {settings.MONGODB_DATABASE}\")",
         "detail": "backend.scripts.import_oews_to_mongo",
+        "documentation": {}
+    },
+    {
+        "label": "mongo_client",
+        "kind": 5,
+        "importPath": "backend.scripts.migrate_add_position_ids",
+        "description": "backend.scripts.migrate_add_position_ids",
+        "peekOfCode": "mongo_client = get_mongodb_client()\ndb = mongo_client.get_database()\nprint(\"=\" * 60)\nprint(\"MIGRATION: Add Position IDs to Proposals\")\nprint(\"=\" * 60)\n# Find all proposals with spreadsheet_data.positions\nproposals = db.proposals.find({\"spreadsheet_data.positions\": {\"$exists\": True}})\nproposals_updated = 0\npositions_updated = 0\nfor proposal in proposals:",
+        "detail": "backend.scripts.migrate_add_position_ids",
+        "documentation": {}
+    },
+    {
+        "label": "db",
+        "kind": 5,
+        "importPath": "backend.scripts.migrate_add_position_ids",
+        "description": "backend.scripts.migrate_add_position_ids",
+        "peekOfCode": "db = mongo_client.get_database()\nprint(\"=\" * 60)\nprint(\"MIGRATION: Add Position IDs to Proposals\")\nprint(\"=\" * 60)\n# Find all proposals with spreadsheet_data.positions\nproposals = db.proposals.find({\"spreadsheet_data.positions\": {\"$exists\": True}})\nproposals_updated = 0\npositions_updated = 0\nfor proposal in proposals:\n    proposal_id = proposal[\"_id\"]",
+        "detail": "backend.scripts.migrate_add_position_ids",
+        "documentation": {}
+    },
+    {
+        "label": "proposals",
+        "kind": 5,
+        "importPath": "backend.scripts.migrate_add_position_ids",
+        "description": "backend.scripts.migrate_add_position_ids",
+        "peekOfCode": "proposals = db.proposals.find({\"spreadsheet_data.positions\": {\"$exists\": True}})\nproposals_updated = 0\npositions_updated = 0\nfor proposal in proposals:\n    proposal_id = proposal[\"_id\"]\n    proposal_name = proposal.get(\"name\", \"Unnamed\")\n    spreadsheet_data = proposal.get(\"spreadsheet_data\", {})\n    positions = spreadsheet_data.get(\"positions\", [])\n    if not positions:\n        continue",
+        "detail": "backend.scripts.migrate_add_position_ids",
+        "documentation": {}
+    },
+    {
+        "label": "proposals_updated",
+        "kind": 5,
+        "importPath": "backend.scripts.migrate_add_position_ids",
+        "description": "backend.scripts.migrate_add_position_ids",
+        "peekOfCode": "proposals_updated = 0\npositions_updated = 0\nfor proposal in proposals:\n    proposal_id = proposal[\"_id\"]\n    proposal_name = proposal.get(\"name\", \"Unnamed\")\n    spreadsheet_data = proposal.get(\"spreadsheet_data\", {})\n    positions = spreadsheet_data.get(\"positions\", [])\n    if not positions:\n        continue\n    # Check if any positions are missing IDs",
+        "detail": "backend.scripts.migrate_add_position_ids",
+        "documentation": {}
+    },
+    {
+        "label": "positions_updated",
+        "kind": 5,
+        "importPath": "backend.scripts.migrate_add_position_ids",
+        "description": "backend.scripts.migrate_add_position_ids",
+        "peekOfCode": "positions_updated = 0\nfor proposal in proposals:\n    proposal_id = proposal[\"_id\"]\n    proposal_name = proposal.get(\"name\", \"Unnamed\")\n    spreadsheet_data = proposal.get(\"spreadsheet_data\", {})\n    positions = spreadsheet_data.get(\"positions\", [])\n    if not positions:\n        continue\n    # Check if any positions are missing IDs\n    positions_need_ids = [i for i, pos in enumerate(positions) if not pos.get(\"id\")]",
+        "detail": "backend.scripts.migrate_add_position_ids",
         "documentation": {}
     },
     {

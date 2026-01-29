@@ -23,5 +23,18 @@ export const getAvailablePercentiles = (
  * Prioritizes custom_salary if manually entered.
  */
 export const getCurrentWage = (position: SpreadsheetPosition | AdvancedPosition): number => {
-  return position.custom_salary || position[`wage_${position.percentile}`] || 0;
+  if (position.custom_salary) return position.custom_salary;
+
+  // Use selected_wage if available
+  if (position.selected_wage) return position.selected_wage;
+
+  // Calculate from percentile
+  if (position.percentile) {
+    const cleanPercentile = position.percentile.replace(' (default)', '');
+    const percentileKey = `wage_${cleanPercentile}` as keyof (SpreadsheetPosition | AdvancedPosition);
+    const wage = position[percentileKey];
+    if (typeof wage === 'number') return wage;
+  }
+
+  return 0;
 };

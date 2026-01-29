@@ -211,8 +211,18 @@ export function getSalarySelectionCount(position: SpreadsheetPosition | Advanced
   }
 
   // Legacy mode - count as 1 if any salary is set
-  if (position.custom_salary || position[`wage_${position.percentile}`]) {
+  if (position.custom_salary || position.selected_wage) {
     return 1;
+  }
+
+  // Check percentile wage
+  if (position.percentile) {
+    const cleanPercentile = position.percentile.replace(' (default)', '');
+    const percentileKey = `wage_${cleanPercentile}` as keyof (SpreadsheetPosition | AdvancedPosition);
+    const wage = position[percentileKey];
+    if (typeof wage === 'number' && wage > 0) {
+      return 1;
+    }
   }
 
   return 0;
@@ -263,7 +273,8 @@ export function getSalaryDisplayLabel(position: SpreadsheetPosition | AdvancedPo
     return 'Custom';
   }
 
-  return position.percentile;
+  // Return percentile (strip " (default)" suffix) or default to 50th
+  return position.percentile?.replace(' (default)', '') || '50th';
 }
 
 /**

@@ -312,11 +312,11 @@ export const SubcontractorSection = () => {
       },
       {
         key: 'baseRate',
-        name: 'Base Rate ($/hr)',
+        name: 'Base Rate\n($/hr)',
         width: 120,
         frozen: true,
         resizable: true,
-        headerCellClass: 'bg-emerald-50 font-semibold text-emerald-700 border-r border-border',
+        headerCellClass: 'bg-emerald-50 font-semibold text-emerald-700 border-r border-border whitespace-pre-line text-center',
         cellClass: 'border-r border-border',
         renderCell: ({ row }) => (
           <div className="flex items-center justify-end h-full px-3 bg-emerald-50/30">
@@ -367,11 +367,11 @@ export const SubcontractorSection = () => {
       },
       {
         key: 'originalBaseRate',
-        name: 'Original Rate ($/hr)',
+        name: 'Original Rate\n($/hr)',
         width: 135,
         frozen: true,
         resizable: true,
-        headerCellClass: 'bg-gray-50 font-semibold text-gray-700 border-r border-border',
+        headerCellClass: 'bg-gray-50 font-semibold text-gray-700 border-r border-border whitespace-pre-line text-center',
         cellClass: 'border-r border-border',
         renderCell: ({ row }) => {
           const originalRate = row.originalBaseRate;
@@ -397,7 +397,7 @@ export const SubcontractorSection = () => {
         name: `${label}\nRate ($/hr)`,
         width: 115,
         resizable: true,
-        headerCellClass: 'bg-emerald-50 font-semibold text-emerald-700',
+        headerCellClass: 'bg-emerald-50 font-semibold text-emerald-700 whitespace-pre-line text-center',
         renderCell: ({ row }) => {
           const yearData = row.yearData[yearStr];
           const rate = yearData?.rate || 0;
@@ -417,7 +417,7 @@ export const SubcontractorSection = () => {
         name: `${label}\nHours`,
         width: 100,
         resizable: true,
-        headerCellClass: 'bg-blue-50 font-medium text-blue-600',
+        headerCellClass: 'bg-blue-50 font-medium text-blue-600 whitespace-pre-line text-center',
         renderCell: ({ row }) => {
           const yearData = row.yearData[yearStr];
           return (
@@ -468,7 +468,7 @@ export const SubcontractorSection = () => {
         name: `${label}\nAmount ($)`,
         width: 120,
         resizable: true,
-        headerCellClass: 'bg-purple-50 font-medium text-purple-600',
+        headerCellClass: 'bg-purple-50 font-medium text-purple-600 whitespace-pre-line text-center',
         renderCell: ({ row }) => {
           const yearData = row.yearData[yearStr];
           return (
@@ -488,7 +488,7 @@ export const SubcontractorSection = () => {
           name: `${label}\nOT Hours`,
           width: 100,
           resizable: true,
-          headerCellClass: 'bg-amber-50 font-medium text-amber-600',
+          headerCellClass: 'bg-amber-50 font-medium text-amber-600 whitespace-pre-line text-center',
           renderCell: ({ row }) => {
             const yearData = row.yearData[yearStr];
             return (
@@ -541,7 +541,7 @@ export const SubcontractorSection = () => {
           name: `${label}\nOT Amount ($)`,
           width: 120,
           resizable: true,
-          headerCellClass: 'bg-amber-50 font-medium text-amber-600 border-r border-border',
+          headerCellClass: 'bg-amber-50 font-medium text-amber-600 border-r border-border whitespace-pre-line text-center',
           cellClass: 'border-r border-border',
           renderCell: ({ row }) => {
             const yearData = row.yearData[yearStr];
@@ -929,7 +929,7 @@ export const SubcontractorSection = () => {
                 className="rdg-light"
                 style={{ height: '100%' }}
                 rowHeight={45}
-                headerRowHeight={40}
+                headerRowHeight={60}
               />
             </div>
           </div>
