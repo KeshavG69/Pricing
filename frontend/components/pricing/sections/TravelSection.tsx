@@ -110,8 +110,8 @@ export const TravelSection = ({
 
   // Create rows (Travel items + subtotal + G&A + total)
   const rows = useMemo<TravelRow[]>(() => {
-    const travelRows: TravelRow[] = travel.map((item) => ({
-      id: item.id,
+    const travelRows: TravelRow[] = travel.map((item, index) => ({
+      id: item.id || `travel-${index}`,
       description: item.description,
       escalate: item.escalate,
       amountsByYear: item.amount_per_year,
