@@ -32,6 +32,7 @@ async def process_single_row(
     labor_category = row_dict.get("labor_category", "")
     description = row_dict.get("description")
     location = row_dict.get("location") or "National"
+    soc_code = row_dict.get("soc_code")  # Extract SOC code from document (if provided)
 
     # Default to BLS
     if wage_source is None:
@@ -40,7 +41,11 @@ async def process_single_row(
     is_gsa = wage_source.get("type") == "gsa"
     source_label = "GSA" if is_gsa else "BLS"
 
-    print(f"  [{row_index}] Processing ({source_label}): {labor_category}")
+    # Log SOC code if provided
+    if soc_code and not is_gsa:
+        print(f"  [{row_index}] Processing ({source_label}): {labor_category} [SOC: {soc_code} from document]")
+    else:
+        print(f"  [{row_index}] Processing ({source_label}): {labor_category}")
 
     try:
         if is_gsa:
@@ -50,7 +55,8 @@ async def process_single_row(
                 labor_category=labor_category,
                 description=description,
                 organization_id=organization_id,
-                file_id=file_id
+                file_id=file_id,
+                soc_code=soc_code
             )
             gsa_prompt = f"Find GSA labor category and rate for: {labor_category}"
 
@@ -60,7 +66,8 @@ async def process_single_row(
                 bls_agent = await create_pricing_agent(
                     labor_category=labor_category,
                     description=description,
-                    location=location or "National"
+                    location=location or "National",
+                    soc_code=soc_code
                 )
                 # Build prompt with description for better context
                 bls_prompt = f"Find wage data for {labor_category}"
@@ -84,7 +91,8 @@ async def process_single_row(
             agent = await create_pricing_agent(
                 labor_category=labor_category,
                 description=description,
-                location=location
+                location=location,
+                soc_code=soc_code
             )
             # Build prompt with description for better context
             prompt = f"Find wage data for {labor_category} in {location}"

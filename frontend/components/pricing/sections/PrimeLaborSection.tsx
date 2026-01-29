@@ -241,6 +241,233 @@ export const PrimeLaborSection = ({
   console.log('[PrimeLaborSection] Sample position breakdown (first position):', positions[0]?.breakdown);
   console.log('[PrimeLaborSection] ========== RENDER END ==========');
 
+  // Location Dropdown Button Component (similar to Contractor dropdown)
+  interface LocationDropdownButtonProps {
+    position: AdvancedPosition;
+    onLocationChange: (position: AdvancedPosition, newLocation: string) => Promise<void>;
+  }
+
+  const LocationDropdownButton = React.memo<LocationDropdownButtonProps>(({
+    position,
+    onLocationChange
+  }) => {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const [isUpdating, setIsUpdating] = React.useState(false);
+    const [searchQuery, setSearchQuery] = React.useState('');
+    const buttonRef = React.useRef<HTMLButtonElement>(null);
+    const dropdownRef = React.useRef<HTMLDivElement>(null);
+    const searchInputRef = React.useRef<HTMLInputElement>(null);
+    const [dropdownPosition, setDropdownPosition] = React.useState({ top: 0, left: 0 });
+
+    const currentLocation = position.location || 'National';
+
+    // All US states for location dropdown
+    const usStates = [
+      'National',
+      'Alabama',
+      'Alaska',
+      'Arizona',
+      'Arkansas',
+      'California',
+      'Colorado',
+      'Connecticut',
+      'Delaware',
+      'District of Columbia',
+      'Florida',
+      'Georgia',
+      'Hawaii',
+      'Idaho',
+      'Illinois',
+      'Indiana',
+      'Iowa',
+      'Kansas',
+      'Kentucky',
+      'Louisiana',
+      'Maine',
+      'Maryland',
+      'Massachusetts',
+      'Michigan',
+      'Minnesota',
+      'Mississippi',
+      'Missouri',
+      'Montana',
+      'Nebraska',
+      'Nevada',
+      'New Hampshire',
+      'New Jersey',
+      'New Mexico',
+      'New York',
+      'North Carolina',
+      'North Dakota',
+      'Ohio',
+      'Oklahoma',
+      'Oregon',
+      'Pennsylvania',
+      'Rhode Island',
+      'South Carolina',
+      'South Dakota',
+      'Tennessee',
+      'Texas',
+      'Utah',
+      'Vermont',
+      'Virginia',
+      'Washington',
+      'West Virginia',
+      'Wisconsin',
+      'Wyoming',
+    ];
+
+    // Filter states based on search query
+    const filteredStates = React.useMemo(() => {
+      if (!searchQuery.trim()) return usStates;
+      const query = searchQuery.toLowerCase();
+      return usStates.filter(state => state.toLowerCase().includes(query));
+    }, [searchQuery]);
+
+    // Calculate dropdown position when opening
+    React.useEffect(() => {
+      if (isOpen && buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        setDropdownPosition({
+          top: rect.bottom + 4,
+          left: rect.left,
+        });
+        // Focus search input when opening
+        setTimeout(() => searchInputRef.current?.focus(), 10);
+      }
+    }, [isOpen]);
+
+    // Close dropdown when clicking outside
+    React.useEffect(() => {
+      const handleClickOutside = (event: MouseEvent) => {
+        if (
+          buttonRef.current && !buttonRef.current.contains(event.target as Node) &&
+          dropdownRef.current && !dropdownRef.current.contains(event.target as Node)
+        ) {
+          setIsOpen(false);
+          setSearchQuery('');
+        }
+      };
+      if (isOpen) {
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+      }
+    }, [isOpen]);
+
+    const handleSelect = async (newLocation: string) => {
+      if (newLocation === currentLocation) {
+        setIsOpen(false);
+        setSearchQuery('');
+        return;
+      }
+
+      setIsUpdating(true);
+      setIsOpen(false);
+      setSearchQuery('');
+
+      try {
+        await onLocationChange(position, newLocation);
+        setIsUpdating(false);
+      } catch (error) {
+        console.error('Failed to update location:', error);
+        setIsUpdating(false);
+      }
+    };
+
+    return (
+      <>
+        <button
+          ref={buttonRef}
+          type="button"
+          disabled={isUpdating}
+          className={`inline-flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-muted/30 border border-border text-sm font-medium transition-colors ${
+            isUpdating ? 'opacity-50 cursor-wait' : 'hover:bg-muted/50 cursor-pointer'
+          }`}
+          onClick={(e) => {
+            e.stopPropagation();
+            if (!isUpdating) setIsOpen(!isOpen);
+          }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+          }}
+          title="Click to change location (will refresh wage data)"
+        >
+          <span className="text-foreground truncate">{currentLocation}</span>
+          <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+        </button>
+
+        {isOpen && typeof window !== 'undefined' && ReactDOM.createPortal(
+          <div
+            ref={dropdownRef}
+            className="fixed z-[9999] w-52 bg-card border border-border rounded-lg shadow-lg overflow-hidden"
+            style={{
+              top: `${dropdownPosition.top}px`,
+              left: `${dropdownPosition.left}px`,
+            }}
+          >
+            {/* Search Input */}
+            <div className="p-2 border-b border-border">
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search states..."
+                className="w-full px-2 py-1.5 text-sm bg-muted/30 border border-border rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && filteredStates.length > 0) {
+                    handleSelect(filteredStates[0]);
+                  } else if (e.key === 'Escape') {
+                    setIsOpen(false);
+                    setSearchQuery('');
+                  }
+                }}
+              />
+            </div>
+
+            {/* States List */}
+            <div className="max-h-64 overflow-y-auto">
+              {filteredStates.length > 0 ? (
+                filteredStates.map((state, index) => (
+                  <button
+                    key={state}
+                    type="button"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      handleSelect(state);
+                    }}
+                    className={`w-full flex items-center justify-between px-3 py-2.5 text-sm hover:bg-muted transition-colors ${
+                      index > 0 ? 'border-t border-border' : ''
+                    } ${currentLocation === state ? 'text-foreground font-medium' : 'text-foreground'}`}
+                  >
+                    <span>{state}</span>
+                    {currentLocation === state && (
+                      <Check className="w-4 h-4 text-primary" />
+                    )}
+                  </button>
+                ))
+              ) : (
+                <div className="px-3 py-2.5 text-sm text-muted-foreground text-center">
+                  No states found
+                </div>
+              )}
+            </div>
+          </div>,
+          document.body
+        )}
+      </>
+    );
+  }, (prevProps, nextProps) => {
+    // Custom comparison to prevent unnecessary re-renders
+    return (
+      prevProps.position.id === nextProps.position.id &&
+      prevProps.position.location === nextProps.position.location
+    );
+  });
+
   // Contractor Dropdown Button Component (defined outside renderCell to persist state)
   interface ContractorDropdownButtonProps {
     position: AdvancedPosition;
@@ -466,6 +693,71 @@ export const PrimeLaborSection = ({
       ...response.data.wage_data,
     });
   }, [proposalId, onUpdatePosition]);
+
+  // Handle location change - triggers wage refresh
+  const handleLocationChange = useCallback(async (position: AdvancedPosition, newLocation: string): Promise<void> => {
+    if (!proposalId) return;
+
+    console.log('[PrimeLaborSection] Location changed, refreshing wage data:', {
+      positionId: position.id,
+      oldLocation: position.location,
+      newLocation,
+      currentPercentile: position.percentile,
+      currentWages: {
+        wage_10th: position.wage_10th,
+        wage_25th: position.wage_25th,
+        wage_50th: position.wage_50th,
+        wage_75th: position.wage_75th,
+        wage_90th: position.wage_90th,
+      }
+    });
+
+    try {
+      // Call wage refresh endpoint with current SOC code and new location
+      const response = await apiClient.post(
+        `/proposals/${proposalId}/positions/${position.id}/refresh-wage`,
+        {
+          soc_code: position.soc_code,
+          soc_title: position.soc_title,
+          location: newLocation,
+          experience: position.experience,
+        }
+      );
+
+      const wageData = response.data.wage_data;
+
+      console.log('[PrimeLaborSection] Received wage data from API:', {
+        location: wageData.location,
+        percentile: wageData.percentile,
+        selected_wage: wageData.selected_wage,
+      });
+
+      // CRITICAL: Also update selected_salaries to match the new wage
+      // getEffectiveSalary prioritizes selected_salaries over percentile wages
+      // If we don't update this, the grid will show the OLD wage even though wage_50th is updated
+      const updates = {
+        location: wageData.location,
+        wage_10th: wageData.wage_10th,
+        wage_25th: wageData.wage_25th,
+        wage_50th: wageData.wage_50th,
+        wage_75th: wageData.wage_75th,
+        wage_90th: wageData.wage_90th,
+        percentile: wageData.percentile,
+        selected_wage: wageData.selected_wage,
+        selected_salaries: [wageData.selected_wage], // Update selected_salaries to match new wage
+      };
+
+      // CRITICAL: Use direct store updatePosition (NOT onUpdatePosition prop)
+      // This ensures proper flow through updatePosition → performTransformToAdvanced → version increment
+      updatePosition(position.id, updates);
+
+      console.log('[PrimeLaborSection] Position updated with new wage:', wageData.selected_wage);
+    } catch (error) {
+      console.error('[PrimeLaborSection] Failed to refresh wage data:', error);
+      // Still update location even if wage refresh fails
+      updatePosition(position.id, { location: newLocation });
+    }
+  }, [proposalId, updatePosition]);
 
   // Context menu items
   const getContextMenuItems = useCallback((position: AdvancedPosition, columnKey?: string): ContextMenuItem[] => {
@@ -920,11 +1212,47 @@ export const PrimeLaborSection = ({
           return null;
         },
       },
+      // Location - Geographic location dropdown (triggers wage refresh)
+      {
+        key: 'location',
+        name: 'Location',
+        width: 180,
+        resizable: true,
+        frozen: true,
+        renderCell: ({ row }) => {
+          if (row.type === 'subtotal') {
+            return <div className="h-full bg-blue-50 border-t-2 border-blue-200" />;
+          } else if (row.type === 'position') {
+            const pos = row.data as AdvancedPosition;
+            return (
+              <div className="flex items-center justify-center h-full px-2">
+                <LocationDropdownButton
+                  position={pos}
+                  onLocationChange={handleLocationChange}
+                />
+              </div>
+            );
+          } else if (row.type === 'subcontractor-header') {
+            return <div className="h-full bg-muted/30" />;
+          } else if (row.type === 'subcontractor') {
+            // Subcontractors inherit location from prime position (read-only)
+            const pos = row.data as AdvancedPosition;
+            return (
+              <div className="flex items-center justify-center h-full px-2">
+                <span className="inline-flex items-center px-3 py-2 rounded-lg bg-muted/30 border border-border text-sm font-medium text-muted-foreground">
+                  {pos.location || 'National'}
+                </span>
+              </div>
+            );
+          }
+          return <div className="h-full bg-muted/30" />;
+        },
+      },
       // Location Type - Toggle between On-Site and Off-Site
       {
         key: 'location_type',
-        name: 'Location',
-        width: 100,
+        name: 'Onsite/Offsite',
+        width: 110,
         resizable: true,
         frozen: true,
         editable: false,
