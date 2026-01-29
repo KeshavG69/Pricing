@@ -19,6 +19,7 @@ import {
   Download,
   Send
 } from 'lucide-react';
+import CookieBanner from '@/components/cookie/CookieBanner';
 
 export default function Home() {
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -727,6 +728,9 @@ export default function Home() {
           </div>
         </footer>
       </main>
+
+      {/* Cookie Consent Banner - Only on landing page */}
+      <CookieBanner />
     </div>
   );
 }

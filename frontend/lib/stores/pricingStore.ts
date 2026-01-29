@@ -1272,16 +1272,17 @@ export const usePricingStore = create<PricingState>((set, get) => {
     updatePosition: (id, updates) => {
       const state = get();
 
-      // Check if this is ONLY a location_type change (to prevent unnecessary grid remounts)
-      const isLocationOnlyChange =
-        Object.keys(updates).length === 1 &&
-        updates.location_type !== undefined;
-
       // Detect if wage-related fields are being updated
       const wageFields = ['selected_wage', 'selected_salaries', 'percentile', 'gsa_custom_rate',
                          'wage_10th', 'wage_25th', 'wage_50th', 'wage_75th', 'wage_90th',
-                         'soc_code', 'soc_title'];
+                         'soc_code', 'soc_title', 'location'];  // Added 'location' as it affects wages
       const hasWageUpdate = Object.keys(updates).some(key => wageFields.includes(key));
+
+      // Check if this is ONLY a location_type change (to prevent unnecessary grid remounts)
+      // NOTE: location (geographic) changes ARE wage changes, only location_type (On-Site/Off-Site) should skip version increment
+      const isLocationTypeOnlyChange =
+        Object.keys(updates).length === 1 &&
+        updates.location_type !== undefined;
 
       // Helper to deep clone values (arrays/objects) to avoid reference sharing
       const deepClone = (value: any) => {
@@ -1297,11 +1298,18 @@ export const usePricingStore = create<PricingState>((set, get) => {
       const targetPosition = state.positions.find(p => p.id === id);
       const targetLaborCategory = targetPosition?.labor_category;
 
-      if (hasWageUpdate && targetLaborCategory) {
+      // Wage sync should ONLY happen for manual wage changes, NOT location changes
+      // When location changes, each position can have different wages for the same labor category
+      const isLocationChange = updates.location !== undefined;
+      const shouldSyncWages = hasWageUpdate && targetLaborCategory && !isLocationChange;
+
+      if (shouldSyncWages) {
         const matchingCount = state.positions.filter(
           p => p.labor_category === targetLaborCategory && p.id !== id
         ).length;
         console.log(`[WAGE SYNC] Detected wage change for labor_category: "${targetLaborCategory}" (${matchingCount} other positions will sync)`);
+      } else if (hasWageUpdate && isLocationChange) {
+        console.log(`[WAGE SYNC] Location change detected - skipping wage sync to other positions with same labor_category`);
       }
 
       // If location_type is being updated, also update linked subcontractor positions
@@ -1346,8 +1354,9 @@ export const usePricingStore = create<PricingState>((set, get) => {
                 clonedUpdates[key as keyof SpreadsheetPosition] = deepClone(value) as any;
               }
               return { ...p, ...clonedUpdates };
-            } else if (hasWageUpdate && targetLaborCategory && p.labor_category === targetLaborCategory) {
+            } else if (shouldSyncWages && p.labor_category === targetLaborCategory) {
               // Wage sync: Update matching positions with ONLY wage fields (deep cloned)
+              // NOTE: This only happens for manual wage changes, NOT location changes
               const wageUpdates: Partial<SpreadsheetPosition> = {};
               wageFields.forEach(field => {
                 if (updates[field as keyof typeof updates] !== undefined) {
@@ -1362,9 +1371,10 @@ export const usePricingStore = create<PricingState>((set, get) => {
         }));
 
         // Then retransform to advanced mode to recalculate breakdown
-        // Skip version increment for location-only changes to prevent grid remount
-        console.log('[ADVANCED MODE] Calling transformToAdvanced', { isLocationOnlyChange });
-        performTransformToAdvanced({ skipVersionIncrement: isLocationOnlyChange });
+        // Skip version increment ONLY for location_type changes to prevent grid remount
+        // Geographic location changes SHOULD increment version because they affect wages
+        console.log('[ADVANCED MODE] Calling transformToAdvanced', { isLocationTypeOnlyChange });
+        performTransformToAdvanced({ skipVersionIncrement: isLocationTypeOnlyChange });
 
         // Set isDirty AFTER transformation to ensure it persists through all state updates
         console.log('[ADVANCED MODE] Setting isDirty=true');
@@ -1403,9 +1413,9 @@ export const usePricingStore = create<PricingState>((set, get) => {
           isDirty: true, // Set dirty immediately
         }));
 
-        // For location-only changes, skip recalculation and just transform
-        if (isLocationOnlyChange) {
-          console.log('[BASIC MODE] Location-only change, transforming without recalculation');
+        // For location_type-only changes, skip recalculation and just transform
+        if (isLocationTypeOnlyChange) {
+          console.log('[BASIC MODE] Location_type-only change, transforming without recalculation');
           performTransformToAdvanced({ skipVersionIncrement: true });
           debouncedAutoSave();
         } else {
@@ -2244,12 +2254,18 @@ export const usePricingStore = create<PricingState>((set, get) => {
       await debouncedRecalculate();
     },
 
-    exportToExcel: async (overrides) => {
+    exportToExcel: async (_overrides) => {
       const state = get();
       if (!state.proposalId) return;
 
       try {
         console.log('Generating Excel file from proposal:', state.proposalId);
+
+        // Save current state before exporting (ensures latest changes are in MongoDB)
+        if (state.isDirty) {
+          console.log('💾 Saving changes before Excel export...');
+          await get().saveProposal();
+        }
 
         // Basic mode: Export simple Excel spreadsheet matching frontend grid
         if (!state.advancedMode) {
@@ -2452,11 +2468,15 @@ export const usePricingStore = create<PricingState>((set, get) => {
       // Detect if wage-related fields are being updated
       const wageFields = ['selected_wage', 'selected_salaries', 'percentile', 'gsa_custom_rate',
                          'wage_10th', 'wage_25th', 'wage_50th', 'wage_75th', 'wage_90th',
-                         'soc_code', 'soc_title'];
+                         'soc_code', 'soc_title', 'location'];
       const hasWageUpdate = Object.keys(updates).some(key => wageFields.includes(key));
 
+      // Wage sync should ONLY happen for manual wage changes, NOT location changes
+      const isLocationChange = updates.location !== undefined;
+      const shouldSyncWages = hasWageUpdate && !isLocationChange;
+
       // If wage-related fields are being updated, sync across positions with same labor_category
-      if (hasWageUpdate) {
+      if (shouldSyncWages) {
         const targetPosition = state.positions.find(p => p.id === id);
         if (targetPosition) {
           const laborCategory = targetPosition.labor_category;
@@ -2490,6 +2510,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
             }));
           }
         }
+      } else if (hasWageUpdate && isLocationChange) {
+        console.log(`[WAGE SYNC] Location change detected in updateAdvancedPosition - skipping wage sync`);
       }
 
       // Update the underlying positions array first (WITHOUT isDirty)

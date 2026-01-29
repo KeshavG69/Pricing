@@ -178,7 +178,10 @@ class ExcelGenerator:
         fringe_rate = indirect_rates.get('fringe', 0.247)
         oh_rate = indirect_rates.get('oh_onsite', indirect_rates.get('oh', 0.0711))
         ga_rate = indirect_rates.get('ga', 0.2243)
-        smh_rate = self.project_data.get('passthrough_rates', {}).get('smh', 0.0665)
+        passthrough_rates = self.project_data.get('passthrough_rates', {})
+        smh_rate = passthrough_rates.get('smh', 0.0665)
+        ga_passthrough_rate = passthrough_rates.get('ga', 0.0)
+        combined_passthrough_rate = smh_rate + ga_passthrough_rate  # S&MH + G&A Passthrough
 
         # Row 11: Direct Labor (calculated value)
         dl_row = current_row
@@ -273,19 +276,19 @@ class ExcelGenerator:
         cell.font = self.BOLD_FONT
         current_row += 1
 
-        # Row 16: Subcontractor Handling (FORMULA: Sub * smh_rate)
-        sub_handling_row = current_row
-        ws.cell(current_row, 2, "Subcontractor Handling")
+        # Row 16: Passthrough (FORMULA: Sub * (S&MH + G&A Passthrough))
+        passthrough_row = current_row
+        ws.cell(current_row, 2, "Passthrough (S&MH + G&A)")
         ws.cell(current_row, 2).font = self.BOLD_FONT
         ws.cell(current_row, 2).border = self.THIN_BORDER
         for period_idx in range(self.total_years):
             col_letter = get_column_letter(3 + period_idx)
             cell = ws.cell(current_row, 3 + period_idx)
-            cell.value = f"={col_letter}{sub_row}*{smh_rate}"
+            cell.value = f"={col_letter}{sub_row}*{combined_passthrough_rate}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
         cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{sub_row}*{smh_rate}"
+        cell.value = f"={get_column_letter(total_col)}{sub_row}*{combined_passthrough_rate}"
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
@@ -526,10 +529,10 @@ class ExcelGenerator:
                 hours_cells.append(f"{get_column_letter(col)}{current_row}")
                 col += 1
 
-                # Rate (FBLR)
+                # Rate (DL Rate - NOT FBLR, breakdown will add indirect costs)
                 rate_col = col
                 cell = ws.cell(current_row, col)
-                cell.value = year_data.get('rate', 0)
+                cell.value = year_data.get('dl_rate', 0)  # Use DL rate, not FBLR
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 1
@@ -880,30 +883,32 @@ class ExcelGenerator:
         # Get rates for calculations
         passthrough_rates = self.project_data.get('passthrough_rates', {})
         smh_rate = passthrough_rates.get('smh', 0.0665)
+        ga_passthrough_rate = passthrough_rates.get('ga', 0.0)
+        combined_passthrough_rate = smh_rate + ga_passthrough_rate  # S&MH + G&A Passthrough
         fee_rates = self.project_data.get('fee_rates', {})
         sub_fee_rate = fee_rates.get('sub_labor', 0.0126)
 
-        # Subcontractor Material Handling (S&MH) row
-        smh_row = current_row
-        ws.cell(current_row, 2, "Subcontractor Material Handling (S&MH)")
+        # Passthrough (S&MH + G&A) row
+        passthrough_row = current_row
+        ws.cell(current_row, 2, "Passthrough (S&MH + G&A)")
         ws.cell(current_row, 2).font = self.BOLD_FONT
         ws.cell(current_row, 2).border = self.THIN_BORDER
 
         cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{total_labor_row}*{smh_rate}"
+        cell.value = f"={get_column_letter(total_col)}{total_labor_row}*{combined_passthrough_rate}"
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
         current_row += 1
 
-        # Total Subcontractor Cost including pass through
+        # Total Subcontractor Cost including passthrough
         total_passthrough_row = current_row
-        ws.cell(current_row, 2, "Total Subcontractor Cost including pass through")
+        ws.cell(current_row, 2, "Total Subcontractor Cost including passthrough")
         ws.cell(current_row, 2).font = self.BOLD_FONT
         ws.cell(current_row, 2).border = self.THIN_BORDER
 
         cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{total_labor_row}+{get_column_letter(total_col)}{smh_row}"
+        cell.value = f"={get_column_letter(total_col)}{total_labor_row}+{get_column_letter(total_col)}{passthrough_row}"
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
@@ -994,13 +999,22 @@ class ExcelGenerator:
                 total_years=self.total_years
             )
 
+            # Get prime labor fee rate (FBLR should include fee for "Fully Loaded" rates)
+            fee_rates = self.project_data.get('fee_rates', {})
+            prime_fee_rate = fee_rates.get('prime_labor', 0.08)
+
             col = 5
             for year in range(1, self.total_years + 1):
                 year_data = results.get(f'year_{year}', {})
-                fblr = year_data.get('rate', 0)
+                fblr_without_fee = year_data.get('rate', 0)
+
+                # Add fee to get fully loaded rate (matching frontend calculation)
+                # FBLR = (DL + Fringe + OH + G&A) + Fee
+                # Fee = (DL + Fringe + OH + G&A) × fee_rate
+                fblr_with_fee = fblr_without_fee * (1 + prime_fee_rate)
 
                 cell = ws.cell(current_row, col)
-                cell.value = fblr
+                cell.value = fblr_with_fee
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 1
@@ -1024,7 +1038,7 @@ class ExcelGenerator:
                 ws.cell(current_row, 4, labor_cat.get('location', ''))
                 ws.cell(current_row, 4).border = self.THIN_BORDER
 
-                # Rates per year
+                # Rates per year (subcontractors show base rate, fees applied at contract level)
                 col = 5
                 for year in range(1, self.total_years + 1):
                     rate = labor_cat.get(f'year_{year}_rate', 0)
@@ -1561,12 +1575,15 @@ class ExcelGenerator:
         fee_rates = self.project_data.get('fee_rates', {})
         escalation_rates = self.project_data.get('escalation_rates', {})
 
+        # Calculate combined passthrough rate (S&MH + G&A Passthrough)
+        combined_passthrough = passthrough_rates.get('smh', 0) + passthrough_rates.get('ga', 0)
+
         rates = [
             ("Fringe", indirect_rates.get('fringe', 0)),
             ("Onsite Overhead (OH)", indirect_rates.get('oh_onsite', indirect_rates.get('oh', 0))),
             ("Offsite Overhead (OH)", indirect_rates.get('oh_offsite', indirect_rates.get('oh', 0))),
             ("General & Administrative (G&A)", indirect_rates.get('ga', 0)),
-            ("Subcontractor Material Handling (S&MH)", passthrough_rates.get('smh', 0)),
+            ("Passthrough (S&MH + G&A)", combined_passthrough),
             ("Fee on Labor", fee_rates.get('prime_labor', 0)),
             ("Fee on Subcontractor", fee_rates.get('sub_labor', 0)),
         ]
@@ -1855,7 +1872,26 @@ class ExcelGenerator:
             col += 1
 
             # Percentiles (BLS only, GSA shows '-')
-            selected_percentile = pos.get('percentile', '50th')
+            # Strip " (default)" suffix from percentile field
+            raw_percentile = pos.get('percentile', '50th')
+            selected_percentile = raw_percentile.replace(' (default)', '') if raw_percentile else '50th'
+
+            # For highlighting, check if user manually edited (selected_salaries exists)
+            selected_salaries = pos.get('selected_salaries', [])
+            highlighted_percentile = None
+            if selected_salaries and len(selected_salaries) > 0:
+                # User edited - determine which percentile matches the selected wage
+                avg_wage = sum(selected_salaries) / len(selected_salaries)
+                rounded_avg = round(avg_wage)
+                # Check which percentile wage matches
+                for pct in ['10th', '25th', '50th', '75th', '90th']:
+                    pct_wage = pos.get(f'wage_{pct}')
+                    if pct_wage and round(pct_wage) == rounded_avg:
+                        highlighted_percentile = pct
+                        break
+            else:
+                # No user edit - use system's selected percentile
+                highlighted_percentile = selected_percentile
 
             for percentile in ['10th', '25th', '50th', '75th', '90th']:
                 if wage_source == 'BLS':
@@ -1867,8 +1903,8 @@ class ExcelGenerator:
                         cell.value = wage_value
                         cell.number_format = self.CURRENCY_FORMAT
 
-                        # Highlight selected percentile
-                        if percentile == selected_percentile:
+                        # Highlight the percentile that's actually selected
+                        if percentile == highlighted_percentile:
                             cell.fill = PatternFill(start_color="D1FAE5", end_color="D1FAE5", fill_type="solid")
                             cell.font = Font(bold=True, color="059669")
                         else:
@@ -1897,12 +1933,16 @@ class ExcelGenerator:
                 else:
                     selected_wage = gsa_rates.get(str(current_year), 0)
             else:
-                # For BLS, use selected_salaries average or selected_wage
-                selected_salaries = pos.get('selected_salaries', [])
+                # For BLS: prioritize user edits, then system selection
                 if selected_salaries and len(selected_salaries) > 0:
+                    # User edited - show average
                     selected_wage = sum(selected_salaries) / len(selected_salaries)
+                elif pos.get('selected_wage'):
+                    # System selected wage
+                    selected_wage = pos.get('selected_wage')
                 else:
-                    selected_wage = pos.get('selected_wage') or pos.get(f'wage_{selected_percentile}', 0)
+                    # Fallback to percentile lookup (with cleaned percentile)
+                    selected_wage = pos.get(f'wage_{selected_percentile}', 0)
 
             cell.value = selected_wage if selected_wage else 0
             cell.number_format = self.CURRENCY_FORMAT

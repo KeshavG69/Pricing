@@ -2498,6 +2498,7 @@ async def refresh_position_wage_data(
         updated_wage_data = {
             "soc_code": soc_code,
             "soc_title": soc_title,
+            "location": location,  # Include location in response
             "wage_10th": wages.get("10th"),
             "wage_25th": wages.get("25th"),
             "wage_50th": wages.get("50th"),
@@ -2511,6 +2512,7 @@ async def refresh_position_wage_data(
         position.update({
             "soc_code": soc_code,
             "soc_title": soc_title,
+            "location": location,  # Save the location used for wage lookup
             "wage_10th": wages.get("10th"),
             "wage_25th": wages.get("25th"),
             "wage_50th": wages.get("50th"),
