@@ -679,7 +679,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
       const response = await pricingApi.recalculate({
         positions: state.positions.map((p) => ({
           id: p.id,
-          percentile: p.percentile,
+          percentile: p.percentile?.replace(' (default)', '') || '50th',  // Strip suffix, default to 50th
           wage_10th: p.wage_10th,
           wage_25th: p.wage_25th,
           wage_50th: p.wage_50th,
@@ -1283,42 +1283,25 @@ export const usePricingStore = create<PricingState>((set, get) => {
                          'soc_code', 'soc_title'];
       const hasWageUpdate = Object.keys(updates).some(key => wageFields.includes(key));
 
-      // If wage-related fields are being updated, sync across positions with same labor_category
-      let finalUpdates = updates;
-      if (hasWageUpdate) {
-        const targetPosition = state.positions.find(p => p.id === id);
-        if (targetPosition) {
-          const laborCategory = targetPosition.labor_category;
-          console.log('[WAGE SYNC] Detected wage change for labor_category:', laborCategory);
-
-          // Find all positions with matching labor_category (exact match)
-          const matchingPositions = state.positions.filter(
-            p => p.labor_category === laborCategory && p.id !== id
-          );
-
-          if (matchingPositions.length > 0) {
-            console.log(`[WAGE SYNC] Found ${matchingPositions.length} matching positions to sync`);
-
-            // Extract only wage-related updates to apply to matching positions
-            const wageUpdates: Partial<SpreadsheetPosition> = {};
-            wageFields.forEach(field => {
-              if (updates[field as keyof typeof updates] !== undefined) {
-                wageUpdates[field as keyof SpreadsheetPosition] = updates[field as keyof typeof updates] as any;
-              }
-            });
-
-            // Update matching positions
-            set((prevState) => ({
-              positions: prevState.positions.map((p) => {
-                if (p.labor_category === laborCategory && p.id !== id) {
-                  console.log(`[WAGE SYNC] Syncing to position: ${p.id}`);
-                  return { ...p, ...wageUpdates };
-                }
-                return p;
-              }),
-            }));
-          }
+      // Helper to deep clone values (arrays/objects) to avoid reference sharing
+      const deepClone = (value: any) => {
+        if (Array.isArray(value)) {
+          return [...value];
+        } else if (typeof value === 'object' && value !== null) {
+          return { ...value };
         }
+        return value;
+      };
+
+      // Get target position's labor category for wage sync
+      const targetPosition = state.positions.find(p => p.id === id);
+      const targetLaborCategory = targetPosition?.labor_category;
+
+      if (hasWageUpdate && targetLaborCategory) {
+        const matchingCount = state.positions.filter(
+          p => p.labor_category === targetLaborCategory && p.id !== id
+        ).length;
+        console.log(`[WAGE SYNC] Detected wage change for labor_category: "${targetLaborCategory}" (${matchingCount} other positions will sync)`);
       }
 
       // If location_type is being updated, also update linked subcontractor positions
@@ -1353,11 +1336,29 @@ export const usePricingStore = create<PricingState>((set, get) => {
         // In advanced mode, use the advanced update logic
         console.log('[ADVANCED MODE] Updating position via updatePosition', { id, updates });
 
-        // Update the underlying positions array first (WITHOUT isDirty)
+        // SINGLE atomic update: target position + wage sync in ONE set() call
         set((prevState) => ({
-          positions: prevState.positions.map((p) =>
-            p.id === id ? { ...p, ...updates } : p
-          ),
+          positions: prevState.positions.map((p) => {
+            if (p.id === id) {
+              // Update target position with deep cloned values
+              const clonedUpdates: Partial<SpreadsheetPosition> = {};
+              for (const [key, value] of Object.entries(updates)) {
+                clonedUpdates[key as keyof SpreadsheetPosition] = deepClone(value) as any;
+              }
+              return { ...p, ...clonedUpdates };
+            } else if (hasWageUpdate && targetLaborCategory && p.labor_category === targetLaborCategory) {
+              // Wage sync: Update matching positions with ONLY wage fields (deep cloned)
+              const wageUpdates: Partial<SpreadsheetPosition> = {};
+              wageFields.forEach(field => {
+                if (updates[field as keyof typeof updates] !== undefined) {
+                  wageUpdates[field as keyof SpreadsheetPosition] = deepClone(updates[field as keyof typeof updates]) as any;
+                }
+              });
+              console.log(`[WAGE SYNC] Syncing to position: ${p.id} (${p.labor_category})`);
+              return { ...p, ...wageUpdates };
+            }
+            return p;
+          }),
         }));
 
         // Then retransform to advanced mode to recalculate breakdown
@@ -1376,10 +1377,29 @@ export const usePricingStore = create<PricingState>((set, get) => {
         // Basic mode logic
         console.log('[BASIC MODE] Updating position', { id, updates });
 
+        // SINGLE atomic update: target position + wage sync in ONE set() call
         set((prevState) => ({
-          positions: prevState.positions.map((p) =>
-            p.id === id ? { ...p, ...updates } : p
-          ),
+          positions: prevState.positions.map((p) => {
+            if (p.id === id) {
+              // Update target position with deep cloned values
+              const clonedUpdates: Partial<SpreadsheetPosition> = {};
+              for (const [key, value] of Object.entries(updates)) {
+                clonedUpdates[key as keyof SpreadsheetPosition] = deepClone(value) as any;
+              }
+              return { ...p, ...clonedUpdates };
+            } else if (hasWageUpdate && targetLaborCategory && p.labor_category === targetLaborCategory) {
+              // Wage sync: Update matching positions with ONLY wage fields (deep cloned)
+              const wageUpdates: Partial<SpreadsheetPosition> = {};
+              wageFields.forEach(field => {
+                if (updates[field as keyof typeof updates] !== undefined) {
+                  wageUpdates[field as keyof SpreadsheetPosition] = deepClone(updates[field as keyof typeof updates]) as any;
+                }
+              });
+              console.log(`[WAGE SYNC] Syncing to position: ${p.id} (${p.labor_category})`);
+              return { ...p, ...wageUpdates };
+            }
+            return p;
+          }),
           isDirty: true, // Set dirty immediately
         }));
 
@@ -2557,7 +2577,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         const response = await pricingApi.recalculate({
           positions: state.positions.map((p) => ({
             id: p.id,
-            percentile: p.percentile,
+            percentile: p.percentile?.replace(' (default)', '') || '50th',  // Strip suffix, default to 50th
             wage_10th: p.wage_10th,
             wage_25th: p.wage_25th,
             wage_50th: p.wage_50th,

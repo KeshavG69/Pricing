@@ -98,7 +98,15 @@ export const ConvertToSubcontractorModal = ({
 
     // For SpreadsheetPosition, calculate FBLR first, then reverse calculate
     const spreadsheetPos = position as SpreadsheetPosition;
-    const selectedWage = spreadsheetPos[`wage_${spreadsheetPos.percentile}`] || spreadsheetPos.selected_wage || 0;
+
+    // Get selected wage - prioritize selected_wage, then calculate from percentile
+    let selectedWage = spreadsheetPos.selected_wage || 0;
+    if (!selectedWage && spreadsheetPos.percentile) {
+      // Strip " (default)" suffix and get wage from percentile
+      const cleanPercentile = spreadsheetPos.percentile.replace(' (default)', '');
+      const percentileKey = `wage_${cleanPercentile}` as keyof SpreadsheetPosition;
+      selectedWage = (spreadsheetPos[percentileKey] as number) || 0;
+    }
 
     let fblr = 0;
 

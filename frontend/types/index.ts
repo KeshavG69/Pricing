@@ -322,13 +322,14 @@ export interface SpreadsheetPosition {
   location_type?: string; // 'On-Site' or 'Off-Site'
   soc_code?: string;
   soc_title?: string;
-  percentile: '10th' | '25th' | '50th' | '75th' | '90th';
+  percentile?: string; // Percentile (may include " (default)" suffix from backend)
   wage_10th?: number;
   wage_25th?: number;
   wage_50th?: number;
   wage_75th?: number;
   wage_90th?: number;
   selected_wage?: number; // The actual wage selected based on experience/percentile
+  selected_percentile?: string; // System-selected percentile (may include " (default)" suffix from backend)
   custom_salary?: number; // Manually entered salary (overrides percentile wages) - DEPRECATED, use selected_salaries
   // Multi-salary selection support
   selected_salaries?: number[]; // Array of selected salary amounts (averaged for calculations)
@@ -454,12 +455,14 @@ export interface AdvancedPosition {
   location_type?: string; // 'On-Site' or 'Off-Site'
   soc_code?: string;
   soc_title?: string;
-  percentile: '10th' | '25th' | '50th' | '75th' | '90th';
+  percentile?: string; // Percentile (may include " (default)" suffix from backend)
   wage_10th?: number;
   wage_25th?: number;
   wage_50th?: number;
   wage_75th?: number;
   wage_90th?: number;
+  selected_wage?: number; // System-selected wage based on percentile
+  selected_percentile?: string; // System-selected percentile (may include " (default)" suffix from backend)
   custom_salary?: number; // Manually entered salary (overrides percentile wages) - DEPRECATED, use selected_salaries
   // Multi-salary selection support
   selected_salaries?: number[]; // Array of selected salary amounts (averaged for calculations)

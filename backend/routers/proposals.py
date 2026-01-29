@@ -540,6 +540,18 @@ async def process_proposal_documents(
             print(f"  - subcontractor_configured: {final_subcontractor_configured}")
             print(f"  - subcontractors: {len(final_subcontractors)} preserved")
 
+        # CRITICAL: Generate unique IDs for positions if missing
+        # This ensures frontend state management works correctly
+        import time
+        timestamp = int(time.time() * 1000)  # Milliseconds since epoch
+        for i, job in enumerate(cleaned_jobs):
+            if not job.get("id"):
+                # Generate unique ID: pos_{index}_{timestamp}_{random}
+                import random
+                random_suffix = random.randint(1000, 9999)
+                job["id"] = f"pos_{i}_{timestamp}_{random_suffix}"
+                print(f"[ID GEN] Generated ID for position {i}: {job['id']} ({job.get('labor_category', 'Unknown')})")
+
         # Update proposal with results (NO duplication - all data in spreadsheet_data)
         crud.update_proposal(
             proposal_id,
@@ -558,7 +570,7 @@ async def process_proposal_documents(
                     "fte_hours_threshold": fte_threshold
                 },
                 "spreadsheet_data": {
-                    "positions": cleaned_jobs,  # Single source of truth
+                    "positions": cleaned_jobs,  # Single source of truth (now with IDs!)
                     "travel": extracted_travel,
                     "odcs": extracted_odcs,
                     "extensions": extracted_extensions,
