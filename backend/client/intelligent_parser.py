@@ -303,6 +303,7 @@ WORKFLOW:
       "location_type": "On-Site", # REQUIRED: MUST be exactly "On-Site" or "Off-Site" (no "Remote", "Hybrid", etc.)
       "is_key_position": false,
       "is_surge": false,  # REQUIRED: true if this is a surge position, false if base position
+      "soc_code": "15-1252",  # OPTIONAL: Extract ONLY if document explicitly lists SOC/O*NET/BLS code. Format: "XX-XXXX" or "XXXXXX"
       "hours_per_year": {{
         "1": 1920,    # REQUIRED: Year-specific regular hours. Use "1", "2", "3", etc. as keys
         "2": 1920,    # If hours are constant: repeat same value for all years
@@ -371,6 +372,21 @@ IMPORTANT:
   * Look for state names in contract location/place of performance sections
   * If document says "remote" or doesn't specify state, use "National"
   * Never use placeholder text like "State name" or "TBD"
+- SOC Code extraction (OPTIONAL - only extract if explicitly present in document):
+  * Look for 6-digit codes in formats: "XX-XXXX" (e.g., "15-1252") or "XXXXXX" (e.g., "151252")
+  * Common labels in documents: "SOC Code", "SOC:", "O*NET Code", "BLS Code", "Occupation Code", "Standard Occupational Classification"
+  * May appear in: tables with labor categories, position descriptions, wage rate sheets, staffing plans
+  * Extract the EXACT code from the document - do NOT infer, lookup, or generate codes
+  * If a position has a SOC code listed, include it in the soc_code field
+  * If NO SOC code is present for a position, OMIT the soc_code field entirely (do not set to null or empty string)
+  * Common SOC code ranges:
+    - 11-xxxx: Management Occupations
+    - 13-xxxx: Business and Financial Operations
+    - 15-xxxx: Computer and Mathematical Occupations
+    - 17-xxxx: Architecture and Engineering
+    - 19-xxxx: Life, Physical, and Social Science
+    - 29-xxxx: Healthcare Practitioners and Technical
+  * If document lists codes but they don't match 6-digit SOC format, do NOT extract them
 - Extensions are optional periods beyond the regular contract (base + option years):
   * Look for phrases like "6-month extension", "12-month extension", "extension period"
   * If document mentions year 6 or beyond when total_years is 5, that's an extension
