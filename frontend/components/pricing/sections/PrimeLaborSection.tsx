@@ -1065,10 +1065,10 @@ export const PrimeLaborSection = ({
           return <div className="h-full bg-muted/30" />;
         },
       },
-      // Labour Category - Expandable indicator + labor category
+      // Labor Category - Expandable indicator + labor category
       {
         key: 'cost_element',
-        name: 'Labour Category',
+        name: 'Labor Category',
         width: 320,
         resizable: true,
         frozen: true,
@@ -1164,7 +1164,7 @@ export const PrimeLaborSection = ({
       // Category Title - Show GSA title or BLS category (position rows only)
       {
         key: 'bls_category',
-        name: isGSAProposal ? 'GSA Labour Category' : 'BLS Labour Category',
+        name: isGSAProposal ? 'GSA Labor Category' : 'BLS Labor Category',
         width: 269, // Increased for larger text (+12%)
         resizable: true,
         renderCell: ({ row }) => {
