@@ -86,6 +86,11 @@ export default function OverviewTab() {
     let primeLaborTotal = 0;
 
     positions.forEach((pos) => {
+      // Skip positions assigned to subcontractors (they're counted in subcontractor totals)
+      if (pos.assigned_subcontractor_id) {
+        return;
+      }
+
       const isGSA = isGSAPosition(pos);
 
       Object.entries(pos.hours_per_year).forEach(([yearStr, hours]) => {
@@ -268,6 +273,11 @@ export default function OverviewTab() {
     const otMultiplier = rates.ot_multiplier || 1.5;  // Default 1.5x (time-and-a-half)
 
     positions.forEach((pos) => {
+      // Skip positions assigned to subcontractors (they're counted in subcontractor totals)
+      if (pos.assigned_subcontractor_id) {
+        return;
+      }
+
       const isGSA = isGSAPosition(pos);
 
       Object.entries(pos.ot_hours_per_year || {}).forEach(([yearStr, otHours]) => {
@@ -388,6 +398,11 @@ export default function OverviewTab() {
 
     // Prime labor components by year (DL, Fringe, OH, G&A) - calculate directly from positions
     positions.forEach((pos) => {
+      // Skip positions assigned to subcontractors (they're counted in subcontractor totals)
+      if (pos.assigned_subcontractor_id) {
+        return;
+      }
+
       const isGSA = pos.wage_source === 'gsa';
 
       Object.entries(pos.hours_per_year).forEach(([yearStr, hours]) => {
@@ -554,6 +569,11 @@ export default function OverviewTab() {
 
     // Calculate OT costs by year
     positions.forEach((pos) => {
+      // Skip positions assigned to subcontractors (they're counted in subcontractor totals)
+      if (pos.assigned_subcontractor_id) {
+        return;
+      }
+
       const isGSA = isGSAPosition(pos);
 
       Object.entries(pos.ot_hours_per_year || {}).forEach(([yearStr, otHours]) => {

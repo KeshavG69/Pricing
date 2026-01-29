@@ -178,7 +178,10 @@ class ExcelGenerator:
         fringe_rate = indirect_rates.get('fringe', 0.247)
         oh_rate = indirect_rates.get('oh_onsite', indirect_rates.get('oh', 0.0711))
         ga_rate = indirect_rates.get('ga', 0.2243)
-        smh_rate = self.project_data.get('passthrough_rates', {}).get('smh', 0.0665)
+        passthrough_rates = self.project_data.get('passthrough_rates', {})
+        smh_rate = passthrough_rates.get('smh', 0.0665)
+        ga_passthrough_rate = passthrough_rates.get('ga', 0.0)
+        combined_passthrough_rate = smh_rate + ga_passthrough_rate  # S&MH + G&A Passthrough
 
         # Row 11: Direct Labor (calculated value)
         dl_row = current_row
@@ -273,19 +276,19 @@ class ExcelGenerator:
         cell.font = self.BOLD_FONT
         current_row += 1
 
-        # Row 16: Subcontractor Handling (FORMULA: Sub * smh_rate)
-        sub_handling_row = current_row
-        ws.cell(current_row, 2, "Subcontractor Handling")
+        # Row 16: Passthrough (FORMULA: Sub * (S&MH + G&A Passthrough))
+        passthrough_row = current_row
+        ws.cell(current_row, 2, "Passthrough (S&MH + G&A)")
         ws.cell(current_row, 2).font = self.BOLD_FONT
         ws.cell(current_row, 2).border = self.THIN_BORDER
         for period_idx in range(self.total_years):
             col_letter = get_column_letter(3 + period_idx)
             cell = ws.cell(current_row, 3 + period_idx)
-            cell.value = f"={col_letter}{sub_row}*{smh_rate}"
+            cell.value = f"={col_letter}{sub_row}*{combined_passthrough_rate}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
         cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{sub_row}*{smh_rate}"
+        cell.value = f"={get_column_letter(total_col)}{sub_row}*{combined_passthrough_rate}"
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
@@ -880,30 +883,32 @@ class ExcelGenerator:
         # Get rates for calculations
         passthrough_rates = self.project_data.get('passthrough_rates', {})
         smh_rate = passthrough_rates.get('smh', 0.0665)
+        ga_passthrough_rate = passthrough_rates.get('ga', 0.0)
+        combined_passthrough_rate = smh_rate + ga_passthrough_rate  # S&MH + G&A Passthrough
         fee_rates = self.project_data.get('fee_rates', {})
         sub_fee_rate = fee_rates.get('sub_labor', 0.0126)
 
-        # Subcontractor Material Handling (S&MH) row
-        smh_row = current_row
-        ws.cell(current_row, 2, "Subcontractor Material Handling (S&MH)")
+        # Passthrough (S&MH + G&A) row
+        passthrough_row = current_row
+        ws.cell(current_row, 2, "Passthrough (S&MH + G&A)")
         ws.cell(current_row, 2).font = self.BOLD_FONT
         ws.cell(current_row, 2).border = self.THIN_BORDER
 
         cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{total_labor_row}*{smh_rate}"
+        cell.value = f"={get_column_letter(total_col)}{total_labor_row}*{combined_passthrough_rate}"
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
         current_row += 1
 
-        # Total Subcontractor Cost including pass through
+        # Total Subcontractor Cost including passthrough
         total_passthrough_row = current_row
-        ws.cell(current_row, 2, "Total Subcontractor Cost including pass through")
+        ws.cell(current_row, 2, "Total Subcontractor Cost including passthrough")
         ws.cell(current_row, 2).font = self.BOLD_FONT
         ws.cell(current_row, 2).border = self.THIN_BORDER
 
         cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{total_labor_row}+{get_column_letter(total_col)}{smh_row}"
+        cell.value = f"={get_column_letter(total_col)}{total_labor_row}+{get_column_letter(total_col)}{passthrough_row}"
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
@@ -1570,12 +1575,15 @@ class ExcelGenerator:
         fee_rates = self.project_data.get('fee_rates', {})
         escalation_rates = self.project_data.get('escalation_rates', {})
 
+        # Calculate combined passthrough rate (S&MH + G&A Passthrough)
+        combined_passthrough = passthrough_rates.get('smh', 0) + passthrough_rates.get('ga', 0)
+
         rates = [
             ("Fringe", indirect_rates.get('fringe', 0)),
             ("Onsite Overhead (OH)", indirect_rates.get('oh_onsite', indirect_rates.get('oh', 0))),
             ("Offsite Overhead (OH)", indirect_rates.get('oh_offsite', indirect_rates.get('oh', 0))),
             ("General & Administrative (G&A)", indirect_rates.get('ga', 0)),
-            ("Subcontractor Material Handling (S&MH)", passthrough_rates.get('smh', 0)),
+            ("Passthrough (S&MH + G&A)", combined_passthrough),
             ("Fee on Labor", fee_rates.get('prime_labor', 0)),
             ("Fee on Subcontractor", fee_rates.get('sub_labor', 0)),
         ]
