@@ -2251,6 +2251,12 @@ export const usePricingStore = create<PricingState>((set, get) => {
       try {
         console.log('Generating Excel file from proposal:', state.proposalId);
 
+        // Save current state before exporting (ensures latest changes are in MongoDB)
+        if (state.isDirty) {
+          console.log('💾 Saving changes before Excel export...');
+          await get().saveProposal();
+        }
+
         // Basic mode: Export simple Excel spreadsheet matching frontend grid
         if (!state.advancedMode) {
           console.log('Exporting basic mode spreadsheet...');

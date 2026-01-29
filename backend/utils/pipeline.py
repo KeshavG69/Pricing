@@ -559,12 +559,31 @@ def build_project_data_from_dataframe(
                 # Use last available year's hours or default to 1880
                 hours_per_year[str(year)] = hours_per_year.get(str(year-1), 1880)
 
+        # Determine base annual wage with priority (matching frontend's getEffectiveSalary):
+        # 1. selected_salaries (user's manual edits, averaged)
+        # 2. custom_salary (legacy)
+        # 3. selected_wage (system selection)
+        # 4. wage_50th (fallback)
+        selected_salaries = row.get('selected_salaries', [])
+        if selected_salaries and len(selected_salaries) > 0:
+            # User manually edited - use average of selected salaries
+            base_annual_wage = sum(selected_salaries) / len(selected_salaries)
+        elif row.get('custom_salary'):
+            # Legacy custom salary
+            base_annual_wage = row.get('custom_salary')
+        elif row.get('selected_wage'):
+            # System selected wage
+            base_annual_wage = row.get('selected_wage')
+        else:
+            # Fallback
+            base_annual_wage = row.get('wage_50th', 100000)
+
         position = {
             'name': row.get('name', project_config.get('prime_contractor_name', 'TBD')),  # Use prime contractor name
             'labor_category': row['labor_category'],
             'ecraft_code': row.get('BLS Labour Category Mapping', row.get('ecraft_code', row.get('soc_title', 'TBD'))),  # Use BLS labor category or soc_title
             'bls_code': row.get('BLS Code', row.get('soc_code', '')),  # Add BLS Code or soc_code
-            'base_annual_wage': row.get('selected_wage', row.get('wage_50th', 100000)),  # Use selected wage
+            'base_annual_wage': base_annual_wage,  # Use prioritized wage (matches frontend getEffectiveSalary)
             'hours_per_year': hours_per_year,
             'standard_fte_hours': row.get('standard_fte_hours', 1880),
             'percentile': row.get('percentile', '50th'),

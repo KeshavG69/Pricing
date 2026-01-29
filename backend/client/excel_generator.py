@@ -526,10 +526,10 @@ class ExcelGenerator:
                 hours_cells.append(f"{get_column_letter(col)}{current_row}")
                 col += 1
 
-                # Rate (FBLR)
+                # Rate (DL Rate - NOT FBLR, breakdown will add indirect costs)
                 rate_col = col
                 cell = ws.cell(current_row, col)
-                cell.value = year_data.get('rate', 0)
+                cell.value = year_data.get('dl_rate', 0)  # Use DL rate, not FBLR
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 1
@@ -994,13 +994,22 @@ class ExcelGenerator:
                 total_years=self.total_years
             )
 
+            # Get prime labor fee rate (FBLR should include fee for "Fully Loaded" rates)
+            fee_rates = self.project_data.get('fee_rates', {})
+            prime_fee_rate = fee_rates.get('prime_labor', 0.08)
+
             col = 5
             for year in range(1, self.total_years + 1):
                 year_data = results.get(f'year_{year}', {})
-                fblr = year_data.get('rate', 0)
+                fblr_without_fee = year_data.get('rate', 0)
+
+                # Add fee to get fully loaded rate (matching frontend calculation)
+                # FBLR = (DL + Fringe + OH + G&A) + Fee
+                # Fee = (DL + Fringe + OH + G&A) × fee_rate
+                fblr_with_fee = fblr_without_fee * (1 + prime_fee_rate)
 
                 cell = ws.cell(current_row, col)
-                cell.value = fblr
+                cell.value = fblr_with_fee
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 1
@@ -1024,7 +1033,7 @@ class ExcelGenerator:
                 ws.cell(current_row, 4, labor_cat.get('location', ''))
                 ws.cell(current_row, 4).border = self.THIN_BORDER
 
-                # Rates per year
+                # Rates per year (subcontractors show base rate, fees applied at contract level)
                 col = 5
                 for year in range(1, self.total_years + 1):
                     rate = labor_cat.get(f'year_{year}_rate', 0)
@@ -1855,7 +1864,26 @@ class ExcelGenerator:
             col += 1
 
             # Percentiles (BLS only, GSA shows '-')
-            selected_percentile = pos.get('percentile', '50th')
+            # Strip " (default)" suffix from percentile field
+            raw_percentile = pos.get('percentile', '50th')
+            selected_percentile = raw_percentile.replace(' (default)', '') if raw_percentile else '50th'
+
+            # For highlighting, check if user manually edited (selected_salaries exists)
+            selected_salaries = pos.get('selected_salaries', [])
+            highlighted_percentile = None
+            if selected_salaries and len(selected_salaries) > 0:
+                # User edited - determine which percentile matches the selected wage
+                avg_wage = sum(selected_salaries) / len(selected_salaries)
+                rounded_avg = round(avg_wage)
+                # Check which percentile wage matches
+                for pct in ['10th', '25th', '50th', '75th', '90th']:
+                    pct_wage = pos.get(f'wage_{pct}')
+                    if pct_wage and round(pct_wage) == rounded_avg:
+                        highlighted_percentile = pct
+                        break
+            else:
+                # No user edit - use system's selected percentile
+                highlighted_percentile = selected_percentile
 
             for percentile in ['10th', '25th', '50th', '75th', '90th']:
                 if wage_source == 'BLS':
@@ -1867,8 +1895,8 @@ class ExcelGenerator:
                         cell.value = wage_value
                         cell.number_format = self.CURRENCY_FORMAT
 
-                        # Highlight selected percentile
-                        if percentile == selected_percentile:
+                        # Highlight the percentile that's actually selected
+                        if percentile == highlighted_percentile:
                             cell.fill = PatternFill(start_color="D1FAE5", end_color="D1FAE5", fill_type="solid")
                             cell.font = Font(bold=True, color="059669")
                         else:
@@ -1897,12 +1925,16 @@ class ExcelGenerator:
                 else:
                     selected_wage = gsa_rates.get(str(current_year), 0)
             else:
-                # For BLS, use selected_salaries average or selected_wage
-                selected_salaries = pos.get('selected_salaries', [])
+                # For BLS: prioritize user edits, then system selection
                 if selected_salaries and len(selected_salaries) > 0:
+                    # User edited - show average
                     selected_wage = sum(selected_salaries) / len(selected_salaries)
+                elif pos.get('selected_wage'):
+                    # System selected wage
+                    selected_wage = pos.get('selected_wage')
                 else:
-                    selected_wage = pos.get('selected_wage') or pos.get(f'wage_{selected_percentile}', 0)
+                    # Fallback to percentile lookup (with cleaned percentile)
+                    selected_wage = pos.get(f'wage_{selected_percentile}', 0)
 
             cell.value = selected_wage if selected_wage else 0
             cell.number_format = self.CURRENCY_FORMAT
