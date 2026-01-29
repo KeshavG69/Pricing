@@ -34,6 +34,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     manualOverrides,
     aggregates,
     ratesReferenceExpanded,
+    advancedModeVersion,
     togglePositionExpansion,
     addManualOverride,
     updateAdvancedPosition,
@@ -426,7 +427,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
 
       {/* Prime Labor Section */}
       <PrimeLaborSection
-        key={`${rates.fringe}-${rates.oh}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}`}
+        key={`${rates.fringe}-${rates.oh}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}-v${advancedModeVersion}`}
         positions={positionsAdvanced}
         rates={rates}
         escalationRates={escalationRates}
