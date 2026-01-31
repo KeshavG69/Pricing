@@ -6,6 +6,7 @@ import type { Column } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
 import { AdvancedPosition } from '@/types';
+import { formatSocCode } from '@/lib/utils/socHelpers';
 
 interface WageDataSectionProps {
   positions: AdvancedPosition[];
@@ -185,7 +186,7 @@ export const WageDataSection = ({ positions }: WageDataSectionProps) => {
       renderCell: ({ row }) => (
         <div className="flex items-center h-full px-2">
           <span className="text-sm text-muted-foreground">
-            {row.wage_source === 'gsa' ? '-' : (row.soc_code || '-')}
+            {row.wage_source === 'gsa' ? '-' : formatSocCode(row.soc_code)}
           </span>
         </div>
       ),

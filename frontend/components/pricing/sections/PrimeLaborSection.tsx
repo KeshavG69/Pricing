@@ -19,6 +19,7 @@ import { SOCSelectionModal } from '@/components/pricing/SOCSelectionModal';
 import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { getAvailablePercentiles } from '@/lib/utils/percentileHelpers';
 import { getEffectiveSalary, getSalaryDisplayLabel, getSalarySelectionCount, isMultiSelectMode, isGSAPosition, getGSARateForYear, reverseEngineerGSARate } from '@/lib/utils/salaryHelpers';
+import { formatSocCode } from '@/lib/utils/socHelpers';
 import Button from '@/components/ui/Button';
 import { usePricingStore, isKeyPosition } from '@/lib/stores/pricingStore';
 import apiClient from '@/lib/api/client';
@@ -1588,7 +1589,7 @@ export const PrimeLaborSection = ({
                     {isGSA ? 'GSA' : 'BLS'}
                   </span>
                   <span className="text-muted-foreground text-xs font-mono">
-                    {isGSA ? (pos.gsa_lcat_id || '-') : (pos.soc_code || '-')}
+                    {isGSA ? (pos.gsa_lcat_id || '-') : formatSocCode(pos.soc_code)}
                   </span>
                 </div>
                 <div className="flex-1" />
