@@ -14,11 +14,7 @@ class EmailService:
         self.frontend_url = config.FRONTEND_URL
 
     def send_invitation_email(
-        self,
-        to_email: str,
-        token: str,
-        organization_name: str,
-        invited_by_name: str
+        self, to_email: str, token: str, organization_name: str, invited_by_name: str
     ):
         """Send organization invitation email"""
         invitation_url = f"{self.frontend_url}/invite/accept?token={token}"
@@ -60,12 +56,7 @@ class EmailService:
             print(f"Failed to send email: {e}")
             raise
 
-    def send_verification_email(
-        self,
-        to_email: str,
-        token: str,
-        user_name: str = None
-    ):
+    def send_verification_email(self, to_email: str, token: str, user_name: str = None):
         """Send email verification magic link"""
         verification_url = f"{self.frontend_url}/auth/verify-email?token={token}"
 
@@ -120,10 +111,7 @@ class EmailService:
             raise
 
     def send_password_reset_email(
-        self,
-        to_email: str,
-        token: str,
-        user_name: str = None
+        self, to_email: str, token: str, user_name: str = None
     ):
         """Send password reset email with secure token link"""
         reset_url = f"{self.frontend_url}/auth/reset-password?token={token}"
@@ -185,7 +173,7 @@ class EmailService:
         from_company: str,
         from_phone: str,
         message_text: str,
-        to_email: str = "service@priceiq.org"
+        to_email: str = "support@priceiq.org",
     ):
         """
         Send contact form submission to support inbox with Reply-To header.
@@ -196,7 +184,7 @@ class EmailService:
             from_company: User's company
             from_phone: User's phone number
             message_text: User's message
-            to_email: Where to send the email (default: service@priceiq.org)
+            to_email: Where to send the email (default: support@priceiq.org)
         """
         html = f"""
         <html>
@@ -248,10 +236,7 @@ class EmailService:
             raise
 
     def send_contact_confirmation_email(
-        self,
-        to_email: str,
-        to_name: str,
-        original_message: str
+        self, to_email: str, to_name: str, original_message: str
     ):
         """
         Send confirmation email to user who submitted contact form.
@@ -286,7 +271,7 @@ class EmailService:
                 <p style="color: #999; font-size: 12px;">
                     Best regards,<br>
                     The PriceIQ Team<br>
-                    <a href="mailto:service@priceiq.org" style="color: #2563eb;">service@priceiq.org</a>
+                    <a href="mailto:support@priceiq.org" style="color: #2563eb;">support@priceiq.org</a>
                 </p>
             </div>
         </body>

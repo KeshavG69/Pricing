@@ -71,9 +71,6 @@ export default function AboutPage() {
               <p>
                 By combining AI-powered automation with official BLS wage data and deep government contracting expertise, we've built a platform that turns weeks of work into minutes—without sacrificing accuracy or compliance.
               </p>
-              <p>
-                Today, PriceIQ serves hundreds of government contractors nationwide, helping them win more proposals and grow their businesses.
-              </p>
             </div>
           </div>
         </section>
@@ -146,22 +143,14 @@ export default function AboutPage() {
         {/* Stats Section */}
         <section className="py-16 lg:py-24 bg-[#2563eb]">
           <div className="max-w-7xl mx-auto px-6 sm:px-8">
-            <div className="grid md:grid-cols-4 gap-8 text-center text-white">
+            <div className="grid md:grid-cols-2 gap-8 text-center text-white">
               <div>
                 <div className="text-5xl font-bold mb-2">6M+</div>
                 <div className="text-white/90 text-lg">BLS Wage Records</div>
               </div>
               <div>
-                <div className="text-5xl font-bold mb-2">500+</div>
-                <div className="text-white/90 text-lg">Active Contractors</div>
-              </div>
-              <div>
                 <div className="text-5xl font-bold mb-2">95%</div>
                 <div className="text-white/90 text-lg">Faster Than Manual</div>
-              </div>
-              <div>
-                <div className="text-5xl font-bold mb-2">3x</div>
-                <div className="text-white/90 text-lg">Improved Win Rates</div>
               </div>
             </div>
           </div>

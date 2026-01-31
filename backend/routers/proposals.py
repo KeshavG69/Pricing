@@ -233,10 +233,15 @@ async def process_proposal_documents(
     file_paths: List[str],
     file_names: List[str],
     temp_dir: Path,
-    wage_source: Dict[str, Any] = None
+    wage_source: Dict[str, Any] = None,
+    preserved_advanced_mode: bool = None,
+    preserved_subcontractor_configured: bool = None,
+    preserved_subcontractors: List[Dict] = None
 ):
     """
     Background task to process uploaded documents.
+
+    For re-ingestion, preserved_* parameters will restore the previous state.
 
     Updates proposal status as processing progresses.
     Uses singleton ProposalCRUD instance for thread safety.
@@ -523,7 +528,31 @@ async def process_proposal_documents(
             billing_message = f"Billing error: {str(billing_error)}"
             # Don't fail the whole proposal processing for billing errors
 
-        # Update proposal with results (including Travel and ODCs in spreadsheet_data)
+        # Determine mode state (preserved from re-ingestion or new upload logic)
+        final_advanced_mode = preserved_advanced_mode if preserved_advanced_mode is not None else should_trigger_advanced
+        final_subcontractor_configured = preserved_subcontractor_configured if preserved_subcontractor_configured is not None else False
+        final_subcontractors = preserved_subcontractors if preserved_subcontractors is not None else []
+
+        # Log re-ingestion vs new upload
+        if preserved_advanced_mode is not None:
+            print(f"[RE-INGEST] Restoring preserved state:")
+            print(f"  - advanced_mode: {final_advanced_mode}")
+            print(f"  - subcontractor_configured: {final_subcontractor_configured}")
+            print(f"  - subcontractors: {len(final_subcontractors)} preserved")
+
+        # CRITICAL: Generate unique IDs for positions if missing
+        # This ensures frontend state management works correctly
+        import time
+        timestamp = int(time.time() * 1000)  # Milliseconds since epoch
+        for i, job in enumerate(cleaned_jobs):
+            if not job.get("id"):
+                # Generate unique ID: pos_{index}_{timestamp}_{random}
+                import random
+                random_suffix = random.randint(1000, 9999)
+                job["id"] = f"pos_{i}_{timestamp}_{random_suffix}"
+                print(f"[ID GEN] Generated ID for position {i}: {job['id']} ({job.get('labor_category', 'Unknown')})")
+
+        # Update proposal with results (NO duplication - all data in spreadsheet_data)
         crud.update_proposal(
             proposal_id,
             user_id,
@@ -533,8 +562,6 @@ async def process_proposal_documents(
                 "progress": 100,
                 "message": billing_message or "Processing complete",
                 "billing_status": billing_status,
-                "should_trigger_advanced": should_trigger_advanced,  # Flag for frontend to auto-trigger advanced
-                "jobs": cleaned_jobs,
                 "metadata": {
                     "total_jobs": len(cleaned_jobs),
                     "base_years": base_years,
@@ -542,13 +569,17 @@ async def process_proposal_documents(
                     "total_years": total_years,
                     "fte_hours_threshold": fte_threshold
                 },
-                "rates": default_rates,
-                "escalation_rates": escalation_rates,
                 "spreadsheet_data": {
+                    "positions": cleaned_jobs,  # Single source of truth (now with IDs!)
                     "travel": extracted_travel,
                     "odcs": extracted_odcs,
                     "extensions": extracted_extensions,
-                    "surge": extracted_surge  # Surge option data (percentage + description)
+                    "surge": extracted_surge,
+                    "rates": default_rates,  # Only in spreadsheet_data
+                    "escalation_rates": escalation_rates,  # Only in spreadsheet_data
+                    "advanced_mode": final_advanced_mode,  # Preserved for re-ingest, or auto-enabled for free first proposal
+                    "subcontractor_configured": final_subcontractor_configured,  # Preserved for re-ingest
+                    "subcontractors": final_subcontractors  # Preserved for re-ingest (names only, no positions)
                 }
             }
         )
@@ -711,6 +742,193 @@ async def upload_proposal_documents(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Upload failed: {str(e)}"
+        )
+
+
+@router.post("/{proposal_id}/reingest")
+async def reingest_proposal_documents(
+    proposal_id: str,
+    background_tasks: BackgroundTasks,
+    files: List[UploadFile] = File(...),
+    wage_source_type: str = Form("bls"),
+    wage_source_file_id: str = Form(None),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Re-ingest new documents for an existing proposal, preserving workspace mode.
+
+    This endpoint:
+    1. Retrieves the existing proposal
+    2. Preserves the current advancedMode state and subcontractor names
+    3. Uploads new documents to iDrive e2
+    4. Processes the new documents
+    5. Replaces proposal data while preserving mode state
+
+    Args:
+        proposal_id: ID of existing proposal to re-ingest
+        files: New document files to upload (multiple supported)
+        wage_source_type: "bls" (default) or "gsa"
+        wage_source_file_id: GSA contract file_id (required if wage_source_type is "gsa")
+
+    Returns:
+        Proposal ID and processing status
+    """
+    from datetime import datetime
+    from pymongo import ReturnDocument
+
+    try:
+        # Initialize services
+        crud = await get_crud()
+        storage = get_idrive_storage()
+
+        # Get user's organization and role for access control
+        organization_id = current_user.get("organization_id")
+        role = current_user.get("role")
+
+        # Get existing proposal
+        proposal = crud.get_proposal(
+            proposal_id,
+            str(current_user["_id"]),
+            organization_id=organization_id,
+            role=role
+        )
+
+        if not proposal:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Proposal not found"
+            )
+
+        # PRESERVE: Save the current workspace mode state
+        spreadsheet_data = proposal.get("spreadsheet_data", {})
+        preserved_advanced_mode = spreadsheet_data.get("advanced_mode", False)
+        preserved_subcontractor_configured = spreadsheet_data.get("subcontractor_configured", False)
+
+        # PRESERVE: Save subcontractor names (empty positions)
+        existing_subcontractors = spreadsheet_data.get("subcontractors", [])
+        preserved_subcontractors = [
+            {
+                "id": sub.get("id"),
+                "name": sub.get("name"),
+                "positions": []  # Empty - will be filled by user after re-ingestion
+            }
+            for sub in existing_subcontractors
+        ]
+
+        print(f"[RE-INGEST] Preserving state for proposal {proposal_id}:")
+        print(f"  - advanced_mode: {preserved_advanced_mode}")
+        print(f"  - subcontractor_configured: {preserved_subcontractor_configured}")
+        print(f"  - subcontractors: {len(preserved_subcontractors)} preserved")
+
+        # Build wage source config
+        wage_source = {"type": wage_source_type}
+        if wage_source_type == "gsa" and wage_source_file_id:
+            wage_source["file_id"] = wage_source_file_id
+
+        # Create temp directory for processing
+        temp_dir = Path(tempfile.mkdtemp())
+        file_paths = []
+        file_names = []
+
+        # Save uploaded files temporarily
+        for file in files:
+            file_path = temp_dir / file.filename
+            with open(file_path, "wb") as f:
+                content = await file.read()
+                f.write(content)
+            file_paths.append(str(file_path))
+            file_names.append(file.filename)
+
+        # Upload new documents to iDrive e2 (replacing old ones)
+        documents_info = []
+        for file, file_path in zip(files, file_paths):
+            # Upload to iDrive
+            idrive_url, idrive_key = storage.upload_document(
+                file_path=file_path,
+                user_id=str(current_user["_id"]),
+                proposal_id=proposal_id,
+                filename=file.filename
+            )
+
+            doc_info = {
+                "filename": file.filename,
+                "file_size": file.size,
+                "upload_date": datetime.utcnow(),
+                "idrive_url": idrive_url,
+                "idrive_key": idrive_key,
+                "extracted_content": None  # Will be filled during processing
+            }
+            documents_info.append(doc_info)
+
+        # Update proposal with new documents and reset status to processing
+        # IMPORTANT: Use direct collection update to avoid user_id permission issues
+        print(f"[RE-INGEST] Updating proposal {proposal_id} status to 'processing'...")
+
+        # Direct database update (bypasses user_id check)
+        update_result = crud.collection.find_one_and_update(
+            {"_id": ObjectId(proposal_id)},
+            {
+                "$set": {
+                    "documents": documents_info,
+                    "status": "processing",
+                    "progress": 0,
+                    "message": "Re-ingesting documents...",
+                    "wage_source": wage_source,
+                    "updated_at": datetime.utcnow()
+                }
+            },
+            return_document=ReturnDocument.AFTER
+        )
+
+        if not update_result:
+            print(f"[RE-INGEST ERROR] Failed to update proposal {proposal_id} in database")
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Failed to update proposal - please try again"
+            )
+
+        print(f"[RE-INGEST] ✅ Updated proposal status to 'processing'")
+        print(f"[RE-INGEST] Status after update: {update_result.get('status')}")
+        print(f"[RE-INGEST] Message after update: {update_result.get('message')}")
+        print(f"[RE-INGEST] Progress after update: {update_result.get('progress')}")
+
+        # Start background processing (will preserve mode state)
+        # IMPORTANT: Pass owner's ID for background updates
+        proposal_owner_id = str(proposal.get("user_id"))
+        background_tasks.add_task(
+            process_proposal_documents,
+            proposal_id,
+            proposal_owner_id,  # Use owner's ID for updates
+            str(current_user.get("organization_id")),  # Organization stays the same
+            file_paths,
+            file_names,
+            temp_dir,
+            wage_source,
+            preserved_advanced_mode,  # Pass preserved state
+            preserved_subcontractor_configured,  # Pass preserved state
+            preserved_subcontractors  # Pass preserved subcontractors
+        )
+
+        return {
+            "proposal_id": proposal_id,
+            "status": "processing",
+            "message": f"Re-ingestion started. Processing {len(files)} file(s).",
+            "preserved_state": {
+                "advanced_mode": preserved_advanced_mode,
+                "subcontractor_configured": preserved_subcontractor_configured,
+                "subcontractors_count": len(preserved_subcontractors)
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        # Clean up on error
+        if 'temp_dir' in locals() and temp_dir.exists():
+            shutil.rmtree(temp_dir, ignore_errors=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Re-ingest failed: {str(e)}"
         )
 
 
@@ -1327,10 +1545,14 @@ async def get_proposal(
     Called after status shows 'completed' or when user opens existing proposal.
     Checks RBAC for shared access.
     """
+    print(f"[GET PROPOSAL] Request for proposal: {proposal_id}")
+    print(f"[GET PROPOSAL] User: {current_user.get('email')}, Org: {current_user.get('organization_id')}")
+
     # Validate ObjectId
     try:
         prop_oid = ObjectId(proposal_id)
-    except Exception:
+    except Exception as e:
+        print(f"[GET PROPOSAL] Invalid ObjectId format: {e}")
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid proposal ID format"
@@ -1341,23 +1563,31 @@ async def get_proposal(
     proposal = crud.get_by_id(prop_oid)
 
     if not proposal:
+        print(f"[GET PROPOSAL] Proposal not found in database: {proposal_id}")
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Proposal not found"
         )
+
+    print(f"[GET PROPOSAL] Found proposal: {proposal.get('name')}, status: {proposal.get('status')}")
 
     # Check for timeout on stuck processing proposals (marks as error if >30 min)
     proposal = crud.check_for_timeout(proposal)
 
     # Check if user has access (owner, admin, or shared)
     if not can_access_proposal(proposal, current_user):
+        print(f"[GET PROPOSAL] Access denied for user {current_user.get('email')}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="You do not have access to this proposal"
         )
 
+    print(f"[GET PROPOSAL] Serializing proposal...")
     # Convert all ObjectIds to strings
-    return serialize_proposal(proposal)
+    serialized = serialize_proposal(proposal)
+    print(f"[GET PROPOSAL] Serialized proposal has {len(serialized)} fields")
+    print(f"[GET PROPOSAL] Response keys: {list(serialized.keys())[:10]}...")  # First 10 keys
+    return serialized
 
 
 @router.patch("/{proposal_id}")
@@ -2268,6 +2498,7 @@ async def refresh_position_wage_data(
         updated_wage_data = {
             "soc_code": soc_code,
             "soc_title": soc_title,
+            "location": location,  # Include location in response
             "wage_10th": wages.get("10th"),
             "wage_25th": wages.get("25th"),
             "wage_50th": wages.get("50th"),
@@ -2281,6 +2512,7 @@ async def refresh_position_wage_data(
         position.update({
             "soc_code": soc_code,
             "soc_title": soc_title,
+            "location": location,  # Save the location used for wage lookup
             "wage_10th": wages.get("10th"),
             "wage_25th": wages.get("25th"),
             "wage_50th": wages.get("50th"),

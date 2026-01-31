@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { BarChart3, Mail, MapPin, Send } from 'lucide-react';
+import { submitHubSpotForm, trackHubSpotEvent } from '@/lib/utils/hubspot';
 
 // Extend Window interface to include Calendly
 declare global {
@@ -49,6 +50,11 @@ export default function ContactPage() {
     const calendlyUrl = process.env.NEXT_PUBLIC_CALENDLY_URL;
     if (calendlyUrl && window.Calendly) {
       window.Calendly.initPopupWidget({ url: calendlyUrl });
+
+      // Track demo scheduling intent
+      trackHubSpotEvent('demo_scheduled_intent', {
+        source: 'contact_page_cta',
+      });
     } else {
       console.error('Calendly is not loaded or URL is not configured');
     }
@@ -72,6 +78,14 @@ export default function ContactPage() {
 
       if (!response.ok) {
         throw new Error(data.detail || 'Failed to send message');
+      }
+
+      // Send to HubSpot (silently fail if error - email is primary)
+      try {
+        await submitHubSpotForm(formData);
+      } catch (hubspotError) {
+        console.error('HubSpot submission failed:', hubspotError);
+        // Don't show error to user - email was successful
       }
 
       // Success - show confirmation and reset form
@@ -262,7 +276,7 @@ export default function ContactPage() {
 
                   {status === 'error' && (
                     <p className="text-sm text-red-600 mt-2 text-center">
-                      Failed to send message. Please try again or email us directly at service@priceiq.org
+                      Failed to send message. Please try again or email us directly at support@priceiq.org
                     </p>
                   )}
                 </form>
@@ -284,8 +298,8 @@ export default function ContactPage() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900 mb-1">Email</h3>
-                      <a href="mailto:service@priceiq.org" className="text-gray-600 hover:text-[#2563eb] transition-colors">
-                        service@priceiq.org
+                      <a href="mailto:support@priceiq.org" className="text-gray-600 hover:text-[#2563eb] transition-colors">
+                        support@priceiq.org
                       </a>
                       <p className="text-sm text-gray-500 mt-1">We'll respond within 24 hours</p>
                     </div>
