@@ -420,7 +420,7 @@ export const SOCSelectionModal = ({
   const gsaBrowseList = searchQuery.trim() !== '' ? gsaSearchResults : gsaCategories;
 
   // Modal title based on wage source
-  const modalTitle = isGSA ? 'Select GSA Labour Category' : 'Select BLS Labour Category';
+  const modalTitle = isGSA ? 'Select GSA Labor Category' : 'Select BLS Labor Category';
 
   // Check if apply button should be enabled
   const canApply = isGSA ? !!selectedGSA : !!selectedSOC;
@@ -471,13 +471,13 @@ export const SOCSelectionModal = ({
         {isGSA ? (
           position.gsa_lcat_id && (
             <div className="text-xs text-muted-foreground mt-1">
-              Current GSA Labour Category: {position.gsa_lcat_id} - {position.gsa_title}
+              Current GSA Labor Category: {position.gsa_lcat_id} - {position.gsa_title}
             </div>
           )
         ) : (
           position.soc_code && (
             <div className="text-xs text-muted-foreground mt-1">
-              Current BLS Labour Category: {position.soc_code} - {position.soc_title}
+              Current BLS Labor Category: {position.soc_code} - {position.soc_title}
             </div>
           )
         )}

@@ -207,4 +207,4 @@ Use of the Services does not imply government approval or endorsement.
 ## Questions or Contact
 
 **Intrepix LLC**
-<service@priceiq.org>
+<support@priceiq.org>

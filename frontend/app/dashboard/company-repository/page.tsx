@@ -1004,7 +1004,7 @@ export default function CompanyRepositoryPage() {
                               )}
                               {contract.status !== 'processing' && (
                                 <span className="text-base font-bold text-foreground">
-                                  {contract.labor_categories_count} Labour categories
+                                  {contract.labor_categories_count} Labor categories
                                 </span>
                               )}
                             </div>

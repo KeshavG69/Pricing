@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { FileText, Download, ExternalLink, RefreshCw, File, FileSpreadsheet, Eye, X, Loader2 } from 'lucide-react';
+import { FileText, Download, ExternalLink, RefreshCw, File, FileSpreadsheet, Eye, X, Loader2, Upload } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import Button from '@/components/ui/Button';
 import { DocumentInfo } from '@/types';
@@ -344,6 +344,9 @@ function SpreadsheetPreview({ url, filename }: { url: string; filename: string }
 export function FilesTab({ documents, proposalId, onUrlsRefreshed }: FilesTabProps) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [previewDoc, setPreviewDoc] = useState<{ doc: DocumentInfo; index: number } | null>(null);
+  const [showReingestModal, setShowReingestModal] = useState(false);
+  const [reingestFiles, setReingestFiles] = useState<File[]>([]);
+  const [isReingesting, setIsReingesting] = useState(false);
   const toast = useToast();
 
   const formatFileSize = (bytes: number) => {
@@ -416,6 +419,115 @@ export function FilesTab({ documents, proposalId, onUrlsRefreshed }: FilesTabPro
     }
   };
 
+  const handleReingestSubmit = async () => {
+    if (reingestFiles.length === 0) {
+      toast.error('Please select at least one file');
+      return;
+    }
+
+    setIsReingesting(true);
+    let pollInterval: NodeJS.Timeout | null = null;
+
+    try {
+      // Start re-ingestion
+      const response = await proposalsApi.reingest(proposalId, reingestFiles);
+      console.log('[Re-ingest] Started:', response);
+
+      toast.success(`Re-ingestion started! Processing ${reingestFiles.length} file(s)...`);
+      setShowReingestModal(false);
+      setReingestFiles([]);
+
+      // Poll for completion
+      let consecutiveErrors = 0;
+
+      // Function to check status
+      const checkStatus = async () => {
+        try {
+          console.log(`[Re-ingest] Polling status for proposal ${proposalId}...`);
+          const status = await proposalsApi.getStatus(proposalId);
+          console.log('[Re-ingest] Status response:', status);
+
+          // Reset error counter on successful poll
+          consecutiveErrors = 0;
+
+          if (status.status === 'completed') {
+            if (pollInterval) clearInterval(pollInterval);
+            toast.success('Re-ingestion complete! Reloading...');
+            setTimeout(() => {
+              window.location.reload();
+            }, 1000);
+            return true; // Stop polling
+          } else if (status.status === 'error') {
+            if (pollInterval) clearInterval(pollInterval);
+            const errorMsg = status.message || 'Unknown error';
+            toast.error('Re-ingestion failed: ' + errorMsg);
+            console.error('Re-ingestion error details:', status);
+            setIsReingesting(false);
+            return true; // Stop polling
+          } else {
+            // Still processing
+            console.log(`[Re-ingest] Status: ${status.status}, Progress: ${status.progress}%, Message: ${status.message}`);
+            return false; // Continue polling
+          }
+        } catch (error: any) {
+          consecutiveErrors++;
+          console.error(`[Re-ingest] Polling error (${consecutiveErrors}/3):`, error);
+          console.error('[Re-ingest] Error details:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status
+          });
+
+          // After 3 consecutive failures, stop polling
+          if (consecutiveErrors >= 3) {
+            if (pollInterval) clearInterval(pollInterval);
+            toast.error('Failed to check processing status. Please refresh the page.');
+            setIsReingesting(false);
+            return true; // Stop polling
+          }
+          return false; // Continue polling
+        }
+      };
+
+      // Check immediately after 5 seconds
+      setTimeout(async () => {
+        const shouldStop = await checkStatus();
+        if (shouldStop) return;
+      }, 5000);
+
+      // Then poll every 30 seconds
+      pollInterval = setInterval(async () => {
+        await checkStatus();
+      }, 30000); // Poll every 30 seconds
+
+      // Timeout after 10 minutes
+      setTimeout(() => {
+        if (pollInterval) clearInterval(pollInterval);
+        if (isReingesting) {
+          toast.error('Processing timeout - please refresh the page to check status');
+          setIsReingesting(false);
+        }
+      }, 600000);
+
+    } catch (error: any) {
+      console.error('[Re-ingest] Submission error:', error);
+      console.error('[Re-ingest] Error details:', {
+        message: error.message,
+        response: error.response?.data,
+        status: error.response?.status
+      });
+      toast.error(error.response?.data?.detail || 'Re-ingestion failed');
+      setIsReingesting(false);
+      if (pollInterval) clearInterval(pollInterval);
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setReingestFiles(Array.from(e.target.files));
+    }
+  };
+
   if (!documents || documents.length === 0) {
     return (
       <div className="text-center py-12">
@@ -428,6 +540,23 @@ export function FilesTab({ documents, proposalId, onUrlsRefreshed }: FilesTabPro
 
   return (
     <div className="space-y-4">
+      {/* Processing Indicator */}
+      {isReingesting && (
+        <div className="bg-[#5B7FFF] text-white rounded-lg p-4">
+          <div className="flex items-center gap-3">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            <div>
+              <p className="text-sm font-semibold">
+                Re-ingesting documents...
+              </p>
+              <p className="text-xs opacity-90 mt-1">
+                This may take a few minutes. Please don't close this page.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -436,15 +565,25 @@ export function FilesTab({ documents, proposalId, onUrlsRefreshed }: FilesTabPro
             {documents.length} file{documents.length !== 1 ? 's' : ''} uploaded for this proposal
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleRefreshUrls}
-          disabled={isRefreshing}
-        >
-          <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
-          Refresh Links
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setShowReingestModal(true)}
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Re-Upload & Replace
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleRefreshUrls}
+            disabled={isRefreshing}
+          >
+            <RefreshCw className={`w-4 h-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+            Refresh Links
+          </Button>
+        </div>
       </div>
 
       {/* File List */}
@@ -498,6 +637,121 @@ export function FilesTab({ documents, proposalId, onUrlsRefreshed }: FilesTabPro
           </div>
         ))}
       </div>
+
+      {/* Re-Ingest Modal */}
+      {showReingestModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+          onClick={() => setShowReingestModal(false)}
+        >
+          <div
+            className="bg-background rounded-lg shadow-xl w-[500px] max-h-[80vh] overflow-y-auto"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <div>
+                <h3 className="text-lg font-semibold text-foreground">Re-Upload & Replace Data</h3>
+                <p className="text-sm text-muted-foreground mt-1">Upload new files to replace proposal data</p>
+              </div>
+              <button
+                onClick={() => setShowReingestModal(false)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 space-y-4">
+              {/* Warning */}
+              <div className="bg-[#5B7FFF]/10 border border-[#5B7FFF]/30 rounded-lg p-4">
+                <p className="text-sm text-[#5B7FFF] font-semibold mb-2">
+                  ⚠️ This will replace all proposal data
+                </p>
+                <ul className="text-sm text-[#5B7FFF]/90 space-y-1 list-disc list-inside">
+                  <li>All positions will be deleted and replaced with new data</li>
+                  <li>Subcontractor names will be kept (positions cleared)</li>
+                </ul>
+              </div>
+
+              {/* File Input */}
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  Select Files
+                </label>
+                <input
+                  type="file"
+                  multiple
+                  accept=".pdf,.docx,.xlsx,.xls,.txt,.rtf"
+                  onChange={handleFileSelect}
+                  className="block w-full text-sm text-foreground
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-md file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-primary file:text-primary-foreground
+                    hover:file:bg-primary/90
+                    cursor-pointer"
+                />
+                <p className="mt-2 text-sm text-muted-foreground">
+                  Supported: PDF, Word, Excel, Text (multiple files allowed)
+                </p>
+              </div>
+
+              {/* Selected Files */}
+              {reingestFiles.length > 0 && (
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-foreground">
+                    Selected Files ({reingestFiles.length})
+                  </label>
+                  <div className="border border-border rounded-lg divide-y divide-border max-h-40 overflow-y-auto">
+                    {reingestFiles.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between p-3">
+                        <div className="flex items-center gap-3">
+                          {getFileIcon(file.name)}
+                          <div>
+                            <p className="text-sm font-medium text-foreground">{file.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {(file.size / 1024).toFixed(2)} KB
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="flex items-center justify-end gap-3 p-6 border-t border-border">
+              <Button
+                variant="outline"
+                onClick={() => setShowReingestModal(false)}
+                disabled={isReingesting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleReingestSubmit}
+                disabled={isReingesting || reingestFiles.length === 0}
+              >
+                {isReingesting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload & Replace
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Preview Modal */}
       {previewDoc && (

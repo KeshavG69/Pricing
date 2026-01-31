@@ -104,7 +104,7 @@ export const PassthroughSection = ({
       // Label column
       {
         key: 'label',
-        name: 'Labour Category',
+        name: 'Labor Category',
         width: 280,
         resizable: true,
         frozen: true,

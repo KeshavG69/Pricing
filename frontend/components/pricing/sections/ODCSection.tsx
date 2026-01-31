@@ -111,8 +111,8 @@ export const ODCSection = ({
 
   // Create rows (ODC items + subtotal + S&MH + total)
   const rows = useMemo<ODCRow[]>(() => {
-    const odcRows: ODCRow[] = odcs.map((odc) => ({
-      id: odc.id,
+    const odcRows: ODCRow[] = odcs.map((odc, index) => ({
+      id: odc.id || `odc-${index}`,
       category: odc.category,
       description: odc.description,
       escalate: odc.escalate,

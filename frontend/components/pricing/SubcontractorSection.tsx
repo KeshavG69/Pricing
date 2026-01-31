@@ -49,6 +49,7 @@ export const SubcontractorSection = () => {
     odcs,
     rates,
     deleteSubcontractor,
+    renameSubcontractor,
     deleteSubcontractorPosition,
     updateSubcontractorPosition,
     updateLinkedBaseRate,
@@ -90,6 +91,12 @@ export const SubcontractorSection = () => {
   // Delete confirmation state
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [subToDelete, setSubToDelete] = useState<{ id: string; name: string; positionCount: number } | null>(null);
+
+  // Rename modal state
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
+  const [subToRename, setSubToRename] = useState<{ id: string; name: string } | null>(null);
+  const [newSubName, setNewSubName] = useState('');
+  const renameInputRef = useRef<HTMLInputElement>(null);
 
   // Position delete confirmation state
   const [deletePosDialogOpen, setDeletePosDialogOpen] = useState(false);
@@ -153,6 +160,16 @@ export const SubcontractorSection = () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [showOverflowMenu]);
+
+  // Select all text when rename dialog opens
+  useEffect(() => {
+    if (renameDialogOpen && renameInputRef.current) {
+      // Small delay to ensure the input is focused
+      setTimeout(() => {
+        renameInputRef.current?.select();
+      }, 100);
+    }
+  }, [renameDialogOpen]);
 
   // Set default selection when subcontractors change
   useEffect(() => {
@@ -295,11 +312,11 @@ export const SubcontractorSection = () => {
       },
       {
         key: 'baseRate',
-        name: 'Base Rate ($/hr)',
+        name: 'Base Rate\n($/hr)',
         width: 120,
         frozen: true,
         resizable: true,
-        headerCellClass: 'bg-emerald-50 font-semibold text-emerald-700 border-r border-border',
+        headerCellClass: 'bg-emerald-50 font-semibold text-emerald-700 border-r border-border whitespace-pre-line text-center',
         cellClass: 'border-r border-border',
         renderCell: ({ row }) => (
           <div className="flex items-center justify-end h-full px-3 bg-emerald-50/30">
@@ -350,11 +367,11 @@ export const SubcontractorSection = () => {
       },
       {
         key: 'originalBaseRate',
-        name: 'Original Rate ($/hr)',
+        name: 'Original Rate\n($/hr)',
         width: 135,
         frozen: true,
         resizable: true,
-        headerCellClass: 'bg-gray-50 font-semibold text-gray-700 border-r border-border',
+        headerCellClass: 'bg-gray-50 font-semibold text-gray-700 border-r border-border whitespace-pre-line text-center',
         cellClass: 'border-r border-border',
         renderCell: ({ row }) => {
           const originalRate = row.originalBaseRate;
@@ -380,7 +397,7 @@ export const SubcontractorSection = () => {
         name: `${label}\nRate ($/hr)`,
         width: 115,
         resizable: true,
-        headerCellClass: 'bg-emerald-50 font-semibold text-emerald-700',
+        headerCellClass: 'bg-emerald-50 font-semibold text-emerald-700 whitespace-pre-line text-center',
         renderCell: ({ row }) => {
           const yearData = row.yearData[yearStr];
           const rate = yearData?.rate || 0;
@@ -400,7 +417,7 @@ export const SubcontractorSection = () => {
         name: `${label}\nHours`,
         width: 100,
         resizable: true,
-        headerCellClass: 'bg-blue-50 font-medium text-blue-600',
+        headerCellClass: 'bg-blue-50 font-medium text-blue-600 whitespace-pre-line text-center',
         renderCell: ({ row }) => {
           const yearData = row.yearData[yearStr];
           return (
@@ -451,7 +468,7 @@ export const SubcontractorSection = () => {
         name: `${label}\nAmount ($)`,
         width: 120,
         resizable: true,
-        headerCellClass: 'bg-purple-50 font-medium text-purple-600',
+        headerCellClass: 'bg-purple-50 font-medium text-purple-600 whitespace-pre-line text-center',
         renderCell: ({ row }) => {
           const yearData = row.yearData[yearStr];
           return (
@@ -471,7 +488,7 @@ export const SubcontractorSection = () => {
           name: `${label}\nOT Hours`,
           width: 100,
           resizable: true,
-          headerCellClass: 'bg-amber-50 font-medium text-amber-600',
+          headerCellClass: 'bg-amber-50 font-medium text-amber-600 whitespace-pre-line text-center',
           renderCell: ({ row }) => {
             const yearData = row.yearData[yearStr];
             return (
@@ -524,7 +541,7 @@ export const SubcontractorSection = () => {
           name: `${label}\nOT Amount ($)`,
           width: 120,
           resizable: true,
-          headerCellClass: 'bg-amber-50 font-medium text-amber-600 border-r border-border',
+          headerCellClass: 'bg-amber-50 font-medium text-amber-600 border-r border-border whitespace-pre-line text-center',
           cellClass: 'border-r border-border',
           renderCell: ({ row }) => {
             const yearData = row.yearData[yearStr];
@@ -790,11 +807,20 @@ export const SubcontractorSection = () => {
             <button
               key={sub.id}
               onClick={() => setSelectedSubId(sub.id)}
+              onDoubleClick={() => {
+                setSubToRename({
+                  id: sub.id,
+                  name: sub.name,
+                });
+                setNewSubName(sub.name);
+                setRenameDialogOpen(true);
+              }}
               className={`px-4 py-2 text-sm font-medium transition-colors relative ${
                 selectedSubId === sub.id
                   ? 'text-primary border-b-2 border-primary'
                   : 'text-muted-foreground hover:text-foreground'
               }`}
+              title="Double-click to rename"
             >
               {sub.name}
               <span className="ml-2 text-xs opacity-70">
@@ -826,9 +852,19 @@ export const SubcontractorSection = () => {
                         setSelectedSubId(sub.id);
                         setShowOverflowMenu(false);
                       }}
+                      onDoubleClick={() => {
+                        setSubToRename({
+                          id: sub.id,
+                          name: sub.name,
+                        });
+                        setNewSubName(sub.name);
+                        setRenameDialogOpen(true);
+                        setShowOverflowMenu(false);
+                      }}
                       className={`w-full px-4 py-2 text-left text-sm hover:bg-muted flex items-center justify-between ${
                         selectedSubId === sub.id ? 'bg-muted font-medium' : ''
                       }`}
+                      title="Double-click to rename"
                     >
                       <span>{sub.name}</span>
                       <span className="text-xs text-muted-foreground ml-2">
@@ -893,7 +929,7 @@ export const SubcontractorSection = () => {
                 className="rdg-light"
                 style={{ height: '100%' }}
                 rowHeight={45}
-                headerRowHeight={40}
+                headerRowHeight={60}
               />
             </div>
           </div>
@@ -930,6 +966,69 @@ export const SubcontractorSection = () => {
           </Card>
         );
       })()}
+
+      {/* Rename Subcontractor Modal */}
+      {renameDialogOpen && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-background border border-border rounded-lg shadow-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-lg font-semibold text-foreground mb-2">
+              Rename Subcontractor
+            </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Enter a new name for: <span className="font-medium">{subToRename?.name}</span>
+            </p>
+            <input
+              ref={renameInputRef}
+              type="text"
+              value={newSubName}
+              onChange={(e) => setNewSubName(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && newSubName.trim()) {
+                  if (subToRename) {
+                    renameSubcontractor(subToRename.id, newSubName);
+                  }
+                  setRenameDialogOpen(false);
+                  setSubToRename(null);
+                  setNewSubName('');
+                } else if (e.key === 'Escape') {
+                  setRenameDialogOpen(false);
+                  setSubToRename(null);
+                  setNewSubName('');
+                }
+              }}
+              placeholder="Enter new name"
+              className="w-full px-3 py-2 border border-border rounded-md focus:outline-none focus:ring-2 focus:ring-primary mb-4"
+              autoFocus
+            />
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setRenameDialogOpen(false);
+                  setSubToRename(null);
+                  setNewSubName('');
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                onClick={() => {
+                  if (subToRename && newSubName.trim()) {
+                    renameSubcontractor(subToRename.id, newSubName);
+                    setRenameDialogOpen(false);
+                    setSubToRename(null);
+                    setNewSubName('');
+                  }
+                }}
+                disabled={!newSubName.trim()}
+              >
+                Rename
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Subcontractor Confirmation Dialog */}
       <ConfirmDialog

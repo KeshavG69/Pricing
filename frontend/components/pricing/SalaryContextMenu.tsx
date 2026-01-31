@@ -63,8 +63,19 @@ export const SalaryContextMenu = ({
       } else if (position.custom_salary) {
         setSelectedPercentiles([]);
         setCustomAmounts([position.custom_salary]);
+      } else if (position.percentile) {
+        // Strip " (default)" suffix and validate
+        const cleanPercentile = position.percentile.replace(' (default)', '') as PercentileValue;
+        const validPercentiles: PercentileValue[] = ['10th', '25th', '50th', '75th', '90th'];
+        if (validPercentiles.includes(cleanPercentile)) {
+          setSelectedPercentiles([cleanPercentile]);
+        } else {
+          setSelectedPercentiles(['50th']); // Default fallback
+        }
+        setCustomAmounts([]);
       } else {
-        setSelectedPercentiles([position.percentile]);
+        // No percentile data - default to 50th
+        setSelectedPercentiles(['50th']);
         setCustomAmounts([]);
       }
     }
