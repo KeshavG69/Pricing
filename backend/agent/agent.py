@@ -36,7 +36,7 @@ async def create_pricing_agent(
         >>> result = await agent.run(f"Find wage data for {labor_category} in {location}")
         >>> # Returns: {"soc_code": "151252", "occupation_name": "...", "area": "...", "wages": {...}}
     """
-    llm = get_chat_llm_agno(model="gpt-5-mini-2025-08-07",api_key=settings.OPENAI_API_KEY,base_url="https://api.openai.com/v1", max_tokens=10000)
+    llm = get_chat_llm_agno(model="google/gemini-3-flash-preview",api_key=settings.OPENROUTER_API_KEY,base_url="https://openrouter.ai/api/v1", max_tokens=10000)
 
     # Create SOC code retriever (searches 1,105 occupations with vector similarity)
     # Pass description to retriever so it can use it for better semantic matching
@@ -202,7 +202,7 @@ async def create_gsa_pricing_agent(
         GSA agents use GSA labor category IDs, not SOC codes. The soc_code parameter
         is included for function signature consistency but is not used in GSA lookups.
     """
-    llm = get_chat_llm_agno(model="gpt-5-mini-2025-08-07",api_key=settings.OPENAI_API_KEY,base_url="https://api.openai.com/v1", max_tokens=10000)
+    llm = get_chat_llm_agno(model="google/gemini-3-flash-preview",api_key=settings.OPENROUTER_API_KEY,base_url="https://openrouter.ai/api/v1", max_tokens=10000)
 
     # Get contract start date for year calculation
     crud = get_company_repository_crud()

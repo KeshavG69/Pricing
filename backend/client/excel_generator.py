@@ -16,6 +16,35 @@ from openpyxl.utils import get_column_letter
 from .calculation_service import Calculator
 
 
+def format_soc_code(soc_code: str) -> str:
+    """
+    Format SOC code to consistent 6-digit display format without hyphen.
+
+    Examples:
+    - "15-1252" → "151252"
+    - "151252" → "151252" (already formatted)
+    - None → "-"
+
+    Args:
+        soc_code: Raw SOC code (6 digits with or without hyphen)
+
+    Returns:
+        Formatted SOC code without hyphen (XXXXXX) or "-" if invalid
+    """
+    if not soc_code:
+        return '-'
+
+    # Remove any existing hyphens
+    clean = soc_code.replace('-', '')
+
+    # Validate: must be 6 digits
+    if len(clean) != 6 or not clean.isdigit():
+        return soc_code  # Return as-is if invalid format
+
+    # Return as 6-digit format without hyphen
+    return clean
+
+
 class ExcelGenerator:
     """
     Generates government contract cost proposal Excel files.
@@ -1856,7 +1885,7 @@ class ExcelGenerator:
 
             # SOC Code (BLS only)
             if wage_source == 'BLS':
-                cell = ws.cell(current_row, col, pos.get('soc_code', ''))
+                cell = ws.cell(current_row, col, format_soc_code(pos.get('soc_code', '')))
             else:
                 cell = ws.cell(current_row, col, '-')
             cell.border = self.THIN_BORDER
