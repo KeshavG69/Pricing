@@ -296,7 +296,7 @@ WORKFLOW:
 
   "positions": [
     {{
-      "labor_category": "Job title",
+      "labor_category": "Job title",  # CRITICAL: Extract ONLY the base job title without any location type suffixes (e.g., "Manager, Program" NOT "Manager, Program (FFP)" or "Manager, Program (Off-Site)"). Do NOT include contract type, location type, or any parenthetical information in the labor_category field. Clean job title only.
       "description": "Full job description",
       "experience": 5,
       "location": "California",  # REQUIRED: Actual state name from document (e.g., "California", "Virginia", "Texas")
@@ -360,6 +360,11 @@ IMPORTANT:
 - For FTE ranges (e.g., "2-3 analysts"), use midpoint or explain your choice
 - For positions appearing later (e.g., "Option Years only"), set early years to 0
 - Watch for "combined teams" (Base Year) that split into specialized roles (Option Years)
+- CRITICAL: labor_category field must contain ONLY the base job title without any suffixes:
+  * Remove parenthetical information like "(FFP)", "(Off-Site)", "(On-Site)", "(T&M)", etc.
+  * Remove contract type indicators from the job title
+  * Extract the clean job title only (e.g., "Manager, Program" NOT "Manager, Program (FFP)")
+  * Location information goes in the location_type field, NOT in labor_category
 - CRITICAL: Always use year-specific format for hours_per_year: {{"1": hours, "2": hours, ...}}
 - If hours are constant across all years: repeat the same value for each year key
 - Never use "all_years" or similar keys - always use numeric year keys ("1", "2", "3", etc.)
