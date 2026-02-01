@@ -243,7 +243,9 @@ class ProposalCRUD:
         self,
         proposal_id: str,
         user_id: str,
-        updates: dict
+        updates: dict,
+        organization_id: Optional[str] = None,
+        role: Optional[str] = None
     ) -> Optional[dict]:
         """
         Update proposal and return updated document (sync).
@@ -252,15 +254,41 @@ class ProposalCRUD:
             proposal_id: Proposal's MongoDB ObjectId (as string)
             user_id: User's MongoDB ObjectId (as string)
             updates: Fields to update
+            organization_id: User's organization ID (optional)
+            role: User's role (optional, 'admin' can update any org proposal)
 
         Returns:
             Updated proposal document or None if not found/unauthorized
         """
-        
+
+        # Build query based on access level (same as get_proposal)
+        if organization_id:
+            if role == "admin":
+                # Admin can update any proposal in their org
+                query = {
+                    "_id": ObjectId(proposal_id),
+                    "organization_id": organization_id
+                }
+            else:
+                # Regular user: owned by them OR shared with them
+                query = {
+                    "_id": ObjectId(proposal_id),
+                    "$or": [
+                        {"user_id": user_id},
+                        {"shared_with": user_id}
+                    ],
+                    "organization_id": organization_id
+                }
+        else:
+            # No organization - simple ownership check
+            query = {
+                "_id": ObjectId(proposal_id),
+                "user_id": user_id
+            }
 
         updates["updated_at"] = datetime.utcnow()
         result = self.collection.find_one_and_update(
-            {"_id": ObjectId(proposal_id), "user_id": user_id},
+            query,
             {"$set": updates},
             return_document=ReturnDocument.AFTER
         )
