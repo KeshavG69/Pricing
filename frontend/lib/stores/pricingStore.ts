@@ -2102,20 +2102,80 @@ export const usePricingStore = create<PricingState>((set, get) => {
           });
           console.log('✅ Proposal saved successfully');
 
-          // 9. Invalidate cache BEFORE refetching (critical!)
+          // 9. Save scroll position BEFORE any state changes
+          const scrollContainer = document.querySelector('.rdg');
+          let savedScrollPosition = { top: 0, left: 0 };
+          if (scrollContainer) {
+            savedScrollPosition = {
+              top: scrollContainer.scrollTop,
+              left: scrollContainer.scrollLeft
+            };
+            get().saveScrollPosition(savedScrollPosition);
+            console.log('[CONVERT] Saved scroll position before reload:', savedScrollPosition);
+          }
+
+          // 10. Invalidate cache BEFORE refetching (critical!)
           proposalCache.delete(state.proposalId);
           console.log('🗑️  Cache cleared before reload');
 
-          // 10. Refetch proposal and reload pricing data (no page reload!)
+          // 11. Refetch proposal and reload pricing data (no page reload!)
           console.log('🔄 Refetching proposal data...');
           const freshProposal = await proposalsApi.get(state.proposalId);
 
           // Reload pricing data with fresh proposal
           await get().loadProposal(state.proposalId, freshProposal);
 
-          // 11. Always retransform the positions (used by both initial and advanced mode)
+          // 12. Always retransform the positions (used by both initial and advanced mode)
           console.log('🔄 Retransforming positions...');
           performTransformToAdvanced();
+
+          // 13. Restore scroll position after DOM updates using requestAnimationFrame
+          const restoreScroll = () => {
+            // Use requestAnimationFrame to wait for browser paint
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                const newScrollContainer = document.querySelector('.rdg');
+                const savedPosition = get().savedScrollPosition;
+
+                if (newScrollContainer && savedPosition) {
+                  console.log('[CONVERT] Attempting to restore scroll position:', savedPosition);
+
+                  // Force scroll restoration
+                  newScrollContainer.scrollTop = savedPosition.top;
+                  newScrollContainer.scrollLeft = savedPosition.left;
+
+                  // Verify it worked
+                  const actualTop = newScrollContainer.scrollTop;
+                  const actualLeft = newScrollContainer.scrollLeft;
+
+                  console.log('[CONVERT] Scroll position after restore:', {
+                    expected: savedPosition,
+                    actual: { top: actualTop, left: actualLeft },
+                    success: Math.abs(actualTop - savedPosition.top) < 5
+                  });
+
+                  // If it didn't work, try again
+                  if (Math.abs(actualTop - savedPosition.top) > 5) {
+                    console.log('[CONVERT] Scroll restoration failed, retrying...');
+                    setTimeout(() => {
+                      newScrollContainer.scrollTop = savedPosition.top;
+                      newScrollContainer.scrollLeft = savedPosition.left;
+                    }, 100);
+                  }
+                } else {
+                  console.warn('[CONVERT] Could not restore scroll:', {
+                    hasContainer: !!newScrollContainer,
+                    hasPosition: !!savedPosition
+                  });
+                }
+              });
+            });
+          };
+
+          // Call immediately and with fallback delays
+          restoreScroll();
+          setTimeout(restoreScroll, 100);
+          setTimeout(restoreScroll, 250);
 
           console.log('✅ Pricing data refreshed - subcontractor now visible!');
         } catch (error) {
@@ -2862,6 +2922,17 @@ export const usePricingStore = create<PricingState>((set, get) => {
       if (subcontractorId === null) {
         console.log('📤 Returning position to Prime');
 
+        // Save scroll position before state update
+        const scrollContainer = document.querySelector('.rdg');
+        let savedScrollPosition = { top: 0, left: 0 };
+        if (scrollContainer) {
+          savedScrollPosition = {
+            top: scrollContainer.scrollTop,
+            left: scrollContainer.scrollLeft
+          };
+          console.log('[RETURN TO PRIME] Saved scroll position:', savedScrollPosition);
+        }
+
         // Update position to remove subcontractor assignment but preserve the last edited rate
         const updatedPositions = state.positions.map(p => {
           if (p.id === positionId) {
@@ -2898,6 +2969,18 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
         // Re-transform to update grid immediately
         performTransformToAdvanced();
+
+        // Restore scroll position after transform
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => {
+            const newScrollContainer = document.querySelector('.rdg');
+            if (newScrollContainer && savedScrollPosition.top > 0) {
+              newScrollContainer.scrollTop = savedScrollPosition.top;
+              newScrollContainer.scrollLeft = savedScrollPosition.left;
+              console.log('[RETURN TO PRIME] Restored scroll position:', savedScrollPosition);
+            }
+          });
+        });
 
         console.log('✅ Position returned to Prime');
         await get().saveProposal();
@@ -2980,6 +3063,17 @@ export const usePricingStore = create<PricingState>((set, get) => {
         return s;
       });
 
+      // Save scroll position before state update
+      const scrollContainer = document.querySelector('.rdg');
+      let savedScrollPosition = { top: 0, left: 0 };
+      if (scrollContainer) {
+        savedScrollPosition = {
+          top: scrollContainer.scrollTop,
+          left: scrollContainer.scrollLeft
+        };
+        console.log('[ASSIGN] Saved scroll position:', savedScrollPosition);
+      }
+
       set({
         positions: updatedPositions,
         subcontractors: updatedSubcontractors,
@@ -2990,7 +3084,29 @@ export const usePricingStore = create<PricingState>((set, get) => {
       performTransformToAdvanced();
 
       console.log('✅ Position assigned to subcontractor');
+
+      // Save first, then restore scroll after all renders complete
       await get().saveProposal();
+
+      // Restore scroll position after save completes (which triggers more renders)
+      const restoreScroll = () => {
+        const newScrollContainer = document.querySelector('.rdg');
+        if (newScrollContainer && savedScrollPosition.top > 0) {
+          newScrollContainer.scrollTop = savedScrollPosition.top;
+          newScrollContainer.scrollLeft = savedScrollPosition.left;
+          console.log('[ASSIGN] Restored scroll position:', savedScrollPosition);
+        }
+      };
+
+      // Multiple attempts to ensure it sticks through all re-renders
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          restoreScroll();
+          setTimeout(restoreScroll, 50);
+          setTimeout(restoreScroll, 150);
+          setTimeout(restoreScroll, 300);
+        });
+      });
     },
 
     saveScrollPosition: (position) => {
