@@ -700,7 +700,9 @@ async def upload_proposal_documents(
         crud.update_proposal(
             proposal_id,
             str(current_user["_id"]),
-            {"documents": documents_info}
+            {"documents": documents_info},
+            organization_id=current_user.get("organization_id"),
+            role=current_user.get("role")
         )
 
         # Start background processing
@@ -1523,7 +1525,9 @@ async def update_business_status(
     updated = crud.update_proposal(
         proposal_id,
         str(current_user["_id"]),
-        {"business_status": business_status}
+        {"business_status": business_status},
+        organization_id=organization_id,
+        role=role
     )
 
     if not updated:
@@ -1610,10 +1614,16 @@ async def update_proposal(
             detail="No fields to update"
         )
 
+    # Get organization_id and role for access control
+    organization_id = current_user.get("organization_id")
+    role = current_user.get("role")
+
     updated_proposal = crud.update_proposal(
         proposal_id,
         str(current_user["_id"]),
-        update_dict
+        update_dict,
+        organization_id=organization_id,
+        role=role
     )
 
     if not updated_proposal:
@@ -1689,11 +1699,17 @@ async def update_position_subcontractor_hours(
                 position["subcontractor_hours_per_year"][year] = sub_year_hours
                 position["prime_hours_per_year"][year] = year_hours - sub_year_hours
 
+    # Get organization_id and role for access control
+    organization_id = current_user.get("organization_id")
+    role = current_user.get("role")
+
     # Update the proposal with modified jobs
     updated_proposal = crud.update_proposal(
         proposal_id,
         str(current_user["_id"]),
-        {"jobs": jobs}
+        {"jobs": jobs},
+        organization_id=organization_id,
+        role=role
     )
 
     if not updated_proposal:
