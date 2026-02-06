@@ -896,7 +896,7 @@ export const SubcontractorSection = () => {
                 ${grandTotal.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </p>
               {subcontractorPercentages[selectedSub.id] && (
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-lg font-bold text-purple-600 mt-1">
                   {subcontractorPercentages[selectedSub.id].percentage.toFixed(1)}% of labor dollars
                   {subcontractorPercentages[selectedSub.id].percentage > 70 && (
                     <span className="ml-1 text-amber-600 font-medium" title="Exceeds FAR 70% threshold">⚠</span>
@@ -937,7 +937,7 @@ export const SubcontractorSection = () => {
       )}
 
       {/* Grand Total for All Subcontractors */}
-      {subcontractors.length > 1 && (() => {
+      {(() => {
         // Calculate combined percentage for all subcontractors
         const totalPassthrough = allSubsTotal * ((rates.smh || 0) + (rates.ga_passthrough || 0));
         const totalWithPassthrough = allSubsTotal + totalPassthrough;
@@ -951,7 +951,7 @@ export const SubcontractorSection = () => {
                 <span className="text-base font-semibold text-foreground">
                   Total Subcontractor Cost
                 </span>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-lg font-bold text-purple-600 mt-1">
                   {combinedPercentage.toFixed(1)}% of labor dollars
                   {combinedPercentage > 70 && (
                     <span className="ml-1 text-amber-600 font-medium" title="Exceeds FAR 70% threshold">⚠</span>
