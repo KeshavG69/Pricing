@@ -65,9 +65,9 @@ def _create_help_center_agent() -> Agent:
         Agent instance configured for help center Q&A
     """
     llm = get_chat_llm_agno(
-        model="claude-haiku-4-5",
-        api_key=settings.CLAUDE_API_KEY,
-        base_url=settings.CLAUDE_BASE_URL,
+        model="openai/gpt-4.1",
+        api_key=settings.OPENROUTER_API_KEY,
+        base_url="https://openrouter.ai/api/v1",
     )
 
     # Create help center retriever (singleton - same for all users)
