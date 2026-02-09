@@ -60,17 +60,11 @@ class LLMClient:
 
         with self._lock:
             if cache_key not in self._chat_llm_cache:
-                # Add 1M context header only for Claude Sonnet 4.5
-                headers = {}
-                if "claude-sonnet-4" in model.lower():
-                    headers["anthropic-beta"] = "context-1m-2025-08-07"
-
                 # Build kwargs dynamically
                 llm_kwargs = {
                     "model": model,
                     "openai_api_key": api_key,
-                    "openai_api_base": base_url,
-                    "default_headers": headers if headers else None
+                    "openai_api_base": base_url
                 }
 
                 # Only add max_tokens if NOT GPT-5
@@ -118,17 +112,11 @@ class LLMClient:
 
         with self._lock:
             if cache_key not in self._chat_llm_agno_cache:
-                # Add 1M context header only for Claude Sonnet 4.5
-                extra_headers = {}
-                if "claude-sonnet-4" in model.lower():
-                    extra_headers["anthropic-beta"] = "context-1m-2025-08-07"
-
                 # Build kwargs dynamically
                 llm_kwargs = {
                     "id": model,
                     "api_key": api_key,
-                    "base_url": base_url,
-                    "extra_headers": extra_headers if extra_headers else None
+                    "base_url": base_url
                 }
 
                 # Only add max_tokens and temperature if NOT GPT-5

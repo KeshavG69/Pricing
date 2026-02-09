@@ -47,15 +47,7 @@ export default function HelpCenterModal() {
   if (!isOpen) return null;
 
   return (
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/50 z-50 animate-fade-in"
-        onClick={closeModal}
-      />
-
-      {/* Modal */}
-      <div className="fixed inset-4 md:right-4 md:left-auto md:top-4 md:bottom-4 md:w-[500px] bg-card border border-border rounded-lg shadow-2xl z-50 flex flex-col animate-scale-in">
+    <div className="fixed right-2 md:right-4 top-20 bottom-4 w-[calc(100%-16px)] md:w-[500px] bg-card border border-border rounded-lg shadow-2xl z-40 flex flex-col animate-slide-in-right">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-border">
           <div className="flex items-center gap-2">
@@ -194,7 +186,6 @@ export default function HelpCenterModal() {
             Press Enter to send, Shift+Enter for new line
           </p>
         </div>
-      </div>
-    </>
+    </div>
   );
 }
