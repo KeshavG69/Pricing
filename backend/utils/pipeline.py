@@ -605,8 +605,15 @@ def build_project_data_from_dataframe(
         }
 
         # Check if position has subcontractor hours assigned
-        sub_hours = row.get('subcontractor_hours', 0)
-        total_hours = row.get('hours', sum(hours_per_year.values()))
+        sub_hours = row.get('subcontractor_hours') or 0
+        # Filter out None values before summing
+        try:
+            total_hours = row.get('hours') or sum(h for h in hours_per_year.values() if h is not None)
+        except Exception as e:
+            print(f"Error calculating total_hours for {row.get('labor_category')}: {e}")
+            print(f"hours_per_year values: {hours_per_year.values()}")
+            print(f"row.get('hours'): {row.get('hours')}")
+            raise
 
         if sub_hours == 0:
             # All prime labor
@@ -631,7 +638,7 @@ def build_project_data_from_dataframe(
                 # Calculate prime hours proportionally if not provided
                 ratio = (total_hours - sub_hours) / total_hours if total_hours > 0 else 1.0
                 prime_position['hours_per_year'] = {
-                    year: int(hrs * ratio) for year, hrs in hours_per_year.items()
+                    year: int((hrs or 0) * ratio) for year, hrs in hours_per_year.items()
                 }
             prime_positions.append(prime_position)
 
@@ -650,7 +657,7 @@ def build_project_data_from_dataframe(
                 # Calculate subcontractor hours proportionally if not provided
                 ratio = sub_hours / total_hours if total_hours > 0 else 0.0
                 sub_position['hours_per_year'] = {
-                    year: int(hrs * ratio) for year, hrs in hours_per_year.items()
+                    year: int((hrs or 0) * ratio) for year, hrs in hours_per_year.items()
                 }
             subcontractor_positions.append(sub_position)
 

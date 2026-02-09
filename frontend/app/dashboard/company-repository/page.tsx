@@ -792,8 +792,14 @@ export default function CompanyRepositoryPage() {
         setPreviewFilename(filename);
         setShowPreviewModal(true);
       }
-    } catch (error) {
-      toast.error('Failed to get document link');
+    } catch (error: any) {
+      // If contract not found (404), refresh the list to sync with backend
+      if (error.response?.status === 404) {
+        toast.error('Contract not found. Refreshing list...');
+        await fetchContracts(true); // Force refresh
+      } else {
+        toast.error('Failed to get document link');
+      }
       console.error('Error fetching document URL:', error);
     }
   };
