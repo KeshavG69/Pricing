@@ -51,10 +51,14 @@ async def generate_excel_from_proposal(
     try:
         import pandas as pd
         from bson import ObjectId
+        import logging
+
+        logger = logging.getLogger(__name__)
 
         # Fetch proposal from MongoDB
         proposal_crud = ProposalCRUD()
         proposal = proposal_crud.get_by_id(ObjectId(proposal_id))
+        logger.info(f"Generating Excel for proposal {proposal_id}")
 
         if not proposal:
             raise HTTPException(status_code=404, detail="Proposal not found")
@@ -108,17 +112,17 @@ async def generate_excel_from_proposal(
             'task_order_number': proposal.get('task_order_number', ''),
 
             # Rates
-            'escalation_rates': spreadsheet_data.get('escalation_rates', {}),
-            'indirect_rates': spreadsheet_data.get('rates', {}),
+            'escalation_rates': spreadsheet_data.get('escalation_rates') or {},
+            'indirect_rates': spreadsheet_data.get('rates') or {},
             'passthrough_rates': {
-                'smh': spreadsheet_data.get('rates', {}).get('smh', 0.0665),
-                'ga': spreadsheet_data.get('rates', {}).get('ga_passthrough', 0.0)
+                'smh': (spreadsheet_data.get('rates') or {}).get('smh') or 0.0665,
+                'ga': (spreadsheet_data.get('rates') or {}).get('ga_passthrough') or 0.0
             },
             'fee_rates': {
-                'prime_labor': spreadsheet_data.get('rates', {}).get('fee', 0.08),
-                'sub_labor': spreadsheet_data.get('rates', {}).get('sub_fee', 0.0126)
+                'prime_labor': (spreadsheet_data.get('rates') or {}).get('fee') or 0.08,
+                'sub_labor': (spreadsheet_data.get('rates') or {}).get('sub_fee') or 0.0126
             },
-            'ga_adder_rate': spreadsheet_data.get('rates', {}).get('ga', 0.2243),
+            'ga_adder_rate': (spreadsheet_data.get('rates') or {}).get('ga') or 0.2243,
 
             # Data
             'subcontractors': [],
@@ -169,11 +173,19 @@ async def generate_excel_from_proposal(
         df = pd.DataFrame(jobs)
 
         # Build project data structure
-        project_data = build_project_data_from_dataframe(df, project_config)
+        logger.info("Building project data from dataframe")
+        try:
+            project_data = build_project_data_from_dataframe(df, project_config)
+            logger.info(f"Project data built successfully with {len(project_data.get('prime_positions', []))} prime positions")
+        except Exception as e:
+            logger.error(f"Error building project data: {e}", exc_info=True)
+            raise
 
         # Add subcontractor data
+        logger.info(f"Processing {len(spreadsheet_data.get('subcontractors', []))} subcontractors")
         for sub in spreadsheet_data.get('subcontractors', []):
             sub_labor_categories = []
+            logger.info(f"Processing subcontractor: {sub.get('name')} with {len(sub.get('positions', []))} positions")
             for pos in sub.get('positions', []):
                 labor_cat = {
                     'labor_category': pos.get('labor_category', ''),
@@ -184,15 +196,21 @@ async def generate_excel_from_proposal(
                 # Add hours and rates per year
                 for year in range(1, project_config['total_years'] + 1):
                     year_key = str(year)
-                    hours = pos.get('hours_per_year', {}).get(year_key, 0)
+                    hours_per_year = pos.get('hours_per_year') or {}
+                    hours = hours_per_year.get(year_key) or 0
 
                     # Calculate escalated rate
-                    base_rate = pos.get('rate', 0)
+                    base_rate = pos.get('rate') or 0
                     escalated_rate = base_rate
-                    for y in range(1, year):
-                        esc_key = f"{y}_to_{y + 1}"
-                        esc_rate = project_config['escalation_rates'].get(esc_key, 0)
-                        escalated_rate *= (1 + esc_rate)
+                    try:
+                        for y in range(1, year):
+                            esc_key = f"{y}_to_{y + 1}"
+                            esc_rate = project_config['escalation_rates'].get(esc_key) or 0
+                            escalated_rate *= (1 + esc_rate)
+                    except Exception as e:
+                        logger.error(f"Error calculating escalated rate for year {year}: {e}")
+                        logger.error(f"base_rate: {base_rate}, escalated_rate: {escalated_rate}, esc_rate: {esc_rate}")
+                        raise
 
                     labor_cat[f'year_{year}_hours'] = hours
                     labor_cat[f'year_{year}_rate'] = escalated_rate
@@ -211,8 +229,14 @@ async def generate_excel_from_proposal(
         }
 
         # Generate Excel workbook
-        generator = ExcelGenerator()
-        workbook = generator.generate_cost_proposal(project_data)
+        logger.info("Generating Excel workbook")
+        try:
+            generator = ExcelGenerator()
+            workbook = generator.generate_cost_proposal(project_data)
+            logger.info("Excel workbook generated successfully")
+        except Exception as e:
+            logger.error(f"Error generating Excel workbook: {e}", exc_info=True)
+            raise
 
         # Save to BytesIO buffer
         output = BytesIO()
@@ -235,6 +259,9 @@ async def generate_excel_from_proposal(
     except HTTPException:
         raise
     except Exception as e:
+        import traceback
+        logger.error(f"Failed to generate Excel from proposal: {str(e)}")
+        logger.error(f"Full traceback: {traceback.format_exc()}")
         raise HTTPException(
             status_code=500,
             detail=f"Failed to generate Excel from proposal: {str(e)}"

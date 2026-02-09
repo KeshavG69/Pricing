@@ -47,8 +47,13 @@ export const companyRepositoryApi = {
   // Update contract start date (for contracts that need_date)
   updateStartDate: async (fileId: string, startDate: string): Promise<GSAContract> => {
     const response = await apiClient.patch<GSAContract>(
-      `/company-repository/${fileId}/start-date`,
-      { contract_start_date: startDate }
+      `/company-repository/${fileId}`,
+      null,
+      {
+        params: {
+          contract_start_date: startDate
+        }
+      }
     );
     return response.data;
   },

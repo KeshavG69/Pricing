@@ -91,7 +91,7 @@ class ExcelGenerator:
         self.extensions = project_data.get('extensions', [])
         
         # Create sheets in order (matching PriceIQ template exactly)
-        # 1. CE Summary (Cost Element Summary) - the main sheet
+        # 1. Summary (Cost Element Summary) - the main sheet
         self._create_ce_summary_sheet()
 
         # 2. Indirect Rate - moved up to position 2
@@ -133,28 +133,75 @@ class ExcelGenerator:
 
         return self.wb
 
+    def _apply_standard_header(self, ws, start_col=2):
+        """
+        Apply standard header format to a worksheet.
+
+        Creates table-style header with labels and values in separate cells:
+        Row 1: "Proprietary Data" (red, bold, centered, merged)
+        Row 2: Prime Contractor Name | [value]
+        Row 3: Subcontractor(s) Name | [value]
+        Row 4: Solicitation | [value]
+        Row 5: Task Order Number | [value]
+
+        Args:
+            ws: Worksheet to apply header to
+            start_col: Starting column (default 2 = B)
+        """
+        # Row 1: "Proprietary Data" - Red, Bold, Centered
+        proprietary_cell = ws.cell(1, start_col, "Proprietary Data")
+        proprietary_cell.font = Font(bold=True, size=11, color="FF0000")
+        proprietary_cell.alignment = Alignment(horizontal='center', vertical='center')
+
+        # Get subcontractor names
+        sub_names = ", ".join(self.project_data.get('subcontractor_names', []))
+        if not sub_names:
+            sub_names = ""
+
+        # Table-style header rows (2-5): Label in col B, Value in col C onwards
+        header_data = [
+            ("Prime Contractor Name", self.project_data.get('prime_contractor_name', 'N/A')),
+            ("Subcontractor(s) Name", sub_names),
+            ("Solicitation", self.project_data.get('solicitation_number', 'N/A')),
+            ("Task Order Number", self.project_data.get('task_order_number', ''))
+        ]
+
+        for idx, (label, value) in enumerate(header_data):
+            row = 2 + idx
+
+            # Label column (bold, bordered)
+            label_cell = ws.cell(row, start_col, label)
+            label_cell.font = self.BOLD_FONT
+            label_cell.border = self.THIN_BORDER
+            label_cell.alignment = Alignment(horizontal='left', vertical='center')
+
+            # Value column (bordered, next column)
+            value_cell = ws.cell(row, start_col + 1, value)
+            value_cell.border = self.THIN_BORDER
+            value_cell.alignment = Alignment(horizontal='left', vertical='center')
+
     def _get_period_label(self, year: int) -> str:
         """Get label for a given year (Base, Option, Extension)."""
         base_years = self.project_data.get('base_years', 1)
-        
+
         if year <= base_years:
             if base_years == 1:
                 return "Base Period"
             return f"Base Year {year}"
-        
+
         # Check if it's an extension
         for ext in self.extensions:
             if ext['year'] == year:
                 return ext.get('label', f"Extension {year}")
-        
+
         # Regular option year
         option_num = year - base_years
         return f"Option Period {option_num}"
 
     def _create_ce_summary_sheet(self):
-        """Create the CE Summary (Cost Element Summary) sheet."""
+        """Create the Summary (Cost Element Summary) sheet."""
         ws = self.wb.active
-        ws.title = "CE Summary"
+        ws.title = "Summary"
 
         # Set column widths matching template exactly
         ws.column_dimensions['A'].width = 2.33  # Padding column
@@ -167,15 +214,8 @@ class ExcelGenerator:
         # Total column
         ws.column_dimensions[get_column_letter(3 + self.total_years)].width = 13
 
-        # Header section (Rows 1-5)
-        ws.cell(1, 2, "Proprietary Data")
-        ws.cell(2, 2, f"Prime Contractor Name: {self.project_data['prime_contractor_name']}")
-
-        sub_names = ", ".join(self.project_data.get('subcontractor_names', []))
-        ws.cell(3, 2, f"Subcontractor(s) Name: {sub_names}")
-
-        ws.cell(4, 2, f"Solicitation: {self.project_data['solicitation_number']}")
-        ws.cell(5, 2, f"Task Order Number: {self.project_data.get('task_order_number', '')}")
+        # Apply standard header format (Rows 1-5)
+        self._apply_standard_header(ws, start_col=2)
 
         # Row 9: Column headers
         header_row = 9
@@ -472,9 +512,8 @@ class ExcelGenerator:
         ws.column_dimensions['C'].width = 19.66  # Site
         ws.column_dimensions['D'].width = 14.33  # Location (if used) or first Hours column
 
-        # Header section
-        ws.cell(1, 2, "Proprietary Data")
-        ws.cell(2, 2, f"Prime Contractor Name: {self.project_data['prime_contractor_name']}")
+        # Apply standard header format (Rows 1-5)
+        self._apply_standard_header(ws, start_col=2)
 
         # Column headers row
         header_row = 10
@@ -638,19 +677,28 @@ class ExcelGenerator:
 
             col = 5
             for year in range(1, self.total_years + 1):
-                col += 1  # Hours
-                col += 1  # Rate
-                # Dollars column
+                col += 1  # Hours (skip)
+
+                # Rate column - reference from Indirect Rate sheet
+                rate_cell = ws.cell(current_row, col)
+                rate_cell.value = "='Indirect Rate'!C9"  # Fringe rate
+                rate_cell.number_format = self.PERCENT_FORMAT
+                rate_cell.border = self.THIN_BORDER
+                rate_col = col
+                col += 1
+
+                # Dollars column - use rate cell reference
                 dl_cell = f"{get_column_letter(col)}{total_direct_labor_row}"
+                rate_ref = f"{get_column_letter(rate_col)}{current_row}"
                 cell = ws.cell(current_row, col)
-                cell.value = f"={dl_cell}*{fringe_rate}"
+                cell.value = f"={dl_cell}*{rate_ref}"
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 1
 
             # Total Dollars
             cell = ws.cell(current_row, total_dollars_col)
-            cell.value = f"={get_column_letter(total_dollars_col)}{total_direct_labor_row}*{fringe_rate}"
+            cell.value = f"={get_column_letter(total_dollars_col)}{total_direct_labor_row}*'Indirect Rate'!C9"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
             cell.font = self.BOLD_FONT
@@ -664,12 +712,21 @@ class ExcelGenerator:
 
             col = 5
             for year in range(1, self.total_years + 1):
-                col += 1  # Hours
-                col += 1  # Rate
-                # Dollars column
+                col += 1  # Hours (skip)
+
+                # Rate column - reference from Indirect Rate sheet (Onsite OH)
+                rate_cell = ws.cell(current_row, col)
+                rate_cell.value = "='Indirect Rate'!C10"  # Onsite Overhead rate
+                rate_cell.number_format = self.PERCENT_FORMAT
+                rate_cell.border = self.THIN_BORDER
+                rate_col = col
+                col += 1
+
+                # Dollars column - use rate cell reference
                 col_letter = get_column_letter(col)
+                rate_ref = f"{get_column_letter(rate_col)}{current_row}"
                 cell = ws.cell(current_row, col)
-                cell.value = f"=({col_letter}{total_direct_labor_row}+{col_letter}{fringe_row})*{oh_rate}"
+                cell.value = f"=({col_letter}{total_direct_labor_row}+{col_letter}{fringe_row})*{rate_ref}"
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 1
@@ -677,7 +734,7 @@ class ExcelGenerator:
             # Total Dollars
             total_col_letter = get_column_letter(total_dollars_col)
             cell = ws.cell(current_row, total_dollars_col)
-            cell.value = f"=({total_col_letter}{total_direct_labor_row}+{total_col_letter}{fringe_row})*{oh_rate}"
+            cell.value = f"=({total_col_letter}{total_direct_labor_row}+{total_col_letter}{fringe_row})*'Indirect Rate'!C10"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
             cell.font = self.BOLD_FONT
@@ -691,12 +748,21 @@ class ExcelGenerator:
 
             col = 5
             for year in range(1, self.total_years + 1):
-                col += 1  # Hours
-                col += 1  # Rate
-                # Dollars column
+                col += 1  # Hours (skip)
+
+                # Rate column - reference from Indirect Rate sheet
+                rate_cell = ws.cell(current_row, col)
+                rate_cell.value = "='Indirect Rate'!C12"  # G&A rate
+                rate_cell.number_format = self.PERCENT_FORMAT
+                rate_cell.border = self.THIN_BORDER
+                rate_col = col
+                col += 1
+
+                # Dollars column - use rate cell reference
                 col_letter = get_column_letter(col)
+                rate_ref = f"{get_column_letter(rate_col)}{current_row}"
                 cell = ws.cell(current_row, col)
-                cell.value = f"=({col_letter}{total_direct_labor_row}+{col_letter}{fringe_row}+{col_letter}{oh_row})*{ga_rate}"
+                cell.value = f"=({col_letter}{total_direct_labor_row}+{col_letter}{fringe_row}+{col_letter}{oh_row})*{rate_ref}"
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 1
@@ -704,7 +770,7 @@ class ExcelGenerator:
             # Total Dollars
             total_col_letter = get_column_letter(total_dollars_col)
             cell = ws.cell(current_row, total_dollars_col)
-            cell.value = f"=({total_col_letter}{total_direct_labor_row}+{total_col_letter}{fringe_row}+{total_col_letter}{oh_row})*{ga_rate}"
+            cell.value = f"=({total_col_letter}{total_direct_labor_row}+{total_col_letter}{fringe_row}+{total_col_letter}{oh_row})*'Indirect Rate'!C12"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
             cell.font = self.BOLD_FONT
@@ -746,12 +812,21 @@ class ExcelGenerator:
 
             col = 5
             for year in range(1, self.total_years + 1):
-                col += 1  # Hours
-                col += 1  # Rate
-                # Dollars column
+                col += 1  # Hours (skip)
+
+                # Rate column - reference from Indirect Rate sheet
+                rate_cell = ws.cell(current_row, col)
+                rate_cell.value = "='Indirect Rate'!C14"  # Fee on Labor rate
+                rate_cell.number_format = self.PERCENT_FORMAT
+                rate_cell.border = self.THIN_BORDER
+                rate_col = col
+                col += 1
+
+                # Dollars column - use rate cell reference
                 col_letter = get_column_letter(col)
+                rate_ref = f"{get_column_letter(rate_col)}{current_row}"
                 cell = ws.cell(current_row, col)
-                cell.value = f"={col_letter}{subtotal_row}*{prime_fee_rate}"
+                cell.value = f"={col_letter}{subtotal_row}*{rate_ref}"
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 1
@@ -759,7 +834,7 @@ class ExcelGenerator:
             # Total Dollars
             total_col_letter = get_column_letter(total_dollars_col)
             cell = ws.cell(current_row, total_dollars_col)
-            cell.value = f"={total_col_letter}{subtotal_row}*{prime_fee_rate}"
+            cell.value = f"={total_col_letter}{subtotal_row}*'Indirect Rate'!C14"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
             cell.font = self.BOLD_FONT
@@ -804,9 +879,8 @@ class ExcelGenerator:
         ws.column_dimensions['B'].width = 50.5  # Labor Category
         ws.column_dimensions['C'].width = 19.66  # Site
 
-        # Header
-        ws.cell(1, 2, "Proprietary Data")
-        ws.cell(2, 2, f"Subcontractor Name: {sub_data['name']}")
+        # Apply standard header format (Rows 1-5)
+        self._apply_standard_header(ws, start_col=2)
 
         # Column headers
         header_row = 10
@@ -821,9 +895,11 @@ class ExcelGenerator:
         for year in range(1, self.total_years + 1):
             period_label = self._get_period_label(year)
 
-            # Period header above (row 7) - Light blue background
+            # Period header above (row 7) - Light blue background, merged across 3 columns
             period_cell = ws.cell(7, col, period_label)
             self._style_period_header_cell(period_cell)
+            # Merge across Hours, Rate, Dollars columns
+            ws.merge_cells(start_row=7, start_column=col, end_row=7, end_column=col + 2)
 
             # Sub-headers for Hours, Rate, Dollars
             sub_headers = ["Hours/Base", "Rate", "Dollars"]
@@ -896,76 +972,42 @@ class ExcelGenerator:
 
             current_row += 1
 
-        # Total Proposed Subcontractor Labor Cost row
-        total_labor_row = current_row
-        ws.cell(current_row, 2, "Total Proposed Subcontractor Labor Cost and Fee")
-        ws.cell(current_row, 2).font = self.BOLD_FONT
-        ws.cell(current_row, 2).border = self.THIN_BORDER
+        # Total row - sum hours and dollars by column (only if there are labor categories)
+        if sub_data.get('labor_categories'):
+            ws.cell(current_row, 2, "Total")
+            ws.cell(current_row, 2).font = self.BOLD_FONT
+            ws.cell(current_row, 2).border = self.THIN_BORDER
 
-        cell = ws.cell(current_row, total_col)
-        cell.value = f"=SUM({get_column_letter(total_col)}{header_row + 1}:{get_column_letter(total_col)}{current_row - 1})"
-        cell.number_format = self.CURRENCY_FORMAT
-        cell.border = self.THIN_BORDER
-        cell.font = self.BOLD_FONT
-        current_row += 1
+            col = 4
+            for year in range(1, self.total_years + 1):
+                # Hours column - sum
+                hours_col_letter = get_column_letter(col)
+                cell = ws.cell(current_row, col)
+                cell.value = f"=SUM({hours_col_letter}{header_row + 1}:{hours_col_letter}{current_row - 1})"
+                cell.number_format = self.NUMBER_FORMAT
+                cell.border = self.THIN_BORDER
+                cell.font = self.BOLD_FONT
+                col += 1
 
-        # Get rates for calculations
-        passthrough_rates = self.project_data.get('passthrough_rates', {})
-        smh_rate = passthrough_rates.get('smh', 0.0665)
-        ga_passthrough_rate = passthrough_rates.get('ga', 0.0)
-        combined_passthrough_rate = smh_rate + ga_passthrough_rate  # S&MH + G&A Passthrough
-        fee_rates = self.project_data.get('fee_rates', {})
-        sub_fee_rate = fee_rates.get('sub_labor', 0.0126)
+                # Rate column - skip (no total for rates)
+                col += 1
 
-        # Passthrough (S&MH + G&A) row
-        passthrough_row = current_row
-        ws.cell(current_row, 2, "Passthrough (S&MH + G&A)")
-        ws.cell(current_row, 2).font = self.BOLD_FONT
-        ws.cell(current_row, 2).border = self.THIN_BORDER
+                # Dollars column - sum
+                dollars_col_letter = get_column_letter(col)
+                cell = ws.cell(current_row, col)
+                cell.value = f"=SUM({dollars_col_letter}{header_row + 1}:{dollars_col_letter}{current_row - 1})"
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+                cell.font = self.BOLD_FONT
+                col += 1
 
-        cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{total_labor_row}*{combined_passthrough_rate}"
-        cell.number_format = self.CURRENCY_FORMAT
-        cell.border = self.THIN_BORDER
-        cell.font = self.BOLD_FONT
-        current_row += 1
-
-        # Total Subcontractor Cost including passthrough
-        total_passthrough_row = current_row
-        ws.cell(current_row, 2, "Total Subcontractor Cost including passthrough")
-        ws.cell(current_row, 2).font = self.BOLD_FONT
-        ws.cell(current_row, 2).border = self.THIN_BORDER
-
-        cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{total_labor_row}+{get_column_letter(total_col)}{passthrough_row}"
-        cell.number_format = self.CURRENCY_FORMAT
-        cell.border = self.THIN_BORDER
-        cell.font = self.BOLD_FONT
-        current_row += 1
-
-        # Fee row
-        fee_row = current_row
-        ws.cell(current_row, 2, "Fee")
-        ws.cell(current_row, 2).font = self.BOLD_FONT
-        ws.cell(current_row, 2).border = self.THIN_BORDER
-
-        cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{total_passthrough_row}*{sub_fee_rate}"
-        cell.number_format = self.CURRENCY_FORMAT
-        cell.border = self.THIN_BORDER
-        cell.font = self.BOLD_FONT
-        current_row += 1
-
-        # Total Labor Cost row
-        ws.cell(current_row, 2, "Total Labor Cost")
-        ws.cell(current_row, 2).font = self.BOLD_FONT
-        ws.cell(current_row, 2).border = self.THIN_BORDER
-
-        cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{total_passthrough_row}+{get_column_letter(total_col)}{fee_row}"
-        cell.number_format = self.CURRENCY_FORMAT
-        cell.border = self.THIN_BORDER
-        cell.font = self.BOLD_FONT
+            # Total column - sum
+            total_col_letter = get_column_letter(total_col)
+            cell = ws.cell(current_row, total_col)
+            cell.value = f"=SUM({total_col_letter}{header_row + 1}:{total_col_letter}{current_row - 1})"
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+            cell.font = self.BOLD_FONT
 
     def _create_fully_loaded_labor_rates_sheet(self):
         """Create the Fully Loaded Labor Rates sheet showing all position rates per period."""
@@ -977,9 +1019,8 @@ class ExcelGenerator:
         ws.column_dimensions['C'].width = 20  # Company
         ws.column_dimensions['D'].width = 20  # Location
 
-        # Header
-        ws.cell(1, 2, "Proprietary Data")
-        ws.cell(2, 2, f"Prime Contractor Name: {self.project_data['prime_contractor_name']}")
+        # Apply standard header format (Rows 1-5)
+        self._apply_standard_header(ws, start_col=2)
 
         # Column headers
         header_row = 8
@@ -1088,9 +1129,8 @@ class ExcelGenerator:
         ws.column_dimensions['A'].width = 2.33  # Padding
         ws.column_dimensions['B'].width = 40.66  # ODC description
 
-        # Header
-        ws.cell(1, 2, "Proprietary Data")
-        ws.cell(2, 2, f"Prime Contractor Name: {self.project_data['prime_contractor_name']}")
+        # Apply standard header format (Rows 1-5)
+        self._apply_standard_header(ws, start_col=2)
 
         # Period columns
         header_row = 8
@@ -1098,8 +1138,10 @@ class ExcelGenerator:
 
         for year in range(1, self.total_years + 1):
             period_label = self._get_period_label(year)
+            # Merge period label across the 2 columns (amount + handling)
             period_cell = ws.cell(header_row, col, period_label)
             self._style_period_header_cell(period_cell)
+            ws.merge_cells(start_row=header_row, start_column=col, end_row=header_row, end_column=col + 1)
             ws.column_dimensions[get_column_letter(col)].width = 18
             ws.column_dimensions[get_column_letter(col + 1)].width = 15
             col += 2  # Amount and handling columns
@@ -1127,16 +1169,16 @@ class ExcelGenerator:
             for year in range(1, self.total_years + 1):
                 # Check for pre-calculated amounts
                 if 'amount_per_year' in odc:
-                    base_amount = odc['amount_per_year'].get(str(year), 0)
+                    base_amount = odc['amount_per_year'].get(str(year)) or 0
                 else:
-                    base_amount = odc.get('amount_year_1', 0)
+                    base_amount = odc.get('amount_year_1') or 0
 
                 # Apply compound escalation if flag is set
                 escalated_amount = base_amount
                 if escalate and year > 1:
                     for y in range(1, year):
                         esc_key = f"{y}_to_{y + 1}"
-                        esc_rate = escalation_rates.get(esc_key, 0)
+                        esc_rate = escalation_rates.get(esc_key) or 0
                         escalated_amount *= (1 + esc_rate)
 
                 cell = ws.cell(current_row, col)
@@ -1203,9 +1245,8 @@ class ExcelGenerator:
         ws.column_dimensions['A'].width = 2.33  # Padding
         ws.column_dimensions['B'].width = 40.66  # Material description
 
-        # Header
-        ws.cell(1, 2, "Proprietary Data")
-        ws.cell(2, 2, f"Prime Contractor Name: {self.project_data['prime_contractor_name']}")
+        # Apply standard header format (Rows 1-5)
+        self._apply_standard_header(ws, start_col=2)
 
         # Period columns
         header_row = 8
@@ -1213,8 +1254,10 @@ class ExcelGenerator:
 
         for year in range(1, self.total_years + 1):
             period_label = self._get_period_label(year)
+            # Merge period label across the 2 columns (base + handling)
             period_cell = ws.cell(header_row, col, period_label)
             self._style_period_header_cell(period_cell)
+            ws.merge_cells(start_row=header_row, start_column=col, end_row=header_row, end_column=col + 1)
             ws.column_dimensions[get_column_letter(col)].width = 18
             ws.column_dimensions[get_column_letter(col + 1)].width = 15
             col += 2
@@ -1241,16 +1284,16 @@ class ExcelGenerator:
             col = 3
             for year in range(1, self.total_years + 1):
                 if 'amount_per_year' in material:
-                    base_amount = material['amount_per_year'].get(str(year), 0)
+                    base_amount = material['amount_per_year'].get(str(year)) or 0
                 else:
-                    base_amount = material.get('amount_year_1', 0)
+                    base_amount = material.get('amount_year_1') or 0
 
                 # Apply compound escalation if flag is set
                 escalated_amount = base_amount
                 if escalate and year > 1:
                     for y in range(1, year):
                         esc_key = f"{y}_to_{y + 1}"
-                        esc_rate = escalation_rates.get(esc_key, 0)
+                        esc_rate = escalation_rates.get(esc_key) or 0
                         escalated_amount *= (1 + esc_rate)
 
                 cell = ws.cell(current_row, col)
@@ -1317,9 +1360,8 @@ class ExcelGenerator:
         ws.column_dimensions['A'].width = 2.33  # Padding
         ws.column_dimensions['B'].width = 40.66  # Travel description
 
-        # Header
-        ws.cell(1, 2, "Proprietary Data")
-        ws.cell(2, 2, f"Prime Contractor Name: {self.project_data['prime_contractor_name']}")
+        # Apply standard header format (Rows 1-5)
+        self._apply_standard_header(ws, start_col=2)
 
         # Period columns
         header_row = 8
@@ -1327,8 +1369,10 @@ class ExcelGenerator:
 
         for year in range(1, self.total_years + 1):
             period_label = self._get_period_label(year)
+            # Merge period label across the 2 columns (base + G&A)
             period_cell = ws.cell(header_row, col, period_label)
             self._style_period_header_cell(period_cell)  # Light blue background for periods
+            ws.merge_cells(start_row=header_row, start_column=col, end_row=header_row, end_column=col + 1)
             ws.column_dimensions[get_column_letter(col)].width = 18
             ws.column_dimensions[get_column_letter(col + 1)].width = 15
             col += 2
@@ -1358,16 +1402,16 @@ class ExcelGenerator:
             col = 3
             for year in range(1, self.total_years + 1):
                 if 'amount_per_year' in travel:
-                    base_amount = travel['amount_per_year'].get(str(year), 0)
+                    base_amount = travel['amount_per_year'].get(str(year)) or 0
                 else:
-                    base_amount = travel.get('amount_year_1', 0)
+                    base_amount = travel.get('amount_year_1') or 0
 
                 # Apply compound escalation if flag is set
                 escalated_amount = base_amount
                 if escalate and year > 1:
                     for y in range(1, year):
                         esc_key = f"{y}_to_{y + 1}"
-                        esc_rate = escalation_rates.get(esc_key, 0)
+                        esc_rate = escalation_rates.get(esc_key) or 0
                         escalated_amount *= (1 + esc_rate)
 
                 cell = ws.cell(current_row, col)
@@ -1437,9 +1481,8 @@ class ExcelGenerator:
         ws.column_dimensions['D'].width = 19.66  # Site
         ws.column_dimensions['E'].width = 14.33  # Location
 
-        # Header
-        ws.cell(1, 2, "Proprietary Data")
-        ws.cell(2, 2, f"Prime Contractor Name: {self.project_data['prime_contractor_name']}")
+        # Apply standard header format (Rows 1-5)
+        self._apply_standard_header(ws, start_col=2)
 
         # Column headers
         header_row = 10
@@ -1586,9 +1629,8 @@ class ExcelGenerator:
         ws.column_dimensions['B'].width = 40.66  # Rate description
         ws.column_dimensions['C'].width = 15  # Rate value
 
-        # Header
-        ws.cell(1, 2, "Proprietary Data")
-        ws.cell(2, 2, f"Prime Contractor Name: {self.project_data['prime_contractor_name']}")
+        # Apply standard header format (Rows 1-5)
+        self._apply_standard_header(ws, start_col=2)
 
         # Indirect Rates header (with blue background like template)
         header_cell = ws.cell(8, 2, "Indirect Rates")
@@ -1723,9 +1765,9 @@ class ExcelGenerator:
             escalation_rates = self.project_data.get('escalation_rates', {})
             for odc in self.project_data.get('odcs', []):
                 if 'amount_per_year' in odc:
-                    base_amount = odc['amount_per_year'].get(str(year), 0)
+                    base_amount = odc['amount_per_year'].get(str(year)) or 0
                 else:
-                    base_amount = odc.get('amount_year_1', 0)
+                    base_amount = odc.get('amount_year_1') or 0
 
                 # Apply compound escalation if flag is set
                 escalated_amount = base_amount
@@ -1733,7 +1775,7 @@ class ExcelGenerator:
                 if escalate and year > 1:
                     for y in range(1, year):
                         esc_key = f"{y}_to_{y + 1}"
-                        esc_rate = escalation_rates.get(esc_key, 0)
+                        esc_rate = escalation_rates.get(esc_key) or 0
                         escalated_amount *= (1 + esc_rate)
 
                 material_total += escalated_amount
@@ -1745,9 +1787,9 @@ class ExcelGenerator:
             travel_total = 0
             for travel in self.project_data.get('travel', []):
                 if 'amount_per_year' in travel:
-                    base_amount = travel['amount_per_year'].get(str(year), 0)
+                    base_amount = travel['amount_per_year'].get(str(year)) or 0
                 else:
-                    base_amount = travel.get('amount_year_1', 0)
+                    base_amount = travel.get('amount_year_1') or 0
 
                 # Apply compound escalation if flag is set
                 escalated_amount = base_amount
@@ -1755,7 +1797,7 @@ class ExcelGenerator:
                 if escalate and year > 1:
                     for y in range(1, year):
                         esc_key = f"{y}_to_{y + 1}"
-                        esc_rate = escalation_rates.get(esc_key, 0)
+                        esc_rate = escalation_rates.get(esc_key) or 0
                         escalated_amount *= (1 + esc_rate)
 
                 travel_total += escalated_amount
@@ -1816,14 +1858,15 @@ class ExcelGenerator:
         ws.column_dimensions['L'].width = 15  # 90th Percentile
         ws.column_dimensions['M'].width = 18  # Selected Wage
 
-        # Header
-        ws.cell(1, 2, "Proprietary Data")
-        ws.cell(2, 2, f"Prime Contractor Name: {self.project_data['prime_contractor_name']}")
-        ws.cell(4, 2, "Wage Data - All Positions with Percentiles")
-        ws.cell(4, 2).font = self.BOLD_FONT
+        # Apply standard header format (Rows 1-5)
+        self._apply_standard_header(ws, start_col=2)
+
+        # Additional title row
+        ws.cell(7, 2, "Wage Data - All Positions with Percentiles")
+        ws.cell(7, 2).font = self.BOLD_FONT
 
         # Column headers
-        header_row = 7
+        header_row = 8
         headers = [
             "Labor Category",
             "Location",
