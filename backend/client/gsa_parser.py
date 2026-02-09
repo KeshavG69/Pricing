@@ -282,7 +282,7 @@ def _extract_descriptions_with_llm(full_text: str) -> List[dict]:
     Returns:
         List of dicts with title, sin, description, experience
     """
-    llm = get_chat_llm(model="gpt-5-mini-2025-08-07",api_key=settings.OPENAI_API_KEY,base_url="https://api.openai.com/v1", max_tokens=30000)
+    llm = get_chat_llm(model="gpt-4.1",api_key=settings.OPENAI_API_KEY,base_url="https://api.openai.com/v1", max_tokens=32000)
 
     prompt = f"""Extract job descriptions and qualifications from this GSA contract document.
 
@@ -334,8 +334,11 @@ Return ONLY valid JSON array. If no job descriptions found, return empty array [
             if retry_count > 0:
                 current_prompt = f"{prompt}\n\nIMPORTANT: Your previous response was incomplete or malformed. Please provide the COMPLETE valid JSON array with all entries fully formed. Do not truncate the output."
                 print(f"     [Descriptions] 🔄 Retry {retry_count}/{max_retries - 1} due to JSON error...")
+            else:
+                print(f"     [Descriptions] 🤖 Calling LLM (attempt {retry_count + 1})...")
 
             response = llm.invoke(current_prompt)
+            print(f"     [Descriptions] ✓ LLM response received")
             response_text = response.content.strip()
 
             # Remove markdown code blocks if present
@@ -391,7 +394,7 @@ def _extract_rates_with_llm(full_text: str, year_columns: Optional[List[str]] = 
     Returns:
         List of dicts with title, sin, rates_by_year
     """
-    llm = get_chat_llm(model="gpt-5-mini-2025-08-07",api_key=settings.OPENAI_API_KEY,base_url="https://api.openai.com/v1", max_tokens=30000)
+    llm = get_chat_llm(model="gpt-4.1",api_key=settings.OPENAI_API_KEY,base_url="https://api.openai.com/v1", max_tokens=32000)
 
     # Build year context from metadata
     if year_columns and len(year_columns) > 0:
@@ -493,8 +496,11 @@ Return ONLY valid JSON array:"""
             if retry_count > 0:
                 current_prompt = f"{prompt}\n\nIMPORTANT: Your previous response was truncated or malformed. Please provide the COMPLETE valid JSON array. Ensure ALL labor categories are included and the JSON is not cut off."
                 print(f"     [Rates] 🔄 Retry {retry_count}/{max_retries - 1} due to JSON error...")
+            else:
+                print(f"     [Rates] 🤖 Calling LLM (attempt {retry_count + 1})...")
 
             response = llm.invoke(current_prompt)
+            print(f"     [Rates] ✓ LLM response received")
             response_text = response.content.strip()
 
             # Remove markdown code blocks if present
@@ -562,7 +568,7 @@ def _merge_descriptions_and_rates(descriptions: List[dict], rates: List[dict]) -
 
     # Build lookup for rates by (title, sin) and by title only
     rates_by_key = {}
-    rates_by_title = {}
+    rates_by_title = {}  # Will store list of rates per title
 
     for rate in rates:
         title = rate.get('title', '').strip()
@@ -576,8 +582,11 @@ def _merge_descriptions_and_rates(descriptions: List[dict], rates: List[dict]) -
             key = (normalize_title(title), sin.upper())
             rates_by_key[key] = rate
 
-        # Index by title only
-        rates_by_title[normalize_title(title)] = rate
+        # Index by title only (store as list to handle multiple SINs with same title)
+        norm_title = normalize_title(title)
+        if norm_title not in rates_by_title:
+            rates_by_title[norm_title] = []
+        rates_by_title[norm_title].append(rate)
 
     # Merge descriptions with rates
     merged = []
@@ -590,22 +599,25 @@ def _merge_descriptions_and_rates(descriptions: List[dict], rates: List[dict]) -
         if not title:
             continue
 
-        # Try exact match by (title, sin)
-        matched_rate = None
+        matched_rates = []  # Can match multiple rates if same title, different SINs
+
+        # Try exact match by (title, sin) first
         if sin:
             key = (normalize_title(title), sin.upper())
             matched_rate = rates_by_key.get(key)
+            if matched_rate:
+                matched_rates.append(matched_rate)
 
-        # Try exact match by title only
-        if not matched_rate:
-            matched_rate = rates_by_title.get(normalize_title(title))
+        # If no SIN match, try title-only match (may return multiple rates)
+        if not matched_rates:
+            title_matches = rates_by_title.get(normalize_title(title), [])
+            if title_matches:
+                matched_rates.extend(title_matches)
 
-        # Try fuzzy match if no exact match
-        matched_rate_index = None
-        if not matched_rate:
+        # Try fuzzy match if no exact matches
+        if not matched_rates:
             best_score = 0.0
             best_match = None
-            best_match_index = None
 
             for idx, rate in enumerate(rates):
                 rate_title = rate.get('title', '').strip()
@@ -616,31 +628,28 @@ def _merge_descriptions_and_rates(descriptions: List[dict], rates: List[dict]) -
                 if score > best_score and score >= 0.85:  # 85% similarity threshold
                     best_score = score
                     best_match = rate
-                    best_match_index = idx
 
             if best_match:
-                matched_rate = best_match
-                matched_rate_index = best_match_index
+                matched_rates.append(best_match)
                 print(f"     [Merge] Fuzzy matched: '{title}' → '{best_match.get('title')}' (score: {best_score:.2f})")
-        else:
-            # Find index of matched rate
-            for idx, rate in enumerate(rates):
-                if rate == matched_rate:
-                    matched_rate_index = idx
-                    break
 
-        # Merge data
-        if matched_rate:
-            merged_entry = {
-                'title': title,  # Use description's title (usually cleaner)
-                'sin': sin or matched_rate.get('sin'),
-                'description': desc.get('description'),
-                'experience': desc.get('experience'),
-                'rates_by_year': matched_rate.get('rates_by_year', {})
-            }
-            merged.append(merged_entry)
-            if matched_rate_index is not None:
-                matched_rate_indices.add(matched_rate_index)
+        # Merge data - create entry for each matched rate
+        if matched_rates:
+            for matched_rate in matched_rates:
+                merged_entry = {
+                    'title': title,  # Use description's title (usually cleaner)
+                    'sin': sin or matched_rate.get('sin'),
+                    'description': desc.get('description'),
+                    'experience': desc.get('experience'),
+                    'rates_by_year': matched_rate.get('rates_by_year', {})
+                }
+                merged.append(merged_entry)
+
+                # Track matched rate index
+                for idx, rate in enumerate(rates):
+                    if rate == matched_rate:
+                        matched_rate_indices.add(idx)
+                        break
         else:
             # Keep description even without rates
             merged.append(desc)
@@ -739,19 +748,24 @@ def parse_gsa_contract(file_path: str) -> dict:
         # ========================================================================
         # STEP 5: Deduplicate and format for storage
         # ========================================================================
-        seen_titles = set()
+        # Use (title, sin) tuple as key to keep same titles with different SINs
+        seen_keys = set()
         labor_categories = []
 
         for cat in merged:
             title = cat.get('title', '').strip()
+            sin = cat.get('sin', '').strip()
             title_lower = title.lower()
 
-            if title and title_lower not in seen_titles:
-                seen_titles.add(title_lower)
+            # Create composite key: (title, sin) - allows same title with different SINs
+            dedup_key = (title_lower, sin.upper() if sin else None)
+
+            if title and dedup_key not in seen_keys:
+                seen_keys.add(dedup_key)
 
                 labor_categories.append({
                     "lcat_id": f"lcat_{len(labor_categories)}",
-                    "sin": cat.get('sin'),
+                    "sin": sin if sin else None,
                     "title": title,
                     "description": cat.get('description'),
                     "experience": cat.get('experience'),

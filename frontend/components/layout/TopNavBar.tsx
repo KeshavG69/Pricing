@@ -9,6 +9,7 @@ import { isAdmin } from '@/lib/utils/permissions';
 import { useAuthStore } from '@/lib/stores/authStore';
 import RoleBadge from '../ui/RoleBadge';
 import HelpCenterButton from '../help/HelpCenterButton';
+import { SetupGuideButton } from '../onboarding';
 
 interface TopNavBarProps {
   user: any;
@@ -166,8 +167,11 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
           )}
         </nav>
 
-        {/* Right: Help Center + User Profile Menu */}
+        {/* Right: Setup Guide + Help Center + User Profile Menu */}
         <div className="flex items-center justify-end gap-2">
+          {/* Setup Guide Button */}
+          <SetupGuideButton />
+
           {/* Help Center Button */}
           <HelpCenterButton />
 
