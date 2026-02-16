@@ -23,7 +23,7 @@ class ContactFormRequest(BaseModel):
     )
     phone: str = Field(default="", max_length=50, description="Phone number (optional)")
     message: str = Field(
-        ..., min_length=10, max_length=5000, description="Message text"
+        ..., min_length=1, max_length=5000, description="Message text"
     )
 
 
