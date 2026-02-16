@@ -683,7 +683,7 @@ class ExcelGenerator:
 
                 # Rate column - reference from Indirect Rate sheet
                 rate_cell = ws.cell(current_row, col)
-                rate_cell.value = "='Indirect Rate'!C9"  # Fringe rate
+                rate_cell.value = "='Indirect Rate'!B9"  # Fringe rate (column B, row 9)
                 rate_cell.number_format = self.PERCENT_FORMAT
                 rate_cell.border = self.THIN_BORDER
                 rate_col = col
@@ -700,7 +700,7 @@ class ExcelGenerator:
 
             # Total Dollars
             cell = ws.cell(current_row, total_dollars_col)
-            cell.value = f"={get_column_letter(total_dollars_col)}{total_direct_labor_row}*'Indirect Rate'!C9"
+            cell.value = f"={get_column_letter(total_dollars_col)}{total_direct_labor_row}*'Indirect Rate'!B9"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
             cell.font = self.BOLD_FONT
@@ -718,7 +718,7 @@ class ExcelGenerator:
 
                 # Rate column - reference from Indirect Rate sheet (Onsite OH)
                 rate_cell = ws.cell(current_row, col)
-                rate_cell.value = "='Indirect Rate'!C10"  # Onsite Overhead rate
+                rate_cell.value = "='Indirect Rate'!B10"  # Onsite Overhead rate (column B, row 10)
                 rate_cell.number_format = self.PERCENT_FORMAT
                 rate_cell.border = self.THIN_BORDER
                 rate_col = col
@@ -736,7 +736,7 @@ class ExcelGenerator:
             # Total Dollars
             total_col_letter = get_column_letter(total_dollars_col)
             cell = ws.cell(current_row, total_dollars_col)
-            cell.value = f"=({total_col_letter}{total_direct_labor_row}+{total_col_letter}{fringe_row})*'Indirect Rate'!C10"
+            cell.value = f"=({total_col_letter}{total_direct_labor_row}+{total_col_letter}{fringe_row})*'Indirect Rate'!B10"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
             cell.font = self.BOLD_FONT
@@ -754,7 +754,7 @@ class ExcelGenerator:
 
                 # Rate column - reference from Indirect Rate sheet
                 rate_cell = ws.cell(current_row, col)
-                rate_cell.value = "='Indirect Rate'!C12"  # G&A rate
+                rate_cell.value = "='Indirect Rate'!B12"  # G&A rate (column B, row 12)
                 rate_cell.number_format = self.PERCENT_FORMAT
                 rate_cell.border = self.THIN_BORDER
                 rate_col = col
@@ -772,7 +772,7 @@ class ExcelGenerator:
             # Total Dollars
             total_col_letter = get_column_letter(total_dollars_col)
             cell = ws.cell(current_row, total_dollars_col)
-            cell.value = f"=({total_col_letter}{total_direct_labor_row}+{total_col_letter}{fringe_row}+{total_col_letter}{oh_row})*'Indirect Rate'!C12"
+            cell.value = f"=({total_col_letter}{total_direct_labor_row}+{total_col_letter}{fringe_row}+{total_col_letter}{oh_row})*'Indirect Rate'!B12"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
             cell.font = self.BOLD_FONT
@@ -818,7 +818,7 @@ class ExcelGenerator:
 
                 # Rate column - reference from Indirect Rate sheet
                 rate_cell = ws.cell(current_row, col)
-                rate_cell.value = "='Indirect Rate'!C14"  # Fee on Labor rate
+                rate_cell.value = "='Indirect Rate'!B14"  # Fee on Labor rate (column B, row 14)
                 rate_cell.number_format = self.PERCENT_FORMAT
                 rate_cell.border = self.THIN_BORDER
                 rate_col = col
@@ -836,7 +836,7 @@ class ExcelGenerator:
             # Total Dollars
             total_col_letter = get_column_letter(total_dollars_col)
             cell = ws.cell(current_row, total_dollars_col)
-            cell.value = f"={total_col_letter}{subtotal_row}*'Indirect Rate'!C14"
+            cell.value = f"={total_col_letter}{subtotal_row}*'Indirect Rate'!B14"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
             cell.font = self.BOLD_FONT
