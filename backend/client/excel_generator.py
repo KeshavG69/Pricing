@@ -530,9 +530,10 @@ class ExcelGenerator:
         for year in range(1, self.total_years + 1):
             period_label = self._get_period_label(year)
 
-            # Period header above sub-headers (row 7) - Light blue background
+            # Period header above sub-headers (row 7) - Light blue background, merged across 3 columns
             period_cell = ws.cell(7, col, period_label)
             self._style_period_header_cell(period_cell)
+            ws.merge_cells(start_row=7, start_column=col, end_row=7, end_column=col + 2)
 
             # Sub-headers for Hours, Rate, Dollars
             sub_headers = ["Hours/Base", "Rate", "Dollars"]
@@ -1130,25 +1131,22 @@ class ExcelGenerator:
         """Create the ODCs sheet (separate from Materials)."""
         ws = self.wb.create_sheet("ODCs")
 
-        # B: ODC description (was B, now A)
+        # A: ODC description
         ws.column_dimensions['A'].width = 40.66
 
         # Apply standard header format (Rows 1-5)
         self._apply_standard_header(ws, start_col=1)
 
-        # Period columns
+        # Period columns (single column per period - includes handling)
         header_row = 8
         col = 2
 
         for year in range(1, self.total_years + 1):
             period_label = self._get_period_label(year)
-            # Merge period label across the 2 columns (amount + handling)
             period_cell = ws.cell(header_row, col, period_label)
             self._style_period_header_cell(period_cell)
-            ws.merge_cells(start_row=header_row, start_column=col, end_row=header_row, end_column=col + 1)
             ws.column_dimensions[get_column_letter(col)].width = 18
-            ws.column_dimensions[get_column_letter(col + 1)].width = 15
-            col += 2  # Amount and handling columns
+            col += 1
 
         # Total column
         ws.cell(header_row, col, "Total")
@@ -1156,7 +1154,7 @@ class ExcelGenerator:
         total_col = col
 
         # ODC rows
-        current_row = header_row + 2
+        current_row = header_row + 1
         smh_rate = self.project_data.get('passthrough_rates', {}).get('smh', 0.0665)
 
         odcs = self.project_data.get('odcs', [])
@@ -1164,7 +1162,7 @@ class ExcelGenerator:
         escalation_rates = self.project_data.get('escalation_rates', {})
 
         for odc in odcs:
-            # ODC base row
+            # ODC row (includes handling)
             ws.cell(current_row, 1, odc['category'])
             ws.cell(current_row, 1).border = self.THIN_BORDER
             escalate = odc.get('escalate', False)
@@ -1185,36 +1183,18 @@ class ExcelGenerator:
                         esc_rate = escalation_rates.get(esc_key) or 0
                         escalated_amount *= (1 + esc_rate)
 
+                # Include handling in the amount
+                total_with_handling = escalated_amount * (1 + smh_rate)
+
                 cell = ws.cell(current_row, col)
-                cell.value = escalated_amount
+                cell.value = total_with_handling
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
-                col += 2
+                col += 1
 
             # Add Total column formula for ODC row
             total_cell = ws.cell(current_row, total_col)
-            total_cell.value = f"=SUM({get_column_letter(2)}{current_row}:{get_column_letter(total_col - 2)}{current_row})"
-            total_cell.number_format = self.CURRENCY_FORMAT
-            total_cell.border = self.THIN_BORDER
-
-            current_row += 1
-
-            # S&MH Handling row
-            ws.cell(current_row, 1, f"{odc['category']} Handling")
-            ws.cell(current_row, 1).border = self.THIN_BORDER
-
-            col = 2
-            for year in range(1, self.total_years + 1):
-                odc_cell = f"{get_column_letter(col)}{current_row - 1}"
-                cell = ws.cell(current_row, col)
-                cell.value = f"={odc_cell}*{smh_rate}"
-                cell.number_format = self.CURRENCY_FORMAT
-                cell.border = self.THIN_BORDER
-                col += 2
-
-            # Add Total column formula for handling row
-            total_cell = ws.cell(current_row, total_col)
-            total_cell.value = f"=SUM({get_column_letter(2)}{current_row}:{get_column_letter(total_col - 2)}{current_row})"
+            total_cell.value = f"=SUM({get_column_letter(2)}{current_row}:{get_column_letter(total_col - 1)}{current_row})"
             total_cell.number_format = self.CURRENCY_FORMAT
             total_cell.border = self.THIN_BORDER
 
@@ -1232,11 +1212,11 @@ class ExcelGenerator:
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
             cell.font = self.BOLD_FONT
-            col += 2
+            col += 1
 
         # Add Total column formula for Total ODCs row
         total_cell = ws.cell(current_row, total_col)
-        total_cell.value = f"=SUM({get_column_letter(2)}{current_row}:{get_column_letter(total_col - 2)}{current_row})"
+        total_cell.value = f"=SUM({get_column_letter(2)}{current_row}:{get_column_letter(total_col - 1)}{current_row})"
         total_cell.number_format = self.CURRENCY_FORMAT
         total_cell.border = self.THIN_BORDER
         total_cell.font = self.BOLD_FONT
@@ -1359,25 +1339,22 @@ class ExcelGenerator:
         """Create the Travel sheet."""
         ws = self.wb.create_sheet("Travel")
 
-        # B: Travel description (was B, now A)
+        # A: Travel description
         ws.column_dimensions['A'].width = 40.66
 
         # Apply standard header format (Rows 1-5)
         self._apply_standard_header(ws, start_col=1)
 
-        # Period columns
+        # Period columns (single column per period - includes G&A)
         header_row = 8
         col = 2
 
         for year in range(1, self.total_years + 1):
             period_label = self._get_period_label(year)
-            # Merge period label across the 2 columns (base + G&A)
             period_cell = ws.cell(header_row, col, period_label)
             self._style_period_header_cell(period_cell)  # Light blue background for periods
-            ws.merge_cells(start_row=header_row, start_column=col, end_row=header_row, end_column=col + 1)
             ws.column_dimensions[get_column_letter(col)].width = 18
-            ws.column_dimensions[get_column_letter(col + 1)].width = 15
-            col += 2
+            col += 1
 
         # Total column
         ws.cell(header_row, col, "Total")
@@ -1385,7 +1362,7 @@ class ExcelGenerator:
         total_col = col
 
         # Travel rows
-        current_row = header_row + 2
+        current_row = header_row + 1
         ga_rate = self.project_data.get('indirect_rates', {}).get('ga', 0.2214)
 
         travel_items = self.project_data.get('travel', [])
@@ -1397,7 +1374,7 @@ class ExcelGenerator:
             description = travel.get('description', 'Travel')
             escalate = travel.get('escalate', False)
 
-            # Travel base row
+            # Travel row (includes G&A)
             ws.cell(current_row, 1, description)
             ws.cell(current_row, 1).border = self.THIN_BORDER
 
@@ -1416,58 +1393,40 @@ class ExcelGenerator:
                         esc_rate = escalation_rates.get(esc_key) or 0
                         escalated_amount *= (1 + esc_rate)
 
+                # Include G&A in the amount
+                total_with_ga = escalated_amount * (1 + ga_rate)
+
                 cell = ws.cell(current_row, col)
-                cell.value = escalated_amount
+                cell.value = total_with_ga
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
-                col += 2
+                col += 1
 
             # Add Total column formula for this travel row
             total_cell = ws.cell(current_row, total_col)
-            total_cell.value = f"=SUM({get_column_letter(2)}{current_row}:{get_column_letter(total_col - 2)}{current_row})"
+            total_cell.value = f"=SUM({get_column_letter(2)}{current_row}:{get_column_letter(total_col - 1)}{current_row})"
             total_cell.number_format = self.CURRENCY_FORMAT
             total_cell.border = self.THIN_BORDER
 
             current_row += 1
 
-        # G&A row
-        ws.cell(current_row, 1, "General & Administrative")
+        # Total row
+        ws.cell(current_row, 1, "Total Travel")
+        ws.cell(current_row, 1).font = self.BOLD_FONT
         ws.cell(current_row, 1).border = self.THIN_BORDER
 
         col = 2
-        for year in range(1, self.total_years + 1):
-            # Sum travel amounts for this period and multiply by G&A rate
-            cell = ws.cell(current_row, col)
-            cell.value = f"=SUM({get_column_letter(col)}{travel_start_row}:{get_column_letter(col)}{current_row - 1})*{ga_rate}"
-            cell.number_format = self.CURRENCY_FORMAT
-            cell.border = self.THIN_BORDER
-            col += 2
-
-        # Add Total column formula for G&A row
-        total_cell = ws.cell(current_row, total_col)
-        total_cell.value = f"=SUM({get_column_letter(2)}{current_row}:{get_column_letter(total_col - 2)}{current_row})"
-        total_cell.number_format = self.CURRENCY_FORMAT
-        total_cell.border = self.THIN_BORDER
-
-        current_row += 1
-
-        # Total row
-        ws.cell(current_row, 2, "Total Travel")
-        ws.cell(current_row, 2).font = self.BOLD_FONT
-        ws.cell(current_row, 2).border = self.THIN_BORDER
-
-        col = 3
         for year in range(1, self.total_years + 1):
             cell = ws.cell(current_row, col)
             cell.value = f"=SUM({get_column_letter(col)}{travel_start_row}:{get_column_letter(col)}{current_row - 1})"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
             cell.font = self.BOLD_FONT
-            col += 2
+            col += 1
 
         # Add Total column formula for Total Travel row
         total_cell = ws.cell(current_row, total_col)
-        total_cell.value = f"=SUM({get_column_letter(3)}{current_row}:{get_column_letter(total_col - 2)}{current_row})"
+        total_cell.value = f"=SUM({get_column_letter(2)}{current_row}:{get_column_letter(total_col - 1)}{current_row})"
         total_cell.number_format = self.CURRENCY_FORMAT
         total_cell.border = self.THIN_BORDER
         total_cell.font = self.BOLD_FONT
