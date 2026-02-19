@@ -139,7 +139,7 @@ def convert_intelligent_output_to_dataframe(intelligent_result: Dict[str, Any]) 
     extensions = intelligent_result.get("extensions", [])
 
     # Build months_per_year dict from extensions
-    total_years = metadata.get("total_years", 5)
+    total_years = metadata.get("total_years") or 5
     months_per_year_dict = {}
 
     # Default: all regular years have 12 months
@@ -174,9 +174,9 @@ def convert_intelligent_output_to_dataframe(intelligent_result: Dict[str, Any]) 
             "ot_hours_per_year": ot_hours_per_year,  # NEW: Overtime hours per year
 
             # Metadata (document-level info)
-            "base_years": metadata.get("base_years", 1),
-            "option_years": metadata.get("option_years", 4),
-            "total_years": metadata.get("total_years", 5),
+            "base_years": metadata.get("base_years") or 1,
+            "option_years": metadata.get("option_years") or 4,
+            "total_years": metadata.get("total_years") or 5,
             "project_name": metadata.get("project_name"),
             "standard_fte_hours": metadata.get("standard_fte_hours", 1920),
             "months_per_year": months_per_year_dict if months_per_year_dict else None
@@ -301,6 +301,27 @@ async def process_proposal_documents(
         extracted_odcs = parse_result.get("odcs", [])
         extracted_extensions = parse_result.get("extensions", [])
         extracted_surge = intelligent_result.get("surge", None)  # Extract surge from raw result
+
+        # Validate that we found positions (travel/ODCs being empty is fine)
+        if len(df) == 0:
+            metadata_notes = intelligent_result.get("metadata", {}).get("notes", "")
+            error_message = "Could not extract or generate staffing positions from this document. "
+            if "GENERATED" in metadata_notes:
+                error_message += "The AI attempted to create a staffing plan but was unable to generate reasonable estimates. "
+            else:
+                error_message += "This document may not contain labor staffing information. "
+            error_message += "Please ensure the document describes labor positions, roles, or staffing requirements."
+
+            crud.update_proposal(
+                proposal_id,
+                user_id,
+                {
+                    "status": "error",
+                    "progress": 0,
+                    "message": error_message
+                }
+            )
+            return
 
         crud.update_proposal(
             proposal_id,
