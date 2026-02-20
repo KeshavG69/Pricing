@@ -154,10 +154,15 @@ export function getGSARateForYear(
     }
 
     // Apply compound escalation from last available year to target contract year
+    // Map contract years to proposal years for escalation lookup
     let escalatedRate = lastAvailableRate;
+    const lastProposalYear = lastAvailableYear - currentGsaYear + 1;
 
     for (let year = lastAvailableYear; year < contractYear; year++) {
-      const escKey = `${year}_to_${year + 1}`;
+      // Calculate corresponding proposal year transition
+      const proposalYear = year - currentGsaYear + 1;
+      const nextProposalYear = proposalYear + 1;
+      const escKey = `${proposalYear}_to_${nextProposalYear}`;
       const escRate = escalationRates[escKey] || 0;
       escalatedRate *= (1 + escRate);
     }

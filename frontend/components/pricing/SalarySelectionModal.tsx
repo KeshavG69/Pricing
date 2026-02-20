@@ -108,14 +108,21 @@ export const SalarySelectionModal = ({
 
     const rates: { contractYear: number; proposalYear: number; rate: number }[] = [];
 
+    // Create a temporary position with the selected gsa_current_year for preview
+    const tempPosition = {
+      ...position,
+      gsa_current_year: gsaCurrentYear,
+    };
+
     for (let proposalYear = 1; proposalYear <= totalYears; proposalYear++) {
       const contractYear = gsaCurrentYear + (proposalYear - 1);
-      const rate = position.gsa_rates_by_year[String(contractYear)] || 0;
+      // Use getGSARateForYear with temp position that has the selected year
+      const rate = getGSARateForYear(tempPosition, proposalYear, escalationRates);
       rates.push({ contractYear, proposalYear, rate });
     }
 
     return rates;
-  }, [position, isGSA, gsaCurrentYear, totalYears]);
+  }, [position, isGSA, gsaCurrentYear, totalYears, escalationRates]);
 
   // Get available contract years from GSA rates
   const availableContractYears = useMemo(() => {
@@ -379,8 +386,8 @@ export const SalarySelectionModal = ({
                           Contract Year {contractYear}
                         </div>
                       </div>
-                      <div className={`text-lg font-bold font-mono ${rate > 0 ? 'text-green-800 dark:text-green-200' : 'text-red-500'}`}>
-                        {rate > 0 ? `$${rate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/hr` : 'N/A'}
+                      <div className="text-lg font-bold font-mono text-green-800 dark:text-green-200">
+                        ${rate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/hr
                       </div>
                     </div>
                   ))}

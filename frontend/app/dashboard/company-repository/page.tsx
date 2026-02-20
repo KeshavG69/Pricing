@@ -570,17 +570,14 @@ export default function CompanyRepositoryPage() {
         };
       });
 
+      // Invalidate all caches for this contract
+      useCompanyRepositoryStore.getState().invalidateAllCaches(fileId);
+
       toast.success('Contract start date updated');
       setEditingStartDate(null);
 
-      // Invalidate cache and refetch to update list
-      try {
-        cacheManager.invalidate(`company_repository_${user?.organization_id}`);
-        // Refetch contracts list to get updated data
-        await fetchContracts();
-      } catch (cacheError) {
-        console.warn('[UPDATE START DATE] Cache invalidation failed:', cacheError);
-      }
+      // Refetch contracts list to get updated data
+      await fetchContracts();
     } catch (error: any) {
       console.error('[UPDATE START DATE] Error:', error);
       console.error('[UPDATE START DATE] Error response:', error.response?.data);
@@ -632,8 +629,8 @@ export default function CompanyRepositoryPage() {
       toast.success('Labor category updated successfully');
       setEditingCell(null);
 
-      // Invalidate cache to refresh on next fetch
-      cacheManager.invalidate(`company_repository_${user?.organization_id}`);
+      // Invalidate all caches for this contract (including sessionStorage)
+      useCompanyRepositoryStore.getState().invalidateAllCaches(fileId);
     } catch (error: any) {
       console.error('Failed to update labor category:', error);
       console.error('Error response:', error.response?.data);
