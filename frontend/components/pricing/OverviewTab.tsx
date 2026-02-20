@@ -100,7 +100,7 @@ export default function OverviewTab() {
           // GSA positions: Reverse engineer for DISPLAY purposes
           // The GSA rate is the final FBLR, but we show it broken down
           // as if it were calculated with indirect rates (for consistency in overview)
-          const originalGsaRate = getGSARateForYear(pos, yearNum);
+          const originalGsaRate = getGSARateForYear(pos, yearNum, escalationRates);
 
           // Apply discount if set by user
           const discountRate = pos.gsa_discount_rate || 0;
@@ -287,7 +287,7 @@ export default function OverviewTab() {
 
         if (isGSA) {
           // GSA: Use discounted GSA rate
-          const originalGsaRate = getGSARateForYear(pos, yearNum);
+          const originalGsaRate = getGSARateForYear(pos, yearNum, escalationRates);
           const discountRate = pos.gsa_discount_rate || 0;
           const discountedGsaRate = originalGsaRate * (1 - discountRate);
 
@@ -411,7 +411,7 @@ export default function OverviewTab() {
 
         if (isGSA) {
           // GSA positions: Reverse engineer for DISPLAY purposes
-          const gsaRate = getGSARateForYear(pos, yearNum);
+          const gsaRate = getGSARateForYear(pos, yearNum, escalationRates);
           const gsaBreakdown = reverseEngineerGSARate(gsaRate, rates);
 
           const dlAmount = gsaBreakdown.dlRate * hours;
@@ -581,7 +581,7 @@ export default function OverviewTab() {
         const yearNum = parseInt(yearStr);
 
         if (isGSA) {
-          const originalGsaRate = getGSARateForYear(pos, yearNum);
+          const originalGsaRate = getGSARateForYear(pos, yearNum, escalationRates);
           const discountRate = pos.gsa_discount_rate || 0;
           const discountedGsaRate = originalGsaRate * (1 - discountRate);
           breakdown[yearStr].ot += discountedGsaRate * otMultiplier * otHours;

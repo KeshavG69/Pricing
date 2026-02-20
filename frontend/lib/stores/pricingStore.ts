@@ -462,7 +462,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           // GSA positions: Reverse engineer for DISPLAY purposes
           // The GSA rate is the final FBLR, but we show it broken down
           // as if it were calculated with indirect rates (for consistency in UI)
-          const originalGsaRate = getGSARateForYear(pos, yearNum);
+          const originalGsaRate = getGSARateForYear(pos, yearNum, state.escalationRates);
 
           // Apply discount if set by user
           const discountRate = pos.gsa_discount_rate || 0;
@@ -2411,7 +2411,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
               for (let year = 1; year <= state.totalYears; year++) {
                 const yearStr = year.toString();
                 const hoursThisYear = p.hours_per_year[yearStr] || 0;
-                const gsaRate = getGSARateForYear(p, year);
+                const gsaRate = getGSARateForYear(p, year, state.escalationRates);
 
                 if (hoursThisYear > 0 && gsaRate > 0) {
                   totalAmount += gsaRate * hoursThisYear;

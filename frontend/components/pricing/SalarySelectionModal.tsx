@@ -26,8 +26,9 @@ export const SalarySelectionModal = ({
   position,
   onUpdate,
 }: SalarySelectionModalProps) => {
-  // Get total years from store
+  // Get total years and escalation rates from store
   const totalYears = usePricingStore((state) => state.totalYears);
+  const escalationRates = usePricingStore((state) => state.escalationRates);
 
   // Check if GSA position
   const isGSA = position ? isGSAPosition(position) : false;
@@ -209,10 +210,10 @@ export const SalarySelectionModal = ({
 
     if (isGSA) {
       // GSA mode: Update current year selection and custom rate
-      // Use null to explicitly clear custom rate when not set
+      // Convert null to undefined for type compatibility
       const updates: Partial<SpreadsheetPosition | AdvancedPosition> = {
-        gsa_current_year: gsaCurrentYear,
-        gsa_custom_rate: gsaCustomRate, // null will clear, number will set
+        gsa_current_year: gsaCurrentYear ?? undefined,
+        gsa_custom_rate: gsaCustomRate ?? undefined,
       };
       onUpdate(updates);
     } else {
@@ -288,7 +289,7 @@ export const SalarySelectionModal = ({
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`font-bold text-xl ${gsaCustomRate ? 'text-blue-800 dark:text-blue-200' : 'text-green-800 dark:text-green-200'}`}>
-                    ${(gsaCustomRate || getGSARateForYear(position, 1)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/hr
+                    ${(gsaCustomRate || getGSARateForYear(position, 1, escalationRates)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/hr
                   </span>
                   <span className={`text-xs px-2 py-0.5 rounded ${gsaCustomRate ? 'text-blue-700 bg-blue-200 dark:bg-blue-900' : 'text-green-700 bg-green-200 dark:bg-green-900'}`}>
                     {gsaCustomRate ? 'Custom' : 'GSA'}

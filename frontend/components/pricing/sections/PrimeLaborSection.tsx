@@ -43,7 +43,7 @@ const calculateAveragedFBLR = (
       const yearStr = year.toString();
       const breakdown = position.breakdown[yearStr];
       const hoursThisYear = breakdown?.hours || 0;
-      const gsaRate = getGSARateForYear(position, year);
+      const gsaRate = getGSARateForYear(position, year, escalationRates);
 
       if (hoursThisYear > 0 && gsaRate > 0) {
         totalAmount += gsaRate * hoursThisYear;
@@ -1844,7 +1844,7 @@ export const PrimeLaborSection = ({
             const rationale = pos.discount_rationale;
 
             // Get first year GSA rate for comparison display
-            const gsaRate = getGSARateForYear(pos, 1);
+            const gsaRate = getGSARateForYear(pos, 1, escalationRates);
 
             return (
               <div
