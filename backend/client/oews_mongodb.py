@@ -29,8 +29,8 @@ class OEWSMongoLookup:
             # Connection pool tuning for Railway MongoDB proxy
             self.client = AsyncIOMotorClient(
                 settings.MONGODB_URL,
-                maxPoolSize=50,
-                minPoolSize=0,           # Don't keep warm connections (Railway proxy issue)
+                maxPoolSize=100,
+                minPoolSize=50,          # Keep 50 warm connections
                 maxIdleTimeMS=300000,    # 5min idle timeout
                 socketTimeoutMS=30000,
                 connectTimeoutMS=20000,
