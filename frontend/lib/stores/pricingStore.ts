@@ -462,11 +462,20 @@ export const usePricingStore = create<PricingState>((set, get) => {
           // GSA positions: Reverse engineer for DISPLAY purposes
           // The GSA rate is the final FBLR, but we show it broken down
           // as if it were calculated with indirect rates (for consistency in UI)
+
+          console.log(`[TRANSFORM_GSA] Position: ${pos.labor_category}, Year: ${yearNum}`);
+          console.log('[TRANSFORM_GSA] gsa_rates_by_year:', pos.gsa_rates_by_year);
+          console.log('[TRANSFORM_GSA] gsa_current_year:', pos.gsa_current_year);
+          console.log('[TRANSFORM_GSA] gsa_custom_rate:', pos.gsa_custom_rate);
+          console.log('[TRANSFORM_GSA] gsa_discount_rate:', pos.gsa_discount_rate);
+
           const originalGsaRate = getGSARateForYear(pos, yearNum, state.escalationRates);
+          console.log('[TRANSFORM_GSA] originalGsaRate from getGSARateForYear:', originalGsaRate);
 
           // Apply discount if set by user
           const discountRate = pos.gsa_discount_rate || 0;
           const gsaRate = originalGsaRate * (1 - discountRate);
+          console.log('[TRANSFORM_GSA] Final gsaRate after discount:', gsaRate);
 
           const gsaBreakdown = reverseEngineerGSARate(gsaRate, state.rates);
 
@@ -496,6 +505,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
             fblr: gsaRate, // GSA rate is the true FBLR (not reverse-engineered value)
             totalAmount,
           };
+
+          console.log('[TRANSFORM_GSA] breakdown.fblr set to:', gsaRate);
         } else {
           // BLS positions: Calculate with indirect rates and escalation
           // Use getEffectiveSalary to handle multi-select averaging
@@ -600,6 +611,12 @@ export const usePricingStore = create<PricingState>((set, get) => {
     };
 
     advanced.forEach((pos) => {
+      // CRITICAL: Skip positions assigned to subcontractors to avoid double-counting
+      // Positions with assigned_subcontractor_id should ONLY be counted in subcontractor totals
+      if (pos.assigned_subcontractor_id) {
+        return;
+      }
+
       Object.entries(pos.breakdown).forEach(([year, breakdown]) => {
         if (!aggregates.byYear[year]) {
           aggregates.byYear[year] = {
@@ -1573,12 +1590,20 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
       // Update state: positions and subcontractors
       set((prevState) => {
-        // Update prime positions with returned hours
+        // Update prime positions with returned hours AND clear assigned_subcontractor_id
         const updatedPositions = prevState.positions.map(pos => {
           if (primeHoursUpdates[pos.id]) {
             return {
               ...pos,
-              hours_per_year: { ...primeHoursUpdates[pos.id] }
+              hours_per_year: { ...primeHoursUpdates[pos.id] },
+              assigned_subcontractor_id: undefined  // Clear subcontractor assignment
+            };
+          }
+          // Also clear assignment for any other positions assigned to this subcontractor
+          if (pos.assigned_subcontractor_id === id) {
+            return {
+              ...pos,
+              assigned_subcontractor_id: undefined
             };
           }
           return pos;
@@ -3061,21 +3086,43 @@ export const usePricingStore = create<PricingState>((set, get) => {
       }
 
       // Calculate base rate from FBLR
-      const effectiveSalary = getEffectiveSalary(position);
-      const fteHours = position.standard_fte_hours || 1920;
-      const dlRate = effectiveSalary / fteHours;
+      let fblr: number;
 
-      // Calculate FBLR using prime rates
-      const fringeRate = state.rates.fringe || 0.247;
-      const ohRate = (position.location_type === 'Off-Site' ? state.rates.oh_offsite : state.rates.oh_onsite) || 0.0711;
-      const gaRate = state.rates.ga || 0.2243;
-      const feeRate = state.rates.fee || 0.08;
+      // Check if GSA position
+      if (isGSAPosition(position)) {
+        // GSA: Rate is already fully burdened, use directly
+        console.log('[ASSIGN_TO_SUB] GSA position detected');
+        console.log('[ASSIGN_TO_SUB] gsa_rates_by_year:', position.gsa_rates_by_year);
+        console.log('[ASSIGN_TO_SUB] gsa_current_year:', position.gsa_current_year);
+        console.log('[ASSIGN_TO_SUB] gsa_custom_rate:', position.gsa_custom_rate);
+        console.log('[ASSIGN_TO_SUB] gsa_discount_rate:', position.gsa_discount_rate);
 
-      const fringeAmount = dlRate * fringeRate;
-      const ohAmount = (dlRate + fringeAmount) * ohRate;
-      const gaAmount = (dlRate + fringeAmount + ohAmount) * gaRate;
-      const feeAmount = (dlRate + fringeAmount + ohAmount + gaAmount) * feeRate;
-      const fblr = dlRate + fringeAmount + ohAmount + gaAmount + feeAmount;
+        const gsaRate = getGSARateForYear(position, 1, state.escalationRates);
+        console.log('[ASSIGN_TO_SUB] GSA rate from getGSARateForYear:', gsaRate);
+
+        const discountRate = position.gsa_discount_rate || 0;
+        fblr = gsaRate * (1 - discountRate);
+        console.log('[ASSIGN_TO_SUB] Final FBLR after discount:', fblr);
+      } else {
+        // BLS: Calculate FBLR from annual salary
+        console.log('[ASSIGN_TO_SUB] BLS position detected');
+        const effectiveSalary = getEffectiveSalary(position);
+        const fteHours = position.standard_fte_hours || 1920;
+        const dlRate = effectiveSalary / fteHours;
+
+        // Calculate FBLR using prime rates
+        const fringeRate = state.rates.fringe || 0.247;
+        const ohRate = (position.location_type === 'Off-Site' ? state.rates.oh_offsite : state.rates.oh_onsite) || 0.0711;
+        const gaRate = state.rates.ga || 0.2243;
+        const feeRate = state.rates.fee || 0.08;
+
+        const fringeAmount = dlRate * fringeRate;
+        const ohAmount = (dlRate + fringeAmount) * ohRate;
+        const gaAmount = (dlRate + fringeAmount + ohAmount) * gaRate;
+        const feeAmount = (dlRate + fringeAmount + ohAmount + gaAmount) * feeRate;
+        fblr = dlRate + fringeAmount + ohAmount + gaAmount + feeAmount;
+        console.log('[ASSIGN_TO_SUB] Calculated FBLR:', fblr);
+      }
 
       // Check if there's a previously edited rate to preserve
       const subFee = state.rates.sub_fee || 0;

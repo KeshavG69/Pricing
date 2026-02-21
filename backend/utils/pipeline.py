@@ -566,6 +566,22 @@ def build_project_data_from_dataframe(
             if str(year) not in hours_per_year:
                 # Use last available year's hours or default to 1880
                 hours_per_year[str(year)] = hours_per_year.get(str(year-1), 1880)
+            elif hours_per_year[str(year)] is None:
+                # If hours is None (e.g., from deleted subcontractor assignment), use default
+                # NOTE: We keep 0 hours as-is (user may have intentionally set it to 0)
+                hours_per_year[str(year)] = 1920  # Default FTE hours
+
+        # Parse gsa_rates_by_year if it's a string
+        gsa_rates_by_year = {}
+        if 'gsa_rates_by_year' in row and pd.notna(row['gsa_rates_by_year']):
+            rates_data = row['gsa_rates_by_year']
+            if isinstance(rates_data, str):
+                try:
+                    gsa_rates_by_year = ast.literal_eval(rates_data)
+                except (ValueError, SyntaxError):
+                    gsa_rates_by_year = {}
+            elif isinstance(rates_data, dict):
+                gsa_rates_by_year = rates_data
 
         # Determine base annual wage with priority (matching frontend's getEffectiveSalary):
         # 1. selected_salaries (user's manual edits, averaged)
@@ -602,18 +618,35 @@ def build_project_data_from_dataframe(
             'wage_90th': row.get('wage_90th', 0),
             'location': row.get('location', ''),
             'site': 'Government' if row.get('location_type') == 'On-Site' else 'Contractor',
+            'location_type': row.get('location_type', 'On-Site'),
+            # GSA-specific fields
+            'wage_source': row.get('wage_source', 'bls'),
+            'gsa_lcat_id': row.get('gsa_lcat_id'),
+            'gsa_title': row.get('gsa_title'),
+            'gsa_rates_by_year': gsa_rates_by_year,  # Use parsed value
+            'gsa_current_year': row.get('gsa_current_year'),
+            'gsa_custom_rate': row.get('gsa_custom_rate'),
+            'gsa_discount_rate': row.get('gsa_discount_rate', 0.0),
         }
 
         # Check if position has subcontractor hours assigned
         sub_hours = row.get('subcontractor_hours') or 0
         # Filter out None values before summing
         try:
-            total_hours = row.get('hours') or sum(h for h in hours_per_year.values() if h is not None)
+            total_hours = row.get('hours') or sum(h for h in hours_per_year.values() if h is not None and h > 0)
+            # If sum results in 0, skip this position (likely data issue)
+            if total_hours == 0:
+                print(f"⚠️  WARNING: Position '{row.get('labor_category')}' has 0 total hours, skipping")
+                print(f"    hours_per_year: {hours_per_year}")
+                print(f"    row.get('hours'): {row.get('hours')}")
+                continue
         except Exception as e:
-            print(f"Error calculating total_hours for {row.get('labor_category')}: {e}")
-            print(f"hours_per_year values: {hours_per_year.values()}")
-            print(f"row.get('hours'): {row.get('hours')}")
-            raise
+            print(f"❌ Error calculating total_hours for {row.get('labor_category')}: {e}")
+            print(f"   hours_per_year values: {hours_per_year.values()}")
+            print(f"   row.get('hours'): {row.get('hours')}")
+            # Skip position on error instead of raising
+            print(f"   Skipping this position due to error")
+            continue
 
         if sub_hours == 0:
             # All prime labor

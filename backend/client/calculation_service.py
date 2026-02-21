@@ -798,7 +798,8 @@ class Calculator:
     def calculate_gsa_position_years(
         position_data: Dict[str, Any],
         total_years: int,
-        discount_rate: float = 0.0
+        discount_rate: float = 0.0,
+        escalation_rates: Dict[str, float] = None
     ) -> Dict[str, Any]:
         """
         Calculate GSA position costs for all years.
@@ -809,8 +810,9 @@ class Calculator:
         Args:
             position_data: Dict with:
                 - labor_category: str
-                - gsa_rates_by_year: Dict[str, float] like {"1": 185.50, "2": 190.25, ...}
-                - hours_per_year: Dict[str, int] like {"1": 1880, "2": 1880, ...}
+                - gsa_rates_by_year: Dict[str, float] like {"5": 185.50, "6": 190.25, ...} (contract years)
+                - gsa_current_year: int (contract year aligned with proposal year 1)
+                - hours_per_year: Dict[str, int] like {"1": 1880, "2": 1880, ...} (proposal years)
             total_years: Number of years
             discount_rate: Optional discount rate
 
@@ -822,9 +824,39 @@ class Calculator:
         gsa_rates = position_data.get("gsa_rates_by_year", {})
         hours_per_year = position_data.get("hours_per_year", {})
 
+        # Get the contract year that aligns with proposal year 1
+        gsa_current_year = position_data.get("gsa_current_year", 1)
+
         for year in range(1, total_years + 1):
             year_str = str(year)
-            gsa_rate = gsa_rates.get(year_str, 0)
+
+            # Map proposal year to contract year
+            contract_year = gsa_current_year + (year - 1)
+            gsa_rate = gsa_rates.get(str(contract_year), 0)
+
+            # If contract year not found, check if we need escalation
+            if gsa_rate == 0 and gsa_rates:
+                available_years = sorted([int(k) for k in gsa_rates.keys() if k.isdigit()])
+                if available_years and contract_year > max(available_years):
+                    last_available_year = max(available_years)
+                    last_available_rate = gsa_rates.get(str(last_available_year), 0)
+
+                    # Apply compound escalation if escalation rates provided
+                    if escalation_rates and last_available_rate > 0:
+                        escalated_rate = last_available_rate
+                        last_proposal_year = last_available_year - gsa_current_year + 1
+
+                        # Apply compound escalation from last available year to current year
+                        for prop_year in range(last_proposal_year, year):
+                            esc_key = f"{prop_year}_to_{prop_year + 1}"
+                            esc_rate = escalation_rates.get(esc_key, 0)
+                            escalated_rate *= (1 + esc_rate)
+
+                        gsa_rate = escalated_rate
+                    else:
+                        # No escalation rates - use last available year (backward compatible)
+                        gsa_rate = last_available_rate
+
             hours = hours_per_year.get(year_str, 0)
 
             # Apply discount
