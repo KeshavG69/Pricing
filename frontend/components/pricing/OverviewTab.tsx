@@ -63,6 +63,9 @@ function CostBreakdownBar({
 export default function OverviewTab() {
   const {
     positions,
+    positionsAdvanced,
+    advancedMode,
+    aggregates,
     subcontractors,
     travel,
     odcs,
@@ -76,7 +79,6 @@ export default function OverviewTab() {
 
   // Calculate all costs with FBLR breakdown
   const costMetrics = useMemo(() => {
-    // Calculate prime labor components directly from positions and current rates
     let directLaborTotal = 0;
     let fringeTotal = 0;
     let ohOnsiteTotal = 0;
@@ -85,11 +87,38 @@ export default function OverviewTab() {
     let primeFeeTotal = 0;
     let primeLaborTotal = 0;
 
-    positions.forEach((pos) => {
-      // Skip positions assigned to subcontractors (they're counted in subcontractor totals)
-      if (pos.assigned_subcontractor_id) {
-        return;
-      }
+    // In Advanced Mode, use pre-calculated aggregates from the store
+    // (aggregates are calculated from positionsAdvanced which has live edits)
+    if (advancedMode && aggregates) {
+      directLaborTotal = aggregates.totalDL;
+      fringeTotal = aggregates.totalFringe;
+      gaTotal = aggregates.totalGA;
+      primeFeeTotal = aggregates.totalFee;
+      primeLaborTotal = aggregates.totalFBLR;
+
+      // Calculate OH split by location type from positionsAdvanced
+      // (aggregates has combined OH, but we need to split it for display)
+      positionsAdvanced.forEach((pos) => {
+        // Skip positions assigned to subcontractors
+        if (pos.assigned_subcontractor_id) return;
+
+        // Sum OH amounts from breakdown, splitting by location type
+        Object.values(pos.breakdown).forEach((yearData) => {
+          const ohAmount = yearData.ohAmount;
+          if (pos.location_type === 'Off-Site') {
+            ohOffsiteTotal += ohAmount;
+          } else {
+            ohOnsiteTotal += ohAmount;
+          }
+        });
+      });
+    } else {
+      // In Basic Mode, calculate from positions
+      positions.forEach((pos) => {
+        // Skip positions assigned to subcontractors (they're counted in subcontractor totals)
+        if (pos.assigned_subcontractor_id) {
+          return;
+        }
 
       const isGSA = isGSAPosition(pos);
 
@@ -100,7 +129,7 @@ export default function OverviewTab() {
           // GSA positions: Reverse engineer for DISPLAY purposes
           // The GSA rate is the final FBLR, but we show it broken down
           // as if it were calculated with indirect rates (for consistency in overview)
-          const originalGsaRate = getGSARateForYear(pos, yearNum);
+          const originalGsaRate = getGSARateForYear(pos, yearNum, escalationRates);
 
           // Apply discount if set by user
           const discountRate = pos.gsa_discount_rate || 0;
@@ -188,6 +217,7 @@ export default function OverviewTab() {
         }
       });
     });
+    } // End of else block (Basic Mode calculation)
 
 
     // Subcontractor costs with escalation (including OT)
@@ -270,13 +300,19 @@ export default function OverviewTab() {
 
     // NEW: Overtime (OT) costs - Calculate from OT hours × OT multiplier
     let otTotal = 0;
-    const otMultiplier = rates.ot_multiplier || 1.5;  // Default 1.5x (time-and-a-half)
 
-    positions.forEach((pos) => {
-      // Skip positions assigned to subcontractors (they're counted in subcontractor totals)
-      if (pos.assigned_subcontractor_id) {
-        return;
-      }
+    // In Advanced Mode, use pre-calculated OT from aggregates
+    if (advancedMode && aggregates) {
+      otTotal = aggregates.totalOT;
+    } else {
+      // In Basic Mode, calculate from positions
+      const otMultiplier = rates.ot_multiplier || 1.5;  // Default 1.5x (time-and-a-half)
+
+      positions.forEach((pos) => {
+        // Skip positions assigned to subcontractors (they're counted in subcontractor totals)
+        if (pos.assigned_subcontractor_id) {
+          return;
+        }
 
       const isGSA = isGSAPosition(pos);
 
@@ -287,7 +323,7 @@ export default function OverviewTab() {
 
         if (isGSA) {
           // GSA: Use discounted GSA rate
-          const originalGsaRate = getGSARateForYear(pos, yearNum);
+          const originalGsaRate = getGSARateForYear(pos, yearNum, escalationRates);
           const discountRate = pos.gsa_discount_rate || 0;
           const discountedGsaRate = originalGsaRate * (1 - discountRate);
 
@@ -321,6 +357,7 @@ export default function OverviewTab() {
         }
       });
     });
+    } // End of else block (Basic Mode OT calculation)
 
     // NEW: Surge costs - Calculate from base prime labor × surge percentage × surge multiplier
     let surgeTotal = 0;
@@ -352,7 +389,7 @@ export default function OverviewTab() {
       surgeTotal,  // NEW: Surge costs
       grandTotal,
     };
-  }, [positions, subcontractors, travel, odcs, surge, rates, escalationRates, advancedModeVersion]);
+  }, [advancedMode, aggregates, positionsAdvanced, positions, subcontractors, travel, odcs, surge, rates, escalationRates, advancedModeVersion]);
 
   // Calculate year-by-year breakdown
   const yearBreakdown = useMemo(() => {
@@ -396,12 +433,45 @@ export default function OverviewTab() {
     // Define OT multiplier for use throughout calculations
     const otMultiplier = rates.ot_multiplier || 1.5;
 
-    // Prime labor components by year (DL, Fringe, OH, G&A) - calculate directly from positions
-    positions.forEach((pos) => {
-      // Skip positions assigned to subcontractors (they're counted in subcontractor totals)
-      if (pos.assigned_subcontractor_id) {
-        return;
-      }
+    // Prime labor components by year (DL, Fringe, OH, G&A)
+    // In Advanced Mode, use pre-calculated aggregates; in Basic Mode, calculate from positions
+    if (advancedMode && aggregates) {
+      // Use aggregates for prime labor breakdown by year
+      Object.entries(aggregates.byYear).forEach(([yearStr, yearData]) => {
+        if (!breakdown[yearStr]) return;
+
+        breakdown[yearStr].directLabor = yearData.dl;
+        breakdown[yearStr].fringe = yearData.fringe;
+        breakdown[yearStr].oh = yearData.oh;
+        breakdown[yearStr].ga = yearData.ga;
+        breakdown[yearStr].ot = yearData.ot;
+        // Note: fee is calculated separately below from subcontractor costs
+      });
+
+      // Calculate OH split by location type from positionsAdvanced
+      positionsAdvanced.forEach((pos) => {
+        // Skip positions assigned to subcontractors
+        if (pos.assigned_subcontractor_id) return;
+
+        // Split OH by location type for each year
+        Object.entries(pos.breakdown).forEach(([yearStr, yearData]) => {
+          if (!breakdown[yearStr]) return;
+
+          const ohAmount = yearData.ohAmount;
+          if (pos.location_type === 'Off-Site') {
+            breakdown[yearStr].ohOffsite += ohAmount;
+          } else {
+            breakdown[yearStr].ohOnsite += ohAmount;
+          }
+        });
+      });
+    } else {
+      // Basic Mode: calculate directly from positions
+      positions.forEach((pos) => {
+        // Skip positions assigned to subcontractors (they're counted in subcontractor totals)
+        if (pos.assigned_subcontractor_id) {
+          return;
+        }
 
       const isGSA = pos.wage_source === 'gsa';
 
@@ -411,7 +481,7 @@ export default function OverviewTab() {
 
         if (isGSA) {
           // GSA positions: Reverse engineer for DISPLAY purposes
-          const gsaRate = getGSARateForYear(pos, yearNum);
+          const gsaRate = getGSARateForYear(pos, yearNum, escalationRates);
           const gsaBreakdown = reverseEngineerGSARate(gsaRate, rates);
 
           const dlAmount = gsaBreakdown.dlRate * hours;
@@ -480,6 +550,7 @@ export default function OverviewTab() {
         }
       });
     });
+    } // End of else block (Basic Mode year calculation)
 
     // Subcontractor by year with escalation (including OT)
     subcontractors.forEach((sub) => {
@@ -581,7 +652,7 @@ export default function OverviewTab() {
         const yearNum = parseInt(yearStr);
 
         if (isGSA) {
-          const originalGsaRate = getGSARateForYear(pos, yearNum);
+          const originalGsaRate = getGSARateForYear(pos, yearNum, escalationRates);
           const discountRate = pos.gsa_discount_rate || 0;
           const discountedGsaRate = originalGsaRate * (1 - discountRate);
           breakdown[yearStr].ot += discountedGsaRate * otMultiplier * otHours;
@@ -633,7 +704,7 @@ export default function OverviewTab() {
     });
 
     return breakdown;
-  }, [positions, subcontractors, travel, odcs, surge, rates, escalationRates, totalYears, advancedModeVersion]);
+  }, [advancedMode, aggregates, positionsAdvanced, positions, subcontractors, travel, odcs, surge, rates, escalationRates, totalYears, advancedModeVersion]);
 
   const formatCurrency = (value: number) => {
     return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;

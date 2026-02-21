@@ -280,9 +280,21 @@ WORKFLOW:
 2. If needed, use web search to research:
    - Typical staffing levels for operations described
    - Industry standards for specific roles
-   - Only when document lacks specific data
+   - Standard contract structures (base years, option years)
+   - Reasonable FTE levels for similar projects
 
-3. Extract as JSON with this structure:
+3. CRITICAL: If the document lacks explicit staffing information:
+   - ALWAYS try to help the user by generating reasonable estimates
+   - Analyze the contract objectives, scope, and requirements
+   - Use web research to find typical staffing patterns for similar projects
+   - Generate plausible labor categories based on the work described
+   - Estimate reasonable FTE hours per position (standard: 1920 hours/year)
+   - Create a draft staffing plan that aligns with the project scope
+   - Set data_source to "generated" or "web_research" for inferred positions
+   - Add detailed notes in metadata explaining what was generated
+   - The goal is to give users a helpful starting point they can refine
+
+4. Extract as JSON with this structure:
 {{
   "metadata": {{
     "project_name": "string or null",
@@ -291,7 +303,7 @@ WORKFLOW:
     "option_years": 4,
     "total_years": 5,
     "standard_fte_hours": {default_fte_hours},
-    "notes": "Add any relevant contract notes "
+    "notes": "REQUIRED: Explain data quality and sources. If staffing was generated/estimated (not explicitly in document), clearly state: 'GENERATED: This staffing plan was created based on contract objectives and typical industry patterns. All positions and hours are estimates and should be reviewed.' Include any assumptions made."
   }},
 
   "positions": [
@@ -354,9 +366,11 @@ WORKFLOW:
 }}
 
 IMPORTANT:
-- Prioritize document data over web research
-- Use web search only for missing information
-- Document your reasoning and data sources
+- Prioritize document data over web research when explicit staffing info exists
+- ALWAYS provide a helpful staffing plan - even if you need to generate reasonable estimates
+- If generating estimates: use web research, mark data_source as "generated" or "web_research", and explain in notes
+- Never return empty positions array - always try to help the user with at least a draft plan
+- Document your reasoning and data sources clearly
 - For FTE ranges (e.g., "2-3 analysts"), use midpoint or explain your choice
 - For positions appearing later (e.g., "Option Years only"), set early years to 0
 - Watch for "combined teams" (Base Year) that split into specialized roles (Option Years)
@@ -500,7 +514,8 @@ Return ONLY valid JSON, no markdown code blocks.
 
     print(f"\n  Project: {metadata.get('project_name', 'Unknown')}")
     print(f"  Location: {metadata.get('location', 'Unknown')}")
-    print(f"  Duration: {metadata.get('total_years', default_years)} years")
+    total_years_display = metadata.get('total_years') or default_years
+    print(f"  Duration: {total_years_display if total_years_display else 'N/A'} years")
     if extensions:
         print(f"  Extensions: {len(extensions)} period(s)")
 

@@ -225,6 +225,9 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
   const primeHoursByYear = useMemo(() => {
     const result: Record<string, number> = {};
     positionsAdvanced.forEach((pos) => {
+      // Skip positions assigned to subcontractors
+      if (pos.assigned_subcontractor_id) return;
+
       Object.entries(pos.breakdown).forEach(([year, breakdown]) => {
         if (!result[year]) result[year] = 0;
         result[year] += breakdown.hours;

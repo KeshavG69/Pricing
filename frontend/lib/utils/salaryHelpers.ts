@@ -113,7 +113,8 @@ export function reverseEngineerGSARate(
  */
 export function getGSARateForYear(
   position: SpreadsheetPosition | AdvancedPosition,
-  proposalYear: number
+  proposalYear: number,
+  escalationRates?: Record<string, number | undefined>
 ): number {
   // Custom rate overrides all years
   if (position.gsa_custom_rate != null && position.gsa_custom_rate > 0) {
@@ -144,7 +145,29 @@ export function getGSARateForYear(
 
   // Use the last available year if we're past the contract period
   if (contractYear > Math.max(...availableYears)) {
-    return position.gsa_rates_by_year[String(Math.max(...availableYears))] || 0;
+    const lastAvailableYear = Math.max(...availableYears);
+    const lastAvailableRate = position.gsa_rates_by_year[String(lastAvailableYear)] || 0;
+
+    // If no escalation rates provided, return last year's rate (backward compatibility)
+    if (!escalationRates) {
+      return lastAvailableRate;
+    }
+
+    // Apply compound escalation from last available year to target contract year
+    // Map contract years to proposal years for escalation lookup
+    let escalatedRate = lastAvailableRate;
+    const lastProposalYear = lastAvailableYear - currentGsaYear + 1;
+
+    for (let year = lastAvailableYear; year < contractYear; year++) {
+      // Calculate corresponding proposal year transition
+      const proposalYear = year - currentGsaYear + 1;
+      const nextProposalYear = proposalYear + 1;
+      const escKey = `${proposalYear}_to_${nextProposalYear}`;
+      const escRate = escalationRates[escKey] || 0;
+      escalatedRate *= (1 + escRate);
+    }
+
+    return escalatedRate;
   }
 
   // Use the first available year if we're before

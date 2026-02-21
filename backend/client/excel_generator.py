@@ -577,12 +577,24 @@ class ExcelGenerator:
             ws.cell(current_row, 3).border = self.THIN_BORDER
 
             # Calculate position data for each year
-            results = Calculator.calculate_position_years(
-                position_data=position,
-                escalation_rates=self.project_data['escalation_rates'],
-                indirect_rates=self.project_data['indirect_rates'],
-                total_years=self.total_years
-            )
+            # Use appropriate calculator based on wage source
+            if position.get('wage_source') == 'gsa':
+                # GSA positions: Use GSA-specific calculator
+                discount_rate = position.get('gsa_discount_rate', 0.0)
+                results = Calculator.calculate_gsa_position_years(
+                    position_data=position,
+                    total_years=self.total_years,
+                    discount_rate=discount_rate,
+                    escalation_rates=self.project_data.get('escalation_rates', {})
+                )
+            else:
+                # BLS positions: Use standard calculator
+                results = Calculator.calculate_position_years(
+                    position_data=position,
+                    escalation_rates=self.project_data['escalation_rates'],
+                    indirect_rates=self.project_data['indirect_rates'],
+                    total_years=self.total_years
+                )
 
             col = 4
             hours_cells = []
@@ -600,10 +612,14 @@ class ExcelGenerator:
                 hours_cells.append(f"{get_column_letter(col)}{current_row}")
                 col += 1
 
-                # Rate (DL Rate - NOT FBLR, breakdown will add indirect costs)
+                # Rate (DL Rate for BLS, FBLR for GSA)
                 rate_col = col
                 cell = ws.cell(current_row, col)
-                cell.value = year_data.get('dl_rate', 0)  # Use DL rate, not FBLR
+                # For GSA positions, use the actual GSA rate (FBLR), not the reverse-engineered DL rate
+                if position.get('wage_source') == 'gsa':
+                    cell.value = year_data.get('rate', 0)  # GSA: Use full FBLR (stored as 'rate')
+                else:
+                    cell.value = year_data.get('dl_rate', 0)  # BLS: Use DL rate, breakdown will add indirect costs
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 1
@@ -1068,12 +1084,24 @@ class ExcelGenerator:
             ws.cell(current_row, 3).border = self.THIN_BORDER
 
             # Calculate FBLR for each year
-            results = Calculator.calculate_position_years(
-                position_data=position,
-                escalation_rates=self.project_data['escalation_rates'],
-                indirect_rates=indirect_rates,
-                total_years=self.total_years
-            )
+            # Use appropriate calculator based on wage source
+            if position.get('wage_source') == 'gsa':
+                # GSA positions: Use GSA-specific calculator
+                discount_rate = position.get('gsa_discount_rate', 0.0)
+                results = Calculator.calculate_gsa_position_years(
+                    position_data=position,
+                    total_years=self.total_years,
+                    discount_rate=discount_rate,
+                    escalation_rates=self.project_data.get('escalation_rates', {})
+                )
+            else:
+                # BLS positions: Use standard calculator
+                results = Calculator.calculate_position_years(
+                    position_data=position,
+                    escalation_rates=self.project_data['escalation_rates'],
+                    indirect_rates=indirect_rates,
+                    total_years=self.total_years
+                )
 
             # Get prime labor fee rate (FBLR should include fee for "Fully Loaded" rates)
             fee_rates = self.project_data.get('fee_rates', {})
@@ -1084,10 +1112,14 @@ class ExcelGenerator:
                 year_data = results.get(f'year_{year}', {})
                 fblr_without_fee = year_data.get('rate', 0)
 
-                # Add fee to get fully loaded rate (matching frontend calculation)
-                # FBLR = (DL + Fringe + OH + G&A) + Fee
-                # Fee = (DL + Fringe + OH + G&A) × fee_rate
-                fblr_with_fee = fblr_without_fee * (1 + prime_fee_rate)
+                # For GSA positions, the rate is already fully loaded (no fee added)
+                if position.get('wage_source') == 'gsa':
+                    fblr_with_fee = fblr_without_fee
+                else:
+                    # BLS: Add fee to get fully loaded rate (matching frontend calculation)
+                    # FBLR = (DL + Fringe + OH + G&A) + Fee
+                    # Fee = (DL + Fringe + OH + G&A) × fee_rate
+                    fblr_with_fee = fblr_without_fee * (1 + prime_fee_rate)
 
                 cell = ws.cell(current_row, col)
                 cell.value = fblr_with_fee
@@ -1680,7 +1712,8 @@ class ExcelGenerator:
 
         indirect_rates = self.project_data.get('indirect_rates', {})
         fringe_rate = indirect_rates.get('fringe', 0.25)
-        oh_rate = indirect_rates.get('oh_onsite', indirect_rates.get('oh', 0.07))
+        oh_onsite_rate = indirect_rates.get('oh_onsite', indirect_rates.get('oh', 0.07))
+        oh_offsite_rate = indirect_rates.get('oh_offsite', indirect_rates.get('oh', 0.07))
         ga_rate = indirect_rates.get('ga', 0.22)
         smh_rate = self.project_data.get('passthrough_rates', {}).get('smh', 0.0671)
         fee_rates = self.project_data.get('fee_rates', {})
@@ -1692,23 +1725,63 @@ class ExcelGenerator:
             year_key = f"year_{year}"
 
             dl_total = 0
+            fringe_total = 0
+            oh_total = 0
+
             for position in self.project_data.get('prime_positions', []):
-                results = Calculator.calculate_position_years(
-                    position_data=position,
-                    escalation_rates=self.project_data['escalation_rates'],
-                    indirect_rates=indirect_rates,
-                    total_years=self.total_years
-                )
-                year_data = results.get(year_key, {})
-                # Direct Labor = DL rate × hours
-                dl_total += year_data.get('dl_rate', 0) * year_data.get('hours', 0)
+                # Use appropriate calculator based on wage source
+                if position.get('wage_source') == 'gsa':
+                    # GSA positions: Calculate with GSA-specific function
+                    discount_rate = position.get('gsa_discount_rate', 0.0)
+                    results = Calculator.calculate_gsa_position_years(
+                        position_data=position,
+                        total_years=self.total_years,
+                        discount_rate=discount_rate,
+                        escalation_rates=self.project_data.get('escalation_rates', {})
+                    )
+                    year_data = results.get(year_key, {})
+
+                    # For GSA: Reverse engineer DL from the fully loaded rate for CE Summary display
+                    # IMPORTANT: Use oh_onsite for ALL GSA positions (matching frontend logic)
+                    # GSA rate is FULLY LOADED (includes fee), so must reverse-engineer with fee in multiplier
+                    gsa_rate = year_data.get('rate', 0)
+                    hours = year_data.get('hours', 0)
+
+                    # Calculate multiplier using oh_onsite AND fee (matching frontend reverseEngineerGSARate)
+                    multiplier = (1 + fringe_rate) * (1 + oh_onsite_rate) * (1 + ga_rate) * (1 + prime_fee_rate)
+                    dl_rate = gsa_rate / multiplier if multiplier > 0 else 0
+                    position_dl = dl_rate * hours
+                    position_fringe = position_dl * fringe_rate
+                    position_oh = (position_dl + position_fringe) * oh_onsite_rate
+                else:
+                    # BLS positions: Use standard calculator (respects location_type via indirect_rates)
+                    results = Calculator.calculate_position_years(
+                        position_data=position,
+                        escalation_rates=self.project_data['escalation_rates'],
+                        indirect_rates=indirect_rates,
+                        total_years=self.total_years
+                    )
+                    year_data = results.get(year_key, {})
+
+                    # Direct Labor = DL rate × hours
+                    position_dl = year_data.get('dl_rate', 0) * year_data.get('hours', 0)
+                    position_fringe = position_dl * fringe_rate
+
+                    # For BLS: Use correct OH rate based on location_type
+                    location_type = position.get('location_type', 'On-Site')
+                    position_oh_rate = oh_onsite_rate if location_type == 'On-Site' else oh_offsite_rate
+                    position_oh = (position_dl + position_fringe) * position_oh_rate
+
+                # Accumulate totals
+                dl_total += position_dl
+                fringe_total += position_fringe
+                oh_total += position_oh
 
             # Use full precision - no rounding to match UI exactly
             result['direct_labor'][year_key] = dl_total
-            result['fringe'][year_key] = dl_total * fringe_rate
-            subtotal1 = dl_total + result['fringe'][year_key]
-            result['overhead'][year_key] = subtotal1 * oh_rate
-            subtotal2 = subtotal1 + result['overhead'][year_key]
+            result['fringe'][year_key] = fringe_total
+            result['overhead'][year_key] = oh_total
+            subtotal2 = dl_total + fringe_total + oh_total
             result['ga_labor'][year_key] = subtotal2 * ga_rate
 
             # Prime labor total for fee calculation
@@ -1941,8 +2014,9 @@ class ExcelGenerator:
                 # No user edit - use system's selected percentile
                 highlighted_percentile = selected_percentile
 
-            for percentile in ['10th', '25th', '50th', '75th', '90th']:
-                if wage_source == 'BLS':
+            # Only show percentile columns for BLS positions (skip for GSA)
+            if wage_source == 'BLS':
+                for percentile in ['10th', '25th', '50th', '75th', '90th']:
                     wage_key = f'wage_{percentile}'
                     wage_value = pos.get(wage_key)
                     cell = ws.cell(current_row, col)
@@ -1960,12 +2034,12 @@ class ExcelGenerator:
                     else:
                         cell.value = '-'
                         cell.alignment = Alignment(horizontal='center')
-                else:
-                    cell = ws.cell(current_row, col, '-')
-                    cell.alignment = Alignment(horizontal='center')
 
-                cell.border = self.THIN_BORDER
-                col += 1
+                    cell.border = self.THIN_BORDER
+                    col += 1
+            else:
+                # GSA: Skip percentile columns entirely (leave blank)
+                col += 5  # Skip 5 percentile columns
 
             # Selected Wage/Rate
             cell = ws.cell(current_row, col)
