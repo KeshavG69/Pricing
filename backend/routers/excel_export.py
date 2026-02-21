@@ -244,7 +244,8 @@ async def generate_excel_from_proposal(
         output.seek(0)
 
         # Generate filename with timestamp
-        timestamp = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+        from datetime import timezone
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         filename = f"cost_proposal_{project_config['solicitation_number']}_{timestamp}.xlsx"
 
         # Return as downloadable file

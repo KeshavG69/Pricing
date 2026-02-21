@@ -889,6 +889,14 @@
         "documentation": {}
     },
     {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "List",
         "importPath": "typing",
         "description": "typing",
@@ -1555,6 +1563,14 @@
     },
     {
         "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Body",
         "importPath": "fastapi",
         "description": "fastapi",
         "isExtraImport": true,
@@ -6144,6 +6160,24 @@
         "description": "backend.routers.billing",
         "peekOfCode": "router = APIRouter(prefix=\"/api/billing\", tags=[\"billing\"])\n# =============================================================================\n# REQUEST MODELS (Only what we need)\n# =============================================================================\nclass PaymentMethodRequest(BaseModel):\n    payment_method_id: str\nclass ChargeRequest(BaseModel):\n    proposal_id: str\n    charge_type: str  # \"basic\" or \"advanced\"\n# =============================================================================",
         "detail": "backend.routers.billing",
+        "documentation": {}
+    },
+    {
+        "label": "LaborCategoryUpdate",
+        "kind": 6,
+        "importPath": "backend.routers.company_repository",
+        "description": "backend.routers.company_repository",
+        "peekOfCode": "class LaborCategoryUpdate(BaseModel):\n    \"\"\"Request model for updating labor category fields.\"\"\"\n    title: Optional[str] = None\n    sin: Optional[str] = None\n    description: Optional[str] = None\n    experience: Optional[str] = None\n    education: Optional[str] = None\n    rates_by_year: Optional[Dict[str, float]] = None\nclass ContractUpdate(BaseModel):\n    \"\"\"Request model for updating contract metadata.\"\"\"",
+        "detail": "backend.routers.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "ContractUpdate",
+        "kind": 6,
+        "importPath": "backend.routers.company_repository",
+        "description": "backend.routers.company_repository",
+        "peekOfCode": "class ContractUpdate(BaseModel):\n    \"\"\"Request model for updating contract metadata.\"\"\"\n    name: Optional[str] = None\n    contract_start_date: Optional[str] = None\n    contract_end_date: Optional[str] = None\n# ============================================================================\n# BACKGROUND PROCESSING\n# ============================================================================\nasync def process_gsa_contract(file_id: str, organization_id: str, file_path: str, temp_dir: Path):\n    \"\"\"",
+        "detail": "backend.routers.company_repository",
         "documentation": {}
     },
     {

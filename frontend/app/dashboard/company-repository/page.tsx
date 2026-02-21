@@ -357,6 +357,21 @@ export default function CompanyRepositoryPage() {
   const [expandedContract, setExpandedContract] = useState<GSAContract | null>(null);
   const [isLoadingDetails, setIsLoadingDetails] = useState(false);
 
+  // Editing state for labor categories
+  const [editingCell, setEditingCell] = useState<{
+    fileId: string;
+    lcatId: string;
+    field: string;
+    value: any;
+  } | null>(null);
+  const [savingCell, setSavingCell] = useState(false);
+
+  // Editing state for contract start date
+  const [editingStartDate, setEditingStartDate] = useState<{
+    fileId: string;
+    date: string;
+  } | null>(null);
+
   // Create preset dialog state
   const [showCreatePresetDialog, setShowCreatePresetDialog] = useState(false);
   const [presetName, setPresetName] = useState('');
@@ -532,6 +547,111 @@ export default function CompanyRepositoryPage() {
       setStartDate('');
     } catch (e) {
       toast.error('Failed to update start date');
+    }
+  };
+
+  // Update contract start date
+  const updateContractStartDate = async (fileId: string, newDate: string) => {
+    try {
+      console.log('[UPDATE START DATE] Updating to:', newDate);
+
+      const response = await apiClient.patch(`/company-repository/${fileId}`, {
+        contract_start_date: newDate
+      });
+
+      console.log('[UPDATE START DATE] Success:', response.data);
+
+      // Update expanded contract state
+      setExpandedContract(prev => {
+        if (!prev || prev.file_id !== fileId) return prev;
+        return {
+          ...prev,
+          contract_start_date: newDate
+        };
+      });
+
+      // Invalidate all caches for this contract
+      useCompanyRepositoryStore.getState().invalidateAllCaches(fileId);
+
+      toast.success('Contract start date updated');
+      setEditingStartDate(null);
+
+      // Refetch contracts list to get updated data
+      await fetchContracts();
+    } catch (error: any) {
+      console.error('[UPDATE START DATE] Error:', error);
+      console.error('[UPDATE START DATE] Error response:', error.response?.data);
+
+      let errorMessage = 'Failed to update start date';
+      if (error.response?.data?.detail) {
+        if (Array.isArray(error.response.data.detail)) {
+          errorMessage = error.response.data.detail.map((err: any) =>
+            `${err.loc.join('.')}: ${err.msg}`
+          ).join(', ');
+        } else {
+          errorMessage = error.response.data.detail;
+        }
+      }
+
+      toast.error(errorMessage);
+    }
+  };
+
+  // Update labor category
+  const updateLaborCategory = async (
+    fileId: string,
+    lcatId: string,
+    updates: Partial<GSALaborCategory>
+  ) => {
+    try {
+      setSavingCell(true);
+
+      console.log('[UPDATE] Sending update:', { fileId, lcatId, updates });
+
+      const response = await apiClient.patch(
+        `/company-repository/${fileId}/labor-categories/${lcatId}`,
+        updates
+      );
+
+      console.log('[UPDATE] Response:', response.data);
+
+      // Update local state optimistically
+      setExpandedContract(prev => {
+        if (!prev || prev.file_id !== fileId) return prev;
+        return {
+          ...prev,
+          labor_categories: prev.labor_categories?.map(lc =>
+            lc.lcat_id === lcatId ? { ...lc, ...updates } : lc
+          )
+        };
+      });
+
+      toast.success('Labor category updated successfully');
+      setEditingCell(null);
+
+      // Invalidate all caches for this contract (including sessionStorage)
+      useCompanyRepositoryStore.getState().invalidateAllCaches(fileId);
+    } catch (error: any) {
+      console.error('Failed to update labor category:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+
+      // Show detailed error message
+      let errorMessage = 'Failed to update';
+      if (error.response?.data?.detail) {
+        if (Array.isArray(error.response.data.detail)) {
+          // Pydantic validation errors
+          errorMessage = error.response.data.detail.map((err: any) =>
+            `${err.loc.join('.')}: ${err.msg}`
+          ).join(', ');
+        } else {
+          errorMessage = error.response.data.detail;
+        }
+      }
+
+      toast.error(errorMessage);
+    } finally {
+      setSavingCell(false);
     }
   };
 
@@ -1014,11 +1134,52 @@ export default function CompanyRepositoryPage() {
                                 </span>
                               )}
                             </div>
-                            {contract.contract_start_date && (
-                              <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
-                                <Calendar className="w-3 h-3" />
-                                Start: {new Date(contract.contract_start_date).toLocaleDateString()}
+                            {userIsAdmin ? (
+                              <div className="flex items-center gap-1 mt-1 text-sm">
+                                <Calendar className="w-3 h-3 text-muted-foreground" />
+                                {editingStartDate?.fileId === contract.file_id ? (
+                                  <input
+                                    type="date"
+                                    className="px-2 py-1 text-sm border border-primary rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                    defaultValue={contract.contract_start_date || new Date().toISOString().split('T')[0]}
+                                    onBlur={(e) => {
+                                      const newDate = e.currentTarget.value;
+                                      if (newDate && newDate !== contract.contract_start_date) {
+                                        updateContractStartDate(contract.file_id, newDate);
+                                      } else {
+                                        setEditingStartDate(null);
+                                      }
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') e.currentTarget.blur();
+                                      if (e.key === 'Escape') {
+                                        setEditingStartDate(null);
+                                      }
+                                    }}
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <span
+                                    className="text-muted-foreground cursor-pointer hover:text-foreground hover:bg-muted/50 px-2 py-1 rounded transition-colors"
+                                    onClick={() => setEditingStartDate({
+                                      fileId: contract.file_id,
+                                      date: contract.contract_start_date || new Date().toISOString().split('T')[0]
+                                    })}
+                                    title="Click to edit start date"
+                                  >
+                                    Start: {contract.contract_start_date
+                                      ? new Date(contract.contract_start_date).toLocaleDateString()
+                                      : 'Click to set date'}
+                                  </span>
+                                )}
                               </div>
+                            ) : (
+                              contract.contract_start_date && (
+                                <div className="flex items-center gap-1 mt-1 text-sm text-muted-foreground">
+                                  <Calendar className="w-3 h-3" />
+                                  Start: {new Date(contract.contract_start_date).toLocaleDateString()}
+                                </div>
+                              )
                             )}
                           </div>
                         </div>
@@ -1078,7 +1239,7 @@ export default function CompanyRepositoryPage() {
                                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">SIN</th>
                                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">Description</th>
                                   <th className="text-left py-2 px-3 font-medium text-muted-foreground">Experience</th>
-                                  {getYearColumns(expandedContract.labor_categories, contract).map(({ yearNum, displayYear }) => (
+                                  {getYearColumns(expandedContract.labor_categories, expandedContract).map(({ yearNum, displayYear }) => (
                                     <th key={yearNum} className="text-right py-2 px-3 font-medium text-muted-foreground">
                                       {displayYear}
                                     </th>
@@ -1086,38 +1247,218 @@ export default function CompanyRepositoryPage() {
                                 </tr>
                               </thead>
                               <tbody>
-                                {expandedContract.labor_categories.map((lc, index) => (
-                                  <tr
-                                    key={lc.lcat_id || index}
-                                    className="border-b border-border/50 last:border-0 hover:bg-muted/30"
-                                  >
-                                    <td className="py-2 px-3 text-foreground">{lc.title}</td>
-                                    <td className="py-2 px-3 text-muted-foreground">{lc.sin || '-'}</td>
-                                    <td className="py-2 px-3 text-muted-foreground">
-                                      <div
-                                        className="max-w-[300px] max-h-[80px] overflow-auto text-sm cursor-pointer hover:bg-muted/50 p-1 rounded"
-                                        onDoubleClick={() => lc.description && setTextModal({ title: `${lc.title} - Description`, content: lc.description })}
-                                      >
-                                        {lc.description || '-'}
-                                      </div>
-                                    </td>
-                                    <td className="py-2 px-3 text-muted-foreground">
-                                      <div
-                                        className="max-w-[250px] max-h-[80px] overflow-auto text-sm cursor-pointer hover:bg-muted/50 p-1 rounded"
-                                        onDoubleClick={() => lc.experience && setTextModal({ title: `${lc.title} - Experience`, content: lc.experience })}
-                                      >
-                                        {lc.experience || '-'}
-                                      </div>
-                                    </td>
-                                    {getYearColumns(expandedContract.labor_categories, contract).map(({ yearNum }) => (
-                                      <td key={yearNum} className="py-2 px-3 text-right text-foreground font-mono">
-                                        {lc.rates_by_year?.[yearNum]
-                                          ? `$${lc.rates_by_year[yearNum].toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                                          : '-'}
+                                {expandedContract.labor_categories.map((lc, index) => {
+                                  const isEditing = editingCell?.lcatId === lc.lcat_id;
+
+                                  return (
+                                    <tr
+                                      key={lc.lcat_id || index}
+                                      className="border-b border-border/50 last:border-0 hover:bg-muted/30"
+                                    >
+                                      {/* Title - Editable */}
+                                      <td className="py-2 px-3 text-foreground">
+                                        {isEditing && editingCell.field === 'title' ? (
+                                          <input
+                                            type="text"
+                                            className="w-full px-2 py-1 border border-primary rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                            defaultValue={lc.title}
+                                            onBlur={(e) => {
+                                              const newValue = e.currentTarget.value;
+                                              if (newValue !== lc.title) {
+                                                updateLaborCategory(expandedContract.file_id, lc.lcat_id, {
+                                                  title: newValue
+                                                });
+                                              } else {
+                                                setEditingCell(null);
+                                              }
+                                            }}
+                                            onKeyDown={(e) => {
+                                              if (e.key === 'Enter') e.currentTarget.blur();
+                                              if (e.key === 'Escape') {
+                                                setEditingCell(null);
+                                              }
+                                            }}
+                                            autoFocus
+                                            disabled={savingCell}
+                                          />
+                                        ) : (
+                                          <div
+                                            className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded"
+                                            onClick={() => setEditingCell({
+                                              fileId: expandedContract.file_id,
+                                              lcatId: lc.lcat_id,
+                                              field: 'title',
+                                              value: lc.title
+                                            })}
+                                            title="Click to edit"
+                                          >
+                                            {lc.title}
+                                          </div>
+                                        )}
                                       </td>
-                                    ))}
-                                  </tr>
-                                ))}
+
+                                      {/* SIN - Editable */}
+                                      <td className="py-2 px-3 text-muted-foreground">
+                                        {isEditing && editingCell.field === 'sin' ? (
+                                          <input
+                                            type="text"
+                                            className="w-full px-2 py-1 border border-primary rounded focus:outline-none focus:ring-2 focus:ring-primary"
+                                            defaultValue={lc.sin || ''}
+                                            onBlur={(e) => {
+                                              const newValue = e.currentTarget.value;
+                                              if (newValue !== lc.sin) {
+                                                updateLaborCategory(expandedContract.file_id, lc.lcat_id, {
+                                                  sin: newValue
+                                                });
+                                              } else {
+                                                setEditingCell(null);
+                                              }
+                                            }}
+                                            onKeyDown={(e) => {
+                                              if (e.key === 'Enter') e.currentTarget.blur();
+                                              if (e.key === 'Escape') {
+                                                setEditingCell(null);
+                                              }
+                                            }}
+                                            autoFocus
+                                            disabled={savingCell}
+                                          />
+                                        ) : (
+                                          <div
+                                            className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded"
+                                            onClick={() => setEditingCell({
+                                              fileId: expandedContract.file_id,
+                                              lcatId: lc.lcat_id,
+                                              field: 'sin',
+                                              value: lc.sin || ''
+                                            })}
+                                            title="Click to edit"
+                                          >
+                                            {lc.sin || '-'}
+                                          </div>
+                                        )}
+                                      </td>
+
+                                      {/* Description - Editable with textarea */}
+                                      <td className="py-2 px-3 text-muted-foreground">
+                                        {isEditing && editingCell.field === 'description' ? (
+                                          <textarea
+                                            className="w-full px-2 py-1 border border-primary rounded focus:outline-none focus:ring-2 focus:ring-primary max-w-[300px]"
+                                            defaultValue={lc.description || ''}
+                                            onBlur={(e) => {
+                                              const newValue = e.currentTarget.value;
+                                              if (newValue !== lc.description) {
+                                                updateLaborCategory(expandedContract.file_id, lc.lcat_id, {
+                                                  description: newValue
+                                                });
+                                              } else {
+                                                setEditingCell(null);
+                                              }
+                                            }}
+                                            rows={3}
+                                            autoFocus
+                                            disabled={savingCell}
+                                          />
+                                        ) : (
+                                          <div
+                                            className="max-w-[300px] max-h-[80px] overflow-auto text-sm cursor-pointer hover:bg-muted/50 p-1 rounded"
+                                            onClick={() => setEditingCell({
+                                              fileId: expandedContract.file_id,
+                                              lcatId: lc.lcat_id,
+                                              field: 'description',
+                                              value: lc.description || ''
+                                            })}
+                                            onDoubleClick={() => lc.description && setTextModal({ title: `${lc.title} - Description`, content: lc.description })}
+                                            title="Click to edit, double-click to view full"
+                                          >
+                                            {lc.description || '-'}
+                                          </div>
+                                        )}
+                                      </td>
+
+                                      {/* Experience - Editable with textarea */}
+                                      <td className="py-2 px-3 text-muted-foreground">
+                                        {isEditing && editingCell.field === 'experience' ? (
+                                          <textarea
+                                            className="w-full px-2 py-1 border border-primary rounded focus:outline-none focus:ring-2 focus:ring-primary max-w-[250px]"
+                                            defaultValue={lc.experience || ''}
+                                            onBlur={(e) => {
+                                              const newValue = e.currentTarget.value;
+                                              if (newValue !== lc.experience) {
+                                                updateLaborCategory(expandedContract.file_id, lc.lcat_id, {
+                                                  experience: newValue
+                                                });
+                                              } else {
+                                                setEditingCell(null);
+                                              }
+                                            }}
+                                            rows={2}
+                                            autoFocus
+                                            disabled={savingCell}
+                                          />
+                                        ) : (
+                                          <div
+                                            className="max-w-[250px] max-h-[80px] overflow-auto text-sm cursor-pointer hover:bg-muted/50 p-1 rounded"
+                                            onClick={() => setEditingCell({
+                                              fileId: expandedContract.file_id,
+                                              lcatId: lc.lcat_id,
+                                              field: 'experience',
+                                              value: lc.experience || ''
+                                            })}
+                                            onDoubleClick={() => lc.experience && setTextModal({ title: `${lc.title} - Experience`, content: lc.experience })}
+                                            title="Click to edit, double-click to view full"
+                                          >
+                                            {lc.experience || '-'}
+                                          </div>
+                                        )}
+                                      </td>
+
+                                      {/* Rate columns - Editable */}
+                                      {getYearColumns(expandedContract.labor_categories, expandedContract).map(({ yearNum }) => (
+                                        <td key={yearNum} className="py-2 px-3 text-right text-foreground font-mono">
+                                          {isEditing && editingCell.field === `rate_${yearNum}` ? (
+                                            <input
+                                              type="number"
+                                              step="0.01"
+                                              className="w-full px-2 py-1 text-right border border-primary rounded focus:outline-none focus:ring-2 focus:ring-primary font-mono"
+                                              defaultValue={lc.rates_by_year?.[yearNum] || 0}
+                                              onBlur={(e) => {
+                                                const newValue = parseFloat(e.currentTarget.value) || 0;
+                                                const newRates = { ...lc.rates_by_year, [yearNum]: newValue };
+                                                updateLaborCategory(expandedContract.file_id, lc.lcat_id, {
+                                                  rates_by_year: newRates
+                                                });
+                                              }}
+                                              onKeyDown={(e) => {
+                                                if (e.key === 'Enter') e.currentTarget.blur();
+                                                if (e.key === 'Escape') {
+                                                  setEditingCell(null);
+                                                }
+                                              }}
+                                              autoFocus
+                                              disabled={savingCell}
+                                            />
+                                          ) : (
+                                            <div
+                                              className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded"
+                                              onClick={() => setEditingCell({
+                                                fileId: expandedContract.file_id,
+                                                lcatId: lc.lcat_id,
+                                                field: `rate_${yearNum}`,
+                                                value: lc.rates_by_year?.[yearNum] || 0
+                                              })}
+                                              title="Click to edit"
+                                            >
+                                              {lc.rates_by_year?.[yearNum]
+                                                ? `$${lc.rates_by_year[yearNum].toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+                                                : '-'}
+                                            </div>
+                                          )}
+                                        </td>
+                                      ))}
+                                    </tr>
+                                  );
+                                })}
                               </tbody>
                             </table>
                           </div>

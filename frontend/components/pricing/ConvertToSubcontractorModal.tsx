@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/Card';
 import { usePricingStore } from '@/lib/stores/pricingStore';
 import { SpreadsheetPosition, AdvancedPosition } from '@/types';
 import { AlertCircle, DollarSign, Clock, ChevronDown, Building2, Check } from 'lucide-react';
+import { getGSARateForYear } from '@/lib/utils/salaryHelpers';
 
 interface ConvertToSubcontractorModalProps {
   open: boolean;
@@ -20,7 +21,7 @@ export const ConvertToSubcontractorModal = ({
   onClose,
   position,
 }: ConvertToSubcontractorModalProps) => {
-  const { subcontractors, rates, totalYears, convertToSubcontractor } = usePricingStore();
+  const { subcontractors, rates, totalYears, escalationRates, convertToSubcontractor } = usePricingStore();
 
   // Form state
   const [mode, setMode] = useState<'existing' | 'new'>('existing');
@@ -85,19 +86,37 @@ export const ConvertToSubcontractorModal = ({
     const feeRate = rates.sub_fee || rates.fee || 0.54;
     const smhRate = rates.smh || 0.43;
 
+    console.log('[CONVERT_MODAL] ========== CALCULATING SUGGESTED RATE ==========');
+    console.log('[CONVERT_MODAL] Fee rate:', feeRate, 'S&MH rate:', smhRate);
+    console.log('[CONVERT_MODAL] Position labor_category:', position.labor_category);
+    console.log('[CONVERT_MODAL] Position type:', isAdvancedPosition(position) ? 'AdvancedPosition' : 'SpreadsheetPosition');
+
     // For AdvancedPosition, get FBLR from breakdown
     if (isAdvancedPosition(position)) {
+      console.log('[CONVERT_MODAL] AdvancedPosition detected - using breakdown');
       const firstYear = Object.keys(position.breakdown)[0];
+      console.log('[CONVERT_MODAL] First year:', firstYear);
+      console.log('[CONVERT_MODAL] All breakdown years:', Object.keys(position.breakdown));
+
       if (firstYear) {
-        const fblr = position.breakdown[firstYear].fblr;
+        const yearBreakdown = position.breakdown[firstYear];
+        console.log('[CONVERT_MODAL] Year breakdown:', yearBreakdown);
+
+        const fblr = yearBreakdown.fblr;
+        console.log('[CONVERT_MODAL] FBLR from breakdown:', fblr);
+
         // REVERSE: Base = FBLR / ((1 + Fee) × (1 + S&MH))
         const baseRate = fblr / ((1 + feeRate) * (1 + smhRate));
+        console.log('[CONVERT_MODAL] Calculated base rate:', baseRate);
+        console.log('[CONVERT_MODAL] ========================================');
         return Math.round(baseRate * 100) / 100;
       }
     }
 
     // For SpreadsheetPosition, calculate FBLR first, then reverse calculate
     const spreadsheetPos = position as SpreadsheetPosition;
+
+    console.log('[CONVERT_MODAL] SpreadsheetPosition path detected');
 
     // Get selected wage - prioritize selected_wage, then calculate from percentile
     let selectedWage = spreadsheetPos.selected_wage || 0;
@@ -110,9 +129,25 @@ export const ConvertToSubcontractorModal = ({
 
     let fblr = 0;
 
-    // GSA: selected_wage is already FBLR
+    console.log('[CONVERT_MODAL] wage_source:', spreadsheetPos.wage_source);
+    console.log('[CONVERT_MODAL] selected_wage:', selectedWage);
+
+    // GSA: Use actual GSA rate (already fully loaded)
     if (spreadsheetPos.wage_source === 'gsa') {
-      fblr = selectedWage;
+      console.log('[CONVERT_MODAL] GSA position detected - fetching GSA data');
+      console.log('[CONVERT_MODAL] gsa_rates_by_year:', spreadsheetPos.gsa_rates_by_year);
+      console.log('[CONVERT_MODAL] gsa_current_year:', spreadsheetPos.gsa_current_year);
+      console.log('[CONVERT_MODAL] gsa_custom_rate:', spreadsheetPos.gsa_custom_rate);
+      console.log('[CONVERT_MODAL] gsa_discount_rate:', spreadsheetPos.gsa_discount_rate);
+
+      // Get GSA rate for year 1 (base period)
+      const gsaRate = getGSARateForYear(spreadsheetPos, 1, escalationRates);
+      console.log('[CONVERT_MODAL] GSA rate from getGSARateForYear:', gsaRate);
+
+      // Apply discount if set
+      const discountRate = spreadsheetPos.gsa_discount_rate || 0;
+      fblr = gsaRate * (1 - discountRate);
+      console.log('[CONVERT_MODAL] Final FBLR after discount:', fblr);
     } else {
       // BLS: Calculate FBLR from annual salary
       const standard_fte_hours = spreadsheetPos.standard_fte_hours || 1880;
@@ -130,8 +165,18 @@ export const ConvertToSubcontractorModal = ({
     // REVERSE: Base = FBLR / ((1 + Fee) × (1 + S&MH))
     const baseRate = fblr / ((1 + feeRate) * (1 + smhRate));
 
+    console.log('[CONVERT_MODAL] Final baseRate:', baseRate);
+
+    // Validation: Warn if rate seems suspiciously low (likely data corruption)
+    if (baseRate > 0 && baseRate < 10) {
+      console.warn(`[CONVERT_MODAL] ⚠️ WARNING: Calculated base rate is suspiciously low ($${baseRate}/hr)`);
+      console.warn('[CONVERT_MODAL] This may indicate corrupted GSA data. Please check position data above.');
+    }
+
+    console.log('[CONVERT_MODAL] ========================================');
+
     return Math.round(baseRate * 100) / 100; // Round to 2 decimals
-  }, [position, rates]);
+  }, [position, rates, escalationRates]);
 
   // Initialize hours allocation when position changes
   useMemo(() => {

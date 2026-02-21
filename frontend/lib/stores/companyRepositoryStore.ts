@@ -20,6 +20,7 @@ interface CompanyRepositoryState {
   pollStatus: (fileId: string) => Promise<GSAContract>;
   clearSelectedContract: () => void;
   clearError: () => void;
+  invalidateAllCaches: (fileId?: string) => void;
 }
 
 export const useCompanyRepositoryStore = create<CompanyRepositoryState>((set, get) => ({
@@ -108,11 +109,8 @@ export const useCompanyRepositoryStore = create<CompanyRepositoryState>((set, ge
       set({ isUploading: true, error: null });
       const response = await companyRepositoryApi.upload(file, name);
 
-      // Invalidate cache
-      const user = useAuthStore.getState().user;
-      if (user?.organization_id) {
-        cacheManager.invalidate(`company-repo:${user.organization_id}:contracts`);
-      }
+      // Invalidate all caches (new contract means all caches are stale)
+      get().invalidateAllCaches();
 
       // Refresh contracts list
       await get().fetchContracts(true);
@@ -133,11 +131,8 @@ export const useCompanyRepositoryStore = create<CompanyRepositoryState>((set, ge
       set({ isLoading: true, error: null });
       await companyRepositoryApi.updateStartDate(fileId, startDate);
 
-      // Invalidate cache and refresh
-      const user = useAuthStore.getState().user;
-      if (user?.organization_id) {
-        cacheManager.invalidate(`company-repo:${user.organization_id}:contracts`);
-      }
+      // Invalidate all caches for this contract
+      get().invalidateAllCaches(fileId);
 
       await get().fetchContracts(true);
       set({ isLoading: false });
@@ -161,11 +156,8 @@ export const useCompanyRepositoryStore = create<CompanyRepositoryState>((set, ge
         isLoading: false,
       }));
 
-      // Invalidate cache
-      const user = useAuthStore.getState().user;
-      if (user?.organization_id) {
-        cacheManager.invalidate(`company-repo:${user.organization_id}:contracts`);
-      }
+      // Invalidate all caches for this contract
+      get().invalidateAllCaches(fileId);
     } catch (error: any) {
       set({
         error: error.response?.data?.detail || 'Failed to delete contract',
@@ -249,4 +241,51 @@ export const useCompanyRepositoryStore = create<CompanyRepositoryState>((set, ge
 
   clearSelectedContract: () => set({ selectedContract: null }),
   clearError: () => set({ error: null }),
+
+  // Invalidate all caches (both cacheManager and sessionStorage)
+  invalidateAllCaches: (fileId?: string) => {
+    const user = useAuthStore.getState().user;
+    const orgId = user?.organization_id;
+
+    if (!orgId) return;
+
+    console.log('[COMPANY_REPO] Invalidating all caches', fileId ? `for file ${fileId}` : 'for all contracts');
+
+    // Invalidate cacheManager caches
+    cacheManager.invalidate(`company-repo:${orgId}:contracts`);
+
+    if (fileId) {
+      // Invalidate specific contract detail cache
+      cacheManager.invalidate(`company-repo:${orgId}:contract:${fileId}`);
+    } else {
+      // Invalidate all contract detail caches (use wildcard pattern)
+      // Note: cacheManager doesn't support wildcards, so we need to clear all keys
+      const allKeys = Object.keys(localStorage).filter(key =>
+        key.startsWith(`company-repo:${orgId}:contract:`)
+      );
+      allKeys.forEach(key => cacheManager.invalidate(key.replace('cache_', '')));
+    }
+
+    // Clear sessionStorage caches used by SOCSelectionModal
+    const GSA_CACHE_PREFIX = 'soc_cache_gsa_cache_';
+    const keysToRemove: string[] = [];
+
+    for (let i = 0; i < sessionStorage.length; i++) {
+      const key = sessionStorage.key(i);
+      if (key && key.startsWith(GSA_CACHE_PREFIX)) {
+        if (fileId) {
+          // Only clear caches for this specific file
+          if (key.includes(fileId)) {
+            keysToRemove.push(key);
+          }
+        } else {
+          // Clear all GSA caches
+          keysToRemove.push(key);
+        }
+      }
+    }
+
+    keysToRemove.forEach(key => sessionStorage.removeItem(key));
+    console.log('[COMPANY_REPO] Cleared', keysToRemove.length, 'sessionStorage cache entries');
+  },
 }));
