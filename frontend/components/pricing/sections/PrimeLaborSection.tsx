@@ -12,6 +12,7 @@ import { ContextMenu } from '@/components/ui/ContextMenu';
 import { SalaryContextMenu } from '@/components/pricing/SalaryContextMenu';
 import { SOCContextMenu } from '@/components/pricing/SOCContextMenu';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { WageSyncConfirmDialog } from '@/components/pricing/WageSyncConfirmDialog';
 import { ConvertToSubcontractorModal } from '@/components/pricing/ConvertToSubcontractorModal';
 import { TransferSubcontractorModal } from '@/components/pricing/TransferSubcontractorModal';
 import { SalarySelectionModal } from '@/components/pricing/SalarySelectionModal';
@@ -42,7 +43,7 @@ const calculateAveragedFBLR = (
       const yearStr = year.toString();
       const breakdown = position.breakdown[yearStr];
       const hoursThisYear = breakdown?.hours || 0;
-      const gsaRate = getGSARateForYear(position, year);
+      const gsaRate = getGSARateForYear(position, year, escalationRates);
 
       if (hoursThisYear > 0 && gsaRate > 0) {
         totalAmount += gsaRate * hoursThisYear;
@@ -167,6 +168,7 @@ export const PrimeLaborSection = ({
   const wageSource = usePricingStore((state) => state.wageSource);
   const subcontractors = usePricingStore((state) => state.subcontractors);
   const updatePosition = usePricingStore((state) => state.updatePosition);
+  const getWageSyncInfo = usePricingStore((state) => state.getWageSyncInfo);
   const advancedModeVersion = usePricingStore((state) => state.advancedModeVersion);
   const assignPositionToContractor = usePricingStore((state) => state.assignPositionToContractor);
   const getLinkedSubcontractorPosition = usePricingStore((state) => state.getLinkedSubcontractorPosition);
@@ -224,12 +226,13 @@ export const PrimeLaborSection = ({
 
   // Create a version string that changes when rates change to force re-render
   const ratesVersion = useMemo(() => {
-    return `${rates.fringe}-${rates.oh_onsite}-${rates.oh_offsite}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}`;
-  }, [rates, escalationRates]);
+    return `${rates.fringe}-${rates.oh_onsite}-${rates.oh_offsite}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}-v${advancedModeVersion}`;
+  }, [rates, escalationRates, advancedModeVersion]);
 
   // Debug: Log when component re-renders
   console.log('[PrimeLaborSection] ========== RENDER START ==========');
   console.log('[PrimeLaborSection] Positions count:', positions.length);
+  console.log('[PrimeLaborSection] advancedModeVersion from store:', advancedModeVersion);
   console.log('[PrimeLaborSection] Rates received:', {
     fringe: rates.fringe,
     oh_onsite: rates.oh_onsite,
@@ -659,6 +662,10 @@ export const PrimeLaborSection = ({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [positionToDelete, setPositionToDelete] = useState<AdvancedPosition | null>(null);
 
+  // Wage sync confirmation state
+  const [wageSyncDialogOpen, setWageSyncDialogOpen] = useState(false);
+  const [pendingWageUpdate, setPendingWageUpdate] = useState<{ positionId: string; updates: any; syncInfo: any } | null>(null);
+
   // Handle right-click on grid rows (BEFORE useMemo to maintain hook order)
   const handleContextMenu = useCallback((e: React.MouseEvent, position: AdvancedPosition) => {
     e.preventDefault();
@@ -674,6 +681,7 @@ export const PrimeLaborSection = ({
 
   // Handle SOC code change from context menu
   const handleSOCChange = useCallback(async (position: AdvancedPosition, socCode: string, socTitle: string): Promise<void> => {
+    console.log('[handleSOCChange] Called with:', { positionId: position.id, socCode, socTitle });
     if (!proposalId) return;
 
     // Call wage refresh endpoint
@@ -687,13 +695,38 @@ export const PrimeLaborSection = ({
       }
     );
 
-    // Update position with new SOC + wage data
-    onUpdatePosition(position.id, {
+    const updates = {
       soc_code: socCode,
       soc_title: socTitle,
       ...response.data.wage_data,
+    };
+
+    console.log('[handleSOCChange] Received updates:', Object.keys(updates));
+
+    // Check if wage sync would happen
+    const syncInfo = getWageSyncInfo(position.id, updates);
+    console.log('[handleSOCChange] Wage sync check:', {
+      positionId: position.id,
+      laborCategory: syncInfo.laborCategory,
+      willSync: syncInfo.willSync,
+      matchingCount: syncInfo.matchingCount
     });
-  }, [proposalId, onUpdatePosition]);
+
+    if (syncInfo.willSync && syncInfo.matchingCount > 0) {
+      console.log('[handleSOCChange] Showing wage sync dialog');
+      // Show confirmation dialog
+      setPendingWageUpdate({
+        positionId: position.id,
+        updates,
+        syncInfo,
+      });
+      setWageSyncDialogOpen(true);
+    } else {
+      console.log('[handleSOCChange] No sync needed, applying directly');
+      // No sync needed, apply directly
+      onUpdatePosition(position.id, updates);
+    }
+  }, [proposalId, onUpdatePosition, getWageSyncInfo]);
 
   // Handle location change - triggers wage refresh
   const handleLocationChange = useCallback(async (position: AdvancedPosition, newLocation: string): Promise<void> => {
@@ -748,17 +781,60 @@ export const PrimeLaborSection = ({
         selected_salaries: [wageData.selected_wage], // Update selected_salaries to match new wage
       };
 
-      // CRITICAL: Use direct store updatePosition (NOT onUpdatePosition prop)
-      // This ensures proper flow through updatePosition → performTransformToAdvanced → version increment
-      updatePosition(position.id, updates);
+      // Check if wage sync would happen
+      const syncInfo = getWageSyncInfo(position.id, updates);
+      console.log('[handleLocationChange] Wage sync check:', {
+        positionId: position.id,
+        laborCategory: syncInfo.laborCategory,
+        willSync: syncInfo.willSync,
+        matchingCount: syncInfo.matchingCount,
+        updates: Object.keys(updates)
+      });
+
+      if (syncInfo.willSync && syncInfo.matchingCount > 0) {
+        console.log('[handleLocationChange] Showing wage sync dialog');
+        // Show confirmation dialog
+        setPendingWageUpdate({
+          positionId: position.id,
+          updates,
+          syncInfo,
+        });
+        setWageSyncDialogOpen(true);
+      } else {
+        console.log('[handleLocationChange] No wage sync needed, applying directly');
+        // No sync needed, apply directly
+        updatePosition(position.id, updates);
+      }
 
       console.log('[PrimeLaborSection] Position updated with new wage:', wageData.selected_wage);
     } catch (error) {
       console.error('[PrimeLaborSection] Failed to refresh wage data:', error);
-      // Still update location even if wage refresh fails
-      updatePosition(position.id, { location: newLocation });
+
+      // Still update location even if wage refresh fails, but check for sync first
+      const updates = { location: newLocation };
+      const syncInfo = getWageSyncInfo(position.id, updates);
+      console.log('[handleLocationChange CATCH] Wage sync check:', {
+        positionId: position.id,
+        laborCategory: syncInfo.laborCategory,
+        willSync: syncInfo.willSync,
+        matchingCount: syncInfo.matchingCount
+      });
+
+      if (syncInfo.willSync && syncInfo.matchingCount > 0) {
+        console.log('[handleLocationChange CATCH] Showing wage sync dialog');
+        // Show confirmation dialog
+        setPendingWageUpdate({
+          positionId: position.id,
+          updates,
+          syncInfo,
+        });
+        setWageSyncDialogOpen(true);
+      } else {
+        console.log('[handleLocationChange CATCH] No sync needed, applying directly');
+        updatePosition(position.id, updates);
+      }
     }
-  }, [proposalId, updatePosition]);
+  }, [proposalId, updatePosition, getWageSyncInfo]);
 
   // Context menu items
   const getContextMenuItems = useCallback((position: AdvancedPosition, columnKey?: string): ContextMenuItem[] => {
@@ -1768,7 +1844,7 @@ export const PrimeLaborSection = ({
             const rationale = pos.discount_rationale;
 
             // Get first year GSA rate for comparison display
-            const gsaRate = getGSARateForYear(pos, 1);
+            const gsaRate = getGSARateForYear(pos, 1, escalationRates);
 
             return (
               <div
@@ -2806,7 +2882,23 @@ export const PrimeLaborSection = ({
           position={contextMenu.position}
           onClose={() => setContextMenu(null)}
           onApply={(updates) => {
-            onUpdatePosition(contextMenu.position.id, updates);
+            // Check if wage sync would happen
+            const syncInfo = getWageSyncInfo(contextMenu.position.id, updates);
+
+            if (syncInfo.willSync && syncInfo.matchingCount > 0) {
+              // Show confirmation dialog
+              setPendingWageUpdate({
+                positionId: contextMenu.position.id,
+                updates,
+                syncInfo,
+              });
+              setWageSyncDialogOpen(true);
+              setContextMenu(null);
+            } else {
+              // No sync needed, apply directly
+              onUpdatePosition(contextMenu.position.id, updates);
+              setContextMenu(null);
+            }
           }}
           onOpenModal={() => {
             setPositionToEdit(contextMenu.position);
@@ -2861,7 +2953,23 @@ export const PrimeLaborSection = ({
         position={positionToEdit}
         onUpdate={(updates) => {
           if (positionToEdit) {
-            onUpdatePosition(positionToEdit.id, updates);
+            // Check if wage sync would happen
+            const syncInfo = getWageSyncInfo(positionToEdit.id, updates);
+
+            if (syncInfo.willSync && syncInfo.matchingCount > 0) {
+              // Show confirmation dialog
+              setPendingWageUpdate({
+                positionId: positionToEdit.id,
+                updates,
+                syncInfo,
+              });
+              setWageSyncDialogOpen(true);
+              setSalaryModalOpen(false);
+              setPositionToEdit(null);
+            } else {
+              // No sync needed, apply directly
+              onUpdatePosition(positionToEdit.id, updates);
+            }
           }
         }}
       />
@@ -2876,7 +2984,34 @@ export const PrimeLaborSection = ({
         position={positionToEditSOC}
         onUpdate={(updates) => {
           if (positionToEditSOC) {
-            onUpdatePosition(positionToEditSOC.id, updates);
+            // Check if wage sync would happen
+            const syncInfo = getWageSyncInfo(positionToEditSOC.id, updates);
+            console.log('[SOCSelectionModal] Wage sync check:', {
+              positionId: positionToEditSOC.id,
+              laborCategory: syncInfo.laborCategory,
+              willSync: syncInfo.willSync,
+              matchingCount: syncInfo.matchingCount,
+              updates: Object.keys(updates)
+            });
+
+            if (syncInfo.willSync && syncInfo.matchingCount > 0) {
+              console.log('[SOCSelectionModal] Showing wage sync dialog');
+              // Show confirmation dialog
+              setPendingWageUpdate({
+                positionId: positionToEditSOC.id,
+                updates,
+                syncInfo,
+              });
+              setWageSyncDialogOpen(true);
+              setSOCModalOpen(false);
+              setPositionToEditSOC(null);
+            } else {
+              console.log('[SOCSelectionModal] No sync needed, applying directly');
+              // No sync needed, apply directly
+              onUpdatePosition(positionToEditSOC.id, updates);
+              setSOCModalOpen(false);
+              setPositionToEditSOC(null);
+            }
           }
         }}
       />
@@ -2921,6 +3056,35 @@ export const PrimeLaborSection = ({
         lockSource={false}
         primePositionId={positionToTransfer?.id}
       />
+
+      {/* Wage Sync Confirmation Dialog */}
+      {pendingWageUpdate && (
+        <WageSyncConfirmDialog
+          isOpen={wageSyncDialogOpen}
+          onClose={() => {
+            setWageSyncDialogOpen(false);
+            setPendingWageUpdate(null);
+          }}
+          onUpdateAll={() => {
+            // Update all positions with same labor category (wage sync enabled)
+            console.log('[WAGE SYNC DIALOG] User selected: Update All');
+            updatePosition(pendingWageUpdate.positionId, pendingWageUpdate.updates, { skipWageSync: false });
+            // Close dialog and let React batch the state updates
+            setWageSyncDialogOpen(false);
+            setPendingWageUpdate(null);
+          }}
+          onUpdateOne={() => {
+            // Update only this position (skip wage sync)
+            console.log('[WAGE SYNC DIALOG] User selected: Update One');
+            updatePosition(pendingWageUpdate.positionId, pendingWageUpdate.updates, { skipWageSync: true });
+            // Close dialog and let React batch the state updates
+            setWageSyncDialogOpen(false);
+            setPendingWageUpdate(null);
+          }}
+          laborCategory={pendingWageUpdate.syncInfo.laborCategory || ''}
+          matchingCount={pendingWageUpdate.syncInfo.matchingCount}
+        />
+      )}
     </div>
   );
 };

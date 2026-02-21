@@ -603,7 +603,7 @@ export const SubcontractorSection = () => {
         const yearNum = parseInt(yearStr);
 
         if (isGSA) {
-          const originalGsaRate = getGSARateForYear(pos, yearNum);
+          const originalGsaRate = getGSARateForYear(pos, yearNum, escalationRates);
           const discountRate = pos.gsa_discount_rate || 0;
           const gsaRate = originalGsaRate * (1 - discountRate);
           primeLaborTotal += gsaRate * hours;

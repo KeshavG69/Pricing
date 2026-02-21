@@ -4,9 +4,9 @@ Company Repository router for managing GSA contract rate sheets.
 Handles file upload, parsing, and CRUD operations for company-specific labor rates.
 """
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, BackgroundTasks, Depends
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, BackgroundTasks, Depends, Body
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Dict
 from pathlib import Path
 import tempfile
 import shutil
@@ -73,6 +73,27 @@ def serialize_repo(repo: dict) -> dict:
             result["labor_categories_count"] = 0
 
     return result
+
+
+# ============================================================================
+# PYDANTIC MODELS
+# ============================================================================
+
+class LaborCategoryUpdate(BaseModel):
+    """Request model for updating labor category fields."""
+    title: Optional[str] = None
+    sin: Optional[str] = None
+    description: Optional[str] = None
+    experience: Optional[str] = None
+    education: Optional[str] = None
+    rates_by_year: Optional[Dict[str, float]] = None
+
+
+class ContractUpdate(BaseModel):
+    """Request model for updating contract metadata."""
+    name: Optional[str] = None
+    contract_start_date: Optional[str] = None
+    contract_end_date: Optional[str] = None
 
 
 # ============================================================================
@@ -335,30 +356,28 @@ async def get_processing_status(
 @router.patch("/{file_id}")
 async def update_company_repository(
     file_id: str,
-    name: Optional[str] = None,
-    contract_start_date: Optional[str] = None,
-    contract_end_date: Optional[str] = None,
+    update_data: ContractUpdate = Body(...),
     current_user: dict = Depends(require_admin)
 ):
     """
     Update GSA contract details. Admin only.
 
-    Used to set contract dates if LLM couldn't extract them.
+    Used to set contract dates, name, etc.
     """
     crud = get_company_repository_crud()
     org_id = str(current_user["organization_id"])
 
-    # Build updates
+    # Build updates from provided fields
     updates = {}
-    if name:
-        updates["name"] = name
-    if contract_start_date:
-        updates["contract_start_date"] = contract_start_date
-    if contract_end_date:
-        updates["contract_end_date"] = contract_end_date
+    if update_data.name is not None:
+        updates["name"] = update_data.name
+    if update_data.contract_start_date is not None:
+        updates["contract_start_date"] = update_data.contract_start_date
+    if update_data.contract_end_date is not None:
+        updates["contract_end_date"] = update_data.contract_end_date
 
     # If date was provided and status was needs_date, set to active
-    if contract_start_date:
+    if update_data.contract_start_date:
         repo = crud.get_by_file_id(file_id, org_id)
         if repo and repo.get("status") == "needs_date":
             updates["status"] = "active"
@@ -369,6 +388,104 @@ async def update_company_repository(
     result = crud.update(file_id, org_id, updates)
     if not result:
         raise HTTPException(status_code=404, detail="GSA contract not found")
+
+    # Invalidate cache
+    invalidate_list_cache(org_id)
+
+    return serialize_repo(result)
+
+
+@router.patch("/{file_id}/labor-categories/{lcat_id}")
+async def update_labor_category(
+    file_id: str,
+    lcat_id: str,
+    update_data: LaborCategoryUpdate = Body(...),
+    current_user: dict = Depends(require_admin)
+):
+    """
+    Update a specific labor category within a GSA contract. Admin only.
+
+    Pinecone update logic:
+    - If title or description changes: re-embed vector (semantic search needs new embedding)
+    - If SIN/experience/education changes: update metadata only (faster)
+    - If rates change: MongoDB only (rates not stored in Pinecone)
+
+    Args:
+        file_id: GSA contract file ID
+        lcat_id: Labor category ID
+        update_data: Fields to update (title, sin, description, experience, education, rates_by_year)
+    """
+    print(f"[UPDATE LABOR CATEGORY] Received: {update_data}")
+    print(f"[UPDATE LABOR CATEGORY] File ID: {file_id}, Labor Cat ID: {lcat_id}")
+
+    crud = get_company_repository_crud()
+    org_id = str(current_user["organization_id"])
+
+    # Get contract
+    repo = crud.get_by_file_id(file_id, org_id)
+    if not repo:
+        raise HTTPException(status_code=404, detail="GSA contract not found")
+
+    # Find labor category
+    labor_categories = repo.get("labor_categories", [])
+    lcat_found = False
+    lcat_updated = None
+    old_title = None
+    old_description = None
+
+    for lcat in labor_categories:
+        if lcat.get("lcat_id") == lcat_id:
+            lcat_found = True
+            old_title = lcat.get("title")
+            old_description = lcat.get("description")
+
+            # Update fields if provided
+            if update_data.title is not None:
+                lcat["title"] = update_data.title
+            if update_data.sin is not None:
+                lcat["sin"] = update_data.sin
+            if update_data.description is not None:
+                lcat["description"] = update_data.description
+            if update_data.experience is not None:
+                lcat["experience"] = update_data.experience
+            if update_data.education is not None:
+                lcat["education"] = update_data.education
+            if update_data.rates_by_year is not None:
+                lcat["rates_by_year"] = update_data.rates_by_year
+
+            lcat_updated = lcat
+            break
+
+    if not lcat_found:
+        raise HTTPException(status_code=404, detail="Labor category not found")
+
+    # Update MongoDB
+    result = crud.update(file_id, org_id, {"labor_categories": labor_categories})
+    if not result:
+        raise HTTPException(status_code=500, detail="Failed to update labor category")
+
+    # Update Pinecone if title or description changed (requires re-embedding)
+    needs_reembed = (
+        (update_data.title is not None and update_data.title != old_title) or
+        (update_data.description is not None and update_data.description != old_description)
+    )
+
+    if needs_reembed:
+        try:
+            pinecone_client = get_gsa_pinecone_client()
+            vector_id = f"{org_id}_{file_id}_{lcat_id}"
+
+            # Delete old vector
+            index = pinecone_client._ensure_index()
+            index.delete(ids=[vector_id])
+
+            # Store new vector with updated embedding
+            pinecone_client.store_labor_categories(org_id, file_id, [lcat_updated])
+
+            print(f"✓ Re-embedded labor category: {lcat_id} (title or description changed)")
+        except Exception as e:
+            print(f"⚠️  Pinecone update failed: {e}")
+            # Don't fail the whole request - Pinecone is secondary to MongoDB
 
     # Invalidate cache
     invalidate_list_cache(org_id)

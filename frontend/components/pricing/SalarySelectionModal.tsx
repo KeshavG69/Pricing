@@ -26,8 +26,9 @@ export const SalarySelectionModal = ({
   position,
   onUpdate,
 }: SalarySelectionModalProps) => {
-  // Get total years from store
+  // Get total years and escalation rates from store
   const totalYears = usePricingStore((state) => state.totalYears);
+  const escalationRates = usePricingStore((state) => state.escalationRates);
 
   // Check if GSA position
   const isGSA = position ? isGSAPosition(position) : false;
@@ -38,7 +39,7 @@ export const SalarySelectionModal = ({
   const [newCustomAmount, setNewCustomAmount] = useState<string>('');
 
   // GSA state
-  const [gsaCurrentYear, setGsaCurrentYear] = useState<number>(1);
+  const [gsaCurrentYear, setGsaCurrentYear] = useState<number | null>(1);
   const [gsaCustomRate, setGsaCustomRate] = useState<number | null>(null);
   const [newGsaCustomRate, setNewGsaCustomRate] = useState<string>('');
 
@@ -46,8 +47,14 @@ export const SalarySelectionModal = ({
   useEffect(() => {
     if (position && open) {
       if (isGSA) {
-        // GSA mode: Initialize GSA current year to saved value or first available contract year
-        if (position.gsa_current_year) {
+        // Initialize custom rate if set
+        setGsaCustomRate(position.gsa_custom_rate || null);
+        setNewGsaCustomRate('');
+
+        // GSA mode: If custom rate is set, deselect year alignment
+        if (position.gsa_custom_rate) {
+          setGsaCurrentYear(null);
+        } else if (position.gsa_current_year) {
           setGsaCurrentYear(position.gsa_current_year);
         } else if (position.gsa_rates_by_year) {
           // Default to first available contract year
@@ -59,9 +66,6 @@ export const SalarySelectionModal = ({
         } else {
           setGsaCurrentYear(1);
         }
-        // Initialize custom rate if set
-        setGsaCustomRate(position.gsa_custom_rate || null);
-        setNewGsaCustomRate('');
       } else {
         // BLS mode: Check for new multi-select format first
         if (position.salary_sources) {
@@ -100,18 +104,25 @@ export const SalarySelectionModal = ({
 
   // Get GSA rates by year (GSA mode)
   const gsaRatesByYear = useMemo(() => {
-    if (!position || !isGSA || !position.gsa_rates_by_year) return [];
+    if (!position || !isGSA || !position.gsa_rates_by_year || gsaCurrentYear === null) return [];
 
     const rates: { contractYear: number; proposalYear: number; rate: number }[] = [];
 
+    // Create a temporary position with the selected gsa_current_year for preview
+    const tempPosition = {
+      ...position,
+      gsa_current_year: gsaCurrentYear,
+    };
+
     for (let proposalYear = 1; proposalYear <= totalYears; proposalYear++) {
       const contractYear = gsaCurrentYear + (proposalYear - 1);
-      const rate = position.gsa_rates_by_year[String(contractYear)] || 0;
+      // Use getGSARateForYear with temp position that has the selected year
+      const rate = getGSARateForYear(tempPosition, proposalYear, escalationRates);
       rates.push({ contractYear, proposalYear, rate });
     }
 
     return rates;
-  }, [position, isGSA, gsaCurrentYear, totalYears]);
+  }, [position, isGSA, gsaCurrentYear, totalYears, escalationRates]);
 
   // Get available contract years from GSA rates
   const availableContractYears = useMemo(() => {
@@ -178,6 +189,7 @@ export const SalarySelectionModal = ({
     const rate = parseFloat(newGsaCustomRate);
     if (!isNaN(rate) && rate > 0) {
       setGsaCustomRate(rate);
+      setGsaCurrentYear(null); // Deselect year alignment when setting custom rate
       setNewGsaCustomRate('');
     }
   };
@@ -185,6 +197,18 @@ export const SalarySelectionModal = ({
   // Remove GSA custom rate
   const removeGsaCustomRate = () => {
     setGsaCustomRate(null);
+    // Restore default year alignment when custom rate is removed
+    if (position?.gsa_current_year) {
+      setGsaCurrentYear(position.gsa_current_year);
+    } else if (position?.gsa_rates_by_year) {
+      const years = Object.keys(position.gsa_rates_by_year)
+        .map(Number)
+        .filter((y) => !isNaN(y))
+        .sort((a, b) => a - b);
+      setGsaCurrentYear(years[0] || 1);
+    } else {
+      setGsaCurrentYear(1);
+    }
   };
 
   // Handle apply
@@ -193,10 +217,10 @@ export const SalarySelectionModal = ({
 
     if (isGSA) {
       // GSA mode: Update current year selection and custom rate
-      // Use null to explicitly clear custom rate when not set
+      // Convert null to undefined for type compatibility
       const updates: Partial<SpreadsheetPosition | AdvancedPosition> = {
-        gsa_current_year: gsaCurrentYear,
-        gsa_custom_rate: gsaCustomRate, // null will clear, number will set
+        gsa_current_year: gsaCurrentYear ?? undefined,
+        gsa_custom_rate: gsaCustomRate ?? undefined,
       };
       onUpdate(updates);
     } else {
@@ -224,7 +248,8 @@ export const SalarySelectionModal = ({
   };
 
   // Check if selection is valid
-  const isValid = isGSA ? gsaCurrentYear > 0 : selectedSalaries.length > 0;
+  // For GSA: either year alignment is selected OR custom rate is set
+  const isValid = isGSA ? (gsaCurrentYear !== null && gsaCurrentYear > 0) || gsaCustomRate !== null : selectedSalaries.length > 0;
 
   // Modal title based on mode
   const modalTitle = isGSA ? 'GSA Rate Configuration' : 'Select Salaries';
@@ -271,7 +296,7 @@ export const SalarySelectionModal = ({
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`font-bold text-xl ${gsaCustomRate ? 'text-blue-800 dark:text-blue-200' : 'text-green-800 dark:text-green-200'}`}>
-                    ${(gsaCustomRate || getGSARateForYear(position, 1)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/hr
+                    ${(gsaCustomRate || getGSARateForYear(position, 1, escalationRates)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/hr
                   </span>
                   <span className={`text-xs px-2 py-0.5 rounded ${gsaCustomRate ? 'text-blue-700 bg-blue-200 dark:bg-blue-900' : 'text-green-700 bg-green-200 dark:bg-green-900'}`}>
                     {gsaCustomRate ? 'Custom' : 'GSA'}
@@ -280,15 +305,17 @@ export const SalarySelectionModal = ({
               </div>
             </div>
 
-            {/* Contract Year Selection - Only show when not using custom rate */}
-            {!gsaCustomRate && (
+            {/* Contract Year Selection - Deselected when custom rate is set (mutually exclusive) */}
+            {availableContractYears.length > 0 && (
               <Card className="p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <Calendar className="w-4 h-4 text-green-700" />
                   <h3 className="text-sm font-semibold text-foreground">Contract Year Alignment</h3>
                 </div>
                 <p className="text-xs text-muted-foreground mb-4">
-                  Select which GSA contract year corresponds to Proposal Year 1
+                  {gsaCustomRate
+                    ? 'Select which GSA contract year corresponds to Proposal Year 1 (currently overridden by custom rate)'
+                    : 'Select which GSA contract year corresponds to Proposal Year 1'}
                 </p>
 
                 <div className="space-y-2">
@@ -309,7 +336,10 @@ export const SalarySelectionModal = ({
                             type="radio"
                             name="gsaYear"
                             checked={isSelected}
-                            onChange={() => setGsaCurrentYear(year)}
+                            onChange={() => {
+                              setGsaCurrentYear(year);
+                              setGsaCustomRate(null); // Clear custom rate when selecting year alignment
+                            }}
                             className="w-4 h-4 text-green-700 cursor-pointer"
                           />
                           <div>
@@ -329,15 +359,17 @@ export const SalarySelectionModal = ({
               </Card>
             )}
 
-            {/* Rate Preview by Year - Only show when not using custom rate */}
-            {!gsaCustomRate && (
+            {/* Rate Preview by Year - Shows GSA rates (dimmed if custom rate overrides) */}
+            {gsaRatesByYear.length > 0 && (
               <Card className="p-4">
                 <div className="flex items-center gap-2 mb-3">
                   <TrendingUp className="w-4 h-4 text-green-700" />
-                  <h3 className="text-sm font-semibold text-foreground">Rate Preview by Proposal Year</h3>
+                  <h3 className="text-sm font-semibold text-foreground">GSA Rate Preview by Proposal Year</h3>
                 </div>
                 <p className="text-xs text-muted-foreground mb-4">
-                  Preview of GSA rates for each proposal year based on contract year alignment
+                  {gsaCustomRate
+                    ? 'Original GSA rates (currently overridden by custom rate)'
+                    : 'Preview of GSA rates for each proposal year based on contract year alignment'}
                 </p>
 
                 <div className="space-y-2">
@@ -354,8 +386,8 @@ export const SalarySelectionModal = ({
                           Contract Year {contractYear}
                         </div>
                       </div>
-                      <div className={`text-lg font-bold font-mono ${rate > 0 ? 'text-green-800 dark:text-green-200' : 'text-red-500'}`}>
-                        {rate > 0 ? `$${rate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/hr` : 'N/A'}
+                      <div className="text-lg font-bold font-mono text-green-800 dark:text-green-200">
+                        ${rate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}/hr
                       </div>
                     </div>
                   ))}

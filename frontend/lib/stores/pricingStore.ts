@@ -65,7 +65,8 @@ interface PricingState {
 
   // Actions
   loadProposal: (proposalId: string, existingProposal?: Proposal) => Promise<void>;
-  updatePosition: (id: string, updates: Partial<SpreadsheetPosition>) => void;
+  updatePosition: (id: string, updates: Partial<SpreadsheetPosition>, options?: { skipWageSync?: boolean }) => void;
+  getWageSyncInfo: (id: string, updates: Partial<SpreadsheetPosition>) => { willSync: boolean; matchingCount: number; laborCategory: string | null };
   addPosition: (position: Omit<SpreadsheetPosition, 'id'>) => void;
   deletePosition: (id: string) => void;
   addSubcontractor: (subcontractor: Omit<Subcontractor, 'id'>) => void;
@@ -461,11 +462,20 @@ export const usePricingStore = create<PricingState>((set, get) => {
           // GSA positions: Reverse engineer for DISPLAY purposes
           // The GSA rate is the final FBLR, but we show it broken down
           // as if it were calculated with indirect rates (for consistency in UI)
-          const originalGsaRate = getGSARateForYear(pos, yearNum);
+
+          console.log(`[TRANSFORM_GSA] Position: ${pos.labor_category}, Year: ${yearNum}`);
+          console.log('[TRANSFORM_GSA] gsa_rates_by_year:', pos.gsa_rates_by_year);
+          console.log('[TRANSFORM_GSA] gsa_current_year:', pos.gsa_current_year);
+          console.log('[TRANSFORM_GSA] gsa_custom_rate:', pos.gsa_custom_rate);
+          console.log('[TRANSFORM_GSA] gsa_discount_rate:', pos.gsa_discount_rate);
+
+          const originalGsaRate = getGSARateForYear(pos, yearNum, state.escalationRates);
+          console.log('[TRANSFORM_GSA] originalGsaRate from getGSARateForYear:', originalGsaRate);
 
           // Apply discount if set by user
           const discountRate = pos.gsa_discount_rate || 0;
           const gsaRate = originalGsaRate * (1 - discountRate);
+          console.log('[TRANSFORM_GSA] Final gsaRate after discount:', gsaRate);
 
           const gsaBreakdown = reverseEngineerGSARate(gsaRate, state.rates);
 
@@ -495,6 +505,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
             fblr: gsaRate, // GSA rate is the true FBLR (not reverse-engineered value)
             totalAmount,
           };
+
+          console.log('[TRANSFORM_GSA] breakdown.fblr set to:', gsaRate);
         } else {
           // BLS positions: Calculate with indirect rates and escalation
           // Use getEffectiveSalary to handle multi-select averaging
@@ -599,6 +611,12 @@ export const usePricingStore = create<PricingState>((set, get) => {
     };
 
     advanced.forEach((pos) => {
+      // CRITICAL: Skip positions assigned to subcontractors to avoid double-counting
+      // Positions with assigned_subcontractor_id should ONLY be counted in subcontractor totals
+      if (pos.assigned_subcontractor_id) {
+        return;
+      }
+
       Object.entries(pos.breakdown).forEach(([year, breakdown]) => {
         if (!aggregates.byYear[year]) {
           aggregates.byYear[year] = {
@@ -651,10 +669,16 @@ export const usePricingStore = create<PricingState>((set, get) => {
     });
 
     // Only increment version if not explicitly skipped (to prevent unnecessary remounts)
+    const oldVersion = state.advancedModeVersion;
     const newVersion = options?.skipVersionIncrement
       ? state.advancedModeVersion
       : state.advancedModeVersion + 1;
-    console.log('[TRANSFORM] Setting new version:', newVersion, options?.skipVersionIncrement ? '(skipped increment)' : '');
+    console.log('[TRANSFORM] Version change:', {
+      oldVersion,
+      newVersion,
+      skipped: options?.skipVersionIncrement || false,
+      willIncrement: newVersion !== oldVersion
+    });
 
     set({
       positionsAdvanced: advanced,
@@ -662,7 +686,9 @@ export const usePricingStore = create<PricingState>((set, get) => {
       advancedModeVersion: newVersion
     });
 
-    console.log('[TRANSFORM] State updated - should trigger re-render');
+    // Verify the version was actually set
+    const updatedState = get();
+    console.log('[TRANSFORM] State updated - version after set():', updatedState.advancedModeVersion);
     console.log('[TRANSFORM] ========== TRANSFORM END ==========');
   };
 
@@ -1269,13 +1295,56 @@ export const usePricingStore = create<PricingState>((set, get) => {
       }
     },
 
-    updatePosition: (id, updates) => {
+    getWageSyncInfo: (id, updates) => {
       const state = get();
 
-      // Detect if wage-related fields are being updated
+      // Detect if wage-related or labor category fields are being updated (includes both BLS and GSA fields)
       const wageFields = ['selected_wage', 'selected_salaries', 'percentile', 'gsa_custom_rate',
                          'wage_10th', 'wage_25th', 'wage_50th', 'wage_75th', 'wage_90th',
-                         'soc_code', 'soc_title', 'location'];  // Added 'location' as it affects wages
+                         'soc_code', 'soc_title', 'location', 'labor_category',
+                         'gsa_lcat_id', 'gsa_title', 'gsa_rates_by_year', 'wage_source'];
+      const hasWageUpdate = Object.keys(updates).some(key => wageFields.includes(key));
+
+      // Get target position's labor category
+      const targetPosition = state.positions.find(p => p.id === id);
+      const targetLaborCategory = targetPosition?.labor_category || null;
+
+      console.log('[getWageSyncInfo] Checking:', {
+        positionId: id,
+        updateFields: Object.keys(updates),
+        hasWageUpdate,
+        targetLaborCategory,
+        allPositions: state.positions.map(p => ({ id: p.id, laborCategory: p.labor_category }))
+      });
+
+      // Show confirmation for wage changes, location changes, and labor category changes
+      const shouldSyncWages = hasWageUpdate && targetLaborCategory;
+
+      if (shouldSyncWages) {
+        const matchingCount = state.positions.filter(
+          p => p.labor_category === targetLaborCategory && p.id !== id
+        ).length;
+        console.log('[getWageSyncInfo] Should sync:', {
+          matchingCount,
+          matchingPositions: state.positions
+            .filter(p => p.labor_category === targetLaborCategory && p.id !== id)
+            .map(p => ({ id: p.id, laborCategory: p.labor_category }))
+        });
+        return { willSync: true, matchingCount, laborCategory: targetLaborCategory };
+      }
+
+      console.log('[getWageSyncInfo] No sync needed');
+      return { willSync: false, matchingCount: 0, laborCategory: targetLaborCategory };
+    },
+
+    updatePosition: (id, updates, options) => {
+      const state = get();
+
+      // Detect if wage-related or labor category fields are being updated (includes both BLS and GSA fields)
+      const wageFields = ['selected_wage', 'selected_salaries', 'percentile', 'gsa_custom_rate',
+                         'wage_10th', 'wage_25th', 'wage_50th', 'wage_75th', 'wage_90th',
+                         'soc_code', 'soc_title', 'location', 'labor_category',
+                         'gsa_lcat_id', 'gsa_title', 'gsa_rates_by_year', 'wage_source'];
       const hasWageUpdate = Object.keys(updates).some(key => wageFields.includes(key));
 
       // Check if this is ONLY a location_type change (to prevent unnecessary grid remounts)
@@ -1298,18 +1367,19 @@ export const usePricingStore = create<PricingState>((set, get) => {
       const targetPosition = state.positions.find(p => p.id === id);
       const targetLaborCategory = targetPosition?.labor_category;
 
-      // Wage sync should ONLY happen for manual wage changes, NOT location changes
-      // When location changes, each position can have different wages for the same labor category
-      const isLocationChange = updates.location !== undefined;
-      const shouldSyncWages = hasWageUpdate && targetLaborCategory && !isLocationChange;
+      // Show confirmation for wage changes, location changes, and labor category changes
+      // Respect the skipWageSync option if provided
+      const shouldSyncWages = hasWageUpdate && targetLaborCategory && !options?.skipWageSync;
 
-      if (shouldSyncWages) {
+      if (hasWageUpdate && targetLaborCategory) {
         const matchingCount = state.positions.filter(
           p => p.labor_category === targetLaborCategory && p.id !== id
         ).length;
-        console.log(`[WAGE SYNC] Detected wage change for labor_category: "${targetLaborCategory}" (${matchingCount} other positions will sync)`);
-      } else if (hasWageUpdate && isLocationChange) {
-        console.log(`[WAGE SYNC] Location change detected - skipping wage sync to other positions with same labor_category`);
+        if (options?.skipWageSync) {
+          console.log(`[WAGE SYNC] Wage sync explicitly skipped by user for labor_category: "${targetLaborCategory}"`);
+        } else if (shouldSyncWages) {
+          console.log(`[WAGE SYNC] Detected change for labor_category: "${targetLaborCategory}" (${matchingCount} other positions will sync)`);
+        }
       }
 
       // If location_type is being updated, also update linked subcontractor positions
@@ -1342,7 +1412,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
       if (state.advancedMode) {
         // In advanced mode, use the advanced update logic
-        console.log('[ADVANCED MODE] Updating position via updatePosition', { id, updates });
+        console.log('[ADVANCED MODE] Updating position via updatePosition', { id, updates, skipWageSync: options?.skipWageSync });
 
         // SINGLE atomic update: target position + wage sync in ONE set() call
         set((prevState) => ({
@@ -1371,10 +1441,15 @@ export const usePricingStore = create<PricingState>((set, get) => {
         }));
 
         // Then retransform to advanced mode to recalculate breakdown
-        // Skip version increment ONLY for location_type changes to prevent grid remount
-        // Geographic location changes SHOULD increment version because they affect wages
-        console.log('[ADVANCED MODE] Calling transformToAdvanced', { isLocationTypeOnlyChange });
-        performTransformToAdvanced({ skipVersionIncrement: isLocationTypeOnlyChange });
+        // ALWAYS increment version for wage changes to force grid re-render
+        // Only skip version increment for location_type changes to prevent unnecessary grid remount
+        const shouldSkipVersionIncrement = isLocationTypeOnlyChange && !hasWageUpdate;
+        console.log('[ADVANCED MODE] Calling transformToAdvanced', {
+          isLocationTypeOnlyChange,
+          hasWageUpdate,
+          shouldSkipVersionIncrement
+        });
+        performTransformToAdvanced({ skipVersionIncrement: shouldSkipVersionIncrement });
 
         // Set isDirty AFTER transformation to ensure it persists through all state updates
         console.log('[ADVANCED MODE] Setting isDirty=true');
@@ -1385,7 +1460,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         debouncedAutoSave();
       } else {
         // Basic mode logic
-        console.log('[BASIC MODE] Updating position', { id, updates });
+        console.log('[BASIC MODE] Updating position', { id, updates, skipWageSync: options?.skipWageSync });
 
         // SINGLE atomic update: target position + wage sync in ONE set() call
         set((prevState) => ({
@@ -1397,8 +1472,9 @@ export const usePricingStore = create<PricingState>((set, get) => {
                 clonedUpdates[key as keyof SpreadsheetPosition] = deepClone(value) as any;
               }
               return { ...p, ...clonedUpdates };
-            } else if (hasWageUpdate && targetLaborCategory && p.labor_category === targetLaborCategory) {
+            } else if (shouldSyncWages && p.labor_category === targetLaborCategory) {
               // Wage sync: Update matching positions with ONLY wage fields (deep cloned)
+              // NOTE: This only happens for manual wage changes, NOT location changes, and respects skipWageSync option
               const wageUpdates: Partial<SpreadsheetPosition> = {};
               wageFields.forEach(field => {
                 if (updates[field as keyof typeof updates] !== undefined) {
@@ -1413,19 +1489,25 @@ export const usePricingStore = create<PricingState>((set, get) => {
           isDirty: true, // Set dirty immediately
         }));
 
-        // For location_type-only changes, skip recalculation and just transform
-        if (isLocationTypeOnlyChange) {
-          console.log('[BASIC MODE] Location_type-only change, transforming without recalculation');
-          performTransformToAdvanced({ skipVersionIncrement: true });
-          debouncedAutoSave();
-        } else {
+        // Always transform to update advanced view (even in "basic" mode if advanced grid is displayed)
+        // Skip version increment ONLY for location_type-only changes without wage updates
+        const shouldSkipVersionIncrement = isLocationTypeOnlyChange && !hasWageUpdate;
+        console.log('[BASIC MODE] Calling transformToAdvanced to update grid', {
+          isLocationTypeOnlyChange,
+          hasWageUpdate,
+          shouldSkipVersionIncrement
+        });
+        performTransformToAdvanced({ skipVersionIncrement: shouldSkipVersionIncrement });
+
+        // For location_type-only changes, skip recalculation
+        if (!isLocationTypeOnlyChange) {
           // Trigger recalculate for UI updates
           debouncedRecalculate();
-
-          // Also trigger auto-save directly to ensure persistence
-          console.log('[BASIC MODE] Triggering debouncedAutoSave (will run in 2s)');
-          debouncedAutoSave();
         }
+
+        // Also trigger auto-save directly to ensure persistence
+        console.log('[BASIC MODE] Triggering debouncedAutoSave (will run in 2s)');
+        debouncedAutoSave();
       }
     },
 
@@ -1508,12 +1590,20 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
       // Update state: positions and subcontractors
       set((prevState) => {
-        // Update prime positions with returned hours
+        // Update prime positions with returned hours AND clear assigned_subcontractor_id
         const updatedPositions = prevState.positions.map(pos => {
           if (primeHoursUpdates[pos.id]) {
             return {
               ...pos,
-              hours_per_year: { ...primeHoursUpdates[pos.id] }
+              hours_per_year: { ...primeHoursUpdates[pos.id] },
+              assigned_subcontractor_id: undefined  // Clear subcontractor assignment
+            };
+          }
+          // Also clear assignment for any other positions assigned to this subcontractor
+          if (pos.assigned_subcontractor_id === id) {
+            return {
+              ...pos,
+              assigned_subcontractor_id: undefined
             };
           }
           return pos;
@@ -2346,7 +2436,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
               for (let year = 1; year <= state.totalYears; year++) {
                 const yearStr = year.toString();
                 const hoursThisYear = p.hours_per_year[yearStr] || 0;
-                const gsaRate = getGSARateForYear(p, year);
+                const gsaRate = getGSARateForYear(p, year, state.escalationRates);
 
                 if (hoursThisYear > 0 && gsaRate > 0) {
                   totalAmount += gsaRate * hoursThisYear;
@@ -2525,22 +2615,23 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
       const state = get();
 
-      // Detect if wage-related fields are being updated
+      // Detect if wage-related or labor category fields are being updated (includes both BLS and GSA fields)
       const wageFields = ['selected_wage', 'selected_salaries', 'percentile', 'gsa_custom_rate',
                          'wage_10th', 'wage_25th', 'wage_50th', 'wage_75th', 'wage_90th',
-                         'soc_code', 'soc_title', 'location'];
+                         'soc_code', 'soc_title', 'location', 'labor_category',
+                         'gsa_lcat_id', 'gsa_title', 'gsa_rates_by_year', 'wage_source'];
       const hasWageUpdate = Object.keys(updates).some(key => wageFields.includes(key));
 
-      // Wage sync should ONLY happen for manual wage changes, NOT location changes
-      const isLocationChange = updates.location !== undefined;
-      const shouldSyncWages = hasWageUpdate && !isLocationChange;
+      // NOTE: updateAdvancedPosition is called AFTER user confirmation in the dialog
+      // So we don't need to check for location changes here - the dialog already handled it
+      const shouldSyncWages = hasWageUpdate;
 
       // If wage-related fields are being updated, sync across positions with same labor_category
       if (shouldSyncWages) {
         const targetPosition = state.positions.find(p => p.id === id);
         if (targetPosition) {
           const laborCategory = targetPosition.labor_category;
-          console.log('[WAGE SYNC] Detected wage change for labor_category:', laborCategory);
+          console.log('[WAGE SYNC] Detected change for labor_category:', laborCategory);
 
           // Find all positions with matching labor_category (exact match)
           const matchingPositions = state.positions.filter(
@@ -2570,8 +2661,6 @@ export const usePricingStore = create<PricingState>((set, get) => {
             }));
           }
         }
-      } else if (hasWageUpdate && isLocationChange) {
-        console.log(`[WAGE SYNC] Location change detected in updateAdvancedPosition - skipping wage sync`);
       }
 
       // Update the underlying positions array first (WITHOUT isDirty)
@@ -2997,21 +3086,43 @@ export const usePricingStore = create<PricingState>((set, get) => {
       }
 
       // Calculate base rate from FBLR
-      const effectiveSalary = getEffectiveSalary(position);
-      const fteHours = position.standard_fte_hours || 1920;
-      const dlRate = effectiveSalary / fteHours;
+      let fblr: number;
 
-      // Calculate FBLR using prime rates
-      const fringeRate = state.rates.fringe || 0.247;
-      const ohRate = (position.location_type === 'Off-Site' ? state.rates.oh_offsite : state.rates.oh_onsite) || 0.0711;
-      const gaRate = state.rates.ga || 0.2243;
-      const feeRate = state.rates.fee || 0.08;
+      // Check if GSA position
+      if (isGSAPosition(position)) {
+        // GSA: Rate is already fully burdened, use directly
+        console.log('[ASSIGN_TO_SUB] GSA position detected');
+        console.log('[ASSIGN_TO_SUB] gsa_rates_by_year:', position.gsa_rates_by_year);
+        console.log('[ASSIGN_TO_SUB] gsa_current_year:', position.gsa_current_year);
+        console.log('[ASSIGN_TO_SUB] gsa_custom_rate:', position.gsa_custom_rate);
+        console.log('[ASSIGN_TO_SUB] gsa_discount_rate:', position.gsa_discount_rate);
 
-      const fringeAmount = dlRate * fringeRate;
-      const ohAmount = (dlRate + fringeAmount) * ohRate;
-      const gaAmount = (dlRate + fringeAmount + ohAmount) * gaRate;
-      const feeAmount = (dlRate + fringeAmount + ohAmount + gaAmount) * feeRate;
-      const fblr = dlRate + fringeAmount + ohAmount + gaAmount + feeAmount;
+        const gsaRate = getGSARateForYear(position, 1, state.escalationRates);
+        console.log('[ASSIGN_TO_SUB] GSA rate from getGSARateForYear:', gsaRate);
+
+        const discountRate = position.gsa_discount_rate || 0;
+        fblr = gsaRate * (1 - discountRate);
+        console.log('[ASSIGN_TO_SUB] Final FBLR after discount:', fblr);
+      } else {
+        // BLS: Calculate FBLR from annual salary
+        console.log('[ASSIGN_TO_SUB] BLS position detected');
+        const effectiveSalary = getEffectiveSalary(position);
+        const fteHours = position.standard_fte_hours || 1920;
+        const dlRate = effectiveSalary / fteHours;
+
+        // Calculate FBLR using prime rates
+        const fringeRate = state.rates.fringe || 0.247;
+        const ohRate = (position.location_type === 'Off-Site' ? state.rates.oh_offsite : state.rates.oh_onsite) || 0.0711;
+        const gaRate = state.rates.ga || 0.2243;
+        const feeRate = state.rates.fee || 0.08;
+
+        const fringeAmount = dlRate * fringeRate;
+        const ohAmount = (dlRate + fringeAmount) * ohRate;
+        const gaAmount = (dlRate + fringeAmount + ohAmount) * gaRate;
+        const feeAmount = (dlRate + fringeAmount + ohAmount + gaAmount) * feeRate;
+        fblr = dlRate + fringeAmount + ohAmount + gaAmount + feeAmount;
+        console.log('[ASSIGN_TO_SUB] Calculated FBLR:', fblr);
+      }
 
       // Check if there's a previously edited rate to preserve
       const subFee = state.rates.sub_fee || 0;
