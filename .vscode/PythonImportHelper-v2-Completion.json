@@ -2595,14 +2595,6 @@
         "documentation": {}
     },
     {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
         "label": "load_dotenv",
         "importPath": "dotenv",
         "description": "dotenv",
@@ -4645,14 +4637,6 @@
         "description": "agent.agent",
         "isExtraImport": true,
         "detail": "agent.agent",
-        "documentation": {}
-    },
-    {
-        "label": "parser",
-        "importPath": "dateutil",
-        "description": "dateutil",
-        "isExtraImport": true,
-        "detail": "dateutil",
         "documentation": {}
     },
     {
@@ -7371,33 +7355,6 @@
         "description": "backend.utils.streaming",
         "peekOfCode": "logger = logging.getLogger(__name__)\ndef extract_text(content: Any) -> Optional[str]:\n    \"\"\"Best-effort extraction of textual content from heterogeneous payloads.\"\"\"\n    if content is None:\n        return None\n    if isinstance(content, str):\n        return content\n    if isinstance(content, dict):\n        if \"text\" in content and isinstance(content[\"text\"], str):\n            return content[\"text\"]",
         "detail": "backend.utils.streaming",
-        "documentation": {}
-    },
-    {
-        "label": "calculate_gsa_year",
-        "kind": 2,
-        "importPath": "backend.test_gsa_year_calculation",
-        "description": "backend.test_gsa_year_calculation",
-        "peekOfCode": "def calculate_gsa_year(contract_start_date: str, current_date: datetime = None) -> int:\n    \"\"\"\n    Calculate current GSA contract year based on contract start date.\n    GSA contracts always use December 30 - December 29 as the year cycle,\n    regardless of when the contract was originally awarded.\n    Example:\n        Contract started: April 1, 2019\n        Year 1 starts: December 30, 2019 (first Dec 30 after contract start)\n        Current date: December 24, 2024 (before Dec 30, 2024)\n        Result: Year 5 (we're still in the Dec 30, 2023 - Dec 29, 2024 cycle)",
-        "detail": "backend.test_gsa_year_calculation",
-        "documentation": {}
-    },
-    {
-        "label": "test_case",
-        "kind": 2,
-        "importPath": "backend.test_gsa_year_calculation",
-        "description": "backend.test_gsa_year_calculation",
-        "peekOfCode": "def test_case(name: str, contract_start: str, test_date: str, expected_year: int):\n    \"\"\"Run a single test case.\"\"\"\n    current_date = datetime.strptime(test_date, \"%Y-%m-%d\")\n    result = calculate_gsa_year(contract_start, current_date)\n    status = \"✓ PASS\" if result == expected_year else \"✗ FAIL\"\n    print(f\"\\n{status} | {name}\")\n    print(f\"  Contract Start: {contract_start}\")\n    print(f\"  Test Date: {test_date}\")\n    print(f\"  Expected Year: {expected_year}\")\n    print(f\"  Got Year: {result}\")",
-        "detail": "backend.test_gsa_year_calculation",
-        "documentation": {}
-    },
-    {
-        "label": "main",
-        "kind": 2,
-        "importPath": "backend.test_gsa_year_calculation",
-        "description": "backend.test_gsa_year_calculation",
-        "peekOfCode": "def main():\n    print(\"=\"*80)\n    print(\"GSA YEAR CALCULATION TEST SUITE\")\n    print(\"=\"*80)\n    all_passed = True\n    # Test 1: Your example - Contract started April 1, 2019\n    print(\"\\n\" + \"=\"*80)\n    print(\"TEST GROUP 1: Contract Started April 1, 2019\")\n    print(\"=\"*80)\n    print(\"Year 1 should start: December 30, 2019\")",
-        "detail": "backend.test_gsa_year_calculation",
         "documentation": {}
     },
     {
