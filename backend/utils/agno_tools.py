@@ -177,10 +177,17 @@ def calculate_gsa_year(contract_start_date: str) -> int:
     """
     Calculate current GSA contract year based on contract start date.
 
+    GSA contracts always use December 30 - December 29 as the year cycle,
+    regardless of when the contract was originally awarded.
+
     Example:
-        Contract started: January 15, 2020
-        Current date: December 24, 2024
-        Result: Year 5
+        Contract started: April 1, 2019
+        Year 1 starts: December 30, 2019 (first Dec 30 after contract start)
+        Current date: December 24, 2024 (before Dec 30, 2024)
+        Result: Year 5 (we're still in the Dec 30, 2023 - Dec 29, 2024 cycle)
+
+        If current date: December 31, 2024 (after Dec 30, 2024)
+        Result: Year 6 (we're now in the Dec 30, 2024 - Dec 29, 2025 cycle)
     """
     from dateutil import parser as date_parser
 
@@ -188,11 +195,26 @@ def calculate_gsa_year(contract_start_date: str) -> int:
         start_date = date_parser.parse(contract_start_date)
         current_date = datetime.now()
 
-        years_diff = current_date.year - start_date.year
+        # Find the first December 30 on or after the contract start date
+        # This is the start of Year 1
+        if start_date.month == 12 and start_date.day == 30:
+            year_1_start = start_date
+        elif start_date.month < 12 or (start_date.month == 12 and start_date.day < 30):
+            # If before Dec 30, use Dec 30 of the same year
+            year_1_start = datetime(start_date.year, 12, 30)
+        else:
+            # If after Dec 30 (Dec 31), use Dec 30 of next year
+            year_1_start = datetime(start_date.year + 1, 12, 30)
 
-        if (current_date.month, current_date.day) < (start_date.month, start_date.day):
+        # Count how many Dec 30 to Dec 29 cycles have passed
+        # Each cycle starts on Dec 30 of a year and ends on Dec 29 of the next year
+        years_diff = current_date.year - year_1_start.year
+
+        # If we haven't reached Dec 30 yet this year, we're still in the previous year
+        if (current_date.month, current_date.day) < (12, 30):
             years_diff -= 1
 
+        # Year number = cycles passed + 1
         return max(1, years_diff + 1)
 
     except Exception:

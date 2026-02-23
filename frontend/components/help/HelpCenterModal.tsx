@@ -4,10 +4,12 @@ import { useState, useEffect } from 'react';
 import { X, Send, Mail } from 'lucide-react';
 import { useHelpCenterStore } from '@/lib/stores/helpCenterStore';
 import { useAuthStore } from '@/lib/stores/authStore';
+import { useOrganizationStore } from '@/lib/stores/organizationStore';
 
 export default function HelpCenterModal() {
   const { isOpen, closeModal } = useHelpCenterStore();
   const { user } = useAuthStore();
+  const { organization } = useOrganizationStore();
 
   // Contact form state
   const [formData, setFormData] = useState({
@@ -25,11 +27,12 @@ export default function HelpCenterModal() {
     if (isOpen && user) {
       setFormData(prev => ({
         ...prev,
-        name: (user as any).name || '',
+        name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || '',
         email: user.email || '',
+        company: organization?.name || '', // Auto-fill from organization
       }));
     }
-  }, [isOpen, user]);
+  }, [isOpen, user, organization]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     setFormData(prev => ({
@@ -61,9 +64,9 @@ export default function HelpCenterModal() {
       // Success - show confirmation and reset form
       setStatus('success');
       setFormData({
-        name: (user as any)?.name || '',
+        name: `${user?.firstName || ''} ${user?.lastName || ''}`.trim() || '',
         email: user?.email || '',
-        company: '',
+        company: organization?.name || '', // Keep company name
         phone: '',
         message: ''
       });
@@ -85,7 +88,13 @@ export default function HelpCenterModal() {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed right-2 md:right-4 top-20 bottom-4 w-[calc(100%-16px)] md:w-[500px] bg-card border border-border rounded-lg shadow-2xl z-40 flex flex-col animate-slide-in-right">
+    <div className="fixed right-0 top-16 bottom-0 w-full md:w-[500px] bg-card border-l border-border shadow-2xl z-40 flex flex-col transition-transform duration-300">
+      {/* Mobile backdrop */}
+      <div
+        className="md:hidden fixed inset-0 bg-black/50 -z-10"
+        onClick={closeModal}
+      />
+
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <div className="flex items-center gap-2">
