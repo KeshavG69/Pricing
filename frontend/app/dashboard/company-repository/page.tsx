@@ -182,6 +182,35 @@ function TextPreview({ url, filename }: { url: string; filename: string }) {
 // Spreadsheet Preview Component (handles XLSX, XLS, CSV)
 const MAX_ROWS = 1000; // Limit rows to prevent browser freeze
 
+// Helper to convert Excel serial date to formatted string
+const formatExcelDate = (value: any): string => {
+  // Check if value is a number that could be an Excel date (between 1900 and 2100)
+  if (typeof value === 'number' && value > 1 && value < 73050) {
+    try {
+      // Excel date: days since 1900-01-01 (with 1900 leap year bug)
+      const date = XLSX.SSF.parse_date_code(value);
+      if (date) {
+        const jsDate = new Date(date.y, date.m - 1, date.d, date.H || 0, date.M || 0, date.S || 0);
+        // Format as DD MMM YYYY if time is 00:00:00, otherwise include time
+        if (date.H === 0 && date.M === 0 && date.S === 0) {
+          return jsDate.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        } else {
+          return jsDate.toLocaleString('en-GB', {
+            day: '2-digit',
+            month: 'short',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+        }
+      }
+    } catch (e) {
+      // If parsing fails, return as string
+    }
+  }
+  return String(value ?? '');
+};
+
 function SpreadsheetPreview({ url, filename }: { url: string; filename: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -205,20 +234,20 @@ function SpreadsheetPreview({ url, filename }: { url: string; filename: string }
 
         if (ext === 'csv') {
           const text = await response.text();
-          workbook = XLSX.read(text, { type: 'string' });
+          workbook = XLSX.read(text, { type: 'string', cellDates: true });
         } else {
           const arrayBuffer = await response.arrayBuffer();
-          workbook = XLSX.read(arrayBuffer, { type: 'array' });
+          workbook = XLSX.read(arrayBuffer, { type: 'array', cellDates: true });
         }
 
         // Convert each sheet to JSON (much more efficient than HTML)
         const sheetData = workbook.SheetNames.map((name) => {
           const sheet = workbook.Sheets[name];
-          const json = XLSX.utils.sheet_to_json<string[]>(sheet, { header: 1, defval: '' });
+          const json = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1, defval: '', raw: false });
           const totalRows = json.length;
-          const headers: string[] = Array.isArray(json[0]) ? json[0].map(h => String(h)) : [];
+          const headers: string[] = Array.isArray(json[0]) ? json[0].map(h => formatExcelDate(h)) : [];
           const rows: string[][] = json.slice(1, MAX_ROWS + 1).map(row =>
-            Array.isArray(row) ? row.map(cell => String(cell ?? '')) : []
+            Array.isArray(row) ? row.map(cell => formatExcelDate(cell)) : []
           );
           return { name, headers, rows, totalRows };
         });
@@ -930,7 +959,7 @@ export default function CompanyRepositoryPage() {
     }
   };
 
-  // Get year columns from labor categories with actual calendar years
+  // Get year columns from labor categories with actual calendar date ranges
   const getYearColumns = (laborCategories: GSALaborCategory[] | undefined, contract: GSAContract) => {
     if (!laborCategories || laborCategories.length === 0) return [];
 
@@ -954,10 +983,20 @@ export default function CompanyRepositoryPage() {
       ? new Date(contract.contract_start_date).getFullYear()
       : currentYear;
 
-    return sortedYears.map((yearNum) => ({
-      yearNum,
-      displayYear: contractStartYear + parseInt(yearNum) - 1
-    }));
+    return sortedYears.map((yearNum) => {
+      // GSA years always run Dec 30 - Dec 29
+      // Year X starts: Dec 30 of (contractStartYear + yearNum - 1)
+      // Year X ends: Dec 29 of (contractStartYear + yearNum)
+      const yearInt = parseInt(yearNum);
+      const startYear = contractStartYear + yearInt - 1;
+      const endYear = contractStartYear + yearInt;
+
+      return {
+        yearNum,
+        startDate: `30 Dec ${startYear}`,
+        endDate: `29 Dec ${endYear}`
+      };
+    });
   };
 
   const getStatusBadge = (status: GSAContract['status']) => {
@@ -1016,7 +1055,7 @@ export default function CompanyRepositoryPage() {
           <div>
             <h1 className="text-3xl font-bold text-foreground mb-1">Company Rates</h1>
             <p className="text-muted-foreground pl-1">
-              Upload and manage GSA contracts for rate lookups
+              Upload and manage FPR contracts for rate lookups
             </p>
           </div>
           {userIsAdmin && (
@@ -1048,9 +1087,9 @@ export default function CompanyRepositoryPage() {
         {/* Contracts List */}
         <Card>
           <CardHeader>
-            <CardTitle>GSA Contracts</CardTitle>
+            <CardTitle>FPR Contracts</CardTitle>
             <CardDescription>
-              Uploaded GSA rate schedules that can be used for proposal pricing
+              Uploaded FPR rate schedules that can be used for proposal pricing
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -1063,7 +1102,7 @@ export default function CompanyRepositoryPage() {
                 <Building2 className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-foreground mb-2">No contracts uploaded</h3>
                 <p className="text-muted-foreground mb-4">
-                  {userIsAdmin ? 'Upload a GSA rate schedule to get started' : 'No GSA contracts available yet'}
+                  {userIsAdmin ? 'Upload an FPR rate schedule to get started' : 'No FPR contracts available yet'}
                 </p>
                 {userIsAdmin && (
                   <Button variant="outline" onClick={() => setShowUploadDialog(true)}>
@@ -1232,16 +1271,23 @@ export default function CompanyRepositoryPage() {
                             </h5>
                           </div>
                           <div className="overflow-x-auto">
-                            <table className="w-full text-sm">
+                            <div style={{ width: `${680 + (getYearColumns(expandedContract.labor_categories, expandedContract).length * 130)}px`, minWidth: 0 }}>
+                              <table className="text-sm border-collapse" style={{
+                                tableLayout: 'fixed',
+                                width: '100%'
+                              }}>
                               <thead>
                                 <tr className="border-b border-border">
-                                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Title</th>
-                                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">SIN</th>
-                                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Description</th>
-                                  <th className="text-left py-2 px-3 font-medium text-muted-foreground">Experience</th>
-                                  {getYearColumns(expandedContract.labor_categories, expandedContract).map(({ yearNum, displayYear }) => (
-                                    <th key={yearNum} className="text-right py-2 px-3 font-medium text-muted-foreground">
-                                      {displayYear}
+                                  <th className="text-left py-2 px-3 font-medium text-muted-foreground" style={{ width: '180px', minWidth: 0, maxWidth: '180px' }}>Title</th>
+                                  <th className="text-left py-2 px-3 font-medium text-muted-foreground" style={{ width: '100px', minWidth: 0, maxWidth: '100px' }}>SIN</th>
+                                  <th className="text-left py-2 px-3 font-medium text-muted-foreground" style={{ width: '250px', minWidth: 0, maxWidth: '250px' }}>Description</th>
+                                  <th className="text-left py-2 px-3 font-medium text-muted-foreground" style={{ width: '150px', minWidth: 0, maxWidth: '150px' }}>Experience</th>
+                                  {getYearColumns(expandedContract.labor_categories, expandedContract).map(({ yearNum, startDate, endDate }) => (
+                                    <th key={yearNum} className="text-right py-2 px-3 font-medium text-muted-foreground" style={{ width: '130px', minWidth: 0, maxWidth: '130px' }}>
+                                      <div className="text-xs">
+                                        <div className="whitespace-nowrap">Start: {startDate}</div>
+                                        <div className="whitespace-nowrap">End: {endDate}</div>
+                                      </div>
                                     </th>
                                   ))}
                                 </tr>
@@ -1256,7 +1302,23 @@ export default function CompanyRepositoryPage() {
                                       className="border-b border-border/50 last:border-0 hover:bg-muted/30"
                                     >
                                       {/* Title - Editable */}
-                                      <td className="py-2 px-3 text-foreground">
+                                      <td className="py-2 px-3 text-foreground cursor-pointer hover:bg-muted/50"
+                                          style={{
+                                            width: '180px',
+                                            minWidth: 0,
+                                            maxWidth: '180px',
+                                            wordBreak: 'break-word',
+                                            overflowWrap: 'break-word',
+                                            whiteSpace: 'normal',
+                                            overflow: 'hidden'
+                                          }}
+                                          onClick={() => !isEditing && setEditingCell({
+                                            fileId: expandedContract.file_id,
+                                            lcatId: lc.lcat_id,
+                                            field: 'title',
+                                            value: lc.title
+                                          })}
+                                          title="Click to edit">
                                         {isEditing && editingCell.field === 'title' ? (
                                           <input
                                             type="text"
@@ -1282,23 +1344,12 @@ export default function CompanyRepositoryPage() {
                                             disabled={savingCell}
                                           />
                                         ) : (
-                                          <div
-                                            className="cursor-pointer hover:bg-muted/50 px-2 py-1 rounded"
-                                            onClick={() => setEditingCell({
-                                              fileId: expandedContract.file_id,
-                                              lcatId: lc.lcat_id,
-                                              field: 'title',
-                                              value: lc.title
-                                            })}
-                                            title="Click to edit"
-                                          >
-                                            {lc.title}
-                                          </div>
+                                          lc.title
                                         )}
                                       </td>
 
                                       {/* SIN - Editable */}
-                                      <td className="py-2 px-3 text-muted-foreground">
+                                      <td className="py-2 px-3 text-muted-foreground" style={{ width: '100px', minWidth: 0, maxWidth: '100px' }}>
                                         {isEditing && editingCell.field === 'sin' ? (
                                           <input
                                             type="text"
@@ -1340,10 +1391,29 @@ export default function CompanyRepositoryPage() {
                                       </td>
 
                                       {/* Description - Editable with textarea */}
-                                      <td className="py-2 px-3 text-muted-foreground">
+                                      <td className="py-2 px-3 text-muted-foreground text-sm cursor-pointer hover:bg-muted/50"
+                                          style={{
+                                            width: '250px',
+                                            minWidth: 0,
+                                            maxWidth: '250px',
+                                            wordBreak: 'break-word',
+                                            overflowWrap: 'break-word',
+                                            whiteSpace: 'normal',
+                                            overflow: 'hidden',
+                                            maxHeight: '100px',
+                                            overflowY: 'auto'
+                                          }}
+                                          onClick={() => !isEditing && setEditingCell({
+                                            fileId: expandedContract.file_id,
+                                            lcatId: lc.lcat_id,
+                                            field: 'description',
+                                            value: lc.description || ''
+                                          })}
+                                          onDoubleClick={() => lc.description && setTextModal({ title: `${lc.title} - Description`, content: lc.description })}
+                                          title="Click to edit, double-click to view full">
                                         {isEditing && editingCell.field === 'description' ? (
                                           <textarea
-                                            className="w-full px-2 py-1 border border-primary rounded focus:outline-none focus:ring-2 focus:ring-primary max-w-[300px]"
+                                            className="w-full px-2 py-1 border border-primary rounded focus:outline-none focus:ring-2 focus:ring-primary"
                                             defaultValue={lc.description || ''}
                                             onBlur={(e) => {
                                               const newValue = e.currentTarget.value;
@@ -1360,27 +1430,34 @@ export default function CompanyRepositoryPage() {
                                             disabled={savingCell}
                                           />
                                         ) : (
-                                          <div
-                                            className="max-w-[300px] max-h-[80px] overflow-auto text-sm cursor-pointer hover:bg-muted/50 p-1 rounded"
-                                            onClick={() => setEditingCell({
-                                              fileId: expandedContract.file_id,
-                                              lcatId: lc.lcat_id,
-                                              field: 'description',
-                                              value: lc.description || ''
-                                            })}
-                                            onDoubleClick={() => lc.description && setTextModal({ title: `${lc.title} - Description`, content: lc.description })}
-                                            title="Click to edit, double-click to view full"
-                                          >
-                                            {lc.description || '-'}
-                                          </div>
+                                          lc.description || '-'
                                         )}
                                       </td>
 
                                       {/* Experience - Editable with textarea */}
-                                      <td className="py-2 px-3 text-muted-foreground">
+                                      <td className="py-2 px-3 text-muted-foreground text-sm cursor-pointer hover:bg-muted/50"
+                                          style={{
+                                            width: '150px',
+                                            minWidth: 0,
+                                            maxWidth: '150px',
+                                            wordBreak: 'break-word',
+                                            overflowWrap: 'break-word',
+                                            whiteSpace: 'normal',
+                                            overflow: 'hidden',
+                                            maxHeight: '100px',
+                                            overflowY: 'auto'
+                                          }}
+                                          onClick={() => !isEditing && setEditingCell({
+                                            fileId: expandedContract.file_id,
+                                            lcatId: lc.lcat_id,
+                                            field: 'experience',
+                                            value: lc.experience || ''
+                                          })}
+                                          onDoubleClick={() => lc.experience && setTextModal({ title: `${lc.title} - Experience`, content: lc.experience })}
+                                          title="Click to edit, double-click to view full">
                                         {isEditing && editingCell.field === 'experience' ? (
                                           <textarea
-                                            className="w-full px-2 py-1 border border-primary rounded focus:outline-none focus:ring-2 focus:ring-primary max-w-[250px]"
+                                            className="w-full px-2 py-1 border border-primary rounded focus:outline-none focus:ring-2 focus:ring-primary"
                                             defaultValue={lc.experience || ''}
                                             onBlur={(e) => {
                                               const newValue = e.currentTarget.value;
@@ -1397,25 +1474,13 @@ export default function CompanyRepositoryPage() {
                                             disabled={savingCell}
                                           />
                                         ) : (
-                                          <div
-                                            className="max-w-[250px] max-h-[80px] overflow-auto text-sm cursor-pointer hover:bg-muted/50 p-1 rounded"
-                                            onClick={() => setEditingCell({
-                                              fileId: expandedContract.file_id,
-                                              lcatId: lc.lcat_id,
-                                              field: 'experience',
-                                              value: lc.experience || ''
-                                            })}
-                                            onDoubleClick={() => lc.experience && setTextModal({ title: `${lc.title} - Experience`, content: lc.experience })}
-                                            title="Click to edit, double-click to view full"
-                                          >
-                                            {lc.experience || '-'}
-                                          </div>
+                                          lc.experience || '-'
                                         )}
                                       </td>
 
                                       {/* Rate columns - Editable */}
                                       {getYearColumns(expandedContract.labor_categories, expandedContract).map(({ yearNum }) => (
-                                        <td key={yearNum} className="py-2 px-3 text-right text-foreground font-mono">
+                                        <td key={yearNum} className="py-2 px-3 text-right text-foreground font-mono" style={{ width: '130px', minWidth: 0, maxWidth: '130px' }}>
                                           {isEditing && editingCell.field === `rate_${yearNum}` ? (
                                             <input
                                               type="number"
@@ -1462,6 +1527,7 @@ export default function CompanyRepositoryPage() {
                               </tbody>
                             </table>
                           </div>
+                        </div>
                         </div>
                       </div>
                     )}
@@ -1668,9 +1734,9 @@ export default function CompanyRepositoryPage() {
                   How it works
                 </h4>
                 <p className="text-sm text-muted-foreground">
-                  Upload a GSA rate schedule (PDF, Excel, or RTF). We'll extract all labor categories
-                  and rates. When creating a proposal, you can choose to use GSA rates instead of BLS data.
-                  GSA rates are final - no indirect rates (fringe, OH, G&A, fee) are applied.
+                  Upload an FPR rate schedule (PDF, Excel, or RTF). We'll extract all labor categories
+                  and rates. When creating a proposal, you can choose to use FPR rates instead of BLS data.
+                  FPR rates are final - no indirect rates (fringe, OH, G&A, fee) are applied.
                 </p>
               </div>
             </div>
@@ -1686,7 +1752,7 @@ export default function CompanyRepositoryPage() {
           setUploadName('');
           setSelectedFile(null);
         }}
-        title="Upload GSA Contract"
+        title="Upload FPR Contract"
         footer={
           <>
             <Button
@@ -1712,12 +1778,12 @@ export default function CompanyRepositoryPage() {
       >
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Upload a GSA rate schedule document. Supported formats: PDF, Excel (.xlsx, .xls), RTF
+            Upload an FPR rate schedule document. Supported formats: PDF, Excel (.xlsx, .xls), RTF
           </p>
 
           <Input
             label="Contract Name"
-            placeholder='e.g., "GSA MAS Contract 2024"'
+            placeholder='e.g., "FPR MAS Contract 2024"'
             value={uploadName}
             onChange={(e) => setUploadName(e.target.value)}
           />
@@ -2239,7 +2305,7 @@ export default function CompanyRepositoryPage() {
                 <FileText className="w-5 h-5 text-primary" />
                 <div>
                   <h3 className="font-semibold text-foreground">{previewContractName}</h3>
-                  <p className="text-sm text-muted-foreground">GSA Contract Document</p>
+                  <p className="text-sm text-muted-foreground">FPR Contract Document</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">

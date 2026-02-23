@@ -6930,7 +6930,7 @@
         "kind": 2,
         "importPath": "backend.utils.agno_tools",
         "description": "backend.utils.agno_tools",
-        "peekOfCode": "def calculate_gsa_year(contract_start_date: str) -> int:\n    \"\"\"\n    Calculate current GSA contract year based on contract start date.\n    Example:\n        Contract started: January 15, 2020\n        Current date: December 24, 2024\n        Result: Year 5\n    \"\"\"\n    from dateutil import parser as date_parser\n    try:",
+        "peekOfCode": "def calculate_gsa_year(contract_start_date: str) -> int:\n    \"\"\"\n    Calculate current GSA contract year based on contract start date.\n    GSA contracts always use December 30 - December 29 as the year cycle,\n    regardless of when the contract was originally awarded.\n    Example:\n        Contract started: April 1, 2019\n        Year 1 starts: December 30, 2019 (first Dec 30 after contract start)\n        Current date: December 24, 2024 (before Dec 30, 2024)\n        Result: Year 5 (we're still in the Dec 30, 2023 - Dec 29, 2024 cycle)",
         "detail": "backend.utils.agno_tools",
         "documentation": {}
     },
