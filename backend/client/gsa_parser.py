@@ -185,24 +185,37 @@ def _extract_metadata_with_llm(full_text: str) -> GSAContractMetadata:
     Returns:
         GSAContractMetadata instance
     """
-    llm = get_chat_llm(model="gpt-4.1",api_key=settings.OPENAI_API_KEY,base_url="https://api.openai.com/v1", max_tokens=10000)
+    llm = get_chat_llm(model="anthropic/claude-sonnet-4.6",api_key=settings.OPENROUTER_API_KEY,base_url="https://openrouter.ai/api/v1", max_tokens=10000)
 
     prompt = f"""Extract metadata from this GSA contract document.
 
 FIELDS TO EXTRACT:
 1. contract_number: GSA contract number (e.g., 'GS-35F-0119Y', '47QRCA25DS242', '47QTCA20D003R')
-2. contract_start_date: Contract start date or period of performance start
-3. contract_end_date: Contract end date or period of performance end
+2. contract_start_date: ORIGINAL contract award date. Use this reasoning process:
+   a) First, look for explicit "Contract Award Date", "Original Start Date", or "Period of Performance Start" in the document header
+   b) If NOT found, calculate backwards from year columns and their dates:
+      - Example: If you see "Year 6" with dates "Dec 30, 2024 - Dec 29, 2025"
+      - Extract the start date from Year 6: December 30, 2024
+      - Backtrack the year number: Year 6 means 5 years have passed since Year 1
+      - Calculate Year 1 start: 2024 - 5 = 2019
+      - Keep the same month/day from the year column: December 30, 2019
+      - Therefore contract_start_date = "December 30, 2019"
+   c) If neither method works, set to null
+3. contract_end_date: Contract end date or final option period end date
 4. company_name: Contractor/company name
 5. year_columns: List of year column headers from rate tables (e.g., ['Year 6', 'Year 7', 'Year 8'] or ['Year 1', 'Year 2'])
 
-Look at the BEGINNING of the document for contract number, dates, and company name.
-Look at RATE TABLES for year column headers.
+CRITICAL REASONING EXAMPLE:
+If year columns show "Year 6, Year 7, Year 8" with Year 6 starting "Dec 30, 2024":
+  * Year 6 starts in 2024
+  * Backtrack: Year 1 = 2024 - 5 = 2019
+  * Use same month/day: December 30, 2019
+  * contract_start_date = "December 30, 2019"
 
 Return ONLY valid JSON in this format:
 {{
   "contract_number": "GS-35F-0119Y",
-  "contract_start_date": "January 1, 2025",
+  "contract_start_date": "December 30, 2019",
   "contract_end_date": "December 31, 2030",
   "company_name": "ACME Corporation",
   "year_columns": ["Year 6", "Year 7", "Year 8", "Year 9", "Year 10"]
@@ -282,7 +295,7 @@ def _extract_descriptions_with_llm(full_text: str) -> List[dict]:
     Returns:
         List of dicts with title, sin, description, experience
     """
-    llm = get_chat_llm(model="gpt-4.1",api_key=settings.OPENAI_API_KEY,base_url="https://api.openai.com/v1", max_tokens=32000)
+    llm = get_chat_llm(model="anthropic/claude-sonnet-4.6",api_key=settings.OPENROUTER_API_KEY,base_url="https://openrouter.ai/api/v1", max_tokens=32000)
 
     prompt = f"""Extract job descriptions and qualifications from this GSA contract document.
 
@@ -394,7 +407,7 @@ def _extract_rates_with_llm(full_text: str, year_columns: Optional[List[str]] = 
     Returns:
         List of dicts with title, sin, rates_by_year
     """
-    llm = get_chat_llm(model="gpt-4.1",api_key=settings.OPENAI_API_KEY,base_url="https://api.openai.com/v1", max_tokens=32000)
+    llm = get_chat_llm(model="anthropic/claude-sonnet-4.6",api_key=settings.OPENROUTER_API_KEY,base_url="https://openrouter.ai/api/v1", max_tokens=32000)
 
     # Build year context from metadata
     if year_columns and len(year_columns) > 0:

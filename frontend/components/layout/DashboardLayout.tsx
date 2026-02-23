@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useProposalsStore } from '@/lib/stores/proposalsStore';
 import { useBillingStore } from '@/lib/stores/billingStore';
+import { useHelpCenterStore } from '@/lib/stores/helpCenterStore';
 import TopNavBar from './TopNavBar';
 import ProposalsSidebar from './ProposalsSidebar';
 import { AddPaymentPrompt, PaymentRequiredModal } from '@/components/billing';
@@ -19,6 +20,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const { user, isInitializing } = useAuthStore();
   const { fetchBillingStatus } = useBillingStore();
+  const { isOpen: isHelpModalOpen } = useHelpCenterStore();
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Redirect to login if not authenticated (wait for initialization first)
@@ -65,7 +67,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       />
 
       {/* Main Content */}
-      <main className="pt-16 md:ml-72 p-6">
+      <main className={`pt-16 md:ml-72 p-6 transition-all duration-300 ${
+        isHelpModalOpen ? 'md:mr-[520px]' : ''
+      }`}>
         <div className="animate-fade-in">
           {children}
         </div>
