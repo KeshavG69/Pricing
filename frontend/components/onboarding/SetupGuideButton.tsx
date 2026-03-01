@@ -57,11 +57,6 @@ export function SetupGuideButton() {
     },
   };
 
-  // Don't render if all tasks completed
-  if (effectiveProgress.completion_stats.percentage === 100) {
-    return null;
-  }
-
   const stats = effectiveProgress.completion_stats;
 
   const handleTaskClick = (taskId: string) => {
@@ -81,12 +76,6 @@ export function SetupGuideButton() {
         title={`Setup Guide (${stats.completed_count}/${stats.total_count})`}
       >
         <CheckCircle2 className="w-5 h-5" />
-        {/* Progress badge */}
-        {stats.percentage < 100 && (
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-primary text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-            {stats.completed_count}
-          </span>
-        )}
       </button>
 
       {/* Dropdown */}
