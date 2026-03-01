@@ -462,6 +462,55 @@ export default function UploadPage() {
           </CardContent>
         </Card>
 
+        {/* File Requirements */}
+        <Card className="mt-6">
+          <CardHeader>
+            <CardTitle>File Requirements</CardTitle>
+            <CardDescription>
+              What information should your document contain
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <div>
+                <h4 className="text-sm font-medium text-foreground mb-2">Required Information:</h4>
+                <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground">
+                  <li><span className="font-medium text-foreground">Position Titles</span> - Job titles or labor categories (e.g., "Software Engineer", "Project Manager")</li>
+                  <li><span className="font-medium text-foreground">Hours/FTE</span> - Full-time equivalent hours or number of positions per year</li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="text-sm font-medium text-foreground mb-2">Optional Information (Recommended):</h4>
+                <ul className="list-disc list-inside space-y-1.5 text-sm text-muted-foreground">
+                  <li><span className="font-medium text-foreground">Experience Level</span> - Years of experience required (e.g., "5+ years", "Senior level")</li>
+                  <li><span className="font-medium text-foreground">Job Descriptions</span> - Detailed responsibilities and qualifications</li>
+                  <li><span className="font-medium text-foreground">Contract Years</span> - Base period, option years, and period of performance</li>
+                  <li><span className="font-medium text-foreground">Location</span> - On-site, off-site, or remote work designation</li>
+                </ul>
+              </div>
+
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-blue-900 mb-1">AI-Powered Intelligence</p>
+                    <p className="text-sm text-blue-800">
+                      If information is missing or incomplete, our AI will analyze your document context and intelligently generate:
+                    </p>
+                    <ul className="list-disc list-inside mt-2 space-y-1 text-sm text-blue-800 ml-2">
+                      <li>Appropriate experience levels based on job descriptions</li>
+                      <li>Contract year structures from period of performance</li>
+                      <li>FTE estimates from staffing narratives</li>
+                      <li>Position classifications and labor category mappings</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Info */}
         <div className="mt-6 text-sm text-muted-foreground">
           <p className="mb-2 font-medium text-foreground">What happens next:</p>
