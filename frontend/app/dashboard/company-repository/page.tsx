@@ -1065,7 +1065,7 @@ export default function CompanyRepositoryPage() {
               className="shadow-md shadow-primary/10"
             >
               <Upload className="w-4 h-4 mr-2" />
-              Upload a New Contract
+              Upload a new FPR Rate
             </Button>
           )}
         </div>
@@ -1107,7 +1107,7 @@ export default function CompanyRepositoryPage() {
                 {userIsAdmin && (
                   <Button variant="outline" onClick={() => setShowUploadDialog(true)}>
                     <Upload className="w-4 h-4 mr-2" />
-                    Upload a New Contract
+                    Upload a new FPR Rate
                   </Button>
                 )}
               </div>
@@ -1549,13 +1549,14 @@ export default function CompanyRepositoryPage() {
                 </CardDescription>
               </div>
               {userIsAdmin && (
-                <button
+                <Button
+                  variant="primary"
                   onClick={() => setShowManualPresetDialog(true)}
-                  className="flex items-center justify-center w-10 h-10 rounded-full bg-primary hover:bg-primary/90 text-primary-foreground transition-colors"
-                  title="Create new preset"
+                  className="shadow-md shadow-primary/10"
                 >
-                  <Plus className="w-5 h-5" />
-                </button>
+                  <Plus className="w-4 h-4 mr-2" />
+                  Enter New Indirect Rates
+                </Button>
               )}
             </div>
           </CardHeader>
