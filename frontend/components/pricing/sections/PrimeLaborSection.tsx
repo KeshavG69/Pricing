@@ -1762,7 +1762,7 @@ export const PrimeLaborSection = ({
       cols.push({
         key: 'gsa_discount',
         name: 'GSA Discount',
-        width: 220,
+        width: 250,
         resizable: true,
         editable: true,
         renderEditCell: (props: RenderEditCellProps<GridRow>) => {
@@ -1835,7 +1835,7 @@ export const PrimeLaborSection = ({
             const isGSA = isGSAPosition(pos);
 
             if (!isGSA) {
-              return <div className="flex items-center justify-center h-full px-2 text-muted-foreground text-xs">N/A</div>;
+              return <div className="flex items-center justify-center h-full px-2 text-sm text-muted-foreground">N/A</div>;
             }
 
             const suggestedDiscount = pos.suggested_discount_rate || 0;
@@ -1848,32 +1848,32 @@ export const PrimeLaborSection = ({
 
             return (
               <div
-                className="flex flex-col justify-center h-full px-2 space-y-0.5"
+                className="flex flex-col justify-center h-full px-3 space-y-1.5"
                 title={rationale || 'BLS comparison data not available'}
               >
                 {suggestedDiscount > 0 ? (
                   <>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Suggested:</span>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground font-medium">Suggested:</span>
                       <span className="text-amber-600 font-semibold">
                         {(suggestedDiscount * 100).toFixed(1)}%
                       </span>
                     </div>
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground">Applied:</span>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-muted-foreground font-medium">Applied:</span>
                       <span className={appliedDiscount > 0 ? "text-emerald-600 font-semibold" : "text-muted-foreground"}>
                         {appliedDiscount > 0 ? `${(appliedDiscount * 100).toFixed(1)}%` : '0%'}
                       </span>
                     </div>
                     {blsComparison && (
-                      <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-                        <span>GSA vs BLS:</span>
-                        <span>${gsaRate.toFixed(2)} / ${blsComparison.toFixed(2)}</span>
+                      <div className="flex items-center justify-between text-xs text-slate-600">
+                        <span className="font-medium">GSA / BLS:</span>
+                        <span className="font-mono">${gsaRate.toFixed(2)} / ${blsComparison.toFixed(2)}</span>
                       </div>
                     )}
                   </>
                 ) : (
-                  <div className="text-xs text-muted-foreground text-center">
+                  <div className="text-sm text-muted-foreground text-center font-medium">
                     No discount needed
                   </div>
                 )}
@@ -2867,7 +2867,11 @@ export const PrimeLaborSection = ({
             if (row.type === 'subtotal') {
               const totals = row.data as any;
               const hasOT = Object.values(totals.byYear || {}).some((yearData: any) => (yearData.ot_cost || 0) > 0);
-              return hasOT ? 75 : 45; // Taller if has OT
+              return hasOT ? 75 : (isGSAProposal ? 70 : 45); // Taller if has OT or GSA
+            }
+            // For GSA proposals, use taller rows to accommodate discount column
+            if (isGSAProposal && row.type === 'position') {
+              return 70;
             }
             return 45;
           }}
