@@ -68,12 +68,32 @@ class ExcelGenerator:
     PERCENT_FORMAT = '0.00%'
     NUMBER_FORMAT = '#,##0.00'  # Template uses decimal for hours
 
+    # Indirect Rate sheet — fixed row positions (column B holds the value)
+    # These are referenced by ALL other sheets via _ir_ref()
+    IR_FRINGE_ROW = 9
+    IR_OH_ONSITE_ROW = 10
+    IR_OH_OFFSITE_ROW = 11
+    IR_GA_ROW = 12
+    IR_PASSTHROUGH_ROW = 13
+    IR_FEE_LABOR_ROW = 14
+    IR_FEE_SUB_ROW = 15
+    # Escalation rows start at 17 (row 16 is blank)
+    IR_ESCALATION_START_ROW = 17
+
     def __init__(self):
         """Initialize the Excel generator."""
         self.wb = None
         self.total_years = 0
         self.project_data = None
         self.extensions = []
+
+    def _ir_ref(self, row: int) -> str:
+        """Return an absolute cell reference into the Indirect Rate sheet (column B)."""
+        return f"'Indirect Rate'!$B${row}"
+
+    def _sanitize_sheet_name(self, name: str) -> str:
+        """Sanitize a string for use as an Excel sheet name (max 31 chars, no special chars)."""
+        return name[:31].replace('\\', '').replace('/', '').replace('?', '').replace('*', '').replace('[', '').replace(']', '')
 
     def generate_cost_proposal(self, project_data: Dict[str, Any]) -> Workbook:
         """
@@ -242,15 +262,8 @@ class ExcelGenerator:
         # Calculate base totals (aggregated from positions/subcontractors/odcs)
         cost_elements = self._calculate_cost_elements()
 
-        # Get rates for formulas
-        indirect_rates = self.project_data.get('indirect_rates', {})
-        fringe_rate = indirect_rates.get('fringe', 0.247)
-        oh_rate = indirect_rates.get('oh_onsite', indirect_rates.get('oh', 0.0711))
-        ga_rate = indirect_rates.get('ga', 0.2243)
-        passthrough_rates = self.project_data.get('passthrough_rates', {})
-        smh_rate = passthrough_rates.get('smh', 0.0665)
-        ga_passthrough_rate = passthrough_rates.get('ga', 0.0)
-        combined_passthrough_rate = smh_rate + ga_passthrough_rate  # S&MH + G&A Passthrough
+        # Rate formulas reference 'Indirect Rate' sheet directly via _ir_ref()
+        # so no local rate variables are needed here
 
         # Row 11: Direct Labor (calculated value)
         dl_row = current_row
@@ -271,7 +284,7 @@ class ExcelGenerator:
         cell.font = self.BOLD_FONT
         current_row += 1
 
-        # Row 12: Fringe Benefits (FORMULA: DL * fringe_rate)
+        # Row 12: Fringe Benefits (FORMULA: DL * Indirect Rate!Fringe)
         fringe_row = current_row
         ws.cell(current_row, 1, "Fringe Benefits")
         ws.cell(current_row, 1).font = self.BOLD_FONT
@@ -279,17 +292,17 @@ class ExcelGenerator:
         for period_idx in range(self.total_years):
             col_letter = get_column_letter(2 + period_idx)
             cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = f"={col_letter}{dl_row}*{fringe_rate}"
+            cell.value = f"={col_letter}{dl_row}*{self._ir_ref(self.IR_FRINGE_ROW)}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
         cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{dl_row}*{fringe_rate}"
+        cell.value = f"={get_column_letter(total_col)}{dl_row}*{self._ir_ref(self.IR_FRINGE_ROW)}"
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
         current_row += 1
 
-        # Row 13: Labor Overhead (FORMULA: (DL + Fringe) * oh_rate)
+        # Row 13: Labor Overhead (FORMULA: (DL + Fringe) * Indirect Rate!OH Onsite)
         oh_row = current_row
         ws.cell(current_row, 1, "Labor Overhead")
         ws.cell(current_row, 1).font = self.BOLD_FONT
@@ -297,17 +310,17 @@ class ExcelGenerator:
         for period_idx in range(self.total_years):
             col_letter = get_column_letter(2 + period_idx)
             cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = f"=({col_letter}{dl_row}+{col_letter}{fringe_row})*{oh_rate}"
+            cell.value = f"=({col_letter}{dl_row}+{col_letter}{fringe_row})*{self._ir_ref(self.IR_OH_ONSITE_ROW)}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
         cell = ws.cell(current_row, total_col)
-        cell.value = f"=({get_column_letter(total_col)}{dl_row}+{get_column_letter(total_col)}{fringe_row})*{oh_rate}"
+        cell.value = f"=({get_column_letter(total_col)}{dl_row}+{get_column_letter(total_col)}{fringe_row})*{self._ir_ref(self.IR_OH_ONSITE_ROW)}"
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
         current_row += 1
 
-        # Row 14: G&A (Labor) (FORMULA: (DL + Fringe + OH) * ga_rate)
+        # Row 14: G&A (Labor) (FORMULA: (DL + Fringe + OH) * Indirect Rate!G&A)
         ga_labor_row = current_row
         ws.cell(current_row, 1, "General & Administrative (Labor)")
         ws.cell(current_row, 1).font = self.BOLD_FONT
@@ -315,12 +328,12 @@ class ExcelGenerator:
         for period_idx in range(self.total_years):
             col_letter = get_column_letter(2 + period_idx)
             cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = f"=({col_letter}{dl_row}+{col_letter}{fringe_row}+{col_letter}{oh_row})*{ga_rate}"
+            cell.value = f"=({col_letter}{dl_row}+{col_letter}{fringe_row}+{col_letter}{oh_row})*{self._ir_ref(self.IR_GA_ROW)}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
         cell = ws.cell(current_row, total_col)
         total_col_letter = get_column_letter(total_col)
-        cell.value = f"=({total_col_letter}{dl_row}+{total_col_letter}{fringe_row}+{total_col_letter}{oh_row})*{ga_rate}"
+        cell.value = f"=({total_col_letter}{dl_row}+{total_col_letter}{fringe_row}+{total_col_letter}{oh_row})*{self._ir_ref(self.IR_GA_ROW)}"
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
@@ -345,7 +358,7 @@ class ExcelGenerator:
         cell.font = self.BOLD_FONT
         current_row += 1
 
-        # Row 16: Passthrough (FORMULA: Sub * (S&MH + G&A Passthrough))
+        # Row 16: Passthrough (FORMULA: Sub * Indirect Rate!Passthrough)
         passthrough_row = current_row
         ws.cell(current_row, 1, "Passthrough (S&MH + G&A)")
         ws.cell(current_row, 1).font = self.BOLD_FONT
@@ -353,11 +366,11 @@ class ExcelGenerator:
         for period_idx in range(self.total_years):
             col_letter = get_column_letter(2 + period_idx)
             cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = f"={col_letter}{sub_row}*{combined_passthrough_rate}"
+            cell.value = f"={col_letter}{sub_row}*{self._ir_ref(self.IR_PASSTHROUGH_ROW)}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
         cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{sub_row}*{combined_passthrough_rate}"
+        cell.value = f"={get_column_letter(total_col)}{sub_row}*{self._ir_ref(self.IR_PASSTHROUGH_ROW)}"
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
@@ -382,7 +395,7 @@ class ExcelGenerator:
         cell.font = self.BOLD_FONT
         current_row += 1
 
-        # Row 18: Material Handling (FORMULA: Materials * smh_rate)
+        # Row 18: Material Handling (FORMULA: Materials * Indirect Rate!Passthrough)
         material_handling_row = current_row
         ws.cell(current_row, 1, "Materials Handling")
         ws.cell(current_row, 1).font = self.BOLD_FONT
@@ -390,11 +403,11 @@ class ExcelGenerator:
         for period_idx in range(self.total_years):
             col_letter = get_column_letter(2 + period_idx)
             cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = f"={col_letter}{material_row}*{smh_rate}"
+            cell.value = f"={col_letter}{material_row}*{self._ir_ref(self.IR_PASSTHROUGH_ROW)}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
         cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{material_row}*{smh_rate}"
+        cell.value = f"={get_column_letter(total_col)}{material_row}*{self._ir_ref(self.IR_PASSTHROUGH_ROW)}"
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
@@ -419,7 +432,7 @@ class ExcelGenerator:
         cell.font = self.BOLD_FONT
         current_row += 1
 
-        # Row 20: G&A (Travel) (FORMULA: Travel * ga_rate)
+        # Row 20: G&A (Travel) (FORMULA: Travel * Indirect Rate!G&A)
         ga_travel_row = current_row
         ws.cell(current_row, 1, "General & Administrative (Travel)")
         ws.cell(current_row, 1).font = self.BOLD_FONT
@@ -427,11 +440,11 @@ class ExcelGenerator:
         for period_idx in range(self.total_years):
             col_letter = get_column_letter(2 + period_idx)
             cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = f"={col_letter}{travel_row}*{ga_rate}"
+            cell.value = f"={col_letter}{travel_row}*{self._ir_ref(self.IR_GA_ROW)}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
         cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{travel_row}*{ga_rate}"
+        cell.value = f"={get_column_letter(total_col)}{travel_row}*{self._ir_ref(self.IR_GA_ROW)}"
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
@@ -889,8 +902,7 @@ class ExcelGenerator:
         """Create a sheet for a single subcontractor, named by company."""
         # Use company name for sheet title (sanitize for Excel sheet name limits)
         company_name = sub_data.get('name', 'Subcontractor')
-        # Excel sheet names have max 31 chars and can't contain: \ / ? * [ ]
-        sheet_name = company_name[:31].replace('\\', '').replace('/', '').replace('?', '').replace('*', '').replace('[', '').replace(']', '')
+        sheet_name = self._sanitize_sheet_name(company_name)
         ws = self.wb.create_sheet(sheet_name)
 
         # Column widths matching template
@@ -1187,8 +1199,6 @@ class ExcelGenerator:
 
         # ODC rows
         current_row = header_row + 1
-        smh_rate = self.project_data.get('passthrough_rates', {}).get('smh', 0.0665)
-
         odcs = self.project_data.get('odcs', [])
         odc_start_row = current_row
         escalation_rates = self.project_data.get('escalation_rates', {})
@@ -1215,11 +1225,9 @@ class ExcelGenerator:
                         esc_rate = escalation_rates.get(esc_key) or 0
                         escalated_amount *= (1 + esc_rate)
 
-                # Include handling in the amount
-                total_with_handling = escalated_amount * (1 + smh_rate)
-
+                # Amount includes S&MH handling via Indirect Rate sheet reference
                 cell = ws.cell(current_row, col)
-                cell.value = total_with_handling
+                cell.value = f"={escalated_amount}*(1+{self._ir_ref(self.IR_PASSTHROUGH_ROW)})"
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 1
@@ -1284,8 +1292,6 @@ class ExcelGenerator:
 
         # Material rows
         current_row = header_row + 2
-        smh_rate = self.project_data.get('passthrough_rates', {}).get('smh', 0.0665)
-
         materials = self.project_data.get('materials', [])
         material_start_row = current_row
         escalation_rates = self.project_data.get('escalation_rates', {})
@@ -1333,7 +1339,7 @@ class ExcelGenerator:
             for year in range(1, self.total_years + 1):
                 material_cell = f"{get_column_letter(col)}{current_row - 1}"
                 cell = ws.cell(current_row, col)
-                cell.value = f"={material_cell}*{smh_rate}"
+                cell.value = f"={material_cell}*{self._ir_ref(self.IR_PASSTHROUGH_ROW)}"
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 2
@@ -1395,8 +1401,6 @@ class ExcelGenerator:
 
         # Travel rows
         current_row = header_row + 1
-        ga_rate = self.project_data.get('indirect_rates', {}).get('ga', 0.2214)
-
         travel_items = self.project_data.get('travel', [])
         travel_start_row = current_row
 
@@ -1425,11 +1429,9 @@ class ExcelGenerator:
                         esc_rate = escalation_rates.get(esc_key) or 0
                         escalated_amount *= (1 + esc_rate)
 
-                # Include G&A in the amount
-                total_with_ga = escalated_amount * (1 + ga_rate)
-
+                # Amount includes G&A via Indirect Rate sheet reference
                 cell = ws.cell(current_row, col)
-                cell.value = total_with_ga
+                cell.value = f"={escalated_amount}*(1+{self._ir_ref(self.IR_GA_ROW)})"
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 1
