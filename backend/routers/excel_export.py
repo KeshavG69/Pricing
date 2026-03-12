@@ -133,10 +133,14 @@ async def generate_excel_from_proposal(
         }
 
         # Convert positions to DataFrame format
+        # BLS Analysis data starts at row 9. Each position's index in the full
+        # positions list maps directly to its BLS Analysis row (9 + i), including
+        # sub-assigned positions which still occupy rows in BLS Analysis.
         positions = spreadsheet_data.get('positions', [])
+        BLS_DATA_START_ROW = 9
         jobs = []
 
-        for pos in positions:
+        for i, pos in enumerate(positions):
             # Skip positions assigned to subcontractors
             if pos.get('assigned_subcontractor_id'):
                 continue
@@ -166,6 +170,7 @@ async def generate_excel_from_proposal(
                 'gsa_current_year': pos.get('gsa_current_year'),
                 'gsa_custom_rate': pos.get('gsa_custom_rate'),
                 'gsa_discount_rate': pos.get('gsa_discount_rate'),
+                'bls_analysis_row': BLS_DATA_START_ROW + i,
             }
             jobs.append(job)
 
