@@ -620,13 +620,14 @@ def build_project_data_from_dataframe(
             'site': 'Government' if row.get('location_type') == 'On-Site' else 'Contractor',
             'location_type': row.get('location_type', 'On-Site'),
             # GSA-specific fields
-            'wage_source': row.get('wage_source', 'bls'),
+            'wage_source': (row.get('wage_source') or 'bls').lower(),
             'gsa_lcat_id': row.get('gsa_lcat_id'),
             'gsa_title': row.get('gsa_title'),
             'gsa_rates_by_year': gsa_rates_by_year,  # Use parsed value
             'gsa_current_year': row.get('gsa_current_year'),
             'gsa_custom_rate': row.get('gsa_custom_rate'),
-            'gsa_discount_rate': row.get('gsa_discount_rate', 0.0),
+            'gsa_discount_rate': 0.0 if pd.isna(row.get('gsa_discount_rate')) else float(row.get('gsa_discount_rate')),
+            'bls_analysis_row': row.get('bls_analysis_row'),
         }
 
         # Check if position has subcontractor hours assigned

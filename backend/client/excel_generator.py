@@ -68,6 +68,18 @@ class ExcelGenerator:
     PERCENT_FORMAT = '0.00%'
     NUMBER_FORMAT = '#,##0.00'  # Template uses decimal for hours
 
+    # Indirect Rate sheet — fixed row positions (column B holds the value)
+    # These are referenced by ALL other sheets via _ir_ref()
+    IR_FRINGE_ROW = 9
+    IR_OH_ONSITE_ROW = 10
+    IR_OH_OFFSITE_ROW = 11
+    IR_GA_ROW = 12
+    IR_PASSTHROUGH_ROW = 13
+    IR_FEE_LABOR_ROW = 14
+    IR_FEE_SUB_ROW = 15
+    # Escalation rows start at 17 (row 16 is blank)
+    IR_ESCALATION_START_ROW = 17
+
     def __init__(self):
         """Initialize the Excel generator."""
         self.wb = None
@@ -75,9 +87,38 @@ class ExcelGenerator:
         self.project_data = None
         self.extensions = []
 
+    def _ir_ref(self, row: int) -> str:
+        """Return an absolute cell reference into the Indirect Rate sheet (column B)."""
+        return f"'Indirect Rate'!$B${row}"
+
+    def _sanitize_sheet_name(self, name: str) -> str:
+        """Sanitize a string for use as an Excel sheet name (max 31 chars, no special chars)."""
+        return name[:31].replace('\\', '').replace('/', '').replace('?', '').replace('*', '').replace('[', '').replace(']', '')
+
+    def _escalation_formula(self, from_year: int, to_year: int) -> str:
+        """
+        Build a compound escalation multiplier fragment referencing Indirect Rate sheet.
+        E.g. from_year=1, to_year=3 → '*(1+IR!$B$17)*(1+IR!$B$18)'
+        Returns empty string when from_year >= to_year (year 1, no escalation needed).
+        """
+        parts = []
+        for y in range(from_year, to_year):
+            ir_row = self.IR_ESCALATION_START_ROW + (y - 1)
+            parts.append(f"*(1+{self._ir_ref(ir_row)})")
+        return "".join(parts)
+
     def generate_cost_proposal(self, project_data: Dict[str, Any]) -> Workbook:
         """
         Generate complete cost proposal Excel workbook in Price IQ format.
+
+        Sheet creation order is designed for true feeder architecture:
+          - CE Summary worksheet is created first (tab 0) but filled last
+          - Indirect Rate sheet is built next (feeder 1: all rate %)
+          - Prime Labor Detail is built next (year 1 rates = BLS/GSA values,
+            year N rates = Excel formulas referencing IR escalation rows)
+          - FLLR is built after PLD (feeder 2: BLS FBLR = PLD rate × IR cascade)
+          - ODC / Materials / Travel built next (base+handling split, escalation via IR)
+          - CE Summary is filled last, referencing all other sheets via formulas
 
         Args:
             project_data: Complete project data including all positions, rates, etc.
@@ -89,45 +130,56 @@ class ExcelGenerator:
         self.project_data = project_data
         self.total_years = project_data['total_years']
         self.extensions = project_data.get('extensions', [])
-        
-        # Create sheets in order (matching PriceIQ template exactly)
-        # 1. Summary (Cost Element Summary) - the main sheet
-        self._create_ce_summary_sheet()
 
-        # 2. Indirect Rate - moved up to position 2
+        # 1. CE Summary — create worksheet first so it stays as tab 0; fill content last
+        ws_summary = self.wb.active
+        ws_summary.title = "Summary"
+        self._setup_ce_summary_columns(ws_summary)
+
+        # 2. Indirect Rate — feeder sheet 1 (all rate % values in fixed rows)
         self._create_indirect_rates_sheet()
 
-        # 3. Prime Labor Detail - Prime contractor labor categories with FBLR breakdown
-        self._create_prime_labor_detail_sheet()
+        # 3. Prime Labor Detail — DL rates (year 1 = BLS/GSA value, year N = IR escalation formula)
+        pld_info = self._create_prime_labor_detail_sheet()
 
-        # 4. Subcontractor sheets - One per subcontractor, named by company
+        # 4. Subcontractor sheets — one per subcontractor, named by company
+        sub_infos = []
         if project_data.get('subcontractors'):
             for sub in project_data['subcontractors']:
-                self._create_subcontractor_sheet(sub)
+                sub_info = self._create_subcontractor_sheet(sub)
+                sub_infos.append(sub_info)
 
-        # 5. Fully Loaded Labor Rates - NEW sheet showing all position rates
+        # 5. Fully Loaded Labor Rates — feeder sheet 2
+        #    BLS: PLD year N rate × IR burden cascade (PLD yr1 feeds from BLS Analysis)
+        #    GSA: direct reference to PLD (already fully loaded)
+        #    Sub: direct reference to sub sheet rate column
         self._create_fully_loaded_labor_rates_sheet()
 
-        # 6. ODCs sheet (separate from materials)
+        # 6. ODCs — base + handling rows; base year N = IR escalation formula
+        odc_info = None
         if project_data.get('odcs'):
-            self._create_odcs_sheet()
+            odc_info = self._create_odcs_sheet()
 
-        # 7. Materials sheet (separate from ODCs)
+        # 7. Materials — base + handling rows; base year N = IR escalation formula
+        materials_info = None
         if project_data.get('materials'):
-            self._create_materials_sheet()
+            materials_info = self._create_materials_sheet()
 
-        # 8. Travel sheet
+        # 8. Travel — base + G&A rows; base year N = IR escalation formula
+        travel_info = None
         if project_data.get('travel'):
-            self._create_travel_sheet()
+            travel_info = self._create_travel_sheet()
 
-        # 9. LOE sheet - Level of Effort with Company column
+        # 9. LOE sheet
         self._create_loe_sheet()
 
-        # 10. BLS Analysis sheet (renamed from Wage Data)
+        # 10. BLS Analysis sheet
         if project_data.get('wage_data'):
             self._create_bls_analysis_sheet()
 
-        # Remove default empty sheet if exists
+        # 11. Fill CE Summary last — every value references another sheet via formula
+        self._fill_ce_summary_sheet(ws_summary, pld_info, sub_infos, odc_info, materials_info, travel_info)
+
         if 'Sheet' in self.wb.sheetnames:
             del self.wb['Sheet']
 
@@ -198,18 +250,17 @@ class ExcelGenerator:
         option_num = year - base_years
         return f"Option Period {option_num}"
 
-    def _create_ce_summary_sheet(self):
-        """Create the Summary (Cost Element Summary) sheet."""
-        ws = self.wb.active
-        ws.title = "Summary"
+    def _setup_ce_summary_columns(self, ws):
+        """Set up CE Summary worksheet column widths and standard header (rows 1-5).
+        Called early so the sheet exists as tab 0; data is filled later by _fill_ce_summary_sheet."""
 
         # Set column widths matching template exactly
-        # A: Cost Element Labels (was B)
+        # A: Cost Element Labels
         ws.column_dimensions['A'].width = 40.66
-        # B: First period column (was C)
+        # B: First period column
         ws.column_dimensions['B'].width = 20.66
-        # Remaining period columns + Total
-        for col_idx in range(3, 2 + self.total_years + 1):  # C onwards
+        # Remaining period columns
+        for col_idx in range(3, 2 + self.total_years + 1):
             ws.column_dimensions[get_column_letter(col_idx)].width = 13
         # Total column
         ws.column_dimensions[get_column_letter(2 + self.total_years)].width = 13
@@ -217,287 +268,335 @@ class ExcelGenerator:
         # Apply standard header format (Rows 1-5)
         self._apply_standard_header(ws, start_col=1)
 
-        # Row 9: Column headers
+    def _fill_ce_summary_sheet(self, ws, pld_info, sub_infos, odc_info, materials_info, travel_info):
+        """
+        Fill CE Summary with cross-sheet formula references.
+        Called last, after all other sheets exist.
+
+        Base values (DL, Sub, Materials, Travel) reference their respective sheets.
+        All rate-applied rows (Fringe, OH, G&A, Passthrough, Handling, Fee)
+        reference the Indirect Rate sheet via _ir_ref().
+
+        Column layout in PLD:  year N rate col = 3N+3,  year N dollars col = 3N+4  (col D = GSA Discount)
+        Column layout in sub:  year N rate col = 3N+1,  year N dollars col = 3N+2
+        Column layout in ODC/Travel: year N col = N+1  (single col per period)
+        """
         header_row = 9
-        ws.cell(header_row, 1, "Cost Element")
-        self._style_header_cell(ws.cell(header_row, 1))
-
-        # Period column headers - Light blue background
-        col = 2
-        for year in range(1, self.total_years + 1):
-            label = self._get_period_label(year)
-            period_cell = ws.cell(header_row, col, label)
-            self._style_period_header_cell(period_cell)  # Light blue for period headers
-            col += 1
-
-        # Total column
-        ws.cell(header_row, col, "Total")
-        self._style_header_cell(ws.cell(header_row, col))
-        total_col = col
-
-        # Cost Element rows (starting row 10, matching template - no "Cost" sub-header row)
         data_start_row = 10
         current_row = data_start_row
 
-        # Calculate base totals (aggregated from positions/subcontractors/odcs)
-        cost_elements = self._calculate_cost_elements()
+        # Total col = period cols (B … B+years-1) + 1
+        total_col = 2 + self.total_years
 
-        # Get rates for formulas
-        indirect_rates = self.project_data.get('indirect_rates', {})
-        fringe_rate = indirect_rates.get('fringe', 0.247)
-        oh_rate = indirect_rates.get('oh_onsite', indirect_rates.get('oh', 0.0711))
-        ga_rate = indirect_rates.get('ga', 0.2243)
-        passthrough_rates = self.project_data.get('passthrough_rates', {})
-        smh_rate = passthrough_rates.get('smh', 0.0665)
-        ga_passthrough_rate = passthrough_rates.get('ga', 0.0)
-        combined_passthrough_rate = smh_rate + ga_passthrough_rate  # S&MH + G&A Passthrough
+        # ── Row 9: Column headers ─────────────────────────────────────────────
+        ws.cell(header_row, 1, "Cost Element")
+        self._style_header_cell(ws.cell(header_row, 1))
+        col = 2
+        for year in range(1, self.total_years + 1):
+            period_cell = ws.cell(header_row, col, self._get_period_label(year))
+            self._style_period_header_cell(period_cell)
+            col += 1
+        ws.cell(header_row, col, "Total")
+        self._style_header_cell(ws.cell(header_row, col))
 
-        # Row 11: Direct Labor (calculated value)
+        # ── Direct Labor: ='Prime Labor Detail'!dollars_col{total_dl_row} ─────
         dl_row = current_row
         ws.cell(current_row, 1, "Direct Labor")
         ws.cell(current_row, 1).font = self.BOLD_FONT
         ws.cell(current_row, 1).border = self.THIN_BORDER
-        for period_idx in range(self.total_years):
-            period_key = f"year_{period_idx + 1}"
-            value = cost_elements.get('direct_labor', {}).get(period_key, 0)
-            cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = value
+        if pld_info:
+            for period_idx in range(self.total_years):
+                year = period_idx + 1
+                pld_col = get_column_letter(3 * year + 4)
+                cell = ws.cell(current_row, 2 + period_idx)
+                cell.value = f"='Prime Labor Detail'!{pld_col}{pld_info['total_dl_row']}"
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+            cell = ws.cell(current_row, total_col)
+            cell.value = f"='Prime Labor Detail'!{get_column_letter(pld_info['total_dollars_col'])}{pld_info['total_dl_row']}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
-        cell = ws.cell(current_row, total_col)
-        cell.value = cost_elements.get('direct_labor', {}).get('total', 0)
-        cell.number_format = self.CURRENCY_FORMAT
-        cell.border = self.THIN_BORDER
-        cell.font = self.BOLD_FONT
+            cell.font = self.BOLD_FONT
+        else:
+            for period_idx in range(self.total_years):
+                cell = ws.cell(current_row, 2 + period_idx)
+                cell.value = 0
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+            cell = ws.cell(current_row, total_col)
+            cell.value = 0
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+            cell.font = self.BOLD_FONT
         current_row += 1
 
-        # Row 12: Fringe Benefits (FORMULA: DL * fringe_rate)
+        # ── Fringe Benefits: DL × IR!fringe ──────────────────────────────────
         fringe_row = current_row
         ws.cell(current_row, 1, "Fringe Benefits")
         ws.cell(current_row, 1).font = self.BOLD_FONT
         ws.cell(current_row, 1).border = self.THIN_BORDER
         for period_idx in range(self.total_years):
-            col_letter = get_column_letter(2 + period_idx)
+            cl = get_column_letter(2 + period_idx)
             cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = f"={col_letter}{dl_row}*{fringe_rate}"
+            cell.value = f"={cl}{dl_row}*{self._ir_ref(self.IR_FRINGE_ROW)}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
         cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{dl_row}*{fringe_rate}"
+        cell.value = f"={get_column_letter(total_col)}{dl_row}*{self._ir_ref(self.IR_FRINGE_ROW)}"
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
         current_row += 1
 
-        # Row 13: Labor Overhead (FORMULA: (DL + Fringe) * oh_rate)
+        # ── Labor Overhead: (DL+Fringe) × IR!oh_onsite ───────────────────────
         oh_row = current_row
         ws.cell(current_row, 1, "Labor Overhead")
         ws.cell(current_row, 1).font = self.BOLD_FONT
         ws.cell(current_row, 1).border = self.THIN_BORDER
         for period_idx in range(self.total_years):
-            col_letter = get_column_letter(2 + period_idx)
+            cl = get_column_letter(2 + period_idx)
             cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = f"=({col_letter}{dl_row}+{col_letter}{fringe_row})*{oh_rate}"
+            cell.value = f"=({cl}{dl_row}+{cl}{fringe_row})*{self._ir_ref(self.IR_OH_ONSITE_ROW)}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
+        tcl = get_column_letter(total_col)
         cell = ws.cell(current_row, total_col)
-        cell.value = f"=({get_column_letter(total_col)}{dl_row}+{get_column_letter(total_col)}{fringe_row})*{oh_rate}"
+        cell.value = f"=({tcl}{dl_row}+{tcl}{fringe_row})*{self._ir_ref(self.IR_OH_ONSITE_ROW)}"
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
         current_row += 1
 
-        # Row 14: G&A (Labor) (FORMULA: (DL + Fringe + OH) * ga_rate)
+        # ── G&A Labor: (DL+Fringe+OH) × IR!ga ───────────────────────────────
         ga_labor_row = current_row
         ws.cell(current_row, 1, "General & Administrative (Labor)")
         ws.cell(current_row, 1).font = self.BOLD_FONT
         ws.cell(current_row, 1).border = self.THIN_BORDER
         for period_idx in range(self.total_years):
-            col_letter = get_column_letter(2 + period_idx)
+            cl = get_column_letter(2 + period_idx)
             cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = f"=({col_letter}{dl_row}+{col_letter}{fringe_row}+{col_letter}{oh_row})*{ga_rate}"
+            cell.value = f"=({cl}{dl_row}+{cl}{fringe_row}+{cl}{oh_row})*{self._ir_ref(self.IR_GA_ROW)}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
+        tcl = get_column_letter(total_col)
         cell = ws.cell(current_row, total_col)
-        total_col_letter = get_column_letter(total_col)
-        cell.value = f"=({total_col_letter}{dl_row}+{total_col_letter}{fringe_row}+{total_col_letter}{oh_row})*{ga_rate}"
+        cell.value = f"=({tcl}{dl_row}+{tcl}{fringe_row}+{tcl}{oh_row})*{self._ir_ref(self.IR_GA_ROW)}"
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
         current_row += 1
 
-        # Row 15: Subcontractor(s) (calculated value)
+        # ── Subcontractors: sum of sub sheet total rows ───────────────────────
         sub_row = current_row
         ws.cell(current_row, 1, "Subcontractor(s)")
         ws.cell(current_row, 1).font = self.BOLD_FONT
         ws.cell(current_row, 1).border = self.THIN_BORDER
-        for period_idx in range(self.total_years):
-            period_key = f"year_{period_idx + 1}"
-            value = cost_elements.get('subcontractors', {}).get(period_key, 0)
-            cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = value
+        if sub_infos:
+            for period_idx in range(self.total_years):
+                year = period_idx + 1
+                sub_dollars_col = get_column_letter(3 * year + 2)
+                parts = [f"'{si['sheet_name']}'!{sub_dollars_col}{si['total_row']}" for si in sub_infos]
+                cell = ws.cell(current_row, 2 + period_idx)
+                cell.value = "=" + "+".join(parts)
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+            total_parts = [f"'{si['sheet_name']}'!{get_column_letter(si['total_col'])}{si['total_row']}" for si in sub_infos]
+            cell = ws.cell(current_row, total_col)
+            cell.value = "=" + "+".join(total_parts)
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
-        cell = ws.cell(current_row, total_col)
-        cell.value = cost_elements.get('subcontractors', {}).get('total', 0)
-        cell.number_format = self.CURRENCY_FORMAT
-        cell.border = self.THIN_BORDER
-        cell.font = self.BOLD_FONT
+            cell.font = self.BOLD_FONT
+        else:
+            for period_idx in range(self.total_years):
+                cell = ws.cell(current_row, 2 + period_idx)
+                cell.value = 0
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+            cell = ws.cell(current_row, total_col)
+            cell.value = 0
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+            cell.font = self.BOLD_FONT
         current_row += 1
 
-        # Row 16: Passthrough (FORMULA: Sub * (S&MH + G&A Passthrough))
+        # ── Passthrough: Sub × IR!passthrough ────────────────────────────────
         passthrough_row = current_row
         ws.cell(current_row, 1, "Passthrough (S&MH + G&A)")
         ws.cell(current_row, 1).font = self.BOLD_FONT
         ws.cell(current_row, 1).border = self.THIN_BORDER
         for period_idx in range(self.total_years):
-            col_letter = get_column_letter(2 + period_idx)
+            cl = get_column_letter(2 + period_idx)
             cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = f"={col_letter}{sub_row}*{combined_passthrough_rate}"
+            cell.value = f"={cl}{sub_row}*{self._ir_ref(self.IR_PASSTHROUGH_ROW)}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
         cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{sub_row}*{combined_passthrough_rate}"
+        cell.value = f"={get_column_letter(total_col)}{sub_row}*{self._ir_ref(self.IR_PASSTHROUGH_ROW)}"
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
         current_row += 1
 
-        # Row 17: Materials (calculated value)
+        # ── Materials: ='ODCs'!base_col{base_total_row} ───────────────────────
         material_row = current_row
         ws.cell(current_row, 1, "Materials")
         ws.cell(current_row, 1).font = self.BOLD_FONT
         ws.cell(current_row, 1).border = self.THIN_BORDER
-        for period_idx in range(self.total_years):
-            period_key = f"year_{period_idx + 1}"
-            value = cost_elements.get('materials', {}).get(period_key, 0)
-            cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = value
+        if odc_info:
+            for period_idx in range(self.total_years):
+                year = period_idx + 1
+                odc_col = get_column_letter(year + 1)  # ODC: year N = col N+1
+                cell = ws.cell(current_row, 2 + period_idx)
+                cell.value = f"='ODCs'!{odc_col}{odc_info['base_total_row']}"
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+            cell = ws.cell(current_row, total_col)
+            cell.value = f"='ODCs'!{get_column_letter(odc_info['total_col'])}{odc_info['base_total_row']}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
-        cell = ws.cell(current_row, total_col)
-        cell.value = cost_elements.get('materials', {}).get('total', 0)
-        cell.number_format = self.CURRENCY_FORMAT
-        cell.border = self.THIN_BORDER
-        cell.font = self.BOLD_FONT
+            cell.font = self.BOLD_FONT
+        else:
+            for period_idx in range(self.total_years):
+                cell = ws.cell(current_row, 2 + period_idx)
+                cell.value = 0
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+            cell = ws.cell(current_row, total_col)
+            cell.value = 0
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+            cell.font = self.BOLD_FONT
         current_row += 1
 
-        # Row 18: Material Handling (FORMULA: Materials * smh_rate)
-        material_handling_row = current_row
+        # ── Material Handling: Materials × IR!passthrough ─────────────────────
         ws.cell(current_row, 1, "Materials Handling")
         ws.cell(current_row, 1).font = self.BOLD_FONT
         ws.cell(current_row, 1).border = self.THIN_BORDER
         for period_idx in range(self.total_years):
-            col_letter = get_column_letter(2 + period_idx)
+            cl = get_column_letter(2 + period_idx)
             cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = f"={col_letter}{material_row}*{smh_rate}"
+            cell.value = f"={cl}{material_row}*{self._ir_ref(self.IR_PASSTHROUGH_ROW)}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
         cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{material_row}*{smh_rate}"
+        cell.value = f"={get_column_letter(total_col)}{material_row}*{self._ir_ref(self.IR_PASSTHROUGH_ROW)}"
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
         current_row += 1
 
-        # Row 19: Travel (calculated value)
+        # ── Travel: ='Travel'!base_col{base_total_row} ────────────────────────
         travel_row = current_row
         ws.cell(current_row, 1, "Travel")
         ws.cell(current_row, 1).font = self.BOLD_FONT
         ws.cell(current_row, 1).border = self.THIN_BORDER
-        for period_idx in range(self.total_years):
-            period_key = f"year_{period_idx + 1}"
-            value = cost_elements.get('travel', {}).get(period_key, 0)
-            cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = value
+        if travel_info:
+            for period_idx in range(self.total_years):
+                year = period_idx + 1
+                tr_col = get_column_letter(year + 1)  # Travel: year N = col N+1
+                cell = ws.cell(current_row, 2 + period_idx)
+                cell.value = f"='Travel'!{tr_col}{travel_info['base_total_row']}"
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+            cell = ws.cell(current_row, total_col)
+            cell.value = f"='Travel'!{get_column_letter(travel_info['total_col'])}{travel_info['base_total_row']}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
-        cell = ws.cell(current_row, total_col)
-        cell.value = cost_elements.get('travel', {}).get('total', 0)
-        cell.number_format = self.CURRENCY_FORMAT
-        cell.border = self.THIN_BORDER
-        cell.font = self.BOLD_FONT
+            cell.font = self.BOLD_FONT
+        else:
+            for period_idx in range(self.total_years):
+                cell = ws.cell(current_row, 2 + period_idx)
+                cell.value = 0
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+            cell = ws.cell(current_row, total_col)
+            cell.value = 0
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+            cell.font = self.BOLD_FONT
         current_row += 1
 
-        # Row 20: G&A (Travel) (FORMULA: Travel * ga_rate)
-        ga_travel_row = current_row
+        # ── G&A Travel: Travel × IR!ga ────────────────────────────────────────
         ws.cell(current_row, 1, "General & Administrative (Travel)")
         ws.cell(current_row, 1).font = self.BOLD_FONT
         ws.cell(current_row, 1).border = self.THIN_BORDER
         for period_idx in range(self.total_years):
-            col_letter = get_column_letter(2 + period_idx)
+            cl = get_column_letter(2 + period_idx)
             cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = f"={col_letter}{travel_row}*{ga_rate}"
+            cell.value = f"={cl}{travel_row}*{self._ir_ref(self.IR_GA_ROW)}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
         cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{travel_row}*{ga_rate}"
+        cell.value = f"={get_column_letter(total_col)}{travel_row}*{self._ir_ref(self.IR_GA_ROW)}"
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
         current_row += 1
 
-        # Sub-Total row
+        # ── Sub-Total: SUM of all above rows ──────────────────────────────────
         subtotal_row = current_row
         ws.cell(current_row, 1, "Sub-Total")
         ws.cell(current_row, 1).font = self.BOLD_FONT
         ws.cell(current_row, 1).border = self.THIN_BORDER
-
         for period_idx in range(self.total_years):
+            cl = get_column_letter(2 + period_idx)
             cell = ws.cell(current_row, 2 + period_idx)
-            # Sum formula for this period column
-            cell.value = f"=SUM({get_column_letter(2 + period_idx)}{data_start_row}:{get_column_letter(2 + period_idx)}{current_row - 1})"
+            cell.value = f"=SUM({cl}{data_start_row}:{cl}{current_row - 1})"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
             cell.font = self.BOLD_FONT
-
-        # Total column for sub-total
+        tcl = get_column_letter(total_col)
         cell = ws.cell(current_row, total_col)
-        cell.value = f"=SUM({get_column_letter(total_col)}{data_start_row}:{get_column_letter(total_col)}{current_row - 1})"
+        cell.value = f"=SUM({tcl}{data_start_row}:{tcl}{current_row - 1})"
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
-
         current_row += 1
 
-        # Fee row
+        # ── Fee: (prime labor subtotal × IR!fee_labor) + (sub+passthrough × IR!fee_sub)
         fee_row = current_row
         ws.cell(current_row, 1, "Fee")
         ws.cell(current_row, 1).font = self.BOLD_FONT
         ws.cell(current_row, 1).border = self.THIN_BORDER
-
-        fee_values = cost_elements.get('fee', {})
         for period_idx in range(self.total_years):
-            period_key = f"year_{period_idx + 1}"
-            value = fee_values.get(period_key, 0)
+            cl = get_column_letter(2 + period_idx)
+            prime_sub = f"({cl}{dl_row}+{cl}{fringe_row}+{cl}{oh_row}+{cl}{ga_labor_row})"
+            sub_with_handling = f"({cl}{sub_row}+{cl}{passthrough_row})"
             cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = value
+            cell.value = (
+                f"={prime_sub}*{self._ir_ref(self.IR_FEE_LABOR_ROW)}"
+                f"+{sub_with_handling}*{self._ir_ref(self.IR_FEE_SUB_ROW)}"
+            )
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
-
+        tcl = get_column_letter(total_col)
+        prime_sub = f"({tcl}{dl_row}+{tcl}{fringe_row}+{tcl}{oh_row}+{tcl}{ga_labor_row})"
+        sub_with_handling = f"({tcl}{sub_row}+{tcl}{passthrough_row})"
         cell = ws.cell(current_row, total_col)
-        cell.value = fee_values.get('total', 0)
+        cell.value = (
+            f"={prime_sub}*{self._ir_ref(self.IR_FEE_LABOR_ROW)}"
+            f"+{sub_with_handling}*{self._ir_ref(self.IR_FEE_SUB_ROW)}"
+        )
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
-
         current_row += 1
 
-        # Total Proposed row
+        # ── Total Proposed: Sub-Total + Fee ───────────────────────────────────
         ws.cell(current_row, 1, "Total Proposed")
         ws.cell(current_row, 1).font = self.BOLD_FONT
         ws.cell(current_row, 1).border = self.THIN_BORDER
         ws.cell(current_row, 1).alignment = Alignment(horizontal='center')
-
         for period_idx in range(self.total_years):
+            cl = get_column_letter(2 + period_idx)
             cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = f"={get_column_letter(2 + period_idx)}{subtotal_row}+{get_column_letter(2 + period_idx)}{fee_row}"
+            cell.value = f"={cl}{subtotal_row}+{cl}{fee_row}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
             cell.font = self.BOLD_FONT
-
+        tcl = get_column_letter(total_col)
         cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{subtotal_row}+{get_column_letter(total_col)}{fee_row}"
+        cell.value = f"={tcl}{subtotal_row}+{tcl}{fee_row}"
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
@@ -519,14 +618,17 @@ class ExcelGenerator:
 
         # Column headers row
         header_row = 10
-        headers = ["Labor Category", "Site", "Location"]
+        headers = ["Labor Category", "Site", "Location", "GSA Discount"]
         for idx, header in enumerate(headers):
             cell = ws.cell(header_row, 1 + idx)
             cell.value = header
             self._style_header_cell(cell)
 
-        # For each period: Hours, Rate, Dollars
-        col = 4
+        # D: GSA Discount
+        ws.column_dimensions['D'].width = 14
+
+        # For each period: Hours, Rate, Dollars — start at col 5 (E) due to discount col
+        col = 5
         for year in range(1, self.total_years + 1):
             period_label = self._get_period_label(year)
 
@@ -576,9 +678,16 @@ class ExcelGenerator:
             ws.cell(current_row, 3, position.get('location', ''))
             ws.cell(current_row, 3).border = self.THIN_BORDER
 
+            # Col D: GSA Discount (only for GSA positions)
+            discount_cell = ws.cell(current_row, 4)
+            if (position.get('wage_source') or '').lower() == 'gsa':
+                discount_cell.value = position.get('gsa_discount_rate', 0.0) or 0.0
+                discount_cell.number_format = self.PERCENT_FORMAT
+            discount_cell.border = self.THIN_BORDER
+
             # Calculate position data for each year
             # Use appropriate calculator based on wage source
-            if position.get('wage_source') == 'gsa':
+            if (position.get('wage_source') or '').lower() == 'gsa':
                 # GSA positions: Use GSA-specific calculator
                 discount_rate = position.get('gsa_discount_rate', 0.0)
                 results = Calculator.calculate_gsa_position_years(
@@ -596,7 +705,7 @@ class ExcelGenerator:
                     total_years=self.total_years
                 )
 
-            col = 4
+            col = 5  # Year cols start at E due to discount col at D
             hours_cells = []
             dollars_cells = []
 
@@ -612,20 +721,52 @@ class ExcelGenerator:
                 hours_cells.append(f"{get_column_letter(col)}{current_row}")
                 col += 1
 
-                # Rate (DL Rate for BLS, FBLR for GSA)
+                # Rate column
+                # GSA yr N: BLS Analysis col L(yr1)/M(yr2)/N(yr3)... × (1-discount) / burden_factor
+                #   BLS Analysis stores actual GSA catalog rates per year; for years beyond
+                #   available data it escalates via IR sheet. Dividing by burden_factor gives
+                #   the DL component so the FBLR cascade restores the full GSA hourly total.
+                # BLS yr 1: direct BLS Analysis row ref ÷ hours (no duplicate-name bug)
+                # BLS yr N: escalate from year 1 rate cell via IR escalation formulas
                 rate_col = col
                 cell = ws.cell(current_row, col)
-                # For GSA positions, use the actual GSA rate (FBLR), not the reverse-engineered DL rate
-                if position.get('wage_source') == 'gsa':
-                    cell.value = year_data.get('rate', 0)  # GSA: Use full FBLR (stored as 'rate')
+                # year1 rate col = col 6 = F  (3*1+3, since year cols now start at 5)
+                year1_rate_col = get_column_letter(3 * 1 + 3)
+                if (position.get('wage_source') or '').lower() == 'gsa':
+                    bls_row = position.get('bls_analysis_row')
+                    if bls_row:
+                        # BLS Analysis col L = yr1, M = yr2, N = yr3, ...
+                        bls_col = get_column_letter(12 + year - 1)
+                        cell.value = (
+                            f"='BLS Analysis'!${bls_col}${bls_row}*(1-$D{current_row})"
+                            f"/(1+{self._ir_ref(self.IR_FRINGE_ROW)})"
+                            f"/(1+{self._ir_ref(self.IR_OH_ONSITE_ROW)})"
+                            f"/(1+{self._ir_ref(self.IR_GA_ROW)})"
+                            f"/(1+{self._ir_ref(self.IR_FEE_LABOR_ROW)})"
+                        )
+                    else:
+                        cell.value = year_data.get('rate', 0)
+                elif year == 1:
+                    if self.project_data.get('wage_data'):
+                        hours_col_letter = get_column_letter(hours_col)
+                        bls_row = position.get('bls_analysis_row')
+                        if bls_row:
+                            cell.value = f"='BLS Analysis'!$L${bls_row}/{hours_col_letter}{current_row}"
+                        else:
+                            cell.value = (
+                                f"=INDEX('BLS Analysis'!$L:$L,"
+                                f"MATCH(A{current_row},'BLS Analysis'!$A:$A,0))"
+                                f"/{hours_col_letter}{current_row}"
+                            )
+                    else:
+                        cell.value = year_data.get('dl_rate', 0)
                 else:
-                    cell.value = year_data.get('dl_rate', 0)  # BLS: Use DL rate, breakdown will add indirect costs
+                    cell.value = f"={year1_rate_col}{current_row}{self._escalation_formula(1, year)}"
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 1
 
                 # Dollars - USE FORMULA: Hours * Rate
-                dollars_col = col
                 cell = ws.cell(current_row, col)
                 cell.value = f"={get_column_letter(hours_col)}{current_row}*{get_column_letter(rate_col)}{current_row}"
                 cell.number_format = self.CURRENCY_FORMAT
@@ -655,7 +796,7 @@ class ExcelGenerator:
             ws.cell(current_row, 1).font = self.BOLD_FONT
             ws.cell(current_row, 1).border = self.THIN_BORDER
 
-            col = 4
+            col = 5
             for year in range(1, self.total_years + 1):
                 # Skip Hours column in sum (just dollars)
                 col += 1  # Hours
@@ -681,20 +822,13 @@ class ExcelGenerator:
             current_row += 1
 
             # Add FBLR breakdown rows (matching template format)
-            indirect_rates = self.project_data.get('indirect_rates', {})
-            fringe_rate = indirect_rates.get('fringe', 0.247)
-            oh_rate = indirect_rates.get('oh_onsite', indirect_rates.get('oh', 0.0711))
-            ga_rate = indirect_rates.get('ga', 0.2243)
-            fee_rates = self.project_data.get('fee_rates', {})
-            prime_fee_rate = fee_rates.get('prime_labor', 0.08)
-
             # Fringe Benefits row
             fringe_row = current_row
             ws.cell(current_row, 1, "Fringe Benefits")
             ws.cell(current_row, 1).font = self.BOLD_FONT
             ws.cell(current_row, 1).border = self.THIN_BORDER
 
-            col = 4
+            col = 5
             for year in range(1, self.total_years + 1):
                 col += 1  # Hours (skip)
 
@@ -729,7 +863,7 @@ class ExcelGenerator:
             ws.cell(current_row, 1).font = self.BOLD_FONT
             ws.cell(current_row, 1).border = self.THIN_BORDER
 
-            col = 4
+            col = 5
             for year in range(1, self.total_years + 1):
                 col += 1  # Hours (skip)
 
@@ -765,7 +899,7 @@ class ExcelGenerator:
             ws.cell(current_row, 1).font = self.BOLD_FONT
             ws.cell(current_row, 1).border = self.THIN_BORDER
 
-            col = 4
+            col = 5
             for year in range(1, self.total_years + 1):
                 col += 1  # Hours (skip)
 
@@ -801,7 +935,7 @@ class ExcelGenerator:
             ws.cell(current_row, 1).font = self.BOLD_FONT
             ws.cell(current_row, 1).border = self.THIN_BORDER
 
-            col = 4
+            col = 5
             for year in range(1, self.total_years + 1):
                 col += 1  # Hours
                 col += 1  # Rate
@@ -829,7 +963,7 @@ class ExcelGenerator:
             ws.cell(current_row, 1).font = self.BOLD_FONT
             ws.cell(current_row, 1).border = self.THIN_BORDER
 
-            col = 4
+            col = 5
             for year in range(1, self.total_years + 1):
                 col += 1  # Hours (skip)
 
@@ -864,7 +998,7 @@ class ExcelGenerator:
             ws.cell(current_row, 1).font = self.BOLD_FONT
             ws.cell(current_row, 1).border = self.THIN_BORDER
 
-            col = 4
+            col = 5
             for year in range(1, self.total_years + 1):
                 col += 1  # Hours
                 col += 1  # Rate
@@ -885,12 +1019,17 @@ class ExcelGenerator:
             cell.border = self.THIN_BORDER
             cell.font = self.BOLD_FONT
 
+        # Return row/col info so CE Summary and FLLR can reference this sheet
+        return {
+            'total_dl_row': total_direct_labor_row if positions else None,
+            'total_dollars_col': total_dollars_col,
+        }
+
     def _create_subcontractor_sheet(self, sub_data: Dict):
         """Create a sheet for a single subcontractor, named by company."""
         # Use company name for sheet title (sanitize for Excel sheet name limits)
         company_name = sub_data.get('name', 'Subcontractor')
-        # Excel sheet names have max 31 chars and can't contain: \ / ? * [ ]
-        sheet_name = company_name[:31].replace('\\', '').replace('/', '').replace('?', '').replace('*', '').replace('[', '').replace(']', '')
+        sheet_name = self._sanitize_sheet_name(company_name)
         ws = self.wb.create_sheet(sheet_name)
 
         # Column widths matching template
@@ -1029,16 +1168,30 @@ class ExcelGenerator:
             cell.border = self.THIN_BORDER
             cell.font = self.BOLD_FONT
 
+        # Return info for CE Summary and FLLR cross-sheet references
+        return {
+            'sheet_name': sheet_name,
+            'total_row': current_row,
+            'total_col': total_col,
+        }
+
     def _create_fully_loaded_labor_rates_sheet(self):
-        """Create the Fully Loaded Labor Rates sheet showing all position rates per period."""
+        """Create the Fully Loaded Labor Rates sheet — feeder sheet 2.
+
+        All values are Excel formulas, not Python-computed numbers:
+          BLS prime:  = 'Prime Labor Detail'!rate_col × IR burden cascade
+                        (PLD year 1 rate itself feeds from BLS Analysis via INDEX/MATCH)
+          GSA prime:  = 'Prime Labor Detail'!rate_col  (already fully loaded in PLD)
+          Sub:        = '{sub_sheet}'!rate_col          (direct reference to sub sheet)
+
+        PLD column layout: year N rate col = 3N+3  (data starts row 11, col D is GSA Discount)
+        Sub column layout: year N rate col = 3N+1  (data starts row 11)
+        """
         ws = self.wb.create_sheet("Fully Loaded Labor Rates")
 
         # Column widths
-        # A: Labor Category (was B)
         ws.column_dimensions['A'].width = 50.5
-        # B: Company (was C)
         ws.column_dimensions['B'].width = 20
-        # C: Location (was D)
         ws.column_dimensions['C'].width = 20
 
         # Apply standard header format (Rows 1-5)
@@ -1048,111 +1201,84 @@ class ExcelGenerator:
         header_row = 8
         ws.cell(header_row, 1, "Labor Category")
         self._style_header_cell(ws.cell(header_row, 1))
-
         ws.cell(header_row, 2, "Company")
         self._style_header_cell(ws.cell(header_row, 2))
-
         ws.cell(header_row, 3, "Location")
         self._style_header_cell(ws.cell(header_row, 3))
 
-        # Period columns
         col = 4
         for year in range(1, self.total_years + 1):
-            period_label = self._get_period_label(year)
             cell = ws.cell(header_row, col)
-            cell.value = period_label
+            cell.value = self._get_period_label(year)
             self._style_period_header_cell(cell)
             ws.column_dimensions[get_column_letter(col)].width = 18
             col += 1
 
-        # Data rows - Prime positions first
-        current_row = header_row + 1
-        prime_positions = self.project_data.get('prime_positions', [])
-        indirect_rates = self.project_data.get('indirect_rates', {})
+        # PLD and sub sheet data rows both start at row 11 (header_row = 10)
+        PLD_DATA_START = 11
+        SUB_DATA_START = 11
 
-        for position in prime_positions:
-            # Labor Category
+        current_row = header_row + 1
+
+        # ── Prime positions ──────────────────────────────────────────────────
+        for i, position in enumerate(self.project_data.get('prime_positions', [])):
+            pld_row = PLD_DATA_START + i
+
             ws.cell(current_row, 1, position['labor_category'])
             ws.cell(current_row, 1).border = self.THIN_BORDER
-
-            # Company (Prime)
             ws.cell(current_row, 2, self.project_data['prime_contractor_name'])
             ws.cell(current_row, 2).border = self.THIN_BORDER
-
-            # Location
             ws.cell(current_row, 3, position.get('location', ''))
             ws.cell(current_row, 3).border = self.THIN_BORDER
 
-            # Calculate FBLR for each year
-            # Use appropriate calculator based on wage source
-            if position.get('wage_source') == 'gsa':
-                # GSA positions: Use GSA-specific calculator
-                discount_rate = position.get('gsa_discount_rate', 0.0)
-                results = Calculator.calculate_gsa_position_years(
-                    position_data=position,
-                    total_years=self.total_years,
-                    discount_rate=discount_rate,
-                    escalation_rates=self.project_data.get('escalation_rates', {})
-                )
-            else:
-                # BLS positions: Use standard calculator
-                results = Calculator.calculate_position_years(
-                    position_data=position,
-                    escalation_rates=self.project_data['escalation_rates'],
-                    indirect_rates=indirect_rates,
-                    total_years=self.total_years
-                )
-
-            # Get prime labor fee rate (FBLR should include fee for "Fully Loaded" rates)
-            fee_rates = self.project_data.get('fee_rates', {})
-            prime_fee_rate = fee_rates.get('prime_labor', 0.08)
-
             col = 4
             for year in range(1, self.total_years + 1):
-                year_data = results.get(f'year_{year}', {})
-                fblr_without_fee = year_data.get('rate', 0)
-
-                # For GSA positions, the rate is already fully loaded (no fee added)
-                if position.get('wage_source') == 'gsa':
-                    fblr_with_fee = fblr_without_fee
-                else:
-                    # BLS: Add fee to get fully loaded rate (matching frontend calculation)
-                    # FBLR = (DL + Fringe + OH + G&A) + Fee
-                    # Fee = (DL + Fringe + OH + G&A) × fee_rate
-                    fblr_with_fee = fblr_without_fee * (1 + prime_fee_rate)
+                # PLD rate column for year N = 3N+3 (col D is GSA Discount)
+                pld_rate_col = get_column_letter(3 * year + 3)
+                pld_ref = f"'Prime Labor Detail'!{pld_rate_col}{pld_row}"
 
                 cell = ws.cell(current_row, col)
-                cell.value = fblr_with_fee
+                if (position.get('wage_source') or '').lower() == 'gsa':
+                    # GSA rate in PLD is already fully loaded — reference directly
+                    cell.value = f"={pld_ref}"
+                else:
+                    # BLS: FBLR = DL rate × (1+fringe) × (1+OH) × (1+G&A) × (1+fee)
+                    location_type = position.get('location_type', 'On-Site')
+                    oh_ir_row = self.IR_OH_ONSITE_ROW if location_type == 'On-Site' else self.IR_OH_OFFSITE_ROW
+                    cell.value = (
+                        f"={pld_ref}"
+                        f"*(1+{self._ir_ref(self.IR_FRINGE_ROW)})"
+                        f"*(1+{self._ir_ref(oh_ir_row)})"
+                        f"*(1+{self._ir_ref(self.IR_GA_ROW)})"
+                        f"*(1+{self._ir_ref(self.IR_FEE_LABOR_ROW)})"
+                    )
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 1
 
             current_row += 1
 
-        # Subcontractor positions
+        # ── Subcontractor positions ───────────────────────────────────────────
         for sub in self.project_data.get('subcontractors', []):
             sub_name = sub.get('name', 'Subcontractor')
+            sheet_name = self._sanitize_sheet_name(sub_name)
 
-            for labor_cat in sub.get('labor_categories', []):
-                # Labor Category
+            for lc_idx, labor_cat in enumerate(sub.get('labor_categories', [])):
+                sub_lc_row = SUB_DATA_START + lc_idx
+
                 ws.cell(current_row, 1, labor_cat['labor_category'])
                 ws.cell(current_row, 1).border = self.THIN_BORDER
-
-                # Company (Subcontractor)
                 ws.cell(current_row, 2, sub_name)
                 ws.cell(current_row, 2).border = self.THIN_BORDER
-
-                # Location
                 ws.cell(current_row, 3, labor_cat.get('location', ''))
                 ws.cell(current_row, 3).border = self.THIN_BORDER
 
-                # Rates per year (subcontractors show base rate, fees applied at contract level)
                 col = 4
                 for year in range(1, self.total_years + 1):
-                    rate = labor_cat.get(f'year_{year}_rate', 0)
-
+                    # Sub rate column for year N = 3N+1 (sub starts at col 3)
+                    sub_rate_col = get_column_letter(3 * year + 1)
                     cell = ws.cell(current_row, col)
-                    cell.value = rate
+                    cell.value = f"='{sheet_name}'!{sub_rate_col}{sub_lc_row}"
                     cell.number_format = self.CURRENCY_FORMAT
                     cell.border = self.THIN_BORDER
                     col += 1
@@ -1187,11 +1313,8 @@ class ExcelGenerator:
 
         # ODC rows
         current_row = header_row + 1
-        smh_rate = self.project_data.get('passthrough_rates', {}).get('smh', 0.0665)
-
         odcs = self.project_data.get('odcs', [])
         odc_start_row = current_row
-        escalation_rates = self.project_data.get('escalation_rates', {})
 
         for odc in odcs:
             # ODC row (includes handling)
@@ -1200,26 +1323,19 @@ class ExcelGenerator:
             escalate = odc.get('escalate', False)
 
             col = 2
+            year1_base = odc.get('amount_year_1') or 0
             for year in range(1, self.total_years + 1):
-                # Check for pre-calculated amounts
-                if 'amount_per_year' in odc:
-                    base_amount = odc['amount_per_year'].get(str(year)) or 0
-                else:
-                    base_amount = odc.get('amount_year_1') or 0
-
-                # Apply compound escalation if flag is set
-                escalated_amount = base_amount
-                if escalate and year > 1:
-                    for y in range(1, year):
-                        esc_key = f"{y}_to_{y + 1}"
-                        esc_rate = escalation_rates.get(esc_key) or 0
-                        escalated_amount *= (1 + esc_rate)
-
-                # Include handling in the amount
-                total_with_handling = escalated_amount * (1 + smh_rate)
-
                 cell = ws.cell(current_row, col)
-                cell.value = total_with_handling
+                if escalate and 'amount_per_year' not in odc:
+                    # True feeder: year1 base × IR escalation formula × IR passthrough
+                    cell.value = f"={year1_base}{self._escalation_formula(1, year)}*(1+{self._ir_ref(self.IR_PASSTHROUGH_ROW)})"
+                else:
+                    # Pre-set amounts per year or no escalation: Python value × IR passthrough
+                    if 'amount_per_year' in odc:
+                        base_amount = odc['amount_per_year'].get(str(year)) or 0
+                    else:
+                        base_amount = year1_base
+                    cell.value = f"={base_amount}*(1+{self._ir_ref(self.IR_PASSTHROUGH_ROW)})"
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 1
@@ -1253,6 +1369,11 @@ class ExcelGenerator:
         total_cell.border = self.THIN_BORDER
         total_cell.font = self.BOLD_FONT
 
+        return {
+            'base_total_row': current_row,
+            'total_col': total_col,
+        }
+
     def _create_materials_sheet(self):
         """Create the Materials sheet (separate from ODCs)."""
         ws = self.wb.create_sheet("Materials")
@@ -1284,11 +1405,8 @@ class ExcelGenerator:
 
         # Material rows
         current_row = header_row + 2
-        smh_rate = self.project_data.get('passthrough_rates', {}).get('smh', 0.0665)
-
         materials = self.project_data.get('materials', [])
         material_start_row = current_row
-        escalation_rates = self.project_data.get('escalation_rates', {})
 
         for material in materials:
             # Material base row
@@ -1297,22 +1415,19 @@ class ExcelGenerator:
             escalate = material.get('escalate', False)
 
             col = 2
+            year1_base = material.get('amount_year_1') or 0
             for year in range(1, self.total_years + 1):
-                if 'amount_per_year' in material:
-                    base_amount = material['amount_per_year'].get(str(year)) or 0
-                else:
-                    base_amount = material.get('amount_year_1') or 0
-
-                # Apply compound escalation if flag is set
-                escalated_amount = base_amount
-                if escalate and year > 1:
-                    for y in range(1, year):
-                        esc_key = f"{y}_to_{y + 1}"
-                        esc_rate = escalation_rates.get(esc_key) or 0
-                        escalated_amount *= (1 + esc_rate)
-
                 cell = ws.cell(current_row, col)
-                cell.value = escalated_amount
+                if escalate and 'amount_per_year' not in material:
+                    # True feeder: year1 base × IR escalation formula
+                    cell.value = f"={year1_base}{self._escalation_formula(1, year)}"
+                else:
+                    # Pre-set amounts per year or no escalation: Python value
+                    if 'amount_per_year' in material:
+                        base_amount = material['amount_per_year'].get(str(year)) or 0
+                    else:
+                        base_amount = year1_base
+                    cell.value = base_amount
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 2
@@ -1333,7 +1448,7 @@ class ExcelGenerator:
             for year in range(1, self.total_years + 1):
                 material_cell = f"{get_column_letter(col)}{current_row - 1}"
                 cell = ws.cell(current_row, col)
-                cell.value = f"={material_cell}*{smh_rate}"
+                cell.value = f"={material_cell}*{self._ir_ref(self.IR_PASSTHROUGH_ROW)}"
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 2
@@ -1395,46 +1510,36 @@ class ExcelGenerator:
 
         # Travel rows
         current_row = header_row + 1
-        ga_rate = self.project_data.get('indirect_rates', {}).get('ga', 0.2214)
-
         travel_items = self.project_data.get('travel', [])
         travel_start_row = current_row
-
-        escalation_rates = self.project_data.get('escalation_rates', {})
 
         for travel in travel_items:
             description = travel.get('description', 'Travel')
             escalate = travel.get('escalate', False)
 
-            # Travel row (includes G&A)
+            # Travel row — raw base amount (no G&A); G&A shown separately below
             ws.cell(current_row, 1, description)
             ws.cell(current_row, 1).border = self.THIN_BORDER
 
             col = 2
+            year1_base = travel.get('amount_year_1') or 0
             for year in range(1, self.total_years + 1):
-                if 'amount_per_year' in travel:
-                    base_amount = travel['amount_per_year'].get(str(year)) or 0
-                else:
-                    base_amount = travel.get('amount_year_1') or 0
-
-                # Apply compound escalation if flag is set
-                escalated_amount = base_amount
-                if escalate and year > 1:
-                    for y in range(1, year):
-                        esc_key = f"{y}_to_{y + 1}"
-                        esc_rate = escalation_rates.get(esc_key) or 0
-                        escalated_amount *= (1 + esc_rate)
-
-                # Include G&A in the amount
-                total_with_ga = escalated_amount * (1 + ga_rate)
-
                 cell = ws.cell(current_row, col)
-                cell.value = total_with_ga
+                if escalate and 'amount_per_year' not in travel:
+                    # True feeder: year1 base × IR escalation formula (raw, no G&A)
+                    cell.value = f"={year1_base}{self._escalation_formula(1, year)}"
+                else:
+                    # Pre-set amounts per year or no escalation: raw amount
+                    if 'amount_per_year' in travel:
+                        base_amount = travel['amount_per_year'].get(str(year)) or 0
+                    else:
+                        base_amount = year1_base
+                    cell.value = base_amount
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 1
 
-            # Add Total column formula for this travel row
+            # Total column for this item row
             total_cell = ws.cell(current_row, total_col)
             total_cell.value = f"=SUM({get_column_letter(2)}{current_row}:{get_column_letter(total_col - 1)}{current_row})"
             total_cell.number_format = self.CURRENCY_FORMAT
@@ -1442,8 +1547,9 @@ class ExcelGenerator:
 
             current_row += 1
 
-        # Total row
-        ws.cell(current_row, 1, "Total Travel")
+        # Base Travel subtotal row (raw, no G&A) — referenced by CE Summary row 18
+        base_total_row = current_row
+        ws.cell(current_row, 1, "Base Travel")
         ws.cell(current_row, 1).font = self.BOLD_FONT
         ws.cell(current_row, 1).border = self.THIN_BORDER
 
@@ -1456,12 +1562,56 @@ class ExcelGenerator:
             cell.font = self.BOLD_FONT
             col += 1
 
-        # Add Total column formula for Total Travel row
         total_cell = ws.cell(current_row, total_col)
         total_cell.value = f"=SUM({get_column_letter(2)}{current_row}:{get_column_letter(total_col - 1)}{current_row})"
         total_cell.number_format = self.CURRENCY_FORMAT
         total_cell.border = self.THIN_BORDER
         total_cell.font = self.BOLD_FONT
+        current_row += 1
+
+        # G&A on Travel row (display only — CE Summary computes its own G&A from Base Travel)
+        ga_row = current_row
+        ws.cell(current_row, 1, "G&A on Travel")
+        ws.cell(current_row, 1).border = self.THIN_BORDER
+
+        col = 2
+        for year in range(1, self.total_years + 1):
+            cell = ws.cell(current_row, col)
+            cell.value = f"={get_column_letter(col)}{base_total_row}*{self._ir_ref(self.IR_GA_ROW)}"
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+            col += 1
+
+        total_cell = ws.cell(current_row, total_col)
+        total_cell.value = f"=SUM({get_column_letter(2)}{current_row}:{get_column_letter(total_col - 1)}{current_row})"
+        total_cell.number_format = self.CURRENCY_FORMAT
+        total_cell.border = self.THIN_BORDER
+        current_row += 1
+
+        # Total Travel (Base + G&A) — for display in the Travel sheet
+        ws.cell(current_row, 1, "Total Travel")
+        ws.cell(current_row, 1).font = self.BOLD_FONT
+        ws.cell(current_row, 1).border = self.THIN_BORDER
+
+        col = 2
+        for year in range(1, self.total_years + 1):
+            cell = ws.cell(current_row, col)
+            cell.value = f"={get_column_letter(col)}{base_total_row}+{get_column_letter(col)}{ga_row}"
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+            cell.font = self.BOLD_FONT
+            col += 1
+
+        total_cell = ws.cell(current_row, total_col)
+        total_cell.value = f"=SUM({get_column_letter(2)}{current_row}:{get_column_letter(total_col - 1)}{current_row})"
+        total_cell.number_format = self.CURRENCY_FORMAT
+        total_cell.border = self.THIN_BORDER
+        total_cell.font = self.BOLD_FONT
+
+        return {
+            'base_total_row': base_total_row,  # CE Summary row 18 → raw base travel
+            'total_col': total_col,
+        }
 
     def _create_loe_sheet(self):
         """Create the Level of Effort (LOE) sheet showing hours per category."""
@@ -1674,7 +1824,7 @@ class ExcelGenerator:
         current_row += 1
         for year in range(1, self.total_years):
             key = f"{year}_to_{year + 1}"
-            rate = escalation_rates.get(key, 0.03)
+            rate = escalation_rates.get(key, 0.0)
 
             label = f"Escalation Factor (Year {year} to {year + 1})"
             label_cell = ws.cell(current_row, 1, label)
@@ -1730,7 +1880,7 @@ class ExcelGenerator:
 
             for position in self.project_data.get('prime_positions', []):
                 # Use appropriate calculator based on wage source
-                if position.get('wage_source') == 'gsa':
+                if (position.get('wage_source') or '').lower() == 'gsa':
                     # GSA positions: Calculate with GSA-specific function
                     discount_rate = position.get('gsa_discount_rate', 0.0)
                     results = Calculator.calculate_gsa_position_years(
@@ -1937,6 +2087,14 @@ class ExcelGenerator:
             self._style_header_cell(cell)
             cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
+        # GSA year 2..N rate column headers (cols M, N, O, ...)
+        for yr in range(2, self.total_years + 1):
+            yr_col_idx = 12 + yr - 1
+            cell = ws.cell(header_row, yr_col_idx, f"GSA Rate\nYear {yr}")
+            self._style_header_cell(cell)
+            cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+            ws.column_dimensions[get_column_letter(yr_col_idx)].width = 14
+
         # Data rows
         current_row = header_row + 1
         wage_data = self.project_data.get('wage_data', {})
@@ -2071,6 +2229,28 @@ class ExcelGenerator:
             cell.border = self.THIN_BORDER
             cell.fill = PatternFill(start_color="DBEAFE", end_color="DBEAFE", fill_type="solid")
             cell.font = Font(bold=True, color="1E40AF")
+
+            # GSA year 2..N catalog rates — cols M(13), N(14), O(15), ...
+            # gsa_rates_by_year is keyed by GSA schedule year; gsa_current_year tells us
+            # which schedule year maps to proposal year 1.  So proposal year N corresponds
+            # to schedule year (gsa_current_year + N - 1).
+            # Use the actual rate when available, else escalate from the previous col.
+            if wage_source == 'GSA':
+                gsa_rates = pos.get('gsa_rates_by_year', {})
+                gsa_current_year = pos.get('gsa_current_year', 1)
+                for yr in range(2, self.total_years + 1):
+                    yr_col_idx   = 12 + yr - 1          # L=12(yr1), M=13(yr2), N=14(yr3)...
+                    prev_col     = get_column_letter(yr_col_idx - 1)
+                    yr_cell      = ws.cell(current_row, yr_col_idx)
+                    schedule_yr  = gsa_current_year + yr - 1
+                    actual_rate  = gsa_rates.get(str(schedule_yr))
+                    if actual_rate is not None:
+                        yr_cell.value = actual_rate
+                    else:
+                        esc_row = self.IR_ESCALATION_START_ROW + yr - 2
+                        yr_cell.value = f"={prev_col}{current_row}*(1+'Indirect Rate'!$B${esc_row})"
+                    yr_cell.number_format = self.CURRENCY_FORMAT
+                    yr_cell.border = self.THIN_BORDER
 
             current_row += 1
 
