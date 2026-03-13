@@ -131,6 +131,19 @@ class ExcelGenerator:
         self.total_years = project_data['total_years']
         self.extensions = project_data.get('extensions', [])
 
+        # True when any prime position uses a GSA catalog rate
+        self.has_gsa = any(
+            (p.get('wage_source') or '').lower() == 'gsa'
+            for p in project_data.get('prime_positions', [])
+        )
+        # Analysis sheet name: "GSA Analysis" for GSA proposals, "BLS Analysis" for BLS
+        self.analysis_sheet_name = "GSA Analysis" if self.has_gsa else "BLS Analysis"
+        # PLD year-col start: col 5 (E) when GSA Discount col D exists, else col 4 (D)
+        self.pld_year_start = 5 if self.has_gsa else 4
+        # Standard FTE hours — same for all positions, read once from the first position
+        _first = next(iter(project_data.get('prime_positions', [])), {})
+        self.standard_fte_hours = _first.get('standard_fte_hours') or 1920
+
         # 1. CE Summary — create worksheet first so it stays as tab 0; fill content last
         ws_summary = self.wb.active
         ws_summary.title = "Summary"
@@ -299,92 +312,131 @@ class ExcelGenerator:
         ws.cell(header_row, col, "Total")
         self._style_header_cell(ws.cell(header_row, col))
 
-        # ── Direct Labor: ='Prime Labor Detail'!dollars_col{total_dl_row} ─────
-        dl_row = current_row
-        ws.cell(current_row, 1, "Direct Labor")
-        ws.cell(current_row, 1).font = self.BOLD_FONT
-        ws.cell(current_row, 1).border = self.THIN_BORDER
-        if pld_info:
-            for period_idx in range(self.total_years):
-                year = period_idx + 1
-                pld_col = get_column_letter(3 * year + 4)
-                cell = ws.cell(current_row, 2 + period_idx)
-                cell.value = f"='Prime Labor Detail'!{pld_col}{pld_info['total_dl_row']}"
+        # ── Prime Labor section ────────────────────────────────────────────────
+        # GSA: single "Prime Labor" row (fully-loaded rate, no breakdown)
+        # BLS: Direct Labor + Fringe + OH + G&A rows
+        prime_labor_row = current_row  # used in Fee formula for BLS only
+        dl_row = current_row           # alias for sub-total SUM range start
+
+        if self.has_gsa:
+            ws.cell(current_row, 1, "Prime Labor")
+            ws.cell(current_row, 1).font = self.BOLD_FONT
+            ws.cell(current_row, 1).border = self.THIN_BORDER
+            if pld_info and pld_info.get('total_prime_labor_row'):
+                for period_idx in range(self.total_years):
+                    year = period_idx + 1
+                    pld_col = get_column_letter(3 * year + self.pld_year_start - 1)
+                    cell = ws.cell(current_row, 2 + period_idx)
+                    cell.value = f"='Prime Labor Detail'!{pld_col}{pld_info['total_prime_labor_row']}"
+                    cell.number_format = self.CURRENCY_FORMAT
+                    cell.border = self.THIN_BORDER
+                cell = ws.cell(current_row, total_col)
+                cell.value = f"='Prime Labor Detail'!{get_column_letter(pld_info['total_dollars_col'])}{pld_info['total_prime_labor_row']}"
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
-            cell = ws.cell(current_row, total_col)
-            cell.value = f"='Prime Labor Detail'!{get_column_letter(pld_info['total_dollars_col'])}{pld_info['total_dl_row']}"
-            cell.number_format = self.CURRENCY_FORMAT
-            cell.border = self.THIN_BORDER
-            cell.font = self.BOLD_FONT
-        else:
-            for period_idx in range(self.total_years):
-                cell = ws.cell(current_row, 2 + period_idx)
+                cell.font = self.BOLD_FONT
+            else:
+                for period_idx in range(self.total_years):
+                    cell = ws.cell(current_row, 2 + period_idx)
+                    cell.value = 0
+                    cell.number_format = self.CURRENCY_FORMAT
+                    cell.border = self.THIN_BORDER
+                cell = ws.cell(current_row, total_col)
                 cell.value = 0
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
+                cell.font = self.BOLD_FONT
+            current_row += 1
+            # No Fringe/OH/G&A rows for GSA — fee already included in GSA rate
+            fringe_row = None
+            oh_row = None
+            ga_labor_row = None
+        else:
+            # ── Direct Labor ──────────────────────────────────────────────────
+            ws.cell(current_row, 1, "Direct Labor")
+            ws.cell(current_row, 1).font = self.BOLD_FONT
+            ws.cell(current_row, 1).border = self.THIN_BORDER
+            if pld_info:
+                for period_idx in range(self.total_years):
+                    year = period_idx + 1
+                    pld_col = get_column_letter(3 * year + self.pld_year_start - 1)
+                    cell = ws.cell(current_row, 2 + period_idx)
+                    cell.value = f"='Prime Labor Detail'!{pld_col}{pld_info['total_dl_row']}"
+                    cell.number_format = self.CURRENCY_FORMAT
+                    cell.border = self.THIN_BORDER
+                cell = ws.cell(current_row, total_col)
+                cell.value = f"='Prime Labor Detail'!{get_column_letter(pld_info['total_dollars_col'])}{pld_info['total_dl_row']}"
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+                cell.font = self.BOLD_FONT
+            else:
+                for period_idx in range(self.total_years):
+                    cell = ws.cell(current_row, 2 + period_idx)
+                    cell.value = 0
+                    cell.number_format = self.CURRENCY_FORMAT
+                    cell.border = self.THIN_BORDER
+                cell = ws.cell(current_row, total_col)
+                cell.value = 0
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+                cell.font = self.BOLD_FONT
+            current_row += 1
+
+            # ── Fringe Benefits ───────────────────────────────────────────────
+            fringe_row = current_row
+            ws.cell(current_row, 1, "Fringe Benefits")
+            ws.cell(current_row, 1).font = self.BOLD_FONT
+            ws.cell(current_row, 1).border = self.THIN_BORDER
+            for period_idx in range(self.total_years):
+                cl = get_column_letter(2 + period_idx)
+                cell = ws.cell(current_row, 2 + period_idx)
+                cell.value = f"={cl}{dl_row}*{self._ir_ref(self.IR_FRINGE_ROW)}"
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
             cell = ws.cell(current_row, total_col)
-            cell.value = 0
+            cell.value = f"={get_column_letter(total_col)}{dl_row}*{self._ir_ref(self.IR_FRINGE_ROW)}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
             cell.font = self.BOLD_FONT
-        current_row += 1
+            current_row += 1
 
-        # ── Fringe Benefits: DL × IR!fringe ──────────────────────────────────
-        fringe_row = current_row
-        ws.cell(current_row, 1, "Fringe Benefits")
-        ws.cell(current_row, 1).font = self.BOLD_FONT
-        ws.cell(current_row, 1).border = self.THIN_BORDER
-        for period_idx in range(self.total_years):
-            cl = get_column_letter(2 + period_idx)
-            cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = f"={cl}{dl_row}*{self._ir_ref(self.IR_FRINGE_ROW)}"
+            # ── Labor Overhead ────────────────────────────────────────────────
+            oh_row = current_row
+            ws.cell(current_row, 1, "Labor Overhead")
+            ws.cell(current_row, 1).font = self.BOLD_FONT
+            ws.cell(current_row, 1).border = self.THIN_BORDER
+            for period_idx in range(self.total_years):
+                cl = get_column_letter(2 + period_idx)
+                cell = ws.cell(current_row, 2 + period_idx)
+                cell.value = f"=({cl}{dl_row}+{cl}{fringe_row})*{self._ir_ref(self.IR_OH_ONSITE_ROW)}"
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+            tcl = get_column_letter(total_col)
+            cell = ws.cell(current_row, total_col)
+            cell.value = f"=({tcl}{dl_row}+{tcl}{fringe_row})*{self._ir_ref(self.IR_OH_ONSITE_ROW)}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
-        cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{dl_row}*{self._ir_ref(self.IR_FRINGE_ROW)}"
-        cell.number_format = self.CURRENCY_FORMAT
-        cell.border = self.THIN_BORDER
-        cell.font = self.BOLD_FONT
-        current_row += 1
+            cell.font = self.BOLD_FONT
+            current_row += 1
 
-        # ── Labor Overhead: (DL+Fringe) × IR!oh_onsite ───────────────────────
-        oh_row = current_row
-        ws.cell(current_row, 1, "Labor Overhead")
-        ws.cell(current_row, 1).font = self.BOLD_FONT
-        ws.cell(current_row, 1).border = self.THIN_BORDER
-        for period_idx in range(self.total_years):
-            cl = get_column_letter(2 + period_idx)
-            cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = f"=({cl}{dl_row}+{cl}{fringe_row})*{self._ir_ref(self.IR_OH_ONSITE_ROW)}"
+            # ── G&A Labor ─────────────────────────────────────────────────────
+            ga_labor_row = current_row
+            ws.cell(current_row, 1, "General & Administrative (Labor)")
+            ws.cell(current_row, 1).font = self.BOLD_FONT
+            ws.cell(current_row, 1).border = self.THIN_BORDER
+            for period_idx in range(self.total_years):
+                cl = get_column_letter(2 + period_idx)
+                cell = ws.cell(current_row, 2 + period_idx)
+                cell.value = f"=({cl}{dl_row}+{cl}{fringe_row}+{cl}{oh_row})*{self._ir_ref(self.IR_GA_ROW)}"
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+            tcl = get_column_letter(total_col)
+            cell = ws.cell(current_row, total_col)
+            cell.value = f"=({tcl}{dl_row}+{tcl}{fringe_row}+{tcl}{oh_row})*{self._ir_ref(self.IR_GA_ROW)}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
-        tcl = get_column_letter(total_col)
-        cell = ws.cell(current_row, total_col)
-        cell.value = f"=({tcl}{dl_row}+{tcl}{fringe_row})*{self._ir_ref(self.IR_OH_ONSITE_ROW)}"
-        cell.number_format = self.CURRENCY_FORMAT
-        cell.border = self.THIN_BORDER
-        cell.font = self.BOLD_FONT
-        current_row += 1
-
-        # ── G&A Labor: (DL+Fringe+OH) × IR!ga ───────────────────────────────
-        ga_labor_row = current_row
-        ws.cell(current_row, 1, "General & Administrative (Labor)")
-        ws.cell(current_row, 1).font = self.BOLD_FONT
-        ws.cell(current_row, 1).border = self.THIN_BORDER
-        for period_idx in range(self.total_years):
-            cl = get_column_letter(2 + period_idx)
-            cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = f"=({cl}{dl_row}+{cl}{fringe_row}+{cl}{oh_row})*{self._ir_ref(self.IR_GA_ROW)}"
-            cell.number_format = self.CURRENCY_FORMAT
-            cell.border = self.THIN_BORDER
-        tcl = get_column_letter(total_col)
-        cell = ws.cell(current_row, total_col)
-        cell.value = f"=({tcl}{dl_row}+{tcl}{fringe_row}+{tcl}{oh_row})*{self._ir_ref(self.IR_GA_ROW)}"
-        cell.number_format = self.CURRENCY_FORMAT
-        cell.border = self.THIN_BORDER
-        cell.font = self.BOLD_FONT
-        current_row += 1
+            cell.font = self.BOLD_FONT
+            current_row += 1
 
         # ── Subcontractors: sum of sub sheet total rows ───────────────────────
         sub_row = current_row
@@ -553,30 +605,38 @@ class ExcelGenerator:
         cell.font = self.BOLD_FONT
         current_row += 1
 
-        # ── Fee: (prime labor subtotal × IR!fee_labor) + (sub+passthrough × IR!fee_sub)
+        # ── Fee ────────────────────────────────────────────────────────────────
+        # GSA: fee only on sub+passthrough (prime labor fee included in GSA rate)
+        # BLS: fee on prime labor subtotal + sub+passthrough
         fee_row = current_row
         ws.cell(current_row, 1, "Fee")
         ws.cell(current_row, 1).font = self.BOLD_FONT
         ws.cell(current_row, 1).border = self.THIN_BORDER
         for period_idx in range(self.total_years):
             cl = get_column_letter(2 + period_idx)
-            prime_sub = f"({cl}{dl_row}+{cl}{fringe_row}+{cl}{oh_row}+{cl}{ga_labor_row})"
             sub_with_handling = f"({cl}{sub_row}+{cl}{passthrough_row})"
             cell = ws.cell(current_row, 2 + period_idx)
+            if self.has_gsa:
+                cell.value = f"={sub_with_handling}*{self._ir_ref(self.IR_FEE_SUB_ROW)}"
+            else:
+                prime_sub = f"({cl}{dl_row}+{cl}{fringe_row}+{cl}{oh_row}+{cl}{ga_labor_row})"
+                cell.value = (
+                    f"={prime_sub}*{self._ir_ref(self.IR_FEE_LABOR_ROW)}"
+                    f"+{sub_with_handling}*{self._ir_ref(self.IR_FEE_SUB_ROW)}"
+                )
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+        tcl = get_column_letter(total_col)
+        sub_with_handling = f"({tcl}{sub_row}+{tcl}{passthrough_row})"
+        cell = ws.cell(current_row, total_col)
+        if self.has_gsa:
+            cell.value = f"={sub_with_handling}*{self._ir_ref(self.IR_FEE_SUB_ROW)}"
+        else:
+            prime_sub = f"({tcl}{dl_row}+{tcl}{fringe_row}+{tcl}{oh_row}+{tcl}{ga_labor_row})"
             cell.value = (
                 f"={prime_sub}*{self._ir_ref(self.IR_FEE_LABOR_ROW)}"
                 f"+{sub_with_handling}*{self._ir_ref(self.IR_FEE_SUB_ROW)}"
             )
-            cell.number_format = self.CURRENCY_FORMAT
-            cell.border = self.THIN_BORDER
-        tcl = get_column_letter(total_col)
-        prime_sub = f"({tcl}{dl_row}+{tcl}{fringe_row}+{tcl}{oh_row}+{tcl}{ga_labor_row})"
-        sub_with_handling = f"({tcl}{sub_row}+{tcl}{passthrough_row})"
-        cell = ws.cell(current_row, total_col)
-        cell.value = (
-            f"={prime_sub}*{self._ir_ref(self.IR_FEE_LABOR_ROW)}"
-            f"+{sub_with_handling}*{self._ir_ref(self.IR_FEE_SUB_ROW)}"
-        )
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
@@ -618,17 +678,17 @@ class ExcelGenerator:
 
         # Column headers row
         header_row = 10
-        headers = ["Labor Category", "Site", "Location", "GSA Discount"]
+        headers = ["Labor Category", "Site", "Location"]
+        if self.has_gsa:
+            headers.append("GSA Discount")
+            ws.column_dimensions['D'].width = 14
         for idx, header in enumerate(headers):
             cell = ws.cell(header_row, 1 + idx)
             cell.value = header
             self._style_header_cell(cell)
 
-        # D: GSA Discount
-        ws.column_dimensions['D'].width = 14
-
-        # For each period: Hours, Rate, Dollars — start at col 5 (E) due to discount col
-        col = 5
+        # For each period: Hours, Rate, Dollars — start at pld_year_start
+        col = self.pld_year_start
         for year in range(1, self.total_years + 1):
             period_label = self._get_period_label(year)
 
@@ -678,12 +738,13 @@ class ExcelGenerator:
             ws.cell(current_row, 3, position.get('location', ''))
             ws.cell(current_row, 3).border = self.THIN_BORDER
 
-            # Col D: GSA Discount (only for GSA positions)
-            discount_cell = ws.cell(current_row, 4)
-            if (position.get('wage_source') or '').lower() == 'gsa':
-                discount_cell.value = position.get('gsa_discount_rate', 0.0) or 0.0
-                discount_cell.number_format = self.PERCENT_FORMAT
-            discount_cell.border = self.THIN_BORDER
+            # Col D: GSA Discount — only written when proposal has GSA positions
+            if self.has_gsa:
+                discount_cell = ws.cell(current_row, 4)
+                if (position.get('wage_source') or '').lower() == 'gsa':
+                    discount_cell.value = position.get('gsa_discount_rate', 0.0) or 0.0
+                    discount_cell.number_format = self.PERCENT_FORMAT
+                discount_cell.border = self.THIN_BORDER
 
             # Calculate position data for each year
             # Use appropriate calculator based on wage source
@@ -705,7 +766,7 @@ class ExcelGenerator:
                     total_years=self.total_years
                 )
 
-            col = 5  # Year cols start at E due to discount col at D
+            col = self.pld_year_start
             hours_cells = []
             dollars_cells = []
 
@@ -730,33 +791,29 @@ class ExcelGenerator:
                 # BLS yr N: escalate from year 1 rate cell via IR escalation formulas
                 rate_col = col
                 cell = ws.cell(current_row, col)
-                # year1 rate col = col 6 = F  (3*1+3, since year cols now start at 5)
-                year1_rate_col = get_column_letter(3 * 1 + 3)
+                # year1 rate col = pld_year_start + 1
+                year1_rate_col = get_column_letter(self.pld_year_start + 1)
                 if (position.get('wage_source') or '').lower() == 'gsa':
                     bls_row = position.get('bls_analysis_row')
                     if bls_row:
-                        # BLS Analysis col L = yr1, M = yr2, N = yr3, ...
-                        bls_col = get_column_letter(12 + year - 1)
+                        # GSA: store fully-loaded rate × (1-discount) directly — no burden division
+                        bls_col = get_column_letter(11 + year - 1)
                         cell.value = (
-                            f"='BLS Analysis'!${bls_col}${bls_row}*(1-$D{current_row})"
-                            f"/(1+{self._ir_ref(self.IR_FRINGE_ROW)})"
-                            f"/(1+{self._ir_ref(self.IR_OH_ONSITE_ROW)})"
-                            f"/(1+{self._ir_ref(self.IR_GA_ROW)})"
-                            f"/(1+{self._ir_ref(self.IR_FEE_LABOR_ROW)})"
+                            f"='{self.analysis_sheet_name}'!${bls_col}${bls_row}*(1-$D{current_row})"
                         )
                     else:
                         cell.value = year_data.get('rate', 0)
                 elif year == 1:
                     if self.project_data.get('wage_data'):
-                        hours_col_letter = get_column_letter(hours_col)
                         bls_row = position.get('bls_analysis_row')
+                        bls_wage_col = 'K' if self.has_gsa else 'L'
                         if bls_row:
-                            cell.value = f"='BLS Analysis'!$L${bls_row}/{hours_col_letter}{current_row}"
+                            cell.value = f"='{self.analysis_sheet_name}'!${bls_wage_col}${bls_row}/{self.standard_fte_hours}"
                         else:
                             cell.value = (
-                                f"=INDEX('BLS Analysis'!$L:$L,"
-                                f"MATCH(A{current_row},'BLS Analysis'!$A:$A,0))"
-                                f"/{hours_col_letter}{current_row}"
+                                f"=INDEX('{self.analysis_sheet_name}'!${bls_wage_col}:${bls_wage_col},"
+                                f"MATCH(A{current_row},'{self.analysis_sheet_name}'!$A:$A,0))"
+                                f"/{self.standard_fte_hours}"
                             )
                     else:
                         cell.value = year_data.get('dl_rate', 0)
@@ -796,7 +853,7 @@ class ExcelGenerator:
             ws.cell(current_row, 1).font = self.BOLD_FONT
             ws.cell(current_row, 1).border = self.THIN_BORDER
 
-            col = 5
+            col = self.pld_year_start
             for year in range(1, self.total_years + 1):
                 # Skip Hours column in sum (just dollars)
                 col += 1  # Hours
@@ -817,211 +874,171 @@ class ExcelGenerator:
             cell.border = self.THIN_BORDER
             cell.font = self.BOLD_FONT
 
-            # Store the Total Direct Labor row for FBLR breakdown references
             total_direct_labor_row = current_row
             current_row += 1
 
-            # Add FBLR breakdown rows (matching template format)
-            # Fringe Benefits row
-            fringe_row = current_row
-            ws.cell(current_row, 1, "Fringe Benefits")
-            ws.cell(current_row, 1).font = self.BOLD_FONT
-            ws.cell(current_row, 1).border = self.THIN_BORDER
-
-            col = 5
-            for year in range(1, self.total_years + 1):
-                col += 1  # Hours (skip)
-
-                # Rate column - reference from Indirect Rate sheet
-                rate_cell = ws.cell(current_row, col)
-                rate_cell.value = "='Indirect Rate'!B9"  # Fringe rate (column B, row 9)
-                rate_cell.number_format = self.PERCENT_FORMAT
-                rate_cell.border = self.THIN_BORDER
-                rate_col = col
-                col += 1
-
-                # Dollars column - use rate cell reference
-                dl_cell = f"{get_column_letter(col)}{total_direct_labor_row}"
-                rate_ref = f"{get_column_letter(rate_col)}{current_row}"
-                cell = ws.cell(current_row, col)
-                cell.value = f"={dl_cell}*{rate_ref}"
-                cell.number_format = self.CURRENCY_FORMAT
-                cell.border = self.THIN_BORDER
-                col += 1
-
-            # Total Dollars
-            cell = ws.cell(current_row, total_dollars_col)
-            cell.value = f"={get_column_letter(total_dollars_col)}{total_direct_labor_row}*'Indirect Rate'!B9"
-            cell.number_format = self.CURRENCY_FORMAT
-            cell.border = self.THIN_BORDER
-            cell.font = self.BOLD_FONT
-            current_row += 1
-
-            # Labor Overhead row
-            oh_row = current_row
-            ws.cell(current_row, 1, "Labor Overhead")
-            ws.cell(current_row, 1).font = self.BOLD_FONT
-            ws.cell(current_row, 1).border = self.THIN_BORDER
-
-            col = 5
-            for year in range(1, self.total_years + 1):
-                col += 1  # Hours (skip)
-
-                # Rate column - reference from Indirect Rate sheet (Onsite OH)
-                rate_cell = ws.cell(current_row, col)
-                rate_cell.value = "='Indirect Rate'!B10"  # Onsite Overhead rate (column B, row 10)
-                rate_cell.number_format = self.PERCENT_FORMAT
-                rate_cell.border = self.THIN_BORDER
-                rate_col = col
-                col += 1
-
-                # Dollars column - use rate cell reference
-                col_letter = get_column_letter(col)
-                rate_ref = f"{get_column_letter(rate_col)}{current_row}"
-                cell = ws.cell(current_row, col)
-                cell.value = f"=({col_letter}{total_direct_labor_row}+{col_letter}{fringe_row})*{rate_ref}"
-                cell.number_format = self.CURRENCY_FORMAT
-                cell.border = self.THIN_BORDER
-                col += 1
-
-            # Total Dollars
-            total_col_letter = get_column_letter(total_dollars_col)
-            cell = ws.cell(current_row, total_dollars_col)
-            cell.value = f"=({total_col_letter}{total_direct_labor_row}+{total_col_letter}{fringe_row})*'Indirect Rate'!B10"
-            cell.number_format = self.CURRENCY_FORMAT
-            cell.border = self.THIN_BORDER
-            cell.font = self.BOLD_FONT
-            current_row += 1
-
-            # G&A row
-            ga_row = current_row
-            ws.cell(current_row, 1, "General & Administrative (Labor)")
-            ws.cell(current_row, 1).font = self.BOLD_FONT
-            ws.cell(current_row, 1).border = self.THIN_BORDER
-
-            col = 5
-            for year in range(1, self.total_years + 1):
-                col += 1  # Hours (skip)
-
-                # Rate column - reference from Indirect Rate sheet
-                rate_cell = ws.cell(current_row, col)
-                rate_cell.value = "='Indirect Rate'!B12"  # G&A rate (column B, row 12)
-                rate_cell.number_format = self.PERCENT_FORMAT
-                rate_cell.border = self.THIN_BORDER
-                rate_col = col
-                col += 1
-
-                # Dollars column - use rate cell reference
-                col_letter = get_column_letter(col)
-                rate_ref = f"{get_column_letter(rate_col)}{current_row}"
-                cell = ws.cell(current_row, col)
-                cell.value = f"=({col_letter}{total_direct_labor_row}+{col_letter}{fringe_row}+{col_letter}{oh_row})*{rate_ref}"
-                cell.number_format = self.CURRENCY_FORMAT
-                cell.border = self.THIN_BORDER
-                col += 1
-
-            # Total Dollars
-            total_col_letter = get_column_letter(total_dollars_col)
-            cell = ws.cell(current_row, total_dollars_col)
-            cell.value = f"=({total_col_letter}{total_direct_labor_row}+{total_col_letter}{fringe_row}+{total_col_letter}{oh_row})*'Indirect Rate'!B12"
-            cell.number_format = self.CURRENCY_FORMAT
-            cell.border = self.THIN_BORDER
-            cell.font = self.BOLD_FONT
-            current_row += 1
-
-            # Subtotal row (before fee)
-            subtotal_row = current_row
-            ws.cell(current_row, 1, "Subtotal")
-            ws.cell(current_row, 1).font = self.BOLD_FONT
-            ws.cell(current_row, 1).border = self.THIN_BORDER
-
-            col = 5
-            for year in range(1, self.total_years + 1):
-                col += 1  # Hours
-                col += 1  # Rate
-                # Dollars column
-                col_letter = get_column_letter(col)
-                cell = ws.cell(current_row, col)
-                cell.value = f"={col_letter}{total_direct_labor_row}+{col_letter}{fringe_row}+{col_letter}{oh_row}+{col_letter}{ga_row}"
+            if self.has_gsa:
+                # GSA: fully-loaded rate stored directly — no Fringe/OH/G&A/Fee breakdown needed
+                ws.cell(total_direct_labor_row, 1, "Total Prime Labor")
+                total_prime_labor_row = total_direct_labor_row
+            else:
+                # BLS: Fringe / OH / G&A / Subtotal / Fee / Total Prime Labor rows
+                fringe_row = current_row
+                ws.cell(current_row, 1, "Fringe Benefits")
+                ws.cell(current_row, 1).font = self.BOLD_FONT
+                ws.cell(current_row, 1).border = self.THIN_BORDER
+                col = self.pld_year_start
+                for year in range(1, self.total_years + 1):
+                    col += 1
+                    rate_cell = ws.cell(current_row, col)
+                    rate_cell.value = "='Indirect Rate'!B9"
+                    rate_cell.number_format = self.PERCENT_FORMAT
+                    rate_cell.border = self.THIN_BORDER
+                    rate_col = col
+                    col += 1
+                    dl_cell = f"{get_column_letter(col)}{total_direct_labor_row}"
+                    cell = ws.cell(current_row, col)
+                    cell.value = f"={dl_cell}*{get_column_letter(rate_col)}{current_row}"
+                    cell.number_format = self.CURRENCY_FORMAT
+                    cell.border = self.THIN_BORDER
+                    col += 1
+                cell = ws.cell(current_row, total_dollars_col)
+                cell.value = f"={get_column_letter(total_dollars_col)}{total_direct_labor_row}*'Indirect Rate'!B9"
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 cell.font = self.BOLD_FONT
-                col += 1
+                current_row += 1
 
-            # Total Dollars
-            total_col_letter = get_column_letter(total_dollars_col)
-            cell = ws.cell(current_row, total_dollars_col)
-            cell.value = f"={total_col_letter}{total_direct_labor_row}+{total_col_letter}{fringe_row}+{total_col_letter}{oh_row}+{total_col_letter}{ga_row}"
-            cell.number_format = self.CURRENCY_FORMAT
-            cell.border = self.THIN_BORDER
-            cell.font = self.BOLD_FONT
-            current_row += 1
-
-            # Fee row
-            fee_row = current_row
-            ws.cell(current_row, 1, "Fee")
-            ws.cell(current_row, 1).font = self.BOLD_FONT
-            ws.cell(current_row, 1).border = self.THIN_BORDER
-
-            col = 5
-            for year in range(1, self.total_years + 1):
-                col += 1  # Hours (skip)
-
-                # Rate column - reference from Indirect Rate sheet
-                rate_cell = ws.cell(current_row, col)
-                rate_cell.value = "='Indirect Rate'!B14"  # Fee on Labor rate (column B, row 14)
-                rate_cell.number_format = self.PERCENT_FORMAT
-                rate_cell.border = self.THIN_BORDER
-                rate_col = col
-                col += 1
-
-                # Dollars column - use rate cell reference
-                col_letter = get_column_letter(col)
-                rate_ref = f"{get_column_letter(rate_col)}{current_row}"
-                cell = ws.cell(current_row, col)
-                cell.value = f"={col_letter}{subtotal_row}*{rate_ref}"
-                cell.number_format = self.CURRENCY_FORMAT
-                cell.border = self.THIN_BORDER
-                col += 1
-
-            # Total Dollars
-            total_col_letter = get_column_letter(total_dollars_col)
-            cell = ws.cell(current_row, total_dollars_col)
-            cell.value = f"={total_col_letter}{subtotal_row}*'Indirect Rate'!B14"
-            cell.number_format = self.CURRENCY_FORMAT
-            cell.border = self.THIN_BORDER
-            cell.font = self.BOLD_FONT
-            current_row += 1
-
-            # Total Prime Labor row
-            ws.cell(current_row, 1, "Total Prime Labor")
-            ws.cell(current_row, 1).font = self.BOLD_FONT
-            ws.cell(current_row, 1).border = self.THIN_BORDER
-
-            col = 5
-            for year in range(1, self.total_years + 1):
-                col += 1  # Hours
-                col += 1  # Rate
-                # Dollars column
-                col_letter = get_column_letter(col)
-                cell = ws.cell(current_row, col)
-                cell.value = f"={col_letter}{subtotal_row}+{col_letter}{fee_row}"
+                oh_row = current_row
+                ws.cell(current_row, 1, "Labor Overhead")
+                ws.cell(current_row, 1).font = self.BOLD_FONT
+                ws.cell(current_row, 1).border = self.THIN_BORDER
+                col = self.pld_year_start
+                for year in range(1, self.total_years + 1):
+                    col += 1
+                    rate_cell = ws.cell(current_row, col)
+                    rate_cell.value = "='Indirect Rate'!B10"
+                    rate_cell.number_format = self.PERCENT_FORMAT
+                    rate_cell.border = self.THIN_BORDER
+                    rate_col = col
+                    col += 1
+                    cl = get_column_letter(col)
+                    cell = ws.cell(current_row, col)
+                    cell.value = f"=({cl}{total_direct_labor_row}+{cl}{fringe_row})*{get_column_letter(rate_col)}{current_row}"
+                    cell.number_format = self.CURRENCY_FORMAT
+                    cell.border = self.THIN_BORDER
+                    col += 1
+                tcl = get_column_letter(total_dollars_col)
+                cell = ws.cell(current_row, total_dollars_col)
+                cell.value = f"=({tcl}{total_direct_labor_row}+{tcl}{fringe_row})*'Indirect Rate'!B10"
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 cell.font = self.BOLD_FONT
-                col += 1
+                current_row += 1
 
-            # Total Dollars
-            total_col_letter = get_column_letter(total_dollars_col)
-            cell = ws.cell(current_row, total_dollars_col)
-            cell.value = f"={total_col_letter}{subtotal_row}+{total_col_letter}{fee_row}"
-            cell.number_format = self.CURRENCY_FORMAT
-            cell.border = self.THIN_BORDER
-            cell.font = self.BOLD_FONT
+                ga_row = current_row
+                ws.cell(current_row, 1, "General & Administrative (Labor)")
+                ws.cell(current_row, 1).font = self.BOLD_FONT
+                ws.cell(current_row, 1).border = self.THIN_BORDER
+                col = self.pld_year_start
+                for year in range(1, self.total_years + 1):
+                    col += 1
+                    rate_cell = ws.cell(current_row, col)
+                    rate_cell.value = "='Indirect Rate'!B12"
+                    rate_cell.number_format = self.PERCENT_FORMAT
+                    rate_cell.border = self.THIN_BORDER
+                    rate_col = col
+                    col += 1
+                    cl = get_column_letter(col)
+                    cell = ws.cell(current_row, col)
+                    cell.value = f"=({cl}{total_direct_labor_row}+{cl}{fringe_row}+{cl}{oh_row})*{get_column_letter(rate_col)}{current_row}"
+                    cell.number_format = self.CURRENCY_FORMAT
+                    cell.border = self.THIN_BORDER
+                    col += 1
+                tcl = get_column_letter(total_dollars_col)
+                cell = ws.cell(current_row, total_dollars_col)
+                cell.value = f"=({tcl}{total_direct_labor_row}+{tcl}{fringe_row}+{tcl}{oh_row})*'Indirect Rate'!B12"
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+                cell.font = self.BOLD_FONT
+                current_row += 1
+
+                subtotal_row = current_row
+                ws.cell(current_row, 1, "Subtotal")
+                ws.cell(current_row, 1).font = self.BOLD_FONT
+                ws.cell(current_row, 1).border = self.THIN_BORDER
+                col = self.pld_year_start
+                for year in range(1, self.total_years + 1):
+                    col += 1
+                    col += 1
+                    cl = get_column_letter(col)
+                    cell = ws.cell(current_row, col)
+                    cell.value = f"={cl}{total_direct_labor_row}+{cl}{fringe_row}+{cl}{oh_row}+{cl}{ga_row}"
+                    cell.number_format = self.CURRENCY_FORMAT
+                    cell.border = self.THIN_BORDER
+                    cell.font = self.BOLD_FONT
+                    col += 1
+                tcl = get_column_letter(total_dollars_col)
+                cell = ws.cell(current_row, total_dollars_col)
+                cell.value = f"={tcl}{total_direct_labor_row}+{tcl}{fringe_row}+{tcl}{oh_row}+{tcl}{ga_row}"
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+                cell.font = self.BOLD_FONT
+                current_row += 1
+
+                fee_row = current_row
+                ws.cell(current_row, 1, "Fee")
+                ws.cell(current_row, 1).font = self.BOLD_FONT
+                ws.cell(current_row, 1).border = self.THIN_BORDER
+                col = self.pld_year_start
+                for year in range(1, self.total_years + 1):
+                    col += 1
+                    rate_cell = ws.cell(current_row, col)
+                    rate_cell.value = "='Indirect Rate'!B14"
+                    rate_cell.number_format = self.PERCENT_FORMAT
+                    rate_cell.border = self.THIN_BORDER
+                    rate_col = col
+                    col += 1
+                    cl = get_column_letter(col)
+                    cell = ws.cell(current_row, col)
+                    cell.value = f"={cl}{subtotal_row}*{get_column_letter(rate_col)}{current_row}"
+                    cell.number_format = self.CURRENCY_FORMAT
+                    cell.border = self.THIN_BORDER
+                    col += 1
+                tcl = get_column_letter(total_dollars_col)
+                cell = ws.cell(current_row, total_dollars_col)
+                cell.value = f"={tcl}{subtotal_row}*'Indirect Rate'!B14"
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+                cell.font = self.BOLD_FONT
+                current_row += 1
+
+                total_prime_labor_row = current_row
+                ws.cell(current_row, 1, "Total Prime Labor")
+                ws.cell(current_row, 1).font = self.BOLD_FONT
+                ws.cell(current_row, 1).border = self.THIN_BORDER
+                col = self.pld_year_start
+                for year in range(1, self.total_years + 1):
+                    col += 1
+                    col += 1
+                    cl = get_column_letter(col)
+                    cell = ws.cell(current_row, col)
+                    cell.value = f"={cl}{subtotal_row}+{cl}{fee_row}"
+                    cell.number_format = self.CURRENCY_FORMAT
+                    cell.border = self.THIN_BORDER
+                    cell.font = self.BOLD_FONT
+                    col += 1
+                tcl = get_column_letter(total_dollars_col)
+                cell = ws.cell(current_row, total_dollars_col)
+                cell.value = f"={tcl}{subtotal_row}+{tcl}{fee_row}"
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+                cell.font = self.BOLD_FONT
 
         # Return row/col info so CE Summary and FLLR can reference this sheet
         return {
             'total_dl_row': total_direct_labor_row if positions else None,
+            'total_prime_labor_row': total_prime_labor_row if positions else None,
             'total_dollars_col': total_dollars_col,
         }
 
@@ -1234,7 +1251,7 @@ class ExcelGenerator:
             col = 4
             for year in range(1, self.total_years + 1):
                 # PLD rate column for year N = 3N+3 (col D is GSA Discount)
-                pld_rate_col = get_column_letter(3 * year + 3)
+                pld_rate_col = get_column_letter(3 * year + self.pld_year_start - 2)
                 pld_ref = f"'Prime Labor Detail'!{pld_rate_col}{pld_row}"
 
                 cell = ws.cell(current_row, col)
@@ -2029,71 +2046,85 @@ class ExcelGenerator:
 
     def _create_bls_analysis_sheet(self):
         """Create the BLS Analysis sheet showing all positions with wage percentiles."""
-        ws = self.wb.create_sheet("BLS Analysis")
+        ws = self.wb.create_sheet(self.analysis_sheet_name)
 
         # Column widths
-        # A: Labor Category (was B)
-        ws.column_dimensions['A'].width = 30
-        # B: Location (was C)
-        ws.column_dimensions['B'].width = 20
-        # C: Description (was D)
-        ws.column_dimensions['C'].width = 50
-        # D: Source (was E)
-        ws.column_dimensions['D'].width = 10
-        # E: SOC Code (was F)
-        ws.column_dimensions['E'].width = 15
-        # F: SOC Title (was G)
-        ws.column_dimensions['F'].width = 35
-        # G: 10th Percentile (was H)
-        ws.column_dimensions['G'].width = 15
-        # H: 25th Percentile (was I)
-        ws.column_dimensions['H'].width = 15
-        # I: 50th Percentile (was J)
-        ws.column_dimensions['I'].width = 15
-        # J: 75th Percentile (was K)
-        ws.column_dimensions['J'].width = 15
-        # K: 90th Percentile (was L)
-        ws.column_dimensions['K'].width = 15
-        # L: Selected Wage (was M)
-        ws.column_dimensions['L'].width = 18
+        ws.column_dimensions['A'].width = 30  # Labor Category
+        ws.column_dimensions['B'].width = 20  # Location
+        ws.column_dimensions['C'].width = 50  # Description
+        ws.column_dimensions['D'].width = 10  # Source
+        if self.has_gsa:
+            # No SOC Code col — SOC Title shifts to E, Selected Wage at K
+            ws.column_dimensions['E'].width = 35  # SOC Title / GSA Labor Category
+            # Hide empty gap columns F–J (old percentile slots)
+            for col_letter in ['F', 'G', 'H', 'I', 'J']:
+                ws.column_dimensions[col_letter].hidden = True
+            ws.column_dimensions['K'].width = 18  # Selected Wage/Rate
+        else:
+            ws.column_dimensions['E'].width = 15  # SOC Code
+            ws.column_dimensions['F'].width = 35  # SOC Title
+            ws.column_dimensions['G'].width = 15  # 10th Percentile
+            ws.column_dimensions['H'].width = 15  # 25th Percentile
+            ws.column_dimensions['I'].width = 15  # 50th Percentile
+            ws.column_dimensions['J'].width = 15  # 75th Percentile
+            ws.column_dimensions['K'].width = 15  # 90th Percentile
+            ws.column_dimensions['L'].width = 18  # Selected Wage/Rate
 
         # Apply standard header format (Rows 1-5)
         self._apply_standard_header(ws, start_col=1)
 
         # Additional title row
-        ws.cell(7, 1, "Wage Data - All Positions with Percentiles")
+        title_text = "Wage Data - All Positions" if self.has_gsa else "Wage Data - All Positions with Percentiles"
+        ws.cell(7, 1, title_text)
         ws.cell(7, 1).font = self.BOLD_FONT
 
         # Column headers
         header_row = 8
-        headers = [
-            "Labor Category",
-            "Location",
-            "Description",
-            "Source",
-            "SOC Code",
-            "SOC Title / GSA Labor Category",
-            "10th Percentile",
-            "25th Percentile",
-            "50th Percentile\n(Median)",
-            "75th Percentile",
-            "90th Percentile",
-            "Selected Wage/Rate"
-        ]
 
-        for idx, header in enumerate(headers):
+        # Fixed headers A–D (always present)
+        for idx, header in enumerate(["Labor Category", "Location", "Description", "Source"]):
             cell = ws.cell(header_row, 1 + idx)
             cell.value = header
             self._style_header_cell(cell)
             cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
-        # GSA year 2..N rate column headers (cols M, N, O, ...)
-        for yr in range(2, self.total_years + 1):
-            yr_col_idx = 12 + yr - 1
-            cell = ws.cell(header_row, yr_col_idx, f"GSA Rate\nYear {yr}")
+        if self.has_gsa:
+            # GSA: no SOC Code col — SOC Title at col 5 (E), Selected Wage at col 11 (K)
+            cell = ws.cell(header_row, 5, "SOC Title / GSA Labor Category")
             self._style_header_cell(cell)
             cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
-            ws.column_dimensions[get_column_letter(yr_col_idx)].width = 14
+
+            cell = ws.cell(header_row, 11, "Selected Wage/Rate")
+            self._style_header_cell(cell)
+            cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
+            # GSA Rate Year 2..N at cols 12, 13, ... (L, M, ...)
+            for yr in range(2, self.total_years + 1):
+                yr_col_idx = 11 + yr - 1
+                cell = ws.cell(header_row, yr_col_idx, f"GSA Rate\nYear {yr}")
+                self._style_header_cell(cell)
+                cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+                ws.column_dimensions[get_column_letter(yr_col_idx)].width = 14
+        else:
+            # BLS: SOC Code at col 5 (E), SOC Title at col 6 (F), percentiles G–K, Selected Wage at L
+            for idx, header in enumerate(["SOC Code", "SOC Title / GSA Labor Category"]):
+                cell = ws.cell(header_row, 5 + idx)
+                cell.value = header
+                self._style_header_cell(cell)
+                cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
+            for idx, header in enumerate([
+                "10th Percentile", "25th Percentile", "50th Percentile\n(Median)",
+                "75th Percentile", "90th Percentile"
+            ]):
+                cell = ws.cell(header_row, 7 + idx)
+                cell.value = header
+                self._style_header_cell(cell)
+                cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
+
+            cell = ws.cell(header_row, 12, "Selected Wage/Rate")
+            self._style_header_cell(cell)
+            cell.alignment = Alignment(horizontal='center', vertical='center', wrap_text=True)
 
         # Data rows
         current_row = header_row + 1
@@ -2133,13 +2164,11 @@ class ExcelGenerator:
                 cell.font = Font(bold=True, color="7C3AED")
             col += 1
 
-            # SOC Code (BLS only)
-            if wage_source == 'BLS':
+            # SOC Code (BLS proposals only — GSA proposals skip this column entirely)
+            if not self.has_gsa:
                 cell = ws.cell(current_row, col, format_soc_code(pos.get('soc_code', '')))
-            else:
-                cell = ws.cell(current_row, col, '-')
-            cell.border = self.THIN_BORDER
-            col += 1
+                cell.border = self.THIN_BORDER
+                col += 1
 
             # SOC Title / GSA Labor Category
             if wage_source == 'GSA':
@@ -2230,16 +2259,12 @@ class ExcelGenerator:
             cell.fill = PatternFill(start_color="DBEAFE", end_color="DBEAFE", fill_type="solid")
             cell.font = Font(bold=True, color="1E40AF")
 
-            # GSA year 2..N catalog rates — cols M(13), N(14), O(15), ...
-            # gsa_rates_by_year is keyed by GSA schedule year; gsa_current_year tells us
-            # which schedule year maps to proposal year 1.  So proposal year N corresponds
-            # to schedule year (gsa_current_year + N - 1).
-            # Use the actual rate when available, else escalate from the previous col.
-            if wage_source == 'GSA':
+            # GSA year 2..N catalog rates — only for GSA proposals
+            if self.has_gsa and wage_source == 'GSA':
                 gsa_rates = pos.get('gsa_rates_by_year', {})
                 gsa_current_year = pos.get('gsa_current_year', 1)
                 for yr in range(2, self.total_years + 1):
-                    yr_col_idx   = 12 + yr - 1          # L=12(yr1), M=13(yr2), N=14(yr3)...
+                    yr_col_idx   = 11 + yr - 1          # K=11(yr1), L=12(yr2), M=13(yr3)...
                     prev_col     = get_column_letter(yr_col_idx - 1)
                     yr_cell      = ws.cell(current_row, yr_col_idx)
                     schedule_yr  = gsa_current_year + yr - 1
