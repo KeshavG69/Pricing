@@ -1,7 +1,8 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useEffect, useRef } from 'react';
 import { usePricingStore } from '@/lib/stores/pricingStore';
+import { proposalsApi } from '@/lib/api/proposals';
 import { getEffectiveSalary, isGSAPosition, getGSARateForYear, reverseEngineerGSARate } from '@/lib/utils/salaryHelpers';
 import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 // Metric Card Component
@@ -62,6 +63,7 @@ function CostBreakdownBar({
 
 export default function OverviewTab() {
   const {
+    proposalId,
     positions,
     positionsAdvanced,
     advancedMode,
@@ -390,6 +392,26 @@ export default function OverviewTab() {
       grandTotal,
     };
   }, [advancedMode, aggregates, positionsAdvanced, positions, subcontractors, travel, odcs, surge, rates, escalationRates, advancedModeVersion]);
+
+  // Save total_cost to backend whenever grand total changes
+  const saveTotalCostTimer = useRef<NodeJS.Timeout | null>(null);
+  useEffect(() => {
+    if (!proposalId || !costMetrics.grandTotal) return;
+
+    if (saveTotalCostTimer.current) clearTimeout(saveTotalCostTimer.current);
+
+    saveTotalCostTimer.current = setTimeout(async () => {
+      try {
+        await proposalsApi.update(proposalId, { total_cost: costMetrics.grandTotal });
+      } catch (err) {
+        console.error('[OverviewTab] Failed to save total_cost:', err);
+      }
+    }, 1500);
+
+    return () => {
+      if (saveTotalCostTimer.current) clearTimeout(saveTotalCostTimer.current);
+    };
+  }, [costMetrics.grandTotal, proposalId]);
 
   // Calculate year-by-year breakdown
   const yearBreakdown = useMemo(() => {

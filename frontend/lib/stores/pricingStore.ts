@@ -2168,11 +2168,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         console.log('💾 Forcing immediate save to MongoDB...');
         try {
           // Calculate total cost
-          const positions = get().positions;
-          const totalCost = positions.reduce((sum, position) => {
-            const positionTotal = position.total_amount || 0;
-            return sum + positionTotal;
-          }, 0);
+          const totalCost = calculateGrandTotal();
 
           await proposalsApi.update(state.proposalId, {
             total_cost: totalCost,
@@ -2966,10 +2962,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
       if (state.proposalId) {
         try {
           // Calculate total cost
-          const totalCost = updatedPositions.reduce((sum, position) => {
-            const positionTotal = position.total_amount || 0;
-            return sum + positionTotal;
-          }, 0);
+          const totalCost = calculateGrandTotal();
 
           await proposalsApi.update(state.proposalId, {
             total_cost: totalCost,
@@ -3254,10 +3247,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
       try {
         // Calculate total cost from all positions
-        const totalCost = state.positions.reduce((sum, position) => {
-          const positionTotal = position.total_amount || 0;
-          return sum + positionTotal;
-        }, 0);
+        const totalCost = calculateGrandTotal();
 
         await proposalsApi.update(state.proposalId, {
           prime_contractor_name: state.primeContractorName,
