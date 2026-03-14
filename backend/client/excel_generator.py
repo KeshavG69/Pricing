@@ -614,12 +614,13 @@ class ExcelGenerator:
         ws.cell(current_row, 1).border = self.THIN_BORDER
         for period_idx in range(self.total_years):
             cl = get_column_letter(2 + period_idx)
-            sub_with_handling = f"({cl}{sub_row}+{cl}{passthrough_row})"
             cell = ws.cell(current_row, 2 + period_idx)
             if self.has_gsa:
-                cell.value = f"={sub_with_handling}*{self._ir_ref(self.IR_FEE_SUB_ROW)}"
+                # GSA: fee on raw sub only (matches UI: subcontractorTotal × sub_fee_rate)
+                cell.value = f"={cl}{sub_row}*{self._ir_ref(self.IR_FEE_SUB_ROW)}"
             else:
                 prime_sub = f"({cl}{dl_row}+{cl}{fringe_row}+{cl}{oh_row}+{cl}{ga_labor_row})"
+                sub_with_handling = f"({cl}{sub_row}+{cl}{passthrough_row})"
                 cell.value = (
                     f"={prime_sub}*{self._ir_ref(self.IR_FEE_LABOR_ROW)}"
                     f"+{sub_with_handling}*{self._ir_ref(self.IR_FEE_SUB_ROW)}"
@@ -627,12 +628,13 @@ class ExcelGenerator:
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
         tcl = get_column_letter(total_col)
-        sub_with_handling = f"({tcl}{sub_row}+{tcl}{passthrough_row})"
         cell = ws.cell(current_row, total_col)
         if self.has_gsa:
-            cell.value = f"={sub_with_handling}*{self._ir_ref(self.IR_FEE_SUB_ROW)}"
+            # GSA: fee on raw sub only (matches UI: subcontractorTotal × sub_fee_rate)
+            cell.value = f"={tcl}{sub_row}*{self._ir_ref(self.IR_FEE_SUB_ROW)}"
         else:
             prime_sub = f"({tcl}{dl_row}+{tcl}{fringe_row}+{tcl}{oh_row}+{tcl}{ga_labor_row})"
+            sub_with_handling = f"({tcl}{sub_row}+{tcl}{passthrough_row})"
             cell.value = (
                 f"={prime_sub}*{self._ir_ref(self.IR_FEE_LABOR_ROW)}"
                 f"+{sub_with_handling}*{self._ir_ref(self.IR_FEE_SUB_ROW)}"
