@@ -239,15 +239,9 @@ async def generate_excel_from_proposal(
                                 else:
                                     rate = gsa_rates_by_year.get(str(min(available_years))) or 0.0
 
-                        # Divide by markupDivisor to match the UI SubcontractorSection formula:
-                        #   effectiveRate = (gsaYearRate * (1 - discountRate)) / markupDivisor
-                        # The CE Summary then adds passthrough + fee on top of this rate,
-                        # so the grand total correctly equals gsa_rate * (1 - discount) * hours.
-                        smh = project_config['passthrough_rates']['smh']
-                        ga_pt = project_config['passthrough_rates']['ga']
-                        sub_fee = project_config['fee_rates']['sub_labor']
-                        markup_divisor = 1 + smh + ga_pt + sub_fee
-                        escalated_rate = (rate * (1 - discount_rate)) / markup_divisor if markup_divisor > 0 else 0
+                        # CE Summary shows raw cost only (no passthrough/fee rows),
+                        # so store the discounted rate directly.
+                        escalated_rate = rate * (1 - discount_rate)
                     else:
                         # Non-GSA sub: escalate frozen base rate the normal way
                         base_rate = pos.get('rate') or 0
