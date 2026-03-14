@@ -383,6 +383,7 @@ export interface SubcontractorPosition {
   labor_category: string;
   rate: number;
   original_base_rate?: number; // Immutable rate at time of conversion
+  rates_per_year?: Record<string, number>; // Per-year back-calculated rates (GSA positions only)
   hours_per_year: Record<string, number>;
   ot_hours_per_year?: Record<string, number>; // Overtime hours per year
   original_position_id?: string; // Links to prime position ID this was converted from

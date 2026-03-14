@@ -207,15 +207,38 @@ export const SubcontractorSection = () => {
     // Get OT multiplier from rates (default 1.5x)
     const otMultiplier = rates.ot_multiplier || 1.5;
 
+    const markupDivisorForDisplay = 1 + (rates.smh || 0) + (rates.ga_passthrough || 0) + (rates.sub_fee || 0);
+
     return selectedSub.positions.map((pos, index) => {
-      const baseRate = pos.rate;
-      const originalBaseRate = pos.original_base_rate || pos.rate; // Fallback for old data
+      // For GSA-sourced sub positions, look up the original prime position
+      const origPrimePos = pos.original_position_id
+        ? positions.find(p => p.id === pos.original_position_id)
+        : null;
+      const isGSASub = origPrimePos ? isGSAPosition(origPrimePos) : false;
+
+      // For GSA subs, use the dynamically-computed Year 1 rate as baseRate
+      // (pos.rate may be stale from old assignment code)
+      const baseRate = isGSASub && origPrimePos
+        ? (getGSARateForYear(origPrimePos, 1, escalationRates) * (1 - (origPrimePos.gsa_discount_rate || 0))) / markupDivisorForDisplay
+        : pos.rate;
+      // For GSA subs, original rate = base rate (always derived from schedule, no manual override concept)
+      // For BLS subs, original rate shows the initial rate at conversion (for manual edit tracking)
+      const originalBaseRate = isGSASub ? baseRate : (pos.original_base_rate || pos.rate);
+
       const yearData: Record<string, YearData> = {};
 
-      // Calculate per-year data with escalation
+      // Calculate per-year data
       for (let year = 1; year <= totalYears; year++) {
         const yearStr = year.toString();
-        const escalatedRate = getEscalatedRate(baseRate, year);
+        let escalatedRate: number;
+        if (isGSASub && origPrimePos) {
+          // GSA sub: derive from prime position's actual GSA schedule (robust against stale rates_per_year)
+          const gsaYearRate = getGSARateForYear(origPrimePos, year, escalationRates);
+          const discountRate = origPrimePos.gsa_discount_rate || 0;
+          escalatedRate = (gsaYearRate * (1 - discountRate)) / markupDivisorForDisplay;
+        } else {
+          escalatedRate = pos.rates_per_year?.[yearStr] ?? getEscalatedRate(baseRate, year);
+        }
         const hours = pos.hours_per_year[yearStr] || 0;
         const amount = escalatedRate * hours;
 
@@ -243,7 +266,7 @@ export const SubcontractorSection = () => {
         yearData,
       };
     });
-  }, [selectedSub, totalYears, escalationRates, getEscalatedRate, rates.ot_multiplier]);
+  }, [selectedSub, totalYears, escalationRates, getEscalatedRate, positions, rates, rates.ot_multiplier]);
 
   // Context menu handlers
   const handleContextMenu = useCallback((event: React.MouseEvent, row: SubcontractorGridRow) => {

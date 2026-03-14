@@ -225,26 +225,47 @@ export default function OverviewTab() {
     // Subcontractor costs with escalation (including OT)
     let subcontractorTotal = 0;
     const subOTMultiplier = rates.ot_multiplier || 1.5;
+    const markupDivisor = 1 + (rates.smh || 0) + (rates.ga_passthrough || 0) + (rates.sub_fee || 0);
 
     subcontractors.forEach((sub) => {
       sub.positions.forEach((pos) => {
+        // For GSA-sourced sub positions, look up the original prime position to get
+        // the actual per-year GSA rates (robust against stale/wrong rates_per_year keys)
+        const originalPrimePos = pos.original_position_id
+          ? positions.find(p => p.id === pos.original_position_id)
+          : null;
+        const isGSASub = originalPrimePos ? isGSAPosition(originalPrimePos) : false;
+
         Object.entries(pos.hours_per_year).forEach(([yearStr, hours]) => {
           const yearNum = parseInt(yearStr);
-          // Apply compound escalation
-          let escalatedRate = pos.rate;
-          for (let y = 1; y < yearNum; y++) {
-            const escKey = `${y}_to_${y + 1}`;
-            const escRate = escalationRates[escKey] || 0;
-            escalatedRate *= (1 + escRate);
+
+          let effectiveRate: number;
+          if (isGSASub && originalPrimePos) {
+            // GSA sub: derive rate from the original prime position's actual GSA schedule
+            // This is correct regardless of whether rates_per_year has the right keys
+            const gsaYearRate = getGSARateForYear(originalPrimePos, yearNum, escalationRates);
+            const discountRate = originalPrimePos.gsa_discount_rate || 0;
+            effectiveRate = (gsaYearRate * (1 - discountRate)) / markupDivisor;
+          } else if (pos.rates_per_year?.[yearStr] !== undefined) {
+            // Non-GSA sub with pre-computed rates (e.g. manually added sub positions)
+            effectiveRate = pos.rates_per_year[yearStr];
+          } else {
+            // BLS sub: escalate from base rate
+            effectiveRate = pos.rate;
+            for (let y = 1; y < yearNum; y++) {
+              const escKey = `${y}_to_${y + 1}`;
+              const escRate = escalationRates[escKey] || 0;
+              effectiveRate *= (1 + escRate);
+            }
           }
 
           // Regular hours cost
-          subcontractorTotal += escalatedRate * hours;
+          subcontractorTotal += effectiveRate * hours;
 
           // OT hours cost
           const otHours = pos.ot_hours_per_year?.[yearStr] || 0;
           if (otHours > 0) {
-            subcontractorTotal += escalatedRate * subOTMultiplier * otHours;
+            subcontractorTotal += effectiveRate * subOTMultiplier * otHours;
           }
         });
       });
@@ -575,17 +596,34 @@ export default function OverviewTab() {
     } // End of else block (Basic Mode year calculation)
 
     // Subcontractor by year with escalation (including OT)
+    const markupDivisor = 1 + (rates.smh || 0) + (rates.ga_passthrough || 0) + (rates.sub_fee || 0);
     subcontractors.forEach((sub) => {
       sub.positions.forEach((pos) => {
+        const origPrimePos = pos.original_position_id
+          ? positions.find(p => p.id === pos.original_position_id)
+          : null;
+        const isGSASubPos = origPrimePos ? isGSAPosition(origPrimePos) : false;
+
         Object.entries(pos.hours_per_year).forEach(([year, hours]) => {
           if (breakdown[year]) {
             const yearNum = parseInt(year);
-            // Apply compound escalation
-            let escalatedRate = pos.rate;
-            for (let y = 1; y < yearNum; y++) {
-              const escKey = `${y}_to_${y + 1}`;
-              const escRate = escalationRates[escKey] || 0;
-              escalatedRate *= (1 + escRate);
+            let escalatedRate: number;
+
+            if (isGSASubPos && origPrimePos) {
+              // GSA sub: derive from prime position's actual GSA schedule
+              const gsaYearRate = getGSARateForYear(origPrimePos, yearNum, escalationRates);
+              const discountRate = origPrimePos.gsa_discount_rate || 0;
+              escalatedRate = (gsaYearRate * (1 - discountRate)) / markupDivisor;
+            } else if (pos.rates_per_year?.[year] !== undefined) {
+              escalatedRate = pos.rates_per_year[year];
+            } else {
+              // BLS sub: escalate from base rate
+              escalatedRate = pos.rate;
+              for (let y = 1; y < yearNum; y++) {
+                const escKey = `${y}_to_${y + 1}`;
+                const escRate = escalationRates[escKey] || 0;
+                escalatedRate *= (1 + escRate);
+              }
             }
 
             // Regular hours cost

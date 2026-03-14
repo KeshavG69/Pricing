@@ -186,6 +186,11 @@ async def generate_excel_from_proposal(
             logger.error(f"Error building project data: {e}", exc_info=True)
             raise
 
+        # Build lookup of prime positions by id so GSA sub positions can re-derive
+        # their rates from the current gsa_rates_by_year + gsa_discount_rate instead
+        # of the frozen SubcontractorPosition.rate set at conversion time.
+        prime_positions_by_id = {p['id']: p for p in positions if p.get('id')}
+
         # Add subcontractor data
         logger.info(f"Processing {len(spreadsheet_data.get('subcontractors', []))} subcontractors")
         for sub in spreadsheet_data.get('subcontractors', []):
@@ -198,24 +203,63 @@ async def generate_excel_from_proposal(
                     'site': pos.get('site', 'Government'),
                 }
 
+                # Resolve prime position for GSA sub positions
+                original_position_id = pos.get('original_position_id')
+                prime_pos = prime_positions_by_id.get(original_position_id) if original_position_id else None
+                is_gsa_sub = prime_pos and (prime_pos.get('wage_source') or '').lower() == 'gsa'
+
                 # Add hours and rates per year
                 for year in range(1, project_config['total_years'] + 1):
                     year_key = str(year)
                     hours_per_year = pos.get('hours_per_year') or {}
                     hours = hours_per_year.get(year_key) or 0
 
-                    # Calculate escalated rate
-                    base_rate = pos.get('rate') or 0
-                    escalated_rate = base_rate
-                    try:
-                        for y in range(1, year):
-                            esc_key = f"{y}_to_{y + 1}"
-                            esc_rate = project_config['escalation_rates'].get(esc_key) or 0
-                            escalated_rate *= (1 + esc_rate)
-                    except Exception as e:
-                        logger.error(f"Error calculating escalated rate for year {year}: {e}")
-                        logger.error(f"base_rate: {base_rate}, escalated_rate: {escalated_rate}, esc_rate: {esc_rate}")
-                        raise
+                    if is_gsa_sub:
+                        # Re-derive rate from the prime position's current GSA schedule + discount.
+                        # This mirrors getGSARateForYear() in the frontend so the Excel export
+                        # always reflects the latest gsa_discount_rate, not the frozen pos.rate.
+                        gsa_rates_by_year = prime_pos.get('gsa_rates_by_year') or {}
+                        gsa_current_year = prime_pos.get('gsa_current_year') or 1
+                        discount_rate = prime_pos.get('gsa_discount_rate') or 0.0
+                        contract_year = gsa_current_year + (year - 1)
+                        rate = gsa_rates_by_year.get(str(contract_year)) or 0.0
+
+                        if not rate:
+                            available_years = sorted(
+                                int(y) for y in gsa_rates_by_year if y.isdigit()
+                            )
+                            if available_years:
+                                if contract_year > max(available_years):
+                                    # Compound-escalate from the last available contract year
+                                    rate = gsa_rates_by_year.get(str(max(available_years))) or 0.0
+                                    for cy in range(max(available_years), contract_year):
+                                        py = cy - gsa_current_year + 1
+                                        esc_key = f"{py}_to_{py + 1}"
+                                        rate *= (1 + (project_config['escalation_rates'].get(esc_key) or 0))
+                                else:
+                                    rate = gsa_rates_by_year.get(str(min(available_years))) or 0.0
+
+                        # Divide by markupDivisor to match the UI SubcontractorSection formula:
+                        #   effectiveRate = (gsaYearRate * (1 - discountRate)) / markupDivisor
+                        # The CE Summary then adds passthrough + fee on top of this rate,
+                        # so the grand total correctly equals gsa_rate * (1 - discount) * hours.
+                        smh = project_config['passthrough_rates']['smh']
+                        ga_pt = project_config['passthrough_rates']['ga']
+                        sub_fee = project_config['fee_rates']['sub_labor']
+                        markup_divisor = 1 + smh + ga_pt + sub_fee
+                        escalated_rate = (rate * (1 - discount_rate)) / markup_divisor if markup_divisor > 0 else 0
+                    else:
+                        # Non-GSA sub: escalate frozen base rate the normal way
+                        base_rate = pos.get('rate') or 0
+                        escalated_rate = base_rate
+                        try:
+                            for y in range(1, year):
+                                esc_key = f"{y}_to_{y + 1}"
+                                esc_rate = project_config['escalation_rates'].get(esc_key) or 0
+                                escalated_rate *= (1 + esc_rate)
+                        except Exception as e:
+                            logger.error(f"Error calculating escalated rate for year {year}: {e}")
+                            raise
 
                     labor_cat[f'year_{year}_hours'] = hours
                     labor_cat[f'year_{year}_rate'] = escalated_rate

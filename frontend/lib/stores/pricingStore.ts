@@ -233,6 +233,7 @@ const mapJobToPosition = (job: JobPosition, index: number): SpreadsheetPosition 
     gsa_title: job.gsa_title,
     gsa_rates_by_year: job.gsa_rates_by_year,
     gsa_current_year: job.gsa_current_year,
+    gsa_discount_rate: job.gsa_discount_rate,
     // Key position flag
     is_key_position: job.is_key_position,
     // Surge flag
@@ -344,26 +345,42 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
     // Calculate subcontractor costs with escalation
     let subTotal = 0;
+    const calcMarkupDivisor = 1 + (state.rates.smh || 0) + (state.rates.ga_passthrough || 0) + (state.rates.sub_fee || 0);
     state.subcontractors.forEach(sub => {
       sub.positions.forEach(pos => {
+        // For GSA-sourced sub positions, look up the original prime position
+        const origPrimePos = pos.original_position_id
+          ? state.positions.find(p => p.id === pos.original_position_id)
+          : null;
+        const isGSASubPos = origPrimePos ? isGSAPosition(origPrimePos) : false;
+
         Object.entries(pos.hours_per_year || {}).forEach(([year, hours]) => {
           const yearNum = parseInt(year, 10);
 
-          // Apply compound escalation
-          let escalationMultiplier = 1;
-          for (let y = 2; y <= yearNum; y++) {
-            const escalationKey = `${y - 1}_to_${y}` as keyof typeof state.escalationRates;
-            const escalationRate = state.escalationRates[escalationKey] || 0;
-            escalationMultiplier *= (1 + escalationRate);
+          let effectiveRate: number;
+          if (isGSASubPos && origPrimePos) {
+            // GSA sub: derive from prime position's actual GSA schedule
+            const gsaYearRate = getGSARateForYear(origPrimePos, yearNum, state.escalationRates);
+            const discountRate = origPrimePos.gsa_discount_rate || 0;
+            effectiveRate = (gsaYearRate * (1 - discountRate)) / calcMarkupDivisor;
+          } else if (pos.rates_per_year?.[year] !== undefined) {
+            effectiveRate = pos.rates_per_year[year];
+          } else {
+            let escalationMultiplier = 1;
+            for (let y = 2; y <= yearNum; y++) {
+              const escalationKey = `${y - 1}_to_${y}` as keyof typeof state.escalationRates;
+              const escalationRate = state.escalationRates[escalationKey] || 0;
+              escalationMultiplier *= (1 + escalationRate);
+            }
+            effectiveRate = pos.rate * escalationMultiplier;
           }
 
-          const escalatedRate = pos.rate * escalationMultiplier;
-          subTotal += hours * escalatedRate;
+          subTotal += hours * effectiveRate;
 
           // Add overtime if exists
           const otHours = (pos.ot_hours_per_year || {})[year] || 0;
           const otMultiplier = state.rates.ot_multiplier || 1.5;
-          subTotal += otHours * escalatedRate * otMultiplier;
+          subTotal += otHours * effectiveRate * otMultiplier;
         });
       });
     });
@@ -3086,14 +3103,9 @@ export const usePricingStore = create<PricingState>((set, get) => {
         // GSA: Rate is already fully burdened, use directly
         console.log('[ASSIGN_TO_SUB] GSA position detected');
         console.log('[ASSIGN_TO_SUB] gsa_rates_by_year:', position.gsa_rates_by_year);
-        console.log('[ASSIGN_TO_SUB] gsa_current_year:', position.gsa_current_year);
-        console.log('[ASSIGN_TO_SUB] gsa_custom_rate:', position.gsa_custom_rate);
-        console.log('[ASSIGN_TO_SUB] gsa_discount_rate:', position.gsa_discount_rate);
-
-        const gsaRate = getGSARateForYear(position, 1, state.escalationRates);
-        console.log('[ASSIGN_TO_SUB] GSA rate from getGSARateForYear:', gsaRate);
 
         const discountRate = position.gsa_discount_rate || 0;
+        const gsaRate = getGSARateForYear(position, 1, state.escalationRates);
         fblr = gsaRate * (1 - discountRate);
         console.log('[ASSIGN_TO_SUB] Final FBLR after discount:', fblr);
       } else {
@@ -3120,15 +3132,32 @@ export const usePricingStore = create<PricingState>((set, get) => {
       // Check if there's a previously edited rate to preserve
       const subFee = state.rates.sub_fee || 0;
       const smh = state.rates.smh || 0;
+      const gaPassthrough = state.rates.ga_passthrough || 0;
+      const markupDivisor = 1 + smh + gaPassthrough + subFee;
       let baseRate: number;
+      let ratesPerYear: Record<string, number> | undefined;
 
       if (position.last_subcontractor_base_rate !== undefined) {
         // Reuse the last edited rate
         baseRate = position.last_subcontractor_base_rate;
         console.log(`💾 Reusing previously edited rate: $${baseRate.toFixed(2)}/hr`);
+      } else if (isGSAPosition(position) && position.gsa_rates_by_year) {
+        // GSA: back-calculate per-year rates using PROPOSAL YEAR keys (1, 2, 3...)
+        // gsa_rates_by_year uses contract year keys (e.g. 3, 4, 5 when gsa_current_year=3)
+        // but hours_per_year and all lookups use proposal year keys (1, 2, 3...)
+        // so we must use getGSARateForYear() which handles the gsa_current_year offset
+        const discountRate = position.gsa_discount_rate || 0;
+        ratesPerYear = {};
+        Object.keys(position.hours_per_year).forEach((yearStr) => {
+          const proposalYear = parseInt(yearStr);
+          const gsaYearRate = getGSARateForYear(position, proposalYear, state.escalationRates);
+          ratesPerYear![yearStr] = (gsaYearRate * (1 - discountRate)) / markupDivisor;
+        });
+        baseRate = ratesPerYear['1'] ?? fblr / markupDivisor;
+        console.log(`💰 GSA per-year rates calculated (proposal-year keys):`, ratesPerYear);
       } else {
-        // First time assignment - calculate from FBLR
-        baseRate = fblr / ((1 + subFee) * (1 + smh));
+        // BLS: back-calculate from FBLR
+        baseRate = fblr / markupDivisor;
         console.log(`💰 Calculated base rate: $${baseRate.toFixed(2)}/hr (from FBLR: $${fblr.toFixed(2)}/hr)`);
       }
 
@@ -3144,6 +3173,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
         labor_category: position.labor_category,
         rate: baseRate,
         original_base_rate: baseRate,
+        rates_per_year: ratesPerYear,
         hours_per_year: { ...position.hours_per_year },
         ot_hours_per_year: position.ot_hours_per_year ? { ...position.ot_hours_per_year } : undefined,
         original_position_id: position.id,
