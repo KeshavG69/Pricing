@@ -284,15 +284,8 @@ class ExcelGenerator:
     def _fill_ce_summary_sheet(self, ws, pld_info, sub_infos, odc_info, materials_info, travel_info):
         """
         Fill CE Summary with cross-sheet formula references.
-        Called last, after all other sheets exist.
-
-        Base values (DL, Sub, Materials, Travel) reference their respective sheets.
-        All rate-applied rows (Fringe, OH, G&A, Passthrough, Handling, Fee)
-        reference the Indirect Rate sheet via _ir_ref().
-
-        Column layout in PLD:  year N rate col = 3N+3,  year N dollars col = 3N+4  (col D = GSA Discount)
-        Column layout in sub:  year N rate col = 3N+1,  year N dollars col = 3N+2
-        Column layout in ODC/Travel: year N col = N+1  (single col per period)
+        Shows: Prime Labor, Subcontractor(s), Materials, Travel, Sub-Total.
+        No passthrough, handling, fee, or other derived rows.
         """
         header_row = 9
         data_start_row = 10
@@ -312,131 +305,35 @@ class ExcelGenerator:
         ws.cell(header_row, col, "Total")
         self._style_header_cell(ws.cell(header_row, col))
 
-        # ── Prime Labor section ────────────────────────────────────────────────
-        # GSA: single "Prime Labor" row (fully-loaded rate, no breakdown)
-        # BLS: Direct Labor + Fringe + OH + G&A rows
-        prime_labor_row = current_row  # used in Fee formula for BLS only
-        dl_row = current_row           # alias for sub-total SUM range start
-
-        if self.has_gsa:
-            ws.cell(current_row, 1, "Prime Labor")
-            ws.cell(current_row, 1).font = self.BOLD_FONT
-            ws.cell(current_row, 1).border = self.THIN_BORDER
-            if pld_info and pld_info.get('total_prime_labor_row'):
-                for period_idx in range(self.total_years):
-                    year = period_idx + 1
-                    pld_col = get_column_letter(3 * year + self.pld_year_start - 1)
-                    cell = ws.cell(current_row, 2 + period_idx)
-                    cell.value = f"='Prime Labor Detail'!{pld_col}{pld_info['total_prime_labor_row']}"
-                    cell.number_format = self.CURRENCY_FORMAT
-                    cell.border = self.THIN_BORDER
-                cell = ws.cell(current_row, total_col)
-                cell.value = f"='Prime Labor Detail'!{get_column_letter(pld_info['total_dollars_col'])}{pld_info['total_prime_labor_row']}"
+        # ── Prime Labor: reference PLD total_prime_labor_row (fully burdened) ─
+        ws.cell(current_row, 1, "Prime Labor")
+        ws.cell(current_row, 1).font = self.BOLD_FONT
+        ws.cell(current_row, 1).border = self.THIN_BORDER
+        if pld_info and pld_info.get('total_prime_labor_row'):
+            for period_idx in range(self.total_years):
+                year = period_idx + 1
+                pld_col = get_column_letter(3 * year + self.pld_year_start - 1)
+                cell = ws.cell(current_row, 2 + period_idx)
+                cell.value = f"='Prime Labor Detail'!{pld_col}{pld_info['total_prime_labor_row']}"
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
-                cell.font = self.BOLD_FONT
-            else:
-                for period_idx in range(self.total_years):
-                    cell = ws.cell(current_row, 2 + period_idx)
-                    cell.value = 0
-                    cell.number_format = self.CURRENCY_FORMAT
-                    cell.border = self.THIN_BORDER
-                cell = ws.cell(current_row, total_col)
-                cell.value = 0
-                cell.number_format = self.CURRENCY_FORMAT
-                cell.border = self.THIN_BORDER
-                cell.font = self.BOLD_FONT
-            current_row += 1
-            # No Fringe/OH/G&A rows for GSA — fee already included in GSA rate
-            fringe_row = None
-            oh_row = None
-            ga_labor_row = None
+            cell = ws.cell(current_row, total_col)
+            cell.value = f"='Prime Labor Detail'!{get_column_letter(pld_info['total_dollars_col'])}{pld_info['total_prime_labor_row']}"
+            cell.number_format = self.CURRENCY_FORMAT
+            cell.border = self.THIN_BORDER
+            cell.font = self.BOLD_FONT
         else:
-            # ── Direct Labor ──────────────────────────────────────────────────
-            ws.cell(current_row, 1, "Direct Labor")
-            ws.cell(current_row, 1).font = self.BOLD_FONT
-            ws.cell(current_row, 1).border = self.THIN_BORDER
-            if pld_info:
-                for period_idx in range(self.total_years):
-                    year = period_idx + 1
-                    pld_col = get_column_letter(3 * year + self.pld_year_start - 1)
-                    cell = ws.cell(current_row, 2 + period_idx)
-                    cell.value = f"='Prime Labor Detail'!{pld_col}{pld_info['total_dl_row']}"
-                    cell.number_format = self.CURRENCY_FORMAT
-                    cell.border = self.THIN_BORDER
-                cell = ws.cell(current_row, total_col)
-                cell.value = f"='Prime Labor Detail'!{get_column_letter(pld_info['total_dollars_col'])}{pld_info['total_dl_row']}"
-                cell.number_format = self.CURRENCY_FORMAT
-                cell.border = self.THIN_BORDER
-                cell.font = self.BOLD_FONT
-            else:
-                for period_idx in range(self.total_years):
-                    cell = ws.cell(current_row, 2 + period_idx)
-                    cell.value = 0
-                    cell.number_format = self.CURRENCY_FORMAT
-                    cell.border = self.THIN_BORDER
-                cell = ws.cell(current_row, total_col)
+            for period_idx in range(self.total_years):
+                cell = ws.cell(current_row, 2 + period_idx)
                 cell.value = 0
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
-                cell.font = self.BOLD_FONT
-            current_row += 1
-
-            # ── Fringe Benefits ───────────────────────────────────────────────
-            fringe_row = current_row
-            ws.cell(current_row, 1, "Fringe Benefits")
-            ws.cell(current_row, 1).font = self.BOLD_FONT
-            ws.cell(current_row, 1).border = self.THIN_BORDER
-            for period_idx in range(self.total_years):
-                cl = get_column_letter(2 + period_idx)
-                cell = ws.cell(current_row, 2 + period_idx)
-                cell.value = f"={cl}{dl_row}*{self._ir_ref(self.IR_FRINGE_ROW)}"
-                cell.number_format = self.CURRENCY_FORMAT
-                cell.border = self.THIN_BORDER
             cell = ws.cell(current_row, total_col)
-            cell.value = f"={get_column_letter(total_col)}{dl_row}*{self._ir_ref(self.IR_FRINGE_ROW)}"
+            cell.value = 0
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
             cell.font = self.BOLD_FONT
-            current_row += 1
-
-            # ── Labor Overhead ────────────────────────────────────────────────
-            oh_row = current_row
-            ws.cell(current_row, 1, "Labor Overhead")
-            ws.cell(current_row, 1).font = self.BOLD_FONT
-            ws.cell(current_row, 1).border = self.THIN_BORDER
-            for period_idx in range(self.total_years):
-                cl = get_column_letter(2 + period_idx)
-                cell = ws.cell(current_row, 2 + period_idx)
-                cell.value = f"=({cl}{dl_row}+{cl}{fringe_row})*{self._ir_ref(self.IR_OH_ONSITE_ROW)}"
-                cell.number_format = self.CURRENCY_FORMAT
-                cell.border = self.THIN_BORDER
-            tcl = get_column_letter(total_col)
-            cell = ws.cell(current_row, total_col)
-            cell.value = f"=({tcl}{dl_row}+{tcl}{fringe_row})*{self._ir_ref(self.IR_OH_ONSITE_ROW)}"
-            cell.number_format = self.CURRENCY_FORMAT
-            cell.border = self.THIN_BORDER
-            cell.font = self.BOLD_FONT
-            current_row += 1
-
-            # ── G&A Labor ─────────────────────────────────────────────────────
-            ga_labor_row = current_row
-            ws.cell(current_row, 1, "General & Administrative (Labor)")
-            ws.cell(current_row, 1).font = self.BOLD_FONT
-            ws.cell(current_row, 1).border = self.THIN_BORDER
-            for period_idx in range(self.total_years):
-                cl = get_column_letter(2 + period_idx)
-                cell = ws.cell(current_row, 2 + period_idx)
-                cell.value = f"=({cl}{dl_row}+{cl}{fringe_row}+{cl}{oh_row})*{self._ir_ref(self.IR_GA_ROW)}"
-                cell.number_format = self.CURRENCY_FORMAT
-                cell.border = self.THIN_BORDER
-            tcl = get_column_letter(total_col)
-            cell = ws.cell(current_row, total_col)
-            cell.value = f"=({tcl}{dl_row}+{tcl}{fringe_row}+{tcl}{oh_row})*{self._ir_ref(self.IR_GA_ROW)}"
-            cell.number_format = self.CURRENCY_FORMAT
-            cell.border = self.THIN_BORDER
-            cell.font = self.BOLD_FONT
-            current_row += 1
+        current_row += 1
 
         # ── Subcontractors: sum of sub sheet total rows ───────────────────────
         sub_row = current_row
@@ -471,33 +368,14 @@ class ExcelGenerator:
             cell.font = self.BOLD_FONT
         current_row += 1
 
-        # ── Passthrough: Sub × IR!passthrough ────────────────────────────────
-        passthrough_row = current_row
-        ws.cell(current_row, 1, "Passthrough (S&MH + G&A)")
-        ws.cell(current_row, 1).font = self.BOLD_FONT
-        ws.cell(current_row, 1).border = self.THIN_BORDER
-        for period_idx in range(self.total_years):
-            cl = get_column_letter(2 + period_idx)
-            cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = f"={cl}{sub_row}*{self._ir_ref(self.IR_PASSTHROUGH_ROW)}"
-            cell.number_format = self.CURRENCY_FORMAT
-            cell.border = self.THIN_BORDER
-        cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{sub_row}*{self._ir_ref(self.IR_PASSTHROUGH_ROW)}"
-        cell.number_format = self.CURRENCY_FORMAT
-        cell.border = self.THIN_BORDER
-        cell.font = self.BOLD_FONT
-        current_row += 1
-
         # ── Materials: ='ODCs'!base_col{base_total_row} ───────────────────────
-        material_row = current_row
         ws.cell(current_row, 1, "Materials")
         ws.cell(current_row, 1).font = self.BOLD_FONT
         ws.cell(current_row, 1).border = self.THIN_BORDER
         if odc_info:
             for period_idx in range(self.total_years):
                 year = period_idx + 1
-                odc_col = get_column_letter(year + 1)  # ODC: year N = col N+1
+                odc_col = get_column_letter(year + 1)
                 cell = ws.cell(current_row, 2 + period_idx)
                 cell.value = f"='ODCs'!{odc_col}{odc_info['base_total_row']}"
                 cell.number_format = self.CURRENCY_FORMAT
@@ -520,38 +398,21 @@ class ExcelGenerator:
             cell.font = self.BOLD_FONT
         current_row += 1
 
-        # ── Material Handling: Materials × IR!passthrough ─────────────────────
-        ws.cell(current_row, 1, "Materials Handling")
-        ws.cell(current_row, 1).font = self.BOLD_FONT
-        ws.cell(current_row, 1).border = self.THIN_BORDER
-        for period_idx in range(self.total_years):
-            cl = get_column_letter(2 + period_idx)
-            cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = f"={cl}{material_row}*{self._ir_ref(self.IR_PASSTHROUGH_ROW)}"
-            cell.number_format = self.CURRENCY_FORMAT
-            cell.border = self.THIN_BORDER
-        cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{material_row}*{self._ir_ref(self.IR_PASSTHROUGH_ROW)}"
-        cell.number_format = self.CURRENCY_FORMAT
-        cell.border = self.THIN_BORDER
-        cell.font = self.BOLD_FONT
-        current_row += 1
-
-        # ── Travel: ='Travel'!base_col{base_total_row} ────────────────────────
-        travel_row = current_row
+        # ── Travel: reference Total Travel row (Base + G&A already combined) ──
         ws.cell(current_row, 1, "Travel")
         ws.cell(current_row, 1).font = self.BOLD_FONT
         ws.cell(current_row, 1).border = self.THIN_BORDER
         if travel_info:
+            travel_row_ref = travel_info.get('total_travel_row') or travel_info['base_total_row']
             for period_idx in range(self.total_years):
                 year = period_idx + 1
-                tr_col = get_column_letter(year + 1)  # Travel: year N = col N+1
+                tr_col = get_column_letter(year + 1)
                 cell = ws.cell(current_row, 2 + period_idx)
-                cell.value = f"='Travel'!{tr_col}{travel_info['base_total_row']}"
+                cell.value = f"='Travel'!{tr_col}{travel_row_ref}"
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
             cell = ws.cell(current_row, total_col)
-            cell.value = f"='Travel'!{get_column_letter(travel_info['total_col'])}{travel_info['base_total_row']}"
+            cell.value = f"='Travel'!{get_column_letter(travel_info['total_col'])}{travel_row_ref}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
             cell.font = self.BOLD_FONT
@@ -568,25 +429,7 @@ class ExcelGenerator:
             cell.font = self.BOLD_FONT
         current_row += 1
 
-        # ── G&A Travel: Travel × IR!ga ────────────────────────────────────────
-        ws.cell(current_row, 1, "General & Administrative (Travel)")
-        ws.cell(current_row, 1).font = self.BOLD_FONT
-        ws.cell(current_row, 1).border = self.THIN_BORDER
-        for period_idx in range(self.total_years):
-            cl = get_column_letter(2 + period_idx)
-            cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = f"={cl}{travel_row}*{self._ir_ref(self.IR_GA_ROW)}"
-            cell.number_format = self.CURRENCY_FORMAT
-            cell.border = self.THIN_BORDER
-        cell = ws.cell(current_row, total_col)
-        cell.value = f"={get_column_letter(total_col)}{travel_row}*{self._ir_ref(self.IR_GA_ROW)}"
-        cell.number_format = self.CURRENCY_FORMAT
-        cell.border = self.THIN_BORDER
-        cell.font = self.BOLD_FONT
-        current_row += 1
-
         # ── Sub-Total: SUM of all above rows ──────────────────────────────────
-        subtotal_row = current_row
         ws.cell(current_row, 1, "Sub-Total")
         ws.cell(current_row, 1).font = self.BOLD_FONT
         ws.cell(current_row, 1).border = self.THIN_BORDER
@@ -600,65 +443,6 @@ class ExcelGenerator:
         tcl = get_column_letter(total_col)
         cell = ws.cell(current_row, total_col)
         cell.value = f"=SUM({tcl}{data_start_row}:{tcl}{current_row - 1})"
-        cell.number_format = self.CURRENCY_FORMAT
-        cell.border = self.THIN_BORDER
-        cell.font = self.BOLD_FONT
-        current_row += 1
-
-        # ── Fee ────────────────────────────────────────────────────────────────
-        # GSA: fee only on sub+passthrough (prime labor fee included in GSA rate)
-        # BLS: fee on prime labor subtotal + sub+passthrough
-        fee_row = current_row
-        ws.cell(current_row, 1, "Fee")
-        ws.cell(current_row, 1).font = self.BOLD_FONT
-        ws.cell(current_row, 1).border = self.THIN_BORDER
-        for period_idx in range(self.total_years):
-            cl = get_column_letter(2 + period_idx)
-            cell = ws.cell(current_row, 2 + period_idx)
-            if self.has_gsa:
-                # GSA: fee on raw sub only (matches UI: subcontractorTotal × sub_fee_rate)
-                cell.value = f"={cl}{sub_row}*{self._ir_ref(self.IR_FEE_SUB_ROW)}"
-            else:
-                prime_sub = f"({cl}{dl_row}+{cl}{fringe_row}+{cl}{oh_row}+{cl}{ga_labor_row})"
-                sub_with_handling = f"({cl}{sub_row}+{cl}{passthrough_row})"
-                cell.value = (
-                    f"={prime_sub}*{self._ir_ref(self.IR_FEE_LABOR_ROW)}"
-                    f"+{sub_with_handling}*{self._ir_ref(self.IR_FEE_SUB_ROW)}"
-                )
-            cell.number_format = self.CURRENCY_FORMAT
-            cell.border = self.THIN_BORDER
-        tcl = get_column_letter(total_col)
-        cell = ws.cell(current_row, total_col)
-        if self.has_gsa:
-            # GSA: fee on raw sub only (matches UI: subcontractorTotal × sub_fee_rate)
-            cell.value = f"={tcl}{sub_row}*{self._ir_ref(self.IR_FEE_SUB_ROW)}"
-        else:
-            prime_sub = f"({tcl}{dl_row}+{tcl}{fringe_row}+{tcl}{oh_row}+{tcl}{ga_labor_row})"
-            sub_with_handling = f"({tcl}{sub_row}+{tcl}{passthrough_row})"
-            cell.value = (
-                f"={prime_sub}*{self._ir_ref(self.IR_FEE_LABOR_ROW)}"
-                f"+{sub_with_handling}*{self._ir_ref(self.IR_FEE_SUB_ROW)}"
-            )
-        cell.number_format = self.CURRENCY_FORMAT
-        cell.border = self.THIN_BORDER
-        cell.font = self.BOLD_FONT
-        current_row += 1
-
-        # ── Total Proposed: Sub-Total + Fee ───────────────────────────────────
-        ws.cell(current_row, 1, "Total Proposed")
-        ws.cell(current_row, 1).font = self.BOLD_FONT
-        ws.cell(current_row, 1).border = self.THIN_BORDER
-        ws.cell(current_row, 1).alignment = Alignment(horizontal='center')
-        for period_idx in range(self.total_years):
-            cl = get_column_letter(2 + period_idx)
-            cell = ws.cell(current_row, 2 + period_idx)
-            cell.value = f"={cl}{subtotal_row}+{cl}{fee_row}"
-            cell.number_format = self.CURRENCY_FORMAT
-            cell.border = self.THIN_BORDER
-            cell.font = self.BOLD_FONT
-        tcl = get_column_letter(total_col)
-        cell = ws.cell(current_row, total_col)
-        cell.value = f"={tcl}{subtotal_row}+{tcl}{fee_row}"
         cell.number_format = self.CURRENCY_FORMAT
         cell.border = self.THIN_BORDER
         cell.font = self.BOLD_FONT
@@ -1628,7 +1412,8 @@ class ExcelGenerator:
         total_cell.font = self.BOLD_FONT
 
         return {
-            'base_total_row': base_total_row,  # CE Summary row 18 → raw base travel
+            'base_total_row': base_total_row,
+            'total_travel_row': current_row,   # Total Travel (Base + G&A) — used by CE Summary
             'total_col': total_col,
         }
 
