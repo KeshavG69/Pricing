@@ -43,7 +43,11 @@ const calculateAveragedFBLR = (
       const yearStr = year.toString();
       const breakdown = position.breakdown[yearStr];
       const hoursThisYear = breakdown?.hours || 0;
-      const gsaRate = getGSARateForYear(position, year, escalationRates);
+      // breakdown.fblr is already the discounted GSA rate (set by performTransformToAdvanced as
+      // originalRate * (1 - discountRate)). This is the same value that drives pos.total_amount
+      // (which is always correct). Fall back to dynamic computation if breakdown is missing.
+      const discountRate = position.gsa_discount_rate || 0;
+      const gsaRate = breakdown?.fblr ?? (getGSARateForYear(position, year, escalationRates) * (1 - discountRate));
 
       if (hoursThisYear > 0 && gsaRate > 0) {
         totalAmount += gsaRate * hoursThisYear;
@@ -1950,6 +1954,19 @@ export const PrimeLaborSection = ({
 
           // Check if this position is assigned to a subcontractor
           if (row.type === 'position' && pos.assigned_subcontractor_id) {
+            // For GSA sub positions, breakdown.fblr already has the current discount applied
+            // (set by performTransformToAdvanced). Using linked.subPos.rate would show a stale
+            // rate frozen at assignment time, not reflecting subsequent discount changes.
+            if (isGSAPosition(pos)) {
+              return (
+                <div className="flex items-center justify-end h-full px-2 bg-blue-50/30">
+                  <span className="text-blue-600 font-semibold">
+                    {formatCurrency(breakdown.fblr)}
+                  </span>
+                </div>
+              );
+            }
+
             const linked = getLinkedSubcontractorPosition(pos.id);
 
             if (linked) {
@@ -2422,6 +2439,17 @@ export const PrimeLaborSection = ({
 
           // Check if this position is assigned to a subcontractor (for amount calculation)
           if (row.type === 'position' && pos.assigned_subcontractor_id) {
+            // For GSA sub positions, breakdown.totalAmount already reflects the current discount
+            if (isGSAPosition(pos)) {
+              return (
+                <div className="flex items-center justify-end h-full px-2 bg-blue-50/30">
+                  <span className="text-emerald-600 font-semibold">
+                    {formatCurrency(breakdown.totalAmount)}
+                  </span>
+                </div>
+              );
+            }
+
             const linked = getLinkedSubcontractorPosition(pos.id);
 
             if (linked) {
@@ -2751,7 +2779,7 @@ export const PrimeLaborSection = ({
     );
 
     return cols;
-  }, [totalYears, expandedPositions, manualOverrides, onToggleExpand, onDeletePosition, handleContextMenu, rates, escalationRates, isGSAProposal]);
+  }, [totalYears, expandedPositions, manualOverrides, onToggleExpand, onDeletePosition, handleContextMenu, rates, escalationRates, isGSAProposal, advancedModeVersion]);
 
   // Get store methods (positions for the modal) - must be before any early returns
   const { addPosition, positions: basicPositions } = usePricingStore();
