@@ -1565,8 +1565,10 @@ export const usePricingStore = create<PricingState>((set, get) => {
       console.log('[DELETE SUB] Deleting subcontractor:', subToDelete.name);
       console.log('[DELETE SUB] Positions to return:', subToDelete.positions.length);
 
-      // Build map of prime position ID -> updated hours
+      // Build map of prime position ID -> updated hours (OLD FLOW only)
       const primeHoursUpdates: Record<string, Record<string, number>> = {};
+      // Prime IDs that only need assigned_subcontractor_id cleared (NEW FLOW)
+      const primesToClearAssignment = new Set<string>();
 
       // For each position in the deleted subcontractor
       subToDelete.positions.forEach(subPos => {
@@ -1583,7 +1585,14 @@ export const usePricingStore = create<PricingState>((set, get) => {
           return;
         }
 
-        // Simple logic: add the deleted sub's hours back to current prime hours
+        if (subPos.shows_in_main_grid) {
+          // NEW FLOW (dropdown assignment): prime hours were never reduced, just clear assignment
+          console.log('[DELETE SUB] NEW FLOW - clearing assignment for prime', primeId);
+          primesToClearAssignment.add(primeId);
+          return;
+        }
+
+        // OLD FLOW (convert to subcontractor): add the deleted sub's hours back to prime
         const newPrimeHours: Record<string, number> = {};
 
         // Get all years from both prime and sub positions
@@ -1610,10 +1619,18 @@ export const usePricingStore = create<PricingState>((set, get) => {
         // Update prime positions with returned hours AND clear assigned_subcontractor_id
         const updatedPositions = prevState.positions.map(pos => {
           if (primeHoursUpdates[pos.id]) {
+            // OLD FLOW: return hours and clear assignment
             return {
               ...pos,
               hours_per_year: { ...primeHoursUpdates[pos.id] },
-              assigned_subcontractor_id: undefined  // Clear subcontractor assignment
+              assigned_subcontractor_id: undefined,
+            };
+          }
+          if (primesToClearAssignment.has(pos.id)) {
+            // NEW FLOW: hours were never reduced, just clear assignment
+            return {
+              ...pos,
+              assigned_subcontractor_id: undefined,
             };
           }
           // Also clear assignment for any other positions assigned to this subcontractor
