@@ -1810,7 +1810,10 @@ class ExcelGenerator:
         # Calculate combined passthrough rate (S&MH + G&A Passthrough)
         combined_passthrough = passthrough_rates.get('smh', 0) + passthrough_rates.get('ga', 0)
 
-        rates = [
+        # For GSA only G&A is used in formulas; Fringe/OH/Passthrough/Fee are not applied.
+        # Row positions must stay fixed (IR_*_ROW constants are hardcoded across all sheets).
+        # For GSA: hide unused rows so they don't clutter the sheet.
+        all_rates = [
             ("Fringe", indirect_rates.get('fringe', 0)),
             ("Onsite Overhead (OH)", indirect_rates.get('oh_onsite', indirect_rates.get('oh', 0))),
             ("Offsite Overhead (OH)", indirect_rates.get('oh_offsite', indirect_rates.get('oh', 0))),
@@ -1819,9 +1822,16 @@ class ExcelGenerator:
             ("Fee on Labor", fee_rates.get('prime_labor', 0)),
             ("Fee on Subcontractor", fee_rates.get('sub_labor', 0)),
         ]
+        # Index 3 = G&A = IR_GA_ROW (row 12) — the only rate used in GSA formulas
+        gsa_visible_indices = {3}
 
         current_row = 9
-        for label, rate in rates:
+        for idx, (label, rate) in enumerate(all_rates):
+            if self.has_gsa and idx not in gsa_visible_indices:
+                ws.row_dimensions[current_row].hidden = True
+                current_row += 1
+                continue
+
             label_cell = ws.cell(current_row, 1, label)
             label_cell.font = self.BOLD_FONT
             label_cell.border = self.THIN_BORDER
