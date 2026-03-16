@@ -197,16 +197,18 @@ async def generate_excel_from_proposal(
             sub_labor_categories = []
             logger.info(f"Processing subcontractor: {sub.get('name')} with {len(sub.get('positions', []))} positions")
             for pos in sub.get('positions', []):
+                # Resolve prime position first — needed for location fields and GSA rate derivation
+                original_position_id = pos.get('original_position_id')
+                prime_pos = prime_positions_by_id.get(original_position_id) if original_position_id else None
+                is_gsa_sub = prime_pos and (prime_pos.get('wage_source') or '').lower() == 'gsa'
+
                 labor_cat = {
                     'labor_category': pos.get('labor_category', ''),
                     'ecraft_code': pos.get('ecraft_code', ''),
                     'site': pos.get('site', 'Government'),
+                    'location': pos.get('location') or (prime_pos.get('location', '') if prime_pos else ''),
+                    'location_type': pos.get('location_type') or (prime_pos.get('location_type', 'On-Site') if prime_pos else 'On-Site'),
                 }
-
-                # Resolve prime position for GSA sub positions
-                original_position_id = pos.get('original_position_id')
-                prime_pos = prime_positions_by_id.get(original_position_id) if original_position_id else None
-                is_gsa_sub = prime_pos and (prime_pos.get('wage_source') or '').lower() == 'gsa'
 
                 # Add hours and rates per year
                 for year in range(1, project_config['total_years'] + 1):
