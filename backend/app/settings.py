@@ -39,6 +39,15 @@ class Settings(BaseSettings):
     # Help Center Pinecone index (separate from GSA)
     HELP_CENTER_PINECONE_INDEX_NAME: str = "help-center"
 
+    # Unstructured API for document text extraction
+    UNSTRUCTURED_API_KEY: str = ""
+    UNSTRUCTURED_API_URL: str = "https://api.unstructuredapp.io"
+
+    # Redis (Celery broker/backend)
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_PASSWORD: str = ""
+
     class Config:
         env_file = ".env"
 

@@ -57,96 +57,14 @@ def create_reasoning_tool(
         raise RuntimeError(f"Failed to create reasoning tool: {str(e)}")
 
 
-def _extract_text_from_pdf(file_path: str) -> str:
-    """Extract full text from PDF."""
-    try:
-        import PyPDF2
-        pages = []
-        with open(file_path, 'rb') as f:
-            reader = PyPDF2.PdfReader(f)
-            for page in reader.pages:
-                text = page.extract_text()
-                if text.strip():
-                    pages.append(text)
-        return '\n\n--- PAGE BREAK ---\n\n'.join(pages)
-    except ImportError:
-        raise ImportError("PyPDF2 not installed. Run: pip install PyPDF2")
-
-
-def _extract_text_from_docx(file_path: str) -> str:
-    """Extract full text from DOCX."""
-    try:
-        import docx
-        doc = docx.Document(file_path)
-        content = []
-
-        for para in doc.paragraphs:
-            if para.text.strip():
-                content.append(para.text)
-
-        for table in doc.tables:
-            table_text = []
-            for row in table.rows:
-                row_text = ' | '.join([cell.text.strip() for cell in row.cells])
-                if row_text.strip():
-                    table_text.append(row_text)
-            if table_text:
-                content.append('\n'.join(table_text))
-
-        return '\n\n'.join(content)
-    except ImportError:
-        raise ImportError("python-docx not installed. Run: pip install python-docx")
-
-
-def _extract_text_from_excel(file_path: str) -> str:
-    """Extract full text from Excel (.xlsx, .xls)."""
-    try:
-        import pandas as pd
-        import openpyxl  # noqa: F401 - Required by pandas for Excel support
-
-        # Read all sheets
-        excel_file = pd.ExcelFile(file_path)
-        content = []
-
-        for sheet_name in excel_file.sheet_names:
-            content.append(f"=== SHEET: {sheet_name} ===")
-
-            # Read sheet
-            df = pd.read_excel(file_path, sheet_name=sheet_name)
-
-            # Convert to text format (preserve structure)
-            # Replace NaN with empty string
-            df = df.fillna('')
-
-            # Convert to string representation (table-like format)
-            sheet_text = df.to_string(index=False)
-            content.append(sheet_text)
-            content.append("")  # Add blank line between sheets
-
-        return '\n\n'.join(content)
-    except ImportError as e:
-        if 'openpyxl' in str(e):
-            raise ImportError("openpyxl not installed. Run: pip install openpyxl")
-        else:
-            raise ImportError(f"Required library not installed: {e}")
-
-
 def _extract_text(file_path: str) -> str:
-    """Extract text from file based on extension."""
-    import os
-    ext = os.path.splitext(file_path)[1].lower()
-
-    if ext == '.pdf':
-        return _extract_text_from_pdf(file_path)
-    elif ext == '.docx':
-        return _extract_text_from_docx(file_path)
-    elif ext in ['.xlsx', '.xls']:
-        return _extract_text_from_excel(file_path)
-    elif ext in ['.txt', '.csv']:
-        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-            return f.read()
-    else:
-        raise ValueError(f"Unsupported file type: {ext}. Supported: PDF, DOCX, XLSX, XLS, TXT, CSV")
+    """Extract text from file using Unstructured API."""
+    from client.unstructured_client import get_unstructured_client
+    client = get_unstructured_client()
+    try:
+        return client.extract_from_path(file_path)
+    finally:
+        client.cleanup()
 
 
 def _create_intelligent_parser() -> Agent:

@@ -4,7 +4,7 @@ Proposals router for managing government contract proposals.
 Handles document upload, storage, processing, and full CRUD operations.
 """
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, BackgroundTasks, Depends, status
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, status
 from fastapi.responses import JSONResponse
 from typing import List, Dict, Any
 from pathlib import Path
@@ -120,514 +120,18 @@ def serialize_proposal(proposal: dict) -> dict:
     return proposal
 
 
-def convert_intelligent_output_to_dataframe(intelligent_result: Dict[str, Any]) -> Dict[str, Any]:
-    """
-    Convert intelligent parser output to the same format as jd_parser output.
-
-    Args:
-        intelligent_result: Output from parse_document_intelligent()
-
-    Returns:
-        Dict with keys: df, travel, odcs, extensions (same as parse_documents_to_dataframe)
-    """
-    import pandas as pd
-
-    metadata = intelligent_result.get("metadata", {})
-    positions = intelligent_result.get("positions", [])
-    travel = intelligent_result.get("travel", [])
-    odcs = intelligent_result.get("odcs", [])
-    extensions = intelligent_result.get("extensions", [])
-
-    # Build months_per_year dict from extensions
-    total_years = metadata.get("total_years") or 5
-    months_per_year_dict = {}
-
-    # Default: all regular years have 12 months
-    for year in range(1, total_years + 1):
-        months_per_year_dict[str(year)] = 12
-
-    # Add extension years with their specific month counts
-    for ext in extensions:
-        ext_year = ext.get("year")
-        ext_months = ext.get("duration_months", 6)
-        if ext_year:
-            months_per_year_dict[str(ext_year)] = ext_months
-
-    # Convert positions to DataFrame rows
-    rows = []
-    for pos in positions:
-        # Extract hours_per_year dict
-        hours_per_year = pos.get("hours_per_year", {})
-
-        # Extract ot_hours_per_year if present (optional field)
-        ot_hours_per_year = pos.get("ot_hours_per_year", None)
-
-        row = {
-            "labor_category": pos.get("labor_category", ""),
-            "description": pos.get("description", ""),
-            "experience": pos.get("experience"),
-            "location": pos.get("location"),
-            "location_type": pos.get("location_type", "On-Site"),
-            "is_key_position": pos.get("is_key_position", False),
-            "is_surge": pos.get("is_surge", False),  # NEW: Surge position flag
-            "hours_per_year": hours_per_year,
-            "ot_hours_per_year": ot_hours_per_year,  # NEW: Overtime hours per year
-
-            # Metadata (document-level info)
-            "base_years": metadata.get("base_years") or 1,
-            "option_years": metadata.get("option_years") or 4,
-            "total_years": metadata.get("total_years") or 5,
-            "project_name": metadata.get("project_name"),
-            "standard_fte_hours": metadata.get("standard_fte_hours", 1920),
-            "months_per_year": months_per_year_dict if months_per_year_dict else None
-        }
-
-        rows.append(row)
-
-    # Create DataFrame
-    df = pd.DataFrame(rows)
-
-    # Convert travel list
-    travel_list = []
-    for t in travel:
-        travel_list.append({
-            "description": t.get("description", ""),
-            "amount_per_year": t.get("amount_per_year", {})
-        })
-
-    # Convert ODCs list
-    odc_list = []
-    for o in odcs:
-        odc_list.append({
-            "category": o.get("category", ""),
-            "description": o.get("description", ""),
-            "amount_per_year": o.get("amount_per_year", {})
-        })
-
-    # Convert extensions list
-    extension_list = []
-    for e in extensions:
-        extension_list.append({
-            "year": e.get("year"),
-            "label": e.get("label", ""),
-            "duration_months": e.get("duration_months", 6),
-            "description": e.get("description", "")
-        })
-
-    return {
-        "df": df,
-        "travel": travel_list,
-        "odcs": odc_list,
-        "extensions": extension_list
-    }
+from utils.processing import convert_intelligent_output_to_dataframe, process_proposal_documents
 
 
 # ============================================================================
 # DOCUMENT UPLOAD & ASYNC PROCESSING
 # ============================================================================
 
-async def process_proposal_documents(
-    proposal_id: str,
-    user_id: str,
-    organization_id: str,
-    file_paths: List[str],
-    file_names: List[str],
-    temp_dir: Path,
-    wage_source: Dict[str, Any] = None,
-    preserved_advanced_mode: bool = None,
-    preserved_subcontractor_configured: bool = None,
-    preserved_subcontractors: List[Dict] = None
-):
-    """
-    Background task to process uploaded documents.
 
-    For re-ingestion, preserved_* parameters will restore the previous state.
-
-    Updates proposal status as processing progresses.
-    Uses singleton ProposalCRUD instance for thread safety.
-
-    Args:
-        wage_source: {"type": "bls"} or {"type": "gsa", "file_id": "..."}
-    """
-    # Get singleton CRUD instance
-    crud = await get_crud()
-
-    # Default to BLS if not specified
-    if wage_source is None:
-        wage_source = {"type": "bls"}
-
-    try:
-        # Get organization settings for default rates and escalation rate
-        default_escalation_rate = 0.03  # Fallback default
-        default_rates = {
-            "fringe": 0.247,
-            "oh_onsite": 0.0711,
-            "oh_offsite": 0.0711,
-            "ga": 0.2243,
-            "fee": 0.07,
-            "smh": 0.065,
-            "sub_fee": 0.05,
-            "ga_passthrough": 0.025,
-            "ga_adder": 0.0,
-            "ot_multiplier": 1.5,  # Overtime multiplier (1.5 = time-and-a-half)
-            "surge_multiplier": 1.15  # Surge pricing multiplier (15% premium)
-        }
-
-        if organization_id:
-            from utils.organizations import get_organization_crud
-            org_crud = get_organization_crud()
-            org = org_crud.get_by_id(ObjectId(organization_id))
-            if org and "settings" in org:
-                settings = org.get("settings", {})
-                default_escalation_rate = settings.get("default_escalation_rate", 0.03)
-                if "default_rates" in settings:
-                    default_rates = settings.get("default_rates")
-
-        # Update status to processing
-        crud.update_proposal(
-            proposal_id,
-            user_id,
-            {"status": "processing", "progress": 0, "message": "Parsing documents..."}
-        )
-
-        # Step 1: Parse documents with Intelligent Parser (replaces JD parser)
-        # Use first file (for multi-file support, we'd loop and merge)
-        intelligent_result = await parse_document_intelligent(file_paths[0])
-
-        # Convert intelligent parser output to DataFrame format
-        parse_result = convert_intelligent_output_to_dataframe(intelligent_result)
-        df = parse_result["df"]
-        extracted_travel = parse_result.get("travel", [])
-        extracted_odcs = parse_result.get("odcs", [])
-        extracted_extensions = parse_result.get("extensions", [])
-        extracted_surge = intelligent_result.get("surge", None)  # Extract surge from raw result
-
-        # Validate that we found positions (travel/ODCs being empty is fine)
-        if len(df) == 0:
-            metadata_notes = intelligent_result.get("metadata", {}).get("notes", "")
-            error_message = "Could not extract or generate staffing positions from this document. "
-            if "GENERATED" in metadata_notes:
-                error_message += "The AI attempted to create a staffing plan but was unable to generate reasonable estimates. "
-            else:
-                error_message += "This document may not contain labor staffing information. "
-            error_message += "Please ensure the document describes labor positions, roles, or staffing requirements."
-
-            crud.update_proposal(
-                proposal_id,
-                user_id,
-                {
-                    "status": "error",
-                    "progress": 0,
-                    "message": error_message
-                }
-            )
-            return
-
-        crud.update_proposal(
-            proposal_id,
-            user_id,
-            {"progress": 30, "message": f"Found {len(df)} positions, {len(extracted_travel)} Travel items, {len(extracted_odcs)} ODCs. Fetching wage data..."}
-        )
-
-        # NEW: Fetch organization rates for BLS comparison (if GSA mode)
-        organization_rates = None
-        if wage_source.get("type") == "gsa":
-            try:
-                from utils.organizations import get_organization_crud
-                org_crud = get_organization_crud()
-                org = org_crud.get_by_id(ObjectId(organization_id))
-
-                if org and org.get("settings"):
-                    default_rates = org["settings"].get("default_rates", {})
-                    organization_rates = {
-                        "fringe": default_rates.get("fringe", 0.247),
-                        "oh_onsite": default_rates.get("oh_onsite", default_rates.get("oh", 0.0711)),
-                        "oh_offsite": default_rates.get("oh_offsite", default_rates.get("oh", 0.0711)),
-                        "ga": default_rates.get("ga", 0.2243),
-                        "fee": default_rates.get("fee", 0.07)
-                    }
-                    print(f"📊 Using organization rates for BLS comparison: Fringe={organization_rates['fringe']}, OH On-Site={organization_rates['oh_onsite']}, OH Off-Site={organization_rates['oh_offsite']}, G&A={organization_rates['ga']}, Fee={organization_rates['fee']}")
-            except Exception as e:
-                print(f"⚠️ Failed to fetch organization rates for BLS comparison: {e}")
-                # Continue without rates - no discount suggestions will be generated
-
-        # Step 2: Process with agents (BLS or GSA based on wage_source)
-        final_df = await process_dataframe_with_agents(
-            df,
-            max_workers=10,
-            wage_source=wage_source,
-            organization_id=organization_id,
-            organization_rates=organization_rates  # NEW: Pass rates for BLS comparison
-        )
-
-        crud.update_proposal(
-            proposal_id,
-            user_id,
-            {"progress": 80, "message": "Finalizing results..."}
-        )
-
-        # Step 3: Clean and process data
-        import numpy as np
-        final_df = final_df.replace([np.inf, -np.inf], None)
-        final_df = final_df.where(final_df.notna(), None)
-
-        # Rename columns to match API schema (snake_case field names)
-        column_mapping = {
-            'BLS Code': 'soc_code',
-            'BLS Labour Category Mapping': 'soc_title',
-            'BLS Occupation Description': 'bls_occupation_description',
-        }
-        final_df = final_df.rename(columns=column_mapping)
-
-        jobs_data = final_df.to_dict('records')
-
-        # Clean NaN/inf values
-        def clean_value(val):
-            if isinstance(val, float):
-                if np.isnan(val) or np.isinf(val):
-                    return None
-            return val
-
-        cleaned_jobs = []
-        for job in jobs_data:
-            cleaned_job = {k: clean_value(v) for k, v in job.items()}
-            cleaned_jobs.append(cleaned_job)
-
-        # Apply position splitting by FTE hours
-        # Extract FTE threshold and months_per_year from document (or use defaults)
-        fte_threshold = 1920  # Default fallback
-        months_per_year_dict = None
-        if cleaned_jobs and len(cleaned_jobs) > 0:
-            first_job_threshold = cleaned_jobs[0].get('standard_fte_hours')
-            if first_job_threshold and 1500 <= first_job_threshold <= 2500:
-                fte_threshold = int(first_job_threshold)
-
-            # Extract months_per_year from first job (for month-aware splitting)
-            months_per_year_dict = cleaned_jobs[0].get('months_per_year')
-
-        final_split_jobs = []
-        for job in cleaned_jobs:
-            # Check if job has hours_per_year (multi-year contract)
-            if 'hours_per_year' in job and job['hours_per_year']:
-                # Multi-year position - use split_multi_year_position with month awareness
-                split_positions = split_multi_year_position(
-                    job,
-                    max_hours=fte_threshold,
-                    months_per_year=months_per_year_dict
-                )
-                final_split_jobs.extend(split_positions)
-            elif 'hours' in job and job['hours'] and job['hours'] > fte_threshold:
-                # Legacy single-year contract with high hours
-                split_positions = split_position_by_hours(job, max_hours=fte_threshold)
-                final_split_jobs.extend(split_positions)
-            else:
-                # No splitting needed
-                final_split_jobs.append(job)
-
-        # Replace cleaned_jobs with split jobs
-        cleaned_jobs = final_split_jobs
-
-        # Extract metadata
-        base_years = None
-        option_years = None
-        total_years = None
-
-        if cleaned_jobs and len(cleaned_jobs) > 0:
-            first_job = cleaned_jobs[0]
-            base_years = first_job.get('base_years')
-            option_years = first_job.get('option_years')
-            total_years = first_job.get('total_years')
-
-        # Defaults
-        if total_years is None:
-            total_years = 5
-        if base_years is None:
-            base_years = 1
-        if option_years is None:
-            option_years = total_years - base_years
-
-        # Generate dynamic escalation rates based on total_years using organization default
-        escalation_rates = {}
-        for year in range(1, total_years):
-            key = f"{year}_to_{year + 1}"
-            escalation_rates[key] = default_escalation_rate
-
-        # Charge for basic proposal (with free first proposal logic)
-        billing_status = "unpaid"
-        billing_message = None
-        should_trigger_advanced = False
-
-        try:
-            stripe_service = get_stripe_service()
-            billing_crud = get_billing_crud()
-
-            # Check if already charged (idempotent)
-            if not billing_crud.is_proposal_charged(proposal_id, "basic"):
-                # Get proposal name for description
-                proposal_doc = crud.get_by_id(ObjectId(proposal_id))
-                proposal_name = proposal_doc.get("name", "Untitled") if proposal_doc else "Untitled"
-
-                # Check for free first proposal
-                first_free_proposal_id = org.get("first_free_proposal_id") if org else None
-                is_first_proposal = first_free_proposal_id is None
-
-                if is_first_proposal:
-                    # FREE FIRST PROPOSAL
-                    billing_id = billing_crud.create_billing_record(
-                        organization_id=str(org["_id"]),
-                        proposal_id=proposal_id,
-                        charge_type="basic",
-                        amount_cents=0,
-                        description=f"PriceIQ Basic (Free First Proposal): {proposal_name[:50]}",
-                        triggered_by_user_id=user_id,
-                        status="succeeded"
-                    )
-
-                    # Set first_free_proposal_id
-                    org_crud = get_organization_crud()
-                    org_crud.collection.update_one(
-                        {"_id": org["_id"]},
-                        {"$set": {"first_free_proposal_id": ObjectId(proposal_id), "updated_at": datetime.utcnow()}}
-                    )
-
-                    billing_status = "paid"
-                    should_trigger_advanced = True  # Auto-trigger advanced for free first proposal
-
-                elif stripe_service.is_configured and org and org.get("stripe_customer_id") and org.get("default_payment_method_id"):
-                    # PAID PROPOSAL (not first)
-                    amount_cents = stripe_service.get_price(ChargeType.BASIC)
-                    billing_id = billing_crud.create_billing_record(
-                        organization_id=str(org["_id"]),
-                        proposal_id=proposal_id,
-                        charge_type="basic",
-                        amount_cents=amount_cents,
-                        description=f"PriceIQ Basic: {proposal_name[:50]}",
-                        triggered_by_user_id=user_id,
-                        status="pending"
-                    )
-
-                    # Charge
-                    result = stripe_service.charge_for_proposal(
-                        customer_id=org["stripe_customer_id"],
-                        payment_method_id=org["default_payment_method_id"],
-                        charge_type=ChargeType.BASIC,
-                        proposal_id=proposal_id,
-                        proposal_name=proposal_name,
-                        organization_id=str(org["_id"])
-                    )
-
-                    if result["success"]:
-                        billing_status = "paid"
-                        billing_crud.collection.update_one(
-                            {"_id": ObjectId(billing_id)},
-                            {"$set": {
-                                "stripe_payment_intent_id": result["payment_intent_id"],
-                                "status": "succeeded",
-                                "updated_at": datetime.utcnow()
-                            }}
-                        )
-                    else:
-                        billing_status = "failed"
-                        billing_message = result.get("error", "Payment failed")
-                        billing_crud.collection.update_one(
-                            {"_id": ObjectId(billing_id)},
-                            {"$set": {
-                                "status": "failed",
-                                "error_message": billing_message,
-                                "updated_at": datetime.utcnow()
-                            }}
-                        )
-                else:
-                    # No payment method and not first proposal
-                    billing_status = "unpaid"
-                    billing_message = "Payment method required"
-            else:
-                billing_status = "paid"  # Already charged
-        except Exception as billing_error:
-            import traceback
-            traceback.print_exc()
-            billing_message = f"Billing error: {str(billing_error)}"
-            # Don't fail the whole proposal processing for billing errors
-
-        # Determine mode state (preserved from re-ingestion or new upload logic)
-        final_advanced_mode = preserved_advanced_mode if preserved_advanced_mode is not None else should_trigger_advanced
-        final_subcontractor_configured = preserved_subcontractor_configured if preserved_subcontractor_configured is not None else False
-        final_subcontractors = preserved_subcontractors if preserved_subcontractors is not None else []
-
-        # Log re-ingestion vs new upload
-        if preserved_advanced_mode is not None:
-            print(f"[RE-INGEST] Restoring preserved state:")
-            print(f"  - advanced_mode: {final_advanced_mode}")
-            print(f"  - subcontractor_configured: {final_subcontractor_configured}")
-            print(f"  - subcontractors: {len(final_subcontractors)} preserved")
-
-        # CRITICAL: Generate unique IDs for positions if missing
-        # This ensures frontend state management works correctly
-        import time
-        timestamp = int(time.time() * 1000)  # Milliseconds since epoch
-        for i, job in enumerate(cleaned_jobs):
-            if not job.get("id"):
-                # Generate unique ID: pos_{index}_{timestamp}_{random}
-                import random
-                random_suffix = random.randint(1000, 9999)
-                job["id"] = f"pos_{i}_{timestamp}_{random_suffix}"
-                print(f"[ID GEN] Generated ID for position {i}: {job['id']} ({job.get('labor_category', 'Unknown')})")
-
-        # Update proposal with results (NO duplication - all data in spreadsheet_data)
-        crud.update_proposal(
-            proposal_id,
-            user_id,
-            {
-                "status": "completed",
-                "business_status": "active",  # Auto-assign active status when completed
-                "progress": 100,
-                "message": billing_message or "Processing complete",
-                "billing_status": billing_status,
-                "metadata": {
-                    "total_jobs": len(cleaned_jobs),
-                    "base_years": base_years,
-                    "option_years": option_years,
-                    "total_years": total_years,
-                    "fte_hours_threshold": fte_threshold
-                },
-                "spreadsheet_data": {
-                    "positions": cleaned_jobs,  # Single source of truth (now with IDs!)
-                    "travel": extracted_travel,
-                    "odcs": extracted_odcs,
-                    "extensions": extracted_extensions,
-                    "surge": extracted_surge,
-                    "rates": default_rates,  # Only in spreadsheet_data
-                    "escalation_rates": escalation_rates,  # Only in spreadsheet_data
-                    "advanced_mode": final_advanced_mode,  # Preserved for re-ingest, or auto-enabled for free first proposal
-                    "subcontractor_configured": final_subcontractor_configured,  # Preserved for re-ingest
-                    "subcontractors": final_subcontractors  # Preserved for re-ingest (names only, no positions)
-                }
-            }
-        )
-
-    except Exception as e:
-        # Update proposal with error
-        crud.update_proposal(
-            proposal_id,
-            user_id,
-            {
-                "status": "error",
-                "progress": 0,
-                "message": f"Error: {str(e)}"
-            }
-        )
-        import traceback
-        traceback.print_exc()
-
-    finally:
-        # Clean up temp directory
-        if temp_dir and temp_dir.exists():
-            shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 @router.post("/upload")
 async def upload_proposal_documents(
-    background_tasks: BackgroundTasks,
     files: List[UploadFile] = File(...),
     name: str = Form(...),
     solicitation_number: str = Form(None),
@@ -727,15 +231,15 @@ async def upload_proposal_documents(
         )
 
         # Start background processing
-        background_tasks.add_task(
-            process_proposal_documents,
+        from tasks.processing_tasks import process_proposal_task
+        process_proposal_task.delay(
             proposal_id,
             str(current_user["_id"]),
             str(current_user.get("organization_id")),
             file_paths,
             file_names,
-            temp_dir,
-            wage_source
+            str(temp_dir),
+            wage_source,
         )
 
         # Auto-completion hook: Mark first proposal uploaded
@@ -771,7 +275,6 @@ async def upload_proposal_documents(
 @router.post("/{proposal_id}/reingest")
 async def reingest_proposal_documents(
     proposal_id: str,
-    background_tasks: BackgroundTasks,
     files: List[UploadFile] = File(...),
     wage_source_type: str = Form("bls"),
     wage_source_file_id: str = Form(None),
@@ -918,18 +421,18 @@ async def reingest_proposal_documents(
         # Start background processing (will preserve mode state)
         # IMPORTANT: Pass owner's ID for background updates
         proposal_owner_id = str(proposal.get("user_id"))
-        background_tasks.add_task(
-            process_proposal_documents,
+        from tasks.processing_tasks import process_proposal_task
+        process_proposal_task.delay(
             proposal_id,
-            proposal_owner_id,  # Use owner's ID for updates
-            str(current_user.get("organization_id")),  # Organization stays the same
+            proposal_owner_id,
+            str(current_user.get("organization_id")),
             file_paths,
             file_names,
-            temp_dir,
+            str(temp_dir),
             wage_source,
-            preserved_advanced_mode,  # Pass preserved state
-            preserved_subcontractor_configured,  # Pass preserved state
-            preserved_subcontractors  # Pass preserved subcontractors
+            preserved_advanced_mode,
+            preserved_subcontractor_configured,
+            preserved_subcontractors,
         )
 
         return {
@@ -1863,7 +1366,6 @@ async def mark_proposal_downloaded(
 @router.post("/{proposal_id}/retry")
 async def retry_proposal_processing(
     proposal_id: str,
-    background_tasks: BackgroundTasks,
     current_user: dict = Depends(get_current_user)
 ):
     """
@@ -1946,15 +1448,15 @@ async def retry_proposal_processing(
     )
 
     # Start background processing
-    background_tasks.add_task(
-        process_proposal_documents,
+    from tasks.processing_tasks import process_proposal_task
+    process_proposal_task.delay(
         proposal_id,
         str(current_user["_id"]),
         str(current_user.get("organization_id")),
         file_paths,
         file_names,
-        temp_dir,
-        proposal.get("wage_source")
+        str(temp_dir),
+        proposal.get("wage_source"),
     )
 
     return {
