@@ -2499,22 +2499,6 @@
         "documentation": {}
     },
     {
-        "label": "timezone",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
-        "label": "datetime",
-        "importPath": "datetime",
-        "description": "datetime",
-        "isExtraImport": true,
-        "detail": "datetime",
-        "documentation": {}
-    },
-    {
         "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
@@ -2648,14 +2632,6 @@
         "description": "bson",
         "isExtraImport": true,
         "detail": "bson",
-        "documentation": {}
-    },
-    {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
-        "isExtraImport": true,
-        "detail": "dotenv",
         "documentation": {}
     },
     {
@@ -2869,118 +2845,6 @@
     },
     {
         "label": "TEXT",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "ReturnDocument",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "MongoClient",
-        "importPath": "pymongo",
-        "description": "pymongo",
-        "isExtraImport": true,
-        "detail": "pymongo",
-        "documentation": {}
-    },
-    {
-        "label": "MongoClient",
         "importPath": "pymongo",
         "description": "pymongo",
         "isExtraImport": true,
@@ -4213,6 +4077,14 @@
     },
     {
         "label": "serialize_docs",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_doc",
         "importPath": "utils.helpers",
         "description": "utils.helpers",
         "isExtraImport": true,
