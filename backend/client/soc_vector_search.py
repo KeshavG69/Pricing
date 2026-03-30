@@ -33,28 +33,9 @@ class SOCVectorSearch:
         # Load or build FAISS index
         self._load_or_build_index()
 
-    def _download_occupation_file(self):
-        """Download oe.occupation from BLS if not present."""
-        occ_file = DATA_DIR / "oe.occupation"
-        if occ_file.exists():
-            return
-        print("  oe.occupation not found, downloading from BLS...")
-        DATA_DIR.mkdir(parents=True, exist_ok=True)
-        import requests
-        url = "https://download.bls.gov/pub/time.series/oe/oe.occupation"
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            "Accept": "*/*",
-        }
-        response = requests.get(url, headers=headers, timeout=60)
-        response.raise_for_status()
-        occ_file.write_bytes(response.content)
-        print(f"  ✓ Downloaded oe.occupation ({occ_file.stat().st_size / 1024:.1f} KB)")
-
     def _load_occupations(self):
         """Load occupation codes and names from local file."""
         print("Loading occupations...")
-        self._download_occupation_file()
         df = pd.read_csv(
             DATA_DIR / "oe.occupation",
             sep="\t",
