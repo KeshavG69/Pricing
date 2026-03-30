@@ -34,16 +34,8 @@ RUN uv sync --no-dev
 COPY --chown=appuser:appuser . .
 
 # Create data directory structure
+# The oe.occupation file is downloaded at runtime (BLS blocks datacenter IPs at build time)
 RUN mkdir -p data/cache data/oews
-
-# Download occupation file for FAISS index (~260KB)
-# BLS server requires proper User-Agent header to avoid 403 Forbidden
-RUN curl -H "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" \
-    -H "Accept: */*" \
-    -o data/oews/oe.occupation \
-    https://download.bls.gov/pub/time.series/oe/oe.occupation && \
-    head -1 data/oews/oe.occupation | grep -q "occupation_code" || \
-    (echo "ERROR: Failed to download valid occupation file" && exit 1)
 
 # Set environment variables
 ENV PATH="/app/.venv/bin:$PATH" \
