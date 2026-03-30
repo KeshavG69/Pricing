@@ -136,6 +136,12 @@ class ExcelGenerator:
             (p.get('wage_source') or '').lower() == 'gsa'
             for p in project_data.get('prime_positions', [])
         )
+
+        # Surge option — percentage (e.g. 0.20) and multiplier (e.g. 1.15)
+        surge = project_data.get('surge')
+        self.surge_percentage = (surge.get('percentage') or 0) if surge else 0
+        self.surge_multiplier = project_data.get('surge_multiplier') or 1.15
+        self.ir_surge_multiplier_row = None  # set by _create_indirect_rates_sheet
         # Analysis sheet name: "GSA Analysis" for GSA proposals, "BLS Analysis" for BLS
         self.analysis_sheet_name = "GSA Analysis" if self.has_gsa else "BLS Analysis"
         # PLD year-col start: col 5 (E) when GSA Discount col D exists, else col 4 (D)
@@ -350,7 +356,22 @@ class ExcelGenerator:
                 year_fmls = [0] * self.total_years
                 total_fml = 0
             _write_row("Prime Labor", year_fmls, total_fml)
+            prime_labor_row_num = current_row
             current_row += 1
+
+            # Surge Option (GSA)
+            if self.surge_percentage:
+                mult_ref = self._ir_ref(self.ir_surge_multiplier_row)
+                surge_year_fmls = [
+                    f"={get_column_letter(2 + i)}{prime_labor_row_num}*{self.surge_percentage}*{mult_ref}"
+                    for i in range(self.total_years)
+                ]
+                surge_total_fml = f"={get_column_letter(total_col)}{prime_labor_row_num}*{self.surge_percentage}*{mult_ref}"
+                _write_row(
+                    f"Surge Option ({self.surge_percentage * 100:.1f}% × {(self.surge_multiplier - 1) * 100:.1f}% premium)",
+                    surge_year_fmls, surge_total_fml, bold=False
+                )
+                current_row += 1
 
         else:
             # ── BLS: full DCAA cost-element breakdown ─────────────────────────
@@ -400,6 +421,27 @@ class ExcelGenerator:
                 total_fml = 0
             _write_row("General & Administrative (Labor)", year_fmls, total_fml, bold=False)
             current_row += 1
+
+            # Surge Option (BLS) — based on fully burdened prime labor (DL:G&A × (1 + fee_rate))
+            # This matches the UI: surge is on FBLR (includes fee), not just bare labor burden
+            if self.surge_percentage:
+                mult_ref = self._ir_ref(self.ir_surge_multiplier_row)
+                fee_ref = self._ir_ref(self.IR_FEE_LABOR_ROW)
+                surge_year_fmls = []
+                for i in range(self.total_years):
+                    cl = get_column_letter(2 + i)
+                    surge_year_fmls.append(
+                        f"=SUM({cl}{dl_row_num}:{cl}{ga_ce_row_num})*(1+{fee_ref})*{self.surge_percentage}*{mult_ref}"
+                    )
+                surge_total_fml = (
+                    f"=SUM({get_column_letter(total_col)}{dl_row_num}:{get_column_letter(total_col)}{ga_ce_row_num})"
+                    f"*(1+{fee_ref})*{self.surge_percentage}*{mult_ref}"
+                )
+                _write_row(
+                    f"Surge Option ({self.surge_percentage * 100:.1f}% × {(self.surge_multiplier - 1) * 100:.1f}% premium)",
+                    surge_year_fmls, surge_total_fml, bold=False
+                )
+                current_row += 1
 
         # ── Subcontractor(s): sum sub sheet total-rows ────────────────────────
         # GSA: sub positions already appear in Prime Labor (shows_in_main_grid),
@@ -1862,6 +1904,19 @@ class ExcelGenerator:
             cell.font = self.NORMAL_FONT
 
             current_row += 1
+
+        # Surge Multiplier — only add if proposal has a surge option
+        if self.surge_percentage:
+            current_row += 1  # blank separator
+            label_cell = ws.cell(current_row, 1, "Surge Multiplier")
+            label_cell.font = self.BOLD_FONT
+            label_cell.border = self.THIN_BORDER
+            cell = ws.cell(current_row, 2)
+            cell.value = self.surge_multiplier
+            cell.number_format = '0.00'
+            cell.border = self.THIN_BORDER
+            cell.font = self.NORMAL_FONT
+            self.ir_surge_multiplier_row = current_row
 
     def _calculate_cost_elements(self) -> Dict[str, Dict[str, float]]:
         """
