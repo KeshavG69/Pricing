@@ -33,11 +33,8 @@ RUN uv sync --no-dev
 # Copy application code
 COPY --chown=appuser:appuser . .
 
-# Create data directory structure
+# Create data directory structure (oe.occupation is bundled via COPY . . above)
 RUN mkdir -p data/cache data/oews
-
-# Bundle occupation file (BLS blocks datacenter IPs so we can't download it)
-COPY data/oews/oe.occupation data/oews/oe.occupation
 
 # Set environment variables
 ENV PATH="/app/.venv/bin:$PATH" \
