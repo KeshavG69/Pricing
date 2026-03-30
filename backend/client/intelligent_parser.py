@@ -18,7 +18,7 @@ from agno.models.openai import OpenAIChat
 from agno.tools.reasoning import ReasoningTools
 from agno.tools.exa import ExaTools
 from app.settings import settings
-
+from client.llm_client import get_chat_llm_agno
 
 def create_reasoning_tool(
     instructions: str = "only show reasoning no need for for action confidence",
@@ -71,13 +71,7 @@ def _create_intelligent_parser() -> Agent:
     """Create intelligent parser with reasoning and web search capabilities."""
 
     # Use a powerful model that can reason — fresh instance each call to avoid stale connections
-    llm = OpenAIChat(
-        id="anthropic/claude-sonnet-4.6",
-        api_key=settings.OPENROUTER_API_KEY,
-        base_url="https://openrouter.ai/api/v1",
-        max_tokens=32000,
-        temperature=0.1,
-    )
+    llm=get_chat_llm_agno(model="anthropic/claude-sonnet-4.6",api_key=settings.OPENROUTER_API_KEY,base_url="https://openrouter.ai/api/v1",max_tokens=60000,temperature=0.1)
 
 
     # Create reasoning tool with few-shot example for combined team pattern

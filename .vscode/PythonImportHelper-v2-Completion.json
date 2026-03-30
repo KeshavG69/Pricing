@@ -167,6 +167,14 @@
         "documentation": {}
     },
     {
+        "label": "get_chat_llm_agno",
+        "importPath": "client.llm_client",
+        "description": "client.llm_client",
+        "isExtraImport": true,
+        "detail": "client.llm_client",
+        "documentation": {}
+    },
+    {
         "label": "get_embeddings",
         "importPath": "client.llm_client",
         "description": "client.llm_client",
