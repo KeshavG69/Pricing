@@ -14,10 +14,10 @@ from typing import Dict, Any, List, Optional
 from pathlib import Path
 
 from agno.agent import Agent
+from agno.models.openai import OpenAIChat
 from agno.tools.reasoning import ReasoningTools
 from agno.tools.exa import ExaTools
 from app.settings import settings
-from client.llm_client import get_chat_llm_agno
 
 
 def create_reasoning_tool(
@@ -70,8 +70,14 @@ def _extract_text(file_path: str) -> str:
 def _create_intelligent_parser() -> Agent:
     """Create intelligent parser with reasoning and web search capabilities."""
 
-    # Use a powerful model that can reason
-    llm=get_chat_llm_agno(model="anthropic/claude-sonnet-4.6",api_key=settings.OPENROUTER_API_KEY,base_url="https://openrouter.ai/api/v1",max_tokens=32000,temperature=0.1)
+    # Use a powerful model that can reason — fresh instance each call to avoid stale connections
+    llm = OpenAIChat(
+        id="anthropic/claude-sonnet-4.6",
+        api_key=settings.OPENROUTER_API_KEY,
+        base_url="https://openrouter.ai/api/v1",
+        max_tokens=32000,
+        temperature=0.1,
+    )
 
 
     # Create reasoning tool with few-shot example for combined team pattern
@@ -130,7 +136,7 @@ def _create_intelligent_parser() -> Agent:
         tools=[reasoning_tool, exa_tool],  # Reasoning + web search
         instructions=instructions,
         markdown=False,
-        debug_mode=True
+        debug_mode=settings.DEBUG_MODE
     )
 
     return agent

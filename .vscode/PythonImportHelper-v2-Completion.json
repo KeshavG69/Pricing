@@ -167,14 +167,6 @@
         "documentation": {}
     },
     {
-        "label": "get_chat_llm_agno",
-        "importPath": "client.llm_client",
-        "description": "client.llm_client",
-        "isExtraImport": true,
-        "detail": "client.llm_client",
-        "documentation": {}
-    },
-    {
         "label": "get_embeddings",
         "importPath": "client.llm_client",
         "description": "client.llm_client",
@@ -3706,6 +3698,22 @@
         "documentation": {}
     },
     {
+        "label": "OpenAIChat",
+        "importPath": "agno.models.openai",
+        "description": "agno.models.openai",
+        "isExtraImport": true,
+        "detail": "agno.models.openai",
+        "documentation": {}
+    },
+    {
+        "label": "OpenAIChat",
+        "importPath": "agno.models.openai",
+        "description": "agno.models.openai",
+        "isExtraImport": true,
+        "detail": "agno.models.openai",
+        "documentation": {}
+    },
+    {
         "label": "ReasoningTools",
         "importPath": "agno.tools.reasoning",
         "description": "agno.tools.reasoning",
@@ -3768,14 +3776,6 @@
         "description": "langchain_openai",
         "isExtraImport": true,
         "detail": "langchain_openai",
-        "documentation": {}
-    },
-    {
-        "label": "OpenAIChat",
-        "importPath": "agno.models.openai",
-        "description": "agno.models.openai",
-        "isExtraImport": true,
-        "detail": "agno.models.openai",
         "documentation": {}
     },
     {
@@ -5072,7 +5072,7 @@
         "kind": 6,
         "importPath": "backend.app.settings",
         "description": "backend.app.settings",
-        "peekOfCode": "class Settings(BaseSettings):\n    \"\"\"Application configuration from environment variables.\"\"\"\n    OPENROUTER_API_KEY: str\n    OPENROUTER_MODEL: str = \"openai/gpt-4o\"\n    OPENAI_API_KEY: str\n    CLAUDE_API_KEY: str\n    CLAUDE_BASE_URL: str = \"https://api.anthropic.com/v1\"\n    # LlamaCloud API for document extraction\n    LLAMA_CLOUD_API_KEY: str\n    # MongoDB configuration",
+        "peekOfCode": "class Settings(BaseSettings):\n    \"\"\"Application configuration from environment variables.\"\"\"\n    OPENROUTER_API_KEY: str\n    OPENROUTER_MODEL: str = \"openai/gpt-4o\"\n    OPENAI_API_KEY: str\n    CLAUDE_API_KEY: str\n    CLAUDE_BASE_URL: str = \"https://api.anthropic.com/v1\"\n    DEBUG_MODE:bool=False\n    # LlamaCloud API for document extraction\n    LLAMA_CLOUD_API_KEY: str",
         "detail": "backend.app.settings",
         "documentation": {}
     },
