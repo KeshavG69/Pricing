@@ -212,7 +212,7 @@ def _create_intelligent_parser() -> Agent:
         tools=[reasoning_tool, exa_tool],  # Reasoning + web search
         instructions=instructions,
         markdown=False,
-        debug_mode=True
+        debug_mode=settings.DEBUG_MODE
     )
 
     return agent

@@ -145,7 +145,7 @@ For troubleshooting questions:
         id="HelpCenterAgent",
         description="PriceIQ Help Center Assistant that answers user questions using documentation.",
         instructions=instructions,
-        debug_mode=True,
+        debug_mode=settings.DEBUG_MODE,
     )
 
     logger.info("Created help center agent (singleton) with memory enabled")
