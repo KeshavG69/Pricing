@@ -50,6 +50,7 @@ test_*.xlsx
 
 # Data directories (built at runtime)
 data/
+!data/oews/oe.occupation
 
 # Environment files
 .env
