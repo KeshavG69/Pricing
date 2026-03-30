@@ -172,7 +172,7 @@ Step 5: The wage_tool will return the final result and stop execution
         id="PricingAgent",
         description="Pricing Agent that finds SOC codes and retrieves wage data for government contractor pricing.",
         instructions=instructions,
-        debug_mode=True,
+        debug_mode=settings.DEBUG_MODE,
     )
 
     return agent
@@ -255,7 +255,7 @@ Note: If SOC code is provided, it helps validate the occupational category match
         id="GSAPricingAgent",
         description="GSA Pricing Agent for GSA contract rates.",
         instructions=instructions,
-        debug_mode=True,
+        debug_mode=settings.DEBUG_MODE,
     )
 
     return agent
