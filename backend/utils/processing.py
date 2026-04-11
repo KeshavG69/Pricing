@@ -334,35 +334,41 @@ async def process_proposal_documents(
             if not job.get("id"):
                 job["id"] = f"pos_{i}_{timestamp}_{random.randint(1000, 9999)}"
 
-        crud.update_proposal(
-            proposal_id,
-            user_id,
-            {
-                "status": "completed",
-                "business_status": "active",
-                "progress": 100,
-                "message": billing_message or "Processing complete",
-                "billing_status": billing_status,
-                "metadata": {
-                    "total_jobs": len(cleaned_jobs),
-                    "base_years": base_years,
-                    "option_years": option_years,
-                    "total_years": total_years,
-                    "fte_hours_threshold": fte_threshold,
-                },
-                "spreadsheet_data": {
-                    "positions": cleaned_jobs,
-                    "travel": extracted_travel,
-                    "odcs": extracted_odcs,
-                    "extensions": extracted_extensions,
-                    "surge": extracted_surge,
-                    "rates": default_rates,
-                    "escalation_rates": escalation_rates,
-                    "advanced_mode": final_advanced_mode,
-                    "subcontractor_configured": final_subcontractor_configured,
-                    "subcontractors": final_subcontractors,
-                },
+        update_data = {
+            "status": "completed",
+            "business_status": "active",
+            "progress": 100,
+            "message": billing_message or "Processing complete",
+            "billing_status": billing_status,
+            "metadata": {
+                "total_jobs": len(cleaned_jobs),
+                "base_years": base_years,
+                "option_years": option_years,
+                "total_years": total_years,
+                "fte_hours_threshold": fte_threshold,
             },
+            "spreadsheet_data": {
+                "positions": cleaned_jobs,
+                "travel": extracted_travel,
+                "odcs": extracted_odcs,
+                "extensions": extracted_extensions,
+                "surge": extracted_surge,
+                "rates": default_rates,
+                "escalation_rates": escalation_rates,
+                "advanced_mode": final_advanced_mode,
+                "subcontractor_configured": final_subcontractor_configured,
+                "subcontractors": final_subcontractors,
+            },
+        }
+        crud.update_proposal(proposal_id, user_id, update_data)
+
+        # Remove legacy jobs[] field — all position data lives in spreadsheet_data.positions
+        from auth.database import get_mongodb_client
+        mongodb = get_mongodb_client()
+        db = mongodb.get_database()
+        db["proposals"].update_one(
+            {"_id": ObjectId(proposal_id)},
+            {"$unset": {"jobs": ""}}
         )
 
     except Exception as e:

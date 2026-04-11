@@ -83,6 +83,7 @@ def _create_intelligent_parser() -> Agent:
     ]
 
     reasoning_tool = create_reasoning_tool(
+        instructions="Focus only on key observations: contract structure, staffing patterns, data gaps. Be sharp and direct — no elaboration. ",
         add_few_shot=True,
         few_shot_examples=few_shot_example
     )

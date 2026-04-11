@@ -5,9 +5,13 @@ FROM python:3.13-slim
 # Install minimal system dependencies
 # faiss-cpu requires: libgomp1
 # healthcheck requires: curl
+# liteparse requires: nodejs (>= 18)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
     curl \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && npm install -g @llamaindex/liteparse \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv

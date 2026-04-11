@@ -38,7 +38,7 @@ dependencies = [
     "striprtf>=0.0.26",
     "celery>=5.3.0",
     "redis>=5.0.0",
-    "unstructured-client>=0.26.0",
+    "liteparse>=0.1.0",
     "uvicorn>=0.38.0",
 
 ]

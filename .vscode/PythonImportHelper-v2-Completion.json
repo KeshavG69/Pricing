@@ -375,14 +375,6 @@
         "documentation": {}
     },
     {
-        "label": "settings",
-        "importPath": "app.settings",
-        "description": "app.settings",
-        "isExtraImport": true,
-        "detail": "app.settings",
-        "documentation": {}
-    },
-    {
         "label": "threading",
         "kind": 6,
         "isExtraImport": true,
@@ -3837,19 +3829,11 @@
         "documentation": {}
     },
     {
-        "label": "UnstructuredClient",
-        "importPath": "unstructured_client",
-        "description": "unstructured_client",
+        "label": "LiteParse",
+        "importPath": "liteparse",
+        "description": "liteparse",
         "isExtraImport": true,
-        "detail": "unstructured_client",
-        "documentation": {}
-    },
-    {
-        "label": "shared",
-        "importPath": "unstructured_client.models",
-        "description": "unstructured_client.models",
-        "isExtraImport": true,
-        "detail": "unstructured_client.models",
+        "detail": "liteparse",
         "documentation": {}
     },
     {
@@ -6187,7 +6171,7 @@
         "kind": 6,
         "importPath": "backend.client.unstructured_client",
         "description": "backend.client.unstructured_client",
-        "peekOfCode": "class UnstructuredClient:\n    \"\"\"Unstructured API client for document text extraction.\"\"\"\n    def __init__(self):\n        self.api_key = settings.UNSTRUCTURED_API_KEY\n        self.api_url = settings.UNSTRUCTURED_API_URL\n        if not self.api_key:\n            raise ValueError(\"UNSTRUCTURED_API_KEY not configured in settings\")\n        self.client = UnstructuredAPIClient(\n            api_key_auth=self.api_key,\n            server_url=self.api_url if self.api_url else None",
+        "peekOfCode": "class UnstructuredClient:\n    \"\"\"Document text extractor using LiteParse.\n    Kept as UnstructuredClient class name for backward compatibility\n    with existing imports (intelligent_parser, gsa_parser).\n    \"\"\"\n    def cleanup(self):\n        \"\"\"No-op — LiteParse has no resources to clean up.\"\"\"\n        pass\n    def extract_from_path(self, file_path: str) -> str:\n        \"\"\"",
         "detail": "backend.client.unstructured_client",
         "documentation": {}
     },
@@ -6196,7 +6180,7 @@
         "kind": 2,
         "importPath": "backend.client.unstructured_client",
         "description": "backend.client.unstructured_client",
-        "peekOfCode": "def get_unstructured_client() -> UnstructuredClient:\n    \"\"\"Create a fresh UnstructuredClient instance.\"\"\"\n    return UnstructuredClient()",
+        "peekOfCode": "def get_unstructured_client() -> UnstructuredClient:\n    \"\"\"Create an UnstructuredClient instance (LiteParse-backed).\"\"\"\n    return UnstructuredClient()",
         "detail": "backend.client.unstructured_client",
         "documentation": {}
     },
@@ -6205,7 +6189,16 @@
         "kind": 5,
         "importPath": "backend.client.unstructured_client",
         "description": "backend.client.unstructured_client",
-        "peekOfCode": "logger = logging.getLogger(__name__)\nclass UnstructuredClient:\n    \"\"\"Unstructured API client for document text extraction.\"\"\"\n    def __init__(self):\n        self.api_key = settings.UNSTRUCTURED_API_KEY\n        self.api_url = settings.UNSTRUCTURED_API_URL\n        if not self.api_key:\n            raise ValueError(\"UNSTRUCTURED_API_KEY not configured in settings\")\n        self.client = UnstructuredAPIClient(\n            api_key_auth=self.api_key,",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# Reusable parser instance (no state, thread-safe)\n_parser = LiteParse()\nclass UnstructuredClient:\n    \"\"\"Document text extractor using LiteParse.\n    Kept as UnstructuredClient class name for backward compatibility\n    with existing imports (intelligent_parser, gsa_parser).\n    \"\"\"\n    def cleanup(self):\n        \"\"\"No-op — LiteParse has no resources to clean up.\"\"\"",
+        "detail": "backend.client.unstructured_client",
+        "documentation": {}
+    },
+    {
+        "label": "_parser",
+        "kind": 5,
+        "importPath": "backend.client.unstructured_client",
+        "description": "backend.client.unstructured_client",
+        "peekOfCode": "_parser = LiteParse()\nclass UnstructuredClient:\n    \"\"\"Document text extractor using LiteParse.\n    Kept as UnstructuredClient class name for backward compatibility\n    with existing imports (intelligent_parser, gsa_parser).\n    \"\"\"\n    def cleanup(self):\n        \"\"\"No-op — LiteParse has no resources to clean up.\"\"\"\n        pass\n    def extract_from_path(self, file_path: str) -> str:",
         "detail": "backend.client.unstructured_client",
         "documentation": {}
     },
