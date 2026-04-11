@@ -54,4 +54,4 @@ EXPOSE 8000
 
 
 
-CMD ["uvicorn app.server:app --host 0.0.0.0 --port 8000 & celery -A app.worker.celery_app worker --loglevel=info --pool=threads --concurrency=2"]
+CMD ["sh", "-c", "uvicorn app.server:app --host 0.0.0.0 --port 8000 & celery -A app.worker.celery_app worker --loglevel=info --pool=threads --concurrency=2"]
