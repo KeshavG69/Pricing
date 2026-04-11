@@ -18,17 +18,10 @@ from app.settings import settings
 logger = logging.getLogger(__name__)
 
 
-def build_redis_url(db: int) -> str:
-    """Build Redis URL with optional authentication."""
-    if settings.REDIS_PASSWORD:
-        return f"redis://:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}/{db}"
-    return f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{db}"
-
-
 celery_app = Celery(
     "priceiq_worker",
-    broker=build_redis_url(0),
-    backend=build_redis_url(1),
+    broker=f"{settings.REDIS_URL.rstrip('/')}/0",
+    backend=f"{settings.REDIS_URL.rstrip('/')}/1",
 )
 
 # Import task modules to register them with Celery

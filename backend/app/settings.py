@@ -41,9 +41,7 @@ class Settings(BaseSettings):
     HELP_CENTER_PINECONE_INDEX_NAME: str = "help-center"
 
     # Redis (Celery broker/backend)
-    REDIS_HOST: str = "localhost"
-    REDIS_PORT: int = 6379
-    REDIS_PASSWORD: str = ""
+    REDIS_URL: str = "redis://localhost:6379"
 
     class Config:
         env_file = ".env"

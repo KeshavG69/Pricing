@@ -9,6 +9,10 @@ FROM python:3.13-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
     curl \
+    libreoffice-core \
+    libreoffice-calc \
+    libreoffice-writer \
+    libreoffice-impress \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && npm install -g @llamaindex/liteparse \
