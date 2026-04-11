@@ -12,7 +12,6 @@ class Settings(BaseSettings):
     CLAUDE_API_KEY: str
     CLAUDE_BASE_URL: str = "https://api.anthropic.com/v1"
     DEBUG_MODE:bool=False
-
     # LlamaCloud API for document extraction
     LLAMA_CLOUD_API_KEY: str
 

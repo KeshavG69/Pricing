@@ -762,7 +762,9 @@ def build_project_data_from_dataframe(
         'travel': project_config.get('travel', []),
         'odcs': project_config.get('odcs', []),
         'extensions': project_config.get('extensions', []),
-        'ga_adder_rate': project_config['ga_adder_rate']
+        'ga_adder_rate': project_config['ga_adder_rate'],
+        'surge': project_config.get('surge'),
+        'surge_multiplier': project_config.get('surge_multiplier', 1.15),
     }
 
     return project_data

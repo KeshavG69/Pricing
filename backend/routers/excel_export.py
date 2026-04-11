@@ -129,7 +129,11 @@ async def generate_excel_from_proposal(
             'travel': spreadsheet_data.get('travel', []),
             'odcs': spreadsheet_data.get('odcs', []),
             'extensions': spreadsheet_data.get('extensions', []),
-            'include_rate_table': True
+            'include_rate_table': True,
+
+            # Surge option
+            'surge': spreadsheet_data.get('surge'),
+            'surge_multiplier': (spreadsheet_data.get('rates') or {}).get('surge_multiplier', 1.15),
         }
 
         # Convert positions to DataFrame format

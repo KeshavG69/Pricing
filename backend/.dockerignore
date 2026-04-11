@@ -48,8 +48,7 @@ test_*.py
 test_*.html
 test_*.xlsx
 
-# Data directories (built at runtime)
-data/
+
 
 # Environment files
 .env

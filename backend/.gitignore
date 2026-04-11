@@ -15,4 +15,5 @@ dump.rdb
 data/
 .DS_Store
 data/oews/
+!data/oews/oe.occupation
 CLAUDE.md
