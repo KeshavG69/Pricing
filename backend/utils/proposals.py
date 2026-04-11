@@ -121,7 +121,6 @@ class ProposalCRUD:
         # Exclude large fields for list view
         projection = {
             "spreadsheet_data": 0,
-            "jobs": 0,
             "rates": 0,
             "escalation_rates": 0,
             "documents": 0
@@ -198,7 +197,6 @@ class ProposalCRUD:
         
 
         projection = {
-            "jobs": 0,
             "spreadsheet_data": 0,
             "rates": 0,
             "escalation_rates": 0,
@@ -371,7 +369,6 @@ class ProposalCRUD:
             "name": new_name,
             "solicitation_number": source.get("solicitation_number"),
             "metadata": source.get("metadata"),
-            "jobs": source.get("jobs"),
             "rates": source.get("rates"),
             "escalation_rates": source.get("escalation_rates"),
             "spreadsheet_data": source.get("spreadsheet_data"),
@@ -475,7 +472,6 @@ class ProposalCRUD:
         # Exclude large fields
         projection = {
             "spreadsheet_data": 0,
-            "jobs": 0,
             "rates": 0,
             "escalation_rates": 0,
             "documents": 0

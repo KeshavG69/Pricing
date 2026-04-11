@@ -2174,29 +2174,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
       console.log('✅ Subcontractor added:', updatedSubcontractor);
       console.log('📊 Updated subcontractors array:', get().subcontractors);
 
-      // 6. Update backend with subcontractor hours
-      if (state.proposalId) {
-        try {
-          // Calculate total allocated subcontractor hours
-          const totalSubHours = Object.values(data.hoursAllocation).reduce(
-            (sum, hours) => sum + hours,
-            0
-          );
-
-          // Call backend API to update position
-          await proposalsApi.updatePositionSubcontractorHours(
-            state.proposalId,
-            positionIndex,
-            totalSubHours
-          );
-
-          console.log(`✅ Backend updated: position ${positionIndex} with ${totalSubHours} subcontractor hours`);
-        } catch (error) {
-          console.error('❌ Failed to update backend:', error);
-        }
-      }
-
-      // 7. Trigger recalculation
+      // 6. Trigger recalculation
       debouncedRecalculate();
 
       // 8. Force IMMEDIATE save to MongoDB (bypass debounce)

@@ -247,6 +247,22 @@
         "documentation": {}
     },
     {
+        "label": "get_company_repository_crud",
+        "importPath": "utils.company_repository",
+        "description": "utils.company_repository",
+        "isExtraImport": true,
+        "detail": "utils.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
         "label": "settings",
         "importPath": "app.settings",
         "description": "app.settings",
@@ -1113,6 +1129,38 @@
         "documentation": {}
     },
     {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "AsyncGenerator",
         "importPath": "typing",
         "description": "typing",
@@ -1250,6 +1298,38 @@
     },
     {
         "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -1554,14 +1634,6 @@
         "documentation": {}
     },
     {
-        "label": "BackgroundTasks",
-        "importPath": "fastapi",
-        "description": "fastapi",
-        "isExtraImport": true,
-        "detail": "fastapi",
-        "documentation": {}
-    },
-    {
         "label": "Depends",
         "importPath": "fastapi",
         "description": "fastapi",
@@ -1779,14 +1851,6 @@
     },
     {
         "label": "HTTPException",
-        "importPath": "fastapi",
-        "description": "fastapi",
-        "isExtraImport": true,
-        "detail": "fastapi",
-        "documentation": {}
-    },
-    {
-        "label": "BackgroundTasks",
         "importPath": "fastapi",
         "description": "fastapi",
         "isExtraImport": true,
@@ -2031,6 +2095,38 @@
         "description": "fastapi.responses",
         "isExtraImport": true,
         "detail": "fastapi.responses",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
         "documentation": {}
     },
     {
@@ -2595,11 +2691,36 @@
         "documentation": {}
     },
     {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
         "isExtraImport": true,
-        "detail": "dotenv",
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "Celery",
+        "importPath": "celery",
+        "description": "celery",
+        "isExtraImport": true,
+        "detail": "celery",
+        "documentation": {}
+    },
+    {
+        "label": "tasks.processing_tasks",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "tasks.processing_tasks",
+        "description": "tasks.processing_tasks",
+        "detail": "tasks.processing_tasks",
+        "documentation": {}
+    },
+    {
+        "label": "process_gsa_contract_task",
+        "importPath": "tasks.processing_tasks",
+        "description": "tasks.processing_tasks",
+        "isExtraImport": true,
+        "detail": "tasks.processing_tasks",
         "documentation": {}
     },
     {
@@ -2624,6 +2745,22 @@
         "description": "dotenv",
         "isExtraImport": true,
         "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
         "documentation": {}
     },
     {
@@ -3561,6 +3698,22 @@
         "documentation": {}
     },
     {
+        "label": "OpenAIChat",
+        "importPath": "agno.models.openai",
+        "description": "agno.models.openai",
+        "isExtraImport": true,
+        "detail": "agno.models.openai",
+        "documentation": {}
+    },
+    {
+        "label": "OpenAIChat",
+        "importPath": "agno.models.openai",
+        "description": "agno.models.openai",
+        "isExtraImport": true,
+        "detail": "agno.models.openai",
+        "documentation": {}
+    },
+    {
         "label": "ReasoningTools",
         "importPath": "agno.tools.reasoning",
         "description": "agno.tools.reasoning",
@@ -3626,14 +3779,6 @@
         "documentation": {}
     },
     {
-        "label": "OpenAIChat",
-        "importPath": "agno.models.openai",
-        "description": "agno.models.openai",
-        "isExtraImport": true,
-        "detail": "agno.models.openai",
-        "documentation": {}
-    },
-    {
         "label": "AsyncIOMotorClient",
         "importPath": "motor.motor_asyncio",
         "description": "motor.motor_asyncio",
@@ -3681,6 +3826,14 @@
         "description": "enum",
         "isExtraImport": true,
         "detail": "enum",
+        "documentation": {}
+    },
+    {
+        "label": "LiteParse",
+        "importPath": "liteparse",
+        "description": "liteparse",
+        "isExtraImport": true,
+        "detail": "liteparse",
         "documentation": {}
     },
     {
@@ -4172,6 +4325,30 @@
         "documentation": {}
     },
     {
+        "label": "ChargeType",
+        "importPath": "client.stripe_client",
+        "description": "client.stripe_client",
+        "isExtraImport": true,
+        "detail": "client.stripe_client",
+        "documentation": {}
+    },
+    {
+        "label": "get_stripe_service",
+        "importPath": "client.stripe_client",
+        "description": "client.stripe_client",
+        "isExtraImport": true,
+        "detail": "client.stripe_client",
+        "documentation": {}
+    },
+    {
+        "label": "get_billing_crud",
+        "importPath": "utils.billing_crud",
+        "description": "utils.billing_crud",
+        "isExtraImport": true,
+        "detail": "utils.billing_crud",
+        "documentation": {}
+    },
+    {
         "label": "get_billing_crud",
         "importPath": "utils.billing_crud",
         "description": "utils.billing_crud",
@@ -4252,6 +4429,14 @@
         "documentation": {}
     },
     {
+        "label": "get_proposal_crud",
+        "importPath": "utils.proposals",
+        "description": "utils.proposals",
+        "isExtraImport": true,
+        "detail": "utils.proposals",
+        "documentation": {}
+    },
+    {
         "label": "tempfile",
         "kind": 6,
         "isExtraImport": true,
@@ -4294,6 +4479,14 @@
         "documentation": {}
     },
     {
+        "label": "parse_gsa_contract",
+        "importPath": "client.gsa_parser",
+        "description": "client.gsa_parser",
+        "isExtraImport": true,
+        "detail": "client.gsa_parser",
+        "documentation": {}
+    },
+    {
         "label": "get_idrive_storage",
         "importPath": "client.idrive_storage",
         "description": "client.idrive_storage",
@@ -4307,6 +4500,14 @@
         "description": "client.idrive_storage",
         "isExtraImport": true,
         "detail": "client.idrive_storage",
+        "documentation": {}
+    },
+    {
+        "label": "get_gsa_pinecone_client",
+        "importPath": "client.gsa_pinecone",
+        "description": "client.gsa_pinecone",
+        "isExtraImport": true,
+        "detail": "client.gsa_pinecone",
         "documentation": {}
     },
     {
@@ -4375,6 +4576,14 @@
     },
     {
         "label": "build_project_data_from_dataframe",
+        "importPath": "utils.pipeline",
+        "description": "utils.pipeline",
+        "isExtraImport": true,
+        "detail": "utils.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "process_dataframe_with_agents",
         "importPath": "utils.pipeline",
         "description": "utils.pipeline",
         "isExtraImport": true,
@@ -4494,6 +4703,14 @@
         "documentation": {}
     },
     {
+        "label": "parse_document_intelligent",
+        "importPath": "client.intelligent_parser",
+        "description": "client.intelligent_parser",
+        "isExtraImport": true,
+        "detail": "client.intelligent_parser",
+        "documentation": {}
+    },
+    {
         "label": "split_position_by_hours",
         "importPath": "routers.pricing",
         "description": "routers.pricing",
@@ -4507,6 +4724,22 @@
         "description": "routers.pricing",
         "isExtraImport": true,
         "detail": "routers.pricing",
+        "documentation": {}
+    },
+    {
+        "label": "convert_intelligent_output_to_dataframe",
+        "importPath": "utils.processing",
+        "description": "utils.processing",
+        "isExtraImport": true,
+        "detail": "utils.processing",
+        "documentation": {}
+    },
+    {
+        "label": "process_proposal_documents",
+        "importPath": "utils.processing",
+        "description": "utils.processing",
+        "isExtraImport": true,
+        "detail": "utils.processing",
         "documentation": {}
     },
     {
@@ -4575,6 +4808,23 @@
         "documentation": {}
     },
     {
+        "label": "gc",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "gc",
+        "description": "gc",
+        "detail": "gc",
+        "documentation": {}
+    },
+    {
+        "label": "celery_app",
+        "importPath": "app.worker",
+        "description": "app.worker",
+        "isExtraImport": true,
+        "detail": "app.worker",
+        "documentation": {}
+    },
+    {
         "label": "RunEvent",
         "importPath": "agno.run.agent",
         "description": "agno.run.agent",
@@ -4637,6 +4887,41 @@
         "description": "agent.agent",
         "isExtraImport": true,
         "detail": "agent.agent",
+        "documentation": {}
+    },
+    {
+        "label": "random",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "random",
+        "description": "random",
+        "detail": "random",
+        "documentation": {}
+    },
+    {
+        "label": "traceback",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "traceback",
+        "description": "traceback",
+        "detail": "traceback",
+        "documentation": {}
+    },
+    {
+        "label": "ThreadPoolExecutor",
+        "importPath": "concurrent.futures",
+        "description": "concurrent.futures",
+        "isExtraImport": true,
+        "detail": "concurrent.futures",
+        "documentation": {}
+    },
+    {
+        "label": "numpy",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "numpy",
+        "description": "numpy",
+        "detail": "numpy",
         "documentation": {}
     },
     {
@@ -4779,7 +5064,7 @@
         "kind": 6,
         "importPath": "backend.app.settings",
         "description": "backend.app.settings",
-        "peekOfCode": "class Settings(BaseSettings):\n    \"\"\"Application configuration from environment variables.\"\"\"\n    OPENROUTER_API_KEY: str\n    OPENROUTER_MODEL: str = \"openai/gpt-4o\"\n    OPENAI_API_KEY: str\n    CLAUDE_API_KEY: str\n    CLAUDE_BASE_URL: str = \"https://api.anthropic.com/v1\"\n    DEBUG_MODE:bool =False\n    # LlamaCloud API for document extraction\n    LLAMA_CLOUD_API_KEY: str",
+        "peekOfCode": "class Settings(BaseSettings):\n    \"\"\"Application configuration from environment variables.\"\"\"\n    OPENROUTER_API_KEY: str\n    OPENROUTER_MODEL: str = \"openai/gpt-4o\"\n    OPENAI_API_KEY: str\n    CLAUDE_API_KEY: str\n    CLAUDE_BASE_URL: str = \"https://api.anthropic.com/v1\"\n    DEBUG_MODE:bool=False\n    # LlamaCloud API for document extraction\n    LLAMA_CLOUD_API_KEY: str",
         "detail": "backend.app.settings",
         "documentation": {}
     },
@@ -4817,6 +5102,42 @@
         "description": "backend.app.startup",
         "peekOfCode": "startup_manager = StartupManager()",
         "detail": "backend.app.startup",
+        "documentation": {}
+    },
+    {
+        "label": "build_redis_url",
+        "kind": 2,
+        "importPath": "backend.app.worker",
+        "description": "backend.app.worker",
+        "peekOfCode": "def build_redis_url(db: int) -> str:\n    \"\"\"Build Redis URL with optional authentication.\"\"\"\n    if settings.REDIS_PASSWORD:\n        return f\"redis://:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}/{db}\"\n    return f\"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{db}\"\ncelery_app = Celery(\n    \"priceiq_worker\",\n    broker=build_redis_url(0),\n    backend=build_redis_url(1),\n)",
+        "detail": "backend.app.worker",
+        "documentation": {}
+    },
+    {
+        "label": "backend_dir",
+        "kind": 5,
+        "importPath": "backend.app.worker",
+        "description": "backend.app.worker",
+        "peekOfCode": "backend_dir = str(Path(__file__).resolve().parent.parent)\nif backend_dir not in sys.path:\n    sys.path.insert(0, backend_dir)\nfrom celery import Celery\nfrom app.settings import settings\nlogger = logging.getLogger(__name__)\ndef build_redis_url(db: int) -> str:\n    \"\"\"Build Redis URL with optional authentication.\"\"\"\n    if settings.REDIS_PASSWORD:\n        return f\"redis://:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}/{db}\"",
+        "detail": "backend.app.worker",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.app.worker",
+        "description": "backend.app.worker",
+        "peekOfCode": "logger = logging.getLogger(__name__)\ndef build_redis_url(db: int) -> str:\n    \"\"\"Build Redis URL with optional authentication.\"\"\"\n    if settings.REDIS_PASSWORD:\n        return f\"redis://:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}/{db}\"\n    return f\"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{db}\"\ncelery_app = Celery(\n    \"priceiq_worker\",\n    broker=build_redis_url(0),\n    backend=build_redis_url(1),",
+        "detail": "backend.app.worker",
+        "documentation": {}
+    },
+    {
+        "label": "celery_app",
+        "kind": 5,
+        "importPath": "backend.app.worker",
+        "description": "backend.app.worker",
+        "peekOfCode": "celery_app = Celery(\n    \"priceiq_worker\",\n    broker=build_redis_url(0),\n    backend=build_redis_url(1),\n)\n# Import task modules to register them with Celery\nimport tasks.processing_tasks  # noqa: E402, F401\ncelery_app.conf.update(\n    task_serializer=\"json\",\n    result_serializer=\"json\",",
+        "detail": "backend.app.worker",
         "documentation": {}
     },
     {
@@ -5846,6 +6167,42 @@
         "documentation": {}
     },
     {
+        "label": "UnstructuredClient",
+        "kind": 6,
+        "importPath": "backend.client.unstructured_client",
+        "description": "backend.client.unstructured_client",
+        "peekOfCode": "class UnstructuredClient:\n    \"\"\"Document text extractor using LiteParse.\n    Kept as UnstructuredClient class name for backward compatibility\n    with existing imports (intelligent_parser, gsa_parser).\n    \"\"\"\n    def cleanup(self):\n        \"\"\"No-op — LiteParse has no resources to clean up.\"\"\"\n        pass\n    def extract_from_path(self, file_path: str) -> str:\n        \"\"\"",
+        "detail": "backend.client.unstructured_client",
+        "documentation": {}
+    },
+    {
+        "label": "get_unstructured_client",
+        "kind": 2,
+        "importPath": "backend.client.unstructured_client",
+        "description": "backend.client.unstructured_client",
+        "peekOfCode": "def get_unstructured_client() -> UnstructuredClient:\n    \"\"\"Create an UnstructuredClient instance (LiteParse-backed).\"\"\"\n    return UnstructuredClient()",
+        "detail": "backend.client.unstructured_client",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.client.unstructured_client",
+        "description": "backend.client.unstructured_client",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# Reusable parser instance (no state, thread-safe)\n_parser = LiteParse()\nclass UnstructuredClient:\n    \"\"\"Document text extractor using LiteParse.\n    Kept as UnstructuredClient class name for backward compatibility\n    with existing imports (intelligent_parser, gsa_parser).\n    \"\"\"\n    def cleanup(self):\n        \"\"\"No-op — LiteParse has no resources to clean up.\"\"\"",
+        "detail": "backend.client.unstructured_client",
+        "documentation": {}
+    },
+    {
+        "label": "_parser",
+        "kind": 5,
+        "importPath": "backend.client.unstructured_client",
+        "description": "backend.client.unstructured_client",
+        "peekOfCode": "_parser = LiteParse()\nclass UnstructuredClient:\n    \"\"\"Document text extractor using LiteParse.\n    Kept as UnstructuredClient class name for backward compatibility\n    with existing imports (intelligent_parser, gsa_parser).\n    \"\"\"\n    def cleanup(self):\n        \"\"\"No-op — LiteParse has no resources to clean up.\"\"\"\n        pass\n    def extract_from_path(self, file_path: str) -> str:",
+        "detail": "backend.client.unstructured_client",
+        "documentation": {}
+    },
+    {
         "label": "LaborCategory",
         "kind": 6,
         "importPath": "backend.models.company_repository",
@@ -6048,7 +6405,7 @@
         "kind": 6,
         "importPath": "backend.routers.company_repository",
         "description": "backend.routers.company_repository",
-        "peekOfCode": "class ContractUpdate(BaseModel):\n    \"\"\"Request model for updating contract metadata.\"\"\"\n    name: Optional[str] = None\n    contract_start_date: Optional[str] = None\n    contract_end_date: Optional[str] = None\n# ============================================================================\n# BACKGROUND PROCESSING\n# ============================================================================\nasync def process_gsa_contract(file_id: str, organization_id: str, file_path: str, temp_dir: Path):\n    \"\"\"",
+        "peekOfCode": "class ContractUpdate(BaseModel):\n    \"\"\"Request model for updating contract metadata.\"\"\"\n    name: Optional[str] = None\n    contract_start_date: Optional[str] = None\n    contract_end_date: Optional[str] = None\n# ============================================================================\n# BACKGROUND PROCESSING (moved to utils/processing.py)\n# ============================================================================\n# ============================================================================\n# UPLOAD ENDPOINT",
         "detail": "backend.routers.company_repository",
         "documentation": {}
     },
@@ -6301,15 +6658,6 @@
         "importPath": "backend.routers.proposals",
         "description": "backend.routers.proposals",
         "peekOfCode": "def serialize_proposal(proposal: dict) -> dict:\n    \"\"\"\n    Convert all ObjectId fields to strings for JSON serialization.\n    Also converts snake_case date fields to camelCase for frontend consistency.\n    Args:\n        proposal: Proposal document from MongoDB\n    Returns:\n        Proposal with all ObjectIds converted to strings and dates in camelCase\n    \"\"\"\n    if not proposal:",
-        "detail": "backend.routers.proposals",
-        "documentation": {}
-    },
-    {
-        "label": "convert_intelligent_output_to_dataframe",
-        "kind": 2,
-        "importPath": "backend.routers.proposals",
-        "description": "backend.routers.proposals",
-        "peekOfCode": "def convert_intelligent_output_to_dataframe(intelligent_result: Dict[str, Any]) -> Dict[str, Any]:\n    \"\"\"\n    Convert intelligent parser output to the same format as jd_parser output.\n    Args:\n        intelligent_result: Output from parse_document_intelligent()\n    Returns:\n        Dict with keys: df, travel, odcs, extensions (same as parse_documents_to_dataframe)\n    \"\"\"\n    import pandas as pd\n    metadata = intelligent_result.get(\"metadata\", {})",
         "detail": "backend.routers.proposals",
         "documentation": {}
     },
@@ -6899,6 +7247,42 @@
         "documentation": {}
     },
     {
+        "label": "process_proposal_task",
+        "kind": 2,
+        "importPath": "backend.tasks.processing_tasks",
+        "description": "backend.tasks.processing_tasks",
+        "peekOfCode": "def process_proposal_task(\n    self,\n    proposal_id: str,\n    user_id: str,\n    organization_id: str,\n    file_paths: List[str],\n    file_names: List[str],\n    temp_dir: str,\n    wage_source: Dict[str, Any],\n    preserved_advanced_mode: Optional[bool] = None,",
+        "detail": "backend.tasks.processing_tasks",
+        "documentation": {}
+    },
+    {
+        "label": "process_gsa_contract_task",
+        "kind": 2,
+        "importPath": "backend.tasks.processing_tasks",
+        "description": "backend.tasks.processing_tasks",
+        "peekOfCode": "def process_gsa_contract_task(\n    self,\n    file_id: str,\n    organization_id: str,\n    file_path: str,\n    temp_dir: str,\n) -> Dict[str, Any]:\n    \"\"\"\n    Celery task that processes an uploaded GSA contract file.\n    Wraps the async process_gsa_contract function.",
+        "detail": "backend.tasks.processing_tasks",
+        "documentation": {}
+    },
+    {
+        "label": "backend_dir",
+        "kind": 5,
+        "importPath": "backend.tasks.processing_tasks",
+        "description": "backend.tasks.processing_tasks",
+        "peekOfCode": "backend_dir = str(Path(__file__).resolve().parent.parent)\nif backend_dir not in sys.path:\n    sys.path.insert(0, backend_dir)\nfrom app.worker import celery_app\nlogger = logging.getLogger(__name__)\n@celery_app.task(bind=True)\ndef process_proposal_task(\n    self,\n    proposal_id: str,\n    user_id: str,",
+        "detail": "backend.tasks.processing_tasks",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.tasks.processing_tasks",
+        "description": "backend.tasks.processing_tasks",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n@celery_app.task(bind=True)\ndef process_proposal_task(\n    self,\n    proposal_id: str,\n    user_id: str,\n    organization_id: str,\n    file_paths: List[str],\n    file_names: List[str],\n    temp_dir: str,",
+        "detail": "backend.tasks.processing_tasks",
+        "documentation": {}
+    },
+    {
         "label": "logger",
         "kind": 5,
         "importPath": "backend.utils.agent_streaming",
@@ -7283,6 +7667,24 @@
         "description": "backend.utils.pipeline",
         "peekOfCode": "def build_project_data_from_dataframe(\n    df: pd.DataFrame,\n    project_config: Dict[str, Any]\n) -> Dict[str, Any]:\n    \"\"\"\n    Build project data structure from DataFrame for Excel generation.\n    Args:\n        df: DataFrame with positions and wage data\n        project_config: Configuration with solicitation info, rates, etc.\n    Returns:",
         "detail": "backend.utils.pipeline",
+        "documentation": {}
+    },
+    {
+        "label": "convert_intelligent_output_to_dataframe",
+        "kind": 2,
+        "importPath": "backend.utils.processing",
+        "description": "backend.utils.processing",
+        "peekOfCode": "def convert_intelligent_output_to_dataframe(intelligent_result: Dict[str, Any]) -> Dict[str, Any]:\n    \"\"\"\n    Convert intelligent parser output to the same format as jd_parser output.\n    Returns:\n        Dict with keys: df, travel, odcs, extensions\n    \"\"\"\n    metadata = intelligent_result.get(\"metadata\", {})\n    positions = intelligent_result.get(\"positions\", [])\n    travel = intelligent_result.get(\"travel\", [])\n    odcs = intelligent_result.get(\"odcs\", [])",
+        "detail": "backend.utils.processing",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.utils.processing",
+        "description": "backend.utils.processing",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# ============================================================================\n# HELPER\n# ============================================================================\ndef convert_intelligent_output_to_dataframe(intelligent_result: Dict[str, Any]) -> Dict[str, Any]:\n    \"\"\"\n    Convert intelligent parser output to the same format as jd_parser output.\n    Returns:\n        Dict with keys: df, travel, odcs, extensions\n    \"\"\"",
+        "detail": "backend.utils.processing",
         "documentation": {}
     },
     {
