@@ -1,0 +1,1160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=1400" />
+<title>PriceIQ — Post-Award Platform Architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0b1220;
+    --ink-2: #1f2937;
+    --muted: #64748b;
+    --muted-2: #94a3b8;
+    --line: #e2e8f0;
+    --card: #ffffff;
+    --bg: #f7f8fb;
+    --band: #eef2ff;
+    --accent: #4f46e5;
+    --accent-2: #6366f1;
+    --accent-soft: #eef0ff;
+    --green: #10b981;
+    --green-soft: #ecfdf5;
+    --amber: #f59e0b;
+    --amber-soft: #fffbeb;
+    --red: #ef4444;
+    --shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px rgba(15, 23, 42, 0.06);
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: var(--ink);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+    letter-spacing: -0.005em;
+    font-feature-settings: 'cv11','ss01';
+  }
+  .page {
+    max-width: 1360px;
+    margin: 0 auto;
+    padding: 56px 56px 96px;
+  }
+  /* HEADER */
+  .hero {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 48px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--line);
+    margin-bottom: 40px;
+  }
+  .hero-left .kicker {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--accent);
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .hero-left h1 {
+    font-size: 42px;
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    margin: 0 0 12px;
+    color: var(--ink);
+    line-height: 1.05;
+  }
+  .hero-left h1 em {
+    font-style: normal;
+    color: var(--accent);
+  }
+  .hero-left p {
+    font-size: 17px;
+    color: var(--muted);
+    margin: 0;
+    max-width: 620px;
+    line-height: 1.55;
+  }
+  .hero-right {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .hero-right .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted-2);
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .hero-right .tag {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--ink);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: var(--accent-soft);
+    color: var(--accent);
+    border-radius: 999px;
+  }
+  .hero-right .tag::before {
+    content: '';
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  /* SECTION TITLES */
+  .section {
+    margin-top: 56px;
+  }
+  .section:first-of-type { margin-top: 0; }
+  .section-head {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 20px;
+  }
+  .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    color: var(--muted-2);
+    letter-spacing: 0.05em;
+    font-weight: 600;
+  }
+  .section-title {
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--ink);
+    margin: 0;
+  }
+  .section-sub {
+    font-size: 14px;
+    color: var(--muted);
+    margin: 0 0 20px;
+    max-width: 800px;
+  }
+
+  /* LIFECYCLE STRIP */
+  .lifecycle {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 28px 32px 20px;
+    box-shadow: var(--shadow);
+  }
+  .lifecycle-stages {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0;
+    align-items: stretch;
+    position: relative;
+  }
+  .stage {
+    padding: 14px 10px 18px;
+    text-align: center;
+    position: relative;
+  }
+  .stage:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: 40%;
+    width: 16px;
+    height: 1px;
+    background: var(--muted-2);
+  }
+  .stage:not(:last-child)::before {
+    content: '';
+    position: absolute;
+    right: -10px;
+    top: calc(40% - 3px);
+    width: 0; height: 0;
+    border-left: 6px solid var(--muted-2);
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+  }
+  .stage-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted-2);
+    letter-spacing: 0.1em;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .stage-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .bands {
+    display: grid;
+    grid-template-columns: 2fr 5fr;
+    gap: 6px;
+    margin-top: 14px;
+  }
+  .band {
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    line-height: 1.3;
+  }
+  .band.current {
+    background: var(--green-soft);
+    color: #065f46;
+    border: 1px solid #a7f3d0;
+  }
+  .band.new {
+    background: var(--accent-soft);
+    color: var(--accent);
+    border: 1px solid #c7d2fe;
+  }
+  .band .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .band.current .dot { background: var(--green); }
+  .band.new .dot { background: var(--accent); }
+
+  /* MAIN ARCHITECTURE */
+  .arch {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 32px;
+    align-items: stretch;
+  }
+  .inputs {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 24px 20px;
+    box-shadow: var(--shadow);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .inputs-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  .input-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 12px;
+    border-radius: 10px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-2);
+  }
+  .input-item.primary {
+    background: var(--accent-soft);
+    border-color: #c7d2fe;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .input-icon {
+    width: 28px; height: 28px;
+    display: grid; place-items: center;
+    background: white;
+    border-radius: 7px;
+    border: 1px solid #e2e8f0;
+    flex-shrink: 0;
+  }
+  .input-item.primary .input-icon {
+    background: white;
+    border-color: #c7d2fe;
+  }
+  .input-sub {
+    font-size: 11px;
+    color: var(--muted-2);
+    margin-top: 1px;
+  }
+  .input-item.primary .input-sub { color: var(--accent-2); opacity: 0.9; }
+  .input-col {
+    display: flex; flex-direction: column; min-width: 0;
+  }
+
+  /* STACK */
+  .stack {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .layer {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 18px 22px;
+    box-shadow: var(--shadow);
+    position: relative;
+  }
+  .layer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .layer-title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink);
+  }
+  .layer-meta {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  /* USER LAYER */
+  .user-layer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    padding: 18px 22px;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: white;
+    border: none;
+  }
+  .user-avatar {
+    width: 40px; height: 40px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+    display: grid; place-items: center;
+  }
+  .user-text .name {
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+  }
+  .user-text .role {
+    font-size: 12px;
+    color: #94a3b8;
+  }
+  .user-badge {
+    margin-left: auto;
+    font-size: 11px;
+    color: #cbd5e1;
+    padding: 5px 10px;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 999px;
+    font-weight: 500;
+  }
+
+  /* MODULES */
+  .modules {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 10px;
+  }
+  .module {
+    background: #fafbff;
+    border: 1px solid #e0e7ff;
+    border-radius: 12px;
+    padding: 14px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    min-height: 112px;
+  }
+  .module .icon-wrap {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: white;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+  .module .name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.2;
+  }
+  .module .desc {
+    font-size: 11px;
+    color: var(--muted);
+    line-height: 1.4;
+    margin-top: 2px;
+  }
+
+  /* AGENT ROW */
+  .agents {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+  .agent {
+    background: #fffdf7;
+    border: 1px solid #fde68a;
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .agent .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--amber);
+    flex-shrink: 0;
+    box-shadow: 0 0 0 4px #fef3c7;
+  }
+  .agent .agent-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .agent .agent-sub {
+    font-size: 10.5px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  /* DATA LAYER */
+  .data-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .data-cell {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .data-cell .mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 600;
+    font-size: 12px;
+    color: #065f46;
+  }
+  .data-cell .desc {
+    font-size: 11px;
+    color: #047857;
+  }
+  .data-cell .dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--green);
+    flex-shrink: 0;
+  }
+
+  /* INGESTION LAYER */
+  .ingestion {
+    background: linear-gradient(135deg, #eef0ff 0%, #f5f3ff 100%);
+    border-color: #c7d2fe;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .ingestion .big-icon {
+    width: 48px; height: 48px;
+    background: var(--accent);
+    border-radius: 12px;
+    color: white;
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+  }
+  .ingestion .ing-text .ing-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+  .ingestion .ing-text .ing-desc {
+    font-size: 12px;
+    color: var(--ink-2);
+  }
+  .ingestion .ing-text .ing-desc code {
+    background: white;
+    padding: 1px 6px;
+    border-radius: 4px;
+    border: 1px solid #e0e7ff;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+  }
+
+  /* OPERATIONS LAYER */
+  .ops {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px 26px;
+    margin-top: 14px;
+    box-shadow: var(--shadow);
+    border-left: 4px solid var(--amber);
+  }
+  .ops-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+  .ops-head .title {
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink);
+  }
+  .ops-head .sub {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .ops-items {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+  }
+  .op-item {
+    background: var(--amber-soft);
+    border: 1px solid #fde68a;
+    border-radius: 10px;
+    padding: 12px 14px;
+  }
+  .op-item .op-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #92400e;
+    margin-bottom: 2px;
+  }
+  .op-item .op-desc {
+    font-size: 11px;
+    color: #a16207;
+    line-height: 1.4;
+  }
+
+  /* FLOW ARROWS */
+  .flow-arrow {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--muted-2);
+    margin: -6px 0;
+  }
+
+  /* REUSE SECTION */
+  .reuse {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  .reuse-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px 26px;
+    box-shadow: var(--shadow);
+  }
+  .reuse-card.existing { border-top: 3px solid var(--green); }
+  .reuse-card.new      { border-top: 3px solid var(--accent); }
+
+  .reuse-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+  }
+  .reuse-head h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+  }
+  .reuse-card.existing h3 { color: #065f46; }
+  .reuse-card.new h3      { color: var(--accent); }
+  .reuse-head .count {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .reuse-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .reuse-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: #fafbff;
+    border: 1px solid #eef0ff;
+  }
+  .reuse-card.existing .reuse-item { background: #f0fdf4; border-color: #d1fae5; }
+  .reuse-mono {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .reuse-card.existing .reuse-mono { color: #065f46; }
+  .reuse-card.new .reuse-mono      { color: var(--accent); }
+  .reuse-desc {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+    line-height: 1.45;
+  }
+  .check {
+    width: 18px; height: 18px; border-radius: 50%;
+    flex-shrink: 0;
+    display: grid; place-items: center;
+    margin-top: 1px;
+  }
+  .reuse-card.existing .check { background: var(--green); color: white; }
+  .reuse-card.new .check      { background: var(--accent); color: white; }
+
+  /* DATA FLOW LEVELS */
+  .levels {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px;
+  }
+  .level {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 22px 24px;
+    box-shadow: var(--shadow);
+    position: relative;
+  }
+  .level .level-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-bottom: 6px;
+  }
+  .level .level-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 6px;
+  }
+  .level .level-desc {
+    font-size: 12.5px;
+    color: var(--muted);
+    margin: 0 0 14px;
+    line-height: 1.5;
+  }
+  .level .level-examples {
+    font-size: 11.5px;
+    color: var(--ink-2);
+    line-height: 1.6;
+  }
+  .level .level-examples span {
+    display: inline-block;
+    padding: 3px 8px;
+    background: #f1f5f9;
+    border-radius: 6px;
+    margin: 2px 3px 2px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10.5px;
+    color: var(--ink-2);
+  }
+  .level.now {
+    border-top: 3px solid var(--green);
+  }
+  .level.next {
+    border-top: 3px solid var(--accent);
+  }
+  .level.vision {
+    border-top: 3px solid var(--amber);
+  }
+  .level-phase {
+    display: inline-block;
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-weight: 600;
+    margin-left: 8px;
+    vertical-align: 1px;
+  }
+  .level.now .level-phase    { background: var(--green-soft); color: #065f46; }
+  .level.next .level-phase   { background: var(--accent-soft); color: var(--accent); }
+  .level.vision .level-phase { background: var(--amber-soft); color: #92400e; }
+
+  /* FOOTER */
+  .footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .footer strong { color: var(--ink); }
+  .legend {
+    display: flex;
+    gap: 14px;
+    align-items: center;
+  }
+  .leg {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11.5px;
+    color: var(--ink-2);
+  }
+  .leg .sq {
+    width: 12px; height: 12px; border-radius: 3px;
+  }
+  .leg .sq.green  { background: var(--green); }
+  .leg .sq.accent { background: var(--accent); }
+  .leg .sq.amber  { background: var(--amber); }
+
+  @media print {
+    body { background: white; }
+    .page { padding: 24px; }
+    .hero, .lifecycle, .reuse-card, .ops, .layer, .level, .inputs {
+      box-shadow: none;
+      break-inside: avoid;
+    }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-left">
+      <div class="kicker">PriceIQ Strategy · Post-Award Platform</div>
+      <h1>GovDash for <em>Operations</em></h1>
+      <p>An agentic AI operating system for running federal contracts after you win them — extending PriceIQ from one-time pricing into a multi-year program management platform.</p>
+    </div>
+    <div class="hero-right">
+      <div class="label">Positioning</div>
+      <div class="tag">Agentic, not Assisted</div>
+    </div>
+  </header>
+
+  <!-- SECTION 1 — LIFECYCLE -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-num">01</div>
+      <h2 class="section-title">The Federal Contract Lifecycle</h2>
+    </div>
+    <p class="section-sub">Every federal contract moves through six stages. PriceIQ today plays only in the pricing slice of the proposal. The post-award platform covers the remaining five stages — the years after you win.</p>
+
+    <div class="lifecycle">
+      <div class="lifecycle-stages">
+        <div class="stage"><div class="stage-num">01</div><div class="stage-name">RFP</div></div>
+        <div class="stage"><div class="stage-num">02</div><div class="stage-name">Proposal</div></div>
+        <div class="stage"><div class="stage-num">03</div><div class="stage-name">Program<br/>Management</div></div>
+        <div class="stage"><div class="stage-num">04</div><div class="stage-name">Deliverables</div></div>
+        <div class="stage"><div class="stage-num">05</div><div class="stage-name">Staffing</div></div>
+        <div class="stage"><div class="stage-num">06</div><div class="stage-name">Closeout</div></div>
+        <div class="stage"><div class="stage-num">∞</div><div class="stage-name" style="color: var(--muted)">Recompete</div></div>
+      </div>
+      <div class="bands">
+        <div class="band current"><span class="dot"></span>PriceIQ Today — Pricing Automation</div>
+        <div class="band new"><span class="dot"></span>Post-Award Platform (New) — Program Management through Closeout</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 2 — CORE ARCHITECTURE -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-num">02</div>
+      <h2 class="section-title">System Architecture</h2>
+    </div>
+    <p class="section-sub">One foundation reads the awarded contract and feeds structured data into every module above it. The user never has to know the details — the system does.</p>
+
+    <div class="arch">
+      <!-- INPUTS COLUMN -->
+      <aside class="inputs">
+        <div class="inputs-title">Data Inputs</div>
+        <div class="input-item primary">
+          <div class="input-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+          </div>
+          <div class="input-col">
+            <span>Awarded Contract</span>
+            <span class="input-sub">PDF · source of truth</span>
+          </div>
+        </div>
+        <div class="input-item">
+          <div class="input-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          </div>
+          <div class="input-col">
+            <span>Timesheets</span>
+            <span class="input-sub">CSV · Deltek / Unanet</span>
+          </div>
+        </div>
+        <div class="input-item">
+          <div class="input-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="6" x2="12" y2="12"/><line x1="12" y1="12" x2="16" y2="14"/></svg>
+          </div>
+          <div class="input-col">
+            <span>Expense Reports</span>
+            <span class="input-sub">ODCs · travel · materials</span>
+          </div>
+        </div>
+        <div class="input-item">
+          <div class="input-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          </div>
+          <div class="input-col">
+            <span>Sub Invoices</span>
+            <span class="input-sub">PDF · auto-parsed</span>
+          </div>
+        </div>
+        <div class="input-item">
+          <div class="input-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 14l4-4 4 4 5-5"/></svg>
+          </div>
+          <div class="input-col">
+            <span>Project Milestones</span>
+            <span class="input-sub">Jira · MS Project</span>
+          </div>
+        </div>
+        <div class="input-item">
+          <div class="input-icon">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.66V20a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h5.34"/><polygon points="18 2 22 6 12 16 8 16 8 12 18 2"/></svg>
+          </div>
+          <div class="input-col">
+            <span>Contract Mods</span>
+            <span class="input-sub">SF 30 PDFs</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- STACK -->
+      <div class="stack">
+
+        <!-- USER LAYER -->
+        <div class="layer user-layer">
+          <div class="user-avatar">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div class="user-text">
+            <div class="name">Program Manager</div>
+            <div class="role">Owns the contract for 5+ years · reviews &amp; approves only</div>
+          </div>
+          <div class="user-badge">Primary User</div>
+        </div>
+
+        <div class="flow-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></div>
+
+        <!-- FEATURE MODULES -->
+        <div class="layer">
+          <div class="layer-head">
+            <div class="layer-title">Feature Modules</div>
+            <div class="layer-meta">6 products · one contract in, full lifecycle covered</div>
+          </div>
+          <div class="modules">
+            <div class="module">
+              <div class="icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg></div>
+              <div class="name">Contract Workspace</div>
+              <div class="desc">Dashboard per contract — CLINs, funding, POP, Q&amp;A</div>
+            </div>
+            <div class="module">
+              <div class="icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg></div>
+              <div class="name">CDRL Tracker</div>
+              <div class="desc">Every deliverable, owner, due date, AI quality check</div>
+            </div>
+            <div class="module">
+              <div class="icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="9" y1="13" x2="15" y2="13"/><line x1="9" y1="17" x2="13" y2="17"/></svg></div>
+              <div class="name">MSR Agent</div>
+              <div class="desc">Auto-drafts Monthly Status Reports from program data</div>
+            </div>
+            <div class="module">
+              <div class="icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+              <div class="name">Burn &amp; Staffing</div>
+              <div class="desc">Live burn per CLIN, funding runout, clearance tracking</div>
+            </div>
+            <div class="module">
+              <div class="icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+              <div class="name">Compliance &amp; Mods</div>
+              <div class="desc">Clause monitoring · SF 30 auto-ingest · flow-downs</div>
+            </div>
+            <div class="module">
+              <div class="icon-wrap"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+              <div class="name">Closeout Agent</div>
+              <div class="desc">Final invoice, CDRL reconcile, CPARS narrative draft</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="flow-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></div>
+
+        <!-- AGENT LAYER -->
+        <div class="layer">
+          <div class="layer-head">
+            <div class="layer-title">Agent Layer — Agno</div>
+            <div class="layer-meta">Autonomous AI agents · reasoning · tool-use · RAG</div>
+          </div>
+          <div class="agents">
+            <div class="agent"><div class="dot"></div><div><div class="agent-name">MSR Writer</div><div class="agent-sub">drafts monthly reports</div></div></div>
+            <div class="agent"><div class="dot"></div><div><div class="agent-name">Clause Watcher</div><div class="agent-sub">flags compliance risks</div></div></div>
+            <div class="agent"><div class="dot"></div><div><div class="agent-name">Mod Ingester</div><div class="agent-sub">diffs SF 30 changes</div></div></div>
+            <div class="agent"><div class="dot"></div><div><div class="agent-name">Closeout Agent</div><div class="agent-sub">builds final package</div></div></div>
+          </div>
+        </div>
+
+        <div class="flow-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></div>
+
+        <!-- DATA LAYER -->
+        <div class="layer">
+          <div class="layer-head">
+            <div class="layer-title">Data Layer</div>
+            <div class="layer-meta">Structured contract data · org-scoped · multi-tenant</div>
+          </div>
+          <div class="data-grid">
+            <div class="data-cell"><div class="dot"></div><div><div class="mono">MongoDB</div><div class="desc">contracts · clins · cdrls · mods</div></div></div>
+            <div class="data-cell"><div class="dot"></div><div><div class="mono">Pinecone</div><div class="desc">clause &amp; CDRL semantic search</div></div></div>
+            <div class="data-cell"><div class="dot"></div><div><div class="mono">FAISS</div><div class="desc">labor category matching (reused)</div></div></div>
+          </div>
+        </div>
+
+        <div class="flow-arrow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg></div>
+
+        <!-- INGESTION LAYER -->
+        <div class="layer ingestion">
+          <div class="big-icon">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+          </div>
+          <div class="ing-text">
+            <div class="ing-title">Contract Ingestion Engine</div>
+            <div class="ing-desc">Extends <code>intelligent_parser.py</code> — reads the awarded contract once, extracts CLINs · CDRLs · FAR clauses · funding · POP · key personnel · QASP. The moat.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- OPERATIONS LAYER -->
+    <div class="ops">
+      <div class="ops-head">
+        <div class="title">Operations Layer</div>
+        <div class="sub">· cross-cutting · runs across every contract · feeds PriceIQ pricing</div>
+      </div>
+      <div class="ops-items">
+        <div class="op-item">
+          <div class="op-name">Indirect Rate Manager</div>
+          <div class="op-desc">Forecasts Fringe · OH · G&amp;A from actuals. Flags DCAA-relevant drift. Pushes updated rates back into PriceIQ.</div>
+        </div>
+        <div class="op-item">
+          <div class="op-name">Clearance Registry</div>
+          <div class="op-desc">Single source of truth for who holds what clearance, expiration tracking, reinvestigation alerts.</div>
+        </div>
+        <div class="op-item">
+          <div class="op-name">CMMC Evidence Room</div>
+          <div class="op-desc">Continuous compliance — SSPs, POA&amp;Ms, audit artifacts across the portfolio.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 3 — DATA FLOW LEVELS -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-num">03</div>
+      <h2 class="section-title">How Data Flows In — Three Levels of Maturity</h2>
+    </div>
+    <p class="section-sub">The product evolves from simple CSV uploads (ship-today) to direct system integrations (v2) to fully agentic data capture (the long-term vision). Each level is strictly additive.</p>
+
+    <div class="levels">
+      <div class="level now">
+        <div class="level-tag">LEVEL 01 <span class="level-phase">MVP · SHIP NOW</span></div>
+        <h3 class="level-title">Manual Upload</h3>
+        <p class="level-desc">User exports CSVs from existing systems and uploads to the workspace. Ugly but honest — every GovCon already has these exports sitting in Deltek or Unanet.</p>
+        <div class="level-examples">
+          <span>Timesheet CSV</span>
+          <span>Expense CSV</span>
+          <span>Sub invoice PDFs</span>
+          <span>Manual CDRL toggle</span>
+        </div>
+      </div>
+      <div class="level next">
+        <div class="level-tag">LEVEL 02 <span class="level-phase">V2 · 6–12 MONTHS</span></div>
+        <h3 class="level-title">Direct Integrations</h3>
+        <p class="level-desc">APIs pull data automatically. Dashboard updates itself. No upload friction. This is where the product stops feeling like a tool and starts feeling like infrastructure.</p>
+        <div class="level-examples">
+          <span>Deltek API</span>
+          <span>Unanet API</span>
+          <span>Jira / MS Project</span>
+          <span>WAWF / PIEE</span>
+        </div>
+      </div>
+      <div class="level vision">
+        <div class="level-tag">LEVEL 03 <span class="level-phase">VISION · AGENTIC</span></div>
+        <h3 class="level-title">Ambient Agents</h3>
+        <p class="level-desc">AI agents watch email, Slack, and inboxes. Mods, deliverable acknowledgments, CPARS feedback — all captured automatically. This is the "GovDash for operations" endgame.</p>
+        <div class="level-examples">
+          <span>Email watcher</span>
+          <span>Slack listener</span>
+          <span>Auto-mod diff</span>
+          <span>CO correspondence</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SECTION 4 — REUSE vs NEW -->
+  <section class="section">
+    <div class="section-head">
+      <div class="section-num">04</div>
+      <h2 class="section-title">Existing Stack vs New Build</h2>
+    </div>
+    <p class="section-sub">~60% of the infrastructure is already built for PriceIQ. The post-award platform is an extension, not a rewrite.</p>
+
+    <div class="reuse">
+      <div class="reuse-card existing">
+        <div class="reuse-head">
+          <h3>Reused from PriceIQ</h3>
+          <div class="count">~60% of stack</div>
+        </div>
+        <div class="reuse-list">
+          <div class="reuse-item">
+            <div class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div>
+              <div class="reuse-mono">intelligent_parser.py</div>
+              <div class="reuse-desc">Extended to read awarded contract packages (CLINs, CDRLs, clauses).</div>
+            </div>
+          </div>
+          <div class="reuse-item">
+            <div class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div>
+              <div class="reuse-mono">Agno agent framework</div>
+              <div class="reuse-desc">Powers every post-award agent (MSR writer, clause watcher, etc.).</div>
+            </div>
+          </div>
+          <div class="reuse-item">
+            <div class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div>
+              <div class="reuse-mono">FAISS · Pinecone</div>
+              <div class="reuse-desc">Semantic search for clause Q&amp;A and CDRL lookup — zero new infra.</div>
+            </div>
+          </div>
+          <div class="reuse-item">
+            <div class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div>
+              <div class="reuse-mono">calculation_service.py</div>
+              <div class="reuse-desc">Becomes the burn engine and the indirect rate forecaster.</div>
+            </div>
+          </div>
+          <div class="reuse-item">
+            <div class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div>
+              <div class="reuse-mono">Multi-tenant Mongo · RBAC · Auth · Billing</div>
+              <div class="reuse-desc">Organization isolation, roles, Stripe — all reused as-is.</div>
+            </div>
+          </div>
+          <div class="reuse-item">
+            <div class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div>
+              <div class="reuse-mono">React data grid · Zustand · Next.js</div>
+              <div class="reuse-desc">Excel-like UIs for CDRL and CLIN trackers — same UX pattern.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="reuse-card new">
+        <div class="reuse-head">
+          <h3>New to Build</h3>
+          <div class="count">~40% of stack</div>
+        </div>
+        <div class="reuse-list">
+          <div class="reuse-item">
+            <div class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+            <div>
+              <div class="reuse-mono">Contract Ingestion Pipeline</div>
+              <div class="reuse-desc">The extraction layer — the single most important thing to get right.</div>
+            </div>
+          </div>
+          <div class="reuse-item">
+            <div class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+            <div>
+              <div class="reuse-mono">New collections: contracts · cdrls · clauses · mods · clearances</div>
+              <div class="reuse-desc">MongoDB schema extensions, all org-scoped.</div>
+            </div>
+          </div>
+          <div class="reuse-item">
+            <div class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+            <div>
+              <div class="reuse-mono">MSR drafting agent</div>
+              <div class="reuse-desc">Pulls burn + deliverables + notes, produces monthly status report.</div>
+            </div>
+          </div>
+          <div class="reuse-item">
+            <div class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+            <div>
+              <div class="reuse-mono">Clause watcher + Mod ingester</div>
+              <div class="reuse-desc">Agno agents specialized for compliance and contract changes.</div>
+            </div>
+          </div>
+          <div class="reuse-item">
+            <div class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+            <div>
+              <div class="reuse-mono">Contract Workspace UI</div>
+              <div class="reuse-desc">New Zustand store + dashboard route sitting alongside proposals.</div>
+            </div>
+          </div>
+          <div class="reuse-item">
+            <div class="check"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></div>
+            <div>
+              <div class="reuse-mono">Integration connectors (v2)</div>
+              <div class="reuse-desc">Deltek, Unanet, Jira, WAWF — fake with CSV in MVP, build later.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div>
+      <strong>8-week MVP</strong> · Contract Ingestion → Contract Workspace → CDRL Tracker → MSR Draft Agent
+    </div>
+    <div class="legend">
+      <div class="leg"><span class="sq green"></span>PriceIQ Today</div>
+      <div class="leg"><span class="sq accent"></span>New Modules</div>
+      <div class="leg"><span class="sq amber"></span>Agents / Ops</div>
+    </div>
+  </footer>
+
+</div>
+</body>
+</html>

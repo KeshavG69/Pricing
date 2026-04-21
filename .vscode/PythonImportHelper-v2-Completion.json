@@ -5105,20 +5105,11 @@
         "documentation": {}
     },
     {
-        "label": "build_redis_url",
-        "kind": 2,
-        "importPath": "backend.app.worker",
-        "description": "backend.app.worker",
-        "peekOfCode": "def build_redis_url(db: int) -> str:\n    \"\"\"Build Redis URL with optional authentication.\"\"\"\n    if settings.REDIS_PASSWORD:\n        return f\"redis://:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}/{db}\"\n    return f\"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{db}\"\ncelery_app = Celery(\n    \"priceiq_worker\",\n    broker=build_redis_url(0),\n    backend=build_redis_url(1),\n)",
-        "detail": "backend.app.worker",
-        "documentation": {}
-    },
-    {
         "label": "backend_dir",
         "kind": 5,
         "importPath": "backend.app.worker",
         "description": "backend.app.worker",
-        "peekOfCode": "backend_dir = str(Path(__file__).resolve().parent.parent)\nif backend_dir not in sys.path:\n    sys.path.insert(0, backend_dir)\nfrom celery import Celery\nfrom app.settings import settings\nlogger = logging.getLogger(__name__)\ndef build_redis_url(db: int) -> str:\n    \"\"\"Build Redis URL with optional authentication.\"\"\"\n    if settings.REDIS_PASSWORD:\n        return f\"redis://:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}/{db}\"",
+        "peekOfCode": "backend_dir = str(Path(__file__).resolve().parent.parent)\nif backend_dir not in sys.path:\n    sys.path.insert(0, backend_dir)\nfrom celery import Celery\nfrom app.settings import settings\nlogger = logging.getLogger(__name__)\ncelery_app = Celery(\n    \"priceiq_worker\",\n    broker=f\"{settings.REDIS_URL.rstrip('/')}/0\",\n    backend=f\"{settings.REDIS_URL.rstrip('/')}/1\",",
         "detail": "backend.app.worker",
         "documentation": {}
     },
@@ -5127,7 +5118,7 @@
         "kind": 5,
         "importPath": "backend.app.worker",
         "description": "backend.app.worker",
-        "peekOfCode": "logger = logging.getLogger(__name__)\ndef build_redis_url(db: int) -> str:\n    \"\"\"Build Redis URL with optional authentication.\"\"\"\n    if settings.REDIS_PASSWORD:\n        return f\"redis://:{settings.REDIS_PASSWORD}@{settings.REDIS_HOST}:{settings.REDIS_PORT}/{db}\"\n    return f\"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{db}\"\ncelery_app = Celery(\n    \"priceiq_worker\",\n    broker=build_redis_url(0),\n    backend=build_redis_url(1),",
+        "peekOfCode": "logger = logging.getLogger(__name__)\ncelery_app = Celery(\n    \"priceiq_worker\",\n    broker=f\"{settings.REDIS_URL.rstrip('/')}/0\",\n    backend=f\"{settings.REDIS_URL.rstrip('/')}/1\",\n)\n# Import task modules to register them with Celery\nimport tasks.processing_tasks  # noqa: E402, F401\ncelery_app.conf.update(\n    task_serializer=\"json\",",
         "detail": "backend.app.worker",
         "documentation": {}
     },
@@ -5136,7 +5127,7 @@
         "kind": 5,
         "importPath": "backend.app.worker",
         "description": "backend.app.worker",
-        "peekOfCode": "celery_app = Celery(\n    \"priceiq_worker\",\n    broker=build_redis_url(0),\n    backend=build_redis_url(1),\n)\n# Import task modules to register them with Celery\nimport tasks.processing_tasks  # noqa: E402, F401\ncelery_app.conf.update(\n    task_serializer=\"json\",\n    result_serializer=\"json\",",
+        "peekOfCode": "celery_app = Celery(\n    \"priceiq_worker\",\n    broker=f\"{settings.REDIS_URL.rstrip('/')}/0\",\n    backend=f\"{settings.REDIS_URL.rstrip('/')}/1\",\n)\n# Import task modules to register them with Celery\nimport tasks.processing_tasks  # noqa: E402, F401\ncelery_app.conf.update(\n    task_serializer=\"json\",\n    result_serializer=\"json\",",
         "detail": "backend.app.worker",
         "documentation": {}
     },
@@ -7793,6 +7784,42 @@
         "description": "frontend.node_modules.flatted.python.flatted",
         "peekOfCode": "def stringify(value, *args, **kwargs):\n    known = _Known()\n    input = []\n    output = []\n    i = int(_index(known, input, value))\n    while i < len(input):\n        output.append(_transform(known, input, input[i]))\n        i += 1\n    return _json.dumps(output, *args, **kwargs)",
         "detail": "frontend.node_modules.flatted.python.flatted",
+        "documentation": {}
+    },
+    {
+        "label": "_Known",
+        "kind": 6,
+        "importPath": "video-assets.priceiq-explainer.node_modules.flatted.python.flatted",
+        "description": "video-assets.priceiq-explainer.node_modules.flatted.python.flatted",
+        "peekOfCode": "class _Known:\n    def __init__(self):\n        self.key = []\n        self.value = []\nclass _String:\n    def __init__(self, value):\n        self.value = value\ndef _array_keys(value):\n    for i in range(len(value)):\n        yield i",
+        "detail": "video-assets.priceiq-explainer.node_modules.flatted.python.flatted",
+        "documentation": {}
+    },
+    {
+        "label": "_String",
+        "kind": 6,
+        "importPath": "video-assets.priceiq-explainer.node_modules.flatted.python.flatted",
+        "description": "video-assets.priceiq-explainer.node_modules.flatted.python.flatted",
+        "peekOfCode": "class _String:\n    def __init__(self, value):\n        self.value = value\ndef _array_keys(value):\n    for i in range(len(value)):\n        yield i\ndef _object_keys(value):\n    for key in value:\n        yield key\ndef _is_array(value):",
+        "detail": "video-assets.priceiq-explainer.node_modules.flatted.python.flatted",
+        "documentation": {}
+    },
+    {
+        "label": "parse",
+        "kind": 2,
+        "importPath": "video-assets.priceiq-explainer.node_modules.flatted.python.flatted",
+        "description": "video-assets.priceiq-explainer.node_modules.flatted.python.flatted",
+        "peekOfCode": "def parse(value, *args, **kwargs):\n    json = _json.loads(value, *args, **kwargs)\n    wrapped = []\n    for value in json:\n        wrapped.append(_wrap(value))\n    input = []\n    for value in wrapped:\n        if isinstance(value, _String):\n            input.append(value.value)\n        else:",
+        "detail": "video-assets.priceiq-explainer.node_modules.flatted.python.flatted",
+        "documentation": {}
+    },
+    {
+        "label": "stringify",
+        "kind": 2,
+        "importPath": "video-assets.priceiq-explainer.node_modules.flatted.python.flatted",
+        "description": "video-assets.priceiq-explainer.node_modules.flatted.python.flatted",
+        "peekOfCode": "def stringify(value, *args, **kwargs):\n    known = _Known()\n    input = []\n    output = []\n    i = int(_index(known, input, value))\n    while i < len(input):\n        output.append(_transform(known, input, input[i]))\n        i += 1\n    return _json.dumps(output, *args, **kwargs)",
+        "detail": "video-assets.priceiq-explainer.node_modules.flatted.python.flatted",
         "documentation": {}
     }
 ]
