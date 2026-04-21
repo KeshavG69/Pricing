@@ -4,7 +4,8 @@ import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { termsApi } from '@/lib/api/terms';
 import Link from 'next/link';
-import { BarChart3, ArrowLeft, FileText, Shield, Building2 } from 'lucide-react';
+import Image from 'next/image';
+import { ArrowLeft, FileText, Shield, Building2 } from 'lucide-react';
 import { TermsContent } from '@/components/terms/content/TermsContent';
 import { SummaryContent } from '@/components/terms/content/SummaryContent';
 import { EnterpriseAddendumContent } from '@/components/terms/content/EnterpriseAddendumContent';
@@ -51,12 +52,15 @@ function TermsPageContent() {
       <header className="border-b bg-white sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground">
-              <BarChart3 className="w-6 h-6" />
-            </div>
+            <Image
+              src="/logo.svg"
+              alt="PriceIQ Logo"
+              width={40}
+              height={40}
+            />
             <div className="flex flex-col">
               <span className="text-lg font-bold tracking-tight text-foreground">
-                PriceIQ
+                Price<span className="text-[#5B7FFF]">IQ</span>
               </span>
               <span className="text-xs text-muted-foreground">
                 Gov Pricing Intelligence

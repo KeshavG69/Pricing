@@ -9,7 +9,8 @@ import Card, { CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import RoleBadge from '@/components/ui/RoleBadge';
-import { Mail, Building, User, CheckCircle, XCircle, AlertCircle, BarChart3 } from 'lucide-react';
+import Image from 'next/image';
+import { Mail, Building, User, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
 import { ValidateTokenResponse, AcceptInvitationRequest } from '@/types';
 
 function AcceptInvitationContent() {
@@ -159,11 +160,16 @@ function AcceptInvitationContent() {
         <div className="w-full max-w-md space-y-6">
           {/* Logo */}
           <Link href="/" className="flex items-center justify-center space-x-2">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground">
-              <BarChart3 className="w-6 h-6" />
-            </div>
+            <Image
+              src="/logo.svg"
+              alt="PriceIQ Logo"
+              width={40}
+              height={40}
+            />
             <div className="flex flex-col">
-              <span className="text-lg font-bold tracking-tight text-foreground">PriceIQ</span>
+              <span className="text-lg font-bold tracking-tight text-foreground">
+                Price<span className="text-[#5B7FFF]">IQ</span>
+              </span>
               <span className="text-xs text-muted-foreground">Gov Pricing Intelligence</span>
             </div>
           </Link>
@@ -206,11 +212,16 @@ function AcceptInvitationContent() {
       <div className="w-full max-w-md space-y-6">
         {/* Logo */}
         <Link href="/" className="flex items-center justify-center space-x-2">
-          <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary text-primary-foreground">
-            <BarChart3 className="w-6 h-6" />
-          </div>
+          <Image
+            src="/logo.svg"
+            alt="PriceIQ Logo"
+            width={40}
+            height={40}
+          />
           <div className="flex flex-col">
-            <span className="text-lg font-bold tracking-tight text-foreground">PriceIQ</span>
+            <span className="text-lg font-bold tracking-tight text-foreground">
+              Price<span className="text-[#5B7FFF]">IQ</span>
+            </span>
             <span className="text-xs text-muted-foreground">Gov Pricing Intelligence</span>
           </div>
         </Link>
