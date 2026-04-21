@@ -4,7 +4,7 @@ Company Repository router for managing GSA contract rate sheets.
 Handles file upload, parsing, and CRUD operations for company-specific labor rates.
 """
 
-from fastapi import APIRouter, UploadFile, File, Form, HTTPException, BackgroundTasks, Depends, Body
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Depends, Body
 from pydantic import BaseModel, Field
 from typing import List, Optional, Dict
 from pathlib import Path
@@ -19,7 +19,7 @@ from utils.company_repository import get_company_repository_crud
 from client.gsa_parser import parse_gsa_contract
 from client.idrive_storage import get_idrive_storage
 from client.gsa_pinecone import get_gsa_pinecone_client
-
+from tasks.processing_tasks import process_gsa_contract_task
 router = APIRouter(prefix="/api/company-repository", tags=["company-repository"])
 
 # Simple cache for list endpoint (5 second TTL)
@@ -97,82 +97,8 @@ class ContractUpdate(BaseModel):
 
 
 # ============================================================================
-# BACKGROUND PROCESSING
+# BACKGROUND PROCESSING (moved to utils/processing.py)
 # ============================================================================
-
-async def process_gsa_contract(file_id: str, organization_id: str, file_path: str, temp_dir: Path):
-    """
-    Background task to parse GSA contract and store to MongoDB + Pinecone in parallel.
-    """
-    import asyncio
-    from concurrent.futures import ThreadPoolExecutor
-
-    crud = get_company_repository_crud()
-
-    try:
-        # Parse the GSA contract (run in thread to avoid blocking event loop)
-        result = await asyncio.to_thread(parse_gsa_contract, file_path)
-
-        # Determine status based on whether date was found
-        status = "needs_date" if result["needs_date"] else "active"
-
-        # Define MongoDB update function
-        def update_mongodb():
-            from auth.database import get_mongodb_client
-            mongodb = get_mongodb_client()
-            db = mongodb.get_database()
-
-            db["company_repositories"].update_one(
-                {"file_id": file_id},
-                {"$set": {
-                    "contract_number": result["contract_number"],
-                    "contract_start_date": result["contract_start_date"],
-                    "contract_end_date": result["contract_end_date"],
-                    "company_name": result["company_name"],
-                    "labor_categories": result["labor_categories"],
-                    "labor_category_count": len(result["labor_categories"]),
-                    "status": status,
-                    "updated_at": datetime.utcnow()
-                }}
-            )
-            print(f"  ✓ MongoDB: Stored {len(result['labor_categories'])} labor categories")
-
-        # Define Pinecone store function
-        def store_pinecone():
-            if result["labor_categories"]:
-                pinecone_client = get_gsa_pinecone_client()
-                count = pinecone_client.store_labor_categories(
-                    organization_id=organization_id,
-                    file_id=file_id,
-                    labor_categories=result["labor_categories"]
-                )
-                print(f"  ✓ Pinecone: Stored {count} vectors")
-
-        # Run MongoDB and Pinecone storage in parallel using thread pool
-        loop = asyncio.get_event_loop()
-        with ThreadPoolExecutor(max_workers=2) as executor:
-            mongo_future = loop.run_in_executor(executor, update_mongodb)
-            pinecone_future = loop.run_in_executor(executor, store_pinecone)
-
-            # Wait for both to complete
-            await asyncio.gather(mongo_future, pinecone_future)
-
-        print(f"✓ Processed GSA contract: {file_id}, {len(result['labor_categories'])} labor categories")
-
-        # Invalidate cache so updated status shows immediately
-        invalidate_list_cache(organization_id)
-
-    except Exception as e:
-        print(f"✗ Error processing GSA contract {file_id}: {e}")
-        crud.update_status(file_id, "error", str(e))
-        invalidate_list_cache(organization_id)
-        import traceback
-        traceback.print_exc()
-
-    finally:
-        # Clean up temp directory
-        if temp_dir and temp_dir.exists():
-            shutil.rmtree(temp_dir, ignore_errors=True)
 
 
 # ============================================================================
@@ -181,7 +107,6 @@ async def process_gsa_contract(file_id: str, organization_id: str, file_path: st
 
 @router.post("/upload")
 async def upload_gsa_contract(
-    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     name: str = Form(...),
     current_user: dict = Depends(require_admin)
@@ -257,12 +182,12 @@ async def upload_gsa_contract(
         )
 
         # Start background processing
-        background_tasks.add_task(
-            process_gsa_contract,
+        
+        process_gsa_contract_task.delay(
             file_id,
             org_id,
             str(file_path),
-            temp_dir
+            str(temp_dir),
         )
 
         # Invalidate cache

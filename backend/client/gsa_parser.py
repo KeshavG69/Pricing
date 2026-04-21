@@ -86,7 +86,7 @@ def _convert_rtf_to_txt(rtf_path: str) -> str:
 
 def _extract_full_text(file_path: str) -> str:
     """
-    Extract full text from file (no chunking).
+    Extract full text from file using Unstructured API.
 
     Args:
         file_path: Path to file
@@ -94,83 +94,12 @@ def _extract_full_text(file_path: str) -> str:
     Returns:
         Full document text as single string
     """
-    import os
-    file_ext = os.path.splitext(file_path)[1].lower()
-
-    # =========================================================================
-    # PDF: Extract all pages
-    # =========================================================================
-    if file_ext == '.pdf':
-        try:
-            import PyPDF2
-            pages = []
-            with open(file_path, 'rb') as f:
-                reader = PyPDF2.PdfReader(f)
-                for page in reader.pages:
-                    text = page.extract_text()
-                    if text.strip():
-                        pages.append(text)
-
-            full_text = '\n\n'.join(pages)
-            print(f"     [PDF] Extracted {len(full_text):,} characters from {len(pages)} pages")
-            return full_text
-        except ImportError:
-            raise ImportError("PyPDF2 not installed. Run: pip install PyPDF2")
-
-    # =========================================================================
-    # DOCX: Extract paragraphs and tables
-    # =========================================================================
-    elif file_ext == '.docx':
-        try:
-            import docx
-            doc = docx.Document(file_path)
-            all_content = []
-
-            # Extract paragraphs
-            for para in doc.paragraphs:
-                if para.text.strip():
-                    all_content.append(para.text)
-
-            # Extract tables
-            for table in doc.tables:
-                for row in table.rows:
-                    row_text = ' | '.join([cell.text.strip() for cell in row.cells])
-                    if row_text.strip():
-                        all_content.append(row_text)
-
-            full_text = '\n'.join(all_content)
-            print(f"     [DOCX] Extracted {len(full_text):,} characters")
-            return full_text
-        except ImportError:
-            raise ImportError("python-docx not installed. Run: pip install python-docx")
-
-    # =========================================================================
-    # CSV: Extract all rows
-    # =========================================================================
-    elif file_ext == '.csv':
-        import csv
-        all_lines = []
-
-        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-            reader = csv.reader(f)
-            for row in reader:
-                line = ' | '.join([cell.strip() for cell in row if cell.strip()])
-                if line:
-                    all_lines.append(line)
-
-        full_text = '\n'.join(all_lines)
-        print(f"     [CSV] Extracted {len(full_text):,} characters from {len(all_lines)} rows")
-        return full_text
-
-    # =========================================================================
-    # TXT/RTF: Extract all text
-    # =========================================================================
-    else:
-        with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
-            full_text = f.read()
-
-        print(f"     [TXT] Extracted {len(full_text):,} characters")
-        return full_text
+    from client.unstructured_client import get_unstructured_client
+    client = get_unstructured_client()
+    try:
+        return client.extract_from_path(file_path)
+    finally:
+        client.cleanup()
 
 
 

@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str
     CLAUDE_API_KEY: str
     CLAUDE_BASE_URL: str = "https://api.anthropic.com/v1"
-    DEBUG_MODE:bool =False
+    DEBUG_MODE:bool=False
     # LlamaCloud API for document extraction
     LLAMA_CLOUD_API_KEY: str
 
@@ -38,6 +38,9 @@ class Settings(BaseSettings):
 
     # Help Center Pinecone index (separate from GSA)
     HELP_CENTER_PINECONE_INDEX_NAME: str = "help-center"
+
+    # Redis (Celery broker/backend)
+    REDIS_URL: str = "redis://localhost:6379"
 
     class Config:
         env_file = ".env"

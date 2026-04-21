@@ -5,9 +5,17 @@ FROM python:3.13-slim
 # Install minimal system dependencies
 # faiss-cpu requires: libgomp1
 # healthcheck requires: curl
+# liteparse requires: nodejs (>= 18)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     libgomp1 \
     curl \
+    libreoffice-core \
+    libreoffice-calc \
+    libreoffice-writer \
+    libreoffice-impress \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && npm install -g @llamaindex/liteparse \
     && rm -rf /var/lib/apt/lists/*
 
 # Install uv
@@ -44,6 +52,6 @@ ENV PATH="/app/.venv/bin:$PATH" \
 # Expose port
 EXPOSE 8000
 
-# Run the application with uvicorn
-# Railway proxies this to external port automatically
-CMD ["uvicorn", "app.server:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4"]
+
+
+CMD ["sh", "-c", "uvicorn app.server:app --host 0.0.0.0 --port 8000 & celery -A app.worker.celery_app worker --loglevel=info --pool=threads --concurrency=2"]
