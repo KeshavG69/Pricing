@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { BarChart3, Mail, MapPin, Send } from 'lucide-react';
+import Image from 'next/image';
+import { Mail, MapPin, Send } from 'lucide-react';
 import { submitHubSpotForm, trackHubSpotEvent } from '@/lib/utils/hubspot';
 
 // Extend Window interface to include Calendly
@@ -116,10 +117,16 @@ export default function ContactPage() {
       <nav className="fixed top-0 left-0 right-0 z-40 bg-black/95 backdrop-blur-md border-b border-white/10">
         <div className="max-w-7xl mx-auto px-6 sm:px-8 h-20 flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-3 group">
-            <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-[#2563eb] text-white transition-transform duration-300 group-hover:scale-105">
-              <BarChart3 className="w-6 h-6" />
-            </div>
-            <span className="text-2xl font-bold text-white tracking-tight">PriceIQ</span>
+            <Image
+              src="/logo.svg"
+              alt="PriceIQ Logo"
+              width={48}
+              height={48}
+              className="transition-transform duration-300 group-hover:scale-105"
+            />
+            <span className="text-2xl font-bold text-white tracking-tight">
+              Price<span className="text-[#5B7FFF]">IQ</span>
+            </span>
           </Link>
 
           <div className="hidden lg:flex items-center space-x-8">
@@ -158,7 +165,7 @@ export default function ContactPage() {
               Let's Talk About Winning More Proposals
             </h1>
             <p className="text-xl text-white/90 max-w-3xl mx-auto leading-relaxed">
-              Our team is ready to help you transform your government contracting process. Reach out and let's get started.
+              Our team is ready to help you transform your pricing process. Reach out and let's get started.
             </p>
           </div>
         </section>

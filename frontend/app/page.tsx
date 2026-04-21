@@ -92,7 +92,7 @@ export default function Home() {
             </Link>
             <Link href="/auth/signup">
               <button className="bg-[#2563eb] hover:bg-[#1d4ed8] text-white px-6 py-2.5 rounded-lg font-bold text-base transition-all duration-300 hover:shadow-lg hover:shadow-[#2563eb]/30 hover:-translate-y-0.5">
-                Get Started
+                Create an account
               </button>
             </Link>
           </div>
@@ -139,7 +139,7 @@ export default function Home() {
             </h1>
 
             <p className="text-lg sm:text-xl text-white/90 max-w-3xl mx-auto mb-4 leading-relaxed animate-slide-up" style={{ animationDelay: '0.1s' }}>
-              Transform weeks of work into minutes with AI powered government contracting pricing automation.
+              Transform weeks of work into minutes with PriceIQ
             </p>
 
             <p className="text-base sm:text-lg text-white/70 max-w-2xl mx-auto mb-10 animate-fade-in" style={{ animationDelay: '0.15s' }}>
@@ -168,7 +168,7 @@ export default function Home() {
               SUBMITTING MORE WITH PRICEIQ
             </p>
             <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-center mb-12 lg:mb-16 text-gray-900 leading-tight animate-slide-up">
-              Join contractors winning more government contracts
+              Be more competitive by automating your pricing process
             </h2>
 
             <div className="grid md:grid-cols-2 gap-6 lg:gap-8">
@@ -179,8 +179,12 @@ export default function Home() {
 
                 <div className="relative z-10 text-center">
                   <h3 className="text-2xl lg:text-3xl font-bold leading-tight">
-                    Government contractors are{' '}
-                    <span className="text-[#60a5fa]">submitting 3x faster</span>{' '}
+                    Submit proposals{' '}
+                    <span className="animate-pulse-glow">
+                      <span className="bg-gradient-to-r from-[#60a5fa] via-[#93c5fd] to-[#60a5fa] bg-clip-text text-transparent animate-gradient-shift">
+                        3x faster
+                      </span>
+                    </span>{' '}
                     with PriceIQ
                   </h3>
                 </div>
