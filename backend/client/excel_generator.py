@@ -1947,7 +1947,7 @@ class ExcelGenerator:
         smh_rate = self.project_data.get('passthrough_rates', {}).get('smh', 0.0671)
         fee_rates = self.project_data.get('fee_rates', {})
         prime_fee_rate = fee_rates.get('prime_labor', 0.08)
-        sub_fee_rate = fee_rates.get('sub_labor', 0.0126)
+        sub_fee_rate = fee_rates.get('sub_labor', 0.0)
 
         # Calculate prime labor costs
         for year in range(1, self.total_years + 1):
@@ -1970,18 +1970,20 @@ class ExcelGenerator:
                     )
                     year_data = results.get(year_key, {})
 
-                    # For GSA: Reverse engineer DL from the fully loaded rate for CE Summary display
-                    # IMPORTANT: Use oh_onsite for ALL GSA positions (matching frontend logic)
-                    # GSA rate is FULLY LOADED (includes fee), so must reverse-engineer with fee in multiplier
+                    # For GSA: Reverse engineer DL from the fully loaded rate for CE Summary display.
+                    # GSA rate is FULLY LOADED (includes fee), so we reverse-engineer with fee in multiplier.
+                    # Honor location_type so the displayed OH slice matches the frontend's
+                    # reverseEngineerGSARate (see PRICING_FORMULAS.md § 6.4).
                     gsa_rate = year_data.get('rate', 0)
                     hours = year_data.get('hours', 0)
+                    position_location_type = position.get('location_type', 'On-Site')
+                    position_oh_rate = oh_onsite_rate if position_location_type == 'On-Site' else oh_offsite_rate
 
-                    # Calculate multiplier using oh_onsite AND fee (matching frontend reverseEngineerGSARate)
-                    multiplier = (1 + fringe_rate) * (1 + oh_onsite_rate) * (1 + ga_rate) * (1 + prime_fee_rate)
+                    multiplier = (1 + fringe_rate) * (1 + position_oh_rate) * (1 + ga_rate) * (1 + prime_fee_rate)
                     dl_rate = gsa_rate / multiplier if multiplier > 0 else 0
                     position_dl = dl_rate * hours
                     position_fringe = position_dl * fringe_rate
-                    position_oh = (position_dl + position_fringe) * oh_onsite_rate
+                    position_oh = (position_dl + position_fringe) * position_oh_rate
                 else:
                     # BLS positions: Use standard calculator (respects location_type via indirect_rates)
                     results = Calculator.calculate_position_years(

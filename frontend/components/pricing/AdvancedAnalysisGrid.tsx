@@ -3,6 +3,7 @@
 import { useCallback, useMemo, useState } from 'react';
 import { usePricingStore } from '@/lib/stores/pricingStore';
 import { TravelItem, ODCItem } from '@/types';
+import { isGSAPosition, getGSARateForYear } from '@/lib/utils/salaryHelpers';
 import PrimeLaborSection from './sections/PrimeLaborSection';
 import PrimeLaborAggregatesSection from './sections/PrimeLaborAggregatesSection';
 import CombinedLaborTotalsSection from './sections/CombinedLaborTotalsSection';
@@ -21,6 +22,7 @@ interface AdvancedAnalysisGridProps {
 
 export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysisGridProps) => {
   const {
+    positions,
     positionsAdvanced,
     subcontractors,
     travel,
@@ -189,37 +191,57 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
   }, [aggregates]);
 
   // Calculate subcontractor costs by year with compound escalation (including OT)
+  // For GSA subs, re-derive rate live from the original prime's GSA schedule so that
+  // changes to gsa_discount_rate on the prime reflect immediately (matches OverviewTab
+  // and calculateGrandTotal in pricingStore).
   const subcontractorCostsByYear = useMemo(() => {
     const result: Record<string, number> = {};
     const otMultiplier = rates.ot_multiplier || 1.5;
+    const markupDivisor = 1 + (rates.smh || 0) + (rates.ga_passthrough || 0) + (rates.sub_fee || 0);
 
     subcontractors.forEach((sub) => {
       sub.positions.forEach((pos) => {
+        const originalPrimePos = pos.original_position_id
+          ? positions.find((p) => p.id === pos.original_position_id)
+          : null;
+        const isGSASub = originalPrimePos ? isGSAPosition(originalPrimePos) : false;
+
         Object.entries(pos.hours_per_year).forEach(([yearStr, hours]) => {
           if (!result[yearStr]) result[yearStr] = 0;
 
           const yearNum = parseInt(yearStr);
-          // Apply compound escalation to base rate
-          let escalatedRate = pos.rate;
-          for (let y = 1; y < yearNum; y++) {
-            const escKey = `${y}_to_${y + 1}`;
-            const escRate = escalationRates[escKey] || 0;
-            escalatedRate *= (1 + escRate);
+
+          let effectiveRate: number;
+          if (isGSASub && originalPrimePos) {
+            // GSA sub: derive from the prime's actual GSA schedule (live discount)
+            const gsaYearRate = getGSARateForYear(originalPrimePos, yearNum, escalationRates);
+            const discountRate = originalPrimePos.gsa_discount_rate || 0;
+            effectiveRate = (gsaYearRate * (1 - discountRate)) / markupDivisor;
+          } else if (pos.rates_per_year?.[yearStr] !== undefined) {
+            effectiveRate = pos.rates_per_year[yearStr];
+          } else {
+            // BLS sub: compound escalation from frozen base
+            effectiveRate = pos.rate;
+            for (let y = 1; y < yearNum; y++) {
+              const escKey = `${y}_to_${y + 1}`;
+              const escRate = escalationRates[escKey] || 0;
+              effectiveRate *= (1 + escRate);
+            }
           }
 
           // Regular hours cost
-          result[yearStr] += hours * escalatedRate;
+          result[yearStr] += hours * effectiveRate;
 
           // OT hours cost
           const otHours = pos.ot_hours_per_year?.[yearStr] || 0;
           if (otHours > 0) {
-            result[yearStr] += otHours * escalatedRate * otMultiplier;
+            result[yearStr] += otHours * effectiveRate * otMultiplier;
           }
         });
       });
     });
     return result;
-  }, [subcontractors, escalationRates, rates.ot_multiplier]);
+  }, [positions, subcontractors, escalationRates, rates.smh, rates.ga_passthrough, rates.sub_fee, rates.ot_multiplier]);
 
   // Calculate prime hours by year from positionsAdvanced
   const primeHoursByYear = useMemo(() => {
@@ -351,8 +373,12 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
     return result;
   }, [odcs, rates.smh, totalYears, escalationRates]);
 
-  // Calculate Surge costs by year (base labor cost × surge percentage × surge multiplier)
-  // Formula: Surge Cost = Base Prime Labor Cost × Surge Percentage × Surge Multiplier
+  // Calculate Surge costs by year.
+  // Formula: Surge Cost = Fully-Loaded Prime Labor × Surge Percentage × Surge Multiplier
+  // Per DFARS 252.217-7001, surge is priced at the same billable rate as the
+  // base work — the government pays the fully-loaded rate (including fee) on
+  // every surge hour. We use aggregates.byYear[y].fblr which is fee-inclusive
+  // (sum of breakdown.totalAmount; for GSA it's gsaRate × hours).
   const surgeCostsByYear = useMemo(() => {
     const result: Record<string, number> = {};
 
@@ -369,14 +395,12 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
 
     for (let year = 1; year <= totalYears; year++) {
       const yearStr = year.toString();
-      const baseLaborCost = primeLaborByYear[yearStr] || 0;
-
-      // Surge = Base Labor × Percentage × Multiplier
-      result[yearStr] = baseLaborCost * surgePercentage * surgeMultiplier;
+      const fullyLoadedLabor = aggregates.byYear[yearStr]?.fblr || 0;
+      result[yearStr] = fullyLoadedLabor * surgePercentage * surgeMultiplier;
     }
 
     return result;
-  }, [surge, primeLaborByYear, rates.surge_multiplier, totalYears]);
+  }, [surge, aggregates, rates.surge_multiplier, totalYears]);
 
   // Calculate grand total (includes prime labor, subcontractors, passthrough, fee, Travel, ODCs, and Surge)
   // Formula: Grand Total = Labor CPFF (prime + OT + sub + passthrough + fee) + Total Travel (with G&A) + Total ODCs (with S&MH) + Surge

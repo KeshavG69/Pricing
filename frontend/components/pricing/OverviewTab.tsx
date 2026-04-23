@@ -1,8 +1,7 @@
 'use client';
 
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo } from 'react';
 import { usePricingStore } from '@/lib/stores/pricingStore';
-import { proposalsApi } from '@/lib/api/proposals';
 import { getEffectiveSalary, isGSAPosition, getGSARateForYear, reverseEngineerGSARate } from '@/lib/utils/salaryHelpers';
 import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 // Metric Card Component
@@ -63,7 +62,6 @@ function CostBreakdownBar({
 
 export default function OverviewTab() {
   const {
-    proposalId,
     positions,
     positionsAdvanced,
     advancedMode,
@@ -137,7 +135,7 @@ export default function OverviewTab() {
           const discountRate = pos.gsa_discount_rate || 0;
           const gsaRate = originalGsaRate * (1 - discountRate);
 
-          const breakdown = reverseEngineerGSARate(gsaRate, rates);
+          const breakdown = reverseEngineerGSARate(gsaRate, rates, pos.location_type);
 
           // IMPORTANT: For GSA, the breakdown is ONLY for display purposes
           // The actual cost is ALWAYS gsaRate * hours (independent of indirect rates)
@@ -413,26 +411,6 @@ export default function OverviewTab() {
       grandTotal,
     };
   }, [advancedMode, aggregates, positionsAdvanced, positions, subcontractors, travel, odcs, surge, rates, escalationRates, advancedModeVersion]);
-
-  // Save total_cost to backend whenever grand total changes
-  const saveTotalCostTimer = useRef<NodeJS.Timeout | null>(null);
-  useEffect(() => {
-    if (!proposalId || !costMetrics.grandTotal) return;
-
-    if (saveTotalCostTimer.current) clearTimeout(saveTotalCostTimer.current);
-
-    saveTotalCostTimer.current = setTimeout(async () => {
-      try {
-        await proposalsApi.update(proposalId, { total_cost: costMetrics.grandTotal });
-      } catch (err) {
-        console.error('[OverviewTab] Failed to save total_cost:', err);
-      }
-    }, 1500);
-
-    return () => {
-      if (saveTotalCostTimer.current) clearTimeout(saveTotalCostTimer.current);
-    };
-  }, [costMetrics.grandTotal, proposalId]);
 
   // Calculate year-by-year breakdown
   const yearBreakdown = useMemo(() => {

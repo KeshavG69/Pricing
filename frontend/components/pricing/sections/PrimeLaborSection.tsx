@@ -62,7 +62,7 @@ const calculateAveragedFBLR = (
     const avgGsaRate = totalAmount / totalHours;
 
     // Reverse engineer the GSA rate to show breakdown (for display consistency)
-    const gsaBreakdown = reverseEngineerGSARate(avgGsaRate, rates);
+    const gsaBreakdown = reverseEngineerGSARate(avgGsaRate, rates, position.location_type);
 
     return {
       dlRate: gsaBreakdown.dlRate,
@@ -216,16 +216,17 @@ export const PrimeLaborSection = ({
     return rate;
   };
 
-  // Helper to calculate marked-up subcontractor rate for DISPLAY ONLY
-  // Formula: displayed_rate = escalated_base_rate × (1 + sub_fee) × (1 + smh)
-  // This does NOT change any calculations - purely for display
+  // Helper to calculate marked-up subcontractor rate for DISPLAY
+  // Formula: displayed_rate = escalated_base_rate × (1 + smh + ga_passthrough + sub_fee)
+  // Additive (matches cost aggregation in calculateGrandTotal / OverviewTab / AdvancedAnalysisGrid).
+  // Per DCAA convention: all prime-applied markups (handling + G&A passthrough + sub fee)
+  // stack linearly on the sub's loaded cost rate to produce the billable rate.
   const getSubcontractorDisplayRate = (baseRate: number, year: number): number => {
-    // First apply escalation to base rate
     const escalatedRate = getEscalatedRate(baseRate, year);
-    // Then apply markup (sub_fee + smh)
     const subFee = rates?.sub_fee || 0;
     const smh = rates?.smh || 0;
-    return escalatedRate * (1 + subFee) * (1 + smh);
+    const gaPassthrough = rates?.ga_passthrough || 0;
+    return escalatedRate * (1 + smh + gaPassthrough + subFee);
   };
 
   // Create a version string that changes when rates change to force re-render
@@ -981,36 +982,51 @@ export const PrimeLaborSection = ({
     });
 
     // Add subcontractor totals
+    // GSA subs re-derive live from the prime's gsa_rates_by_year × (1 - gsa_discount_rate)
+    // so discount changes on the prime reflect immediately.
+    const subMarkupDivisor = 1 + (rates.smh || 0) + (rates.ga_passthrough || 0) + (rates.sub_fee || 0);
     subcontractors.forEach((sub) => {
       sub.positions.forEach((subPos) => {
-        // Sum total hours and amounts
+        const originalPrimePos = subPos.original_position_id
+          ? positions.find((p) => p.id === subPos.original_position_id)
+          : null;
+        const isGSASub = originalPrimePos ? isGSAPosition(originalPrimePos) : false;
+
+        // Sum total hours
         const subTotalHours = Object.values(subPos.hours_per_year).reduce((sum, h) => sum + h, 0);
         totals.totalHours += subTotalHours;
 
-        // Calculate subcontractor amounts (with passthrough and fee)
-        const subBaseCost = subTotalHours * subPos.rate;
-        const passthrough = subBaseCost * ((rates.smh || 0) + (rates.ga_passthrough || 0));
-        const subFee = subBaseCost * (rates.sub_fee || 0);
-        const subTotalAmount = subBaseCost + passthrough + subFee;
-        totals.totalAmount += subTotalAmount;
-
-        // Sum per-year hours and amounts
+        // Per-year cost; grand total is the sum (keeps total consistent with per-year)
+        let subPositionTotal = 0;
         for (let year = 1; year <= totalYears; year++) {
           const yearStr = year.toString();
           const hours = subPos.hours_per_year[yearStr] || 0;
           if (!totals.byYear[yearStr]) {
-            totals.byYear[yearStr] = { hours: 0, ot_hours: 0, ot_cost: 0, amount: 0, rate: 0 };  // NEW: Added ot_hours and ot_cost
+            totals.byYear[yearStr] = { hours: 0, ot_hours: 0, ot_cost: 0, amount: 0, rate: 0 };
           }
           totals.byYear[yearStr].hours += hours;
           // Note: Subcontractors don't have OT hours - they use fixed rates
 
-          // Calculate amount for this year with escalation
-          const escalatedRate = getEscalatedRate(subPos.rate, year);
-          const baseCost = hours * escalatedRate;
+          let effectiveRate: number;
+          if (isGSASub && originalPrimePos) {
+            const gsaYearRate = getGSARateForYear(originalPrimePos, year, escalationRates);
+            const discountRate = originalPrimePos.gsa_discount_rate || 0;
+            effectiveRate = (gsaYearRate * (1 - discountRate)) / subMarkupDivisor;
+          } else if (subPos.rates_per_year?.[yearStr] !== undefined) {
+            effectiveRate = subPos.rates_per_year[yearStr];
+          } else {
+            effectiveRate = getEscalatedRate(subPos.rate, year);
+          }
+
+          const baseCost = hours * effectiveRate;
           const passthroughCost = baseCost * ((rates.smh || 0) + (rates.ga_passthrough || 0));
           const feeCost = baseCost * (rates.sub_fee || 0);
-          totals.byYear[yearStr].amount += baseCost + passthroughCost + feeCost;
+          const totalForYear = baseCost + passthroughCost + feeCost;
+          totals.byYear[yearStr].amount += totalForYear;
+          subPositionTotal += totalForYear;
         }
+
+        totals.totalAmount += subPositionTotal;
       });
     });
 
@@ -1109,7 +1125,8 @@ export const PrimeLaborSection = ({
       // If expanded, add breakdown rows
       if (expandedPositions.has(pos.id)) {
         if (pos.assigned_subcontractor_id) {
-          // Subcontractor breakdown: Base Rate, Sub Fee, S&MH (3 rows)
+          // Subcontractor breakdown: Base Rate, S&MH, G&A Passthrough, Sub Fee (4 rows)
+          // Ordered to match the build-up: base + handling + G&A on sub + fee
           rows.push(
             {
               type: 'subcontractor-breakdown',
@@ -1120,13 +1137,19 @@ export const PrimeLaborSection = ({
             {
               type: 'subcontractor-breakdown',
               positionId: pos.id,
-              subcontractorBreakdownType: 'sub_fee',
+              subcontractorBreakdownType: 'smh',
               data: pos,
             },
             {
               type: 'subcontractor-breakdown',
               positionId: pos.id,
-              subcontractorBreakdownType: 'smh',
+              subcontractorBreakdownType: 'ga_passthrough',
+              data: pos,
+            },
+            {
+              type: 'subcontractor-breakdown',
+              positionId: pos.id,
+              subcontractorBreakdownType: 'sub_fee',
               data: pos,
             }
           );
@@ -1545,11 +1568,12 @@ export const PrimeLaborSection = ({
               </div>
             );
           } else if (row.type === 'subcontractor-breakdown') {
-            // Subcontractor breakdown rows (Base Rate, Sub Fee, S&MH)
+            // Subcontractor breakdown rows (Base Rate, S&MH, G&A Passthrough, Sub Fee)
             const labels = {
               base: 'Base Rate',
+              smh: 'S&MH',
+              ga_passthrough: 'G&A Passthrough',
               sub_fee: 'Sub Fee',
-              smh: 'S&MH'
             };
             return (
               <div className="flex items-center h-full px-2 pl-8 bg-blue-50/20">
@@ -1924,6 +1948,7 @@ export const PrimeLaborSection = ({
             const escalatedBaseRate = getEscalatedRate(baseRate, year);
             const subFee = rates?.sub_fee || 0;
             const smh = rates?.smh || 0;
+            const gaPassthrough = rates?.ga_passthrough || 0;
 
             let value = 0;
 
@@ -1935,7 +1960,10 @@ export const PrimeLaborSection = ({
                 value = escalatedBaseRate * subFee;
                 break;
               case 'smh':
-                value = (escalatedBaseRate * (1 + subFee)) * smh;
+                value = escalatedBaseRate * smh;
+                break;
+              case 'ga_passthrough':
+                value = escalatedBaseRate * gaPassthrough;
                 break;
             }
 
@@ -2060,9 +2088,11 @@ export const PrimeLaborSection = ({
               const editedDisplayRate = parseFloat(inputValue) || 0;
 
               // REVERSE ENGINEER: User edited the marked-up rate, convert back to clean base rate
+              // Must match getSubcontractorDisplayRate's additive formula.
               const subFee = rates?.sub_fee || 0;
               const smh = rates?.smh || 0;
-              const newBaseRate = editedDisplayRate / ((1 + subFee) * (1 + smh));
+              const gaPassthrough = rates?.ga_passthrough || 0;
+              const newBaseRate = editedDisplayRate / (1 + smh + gaPassthrough + subFee);
 
               console.log('[MAIN GRID] Reverse engineering base rate:', {
                 positionId: pos.id,
@@ -2407,6 +2437,7 @@ export const PrimeLaborSection = ({
             const hours = breakdown.hours || 0;
             const subFee = rates?.sub_fee || 0;
             const smh = rates?.smh || 0;
+            const gaPassthrough = rates?.ga_passthrough || 0;
 
             let rateValue = 0;
 
@@ -2418,7 +2449,10 @@ export const PrimeLaborSection = ({
                 rateValue = escalatedBaseRate * subFee;
                 break;
               case 'smh':
-                rateValue = (escalatedBaseRate * (1 + subFee)) * smh;
+                rateValue = escalatedBaseRate * smh;
+                break;
+              case 'ga_passthrough':
+                rateValue = escalatedBaseRate * gaPassthrough;
                 break;
             }
 

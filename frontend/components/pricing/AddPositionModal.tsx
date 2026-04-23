@@ -344,8 +344,8 @@ export const AddPositionModal = ({
                 className="w-full px-3 py-2 bg-background border border-input rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
               >
                 <option value="25th">25th Percentile (Entry Level - {'<'} 3 years)</option>
-                <option value="50th">50th Percentile (Mid Level - 3-5 years)</option>
-                <option value="75th">75th Percentile (Senior Level - {'>'} 5 years)</option>
+                <option value="50th">50th Percentile (Mid Level - 3 to {'<'} 6 years)</option>
+                <option value="75th">75th Percentile (Senior Level - ≥ 6 years)</option>
                 <option value="90th">90th Percentile (Expert Level)</option>
               </select>
             </>

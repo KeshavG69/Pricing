@@ -28,8 +28,8 @@ This section explains the data sources behind PriceIQ's automated wage lookup:
 
 ### Wage Percentiles
 - **25th Percentile**: Junior/entry-level (< 3 years experience)
-- **50th Percentile**: Mid-level (3-5 years experience, median wage)
-- **75th Percentile**: Senior (> 5 years experience)
+- **50th Percentile**: Mid-level (3 to < 6 years experience, median wage)
+- **75th Percentile**: Senior (≥ 6 years experience)
 - **90th Percentile**: Expert/leadership roles
 - **Auto-selection**: PriceIQ chooses percentile based on experience level
 
@@ -70,7 +70,7 @@ This section explains the data sources behind PriceIQ's automated wage lookup:
 2. AI matches to closest SOC code (e.g., "Software Engineer" → 15-1252)
 3. System looks up BLS OEWS wage data for that SOC code
 4. Filters by area code (e.g., Washington-Arlington-Alexandria, DC-VA-MD-WV)
-5. Selects percentile based on experience (< 3 years = 25th, 3-5 = 50th, > 5 = 75th)
+5. Selects percentile based on experience (< 3 years = 25th, 3 to < 6 = 50th, ≥ 6 = 75th)
 6. Converts annual wage to hourly (÷ 2080 or 1920 hours)
 7. Applies indirect rates (Fringe, OH, G&A, Fee) to calculate FBLR
 
@@ -127,8 +127,8 @@ This section explains the data sources behind PriceIQ's automated wage lookup:
 ### About Percentiles
 - **Auto-Selected**: Based on experience level in job description
 - **< 3 years**: 25th percentile (entry-level)
-- **3-5 years**: 50th percentile (mid-level, median)
-- **> 5 years**: 75th percentile (senior)
+- **3 to < 6 years**: 50th percentile (mid-level, median)
+- **≥ 6 years**: 75th percentile (senior)
 - **Manual Override**: You can change percentile in Advanced Mode or Wage Data tab
 
 ### About GSA Schedules

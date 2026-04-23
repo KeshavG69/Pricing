@@ -439,12 +439,16 @@ export const usePricingStore = create<PricingState>((set, get) => {
       });
     });
 
-    // Calculate surge costs (if surge option exists)
+    // Calculate surge costs (if surge option exists).
+    // Surge base is fee-INCLUSIVE prime labor (= billable rate): per DFARS
+    // 252.217-7001, surge hours are priced at the same billable rate as base
+    // work, and government billable rate always includes fee.
     let surgeTotal = 0;
     if (state.surge && state.surge.percentage !== null) {
       const surgePercentage = state.surge.percentage;
       const surgeMultiplier = state.rates.surge_multiplier || 1.15;
-      surgeTotal = primeLaborTotal * surgePercentage * surgeMultiplier;
+      const primeLaborWithFee = primeLaborTotal + primeFee;
+      surgeTotal = primeLaborWithFee * surgePercentage * surgeMultiplier;
     }
 
     // Grand total
@@ -494,7 +498,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           const gsaRate = originalGsaRate * (1 - discountRate);
           console.log('[TRANSFORM_GSA] Final gsaRate after discount:', gsaRate);
 
-          const gsaBreakdown = reverseEngineerGSARate(gsaRate, state.rates);
+          const gsaBreakdown = reverseEngineerGSARate(gsaRate, state.rates, pos.location_type);
 
           // IMPORTANT: For GSA, the breakdown is ONLY for display purposes
           // The actual cost is ALWAYS gsaRate * hours (independent of indirect rates)
@@ -1056,7 +1060,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
             oh_onsite: 0.0711,
             oh_offsite: 0.0711,
             ga: 0.2243,
-            fee: 0.08,
+            fee: 0.07,
           };
         } else {
           // Migrate old 'oh' to new structure

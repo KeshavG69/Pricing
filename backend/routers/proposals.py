@@ -1937,7 +1937,7 @@ async def refresh_position_wage_data(
         if experience is not None:
             if experience < 3:
                 selected_percentile = "25th"
-            elif experience <= 5:
+            elif experience < 6:
                 selected_percentile = "50th"
             else:
                 selected_percentile = "75th"

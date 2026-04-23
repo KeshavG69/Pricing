@@ -183,9 +183,8 @@ db.users.createIndex({ "current_organization_id": 1 })
 | `│  ├─ ga` | G&A rate | `0.2243` (22.43%) | Management, HR, accounting |
 | `│  ├─ fee` | Prime contractor fee | `0.07` (7%) | Profit on prime labor |
 | `│  ├─ smh` | Subcontractor handling | `0.065` (6.5%) | Cost to manage subs |
-| `│  ├─ sub_fee` | Fee on subcontractor labor | `0.05` (5%) | Profit on sub labor |
-| `│  ├─ ga_passthrough` | G&A on subcontractor costs | `0.025` (2.5%) | G&A applied to subs |
-| `│  └─ ga_adder` | G&A on ODCs | `0.0243` (2.43%) | G&A applied to travel, materials |
+| `│  ├─ sub_fee` | Fee on subcontractor labor | `0.0` | Profit on sub labor (override per proposal if charged) |
+| `│  └─ ga_passthrough` | G&A on subcontractor costs | `0.025` (2.5%) | G&A applied to subs |
 | `├─ default_escalation_rate` | Annual wage increase | `0.03` (3%) | Year-over-year inflation |
 | `└─ allow_user_rate_override` | Can users change rates? | `true` | If false, rates are locked |
 | **`subscription`** | **Billing information** | See below | **Controls plan limits** |
@@ -281,9 +280,8 @@ if org.settings.allow_user_rate_override:
 | `├─ ga` | G&A rate | `0.2243` | 22.43% |
 | `├─ fee` | Prime labor fee | `0.07` | 7% |
 | `├─ smh` | S&MH rate | `0.065` | 6.5% |
-| `├─ sub_fee` | Subcontractor fee | `0.05` | 5% |
-| `├─ ga_passthrough` | G&A on subs | `0.025` | 2.5% |
-| `└─ ga_adder` | G&A on ODCs | `0.0243` | 2.43% |
+| `├─ sub_fee` | Subcontractor fee | `0.0` | 0% default; override per proposal |
+| `└─ ga_passthrough` | G&A on subs | `0.025` | 2.5% |
 | **`escalation_rates`** | **Year-over-year increases** | Object | **Wage inflation rates** |
 | `├─ 1_to_2` | Year 1 to Year 2 increase | `0.0272` | 2.72% wage increase |
 | `├─ 2_to_3` | Year 2 to Year 3 increase | `0.0299` | 2.99% wage increase |
@@ -334,8 +332,8 @@ if org.settings.allow_user_rate_override:
    ↓
 8. Auto-select wage based on experience
    ├─ < 3 years → 25th percentile
-   ├─ 3-5 years → 50th percentile
-   ├─ > 5 years → 75th percentile
+   ├─ 3 to < 6 years → 50th percentile
+   ├─ ≥ 6 years → 75th percentile
    ├─ Progress = 90%
    ↓
 9. Split positions if hours > 1920 (FTE threshold)

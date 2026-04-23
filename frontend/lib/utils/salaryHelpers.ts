@@ -41,11 +41,14 @@ export function isGSAPosition(position: SpreadsheetPosition | AdvancedPosition):
  *
  * @param gsaRate The GSA hourly rate (final FBLR)
  * @param rates The indirect rates to use for reverse engineering
+ * @param locationType Optional 'On-Site' | 'Off-Site' — picks oh_onsite vs oh_offsite
+ *                     to match how BLS positions present OH. Defaults to On-Site.
  * @returns Breakdown object with dl_rate, fringe, oh, ga, fee, and fblr
  */
 export function reverseEngineerGSARate(
   gsaRate: number,
-  rates: IndirectRates
+  rates: IndirectRates,
+  locationType?: string
 ): {
   dlRate: number;
   fringe: number;
@@ -54,9 +57,12 @@ export function reverseEngineerGSARate(
   fee: number;
   fblr: number;
 } {
-  // For GSA reverse engineering, use oh_onsite as default (with fallbacks)
-  // This is only for display purposes - GSA rates are already fully burdened
-  const ohRate = rates.oh_onsite ?? rates.oh_offsite ?? rates.oh ?? 0.0711;
+  // Pick OH rate based on location_type to match BLS breakdown behavior.
+  // Fallback chain: location-specific rate → opposite rate → legacy oh → default
+  const ohOnsite = rates.oh_onsite ?? rates.oh_offsite ?? rates.oh ?? 0.0711;
+  const ohOffsite = rates.oh_offsite ?? rates.oh_onsite ?? rates.oh ?? 0.0711;
+  const locType = locationType || 'On-Site';
+  const ohRate = locType === 'On-Site' ? ohOnsite : ohOffsite;
 
   console.log(`[REVERSE_ENGINEER_GSA] Input: gsaRate=${gsaRate}, fringe=${rates.fringe}, oh_onsite=${rates.oh_onsite}, oh_offsite=${rates.oh_offsite}, ohRate=${ohRate}, ga=${rates.ga}, fee=${rates.fee}`);
 
@@ -116,8 +122,8 @@ export function getGSARateForYear(
   proposalYear: number,
   escalationRates?: Record<string, number | undefined>
 ): number {
-  // Custom rate overrides all years
-  if (position.gsa_custom_rate != null && position.gsa_custom_rate > 0) {
+  // Custom rate overrides all years (null/undefined means "not set"; 0 is a valid rate)
+  if (position.gsa_custom_rate != null) {
     return position.gsa_custom_rate;
   }
 
@@ -270,7 +276,7 @@ export function isMultiSelectMode(position: SpreadsheetPosition | AdvancedPositi
 export function getSalaryDisplayLabel(position: SpreadsheetPosition | AdvancedPosition): string {
   // GSA positions show "GSA" or "Custom" label
   if (isGSAPosition(position)) {
-    if (position.gsa_custom_rate != null && position.gsa_custom_rate > 0) {
+    if (position.gsa_custom_rate != null) {
       return 'Custom';
     }
     return 'GSA';

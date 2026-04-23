@@ -19,6 +19,7 @@ from datetime import datetime
 from client.jd_parser import parse_documents_to_dataframe
 from utils.pipeline import process_dataframe_with_agents, build_project_data_from_dataframe
 from client.excel_generator import ExcelGenerator
+from client.calculation_service import Calculator
 from utils.proposals import ProposalCRUD
 from utils.helpers import serialize_doc
 from auth.dependencies import get_current_user
@@ -115,14 +116,13 @@ async def generate_excel_from_proposal(
             'escalation_rates': spreadsheet_data.get('escalation_rates') or {},
             'indirect_rates': spreadsheet_data.get('rates') or {},
             'passthrough_rates': {
-                'smh': (spreadsheet_data.get('rates') or {}).get('smh') or 0.0665,
-                'ga': (spreadsheet_data.get('rates') or {}).get('ga_passthrough') or 0.0
+                'smh': (spreadsheet_data.get('rates') or {}).get('smh') or 0.065,
+                'ga': (spreadsheet_data.get('rates') or {}).get('ga_passthrough') or 0.025
             },
             'fee_rates': {
-                'prime_labor': (spreadsheet_data.get('rates') or {}).get('fee') or 0.08,
-                'sub_labor': (spreadsheet_data.get('rates') or {}).get('sub_fee') or 0.0126
+                'prime_labor': (spreadsheet_data.get('rates') or {}).get('fee') or 0.07,
+                'sub_labor': (spreadsheet_data.get('rates') or {}).get('sub_fee') or 0.0
             },
-            'ga_adder_rate': (spreadsheet_data.get('rates') or {}).get('ga') or 0.2243,
 
             # Data
             'subcontractors': [],
@@ -221,30 +221,17 @@ async def generate_excel_from_proposal(
                     hours = hours_per_year.get(year_key) or 0
 
                     if is_gsa_sub:
-                        # Re-derive rate from the prime position's current GSA schedule + discount.
-                        # This mirrors getGSARateForYear() in the frontend so the Excel export
-                        # always reflects the latest gsa_discount_rate, not the frozen pos.rate.
-                        gsa_rates_by_year = prime_pos.get('gsa_rates_by_year') or {}
-                        gsa_current_year = prime_pos.get('gsa_current_year') or 1
+                        # Re-derive rate from the prime position's current GSA schedule + discount
+                        # via the shared helper so Excel export always matches the frontend's
+                        # getGSARateForYear() (source of truth in the UI).
+                        rate = Calculator.get_gsa_rate_for_year(
+                            gsa_rates_by_year=prime_pos.get('gsa_rates_by_year') or {},
+                            gsa_current_year=prime_pos.get('gsa_current_year') or 1,
+                            proposal_year=year,
+                            escalation_rates=project_config.get('escalation_rates') or {},
+                            gsa_custom_rate=prime_pos.get('gsa_custom_rate'),
+                        )
                         discount_rate = prime_pos.get('gsa_discount_rate') or 0.0
-                        contract_year = gsa_current_year + (year - 1)
-                        rate = gsa_rates_by_year.get(str(contract_year)) or 0.0
-
-                        if not rate:
-                            available_years = sorted(
-                                int(y) for y in gsa_rates_by_year if y.isdigit()
-                            )
-                            if available_years:
-                                if contract_year > max(available_years):
-                                    # Compound-escalate from the last available contract year
-                                    rate = gsa_rates_by_year.get(str(max(available_years))) or 0.0
-                                    for cy in range(max(available_years), contract_year):
-                                        py = cy - gsa_current_year + 1
-                                        esc_key = f"{py}_to_{py + 1}"
-                                        rate *= (1 + (project_config['escalation_rates'].get(esc_key) or 0))
-                                else:
-                                    rate = gsa_rates_by_year.get(str(min(available_years))) or 0.0
-
                         # CE Summary shows raw cost only (no passthrough/fee rows),
                         # so store the discounted rate directly.
                         escalated_rate = rate * (1 - discount_rate)
@@ -368,14 +355,13 @@ async def get_project_config_template():
                 "ga": 0.2243
             },
             "passthrough_rates": {
-                "smh": 0.0665,
-                "ga": 0.0
+                "smh": 0.065,
+                "ga": 0.025
             },
             "fee_rates": {
-                "prime_labor": 0.08,
-                "sub_labor": 0.0126
+                "prime_labor": 0.07,
+                "sub_labor": 0.0
             },
-            "ga_adder_rate": 0.2212,
             "subcontractors": [
                 {
                     "name": "Subcontractor A",
@@ -427,7 +413,6 @@ async def get_project_config_template():
                 "indirect_rates": "Fringe, Overhead, and G&A rates for FBLR calculation",
                 "passthrough_rates": "S&MH and G&A rates for subcontractor management",
                 "fee_rates": "Profit margins: higher for prime labor, lower for sub labor",
-                "ga_adder_rate": "G&A rate applied to ODCs",
                 "subcontractors": "Optional: Include if you have subcontractor labor",
                 "odcs": "Optional: Other Direct Costs like travel, equipment, etc.",
                 "include_rate_table": "Set to true to include Sheet 2 with rate calculations"

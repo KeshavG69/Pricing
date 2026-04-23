@@ -121,9 +121,8 @@ async def process_proposal_documents(
             "ga": 0.2243,
             "fee": 0.07,
             "smh": 0.065,
-            "sub_fee": 0.05,
+            "sub_fee": 0.0,
             "ga_passthrough": 0.025,
-            "ga_adder": 0.0,
             "ot_multiplier": 1.5,
             "surge_multiplier": 1.15,
         }

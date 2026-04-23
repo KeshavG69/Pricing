@@ -563,8 +563,8 @@ export const SalarySelectionModal = ({
                       <div className="text-xs text-muted-foreground">
                         {p.value === '10th' && 'Entry level'}
                         {p.value === '25th' && 'Early career (< 3 years)'}
-                        {p.value === '50th' && 'Mid-level (3-5 years)'}
-                        {p.value === '75th' && 'Senior (> 5 years)'}
+                        {p.value === '50th' && 'Mid-level (3 to < 6 years)'}
+                        {p.value === '75th' && 'Senior (≥ 6 years)'}
                         {p.value === '90th' && 'Expert level'}
                       </div>
                     </div>
