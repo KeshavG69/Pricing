@@ -535,8 +535,9 @@ if item.escalate:
 odcTotal     += finalAmount * (1 + (rates.smh || 0))
 ```
 
-- Applies **SMH** (Subcontract & Material Handling), NOT G&A.
-- **No fee.**
+- Applies **SMH only** (Subcontract & Material Handling). No G&A passthrough.
+- Matches the Nexagen CE Summary sample template (`Material` sheet: `Material Handling = base × 'Indirect Rate'!$C$13` where C13 is a single S&MH rate).
+- **No fee** on ODCs (fee is on labor only).
 
 ---
 
@@ -679,29 +680,6 @@ These components receive pre-computed per-year maps as props and just sum them �
 
 ---
 
-## 13. Known divergences (read before porting!)
-
-When you build tools for the chat agent, match the **frontend** version unless explicitly computing something that only lives in backend (Excel export).
-
-| # | Concept | Frontend | Backend | Impact |
-|---|---|---|---|---|
-| D1 / D2 | Different UI displays of the "FBLR" label | Per-year grid cells show fee-inclusive FBLR; averaged columns show fee-excluded (with a separate Fee column next to it, per DCAA cost-proposal build-up format) | Backend `calculate_position_years` returns fee-excluded; `calculate_averaged_fblr` returns fee-inclusive | **Canonical rule, not a bug**: FBLR = `dl + fringe + oh + ga + fee` (fee-inclusive). The pre-fee display in the averaged column is a cosmetic UI split to match government cost-proposal deliverables. Agent always answers with fee-inclusive. See § 5 "Canonical FBLR definition". |
-| ~~D3~~ | ~~Escalation proration by `months_per_year`~~ | **FIXED** — [calculation_service.py:962-976](backend/client/calculation_service.py:962) now applies full-year escalation matching the frontend. `months_per_year` parameter kept for API compat but ignored. | same | resolved |
-| ~~D4~~ | ~~Subcontractor SMH base (cascading vs additive)~~ | **FIXED** — [calculation_service.py:666-693](backend/client/calculation_service.py:666) now applies SMH and fee additively on the sub's loaded cost, matching DCAA allocation-base convention and the frontend. Cap case simplified to `fee = cap - smh` with total = cap exactly. | same | resolved |
-| ~~D5~~ | ~~GSA reverse-engineering ignored `location_type`~~ | **FIXED** — [salaryHelpers.ts:46-68](frontend/lib/utils/salaryHelpers.ts:46) now accepts `locationType`; call sites (store, OverviewTab, PrimeLaborSection averaged-FBLR) pass `pos.location_type` | n/a | resolved |
-| ~~D6~~ | ~~Excel export GSA sub rate re-derivation (parallel impl)~~ | **FIXED** — extracted `Calculator.get_gsa_rate_for_year` ([calculation_service.py:758-824](backend/client/calculation_service.py:758)) as shared source of truth. `excel_export.py` and `calculate_gsa_position_years` both call it now. Also picks up `gsa_custom_rate` support that excel_export previously ignored. Future agent tools use the same helper. | same | resolved |
-| ~~D7~~ | ~~`gsa_custom_rate === 0` treated as unset~~ | **FIXED** — [salaryHelpers.ts:120](frontend/lib/utils/salaryHelpers.ts:120) and [:279](frontend/lib/utils/salaryHelpers.ts:279) now use `!= null` check, so literal `0` is a valid rate | same | resolved |
-| ~~D8~~ | ~~Subcontractor display rate formula~~ | **FIXED** — [PrimeLaborSection.tsx:219-231](frontend/components/pricing/sections/PrimeLaborSection.tsx:219) now uses additive `base × (1 + smh + ga_passthrough + sub_fee)` matching cost aggregation. Edit-reverse at [line 2081](frontend/components/pricing/sections/PrimeLaborSection.tsx:2081) uses additive inverse. Breakdown rows expanded from 3 to 4 to include G&A Passthrough. | same | resolved |
-| ~~D9~~ | ~~Surge base fee-inclusivity~~ | **FIXED** — all three grand-total sites now use fee-inclusive prime labor as the surge base, matching DFARS 252.217-7001 (surge hours priced at the full billable rate). [pricingStore.ts:447-452](frontend/lib/stores/pricingStore.ts:447) uses `primeLaborTotal + primeFee`; [AdvancedAnalysisGrid.tsx:392-398](frontend/components/pricing/AdvancedAnalysisGrid.tsx:392) uses `aggregates.byYear[y].fblr`; OverviewTab already was correct. | n/a | resolved |
-| ~~D10~~ | ~~GSA sub rate live-derivation~~ | **FIXED** across all sub-cost rollups — `AdvancedAnalysisGrid.subcontractorCostsByYear`, `SubcontractorSection.allSubsTotal`, `SubcontractorSection.subcontractorPercentages`, and `PrimeLaborSection` Combined-Totals row all re-derive GSA sub rates live from prime's `gsa_rates_by_year × (1 - gsa_discount_rate) / markupDivisor` | same | resolved |
-| ~~D11~~ | ~~Dual writers to `proposals.total_cost`~~ | **FIXED** — removed the Overview-tab writer. Store is now the sole persister via `saveProposal` (explicit save) and `debouncedAutoSave` (2s auto-save on `isDirty`). Overview is pure display. | n/a | resolved |
-| ~~D12~~ | ~~`ConvertToSubcontractorModal` reverse formula used multiplicative cascade and omitted `ga_passthrough`~~ | **FIXED** — [ConvertToSubcontractorModal.tsx:86-179](frontend/components/pricing/ConvertToSubcontractorModal.tsx:86) now uses additive `markupDivisor = 1 + smh + ga_passthrough + sub_fee` matching `assignPositionToContractor` in the store and § 9.5. Also replaced absurd fallback defaults (0.54, 0.43) with sensible ones (0.08, 0.065). | n/a | resolved |
-| ~~D13~~ | ~~`RateTableView` (orphan dead code with wrong formula)~~ | **DELETED** — file removed from repo. Was not imported anywhere in current source (prior `.next` cache references were stale). | n/a | resolved |
-| ~~D14~~ | ~~Excel generator GSA reverse-engineer ignored `location_type`~~ (D5 analog) | **FIXED** — [excel_generator.py:1974-1988](backend/client/excel_generator.py:1974) now picks `oh_onsite_rate` vs `oh_offsite_rate` based on `position.location_type`, matching the frontend `reverseEngineerGSARate` fix (D5). Actual cost unaffected — CE Summary OH line in Excel now matches UI. | same | resolved |
-| ~~D15~~ | ~~Default rate divergences between backend and frontend~~ | **FIXED** — all default rates aligned to **fee = 0.07** (frontend fallback [pricingStore.ts:1063](frontend/lib/stores/pricingStore.ts:1063) changed 0.08→0.07; backend already 0.07), **sub_fee = 0.0** ([organizations.py:55](backend/utils/organizations.py:55), [processing.py:124](backend/utils/processing.py:124), [excel_generator.py:1950](backend/client/excel_generator.py:1950), [excel_export.py](backend/routers/excel_export.py) all use 0.0; Pydantic models in [routers/organizations.py](backend/routers/organizations.py) already 0.0), **ga_passthrough = 0.025** (Pydantic models in routers/organizations.py and excel_export.py fallbacks raised 0.0→0.025). PRICING_FORMULAS.md § 3 typical values table updated. | n/a | resolved |
-| ~~D16~~ | ~~`ga_adder` legacy field~~ | **FIXED** — field removed from: org creation templates ([organizations.py:47-58](backend/utils/organizations.py:47), [processing.py:117-129](backend/utils/processing.py:117)), router preset copy ([routers/organizations.py:465-478](backend/routers/organizations.py:465)), proposal schema description, project_data builder ([pipeline.py:755-770](backend/utils/pipeline.py:755)), Excel export project_config ([excel_export.py:115-127, 356-364, 410-420](backend/routers/excel_export.py:115)), frontend types ([types/index.ts](frontend/types/index.ts)). `Calculator.calculate_odc_years` signature simplified: `ga_adder_rate` and `ga_rate` params removed, `smh_rate` now required positional param. Back-compat branch deleted. Existing proposals/orgs with `ga_adder` in stored data are simply ignored by new code. | n/a | resolved |
-
----
 
 ## 14. Position splitting (FTE threshold)
 

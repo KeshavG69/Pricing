@@ -366,7 +366,7 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
         odcBase += escalatedAmount;
       });
 
-      // Apply S&MH markup to all ODCs
+      // Apply S&MH markup to all ODCs (matches Nexagen sample template)
       result[yearStr] = odcBase * (1 + smhRate);
     }
 
@@ -528,7 +528,8 @@ export const AdvancedAnalysisGrid = ({ isAdvancedMode = true }: AdvancedAnalysis
         onDelete={deleteTravel}
       />
 
-      {/* ODC Section - Materials, Equipment, etc., uses SMH Rate */}
+      {/* ODC Section - Materials, Equipment, etc., uses SMH Rate only
+           (per Nexagen sample template — Material Handling = S&MH, no G&A). */}
       <ODCSection
         odcs={odcs}
         totalYears={totalYears}

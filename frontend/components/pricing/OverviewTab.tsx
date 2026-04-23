@@ -1071,7 +1071,7 @@ export default function OverviewTab() {
           </div>
 
           {/* Escalation Rates */}
-          {Object.keys(escalationRates).length > 0 && (
+          {escalationRates && Object.keys(escalationRates).length > 0 && (
             <div className="mt-6">
               <h3 className="text-sm font-bold text-foreground mb-3">Escalation Rates</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">

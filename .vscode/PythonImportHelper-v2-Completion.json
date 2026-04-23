@@ -127,6 +127,22 @@
         "documentation": {}
     },
     {
+        "label": "Agent",
+        "importPath": "agno.agent",
+        "description": "agno.agent",
+        "isExtraImport": true,
+        "detail": "agno.agent",
+        "documentation": {}
+    },
+    {
+        "label": "get_chat_llm_agno",
+        "importPath": "client.llm_client",
+        "description": "client.llm_client",
+        "isExtraImport": true,
+        "detail": "client.llm_client",
+        "documentation": {}
+    },
+    {
         "label": "get_chat_llm_agno",
         "importPath": "client.llm_client",
         "description": "client.llm_client",
@@ -375,6 +391,14 @@
         "documentation": {}
     },
     {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
         "label": "threading",
         "kind": 6,
         "isExtraImport": true,
@@ -390,6 +414,14 @@
         "importPath": "logging",
         "description": "logging",
         "detail": "logging",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
         "documentation": {}
     },
     {
@@ -1433,6 +1465,22 @@
         "documentation": {}
     },
     {
+        "label": "get_agent_db",
+        "importPath": "client.agent_memory",
+        "description": "client.agent_memory",
+        "isExtraImport": true,
+        "detail": "client.agent_memory",
+        "documentation": {}
+    },
+    {
+        "label": "get_memory_manager",
+        "importPath": "client.agent_memory",
+        "description": "client.agent_memory",
+        "isExtraImport": true,
+        "detail": "client.agent_memory",
+        "documentation": {}
+    },
+    {
         "label": "asyncio",
         "kind": 6,
         "isExtraImport": true,
@@ -1826,6 +1874,22 @@
         "documentation": {}
     },
     {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
         "label": "UploadFile",
         "importPath": "fastapi",
         "description": "fastapi",
@@ -2067,6 +2131,14 @@
     },
     {
         "label": "FileResponse",
+        "importPath": "fastapi.responses",
+        "description": "fastapi.responses",
+        "isExtraImport": true,
+        "detail": "fastapi.responses",
+        "documentation": {}
+    },
+    {
+        "label": "StreamingResponse",
         "importPath": "fastapi.responses",
         "description": "fastapi.responses",
         "isExtraImport": true,
@@ -2339,6 +2411,14 @@
     },
     {
         "label": "contact",
+        "importPath": "routers",
+        "description": "routers",
+        "isExtraImport": true,
+        "detail": "routers",
+        "documentation": {}
+    },
+    {
+        "label": "pricing_chat",
         "importPath": "routers",
         "description": "routers",
         "isExtraImport": true,
@@ -3422,6 +3502,14 @@
     },
     {
         "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
         "importPath": "pydantic",
         "description": "pydantic",
         "isExtraImport": true,
@@ -4631,6 +4719,22 @@
         "documentation": {}
     },
     {
+        "label": "stream_agent_response",
+        "importPath": "utils.agent_streaming",
+        "description": "utils.agent_streaming",
+        "isExtraImport": true,
+        "detail": "utils.agent_streaming",
+        "documentation": {}
+    },
+    {
+        "label": "create_sse_event_stream",
+        "importPath": "utils.streaming",
+        "description": "utils.streaming",
+        "isExtraImport": true,
+        "detail": "utils.streaming",
+        "documentation": {}
+    },
+    {
         "label": "create_sse_event_stream",
         "importPath": "utils.streaming",
         "description": "utils.streaming",
@@ -4676,6 +4780,14 @@
         "description": "auth.rbac",
         "isExtraImport": true,
         "detail": "auth.rbac",
+        "documentation": {}
+    },
+    {
+        "label": "get_pricing_agent",
+        "importPath": "agent.pricing_agent",
+        "description": "agent.pricing_agent",
+        "isExtraImport": true,
+        "detail": "agent.pricing_agent",
         "documentation": {}
     },
     {
@@ -5056,6 +5168,42 @@
         "description": "backend.agent.help_center_agent",
         "peekOfCode": "_agent_lock = threading.Lock()\ndef get_help_center_agent(session_id: str) -> Agent:\n    \"\"\"\n    Get cached help center agent singleton with session-specific binding.\n    Since the help center agent has no user-specific context, we cache\n    a single instance and reuse it across all requests. Session ID is\n    dynamically bound for conversation tracking and memory.\n    Args:\n        session_id: Session ID for this request\n    Returns:",
         "detail": "backend.agent.help_center_agent",
+        "documentation": {}
+    },
+    {
+        "label": "get_pricing_agent",
+        "kind": 2,
+        "importPath": "backend.agent.pricing_agent",
+        "description": "backend.agent.pricing_agent",
+        "peekOfCode": "def get_pricing_agent(session_id: str, proposal_context: str) -> Agent:\n    \"\"\"\n    Get cached pricing agent singleton with session-specific binding.\n    Session ID is bound dynamically for conversation history / user memories.\n    Args:\n        session_id: Session ID for this request\n        proposal_context: The fully-computed proposal state\n    Returns:\n        Cached Agent instance with updated session_id\n    \"\"\"",
+        "detail": "backend.agent.pricing_agent",
+        "documentation": {}
+    },
+    {
+        "label": "clear_cache",
+        "kind": 2,
+        "importPath": "backend.agent.pricing_agent",
+        "description": "backend.agent.pricing_agent",
+        "peekOfCode": "def clear_cache():\n    \"\"\"Clear the cached pricing agent (for testing / maintenance).\"\"\"\n    global _pricing_agent\n    with _agent_lock:\n        _pricing_agent = None\n        logger.info(\"Cleared pricing agent cache\")",
+        "detail": "backend.agent.pricing_agent",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.agent.pricing_agent",
+        "description": "backend.agent.pricing_agent",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# Global singleton\n_pricing_agent: Optional[Agent] = None\n_agent_lock = threading.Lock()\ndef get_pricing_agent(session_id: str, proposal_context: str) -> Agent:\n    \"\"\"\n    Get cached pricing agent singleton with session-specific binding.\n    Session ID is bound dynamically for conversation history / user memories.\n    Args:\n        session_id: Session ID for this request",
+        "detail": "backend.agent.pricing_agent",
+        "documentation": {}
+    },
+    {
+        "label": "_agent_lock",
+        "kind": 5,
+        "importPath": "backend.agent.pricing_agent",
+        "description": "backend.agent.pricing_agent",
+        "peekOfCode": "_agent_lock = threading.Lock()\ndef get_pricing_agent(session_id: str, proposal_context: str) -> Agent:\n    \"\"\"\n    Get cached pricing agent singleton with session-specific binding.\n    Session ID is bound dynamically for conversation history / user memories.\n    Args:\n        session_id: Session ID for this request\n        proposal_context: The fully-computed proposal state\n    Returns:\n        Cached Agent instance with updated session_id",
+        "detail": "backend.agent.pricing_agent",
         "documentation": {}
     },
     {
@@ -6631,6 +6779,33 @@
         "description": "backend.routers.pricing",
         "peekOfCode": "router = APIRouter()\ndef split_position_by_hours(position: Dict, max_hours: int = 1920) -> List[Dict]:\n    \"\"\"\n    Split a position into multiple FTE rows if hours > max_hours.\n    Args:\n        position: Job position dict with 'hours' field\n        max_hours: Max hours per person (default 1920)\n    Returns:\n        List of position dicts (1 or more)\n    Example:",
         "detail": "backend.routers.pricing",
+        "documentation": {}
+    },
+    {
+        "label": "PricingChatQuery",
+        "kind": 6,
+        "importPath": "backend.routers.pricing_chat",
+        "description": "backend.routers.pricing_chat",
+        "peekOfCode": "class PricingChatQuery(BaseModel):\n    \"\"\"Request body for the pricing chat endpoint.\"\"\"\n    query: str\n    proposal_context: str  # Serialized computed state from the frontend\n    session_id: str\n    organization_id: (\n        str  # Org scope for future tool calls (Mongo query, cross-proposal, billing)\n    )\n@router.post(\"/ask\")\nasync def ask_pricing(request: PricingChatQuery):",
+        "detail": "backend.routers.pricing_chat",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.routers.pricing_chat",
+        "description": "backend.routers.pricing_chat",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nrouter = APIRouter(prefix=\"/api/pricing-chat\", tags=[\"pricing-chat\"])\nclass PricingChatQuery(BaseModel):\n    \"\"\"Request body for the pricing chat endpoint.\"\"\"\n    query: str\n    proposal_context: str  # Serialized computed state from the frontend\n    session_id: str\n    organization_id: (\n        str  # Org scope for future tool calls (Mongo query, cross-proposal, billing)\n    )",
+        "detail": "backend.routers.pricing_chat",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.routers.pricing_chat",
+        "description": "backend.routers.pricing_chat",
+        "peekOfCode": "router = APIRouter(prefix=\"/api/pricing-chat\", tags=[\"pricing-chat\"])\nclass PricingChatQuery(BaseModel):\n    \"\"\"Request body for the pricing chat endpoint.\"\"\"\n    query: str\n    proposal_context: str  # Serialized computed state from the frontend\n    session_id: str\n    organization_id: (\n        str  # Org scope for future tool calls (Mongo query, cross-proposal, billing)\n    )\n@router.post(\"/ask\")",
+        "detail": "backend.routers.pricing_chat",
         "documentation": {}
     },
     {

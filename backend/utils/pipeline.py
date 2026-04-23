@@ -602,6 +602,18 @@ def build_project_data_from_dataframe(
             # Fallback
             base_annual_wage = row.get('wage_50th', 100000)
 
+        # Parse ot_hours_per_year similar to hours_per_year (may be dict or string)
+        ot_hours_per_year = {}
+        if 'ot_hours_per_year' in row and pd.notna(row['ot_hours_per_year']):
+            ot_data = row['ot_hours_per_year']
+            if isinstance(ot_data, str):
+                try:
+                    ot_hours_per_year = ast.literal_eval(ot_data) or {}
+                except (ValueError, SyntaxError):
+                    ot_hours_per_year = {}
+            elif isinstance(ot_data, dict):
+                ot_hours_per_year = ot_data
+
         position = {
             'name': row.get('name', project_config.get('prime_contractor_name', 'TBD')),  # Use prime contractor name
             'labor_category': row['labor_category'],
@@ -609,6 +621,7 @@ def build_project_data_from_dataframe(
             'bls_code': row.get('BLS Code', row.get('soc_code', '')),  # Add BLS Code or soc_code
             'base_annual_wage': base_annual_wage,  # Use prioritized wage (matches frontend getEffectiveSalary)
             'hours_per_year': hours_per_year,
+            'ot_hours_per_year': ot_hours_per_year,
             'standard_fte_hours': row.get('standard_fte_hours', 1880),
             'percentile': row.get('percentile', '50th'),
             'wage_10th': row.get('wage_10th', 0),

@@ -166,6 +166,7 @@ async def generate_excel_from_proposal(
                 'selected_wage': pos.get('selected_wage'),
                 'selected_salaries': pos.get('selected_salaries', []),
                 'hours_per_year': pos.get('hours_per_year', {}),
+                'ot_hours_per_year': pos.get('ot_hours_per_year') or {},
                 'standard_fte_hours': pos.get('standard_fte_hours', 2080),
                 'wage_source': pos.get('wage_source', 'bls'),
                 'gsa_lcat_id': pos.get('gsa_lcat_id'),

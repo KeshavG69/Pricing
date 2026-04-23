@@ -433,7 +433,8 @@ export const usePricingStore = create<PricingState>((set, get) => {
           finalAmount = amount * escalationMultiplier;
         }
 
-        // Apply S&MH markup
+        // Apply S&MH markup only (matches the Nexagen sample template's
+        // Material Handling formula: base × C13 where C13 is just S&MH, no G&A).
         const smhRate = state.rates.smh || 0;
         odcTotal += finalAmount * (1 + smhRate);
       });
@@ -1224,7 +1225,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           extensions: proposal.spreadsheet_data?.extensions || [],
           surge: proposal.spreadsheet_data?.surge || null,  // NEW: Load surge option
           rates: rates,  // Use migrated rates
-          escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Load from spreadsheet_data (fallback to top-level for old proposals)
+          escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates || ({} as EscalationRates),  // Load from spreadsheet_data (fallback to top-level; default {} to avoid Object.keys() on undefined)
           wageSource: proposal.wage_source || { type: 'bls' },  // Load wage source from proposal
           totalYears,
           baseYears: proposal.metadata?.base_years || 1,
@@ -1252,7 +1253,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           extensions: proposal.spreadsheet_data?.extensions || [],
           surge: proposal.spreadsheet_data?.surge || null,  // NEW: Load surge option
           rates: rates,  // Use migrated rates
-          escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Load from spreadsheet_data (fallback to top-level for old proposals)
+          escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates || ({} as EscalationRates),  // Load from spreadsheet_data (fallback to top-level; default {} to avoid Object.keys() on undefined)
           wageSource: proposal.wage_source || { type: 'bls' },  // Cache wage source
           totalYears,
           baseYears: proposal.metadata?.base_years || 1,
