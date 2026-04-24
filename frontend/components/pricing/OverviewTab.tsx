@@ -1,8 +1,7 @@
 'use client';
 
-import { useMemo, useEffect, useRef } from 'react';
+import { useMemo } from 'react';
 import { usePricingStore } from '@/lib/stores/pricingStore';
-import { proposalsApi } from '@/lib/api/proposals';
 import { getEffectiveSalary, isGSAPosition, getGSARateForYear, reverseEngineerGSARate } from '@/lib/utils/salaryHelpers';
 import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 // Metric Card Component
@@ -18,11 +17,20 @@ function MetricCard({
   return (
     <Card>
       <CardContent className="pt-6">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            <h3 className="text-3xl font-bold text-foreground mt-2">{value}</h3>
-            <p className="text-xs text-muted-foreground mt-1">{subtitle}</p>
+        <div className="flex items-center justify-between gap-2">
+          {/* min-w-0 so the flex child can shrink below its content's intrinsic width */}
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-muted-foreground truncate">{title}</p>
+            {/*
+              Responsive value sizing — large on wide screens, smaller when the
+              container is narrow (e.g. when the pricing chat panel is open and
+              pushes content to ~70% of the viewport). tabular-nums aligns digits,
+              tracking-tight shaves kerning, break-all ensures nothing overflows.
+            */}
+            <h3 className="mt-2 font-bold text-foreground tabular-nums tracking-tight break-all text-xl md:text-2xl 2xl:text-3xl">
+              {value}
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1 truncate">{subtitle}</p>
           </div>
         </div>
       </CardContent>
@@ -44,9 +52,9 @@ function CostBreakdownBar({
 }) {
   return (
     <div className="mb-4">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-sm font-medium text-foreground">{label}</span>
-        <span className="text-sm font-semibold text-muted-foreground">
+      <div className="flex items-center justify-between gap-3 mb-2 flex-wrap">
+        <span className="text-sm font-medium text-foreground min-w-0 truncate">{label}</span>
+        <span className="text-sm font-semibold text-muted-foreground tabular-nums whitespace-nowrap">
           ${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
           <span className="ml-2 text-xs">({percentage.toFixed(1)}%)</span>
         </span>
@@ -63,7 +71,6 @@ function CostBreakdownBar({
 
 export default function OverviewTab() {
   const {
-    proposalId,
     positions,
     positionsAdvanced,
     advancedMode,
@@ -137,7 +144,7 @@ export default function OverviewTab() {
           const discountRate = pos.gsa_discount_rate || 0;
           const gsaRate = originalGsaRate * (1 - discountRate);
 
-          const breakdown = reverseEngineerGSARate(gsaRate, rates);
+          const breakdown = reverseEngineerGSARate(gsaRate, rates, pos.location_type);
 
           // IMPORTANT: For GSA, the breakdown is ONLY for display purposes
           // The actual cost is ALWAYS gsaRate * hours (independent of indirect rates)
@@ -413,26 +420,6 @@ export default function OverviewTab() {
       grandTotal,
     };
   }, [advancedMode, aggregates, positionsAdvanced, positions, subcontractors, travel, odcs, surge, rates, escalationRates, advancedModeVersion]);
-
-  // Save total_cost to backend whenever grand total changes
-  const saveTotalCostTimer = useRef<NodeJS.Timeout | null>(null);
-  useEffect(() => {
-    if (!proposalId || !costMetrics.grandTotal) return;
-
-    if (saveTotalCostTimer.current) clearTimeout(saveTotalCostTimer.current);
-
-    saveTotalCostTimer.current = setTimeout(async () => {
-      try {
-        await proposalsApi.update(proposalId, { total_cost: costMetrics.grandTotal });
-      } catch (err) {
-        console.error('[OverviewTab] Failed to save total_cost:', err);
-      }
-    }, 1500);
-
-    return () => {
-      if (saveTotalCostTimer.current) clearTimeout(saveTotalCostTimer.current);
-    };
-  }, [costMetrics.grandTotal, proposalId]);
 
   // Calculate year-by-year breakdown
   const yearBreakdown = useMemo(() => {
@@ -776,8 +763,9 @@ export default function OverviewTab() {
 
   return (
     <div className="space-y-3">
-      {/* Cost Metrics Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      {/* Cost Metrics Row — 4-up only at xl+ so cards don't get cramped when
+           the pricing chat panel is open (which narrows effective viewport by ~28rem) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         <MetricCard
           title="Total Contract Value"
           value={formatCurrency(costMetrics.grandTotal)}
@@ -1093,7 +1081,7 @@ export default function OverviewTab() {
           </div>
 
           {/* Escalation Rates */}
-          {Object.keys(escalationRates).length > 0 && (
+          {escalationRates && Object.keys(escalationRates).length > 0 && (
             <div className="mt-6">
               <h3 className="text-sm font-bold text-foreground mb-3">Escalation Rates</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">

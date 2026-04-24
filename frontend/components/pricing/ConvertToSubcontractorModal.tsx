@@ -83,11 +83,14 @@ export const ConvertToSubcontractorModal = ({
 
     if (totalHours === 0) return 0;
 
-    const feeRate = rates.sub_fee || rates.fee || 0.54;
-    const smhRate = rates.smh || 0.43;
+    const feeRate = rates.sub_fee || rates.fee || 0.07;
+    const smhRate = rates.smh || 0.065;
+    const gaPassthrough = rates.ga_passthrough || 0.025;
+    // Additive markup, matches § 9.5 and assignPositionToContractor in pricingStore.
+    const markupDivisor = 1 + smhRate + gaPassthrough + feeRate;
 
     console.log('[CONVERT_MODAL] ========== CALCULATING SUGGESTED RATE ==========');
-    console.log('[CONVERT_MODAL] Fee rate:', feeRate, 'S&MH rate:', smhRate);
+    console.log('[CONVERT_MODAL] Fee rate:', feeRate, 'S&MH rate:', smhRate, 'G&A passthrough:', gaPassthrough);
     console.log('[CONVERT_MODAL] Position labor_category:', position.labor_category);
     console.log('[CONVERT_MODAL] Position type:', isAdvancedPosition(position) ? 'AdvancedPosition' : 'SpreadsheetPosition');
 
@@ -105,8 +108,8 @@ export const ConvertToSubcontractorModal = ({
         const fblr = yearBreakdown.fblr;
         console.log('[CONVERT_MODAL] FBLR from breakdown:', fblr);
 
-        // REVERSE: Base = FBLR / ((1 + Fee) × (1 + S&MH))
-        const baseRate = fblr / ((1 + feeRate) * (1 + smhRate));
+        // REVERSE: Base = FBLR / (1 + Fee + S&MH + G&A passthrough)  [additive]
+        const baseRate = fblr / markupDivisor;
         console.log('[CONVERT_MODAL] Calculated base rate:', baseRate);
         console.log('[CONVERT_MODAL] ========================================');
         return Math.round(baseRate * 100) / 100;
@@ -162,8 +165,8 @@ export const ConvertToSubcontractorModal = ({
       fblr = dlRate + fringe + oh + ga + fee;
     }
 
-    // REVERSE: Base = FBLR / ((1 + Fee) × (1 + S&MH))
-    const baseRate = fblr / ((1 + feeRate) * (1 + smhRate));
+    // REVERSE: Base = FBLR / (1 + Fee + S&MH + G&A passthrough)  [additive]
+    const baseRate = fblr / markupDivisor;
 
     console.log('[CONVERT_MODAL] Final baseRate:', baseRate);
 

@@ -392,13 +392,11 @@ class Calculator:
     @staticmethod
     def calculate_odc_years(
         odc_data: Dict[str, Any],
-        ga_adder_rate: float,
         escalation_rates: Dict[str, float],
         total_years: int,
+        smh_rate: float,
         apply_adder: bool = True,
         escalate: bool = False,
-        ga_rate: float = None,
-        smh_rate: float = None
     ) -> Dict[str, Any]:
         """
         Calculate ODC (Other Direct Costs) for all years with SMH Rate.
@@ -418,13 +416,11 @@ class Calculator:
                     - category: str (e.g., "Materials", "Equipment")
                     - description: str (optional)
                     - amount_year_1: float (base amount for Year 1)
-            ga_adder_rate: Legacy G&A adder rate (for backward compatibility)
             escalation_rates: Dict like {"1_to_2": 0.0272, "2_to_3": 0.0299, ...}
             total_years: Number of years
+            smh_rate: SMH Rate for ODCs (e.g., 0.065 for 6.5%)
             apply_adder: Whether to apply overhead (default True)
             escalate: Whether to escalate ODC year-over-year (default False - most ODCs stay fixed)
-            ga_rate: NOT USED for ODCs (only for Travel which is now separate)
-            smh_rate: SMH Rate for ODCs (e.g., 0.065 for 6.5%)
 
         Returns:
             Dict with:
@@ -437,9 +433,7 @@ class Calculator:
             ...     "category": "Equipment",
             ...     "amount_per_year": {"1": 5000, "2": 5000}
             ... }
-            >>> Calculator.calculate_odc_years(
-            ...     odc, 0, {}, 2, True, smh_rate=0.065
-            ... )
+            >>> Calculator.calculate_odc_years(odc, {}, 2, smh_rate=0.065)
             {
                 'category': 'Equipment',
                 'year_1': {'base': 5000, 'smh': 325, 'total': 5325},
@@ -452,9 +446,7 @@ class Calculator:
             ...     "category": "Materials",
             ...     "amount_per_year": {"1": 5000, "2": 5150}
             ... }
-            >>> Calculator.calculate_odc_years(
-            ...     odc, 0, {}, 2, True, smh_rate=0.065
-            ... )
+            >>> Calculator.calculate_odc_years(odc, {}, 2, smh_rate=0.065)
             {
                 'category': 'Materials',
                 'year_1': {'base': 5000, 'smh': 325, 'total': 5325},
@@ -465,15 +457,10 @@ class Calculator:
         results = {}
         category = odc_data["category"]
 
-        # ODCs use SMH Rate (Subcontract & Material Handling)
-        # Travel is now completely separate and not handled by this method
-        if smh_rate is not None:
-            overhead_rate = smh_rate  # SMH Rate for ODCs (Equipment, Materials, etc.)
-            overhead_label = "smh"
-        else:
-            # Backward compatibility: use ga_adder_rate if smh_rate not provided
-            overhead_rate = ga_adder_rate
-            overhead_label = "ga_adder"
+        # ODCs use SMH Rate (Subcontract & Material Handling) additively.
+        # Travel is separate and not handled by this method (see calculate_travel_years).
+        overhead_rate = smh_rate
+        overhead_label = "smh"
 
         # Check if frontend sent pre-calculated amounts (new format)
         if "amount_per_year" in odc_data:
@@ -606,10 +593,14 @@ class Calculator:
         1. Fee (profit for bringing them in)
         2. S&MH (Subcontractor & Material Handling - cost to manage them)
 
-        S&MH applies to (base + fee), not just base (cascading).
+        Both apply ADDITIVELY to the sub's loaded rate (per DCAA convention:
+        the material/subcontract handling allocation base is the subcontract
+        cost itself, not cost + prime fee). This matches the frontend cost
+        aggregation in calculateGrandTotal / AdvancedAnalysisGrid / OverviewTab.
 
         For contracts with max pass-through cap (e.g., SeaPort-NxG at 8%):
-        Fee is calculated as: max_passthrough_rate - smh_rate
+        Fee is calculated as max_passthrough_rate - smh_rate so that total
+        markup (fee + smh) equals the cap exactly.
 
         Args:
             sub_base_rate: Subcontractor's FBLR ($/hr)
@@ -630,9 +621,9 @@ class Calculator:
             >>> Calculator.calculate_subcontractor_markup(140.0, 0.10, 0.0665)
             {
                 'sub_base_rate': 140.0,
-                'fee': 14.0,
-                'smh': 10.24,
-                'final_rate': 164.24,
+                'fee': 14.0,          # 140 × 0.10
+                'smh': 9.31,          # 140 × 0.0665 (additive, on base only)
+                'final_rate': 163.31, # 140 + 14 + 9.31
                 'applied_fee_rate': 0.10
             }
 
@@ -644,15 +635,17 @@ class Calculator:
             ... )
             {
                 'sub_base_rate': 140.0,
-                'fee': 1.89,  # (8% - 6.65%) = 1.35% of 140
-                'smh': 9.43,
-                'final_rate': 151.32,
+                'fee': 1.89,          # (8% - 6.65%) = 1.35% of 140
+                'smh': 9.31,          # 140 × 0.0665
+                'final_rate': 151.20, # 140 + 1.89 + 9.31 (= 140 × 1.08, exactly 8%)
                 'applied_fee_rate': 0.0135
             }
         """
         # Determine fee rate based on cap requirement
         if has_max_passthrough_cap and max_passthrough_rate is not None:
-            # Contract has cap (e.g., SeaPort-NxG) - calculate fee from cap
+            # Contract has cap (e.g., SeaPort-NxG): both fee and SMH apply to the
+            # same base (the sub's loaded cost rate), so total markup = fee + smh.
+            # Constrain fee so that (fee + smh) <= cap.
             applied_fee_rate = max_passthrough_rate - smh_rate
 
             if applied_fee_rate < 0:
@@ -665,13 +658,14 @@ class Calculator:
             # Normal contract - use provided fee_rate
             applied_fee_rate = fee_rate
 
-        # Step 1: Add fee to subcontractor's rate
+        # Per DCAA convention, subcontract handling (S&MH) is allocated over the
+        # subcontract COST base — not over (cost + prime fee). Apply both S&MH
+        # and the prime's fee ADDITIVELY to the sub's loaded rate so the math
+        # matches the frontend (calculateGrandTotal, AdvancedAnalysisGrid, etc.)
+        # and what the government ultimately sees.
         fee = round(sub_base_rate * applied_fee_rate, 2)
-        with_fee = round(sub_base_rate + fee, 2)
-
-        # Step 2: Add S&MH to the subtotal (cascading)
-        smh = round(with_fee * smh_rate, 2)
-        final_rate = round(with_fee + smh, 2)
+        smh = round(sub_base_rate * smh_rate, 2)
+        final_rate = round(sub_base_rate + fee + smh, 2)
 
         return {
             "sub_base_rate": sub_base_rate,
@@ -688,8 +682,8 @@ class Calculator:
 
         Uses industry-standard rules:
         - Junior level (< 3 years) → 25th percentile
-        - Mid level (3-5 years) → 50th percentile (median)
-        - Senior level (> 5 years) → 75th percentile
+        - Mid level (3 to < 6 years) → 50th percentile (median)
+        - Senior level (≥ 6 years) → 75th percentile
 
         Frontend can override this selection via dropdown.
 
@@ -709,9 +703,9 @@ class Calculator:
         """
         if experience_years < 3:
             return "25th"
-        elif 3 <= experience_years <= 5:
+        elif 3 <= experience_years < 6:
             return "50th"
-        else:  # > 5 years
+        else:  # >= 6 years
             return "75th"
 
     @staticmethod
@@ -747,6 +741,76 @@ class Calculator:
                 f"Available percentiles: {list(wages_dict.keys())}"
             )
         return float(wages_dict[percentile])
+
+    @staticmethod
+    def get_gsa_rate_for_year(
+        gsa_rates_by_year: Dict[str, float],
+        gsa_current_year: Optional[int],
+        proposal_year: int,
+        escalation_rates: Optional[Dict[str, float]] = None,
+        gsa_custom_rate: Optional[float] = None,
+    ) -> float:
+        """
+        Look up the GSA hourly rate for a given proposal year.
+
+        Mirrors frontend/lib/utils/salaryHelpers.ts:getGSARateForYear so Excel
+        export, agent tools, and any future Python consumer produce the same
+        rate the UI shows. Keep both implementations in sync.
+
+        Resolution order:
+          1. If gsa_custom_rate is set (not None), return it. 0 is a valid rate.
+          2. Map proposal_year → contract_year via gsa_current_year offset and
+             return gsa_rates_by_year[contract_year] if present.
+          3. If contract_year is beyond the last available rate, start from the
+             last known rate and compound-escalate using escalation_rates.
+             Without escalation_rates, return the last known rate unchanged.
+          4. If contract_year is before the first available rate, return the
+             earliest known rate.
+          5. Otherwise return 0.0.
+
+        Args:
+            gsa_rates_by_year: Dict of contract-year → rate, e.g. {"5": 185.50}
+            gsa_current_year: Contract year that aligns with proposal year 1
+            proposal_year: 1-based proposal year to look up
+            escalation_rates: Optional, e.g. {"1_to_2": 0.027}
+            gsa_custom_rate: Optional hard-override for all years
+
+        Returns:
+            Hourly rate in dollars (float), or 0.0 if no data.
+        """
+        # Custom rate overrides everything (None = unset; literal 0 is valid)
+        if gsa_custom_rate is not None:
+            return float(gsa_custom_rate)
+
+        if not gsa_rates_by_year:
+            return 0.0
+
+        current_gsa_year = gsa_current_year or 1
+        contract_year = current_gsa_year + (proposal_year - 1)
+
+        rate = gsa_rates_by_year.get(str(contract_year))
+        if rate:
+            return float(rate)
+
+        available_years = sorted(
+            int(y) for y in gsa_rates_by_year if str(y).isdigit()
+        )
+        if not available_years:
+            return 0.0
+
+        if contract_year > max(available_years):
+            last_year = max(available_years)
+            rate = float(gsa_rates_by_year.get(str(last_year)) or 0.0)
+            if not escalation_rates:
+                return rate
+            for cy in range(last_year, contract_year):
+                prop_year = cy - current_gsa_year + 1
+                esc_key = f"{prop_year}_to_{prop_year + 1}"
+                rate *= (1 + (escalation_rates.get(esc_key, 0) or 0))
+            return rate
+
+        # contract_year < min available → use earliest known rate
+        return float(gsa_rates_by_year.get(str(min(available_years))) or 0.0)
 
     @staticmethod
     def calculate_gsa_rate(
@@ -823,39 +887,20 @@ class Calculator:
         labor_category = position_data.get("labor_category", "")
         gsa_rates = position_data.get("gsa_rates_by_year", {})
         hours_per_year = position_data.get("hours_per_year", {})
-
-        # Get the contract year that aligns with proposal year 1
         gsa_current_year = position_data.get("gsa_current_year", 1)
+        gsa_custom_rate = position_data.get("gsa_custom_rate")
 
         for year in range(1, total_years + 1):
             year_str = str(year)
 
-            # Map proposal year to contract year
-            contract_year = gsa_current_year + (year - 1)
-            gsa_rate = gsa_rates.get(str(contract_year), 0)
-
-            # If contract year not found, check if we need escalation
-            if gsa_rate == 0 and gsa_rates:
-                available_years = sorted([int(k) for k in gsa_rates.keys() if k.isdigit()])
-                if available_years and contract_year > max(available_years):
-                    last_available_year = max(available_years)
-                    last_available_rate = gsa_rates.get(str(last_available_year), 0)
-
-                    # Apply compound escalation if escalation rates provided
-                    if escalation_rates and last_available_rate > 0:
-                        escalated_rate = last_available_rate
-                        last_proposal_year = last_available_year - gsa_current_year + 1
-
-                        # Apply compound escalation from last available year to current year
-                        for prop_year in range(last_proposal_year, year):
-                            esc_key = f"{prop_year}_to_{prop_year + 1}"
-                            esc_rate = escalation_rates.get(esc_key, 0)
-                            escalated_rate *= (1 + esc_rate)
-
-                        gsa_rate = escalated_rate
-                    else:
-                        # No escalation rates - use last available year (backward compatible)
-                        gsa_rate = last_available_rate
+            # Single source of truth for GSA year lookup (mirrors frontend).
+            gsa_rate = Calculator.get_gsa_rate_for_year(
+                gsa_rates_by_year=gsa_rates,
+                gsa_current_year=gsa_current_year,
+                proposal_year=year,
+                escalation_rates=escalation_rates,
+                gsa_custom_rate=gsa_custom_rate,
+            )
 
             hours = hours_per_year.get(year_str, 0)
 
@@ -921,6 +966,9 @@ class Calculator:
             fee_rate: Fee/profit rate (e.g., 0.07 for 7%)
             standard_fte_hours: Full-time equivalent hours (default 1880)
             total_years: Total contract years
+            months_per_year: DEPRECATED — accepted for API compatibility but ignored.
+                Escalation is applied at the full annual rate to match the frontend
+                (performTransformToAdvanced / calculateAveragedFBLR).
             oh_onsite_rate: Overhead rate for on-site positions (e.g., 0.0711 for 7.11%)
             oh_offsite_rate: Overhead rate for off-site positions (e.g., 0.0711 for 7.11%)
             location_type: Position location ('On-Site' or 'Off-Site')
@@ -962,10 +1010,6 @@ class Calculator:
             year_str = str(year)
             hours_this_year = hours_per_year.get(year_str, 0)
 
-            # Get months for this year (default to 12)
-            months_this_year = months_per_year.get(year_str, 12) if months_per_year else 12
-            month_fraction = months_this_year / 12.0
-
             # Calculate proportional salary for this year
             if hours_this_year > 0:
                 hourly_rate_this_year = current_year_wage / standard_fte_hours
@@ -974,12 +1018,15 @@ class Calculator:
                 total_salary += salary_earned_this_year
                 total_hours += hours_this_year
 
-            # Apply PRORATED escalation for next year
+            # Apply full-year escalation into the next year (matches frontend
+            # performTransformToAdvanced / calculateAveragedFBLR). months_per_year
+            # is NOT used to prorate escalation — partial-year extensions still
+            # receive the full annual bump, consistent with how the UI shows
+            # and persists wages.
             if year < total_years:
                 escalation_key = f"{year}_to_{year + 1}"
-                full_year_escalation = escalation_rates.get(escalation_key, 0)
-                prorated_escalation = full_year_escalation * month_fraction
-                current_year_wage = current_year_wage * (1 + prorated_escalation)
+                esc_rate = escalation_rates.get(escalation_key, 0)
+                current_year_wage = current_year_wage * (1 + esc_rate)
 
         if total_hours == 0:
             return {

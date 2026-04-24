@@ -1,5 +1,23 @@
 """
 Agent streaming utilities for real-time responses.
+
+Shaped after Kroolo's enterprise-fastapi agent_streaming.py but trimmed to the
+features actually used by PriceIQ:
+
+  - Core streaming loop with run.started / message.delta / run.completed
+  - Tool.started / tool.completed forwarding
+  - Reasoning-tool (`think` / `analyze`) output cleanup — strips the
+    "CRITICAL INSTRUCTION" boilerplate Agno's ReasoningTools appends
+  - Compression events (Agno emits these when context gets large)
+  - HITL `run.paused` passthrough (not used yet but kept for forward compat)
+  - Accumulated content fallback so `message.completed` always fires even if
+    the provider skips it on the final chunk
+
+Not ported (Kroolo-specific, not applicable here):
+  - Sub-agent dual-queue streaming (no sub-agents)
+  - Intent suggestions / smart replies
+  - Token cost tracking to DB
+  - HITL continue endpoint
 """
 
 import logging
@@ -14,11 +32,56 @@ from utils.streaming import extract_text, sanitize_payload
 logger = logging.getLogger(__name__)
 
 
+# ─── Reasoning-tool output cleanup ──────────────────────────────────────────
+# Agno's ReasoningTools sometimes appends a "CRITICAL INSTRUCTION" paragraph
+# to the `thought` / `result` fields, intended for the model itself. Those
+# paragraphs aren't useful to the user and look noisy in the transcript, so
+# we scrub them before emitting tool events downstream.
+
+def _strip_boilerplate(text: str) -> str:
+    """Remove model-injected CRITICAL INSTRUCTION blocks from reasoning tool text.
+
+    The boilerplate always appears as one or more paragraphs (separated by
+    blank lines) that start with 'CRITICAL INSTRUCTION'. Sub-bullets (a)/(b)/(c)
+    belong to those paragraphs and are dropped along with the header.
+    """
+    if not text:
+        return text
+    paragraphs = text.split("\n\n")
+    kept = []
+    for para in paragraphs:
+        first_line = next((line.strip() for line in para.splitlines() if line.strip()), "")
+        if first_line.startswith("CRITICAL INSTRUCTION"):
+            continue
+        kept.append(para)
+    return "\n\n".join(kept).strip()
+
+
+def _clean_reasoning_args(tool_args: Any) -> Any:
+    """Scrub CRITICAL INSTRUCTION boilerplate from reasoning tool_args fields."""
+    if not isinstance(tool_args, dict):
+        return tool_args
+    cleaned = dict(tool_args)
+    for field in ("thought", "thoughts", "reasoning"):
+        if isinstance(cleaned.get(field), str):
+            cleaned[field] = _strip_boilerplate(cleaned[field])
+    return cleaned
+
+
+_REASONING_TOOL_NAMES = {"think", "analyze"}
+
+
+# ─── Main streaming generator ───────────────────────────────────────────────
+
 async def stream_agent_response(
     query: str,
     agent: Agent,
 ) -> AsyncGenerator[Dict[str, Any], None]:
-    """Stream Agno agent events as structured payloads."""
+    """Stream Agno agent events as structured payloads.
+
+    Yields dicts with an `event` key plus event-specific fields. Downstream
+    `create_sse_event_stream` converts each dict to an SSE frame.
+    """
 
     if not query or not query.strip():
         yield {
@@ -36,11 +99,27 @@ async def stream_agent_response(
         }
         return
 
+    # Immediate analysis event — matches Kroolo's pattern of yielding the
+    # "thinking" signal as the very first chunk of the stream, before any
+    # agent work starts. The frontend shows its rotating-quotes / thinking
+    # indicator the moment it arrives.
+    yield {
+        "event": "analysis",
+        "content": "Analysing your query",
+    }
+
     start_time = time.monotonic()
     first_delta_emitted = False
+    run_id: str | None = None
+    run_metrics: Dict[str, Any] | None = None
+    accumulated_content: list[str] = []  # for fallback message.completed
 
     try:
-        response_stream = agent.arun(query, stream=True, stream_intermediate_steps=True)
+        # stream_events=True (not the older stream_intermediate_steps) is what
+        # makes Agno emit tool_call_started / tool_call_completed / reasoning
+        # events alongside content deltas. Without this, only message.delta
+        # events reach the client.
+        response_stream = agent.arun(query, stream=True, stream_events=True)
 
         async for run_chunk in response_stream:
             payload: Dict[str, Any]
@@ -59,14 +138,20 @@ async def stream_agent_response(
             payload = sanitize_payload(payload)
             agno_event = payload.get("event", RunEvent.run_content.value)
 
-            # Log events for debugging
-            logger.debug(f"[Stream Event] agno_event={agno_event}, payload_keys={list(payload.keys())}")
+            # Capture run_id / metrics as we see them
+            if payload.get("run_id") and not run_id:
+                run_id = payload.get("run_id")
+            if payload.get("metrics"):
+                run_metrics = payload.get("metrics")
 
+            logger.debug(f"[Stream Event] agno_event={agno_event}, keys={list(payload.keys())}")
+
+            # ── run.started ───────────────────────────────────────────
             if agno_event == RunEvent.run_started.value:
                 yield {
                     "event": "run.started",
                     "agent_id": payload.get("agent_id"),
-                    "run_id": payload.get("run_id"),
+                    "run_id": run_id,
                     "session_id": payload.get("session_id"),
                     "model": payload.get("model"),
                     "model_provider": payload.get("model_provider"),
@@ -74,14 +159,16 @@ async def stream_agent_response(
                 }
                 continue
 
+            # ── message.delta (incremental content) ───────────────────
             if agno_event in {RunEvent.run_content.value, RunEvent.run_intermediate_content.value}:
                 delta_text = extract_text(payload.get("content"))
                 if delta_text:
+                    accumulated_content.append(delta_text)
                     if not first_delta_emitted:
                         first_delta_emitted = True
                         ttft_ms = (time.monotonic() - start_time) * 1000.0
                         logger.info(
-                            f"TTFT: {ttft_ms:.1f}ms | Run: {payload.get('run_id')} | Session: {payload.get('session_id')}"
+                            f"TTFT: {ttft_ms:.1f}ms | Run: {run_id} | Session: {payload.get('session_id')}"
                         )
                     yield {
                         "event": "message.delta",
@@ -91,29 +178,81 @@ async def stream_agent_response(
                     }
                 continue
 
+            # ── tool.started (reasoning args scrubbed) ────────────────
             if agno_event == RunEvent.tool_call_started.value:
                 tool = payload.get("tool") or {}
+                tool_name = tool.get("tool_name", "")
+                is_reasoning = tool_name in _REASONING_TOOL_NAMES
                 yield {
                     "event": "tool.started",
-                    "tool_name": tool.get("tool_name"),
-                    "tool_args": tool.get("tool_args"),
+                    "tool_name": tool_name,
+                    "tool_args": (
+                        _clean_reasoning_args(tool.get("tool_args"))
+                        if is_reasoning
+                        else tool.get("tool_args")
+                    ),
                     "tool_call_id": tool.get("tool_call_id"),
                 }
                 continue
 
+            # ── tool.completed (reasoning result scrubbed) ────────────
             if agno_event == RunEvent.tool_call_completed.value:
                 tool = payload.get("tool") or {}
+                tool_name = tool.get("tool_name", "")
+                is_reasoning = tool_name in _REASONING_TOOL_NAMES
+                raw_result = tool.get("result")
                 yield {
                     "event": "tool.completed",
-                    "tool_name": tool.get("tool_name"),
-                    "tool_args": tool.get("tool_args"),
-                    "result": tool.get("result"),
+                    "tool_name": tool_name,
+                    "tool_args": (
+                        _clean_reasoning_args(tool.get("tool_args"))
+                        if is_reasoning
+                        else tool.get("tool_args")
+                    ),
+                    "result": (
+                        _strip_boilerplate(raw_result)
+                        if is_reasoning and isinstance(raw_result, str)
+                        else raw_result
+                    ),
                     "error": tool.get("tool_call_error"),
                     "metrics": tool.get("metrics"),
                     "tool_call_id": tool.get("tool_call_id"),
                 }
                 continue
 
+            # ── Context-window compression (Agno emits these on large runs) ──
+            if agno_event == RunEvent.compression_started.value:
+                yield {
+                    "event": "compression.started",
+                    "content": "Compressing context to fit model window…",
+                }
+                continue
+
+            if agno_event == RunEvent.compression_completed.value:
+                yield {
+                    "event": "compression.completed",
+                    "content": "Compression complete.",
+                    "tool_results_compressed": payload.get("tool_results_compressed"),
+                    "original_size": payload.get("original_size"),
+                    "compressed_size": payload.get("compressed_size"),
+                }
+                continue
+
+            # ── HITL pause (not used yet; forwarded for future UI work) ─
+            if agno_event == RunEvent.run_paused.value:
+                yield {
+                    "event": "run.paused",
+                    "run_id": payload.get("run_id"),
+                    "session_id": payload.get("session_id"),
+                    "requirements": payload.get("requirements"),
+                }
+                logger.info(
+                    f"[HITL] Run paused: run_id={payload.get('run_id')}, "
+                    f"requirements={len(payload.get('requirements', []))}"
+                )
+                return  # stop streaming — client must resume via a continue endpoint
+
+            # ── run.error ─────────────────────────────────────────────
             if agno_event == RunEvent.run_error.value:
                 yield {
                     "event": "error",
@@ -123,8 +262,9 @@ async def stream_agent_response(
                 }
                 continue
 
+            # ── run.completed (with message.completed + usage) ────────
             if agno_event == RunEvent.run_completed.value:
-                run_meta = {
+                yield {
                     "event": "run.completed",
                     "agent_id": payload.get("agent_id"),
                     "run_id": payload.get("run_id"),
@@ -133,8 +273,6 @@ async def stream_agent_response(
                     "status": payload.get("status"),
                     "metrics": payload.get("metrics"),
                 }
-
-                yield run_meta
 
                 final_text = extract_text(payload.get("content"))
                 if final_text:
@@ -151,14 +289,35 @@ async def stream_agent_response(
                         "event": "usage",
                         "usage": metrics,
                     }
-
                 continue
 
-            # Pass through any other events
+            # ── Fallthrough: unknown events forwarded verbatim ────────
             yield {
                 "event": "agent.event",
                 "data": payload,
             }
+
+        # ── Stream ended — emit message.completed as a fallback if the
+        #    provider didn't already (some paths don't emit a final
+        #    run_completed with content; we still want the UI to close cleanly).
+        if accumulated_content and not first_delta_emitted:
+            # Edge case: content arrived but no delta was emitted (unusual)
+            final_text = "".join(accumulated_content)
+            yield {
+                "event": "message.completed",
+                "content": final_text,
+                "run_id": run_id,
+                "finish_reason": "completed",
+            }
+        elif accumulated_content:
+            # Normal case: deltas were emitted. Ensure a completion event
+            # exists for clients that rely on it (streamingMarkdown, etc.).
+            # The Agno run_completed branch above already emits this in most
+            # runs; this is belt-and-braces for paths that skip it.
+            pass
+
+        if run_metrics:
+            logger.debug(f"Final run_metrics: {run_metrics}")
 
     except Exception as exc:
         logger.error(

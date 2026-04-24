@@ -984,13 +984,16 @@ Year 3:
 **Python Calculation Logic:**
 
 ```python
-def calculate_odc_years(base_amount, ga_adder_rate, escalation_rates, total_years, escalate=True):
+def calculate_odc_years(base_amount, smh_rate, escalation_rates, total_years, escalate=True):
     """
-    Calculate ODC costs for all years
+    Calculate ODC costs for all years.
+
+    ODCs carry a subcontract-and-material-handling (S&MH) markup, NOT G&A or fee.
+    Each year: base × (1 + smh_rate). Optionally escalated year-over-year.
 
     Args:
         base_amount: Year 1 base cost (e.g., $15,000)
-        ga_adder_rate: G&A adder rate (e.g., 0.2212)
+        smh_rate: S&MH rate (e.g., 0.065 for 6.5%)
         escalation_rates: {"1_to_2": 0.03, "2_to_3": 0.03, ...}
         total_years: Number of contract years
         escalate: Whether to apply escalation
@@ -1002,17 +1005,15 @@ def calculate_odc_years(base_amount, ga_adder_rate, escalation_rates, total_year
     current_base = base_amount
 
     for year in range(1, total_years + 1):
-        # Calculate G&A adder
-        ga_adder = current_base * ga_adder_rate
-        total = current_base + ga_adder
+        smh = current_base * smh_rate
+        total = current_base + smh
 
         results[f'year_{year}'] = {
             'base': current_base,
-            'ga_adder': ga_adder,
+            'smh': smh,
             'total': total
         }
 
-        # Escalate for next year
         if escalate and year < total_years:
             escalation_key = f"{year}_to_{year+1}"
             escalation_rate = escalation_rates.get(escalation_key, 0.03)
@@ -1023,7 +1024,7 @@ def calculate_odc_years(base_amount, ga_adder_rate, escalation_rates, total_year
 # Example usage
 results = calculate_odc_years(
     base_amount=15000,
-    ga_adder_rate=0.2212,
+    smh_rate=0.065,
     escalation_rates={"1_to_2": 0.03, "2_to_3": 0.03},
     total_years=3,
     escalate=True
@@ -1031,9 +1032,9 @@ results = calculate_odc_years(
 
 print(results)
 # {
-#   'year_1': {'base': 15000, 'ga_adder': 3318, 'total': 18318},
-#   'year_2': {'base': 15450, 'ga_adder': 3417, 'total': 18867},
-#   'year_3': {'base': 15914, 'ga_adder': 3520, 'total': 19434}
+#   'year_1': {'base': 15000,   'smh':  975.0, 'total': 15975.0},
+#   'year_2': {'base': 15450,   'smh': 1004.3, 'total': 16454.3},
+#   'year_3': {'base': 15913.5, 'smh': 1034.4, 'total': 16947.9}
 # }
 ```
 

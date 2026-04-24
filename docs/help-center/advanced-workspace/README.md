@@ -51,7 +51,7 @@ A: Click the "Rates" panel in the pricing workspace and edit Fringe, OH, G&A, an
 A: Government contracts often have different overhead rates for on-site vs off-site work. PriceIQ applies the correct rate based on each position's location type. See [Indirect Rates Explained](03-indirect-rates.md).
 
 **Q: What's the difference between 25th, 50th, and 75th percentile wages?**
-A: These represent different experience levels in BLS data. PriceIQ auto-selects based on position experience: <3 years = 25th, 3-5 years = 50th, >5 years = 75th. See [Understanding Wage Percentiles](06-wage-percentiles.md).
+A: These represent different experience levels in BLS data. PriceIQ auto-selects based on position experience: < 3 years = 25th, 3 to < 6 years = 50th, ≥ 6 years = 75th. See [Understanding Wage Percentiles](06-wage-percentiles.md).
 
 **Q: Why did my position split into multiple rows?**
 A: Positions exceeding 1920 hours (FTE threshold) automatically split to reflect multiple full-time employees. Example: 5760 hours → 3 positions of 1920 hours each. See [Position Splitting](10-position-splitting.md).

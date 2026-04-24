@@ -76,7 +76,6 @@ export interface OrganizationSettings {
     smh: number;
     sub_fee: number;
     ga_passthrough: number;
-    ga_adder: number;
     oh?: number;  // Deprecated
   };
   default_escalation_rate: number;
@@ -298,7 +297,6 @@ export interface IndirectRates {
   smh?: number;
   sub_fee?: number;
   ga_passthrough?: number;
-  ga_adder?: number;
   oh?: number;  // Deprecated (for backward compatibility)
   ot_multiplier?: number;  // NEW: Overtime multiplier (e.g., 1.5 for time-and-a-half)
   surge_multiplier?: number;  // NEW: Surge pricing multiplier (e.g., 1.15 for 15% premium)
@@ -528,7 +526,7 @@ export interface Aggregates {
 
 export type GridRowType = 'position' | 'breakdown' | 'subtotal' | 'subcontractor' | 'subcontractor-header' | 'subcontractor-breakdown';
 export type BreakdownType = 'dl' | 'fringe' | 'oh' | 'ga' | 'fee';
-export type SubcontractorBreakdownType = 'base' | 'sub_fee' | 'smh';
+export type SubcontractorBreakdownType = 'base' | 'sub_fee' | 'smh' | 'ga_passthrough';
 
 export interface GridRow {
   type: GridRowType;
@@ -633,7 +631,6 @@ export interface ProjectConfig {
     prime_labor: number;
     sub_labor: number;
   };
-  ga_adder_rate: number;
   subcontractors: Subcontractor[];
   travel: TravelItem[];
   odcs: ODCItem[];
