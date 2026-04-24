@@ -1237,6 +1237,25 @@ export const PrimeLaborSection = ({
     return rows;
   }, [positions, expandedPositions, rates, escalationRates, totalYears, columnTotals, getLinkedSubcontractorPositions, advancedModeVersion]);
 
+  // Size the grid to fit its rows (rather than occupying a fixed viewport
+  // slice and showing a big empty gap when there are only a few positions).
+  const gridContentHeight = useMemo(() => {
+    const HEADER = 35;
+    const ROW = 45;
+    const SUBTOTAL_WITH_OT = 75;
+    let total = HEADER;
+    for (const row of gridRows) {
+      if (row.type === 'subtotal') {
+        const totals = row.data as any;
+        const hasOT = Object.values(totals.byYear || {}).some((yearData: any) => (yearData.ot_cost || 0) > 0);
+        total += hasOT ? SUBTOTAL_WITH_OT : ROW;
+      } else {
+        total += ROW;
+      }
+    }
+    return total + 2; // border
+  }, [gridRows]);
+
   // Get cell styling for manual overrides
   const getCellClassName = (positionId: string, year: string, field: string) => {
     const overrideKey = `${year}.${field}`;
@@ -2881,8 +2900,8 @@ export const PrimeLaborSection = ({
       </div>
 
       <div
-        className="border border-border rounded-lg transition-all duration-200"
-        style={{ height: 'calc(100vh - 280px)', minHeight: 400 }}
+        className="border border-border rounded-lg transition-all duration-200 overflow-hidden"
+        style={{ height: gridContentHeight, maxHeight: 'calc(100vh - 280px)' }}
       >
         <DataGrid
           key={`${rates.fringe}-${rates.oh_onsite}-${rates.oh_offsite}-${rates.ga}-${rates.fee}-${Object.values(escalationRates).join('-')}-v${advancedModeVersion}`}
