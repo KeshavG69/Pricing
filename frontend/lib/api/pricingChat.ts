@@ -16,7 +16,21 @@ export type PricingChatEvent =
   | { type: 'analysis' }
   | { type: 'delta'; content: string }
   | { type: 'done'; content?: string }
-  | { type: 'error'; error: string };
+  | { type: 'error'; error: string }
+  | {
+      type: 'tool.started';
+      tool_name: string;
+      tool_args?: Record<string, unknown>;
+      tool_call_id?: string;
+    }
+  | {
+      type: 'tool.completed';
+      tool_name: string;
+      tool_args?: Record<string, unknown>;
+      result?: unknown;
+      error?: unknown;
+      tool_call_id?: string;
+    };
 
 export async function* streamPricingChat(
   req: PricingChatRequest,
@@ -68,8 +82,15 @@ export async function* streamPricingChat(
         const parsed = parseSSEFrame(frame);
         if (!parsed) continue;
 
-        const content = typeof parsed.data?.content === 'string' ? parsed.data.content : undefined;
-        const errText = typeof parsed.data?.error === 'string' ? parsed.data.error : undefined;
+        const data = parsed.data || {};
+        const content = typeof data.content === 'string' ? data.content : undefined;
+        const errText = typeof data.error === 'string' ? data.error : undefined;
+        const toolName = typeof data.tool_name === 'string' ? data.tool_name : '';
+        const toolCallId = typeof data.tool_call_id === 'string' ? data.tool_call_id : undefined;
+        const toolArgs =
+          data.tool_args && typeof data.tool_args === 'object' && !Array.isArray(data.tool_args)
+            ? (data.tool_args as Record<string, unknown>)
+            : undefined;
 
         if (parsed.event === 'analysis') {
           yield { type: 'analysis' };
@@ -77,10 +98,26 @@ export async function* streamPricingChat(
           yield { type: 'delta', content };
         } else if (parsed.event === 'message.completed') {
           yield { type: 'done', content };
+        } else if (parsed.event === 'tool.started') {
+          yield {
+            type: 'tool.started',
+            tool_name: toolName,
+            tool_args: toolArgs,
+            tool_call_id: toolCallId,
+          };
+        } else if (parsed.event === 'tool.completed') {
+          yield {
+            type: 'tool.completed',
+            tool_name: toolName,
+            tool_args: toolArgs,
+            result: data.result,
+            error: data.error,
+            tool_call_id: toolCallId,
+          };
         } else if (parsed.event === 'error') {
           yield { type: 'error', error: errText || 'Unknown error' };
         }
-        // Ignore other events (run.started, tool.*, usage, etc.)
+        // Ignored: run.started / run.completed / usage / compression.* / agent.event
       }
     }
   } catch (err: unknown) {

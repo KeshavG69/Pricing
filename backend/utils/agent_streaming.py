@@ -106,7 +106,11 @@ async def stream_agent_response(
     accumulated_content: list[str] = []  # for fallback message.completed
 
     try:
-        response_stream = agent.arun(query, stream=True, stream_intermediate_steps=True)
+        # stream_events=True (not the older stream_intermediate_steps) is what
+        # makes Agno emit tool_call_started / tool_call_completed / reasoning
+        # events alongside content deltas. Without this, only message.delta
+        # events reach the client.
+        response_stream = agent.arun(query, stream=True, stream_events=True)
 
         async for run_chunk in response_stream:
             payload: Dict[str, Any]

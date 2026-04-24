@@ -8,6 +8,7 @@ import { serializeProposalContext } from '@/lib/chat/proposalContext';
 import { streamPricingChat } from '@/lib/api/pricingChat';
 import MarkdownRenderer from './chat/MarkdownRenderer';
 import ThinkingIndicator from './chat/ThinkingIndicator';
+import ReasoningSteps, { type ReasoningStep } from './chat/ReasoningSteps';
 
 interface ChatMessage {
   id: string;
@@ -15,11 +16,23 @@ interface ChatMessage {
   content: string;
   streaming?: boolean;
   thinking?: boolean; // true from send-click until first content delta
+  reasoning?: ReasoningStep[]; // think/analyze tool calls, accumulated in order
 }
 
 function newSessionId(proposalId: string | null): string {
   const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   return proposalId ? `chat-${proposalId}-${suffix}` : `ephemeral-${suffix}`;
+}
+
+// Stringify tool.completed `result` (may be string, object, or anything else).
+function resultToStr(r: unknown): string | undefined {
+  if (r == null) return undefined;
+  if (typeof r === 'string') return r;
+  try {
+    return JSON.stringify(r, null, 2);
+  } catch {
+    return String(r);
+  }
 }
 
 export default function PricingChatPanel() {
@@ -195,6 +208,71 @@ export default function PricingChatPanel() {
                 : msg,
             ),
           );
+        } else if (evt.type === 'tool.started') {
+          // Append a new reasoning step (or no-op if we don't care about this tool).
+          // For now we accumulate ALL tool calls the agent makes, not just
+          // think/analyze — the UI only labels known ones, others show raw.
+          setMessages((m) =>
+            m.map((msg) => {
+              if (msg.id !== assistantMsg.id) return msg;
+              const stepId = evt.tool_call_id || `step-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+              const nextSteps: ReasoningStep[] = [
+                ...(msg.reasoning || []),
+                {
+                  id: stepId,
+                  name: evt.tool_name || 'tool',
+                  args: evt.tool_args,
+                  running: true,
+                },
+              ];
+              return { ...msg, reasoning: nextSteps };
+            }),
+          );
+        } else if (evt.type === 'tool.completed') {
+          setMessages((m) =>
+            m.map((msg) => {
+              if (msg.id !== assistantMsg.id) return msg;
+              const steps = msg.reasoning || [];
+              // Find matching running step by tool_call_id, else the last running one
+              const idx = (() => {
+                if (evt.tool_call_id) {
+                  const i = steps.findIndex((s) => s.id === evt.tool_call_id);
+                  if (i >= 0) return i;
+                }
+                // fallback: the last still-running step
+                for (let i = steps.length - 1; i >= 0; i--) if (steps[i].running) return i;
+                return -1;
+              })();
+              let next: ReasoningStep[];
+              if (idx >= 0) {
+                next = steps.map((s, i) =>
+                  i === idx
+                    ? {
+                        ...s,
+                        args: evt.tool_args ?? s.args,
+                        result: resultToStr(evt.result),
+                        error: evt.error,
+                        running: false,
+                      }
+                    : s,
+                );
+              } else {
+                // No matching started event seen; synthesize the step from completed.
+                next = [
+                  ...steps,
+                  {
+                    id: evt.tool_call_id || `step-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                    name: evt.tool_name || 'tool',
+                    args: evt.tool_args,
+                    result: resultToStr(evt.result),
+                    error: evt.error,
+                    running: false,
+                  },
+                ];
+              }
+              return { ...msg, reasoning: next };
+            }),
+          );
         } else if (evt.type === 'error') {
           setMessages((m) =>
             m.map((msg) =>
@@ -328,16 +406,34 @@ export default function PricingChatPanel() {
                             {msg.content}
                           </div>
                         ) : (
-                          // Assistant messages: thinking → quotes, then markdown
+                          // Assistant: reasoning (if any) above the content.
+                          // Reasoning is shown in LIVE mode while no answer content
+                          // has streamed yet; once the answer starts, it auto-
+                          // collapses into a compact chip below (well, above) the
+                          // answer so the user can still re-open it.
                           <div className="break-words">
-                            {msg.thinking && !msg.content ? (
+                            {msg.reasoning && msg.reasoning.length > 0 && (
+                              <ReasoningSteps
+                                steps={msg.reasoning}
+                                isStreaming={!msg.content}
+                              />
+                            )}
+                            {/*
+                              Show the rotating thinking indicator only before the
+                              first reasoning step arrives. Once reasoning steps
+                              exist, the ReasoningSteps live view carries the
+                              "something is happening" signal.
+                            */}
+                            {msg.thinking &&
+                            !msg.content &&
+                            (!msg.reasoning || msg.reasoning.length === 0) ? (
                               <ThinkingIndicator />
                             ) : (
                               <>
                                 {msg.content ? (
                                   <MarkdownRenderer>{msg.content}</MarkdownRenderer>
                                 ) : null}
-                                {msg.streaming && (
+                                {msg.streaming && msg.content && (
                                   <Loader2 className="ml-1 inline h-3 w-3 animate-spin opacity-60" />
                                 )}
                               </>
