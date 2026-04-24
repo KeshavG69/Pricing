@@ -10,15 +10,36 @@ Supported file types: PDF, DOCX, XLSX, XLS, TXT, CSV
 """
 
 import json
+import logging
 from typing import Dict, Any, List, Optional
 from pathlib import Path
 
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
+from agno.run.agent import RunEvent, RunOutput, RunOutputEvent
 from utils.agno_tools import create_reasoning_tool
 from agno.tools.exa import ExaTools
 from app.settings import settings
 from client.llm_client import get_chat_llm_agno
+
+logger = logging.getLogger(__name__)
+
+
+# Map raw Agno tool names to short, user-friendly phrases for the event feed.
+# Everything else falls back to a generic "Running <tool>" label.
+_TOOL_LABELS = {
+    "analyze": "Reasoning about the contract",
+    "think": "Reasoning about the contract",
+    "search_exa": "Searching the web for context",
+    "exa_search": "Searching the web for context",
+    "search_and_contents": "Searching the web for context",
+}
+
+
+def _tool_label(tool_name: str) -> str:
+    if not tool_name:
+        return "Running tool"
+    return _TOOL_LABELS.get(tool_name, f"Running {tool_name}")
 
 
 
@@ -105,10 +126,142 @@ def _create_intelligent_parser() -> Agent:
     return agent
 
 
+async def _run_agent_streaming(
+    agent: Agent,
+    prompt: str,
+    proposal_id: Optional[str] = None,
+) -> str:
+    """Run the parser agent with event streaming and return accumulated text.
+
+    When `proposal_id` is provided, publishes a live feed of tool calls,
+    reasoning output, and run lifecycle events to the proposal_events
+    collection so the frontend can show the agent's thinking in real time.
+
+    Returns the concatenated message content for downstream JSON parsing.
+    """
+    from utils.event_stream import get_event_stream
+
+    stream = get_event_stream() if proposal_id else None
+    accumulated: List[str] = []
+
+    def _publish(event: str, payload: Optional[Dict[str, Any]] = None) -> None:
+        if not stream:
+            return
+        try:
+            stream.publish(proposal_id, event, payload or {})
+        except Exception as e:
+            # Never let event logging break the parser run.
+            logger.warning(f"publish event failed ({event}): {e}")
+
+    def _clean_reasoning(text: Any) -> Any:
+        """Strip Agno's 'CRITICAL INSTRUCTION' boilerplate from reasoning text."""
+        if not isinstance(text, str) or not text:
+            return text
+        kept = []
+        for para in text.split("\n\n"):
+            first = next((line.strip() for line in para.splitlines() if line.strip()), "")
+            if first.startswith("CRITICAL INSTRUCTION"):
+                continue
+            kept.append(para)
+        return "\n\n".join(kept).strip()
+
+    def _pack_tool_args(tool_name: str, raw_args: Any) -> Dict[str, Any]:
+        """Build a UI-friendly args dict (scrubs reasoning boilerplate)."""
+        if not isinstance(raw_args, dict):
+            return {}
+        if tool_name in {"analyze", "think"}:
+            return {
+                "title": raw_args.get("title"),
+                "thought": _clean_reasoning(raw_args.get("thought") or raw_args.get("reasoning")),
+                "action": raw_args.get("action") or raw_args.get("next_action"),
+                "confidence": raw_args.get("confidence"),
+            }
+        # Web-search tools: surface the actual query the agent ran
+        if tool_name in {"search_exa", "exa_search", "search_and_contents"}:
+            return {
+                "query": raw_args.get("query"),
+                "num_results": raw_args.get("num_results"),
+            }
+        return raw_args
+
+    try:
+        async for chunk in agent.arun(prompt, stream=True, stream_events=True):
+            if isinstance(chunk, RunOutputEvent):
+                payload = chunk.to_dict()
+            elif isinstance(chunk, RunOutput):
+                payload = chunk.to_dict()
+                payload.setdefault("event", RunEvent.run_completed.value)
+            else:
+                continue
+
+            agno_event = payload.get("event")
+
+            if agno_event == RunEvent.run_started.value:
+                _publish("run.started", {"title": "Analyzing document"})
+                continue
+
+            if agno_event in {RunEvent.run_content.value, RunEvent.run_intermediate_content.value}:
+                content = payload.get("content")
+                if isinstance(content, str):
+                    accumulated.append(content)
+                continue
+
+            if agno_event == RunEvent.tool_call_started.value:
+                tool = payload.get("tool") or {}
+                tool_name = tool.get("tool_name", "")
+                _publish("tool.started", {
+                    "tool_name": tool_name,
+                    "title": _tool_label(tool_name),
+                    "args": _pack_tool_args(tool_name, tool.get("tool_args")),
+                    "tool_call_id": tool.get("tool_call_id"),
+                })
+                continue
+
+            if agno_event == RunEvent.tool_call_completed.value:
+                tool = payload.get("tool") or {}
+                tool_name = tool.get("tool_name", "")
+                raw_result = tool.get("result")
+                # Scrub reasoning result; keep web-search results as-is (frontend truncates).
+                if tool_name in {"analyze", "think"} and isinstance(raw_result, str):
+                    result_for_ui = _clean_reasoning(raw_result)
+                else:
+                    result_for_ui = raw_result
+                _publish("tool.completed", {
+                    "tool_name": tool_name,
+                    "title": _tool_label(tool_name),
+                    "args": _pack_tool_args(tool_name, tool.get("tool_args")),
+                    "result": result_for_ui,
+                    "error": tool.get("tool_call_error"),
+                    "tool_call_id": tool.get("tool_call_id"),
+                })
+                continue
+
+            if agno_event == RunEvent.run_completed.value:
+                _publish("run.completed", {"title": "Analysis complete"})
+                content = payload.get("content")
+                if isinstance(content, str) and not accumulated:
+                    accumulated.append(content)
+                continue
+
+            if agno_event == RunEvent.run_error.value:
+                _publish("run.error", {
+                    "error": payload.get("content") or payload.get("message"),
+                })
+                continue
+
+    except Exception as exc:
+        logger.error(f"Intelligent parser streaming error: {exc}", exc_info=True)
+        _publish("run.error", {"error": str(exc)[:500]})
+        raise
+
+    return "".join(accumulated)
+
+
 async def parse_document_intelligent(
     file_path: str,
     default_fte_hours: int = 1920,
-    default_years: int = 5
+    default_years: int = 5,
+    proposal_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Parse document with intelligent agent that reasons first, then extracts.
@@ -123,6 +276,10 @@ async def parse_document_intelligent(
         file_path: Path to document (PDF, DOCX, XLSX, XLS, TXT, CSV)
         default_fte_hours: Default FTE hours per year
         default_years: Default contract duration
+        proposal_id: If provided, publishes tool-call / reasoning events to the
+            proposal_events log so the frontend can stream the agent's
+            reasoning to the user. Optional — callers that don't need a live
+            feed (tests, CLI) omit it.
 
     Returns:
         Dict with metadata, positions, travel, odcs
@@ -349,10 +506,13 @@ Return ONLY valid JSON, no markdown code blocks.
                 current_prompt = f"{prompt}\n\nIMPORTANT: Your previous response was truncated or malformed. Please provide COMPLETE valid JSON. Ensure all brackets and quotes are closed properly."
                 print(f"  🔄 Retry attempt {retry_count}/{max_retries - 1} due to malformed JSON...")
 
-            response = await agent.arun(current_prompt)
-
-            # Parse JSON response
-            response_text = response.content if hasattr(response, 'content') else str(response)
+            # Stream so we can publish tool calls / reasoning to the event log
+            # for the frontend. Accumulated content is the final JSON text.
+            response_text = await _run_agent_streaming(
+                agent,
+                current_prompt,
+                proposal_id=proposal_id,
+            )
 
             # Clean up markdown if present
             if '```json' in response_text:

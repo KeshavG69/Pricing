@@ -38,6 +38,44 @@ export interface ProposalListResponse {
   limit: number;
 }
 
+export interface ParserEvent {
+  proposal_id: string;
+  seq: number;
+  event:
+    | 'run.started'
+    | 'tool.started'
+    | 'tool.completed'
+    | 'run.completed'
+    | 'run.error'
+    | 'phase.started'
+    | 'phase.completed';
+  payload: {
+    title?: string;
+    tool_name?: string;
+    /** Stable id used to pair phase.started with phase.completed. */
+    key?: string;
+    args?: {
+      title?: string;
+      thought?: string;
+      action?: string;
+      confidence?: number;
+      query?: string;
+      num_results?: number;
+      [key: string]: unknown;
+    };
+    result?: unknown;
+    error?: string | null;
+    tool_call_id?: string;
+  };
+  ts: string;
+}
+
+export interface ParserEventsResponse {
+  events: ParserEvent[];
+  last_seq: number;
+  status: 'processing' | 'completed' | 'error';
+}
+
 export const proposalsApi = {
   // Get proposal statistics
   getStats: async (): Promise<ProposalStats> => {
@@ -120,6 +158,21 @@ export const proposalsApi = {
   getStatus: async (proposalId: string): Promise<ProposalStatus> => {
     const response = await apiClient.get<ProposalStatus>(
       `/proposals/${proposalId}/status`
+    );
+    return response.data;
+  },
+
+  // Live event feed from the intelligent parser (tool calls + reasoning).
+  // Poll with `since=<last_seq>` to incrementally append new events.
+  // Events are deleted on terminal status — callers should fall back to the
+  // proposal view when `status` here is no longer 'processing'.
+  getEvents: async (
+    proposalId: string,
+    since: number
+  ): Promise<ParserEventsResponse> => {
+    const response = await apiClient.get<ParserEventsResponse>(
+      `/proposals/${proposalId}/events`,
+      { params: { since } }
     );
     return response.data;
   },
