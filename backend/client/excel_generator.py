@@ -74,11 +74,85 @@ class ExcelGenerator:
     IR_OH_ONSITE_ROW = 10
     IR_OH_OFFSITE_ROW = 11
     IR_GA_ROW = 12
-    IR_PASSTHROUGH_ROW = 13
+    IR_PASSTHROUGH_ROW = 13         # S&MH + G&A Passthrough — for subcontractor passthrough line only
     IR_FEE_LABOR_ROW = 14
     IR_FEE_SUB_ROW = 15
+    IR_SMH_MATERIALS_ROW = 16       # S&MH only — for materials/ODC handling (matches Nexagen sample)
     # Escalation rows start at 17 (row 16 is blank)
     IR_ESCALATION_START_ROW = 17
+
+    # Helper: compute prime overtime $ per year (OT hours × fee-inclusive FBLR × OT multiplier)
+    def _compute_prime_ot_by_year(self):
+        """Compute prime overtime cost per year by iterating positions.
+
+        Mirrors PRICING_FORMULAS.md § 16.1: per-position OT cost per year =
+            ot_hours × FBLR(year) × ot_multiplier
+        where FBLR is fee-inclusive and includes compound escalation.
+
+        Returns {1: ot_cost_year_1, 2: …, …} — literal dollar amounts that the
+        caller writes directly into Excel cells (no cross-sheet formula here
+        because the PLD sheet lacks per-position OT columns).
+        """
+        from client.calculation_service import Calculator  # local import to avoid cycles
+
+        indirect_rates = self.project_data.get('indirect_rates', {}) or {}
+        escalation_rates = self.project_data.get('escalation_rates', {}) or {}
+        fee_rates = self.project_data.get('fee_rates', {}) or {}
+
+        ot_multiplier = indirect_rates.get('ot_multiplier') or 1.5
+        fringe_rate = indirect_rates.get('fringe', 0) or 0
+        oh_onsite = indirect_rates.get('oh_onsite', indirect_rates.get('oh', 0)) or 0
+        oh_offsite = indirect_rates.get('oh_offsite', indirect_rates.get('oh', 0)) or 0
+        ga_rate = indirect_rates.get('ga', 0) or 0
+        fee_rate = fee_rates.get('prime_labor', 0) or 0
+
+        result = {y: 0.0 for y in range(1, self.total_years + 1)}
+        for pos in self.project_data.get('prime_positions', []):
+            ot_map = pos.get('ot_hours_per_year') or {}
+            if not ot_map:
+                continue
+            is_gsa = (pos.get('wage_source') or '').lower() == 'gsa'
+
+            if is_gsa:
+                gsa_rates = pos.get('gsa_rates_by_year') or {}
+                gsa_current_year = pos.get('gsa_current_year') or 1
+                discount = pos.get('gsa_discount_rate') or 0.0
+                for y in range(1, self.total_years + 1):
+                    ot_hours = float(ot_map.get(str(y)) or 0)
+                    if ot_hours <= 0:
+                        continue
+                    rate = Calculator.get_gsa_rate_for_year(
+                        gsa_rates_by_year=gsa_rates,
+                        gsa_current_year=gsa_current_year,
+                        proposal_year=y,
+                        escalation_rates=escalation_rates,
+                        gsa_custom_rate=pos.get('gsa_custom_rate'),
+                    )
+                    rate *= (1 - discount)
+                    result[y] += ot_hours * rate * ot_multiplier
+            else:
+                base_wage = pos.get('base_annual_wage', 0) or 0
+                fte = pos.get('standard_fte_hours') or 1920
+                loc = pos.get('location_type', 'On-Site')
+                oh_rate = oh_onsite if loc == 'On-Site' else oh_offsite
+                for y in range(1, self.total_years + 1):
+                    ot_hours = float(ot_map.get(str(y)) or 0)
+                    if ot_hours <= 0:
+                        continue
+                    # Compound-escalate wage to target year
+                    wage = base_wage
+                    for yy in range(1, y):
+                        esc = escalation_rates.get(f"{yy}_to_{yy + 1}", 0) or 0
+                        wage *= (1 + esc)
+                    dl_rate = wage / fte
+                    fringe_amt = dl_rate * fringe_rate
+                    oh_amt = (dl_rate + fringe_amt) * oh_rate
+                    ga_amt = (dl_rate + fringe_amt + oh_amt) * ga_rate
+                    fee_amt = (dl_rate + fringe_amt + oh_amt + ga_amt) * fee_rate
+                    fblr = dl_rate + fringe_amt + oh_amt + ga_amt + fee_amt
+                    result[y] += ot_hours * fblr * ot_multiplier
+
+        return result
 
     def __init__(self):
         """Initialize the Excel generator."""
@@ -420,6 +494,20 @@ class ExcelGenerator:
                 year_fmls = [0] * self.total_years
                 total_fml = 0
             _write_row("General & Administrative (Labor)", year_fmls, total_fml, bold=False)
+            current_row += 1
+
+            # 4b. Overtime (Prime) — placed after G&A (Labor) but BEFORE sub row
+            # so it's swept into the Sub-Total sum. NOT in the fee base, because
+            # OT is already fee-inclusive (FBLR × OT hours × multiplier).
+            ot_ce_row_num = current_row
+            if pld_info and pld_info.get('overtime_row'):
+                r = pld_info['overtime_row']
+                year_fmls = [f"='Prime Labor Detail'!{_pld_col(y)}{r}" for y in range(1, self.total_years + 1)]
+                total_fml = f"='Prime Labor Detail'!{pld_tcl}{r}"
+            else:
+                year_fmls = [0] * self.total_years
+                total_fml = 0
+            _write_row("Overtime (Prime)", year_fmls, total_fml, bold=False)
             current_row += 1
 
             # Surge Option (BLS) — based on fully burdened prime labor (DL:G&A × (1 + fee_rate))
@@ -1015,6 +1103,34 @@ class ExcelGenerator:
                 cell.font = self.BOLD_FONT
                 current_row += 1
 
+                # ── Overtime row (OT hours × fee-inclusive FBLR × ot_multiplier) ──
+                # Written as literal dollar amounts per year (not an Excel formula)
+                # because PLD position rows don't have OT-hours columns.
+                ot_by_year = self._compute_prime_ot_by_year()
+                overtime_row = current_row
+                ws.cell(current_row, 1, "Overtime (Prime)")
+                ws.cell(current_row, 1).font = self.BOLD_FONT
+                ws.cell(current_row, 1).border = self.THIN_BORDER
+                col = self.pld_year_start
+                ot_total = 0.0
+                for year in range(1, self.total_years + 1):
+                    col += 1  # hours column (unused for OT aggregate row)
+                    col += 1  # rate column (unused)
+                    amt = round(ot_by_year.get(year, 0.0), 2)
+                    cell = ws.cell(current_row, col)
+                    cell.value = amt
+                    cell.number_format = self.CURRENCY_FORMAT
+                    cell.border = self.THIN_BORDER
+                    cell.font = self.BOLD_FONT
+                    ot_total += amt
+                    col += 1
+                cell = ws.cell(current_row, total_dollars_col)
+                cell.value = round(ot_total, 2)
+                cell.number_format = self.CURRENCY_FORMAT
+                cell.border = self.THIN_BORDER
+                cell.font = self.BOLD_FONT
+                current_row += 1
+
                 total_prime_labor_row = current_row
                 ws.cell(current_row, 1, "Total Prime Labor")
                 ws.cell(current_row, 1).font = self.BOLD_FONT
@@ -1025,14 +1141,14 @@ class ExcelGenerator:
                     col += 1
                     cl = get_column_letter(col)
                     cell = ws.cell(current_row, col)
-                    cell.value = f"={cl}{subtotal_row}+{cl}{fee_row}"
+                    cell.value = f"={cl}{subtotal_row}+{cl}{fee_row}+{cl}{overtime_row}"
                     cell.number_format = self.CURRENCY_FORMAT
                     cell.border = self.THIN_BORDER
                     cell.font = self.BOLD_FONT
                     col += 1
                 tcl = get_column_letter(total_dollars_col)
                 cell = ws.cell(current_row, total_dollars_col)
-                cell.value = f"={tcl}{subtotal_row}+{tcl}{fee_row}"
+                cell.value = f"={tcl}{subtotal_row}+{tcl}{fee_row}+{tcl}{overtime_row}"
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 cell.font = self.BOLD_FONT
@@ -1043,6 +1159,7 @@ class ExcelGenerator:
             'fringe_row': fringe_row if (positions and not self.has_gsa) else None,
             'oh_row': oh_row if (positions and not self.has_gsa) else None,
             'ga_row': ga_row if (positions and not self.has_gsa) else None,
+            'overtime_row': overtime_row if (positions and not self.has_gsa) else None,
             'total_prime_labor_row': total_prime_labor_row if positions else None,
             'total_dollars_col': total_dollars_col,
         }
@@ -1386,14 +1503,16 @@ class ExcelGenerator:
         total_cell.font = self.BOLD_FONT
         current_row += 1
 
-        # Materials Handling (S&MH) row = base_only_total × passthrough rate
+        # Materials Handling (S&MH) row = base_only_total × S&MH-only rate
+        # (IR_SMH_MATERIALS_ROW, not IR_PASSTHROUGH_ROW — materials don't get G&A passthrough;
+        # matches the Nexagen sample template's Material Handling formula.)
         handling_row = current_row
         ws.cell(current_row, 1, "Materials Handling (S&MH)")
         ws.cell(current_row, 1).border = self.THIN_BORDER
         col = 2
         for year in range(1, self.total_years + 1):
             cell = ws.cell(current_row, col)
-            cell.value = f"={get_column_letter(col)}{base_only_total_row}*{self._ir_ref(self.IR_PASSTHROUGH_ROW)}"
+            cell.value = f"={get_column_letter(col)}{base_only_total_row}*{self._ir_ref(self.IR_SMH_MATERIALS_ROW)}"
             cell.number_format = self.CURRENCY_FORMAT
             cell.border = self.THIN_BORDER
             col += 1
@@ -1494,7 +1613,7 @@ class ExcelGenerator:
 
             current_row += 1
 
-            # Material Handling row
+            # Material Handling row — uses S&MH-only rate (not combined passthrough)
             ws.cell(current_row, 1, f"{material['category']} Handling")
             ws.cell(current_row, 1).border = self.THIN_BORDER
 
@@ -1502,7 +1621,7 @@ class ExcelGenerator:
             for year in range(1, self.total_years + 1):
                 material_cell = f"{get_column_letter(col)}{current_row - 1}"
                 cell = ws.cell(current_row, col)
-                cell.value = f"={material_cell}*{self._ir_ref(self.IR_PASSTHROUGH_ROW)}"
+                cell.value = f"={material_cell}*{self._ir_ref(self.IR_SMH_MATERIALS_ROW)}"
                 cell.number_format = self.CURRENCY_FORMAT
                 cell.border = self.THIN_BORDER
                 col += 2
@@ -1849,8 +1968,10 @@ class ExcelGenerator:
         fee_rates = self.project_data.get('fee_rates', {})
         escalation_rates = self.project_data.get('escalation_rates', {})
 
-        # Calculate combined passthrough rate (S&MH + G&A Passthrough)
-        combined_passthrough = passthrough_rates.get('smh', 0) + passthrough_rates.get('ga', 0)
+        # Passthrough (subcontractor) = S&MH + G&A Passthrough (combined).
+        # Material Handling (ODC) = S&MH only (matches Nexagen sample template).
+        smh_only = passthrough_rates.get('smh', 0)
+        combined_passthrough = smh_only + passthrough_rates.get('ga', 0)
 
         # For GSA only G&A is used in formulas; Fringe/OH/Passthrough/Fee are not applied.
         # Row positions must stay fixed (IR_*_ROW constants are hardcoded across all sheets).
@@ -1863,6 +1984,7 @@ class ExcelGenerator:
             ("Passthrough (S&MH + G&A)", combined_passthrough),
             ("Fee on Labor", fee_rates.get('prime_labor', 0)),
             ("Fee on Subcontractor", fee_rates.get('sub_labor', 0)),
+            ("Material Handling (S&MH)", smh_only),
         ]
         # Index 3 = G&A = IR_GA_ROW (row 12) — the only rate used in GSA formulas
         gsa_visible_indices = {3}
@@ -1886,8 +2008,8 @@ class ExcelGenerator:
 
             current_row += 1
 
-        # Escalation factors
-        current_row += 1
+        # Escalation factors (start row 17 by constant; the rate loop above
+        # ended at row 17 since we have 8 rate rows starting at row 9).
         for year in range(1, self.total_years):
             key = f"{year}_to_{year + 1}"
             rate = escalation_rates.get(key, 0.0)
@@ -1947,7 +2069,7 @@ class ExcelGenerator:
         smh_rate = self.project_data.get('passthrough_rates', {}).get('smh', 0.0671)
         fee_rates = self.project_data.get('fee_rates', {})
         prime_fee_rate = fee_rates.get('prime_labor', 0.08)
-        sub_fee_rate = fee_rates.get('sub_labor', 0.0126)
+        sub_fee_rate = fee_rates.get('sub_labor', 0.0)
 
         # Calculate prime labor costs
         for year in range(1, self.total_years + 1):
@@ -1970,18 +2092,20 @@ class ExcelGenerator:
                     )
                     year_data = results.get(year_key, {})
 
-                    # For GSA: Reverse engineer DL from the fully loaded rate for CE Summary display
-                    # IMPORTANT: Use oh_onsite for ALL GSA positions (matching frontend logic)
-                    # GSA rate is FULLY LOADED (includes fee), so must reverse-engineer with fee in multiplier
+                    # For GSA: Reverse engineer DL from the fully loaded rate for CE Summary display.
+                    # GSA rate is FULLY LOADED (includes fee), so we reverse-engineer with fee in multiplier.
+                    # Honor location_type so the displayed OH slice matches the frontend's
+                    # reverseEngineerGSARate (see PRICING_FORMULAS.md § 6.4).
                     gsa_rate = year_data.get('rate', 0)
                     hours = year_data.get('hours', 0)
+                    position_location_type = position.get('location_type', 'On-Site')
+                    position_oh_rate = oh_onsite_rate if position_location_type == 'On-Site' else oh_offsite_rate
 
-                    # Calculate multiplier using oh_onsite AND fee (matching frontend reverseEngineerGSARate)
-                    multiplier = (1 + fringe_rate) * (1 + oh_onsite_rate) * (1 + ga_rate) * (1 + prime_fee_rate)
+                    multiplier = (1 + fringe_rate) * (1 + position_oh_rate) * (1 + ga_rate) * (1 + prime_fee_rate)
                     dl_rate = gsa_rate / multiplier if multiplier > 0 else 0
                     position_dl = dl_rate * hours
                     position_fringe = position_dl * fringe_rate
-                    position_oh = (position_dl + position_fringe) * oh_onsite_rate
+                    position_oh = (position_dl + position_fringe) * position_oh_rate
                 else:
                     # BLS positions: Use standard calculator (respects location_type via indirect_rates)
                     results = Calculator.calculate_position_years(

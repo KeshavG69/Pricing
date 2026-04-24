@@ -224,8 +224,8 @@ wage_data = db.wage_data.find_one({
 
 **Auto-Selection Logic:**
 - **< 3 years experience** → 25th percentile
-- **3-5 years experience** → 50th percentile (median)
-- **> 5 years experience** → 75th percentile
+- **3 to < 6 years experience** → 50th percentile (median)
+- **≥ 6 years experience** → 75th percentile
 
 **Example:**
 - Position: "Software Engineer III, Senior (5+ years)"

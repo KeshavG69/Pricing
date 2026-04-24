@@ -230,15 +230,19 @@ async def upload_proposal_documents(
             role=current_user.get("role")
         )
 
+        # Files are now in iDrive — worker will download them there. Clean up
+        # the API-local staging tmpdir so it doesn't leak.
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
         # Start background processing
+        idrive_keys = [doc["idrive_key"] for doc in documents_info]
         from tasks.processing_tasks import process_proposal_task
         process_proposal_task.delay(
             proposal_id,
             str(current_user["_id"]),
             str(current_user.get("organization_id")),
-            file_paths,
+            idrive_keys,
             file_names,
-            str(temp_dir),
             wage_source,
         )
 
@@ -418,17 +422,20 @@ async def reingest_proposal_documents(
         print(f"[RE-INGEST] Message after update: {update_result.get('message')}")
         print(f"[RE-INGEST] Progress after update: {update_result.get('progress')}")
 
+        # Files are now in iDrive — worker will download them there.
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
         # Start background processing (will preserve mode state)
         # IMPORTANT: Pass owner's ID for background updates
         proposal_owner_id = str(proposal.get("user_id"))
+        idrive_keys = [doc["idrive_key"] for doc in documents_info]
         from tasks.processing_tasks import process_proposal_task
         process_proposal_task.delay(
             proposal_id,
             proposal_owner_id,
             str(current_user.get("organization_id")),
-            file_paths,
+            idrive_keys,
             file_names,
-            str(temp_dir),
             wage_source,
             preserved_advanced_mode,
             preserved_subcontractor_configured,
@@ -1286,7 +1293,6 @@ async def retry_proposal_processing(
     Re-downloads documents from iDrive and re-runs processing.
     """
     crud = await get_crud()
-    storage = get_idrive_storage()
 
     # Get user's organization and role for access control
     organization_id = current_user.get("organization_id")
@@ -1321,29 +1327,16 @@ async def retry_proposal_processing(
             detail="No documents found. The original files were not saved. Please create a new proposal and upload the documents again."
         )
 
-    # Create temp directory and download files from iDrive
-    temp_dir = Path(tempfile.mkdtemp())
-    file_paths = []
+    idrive_keys = []
     file_names = []
+    for doc in documents:
+        idrive_key = doc.get("idrive_key")
+        filename = doc.get("filename")
+        if idrive_key and filename:
+            idrive_keys.append(idrive_key)
+            file_names.append(filename)
 
-    try:
-        for doc in documents:
-            idrive_key = doc.get("idrive_key")
-            filename = doc.get("filename")
-            if idrive_key and filename:
-                file_path = temp_dir / filename
-                storage.download_document(idrive_key, str(file_path))
-                file_paths.append(str(file_path))
-                file_names.append(filename)
-    except Exception as e:
-        shutil.rmtree(temp_dir, ignore_errors=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to retrieve documents from storage: {str(e)}"
-        )
-
-    if not file_paths:
-        shutil.rmtree(temp_dir, ignore_errors=True)
+    if not idrive_keys:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Could not retrieve any documents for reprocessing"
@@ -1366,9 +1359,8 @@ async def retry_proposal_processing(
         proposal_id,
         str(current_user["_id"]),
         str(current_user.get("organization_id")),
-        file_paths,
+        idrive_keys,
         file_names,
-        str(temp_dir),
         proposal.get("wage_source"),
     )
 
@@ -1937,7 +1929,7 @@ async def refresh_position_wage_data(
         if experience is not None:
             if experience < 3:
                 selected_percentile = "25th"
-            elif experience <= 5:
+            elif experience < 6:
                 selected_percentile = "50th"
             else:
                 selected_percentile = "75th"

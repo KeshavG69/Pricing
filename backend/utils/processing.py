@@ -121,9 +121,8 @@ async def process_proposal_documents(
             "ga": 0.2243,
             "fee": 0.07,
             "smh": 0.065,
-            "sub_fee": 0.05,
+            "sub_fee": 0.0,
             "ga_passthrough": 0.025,
-            "ga_adder": 0.0,
             "ot_multiplier": 1.5,
             "surge_multiplier": 1.15,
         }
@@ -237,6 +236,32 @@ async def process_proposal_documents(
             else:
                 final_split_jobs.append(job)
         cleaned_jobs = final_split_jobs
+
+        # Guard: ensure wage lookup actually produced usable data.
+        # Both BLS and GSA pipelines set selected_wage; None means the agent
+        # returned no data or errored for that row. If the failure rate is
+        # high, the proposal is unusable — don't charge and don't mark completed.
+        total_positions = len(cleaned_jobs)
+        failed_positions = sum(1 for job in cleaned_jobs if not job.get("selected_wage"))
+        if total_positions > 0 and failed_positions / total_positions > 0.5:
+            logger.error(
+                f"Wage lookup failed for {failed_positions}/{total_positions} positions "
+                f"(>50%). Marking proposal {proposal_id} as error, skipping billing."
+            )
+            crud.update_proposal(
+                proposal_id,
+                user_id,
+                {
+                    "status": "error",
+                    "progress": 0,
+                    "billing_status": "unpaid",
+                    "message": (
+                        f"Wage lookup failed for {failed_positions} of {total_positions} positions. "
+                        "Please retry the upload, or contact support if this persists."
+                    ),
+                },
+            )
+            return
 
         # Extract contract metadata
         base_years = cleaned_jobs[0].get("base_years") if cleaned_jobs else None

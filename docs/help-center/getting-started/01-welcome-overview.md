@@ -99,8 +99,8 @@ Get a high-level introduction to PriceIQ's government contractor pricing automat
 
 **Auto-Selection:**
 - < 3 years experience → 25th percentile
-- 3-5 years → 50th percentile (median)
-- > 5 years → 75th percentile
+- 3 to < 6 years → 50th percentile (median)
+- ≥ 6 years → 75th percentile
 - Manual override available
 
 ### Multi-Year Contract Support

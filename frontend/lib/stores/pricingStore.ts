@@ -433,18 +433,23 @@ export const usePricingStore = create<PricingState>((set, get) => {
           finalAmount = amount * escalationMultiplier;
         }
 
-        // Apply S&MH markup
+        // Apply S&MH markup only (matches the Nexagen sample template's
+        // Material Handling formula: base × C13 where C13 is just S&MH, no G&A).
         const smhRate = state.rates.smh || 0;
         odcTotal += finalAmount * (1 + smhRate);
       });
     });
 
-    // Calculate surge costs (if surge option exists)
+    // Calculate surge costs (if surge option exists).
+    // Surge base is fee-INCLUSIVE prime labor (= billable rate): per DFARS
+    // 252.217-7001, surge hours are priced at the same billable rate as base
+    // work, and government billable rate always includes fee.
     let surgeTotal = 0;
     if (state.surge && state.surge.percentage !== null) {
       const surgePercentage = state.surge.percentage;
       const surgeMultiplier = state.rates.surge_multiplier || 1.15;
-      surgeTotal = primeLaborTotal * surgePercentage * surgeMultiplier;
+      const primeLaborWithFee = primeLaborTotal + primeFee;
+      surgeTotal = primeLaborWithFee * surgePercentage * surgeMultiplier;
     }
 
     // Grand total
@@ -494,7 +499,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           const gsaRate = originalGsaRate * (1 - discountRate);
           console.log('[TRANSFORM_GSA] Final gsaRate after discount:', gsaRate);
 
-          const gsaBreakdown = reverseEngineerGSARate(gsaRate, state.rates);
+          const gsaBreakdown = reverseEngineerGSARate(gsaRate, state.rates, pos.location_type);
 
           // IMPORTANT: For GSA, the breakdown is ONLY for display purposes
           // The actual cost is ALWAYS gsaRate * hours (independent of indirect rates)
@@ -1056,7 +1061,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
             oh_onsite: 0.0711,
             oh_offsite: 0.0711,
             ga: 0.2243,
-            fee: 0.08,
+            fee: 0.07,
           };
         } else {
           // Migrate old 'oh' to new structure
@@ -1220,7 +1225,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           extensions: proposal.spreadsheet_data?.extensions || [],
           surge: proposal.spreadsheet_data?.surge || null,  // NEW: Load surge option
           rates: rates,  // Use migrated rates
-          escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Load from spreadsheet_data (fallback to top-level for old proposals)
+          escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates || ({} as EscalationRates),  // Load from spreadsheet_data (fallback to top-level; default {} to avoid Object.keys() on undefined)
           wageSource: proposal.wage_source || { type: 'bls' },  // Load wage source from proposal
           totalYears,
           baseYears: proposal.metadata?.base_years || 1,
@@ -1248,7 +1253,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           extensions: proposal.spreadsheet_data?.extensions || [],
           surge: proposal.spreadsheet_data?.surge || null,  // NEW: Load surge option
           rates: rates,  // Use migrated rates
-          escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates,  // Load from spreadsheet_data (fallback to top-level for old proposals)
+          escalationRates: proposal.spreadsheet_data?.escalation_rates || proposal.escalation_rates || ({} as EscalationRates),  // Load from spreadsheet_data (fallback to top-level; default {} to avoid Object.keys() on undefined)
           wageSource: proposal.wage_source || { type: 'bls' },  // Cache wage source
           totalYears,
           baseYears: proposal.metadata?.base_years || 1,
