@@ -21,20 +21,21 @@ from utils.agno_tools import create_reasoning_tool
 
 logger = logging.getLogger(__name__)
 
-# Global singleton
+# Global singleton — context-free. proposal_state is passed inline per turn.
 _pricing_agent: Optional[Agent] = None
 _agent_lock = threading.Lock()
 
 
-def get_pricing_agent(session_id: str, proposal_context: str) -> Agent:
+def get_pricing_agent(session_id: str) -> Agent:
     """
-    Get cached pricing agent singleton with session-specific binding.
+    Get the cached pricing agent singleton with session-specific binding.
 
-    Session ID is bound dynamically for conversation history / user memories.
+    The singleton does NOT bake proposal state into instructions — that would
+    freeze the first caller's state for every subsequent request. Proposal
+    state is passed inline with each user message instead.
 
     Args:
-        session_id: Session ID for this request
-        proposal_context: The fully-computed proposal state
+        session_id: Session ID for this request (used for history / memories)
 
     Returns:
         Cached Agent instance with updated session_id
@@ -44,14 +45,14 @@ def get_pricing_agent(session_id: str, proposal_context: str) -> Agent:
     if _pricing_agent is None:
         with _agent_lock:
             if _pricing_agent is None:
-                _pricing_agent = _create_pricing_agent(session_id, proposal_context)
+                _pricing_agent = _create_pricing_agent()
                 logger.info("Initialized global pricing agent singleton")
 
     _pricing_agent.session_id = session_id
     return _pricing_agent
 
 
-def _create_pricing_agent(session_id:str,proposal_context:str) -> Agent:
+def _create_pricing_agent() -> Agent:
     """Create the pricing agent (internal — called once)."""
     llm = get_chat_llm_agno(
         model="anthropic/claude-sonnet-4.6",
@@ -87,8 +88,17 @@ total, per-year breakdowns, per-position FBLR and costs, subcontractor costs, \
 travel, ODCs, surge, and pre-computed slices (by location type, wage source, \
 work type, subcontractor, year).
 
-ALWAYS read your answers directly from this block. Do not recompute, estimate, \
-or guess. Quote numbers verbatim.""",
+The block ALSO includes the proposal's identity under `proposal`: \
+`proposal.name` (the proposal name / title shown in the UI header) and \
+`proposal.solicitation_number` (the government contract / solicitation \
+number). When the user asks "what proposal am I looking at", "what's the \
+contract number", or refers to the proposal by name, use these fields \
+verbatim — do NOT guess from labor categories or file names.
+
+ALWAYS read your answers directly from the <proposal_state> block on the \
+CURRENT user turn. Never rely on figures from earlier turns — the user may \
+have edited the proposal between messages, so each turn's state is \
+authoritative. Do not recompute, estimate, or guess. Quote numbers verbatim.""",
 
         # ── Hard answering rules ──────────────────────────────────────
         """<rules>
@@ -131,8 +141,8 @@ per year with escalation"). Do not produce hand-computed replacement numbers.
 9. Reasoning tool (`think` / `analyze`) usage — use it DELIBERATELY, not by \
 reflex:
    • SKIP reasoning for simple reads ("what's the grand total?", "how many \
-positions?", "show me year 3 fee"). The answer is already in the state block \
-— just quote it.
+positions?", "show me year 3 fee", "what's the proposal name / contract \
+number?"). The answer is already in the state block — just quote it.
    • USE `think` to plan the answer when the user asks for a multi-step \
 explanation, a comparison across positions/years, an interpretation of why \
 two numbers differ, or anything that needs you to combine multiple slices of \
@@ -146,21 +156,11 @@ not duplicate it. Keep each thought short and specific (which breakdown slice \
 you're pulling from, what subset of positions, which year, which rate).
    • Never use reasoning to ESTIMATE missing data. If a number isn't in the \
 state, say so; don't reason your way to an approximation.
-</rules>"""
-+
-f"""
-
-<Proposal Context>
-{proposal_context.strip()}
-</Proposal Context>
-
-
-""",
+</rules>""",
     ]
 
     agent = Agent(
         name="Q",
-        session_id=session_id,
         model=llm,
         db=db_instance,
         memory_manager=memory_manager,

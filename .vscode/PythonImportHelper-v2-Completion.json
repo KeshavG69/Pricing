@@ -5311,7 +5311,7 @@
         "kind": 2,
         "importPath": "backend.agent.pricing_agent",
         "description": "backend.agent.pricing_agent",
-        "peekOfCode": "def get_pricing_agent(session_id: str, proposal_context: str) -> Agent:\n    \"\"\"\n    Get cached pricing agent singleton with session-specific binding.\n    Session ID is bound dynamically for conversation history / user memories.\n    Args:\n        session_id: Session ID for this request\n        proposal_context: The fully-computed proposal state\n    Returns:\n        Cached Agent instance with updated session_id\n    \"\"\"",
+        "peekOfCode": "def get_pricing_agent(session_id: str) -> Agent:\n    \"\"\"\n    Get the cached pricing agent singleton with session-specific binding.\n    The singleton does NOT bake proposal state into instructions — that would\n    freeze the first caller's state for every subsequent request. Proposal\n    state is passed inline with each user message instead.\n    Args:\n        session_id: Session ID for this request (used for history / memories)\n    Returns:\n        Cached Agent instance with updated session_id",
         "detail": "backend.agent.pricing_agent",
         "documentation": {}
     },
@@ -5329,7 +5329,7 @@
         "kind": 5,
         "importPath": "backend.agent.pricing_agent",
         "description": "backend.agent.pricing_agent",
-        "peekOfCode": "logger = logging.getLogger(__name__)\n# Global singleton\n_pricing_agent: Optional[Agent] = None\n_agent_lock = threading.Lock()\ndef get_pricing_agent(session_id: str, proposal_context: str) -> Agent:\n    \"\"\"\n    Get cached pricing agent singleton with session-specific binding.\n    Session ID is bound dynamically for conversation history / user memories.\n    Args:\n        session_id: Session ID for this request",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# Global singleton — context-free. proposal_state is passed inline per turn.\n_pricing_agent: Optional[Agent] = None\n_agent_lock = threading.Lock()\ndef get_pricing_agent(session_id: str) -> Agent:\n    \"\"\"\n    Get the cached pricing agent singleton with session-specific binding.\n    The singleton does NOT bake proposal state into instructions — that would\n    freeze the first caller's state for every subsequent request. Proposal\n    state is passed inline with each user message instead.",
         "detail": "backend.agent.pricing_agent",
         "documentation": {}
     },
@@ -5338,7 +5338,7 @@
         "kind": 5,
         "importPath": "backend.agent.pricing_agent",
         "description": "backend.agent.pricing_agent",
-        "peekOfCode": "_agent_lock = threading.Lock()\ndef get_pricing_agent(session_id: str, proposal_context: str) -> Agent:\n    \"\"\"\n    Get cached pricing agent singleton with session-specific binding.\n    Session ID is bound dynamically for conversation history / user memories.\n    Args:\n        session_id: Session ID for this request\n        proposal_context: The fully-computed proposal state\n    Returns:\n        Cached Agent instance with updated session_id",
+        "peekOfCode": "_agent_lock = threading.Lock()\ndef get_pricing_agent(session_id: str) -> Agent:\n    \"\"\"\n    Get the cached pricing agent singleton with session-specific binding.\n    The singleton does NOT bake proposal state into instructions — that would\n    freeze the first caller's state for every subsequent request. Proposal\n    state is passed inline with each user message instead.\n    Args:\n        session_id: Session ID for this request (used for history / memories)\n    Returns:",
         "detail": "backend.agent.pricing_agent",
         "documentation": {}
     },
