@@ -12,6 +12,8 @@ import tempfile
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from celery.exceptions import SoftTimeLimitExceeded
+
 # Ensure backend directory is on path (needed when Celery forks a worker process)
 backend_dir = str(Path(__file__).resolve().parent.parent)
 if backend_dir not in sys.path:
@@ -21,8 +23,20 @@ from app.worker import celery_app
 
 logger = logging.getLogger(__name__)
 
+# Soft limit raises SoftTimeLimitExceeded inside the task so we can clean up
+# (mark proposal as error, skip billing). Hard limit kills the worker process
+# if the task ignores the soft signal. Must stay below / equal to the lazy
+# timeout check in ProposalCRUD.check_for_timeout (currently 30 min) so a
+# stuck task is resolved before a polling client flips it.
+PROPOSAL_TASK_SOFT_TIMEOUT = 25 * 60  # 25 minutes
+PROPOSAL_TASK_HARD_TIMEOUT = 30 * 60  # 30 minutes
 
-@celery_app.task(bind=True)
+
+@celery_app.task(
+    bind=True,
+    soft_time_limit=PROPOSAL_TASK_SOFT_TIMEOUT,
+    time_limit=PROPOSAL_TASK_HARD_TIMEOUT,
+)
 def process_proposal_task(
     self,
     proposal_id: str,
@@ -43,6 +57,7 @@ def process_proposal_task(
     caller — only idrive_keys cross the task boundary, so this works whether the
     worker runs in the same container as the API or in a separate one.
     """
+    temp_dir: Optional[Path] = None
     try:
         logger.info(f"Starting proposal processing task: {proposal_id}")
 
@@ -77,14 +92,46 @@ def process_proposal_task(
         logger.info(f"Proposal processing task completed: {proposal_id}")
         return {"status": "success", "proposal_id": proposal_id}
 
+    except SoftTimeLimitExceeded:
+        logger.error(
+            f"Proposal processing task exceeded {PROPOSAL_TASK_SOFT_TIMEOUT}s soft limit: {proposal_id}"
+        )
+        _mark_proposal_timed_out(proposal_id, user_id)
+        return {"status": "timeout", "proposal_id": proposal_id}
+
     except Exception as e:
         logger.error(f"Proposal processing task failed: {proposal_id}: {e}", exc_info=True)
-        if 'temp_dir' in locals():
-            shutil.rmtree(temp_dir, ignore_errors=True)
         return {"status": "error", "proposal_id": proposal_id, "error": str(e)}
 
     finally:
+        if temp_dir is not None:
+            shutil.rmtree(temp_dir, ignore_errors=True)
         gc.collect()
+
+
+def _mark_proposal_timed_out(proposal_id: str, user_id: str) -> None:
+    """Flip a timed-out proposal to error and leave billing_status unpaid so no charge fires."""
+    try:
+        from utils.proposals import get_proposal_crud
+        crud = get_proposal_crud()
+        crud.update_proposal(
+            proposal_id,
+            user_id,
+            {
+                "status": "error",
+                "progress": 0,
+                "billing_status": "unpaid",
+                "message": (
+                    f"Processing exceeded the {PROPOSAL_TASK_SOFT_TIMEOUT // 60}-minute time limit "
+                    "and was cancelled. Please retry the upload, or contact support if this persists."
+                ),
+            },
+        )
+    except Exception as update_err:
+        logger.error(
+            f"Failed to mark proposal {proposal_id} as timed out: {update_err}",
+            exc_info=True,
+        )
 
 
 @celery_app.task(bind=True)
