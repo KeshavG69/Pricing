@@ -21,11 +21,29 @@ class OEWSMongoLookup:
         """Initialize MongoDB connection (lazy initialization)."""
         self.client: Optional[AsyncIOMotorClient] = None
         self.db: Optional[AsyncIOMotorDatabase] = None
+        self._loop: Optional[asyncio.AbstractEventLoop] = None
 
     async def _ensure_initialized(self):
-        """Ensure MongoDB connection is initialized (lazy initialization)"""
+        """Ensure MongoDB connection is initialized (lazy initialization).
+
+        Motor's AsyncIOMotorClient binds to the event loop it was created on.
+        Celery runs each task in its own asyncio.run() loop, which closes when
+        the task ends — so a cached client from a prior task raises
+        "Event loop is closed" on the next call. Detect a loop change and
+        rebuild the client so the singleton works across Celery task boundaries.
+        """
+        current_loop = asyncio.get_running_loop()
+
+        if self.db is not None and self._loop is not current_loop:
+            try:
+                self.client.close()
+            except Exception:
+                pass
+            self.client = None
+            self.db = None
+            self._loop = None
+
         if self.db is None:
-            # Create Motor async client
             # Connection pool tuning for Railway MongoDB proxy
             self.client = AsyncIOMotorClient(
                 settings.MONGODB_URL,
@@ -40,6 +58,7 @@ class OEWSMongoLookup:
                 heartbeatFrequencyMS=120000,  # Check every 2min instead of default 10s
             )
             self.db = self.client[settings.MONGODB_DATABASE]
+            self._loop = current_loop
 
     async def search_areas(self, keyword: str) -> List[Dict[str, str]]:
         """
@@ -293,29 +312,21 @@ class OEWSMongoLookup:
             self.client.close()
 
 
-# Global singleton instance with thread-safe lazy initialization
-_oews_mongo_client: Optional[OEWSMongoLookup] = None
-_client_lock = None  # Will be initialized when needed
+import threading
+
+# Thread-local client instance. Motor binds to the asyncio loop it was created
+# on, so a process-global singleton breaks under Celery `--pool=threads`:
+# concurrent tasks run in separate threads, each with its own asyncio.run()
+# loop, and would race each other to rebuild a shared client. Keying by thread
+# isolates each worker thread's client from the others; the loop-rebuild logic
+# inside _ensure_initialized handles sequential reuse within the same thread.
+_thread_local = threading.local()
 
 
 def get_oews_mongo_client() -> OEWSMongoLookup:
-    """
-    Get or create OEWS MongoDB client (singleton pattern).
-
-    Thread-safe synchronous getter. The client itself uses async methods
-    with lazy initialization via _ensure_initialized().
-
-    Returns:
-        OEWSMongoLookup instance
-    """
-    global _oews_mongo_client, _client_lock
-
-    # Initialize lock on first call
-    if _client_lock is None:
-        import threading
-        _client_lock = threading.Lock()
-
-    with _client_lock:
-        if _oews_mongo_client is None:
-            _oews_mongo_client = OEWSMongoLookup()
-        return _oews_mongo_client
+    """Return the OEWS MongoDB client for the current thread."""
+    client = getattr(_thread_local, "client", None)
+    if client is None:
+        client = OEWSMongoLookup()
+        _thread_local.client = client
+    return client
