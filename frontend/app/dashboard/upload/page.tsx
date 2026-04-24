@@ -9,11 +9,13 @@ import { useCompanyRepositoryStore } from '@/lib/stores/companyRepositoryStore';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useBillingStore } from '@/lib/stores/billingStore';
 import { useProposalPolling } from '@/lib/hooks/useProposalPolling';
+import { useProposalEvents } from '@/lib/hooks/useProposalEvents';
 import { chargeForProposal } from '@/lib/api/billing';
 import Button from '@/components/ui/Button';
 import Card, { CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/Card';
 import Input from '@/components/ui/Input';
 import ProcessingLoader from '@/components/ui/ProcessingLoader';
+import ParserEventFeed from '@/components/ui/ParserEventFeed';
 import ChargeConfirmationModal from '@/components/ui/ChargeConfirmationModal';
 import { CustomSelect, SelectOption } from '@/components/ui/CustomSelect';
 import { Upload, File, X, AlertCircle, Database, Building2 } from 'lucide-react';
@@ -72,6 +74,9 @@ export default function UploadPage() {
 
   // Poll status after upload
   const { status, isPolling, error: pollingError } = useProposalPolling(uploadedProposalId);
+
+  // Poll the live event feed (tool calls + reasoning from the parser agent)
+  const parserEvents = useProposalEvents(uploadedProposalId);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setError(null);
@@ -207,16 +212,29 @@ export default function UploadPage() {
     return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
   };
 
-  // Show processing loader while uploading or polling
+  // Show processing loader while uploading or polling.
+  // Once we have a proposalId, switch to the live parser event feed so the
+  // user can watch the agent reason + call tools in real time. Before the
+  // upload finishes (no proposalId yet) the classic spinner is still the
+  // right UX since there's nothing to stream.
   if (isLoading || isPolling) {
     return (
       <DashboardLayout>
-        <div className="h-[calc(100vh-100px)] flex items-center justify-center">
-          <ProcessingLoader
-            progress={status?.progress || 0}
-            message={status?.message || 'Uploading documents...'}
-            status={status?.status || 'processing'}
-          />
+        <div className="min-h-[calc(100vh-100px)] flex items-start justify-center px-4 py-10 overflow-y-auto">
+          {uploadedProposalId ? (
+            <ParserEventFeed
+              events={parserEvents}
+              progress={status?.progress ?? 0}
+              status={status?.status ?? 'processing'}
+              fallbackMessage={status?.message}
+            />
+          ) : (
+            <ProcessingLoader
+              progress={status?.progress || 0}
+              message={status?.message || 'Uploading documents...'}
+              status={status?.status || 'processing'}
+            />
+          )}
         </div>
       </DashboardLayout>
     );

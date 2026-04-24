@@ -1313,6 +1313,38 @@
         "documentation": {}
     },
     {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Optional",
         "importPath": "typing",
         "description": "typing",
@@ -2755,6 +2787,14 @@
         "documentation": {}
     },
     {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
         "label": "timedelta",
         "importPath": "datetime",
         "description": "datetime",
@@ -3133,6 +3173,14 @@
         "documentation": {}
     },
     {
+        "label": "ReturnDocument",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
         "label": "HTTPBearer",
         "importPath": "fastapi.security",
         "description": "fastapi.security",
@@ -3218,6 +3266,14 @@
         "description": "auth",
         "isExtraImport": true,
         "detail": "auth",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
         "documentation": {}
     },
     {
@@ -3847,6 +3903,54 @@
         "description": "agno.models.openai",
         "isExtraImport": true,
         "detail": "agno.models.openai",
+        "documentation": {}
+    },
+    {
+        "label": "RunEvent",
+        "importPath": "agno.run.agent",
+        "description": "agno.run.agent",
+        "isExtraImport": true,
+        "detail": "agno.run.agent",
+        "documentation": {}
+    },
+    {
+        "label": "RunOutput",
+        "importPath": "agno.run.agent",
+        "description": "agno.run.agent",
+        "isExtraImport": true,
+        "detail": "agno.run.agent",
+        "documentation": {}
+    },
+    {
+        "label": "RunOutputEvent",
+        "importPath": "agno.run.agent",
+        "description": "agno.run.agent",
+        "isExtraImport": true,
+        "detail": "agno.run.agent",
+        "documentation": {}
+    },
+    {
+        "label": "RunEvent",
+        "importPath": "agno.run.agent",
+        "description": "agno.run.agent",
+        "isExtraImport": true,
+        "detail": "agno.run.agent",
+        "documentation": {}
+    },
+    {
+        "label": "RunOutput",
+        "importPath": "agno.run.agent",
+        "description": "agno.run.agent",
+        "isExtraImport": true,
+        "detail": "agno.run.agent",
+        "documentation": {}
+    },
+    {
+        "label": "RunOutputEvent",
+        "importPath": "agno.run.agent",
+        "description": "agno.run.agent",
+        "isExtraImport": true,
+        "detail": "agno.run.agent",
         "documentation": {}
     },
     {
@@ -4977,35 +5081,19 @@
         "documentation": {}
     },
     {
+        "label": "SoftTimeLimitExceeded",
+        "importPath": "celery.exceptions",
+        "description": "celery.exceptions",
+        "isExtraImport": true,
+        "detail": "celery.exceptions",
+        "documentation": {}
+    },
+    {
         "label": "celery_app",
         "importPath": "app.worker",
         "description": "app.worker",
         "isExtraImport": true,
         "detail": "app.worker",
-        "documentation": {}
-    },
-    {
-        "label": "RunEvent",
-        "importPath": "agno.run.agent",
-        "description": "agno.run.agent",
-        "isExtraImport": true,
-        "detail": "agno.run.agent",
-        "documentation": {}
-    },
-    {
-        "label": "RunOutput",
-        "importPath": "agno.run.agent",
-        "description": "agno.run.agent",
-        "isExtraImport": true,
-        "detail": "agno.run.agent",
-        "documentation": {}
-    },
-    {
-        "label": "RunOutputEvent",
-        "importPath": "agno.run.agent",
-        "description": "agno.run.agent",
-        "isExtraImport": true,
-        "detail": "agno.run.agent",
         "documentation": {}
     },
     {
@@ -6038,6 +6126,24 @@
         "documentation": {}
     },
     {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.client.intelligent_parser",
+        "description": "backend.client.intelligent_parser",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# Map raw Agno tool names to short, user-friendly phrases for the event feed.\n# Everything else falls back to a generic \"Running <tool>\" label.\n_TOOL_LABELS = {\n    \"analyze\": \"Reasoning about the contract\",\n    \"think\": \"Reasoning about the contract\",\n    \"search_exa\": \"Searching the web for context\",\n    \"exa_search\": \"Searching the web for context\",\n    \"search_and_contents\": \"Searching the web for context\",\n}",
+        "detail": "backend.client.intelligent_parser",
+        "documentation": {}
+    },
+    {
+        "label": "_TOOL_LABELS",
+        "kind": 5,
+        "importPath": "backend.client.intelligent_parser",
+        "description": "backend.client.intelligent_parser",
+        "peekOfCode": "_TOOL_LABELS = {\n    \"analyze\": \"Reasoning about the contract\",\n    \"think\": \"Reasoning about the contract\",\n    \"search_exa\": \"Searching the web for context\",\n    \"exa_search\": \"Searching the web for context\",\n    \"search_and_contents\": \"Searching the web for context\",\n}\ndef _tool_label(tool_name: str) -> str:\n    if not tool_name:\n        return \"Running tool\"",
+        "detail": "backend.client.intelligent_parser",
+        "documentation": {}
+    },
+    {
         "label": "DocumentMetadata",
         "kind": 6,
         "importPath": "backend.client.jd_parser",
@@ -6213,7 +6319,7 @@
         "kind": 6,
         "importPath": "backend.client.oews_mongodb",
         "description": "backend.client.oews_mongodb",
-        "peekOfCode": "class OEWSMongoLookup:\n    \"\"\"Query OEWS wage data from MongoDB (Async).\"\"\"\n    def __init__(self):\n        \"\"\"Initialize MongoDB connection (lazy initialization).\"\"\"\n        self.client: Optional[AsyncIOMotorClient] = None\n        self.db: Optional[AsyncIOMotorDatabase] = None\n    async def _ensure_initialized(self):\n        \"\"\"Ensure MongoDB connection is initialized (lazy initialization)\"\"\"\n        if self.db is None:\n            # Create Motor async client",
+        "peekOfCode": "class OEWSMongoLookup:\n    \"\"\"Query OEWS wage data from MongoDB (Async).\"\"\"\n    def __init__(self):\n        \"\"\"Initialize MongoDB connection (lazy initialization).\"\"\"\n        self.client: Optional[AsyncIOMotorClient] = None\n        self.db: Optional[AsyncIOMotorDatabase] = None\n        self._loop: Optional[asyncio.AbstractEventLoop] = None\n    async def _ensure_initialized(self):\n        \"\"\"Ensure MongoDB connection is initialized (lazy initialization).\n        Motor's AsyncIOMotorClient binds to the event loop it was created on.",
         "detail": "backend.client.oews_mongodb",
         "documentation": {}
     },
@@ -6222,16 +6328,16 @@
         "kind": 2,
         "importPath": "backend.client.oews_mongodb",
         "description": "backend.client.oews_mongodb",
-        "peekOfCode": "def get_oews_mongo_client() -> OEWSMongoLookup:\n    \"\"\"\n    Get or create OEWS MongoDB client (singleton pattern).\n    Thread-safe synchronous getter. The client itself uses async methods\n    with lazy initialization via _ensure_initialized().\n    Returns:\n        OEWSMongoLookup instance\n    \"\"\"\n    global _oews_mongo_client, _client_lock\n    # Initialize lock on first call",
+        "peekOfCode": "def get_oews_mongo_client() -> OEWSMongoLookup:\n    \"\"\"Return the OEWS MongoDB client for the current thread.\"\"\"\n    client = getattr(_thread_local, \"client\", None)\n    if client is None:\n        client = OEWSMongoLookup()\n        _thread_local.client = client\n    return client",
         "detail": "backend.client.oews_mongodb",
         "documentation": {}
     },
     {
-        "label": "_client_lock",
+        "label": "_thread_local",
         "kind": 5,
         "importPath": "backend.client.oews_mongodb",
         "description": "backend.client.oews_mongodb",
-        "peekOfCode": "_client_lock = None  # Will be initialized when needed\ndef get_oews_mongo_client() -> OEWSMongoLookup:\n    \"\"\"\n    Get or create OEWS MongoDB client (singleton pattern).\n    Thread-safe synchronous getter. The client itself uses async methods\n    with lazy initialization via _ensure_initialized().\n    Returns:\n        OEWSMongoLookup instance\n    \"\"\"\n    global _oews_mongo_client, _client_lock",
+        "peekOfCode": "_thread_local = threading.local()\ndef get_oews_mongo_client() -> OEWSMongoLookup:\n    \"\"\"Return the OEWS MongoDB client for the current thread.\"\"\"\n    client = getattr(_thread_local, \"client\", None)\n    if client is None:\n        client = OEWSMongoLookup()\n        _thread_local.client = client\n    return client",
         "detail": "backend.client.oews_mongodb",
         "documentation": {}
     },
@@ -7500,7 +7606,7 @@
         "kind": 5,
         "importPath": "backend.tasks.processing_tasks",
         "description": "backend.tasks.processing_tasks",
-        "peekOfCode": "backend_dir = str(Path(__file__).resolve().parent.parent)\nif backend_dir not in sys.path:\n    sys.path.insert(0, backend_dir)\nfrom app.worker import celery_app\nlogger = logging.getLogger(__name__)\n@celery_app.task(bind=True)\ndef process_proposal_task(\n    self,\n    proposal_id: str,\n    user_id: str,",
+        "peekOfCode": "backend_dir = str(Path(__file__).resolve().parent.parent)\nif backend_dir not in sys.path:\n    sys.path.insert(0, backend_dir)\nfrom app.worker import celery_app\nlogger = logging.getLogger(__name__)\n# Soft limit raises SoftTimeLimitExceeded inside the task so we can clean up\n# (mark proposal as error, skip billing). Hard limit kills the worker process\n# if the task ignores the soft signal. Must stay below / equal to the lazy\n# timeout check in ProposalCRUD.check_for_timeout (currently 30 min) so a\n# stuck task is resolved before a polling client flips it.",
         "detail": "backend.tasks.processing_tasks",
         "documentation": {}
     },
@@ -7509,7 +7615,25 @@
         "kind": 5,
         "importPath": "backend.tasks.processing_tasks",
         "description": "backend.tasks.processing_tasks",
-        "peekOfCode": "logger = logging.getLogger(__name__)\n@celery_app.task(bind=True)\ndef process_proposal_task(\n    self,\n    proposal_id: str,\n    user_id: str,\n    organization_id: str,\n    idrive_keys: List[str],\n    file_names: List[str],\n    wage_source: Dict[str, Any],",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# Soft limit raises SoftTimeLimitExceeded inside the task so we can clean up\n# (mark proposal as error, skip billing). Hard limit kills the worker process\n# if the task ignores the soft signal. Must stay below / equal to the lazy\n# timeout check in ProposalCRUD.check_for_timeout (currently 30 min) so a\n# stuck task is resolved before a polling client flips it.\nPROPOSAL_TASK_SOFT_TIMEOUT = 25 * 60  # 25 minutes\nPROPOSAL_TASK_HARD_TIMEOUT = 30 * 60  # 30 minutes\n@celery_app.task(\n    bind=True,",
+        "detail": "backend.tasks.processing_tasks",
+        "documentation": {}
+    },
+    {
+        "label": "PROPOSAL_TASK_SOFT_TIMEOUT",
+        "kind": 5,
+        "importPath": "backend.tasks.processing_tasks",
+        "description": "backend.tasks.processing_tasks",
+        "peekOfCode": "PROPOSAL_TASK_SOFT_TIMEOUT = 25 * 60  # 25 minutes\nPROPOSAL_TASK_HARD_TIMEOUT = 30 * 60  # 30 minutes\n@celery_app.task(\n    bind=True,\n    soft_time_limit=PROPOSAL_TASK_SOFT_TIMEOUT,\n    time_limit=PROPOSAL_TASK_HARD_TIMEOUT,\n)\ndef process_proposal_task(\n    self,\n    proposal_id: str,",
+        "detail": "backend.tasks.processing_tasks",
+        "documentation": {}
+    },
+    {
+        "label": "PROPOSAL_TASK_HARD_TIMEOUT",
+        "kind": 5,
+        "importPath": "backend.tasks.processing_tasks",
+        "description": "backend.tasks.processing_tasks",
+        "peekOfCode": "PROPOSAL_TASK_HARD_TIMEOUT = 30 * 60  # 30 minutes\n@celery_app.task(\n    bind=True,\n    soft_time_limit=PROPOSAL_TASK_SOFT_TIMEOUT,\n    time_limit=PROPOSAL_TASK_HARD_TIMEOUT,\n)\ndef process_proposal_task(\n    self,\n    proposal_id: str,\n    user_id: str,",
         "detail": "backend.tasks.processing_tasks",
         "documentation": {}
     },
@@ -7718,6 +7842,42 @@
         "description": "backend.utils.email_verification",
         "peekOfCode": "_lock = threading.RLock()\nclass EmailVerificationCRUD:\n    \"\"\"Email Verification CRUD operations with token hashing (Sync Singleton)\"\"\"\n    def __init__(self):\n        \"\"\"Initialize EmailVerificationCRUD\"\"\"\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"email_verifications\"]\n        self.users_collection = mongodb.get_users_collection()\n        self.email_service = EmailService()",
         "detail": "backend.utils.email_verification",
+        "documentation": {}
+    },
+    {
+        "label": "EventStream",
+        "kind": 6,
+        "importPath": "backend.utils.event_stream",
+        "description": "backend.utils.event_stream",
+        "peekOfCode": "class EventStream:\n    \"\"\"Per-proposal event log with atomic sequence numbers.\"\"\"\n    def __init__(self):\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.events = self.db[\"proposal_events\"]\n        self.counters = self.db[\"proposal_event_counters\"]\n        try:\n            self.events.create_index([(\"proposal_id\", 1), (\"seq\", 1)])\n            self.events.create_index(\"ts\", expireAfterSeconds=EVENTS_TTL_SECONDS)",
+        "detail": "backend.utils.event_stream",
+        "documentation": {}
+    },
+    {
+        "label": "get_event_stream",
+        "kind": 2,
+        "importPath": "backend.utils.event_stream",
+        "description": "backend.utils.event_stream",
+        "peekOfCode": "def get_event_stream() -> EventStream:\n    \"\"\"Process-wide singleton. Uses sync pymongo so it's thread-safe.\"\"\"\n    global _stream\n    if _stream is None:\n        with _stream_lock:\n            if _stream is None:\n                _stream = EventStream()\n    return _stream",
+        "detail": "backend.utils.event_stream",
+        "documentation": {}
+    },
+    {
+        "label": "EVENTS_TTL_SECONDS",
+        "kind": 5,
+        "importPath": "backend.utils.event_stream",
+        "description": "backend.utils.event_stream",
+        "peekOfCode": "EVENTS_TTL_SECONDS = 3600  # 1 hour backstop if cleanup never runs\nclass EventStream:\n    \"\"\"Per-proposal event log with atomic sequence numbers.\"\"\"\n    def __init__(self):\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.events = self.db[\"proposal_events\"]\n        self.counters = self.db[\"proposal_event_counters\"]\n        try:\n            self.events.create_index([(\"proposal_id\", 1), (\"seq\", 1)])",
+        "detail": "backend.utils.event_stream",
+        "documentation": {}
+    },
+    {
+        "label": "_stream_lock",
+        "kind": 5,
+        "importPath": "backend.utils.event_stream",
+        "description": "backend.utils.event_stream",
+        "peekOfCode": "_stream_lock = threading.Lock()\ndef get_event_stream() -> EventStream:\n    \"\"\"Process-wide singleton. Uses sync pymongo so it's thread-safe.\"\"\"\n    global _stream\n    if _stream is None:\n        with _stream_lock:\n            if _stream is None:\n                _stream = EventStream()\n    return _stream",
+        "detail": "backend.utils.event_stream",
         "documentation": {}
     },
     {

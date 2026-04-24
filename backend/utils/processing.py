@@ -145,8 +145,11 @@ async def process_proposal_documents(
             {"status": "processing", "progress": 0, "message": "Parsing documents..."},
         )
 
-        # Step 1: Parse document
-        intelligent_result = await parse_document_intelligent(file_paths[0])
+        # Step 1: Parse document (streams tool calls + reasoning to proposal_events)
+        intelligent_result = await parse_document_intelligent(
+            file_paths[0],
+            proposal_id=proposal_id,
+        )
         parse_result = convert_intelligent_output_to_dataframe(intelligent_result)
         df = parse_result["df"]
         extracted_travel = parse_result.get("travel", [])
@@ -191,7 +194,24 @@ async def process_proposal_documents(
             except Exception as e:
                 logger.warning(f"Failed to fetch org rates for BLS comparison: {e}")
 
-        # Step 2: Fetch wages via agents
+        # Step 2: Fetch wages via agents. Emit a phase event so the user's
+        # live feed shows a row for this step — otherwise the UI goes silent
+        # for the 10–60s this takes.
+        from utils.event_stream import get_event_stream
+        event_stream = get_event_stream()
+        wage_source_label = "GSA" if wage_source.get("type") == "gsa" else "BLS"
+        try:
+            event_stream.publish(
+                proposal_id,
+                "phase.started",
+                {
+                    "key": "wages",
+                    "title": f"Matching {wage_source_label} wage data for {len(df)} positions",
+                },
+            )
+        except Exception as e:
+            logger.warning(f"publish phase.started(wages) failed: {e}")
+
         final_df = await process_dataframe_with_agents(
             df,
             max_workers=10,
@@ -199,6 +219,18 @@ async def process_proposal_documents(
             organization_id=organization_id,
             organization_rates=organization_rates,
         )
+
+        try:
+            event_stream.publish(
+                proposal_id,
+                "phase.completed",
+                {
+                    "key": "wages",
+                    "title": f"Matched {wage_source_label} wage data for {len(df)} positions",
+                },
+            )
+        except Exception as e:
+            logger.warning(f"publish phase.completed(wages) failed: {e}")
 
         crud.update_proposal(proposal_id, user_id, {"progress": 80, "message": "Finalizing results..."})
 
@@ -401,6 +433,16 @@ async def process_proposal_documents(
         traceback.print_exc()
 
     finally:
+        # Drop the live event feed on terminal state. Safe to call even on
+        # the early-return paths (empty df / failed wage lookup) — those set
+        # status=error before returning and fall through to this block.
+        # Keyed by proposal_id, so never touches another concurrent proposal.
+        try:
+            from utils.event_stream import get_event_stream
+            get_event_stream().cleanup(proposal_id)
+        except Exception as cleanup_err:
+            logger.warning(f"Event cleanup failed for {proposal_id}: {cleanup_err}")
+
         if temp_dir and Path(temp_dir).exists():
             shutil.rmtree(temp_dir, ignore_errors=True)
 

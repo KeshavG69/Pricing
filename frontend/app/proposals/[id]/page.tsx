@@ -20,6 +20,8 @@ import { WageDataSection } from '@/components/pricing/sections/WageDataSection';
 import { AdvancedAnalysisModal, SubcontractorInfo } from '@/components/pricing/AdvancedAnalysisModal';
 import PricingChatPanel from '@/components/pricing/PricingChatPanel';
 import ChargeConfirmationModal from '@/components/ui/ChargeConfirmationModal';
+import ParserEventFeed from '@/components/ui/ParserEventFeed';
+import { useProposalEvents } from '@/lib/hooks/useProposalEvents';
 import { Loader2, AlertCircle, Download, Share2, CheckCircle, XCircle, Send, ChevronDown, Save } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
 import { ShareOrInviteModal } from '@/components/proposals/ShareOrInviteModal';
@@ -58,6 +60,15 @@ export default function ProposalPage() {
   } = usePricingStore();
   const [pollingStatus, setPollingStatus] = useState<any>(null);
   const [isPolling, setIsPolling] = useState(false);
+
+  // Stream intelligent-parser events while the proposal is processing — same
+  // feed the upload page shows, so a user who navigates away and reopens a
+  // still-processing proposal sees the live reasoning instead of a spinner.
+  const isProcessingStatus =
+    (pollingStatus?.status ?? currentProposal?.status) === 'processing';
+  const parserEvents = useProposalEvents(
+    isProcessingStatus ? proposalId : null,
+  );
   const [pricingLoaded, setPricingLoaded] = useState(false);
   const [isEditingSolicitation, setIsEditingSolicitation] = useState(false);
   const [editedSolicitation, setEditedSolicitation] = useState('');
@@ -432,30 +443,19 @@ export default function ProposalPage() {
 
   const renderProcessingView = () => (
     <Card>
-      <CardHeader>
-        <CardTitle>Processing Documents</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="text-center py-12">
-          <Loader2 className="w-16 h-16 text-primary animate-spin mx-auto mb-4" />
-          <p className="text-lg text-foreground mb-2">
-            {pollingStatus?.message || currentProposal?.message || 'Processing your documents...'}
-          </p>
-          <div className="w-full max-w-md mx-auto mt-6">
-            <div className="h-2 bg-muted rounded-full overflow-hidden">
-              <div
-                className="h-full bg-primary transition-all duration-500"
-                style={{ width: `${pollingStatus?.progress || currentProposal?.progress || 0}%` }}
-              />
-            </div>
-            <p className="text-sm text-muted-foreground mt-2">
-              {pollingStatus?.progress || currentProposal?.progress || 0}% complete
-            </p>
-          </div>
-          <p className="text-xs text-muted-foreground mt-4">
-            You can safely close this page - processing will continue in the background
-          </p>
-        </div>
+      <CardContent className="py-10">
+        <ParserEventFeed
+          events={parserEvents}
+          status="processing"
+          fallbackMessage={
+            pollingStatus?.message ||
+            currentProposal?.message ||
+            'Processing your documents…'
+          }
+        />
+        <p className="text-xs text-muted-foreground text-center mt-8">
+          You can safely close this page — processing will continue in the background.
+        </p>
       </CardContent>
     </Card>
   );

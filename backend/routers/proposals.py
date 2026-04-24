@@ -505,6 +505,44 @@ async def get_proposal_status(
     }
 
 
+@router.get("/{proposal_id}/events")
+async def get_proposal_events(
+    proposal_id: str,
+    since: int = 0,
+    current_user: dict = Depends(get_current_user),
+):
+    """Live event feed for the intelligent parser (tool calls, reasoning).
+
+    Frontend polls this with `?since=<last_seq>` to incrementally render
+    reasoning and tool calls. Events are deleted when processing finishes,
+    so a completed proposal returns an empty list — the UI should fall back
+    to the normal proposal view when status is `completed`.
+    """
+    crud = await get_crud()
+
+    proposal = crud.get_proposal(
+        proposal_id,
+        str(current_user["_id"]),
+        organization_id=current_user.get("organization_id"),
+        role=current_user.get("role"),
+    )
+    if not proposal:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Proposal not found",
+        )
+
+    from utils.event_stream import get_event_stream
+
+    events = get_event_stream().get_since(proposal_id, since)
+    last_seq = events[-1]["seq"] if events else since
+    return {
+        "events": events,
+        "last_seq": last_seq,
+        "status": proposal.get("status", "processing"),
+    }
+
+
 # ============================================================================
 # CRUD OPERATIONS
 # ============================================================================
