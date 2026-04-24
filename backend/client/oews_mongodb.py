@@ -21,11 +21,29 @@ class OEWSMongoLookup:
         """Initialize MongoDB connection (lazy initialization)."""
         self.client: Optional[AsyncIOMotorClient] = None
         self.db: Optional[AsyncIOMotorDatabase] = None
+        self._loop: Optional[asyncio.AbstractEventLoop] = None
 
     async def _ensure_initialized(self):
-        """Ensure MongoDB connection is initialized (lazy initialization)"""
+        """Ensure MongoDB connection is initialized (lazy initialization).
+
+        Motor's AsyncIOMotorClient binds to the event loop it was created on.
+        Celery runs each task in its own asyncio.run() loop, which closes when
+        the task ends — so a cached client from a prior task raises
+        "Event loop is closed" on the next call. Detect a loop change and
+        rebuild the client so the singleton works across Celery task boundaries.
+        """
+        current_loop = asyncio.get_running_loop()
+
+        if self.db is not None and self._loop is not current_loop:
+            try:
+                self.client.close()
+            except Exception:
+                pass
+            self.client = None
+            self.db = None
+            self._loop = None
+
         if self.db is None:
-            # Create Motor async client
             # Connection pool tuning for Railway MongoDB proxy
             self.client = AsyncIOMotorClient(
                 settings.MONGODB_URL,
@@ -40,6 +58,7 @@ class OEWSMongoLookup:
                 heartbeatFrequencyMS=120000,  # Check every 2min instead of default 10s
             )
             self.db = self.client[settings.MONGODB_DATABASE]
+            self._loop = current_loop
 
     async def search_areas(self, keyword: str) -> List[Dict[str, str]]:
         """
