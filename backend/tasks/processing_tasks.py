@@ -133,6 +133,14 @@ def _mark_proposal_timed_out(proposal_id: str, user_id: str) -> None:
             exc_info=True,
         )
 
+    # Drop the live event feed — soft-timeout path bypasses the finally block
+    # in process_proposal_documents.
+    try:
+        from utils.event_stream import get_event_stream
+        get_event_stream().cleanup(proposal_id)
+    except Exception as cleanup_err:
+        logger.warning(f"Event cleanup failed for {proposal_id}: {cleanup_err}")
+
 
 @celery_app.task(bind=True)
 def process_gsa_contract_task(
