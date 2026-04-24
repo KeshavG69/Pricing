@@ -181,13 +181,15 @@ async def upload_gsa_contract(
             }}
         )
 
+        # File is now in iDrive — worker downloads it there. Clean up staging tmpdir.
+        shutil.rmtree(temp_dir, ignore_errors=True)
+
         # Start background processing
-        
         process_gsa_contract_task.delay(
             file_id,
             org_id,
-            str(file_path),
-            str(temp_dir),
+            idrive_key,
+            file.filename,
         )
 
         # Invalidate cache
@@ -200,6 +202,8 @@ async def upload_gsa_contract(
         }
 
     except Exception as e:
+        if 'temp_dir' in locals() and temp_dir.exists():
+            shutil.rmtree(temp_dir, ignore_errors=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 

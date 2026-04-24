@@ -415,6 +415,14 @@
         "documentation": {}
     },
     {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
         "label": "threading",
         "kind": 6,
         "isExtraImport": true,
@@ -2314,6 +2322,14 @@
         "documentation": {}
     },
     {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
         "label": "pricing",
         "importPath": "routers",
         "description": "routers",
@@ -3012,6 +3028,14 @@
         "documentation": {}
     },
     {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
+        "documentation": {}
+    },
+    {
         "label": "bcrypt",
         "kind": 6,
         "isExtraImport": true,
@@ -3078,6 +3102,14 @@
     },
     {
         "label": "TEXT",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "MongoClient",
         "importPath": "pymongo",
         "description": "pymongo",
         "isExtraImport": true,
@@ -7185,6 +7217,24 @@
         "documentation": {}
     },
     {
+        "label": "main",
+        "kind": 2,
+        "importPath": "backend.scripts.inspect_proposal",
+        "description": "backend.scripts.inspect_proposal",
+        "peekOfCode": "def main():\n    db_name = os.environ.get(\"MONGODB_DATABASE_OVERRIDE\", \"priceiq\")\n    client = MongoClient(settings.MONGODB_URL)\n    db = client[db_name]\n    print(f\"Using database: {db_name}\")\n    proposal = db.proposals.find_one({\"_id\": ObjectId(PROPOSAL_ID)})\n    if not proposal:\n        print(f\"NOT FOUND: {PROPOSAL_ID}\")\n        return\n    print(\"=\" * 60)",
+        "detail": "backend.scripts.inspect_proposal",
+        "documentation": {}
+    },
+    {
+        "label": "PROPOSAL_ID",
+        "kind": 5,
+        "importPath": "backend.scripts.inspect_proposal",
+        "description": "backend.scripts.inspect_proposal",
+        "peekOfCode": "PROPOSAL_ID = \"69eba92aa7072d3882c189dc\"\ndef main():\n    db_name = os.environ.get(\"MONGODB_DATABASE_OVERRIDE\", \"priceiq\")\n    client = MongoClient(settings.MONGODB_URL)\n    db = client[db_name]\n    print(f\"Using database: {db_name}\")\n    proposal = db.proposals.find_one({\"_id\": ObjectId(PROPOSAL_ID)})\n    if not proposal:\n        print(f\"NOT FOUND: {PROPOSAL_ID}\")\n        return",
+        "detail": "backend.scripts.inspect_proposal",
+        "documentation": {}
+    },
+    {
         "label": "migrate_onboarding_progress",
         "kind": 2,
         "importPath": "backend.scripts.migrate_onboarding_progress",
@@ -7432,7 +7482,7 @@
         "kind": 2,
         "importPath": "backend.tasks.processing_tasks",
         "description": "backend.tasks.processing_tasks",
-        "peekOfCode": "def process_proposal_task(\n    self,\n    proposal_id: str,\n    user_id: str,\n    organization_id: str,\n    file_paths: List[str],\n    file_names: List[str],\n    temp_dir: str,\n    wage_source: Dict[str, Any],\n    preserved_advanced_mode: Optional[bool] = None,",
+        "peekOfCode": "def process_proposal_task(\n    self,\n    proposal_id: str,\n    user_id: str,\n    organization_id: str,\n    idrive_keys: List[str],\n    file_names: List[str],\n    wage_source: Dict[str, Any],\n    preserved_advanced_mode: Optional[bool] = None,\n    preserved_subcontractor_configured: Optional[bool] = None,",
         "detail": "backend.tasks.processing_tasks",
         "documentation": {}
     },
@@ -7441,7 +7491,7 @@
         "kind": 2,
         "importPath": "backend.tasks.processing_tasks",
         "description": "backend.tasks.processing_tasks",
-        "peekOfCode": "def process_gsa_contract_task(\n    self,\n    file_id: str,\n    organization_id: str,\n    file_path: str,\n    temp_dir: str,\n) -> Dict[str, Any]:\n    \"\"\"\n    Celery task that processes an uploaded GSA contract file.\n    Wraps the async process_gsa_contract function.",
+        "peekOfCode": "def process_gsa_contract_task(\n    self,\n    file_id: str,\n    organization_id: str,\n    idrive_key: str,\n    filename: str,\n) -> Dict[str, Any]:\n    \"\"\"\n    Celery task that processes an uploaded GSA contract file.\n    Downloads the file from iDrive into a worker-local tmpdir before parsing.",
         "detail": "backend.tasks.processing_tasks",
         "documentation": {}
     },
@@ -7459,7 +7509,7 @@
         "kind": 5,
         "importPath": "backend.tasks.processing_tasks",
         "description": "backend.tasks.processing_tasks",
-        "peekOfCode": "logger = logging.getLogger(__name__)\n@celery_app.task(bind=True)\ndef process_proposal_task(\n    self,\n    proposal_id: str,\n    user_id: str,\n    organization_id: str,\n    file_paths: List[str],\n    file_names: List[str],\n    temp_dir: str,",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n@celery_app.task(bind=True)\ndef process_proposal_task(\n    self,\n    proposal_id: str,\n    user_id: str,\n    organization_id: str,\n    idrive_keys: List[str],\n    file_names: List[str],\n    wage_source: Dict[str, Any],",
         "detail": "backend.tasks.processing_tasks",
         "documentation": {}
     },

@@ -99,6 +99,15 @@ async def stream_agent_response(
         }
         return
 
+    # Immediate analysis event — matches Kroolo's pattern of yielding the
+    # "thinking" signal as the very first chunk of the stream, before any
+    # agent work starts. The frontend shows its rotating-quotes / thinking
+    # indicator the moment it arrives.
+    yield {
+        "event": "analysis",
+        "content": "Analysing your query",
+    }
+
     start_time = time.monotonic()
     first_delta_emitted = False
     run_id: str | None = None

@@ -319,11 +319,13 @@ export default function PricingChatPanel() {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white shadow-lg transition hover:bg-blue-700 hover:shadow-xl"
-          aria-label="Open pricing assistant"
+          className="fixed bottom-6 right-6 z-40 flex items-center gap-2 rounded-full bg-blue-600 py-3 pl-3 pr-5 text-sm font-semibold text-white shadow-lg transition hover:bg-blue-700 hover:shadow-xl"
+          aria-label="Open Q — Pricing Assistant"
         >
-          <Sparkles className="h-4 w-4" />
-          Ask about this proposal
+          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-white/20 text-[13px] font-bold leading-none">
+            Q
+          </span>
+          Ask Q
         </button>
       )}
 
@@ -333,11 +335,16 @@ export default function PricingChatPanel() {
           <aside className="fixed bottom-0 right-0 top-0 z-50 flex w-full max-w-md flex-col border-l border-border bg-background shadow-2xl">
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border bg-muted/30 px-4 py-3">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-blue-600" />
+              <div className="flex items-center gap-2.5">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm">
+                  <span className="font-bold text-sm tracking-tight">Q</span>
+                </div>
                 <div>
                   <h2 className="text-sm font-semibold text-foreground">
-                    Pricing Assistant
+                    Q
+                    <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+                      · Pricing Assistant
+                    </span>
                   </h2>
                   <p className="text-xs text-muted-foreground">
                     Ask anything about this proposal
@@ -369,12 +376,12 @@ export default function PricingChatPanel() {
             >
               {messages.length === 0 ? (
                 <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
-                  <div className="rounded-full bg-blue-50 p-3">
-                    <MessageCircle className="h-6 w-6 text-blue-600" />
+                  <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm">
+                    <span className="text-xl font-bold tracking-tight">Q</span>
                   </div>
                   <div>
                     <h3 className="text-sm font-semibold text-foreground">
-                      Try asking…
+                      Ask Q about this proposal
                     </h3>
                     <ul className="mt-2 space-y-1.5 text-xs text-muted-foreground">
                       <li>"How many off-site positions and what's their total cost?"</li>
@@ -482,7 +489,7 @@ export default function PricingChatPanel() {
                 </button>
               </div>
               <p className="mt-2 text-[10px] text-muted-foreground">
-                The assistant reads your current proposal state. Numbers match what you see on screen.
+                Q reads your current proposal state. Numbers match what you see on screen.
               </p>
             </div>
           </aside>

@@ -1,5 +1,7 @@
 """
-Pricing Agent: answers questions about the proposal the user is currently editing.
+Q — the PriceIQ Pricing Assistant.
+
+Answers questions about the proposal the user is currently editing.
 
 Readable-state pattern — the frontend sends the fully-computed proposal state
 inline with each user message (wrapped in <proposal_state>…</proposal_state>).
@@ -75,7 +77,7 @@ def _create_pricing_agent(session_id:str,proposal_context:str) -> Agent:
 
     instructions = [
         # ── Role + state-block contract ───────────────────────────────
-        """You are the PriceIQ Pricing Assistant. You help government-contractor \
+        """You are Q — the PriceIQ Pricing Assistant. You help government-contractor \
 pricing teams understand and analyze the proposal they are currently editing.
 
 Each user message arrives with the user's CURRENT proposal state inlined \
@@ -157,7 +159,7 @@ f"""
     ]
 
     agent = Agent(
-        name="Pricing Assistant",
+        name="Q",
         session_id=session_id,
         model=llm,
         db=db_instance,
@@ -170,7 +172,7 @@ f"""
         add_datetime_to_context=True,
         markdown=True,
         id="PricingAgent",
-        description="PriceIQ Pricing Assistant — answers questions about the user's current proposal by reading the inlined computed state.",
+        description="Q — PriceIQ Pricing Assistant that answers questions about the user's current proposal by reading the inlined computed state.",
         instructions=instructions,
         debug_mode=settings.DEBUG_MODE,
     )
