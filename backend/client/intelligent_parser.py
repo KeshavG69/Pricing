@@ -15,46 +15,12 @@ from pathlib import Path
 
 from agno.agent import Agent
 from agno.models.openai import OpenAIChat
-from agno.tools.reasoning import ReasoningTools
+from utils.agno_tools import create_reasoning_tool
 from agno.tools.exa import ExaTools
 from app.settings import settings
 from client.llm_client import get_chat_llm_agno
 
-def create_reasoning_tool(
-    instructions: str = "only show reasoning no need for for action confidence",
-    add_instructions: bool = True,
-    think: bool = True,
-    analyze: bool = True,
-    add_few_shot: bool = False,
-    few_shot_examples: Optional[List[Dict[str, str]]] = None,
-) -> ReasoningTools:
-    """
-    Create a reasoning tool with customizable parameters.
 
-    Args:
-        instructions: Instructions for reasoning
-        add_instructions: Whether to add instructions
-        think: Enable thinking
-        analyze: Enable analysis
-        add_few_shot: Whether to add few-shot examples
-        few_shot_examples: List of few-shot examples
-
-    Returns:
-        Configured ReasoningTools instance
-    """
-    try:
-        tool = ReasoningTools(
-            instructions=instructions,
-            add_instructions=add_instructions,
-            enable_think=think,
-            enable_analyze=analyze,
-            add_few_shot=add_few_shot,
-            few_shot_examples=few_shot_examples,
-        )
-    
-        return tool
-    except Exception as e:
-        raise RuntimeError(f"Failed to create reasoning tool: {str(e)}")
 
 
 def _extract_text(file_path: str) -> str:
@@ -131,7 +97,9 @@ def _create_intelligent_parser() -> Agent:
         tools=[reasoning_tool, exa_tool],  # Reasoning + web search
         instructions=instructions,
         markdown=False,
-        debug_mode=settings.DEBUG_MODE
+        debug_mode=settings.DEBUG_MODE,
+        telemetry=False
+
     )
 
     return agent

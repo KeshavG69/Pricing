@@ -28,7 +28,7 @@ class RatePreset(BaseModel):
     fee: float
     smh: float = 0.0
     sub_fee: float = 0.0
-    ga_passthrough: float = 0.0
+    ga_passthrough: float = 0.025
     escalation_rate: float = 0.0
     ot_multiplier: float = 1.5  # Overtime multiplier (default: time-and-a-half)
     surge_multiplier: float = 1.15  # Surge pricing multiplier (default: 15% premium)
@@ -44,7 +44,7 @@ class CreateRatePresetRequest(BaseModel):
     fee: float
     smh: float = 0.0
     sub_fee: float = 0.0
-    ga_passthrough: float = 0.0
+    ga_passthrough: float = 0.025
     escalation_rate: float = 0.0
     ot_multiplier: float = 1.5  # Overtime multiplier (default: time-and-a-half)
     surge_multiplier: float = 1.15  # Surge pricing multiplier (default: 15% premium)
@@ -472,7 +472,6 @@ async def apply_preset_as_default(
         "smh": preset.get("smh", 0),
         "sub_fee": preset.get("sub_fee", 0),
         "ga_passthrough": preset.get("ga_passthrough", 0),
-        "ga_adder": preset.get("ga_adder", 0),
         "ot_multiplier": preset.get("ot_multiplier", 1.5),
         "surge_multiplier": preset.get("surge_multiplier", 1.15),
     }

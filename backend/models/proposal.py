@@ -62,7 +62,7 @@ class ProposalUpdate(BaseModel):
     )
     rates: Optional[Dict[str, float]] = Field(
         None,
-        description="Indirect rates (fringe, oh, ga, fee, smh, sub_fee, ga_passthrough, ga_adder)"
+        description="Indirect rates (fringe, oh_onsite, oh_offsite, ga, fee, smh, sub_fee, ga_passthrough)"
     )
     escalation_rates: Optional[Dict[str, float]] = Field(
         None,

@@ -18,6 +18,7 @@ import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { SubcontractorSection } from '@/components/pricing/SubcontractorSection';
 import { WageDataSection } from '@/components/pricing/sections/WageDataSection';
 import { AdvancedAnalysisModal, SubcontractorInfo } from '@/components/pricing/AdvancedAnalysisModal';
+import PricingChatPanel from '@/components/pricing/PricingChatPanel';
 import ChargeConfirmationModal from '@/components/ui/ChargeConfirmationModal';
 import { Loader2, AlertCircle, Download, Share2, CheckCircle, XCircle, Send, ChevronDown, Save } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
@@ -952,6 +953,9 @@ export default function ProposalPage() {
           'Excel export with detailed calculations',
         ]}
       />
+
+      {/* Pricing chat assistant — floating panel */}
+      <PricingChatPanel />
     </DashboardLayout>
   );
 }

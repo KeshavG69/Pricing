@@ -595,24 +595,43 @@ export const SubcontractorSection = () => {
   }, [gridRows]);
 
   // Calculate total for all subcontractors (with escalation and OT)
+  // GSA subs re-derive live from the prime's gsa_rates_by_year × (1 - gsa_discount_rate)
+  // so discount changes on the prime are reflected immediately.
   const allSubsTotal = useMemo(() => {
     const otMultiplier = rates.ot_multiplier || 1.5;
+    const markupDivisor = 1 + (rates.smh || 0) + (rates.ga_passthrough || 0) + (rates.sub_fee || 0);
 
     return subcontractors.reduce((sum, sub) => {
       const subTotal = sub.positions.reduce((posSum, pos) => {
+        const originalPrimePos = pos.original_position_id
+          ? positions.find((p) => p.id === pos.original_position_id)
+          : null;
+        const isGSASub = originalPrimePos ? isGSAPosition(originalPrimePos) : false;
+
         let positionTotal = 0;
         for (let year = 1; year <= totalYears; year++) {
           const yearStr = year.toString();
-          const escalatedRate = getEscalatedRate(pos.rate, year);
+
+          let effectiveRate: number;
+          if (isGSASub && originalPrimePos) {
+            const gsaYearRate = getGSARateForYear(originalPrimePos, year, escalationRates);
+            const discountRate = originalPrimePos.gsa_discount_rate || 0;
+            effectiveRate = (gsaYearRate * (1 - discountRate)) / markupDivisor;
+          } else if (pos.rates_per_year?.[yearStr] !== undefined) {
+            effectiveRate = pos.rates_per_year[yearStr];
+          } else {
+            effectiveRate = getEscalatedRate(pos.rate, year);
+          }
+
           const hours = pos.hours_per_year[yearStr] || 0;
           const otHours = pos.ot_hours_per_year?.[yearStr] || 0;
-          positionTotal += escalatedRate * hours + escalatedRate * otMultiplier * otHours;
+          positionTotal += effectiveRate * hours + effectiveRate * otMultiplier * otHours;
         }
         return posSum + positionTotal;
       }, 0);
       return sum + subTotal;
     }, 0);
-  }, [subcontractors, totalYears, escalationRates, getEscalatedRate, rates.ot_multiplier]);
+  }, [positions, subcontractors, totalYears, escalationRates, getEscalatedRate, rates.ot_multiplier, rates.smh, rates.ga_passthrough, rates.sub_fee]);
 
   // Calculate percentage of dollars allocated to subcontractors
   // Formula: (Subcontractor Total + Passthrough) / (Total Contract Value - ODC - Travel)
@@ -715,15 +734,33 @@ export const SubcontractorSection = () => {
     const laborTotal = grandTotal - odcTotal - travelTotal;
 
     // Calculate percentage for each subcontractor
+    // GSA subs re-derive live from prime's gsa_rates_by_year × (1 - gsa_discount_rate)
+    const markupDivisor = 1 + (rates.smh || 0) + (rates.ga_passthrough || 0) + (rates.sub_fee || 0);
     const percentages: Record<string, { percentage: number; laborTotal: number }> = {};
     subcontractors.forEach((sub) => {
       const subTotal = sub.positions.reduce((posSum, pos) => {
+        const originalPrimePos = pos.original_position_id
+          ? positions.find((p) => p.id === pos.original_position_id)
+          : null;
+        const isGSASub = originalPrimePos ? isGSAPosition(originalPrimePos) : false;
+
         let positionTotal = 0;
         for (let year = 1; year <= totalYears; year++) {
           const yearStr = year.toString();
-          const escalatedRate = getEscalatedRate(pos.rate, year);
+
+          let effectiveRate: number;
+          if (isGSASub && originalPrimePos) {
+            const gsaYearRate = getGSARateForYear(originalPrimePos, year, escalationRates);
+            const discountRate = originalPrimePos.gsa_discount_rate || 0;
+            effectiveRate = (gsaYearRate * (1 - discountRate)) / markupDivisor;
+          } else if (pos.rates_per_year?.[yearStr] !== undefined) {
+            effectiveRate = pos.rates_per_year[yearStr];
+          } else {
+            effectiveRate = getEscalatedRate(pos.rate, year);
+          }
+
           const hours = pos.hours_per_year[yearStr] || 0;
-          positionTotal += escalatedRate * hours;
+          positionTotal += effectiveRate * hours;
         }
         return posSum + positionTotal;
       }, 0);

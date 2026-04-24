@@ -288,8 +288,8 @@ FBLR = DL + Fringe + OH + G&A + Fee
 
 **Wage Percentile Selection**:
 - < 3 years experience → 25th percentile
-- 3-5 years → 50th percentile (median)
-- > 5 years → 75th percentile
+- 3 to < 6 years → 50th percentile (median)
+- ≥ 6 years → 75th percentile
 - Logic in `utils/pipeline.py:process_single_row`
 
 **GSA vs BLS Positions**:
