@@ -58,8 +58,16 @@ async def ask_pricing(request: PricingChatQuery):
             f"query_len={len(request.query)} context_len={len(request.proposal_context)}"
         )
 
-        agent = get_pricing_agent(session_id=request.session_id, proposal_context=request.proposal_context)
+        agent = get_pricing_agent(session_id=request.session_id)
 
+        # Wrap the user query with the CURRENT proposal state on every turn.
+        # The agent is a singleton — baking state into instructions would
+        # freeze the first caller's state for everyone else. Passing the
+        # state inline per-turn guarantees each message sees the live UI.
+        full_query = (
+            f"<proposal_state>\n{request.proposal_context.strip()}\n</proposal_state>\n\n"
+            f"{request.query.strip()}"
+        )
 
         headers = {
             "Cache-Control": "no-cache",
@@ -72,7 +80,7 @@ async def ask_pricing(request: PricingChatQuery):
             # stream_agent_response yields the `analysis` event as its very
             # first chunk (matches Kroolo's "QueryAnalysing" pattern), so the
             # UI's thinking indicator fires before the agent is awaited.
-            events = stream_agent_response(request.query, agent)
+            events = stream_agent_response(full_query, agent)
             async for chunk in create_sse_event_stream(events):
                 yield chunk
 
