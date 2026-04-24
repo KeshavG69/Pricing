@@ -69,6 +69,12 @@ async def ask_pricing(request: PricingChatQuery):
         }
 
         async def sse_stream():
+            # Immediate "analysis" event so the UI can swap to a playful
+            # thinking-state indicator before the agent starts streaming.
+            # Emitted BEFORE the agent is awaited so there's no perceived
+            # delay between send-click and visual feedback.
+            yield "event: analysis\ndata: {}\n\n"
+
             events = stream_agent_response(request.query, agent)
             async for chunk in create_sse_event_stream(events):
                 yield chunk

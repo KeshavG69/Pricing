@@ -7,26 +7,19 @@ import { useAuthStore } from '@/lib/stores/authStore';
 import { serializeProposalContext } from '@/lib/chat/proposalContext';
 import { streamPricingChat } from '@/lib/api/pricingChat';
 import MarkdownRenderer from './chat/MarkdownRenderer';
+import ThinkingIndicator from './chat/ThinkingIndicator';
 
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   streaming?: boolean;
+  thinking?: boolean; // true from send-click until first content delta
 }
 
-const SESSION_KEY_PREFIX = 'pricing-chat-session:';
-
-function getSessionId(proposalId: string | null): string {
-  if (!proposalId) return `ephemeral-${Date.now()}`;
-  const storageKey = `${SESSION_KEY_PREFIX}${proposalId}`;
-  if (typeof window === 'undefined') return `ssr-${proposalId}`;
-  let sid = sessionStorage.getItem(storageKey);
-  if (!sid) {
-    sid = `chat-${proposalId}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    sessionStorage.setItem(storageKey, sid);
-  }
-  return sid;
+function newSessionId(proposalId: string | null): string {
+  const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  return proposalId ? `chat-${proposalId}-${suffix}` : `ephemeral-${suffix}`;
 }
 
 export default function PricingChatPanel() {
@@ -34,6 +27,9 @@ export default function PricingChatPanel() {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
+  // Session ID: regenerated every time the panel opens and on "New chat"
+  // so each chat opens as a fresh conversation with no history bleed.
+  const [sessionId, setSessionId] = useState<string>(() => newSessionId(null));
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -48,12 +44,16 @@ export default function PricingChatPanel() {
     }
   }, [messages]);
 
-  // Focus input when panel opens
+  // Focus input + start a fresh session every time the panel opens.
+  // New session id => fresh agent-side conversation history, no bleed from
+  // a previous open.
   useEffect(() => {
     if (isOpen) {
+      setSessionId(newSessionId(proposalId));
+      setMessages([]);
       setTimeout(() => inputRef.current?.focus(), 50);
     }
-  }, [isOpen]);
+  }, [isOpen, proposalId]);
 
   // Cancel any in-flight stream when panel closes or component unmounts
   useEffect(() => {
@@ -146,6 +146,7 @@ export default function PricingChatPanel() {
       role: 'assistant',
       content: '',
       streaming: true,
+      thinking: true, // show rotating quotes until first content delta
     };
     setMessages((m) => [...m, userMsg, assistantMsg]);
     setInput('');
@@ -159,16 +160,25 @@ export default function PricingChatPanel() {
         {
           query: trimmed,
           proposal_context: proposalContext,
-          session_id: getSessionId(proposalId),
+          session_id: sessionId,
           organization_id: organizationId,
         },
         controller.signal,
       )) {
-        if (evt.type === 'delta') {
+        if (evt.type === 'analysis') {
+          // Backend acknowledged the request — rotating quotes keep going.
+          // (thinking is already true from send-click; no-op here, but logged
+          // for observability when debugging streams.)
+          continue;
+        } else if (evt.type === 'delta') {
           setMessages((m) =>
             m.map((msg) =>
               msg.id === assistantMsg.id
-                ? { ...msg, content: msg.content + evt.content }
+                ? {
+                    ...msg,
+                    content: msg.content + evt.content,
+                    thinking: false, // first real content → swap out the quotes
+                  }
                 : msg,
             ),
           );
@@ -176,7 +186,12 @@ export default function PricingChatPanel() {
           setMessages((m) =>
             m.map((msg) =>
               msg.id === assistantMsg.id
-                ? { ...msg, content: evt.content || msg.content, streaming: false }
+                ? {
+                    ...msg,
+                    content: evt.content || msg.content,
+                    streaming: false,
+                    thinking: false,
+                  }
                 : msg,
             ),
           );
@@ -188,6 +203,7 @@ export default function PricingChatPanel() {
                     ...msg,
                     content: `⚠️ ${evt.error}`,
                     streaming: false,
+                    thinking: false,
                   }
                 : msg,
             ),
@@ -214,9 +230,7 @@ export default function PricingChatPanel() {
 
   const handleNewSession = () => {
     if (abortRef.current) abortRef.current.abort();
-    if (proposalId && typeof window !== 'undefined') {
-      sessionStorage.removeItem(`${SESSION_KEY_PREFIX}${proposalId}`);
-    }
+    setSessionId(newSessionId(proposalId));
     setMessages([]);
     setIsStreaming(false);
   };
@@ -314,13 +328,19 @@ export default function PricingChatPanel() {
                             {msg.content}
                           </div>
                         ) : (
-                          // Assistant messages render as markdown
+                          // Assistant messages: thinking → quotes, then markdown
                           <div className="break-words">
-                            {msg.content ? (
-                              <MarkdownRenderer>{msg.content}</MarkdownRenderer>
-                            ) : null}
-                            {msg.streaming && (
-                              <Loader2 className="ml-1 inline h-3 w-3 animate-spin opacity-60" />
+                            {msg.thinking && !msg.content ? (
+                              <ThinkingIndicator />
+                            ) : (
+                              <>
+                                {msg.content ? (
+                                  <MarkdownRenderer>{msg.content}</MarkdownRenderer>
+                                ) : null}
+                                {msg.streaming && (
+                                  <Loader2 className="ml-1 inline h-3 w-3 animate-spin opacity-60" />
+                                )}
+                              </>
                             )}
                           </div>
                         )}

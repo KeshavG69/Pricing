@@ -239,6 +239,22 @@
         "documentation": {}
     },
     {
+        "label": "create_reasoning_tool",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "isExtraImport": true,
+        "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_reasoning_tool",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "isExtraImport": true,
+        "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
         "label": "get_company_repository_crud",
         "importPath": "utils.company_repository",
         "description": "utils.company_repository",
@@ -3802,14 +3818,6 @@
         "documentation": {}
     },
     {
-        "label": "ReasoningTools",
-        "importPath": "agno.tools.reasoning",
-        "description": "agno.tools.reasoning",
-        "isExtraImport": true,
-        "detail": "agno.tools.reasoning",
-        "documentation": {}
-    },
-    {
         "label": "ExaTools",
         "importPath": "agno.tools.exa",
         "description": "agno.tools.exa",
@@ -4985,6 +4993,14 @@
         "documentation": {}
     },
     {
+        "label": "ReasoningTools",
+        "importPath": "agno.tools.reasoning",
+        "description": "agno.tools.reasoning",
+        "isExtraImport": true,
+        "detail": "agno.tools.reasoning",
+        "documentation": {}
+    },
+    {
         "label": "secrets",
         "kind": 6,
         "isExtraImport": true,
@@ -5978,15 +5994,6 @@
         "description": "backend.client.idrive_storage",
         "peekOfCode": "_client_lock = threading.RLock()\ndef get_idrive_storage() -> IDriveStorage:\n    \"\"\"\n    Get or create iDrive storage client (singleton pattern).\n    Returns:\n        IDriveStorage instance\n    \"\"\"\n    global _idrive_storage_client\n    with _client_lock:\n        if _idrive_storage_client is None:",
         "detail": "backend.client.idrive_storage",
-        "documentation": {}
-    },
-    {
-        "label": "create_reasoning_tool",
-        "kind": 2,
-        "importPath": "backend.client.intelligent_parser",
-        "description": "backend.client.intelligent_parser",
-        "peekOfCode": "def create_reasoning_tool(\n    instructions: str = \"only show reasoning no need for for action confidence\",\n    add_instructions: bool = True,\n    think: bool = True,\n    analyze: bool = True,\n    add_few_shot: bool = False,\n    few_shot_examples: Optional[List[Dict[str, str]]] = None,\n) -> ReasoningTools:\n    \"\"\"\n    Create a reasoning tool with customizable parameters.",
-        "detail": "backend.client.intelligent_parser",
         "documentation": {}
     },
     {
@@ -7461,7 +7468,16 @@
         "kind": 5,
         "importPath": "backend.utils.agent_streaming",
         "description": "backend.utils.agent_streaming",
-        "peekOfCode": "logger = logging.getLogger(__name__)\nasync def stream_agent_response(\n    query: str,\n    agent: Agent,\n) -> AsyncGenerator[Dict[str, Any], None]:\n    \"\"\"Stream Agno agent events as structured payloads.\"\"\"\n    if not query or not query.strip():\n        yield {\n            \"event\": \"error\",\n            \"error\": \"Query cannot be empty\",",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# ─── Reasoning-tool output cleanup ──────────────────────────────────────────\n# Agno's ReasoningTools sometimes appends a \"CRITICAL INSTRUCTION\" paragraph\n# to the `thought` / `result` fields, intended for the model itself. Those\n# paragraphs aren't useful to the user and look noisy in the transcript, so\n# we scrub them before emitting tool events downstream.\ndef _strip_boilerplate(text: str) -> str:\n    \"\"\"Remove model-injected CRITICAL INSTRUCTION blocks from reasoning tool text.\n    The boilerplate always appears as one or more paragraphs (separated by\n    blank lines) that start with 'CRITICAL INSTRUCTION'. Sub-bullets (a)/(b)/(c)",
+        "detail": "backend.utils.agent_streaming",
+        "documentation": {}
+    },
+    {
+        "label": "_REASONING_TOOL_NAMES",
+        "kind": 5,
+        "importPath": "backend.utils.agent_streaming",
+        "description": "backend.utils.agent_streaming",
+        "peekOfCode": "_REASONING_TOOL_NAMES = {\"think\", \"analyze\"}\n# ─── Main streaming generator ───────────────────────────────────────────────\nasync def stream_agent_response(\n    query: str,\n    agent: Agent,\n) -> AsyncGenerator[Dict[str, Any], None]:\n    \"\"\"Stream Agno agent events as structured payloads.\n    Yields dicts with an `event` key plus event-specific fields. Downstream\n    `create_sse_event_stream` converts each dict to an SSE frame.\n    \"\"\"",
         "detail": "backend.utils.agent_streaming",
         "documentation": {}
     },
@@ -7516,6 +7532,15 @@
         "importPath": "backend.utils.agno_tools",
         "description": "backend.utils.agno_tools",
         "peekOfCode": "def create_help_center_retriever():\n    \"\"\"\n    Create a retriever for help center documentation search.\n    Args:\n        category: Optional category filter (e.g., \"getting-started\", \"pricing\")\n    Returns:\n        Callable retriever function for agno agents\n    \"\"\"\n    pinecone_client = get_help_center_pinecone_client()\n    def help_center_retriever(",
+        "detail": "backend.utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_reasoning_tool",
+        "kind": 2,
+        "importPath": "backend.utils.agno_tools",
+        "description": "backend.utils.agno_tools",
+        "peekOfCode": "def create_reasoning_tool(\n    instructions: str = \"only show reasoning no need for for action confidence\",\n    add_instructions: bool = True,\n    think: bool = True,\n    analyze: bool = True,\n    add_few_shot: bool = False,\n    few_shot_examples: Optional[List[Dict[str, str]]] = None,\n) -> ReasoningTools:\n    \"\"\"\n    Create a reasoning tool with customizable parameters.",
         "detail": "backend.utils.agno_tools",
         "documentation": {}
     },

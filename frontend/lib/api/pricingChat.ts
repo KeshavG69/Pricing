@@ -13,6 +13,7 @@ export interface PricingChatRequest {
 }
 
 export type PricingChatEvent =
+  | { type: 'analysis' }
   | { type: 'delta'; content: string }
   | { type: 'done'; content?: string }
   | { type: 'error'; error: string };
@@ -70,7 +71,9 @@ export async function* streamPricingChat(
         const content = typeof parsed.data?.content === 'string' ? parsed.data.content : undefined;
         const errText = typeof parsed.data?.error === 'string' ? parsed.data.error : undefined;
 
-        if (parsed.event === 'message.delta' && content) {
+        if (parsed.event === 'analysis') {
+          yield { type: 'analysis' };
+        } else if (parsed.event === 'message.delta' && content) {
           yield { type: 'delta', content };
         } else if (parsed.event === 'message.completed') {
           yield { type: 'done', content };

@@ -15,6 +15,7 @@ from agno.agent import Agent
 from app.settings import settings
 from client.llm_client import get_chat_llm_agno
 from client.agent_memory import get_agent_db, get_memory_manager
+from utils.agno_tools import create_reasoning_tool
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +59,19 @@ def _create_pricing_agent(session_id:str,proposal_context:str) -> Agent:
 
     db_instance = get_agent_db()
     memory_manager = get_memory_manager()
+
+    # Reasoning tool — lets the agent think/analyze before answering.
+    # Useful for "how is X calculated?" / "why does this number differ?" style
+    # questions where the model benefits from a scratchpad before responding.
+    reasoning = create_reasoning_tool(
+        instructions=(
+            "Think step-by-step before answering pricing questions. "
+            "Use the proposal_state block to ground every figure. "
+            "Do not fabricate numbers — only pull from the state."
+        ),
+        think=True,
+        analyze=True,
+    )
 
     instructions = [
         # ── Role + state-block contract ───────────────────────────────
@@ -108,6 +122,25 @@ a one-line answer.
 is?", explain conceptually using the inputs visible in the state block (e.g., \
 "FBLR for this position = DL × (1 + fringe + OH + G&A + fee) cascade, applied \
 per year with escalation"). Do not produce hand-computed replacement numbers.
+
+9. Reasoning tool (`think` / `analyze`) usage — use it DELIBERATELY, not by \
+reflex:
+   • SKIP reasoning for simple reads ("what's the grand total?", "how many \
+positions?", "show me year 3 fee"). The answer is already in the state block \
+— just quote it.
+   • USE `think` to plan the answer when the user asks for a multi-step \
+explanation, a comparison across positions/years, an interpretation of why \
+two numbers differ, or anything that needs you to combine multiple slices of \
+the state block. Think first, then answer.
+   • USE `analyze` after `think` to sanity-check your reasoning against the \
+state block before writing the final response — particularly to confirm you \
+didn't invent numbers, didn't confuse prime vs sub, and didn't double-count \
+OT with fee.
+   • Reasoning is a scratchpad — it should reference the proposal_state block, \
+not duplicate it. Keep each thought short and specific (which breakdown slice \
+you're pulling from, what subset of positions, which year, which rate).
+   • Never use reasoning to ESTIMATE missing data. If a number isn't in the \
+state, say so; don't reason your way to an approximation.
 </rules>"""
 +
 f"""
@@ -126,6 +159,7 @@ f"""
         model=llm,
         db=db_instance,
         memory_manager=memory_manager,
+        tools=[reasoning],
         add_history_to_context=True,
         num_history_runs=4,
         enable_agentic_memory=True,

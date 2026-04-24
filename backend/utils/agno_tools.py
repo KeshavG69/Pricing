@@ -12,7 +12,7 @@ from client.oews_mongodb import get_oews_mongo_client
 from client.gsa_pinecone import get_gsa_pinecone_client
 from utils.company_repository import get_company_repository_crud
 from client.help_center_pinecone import get_help_center_pinecone_client
-
+from agno.tools.reasoning import ReasoningTools
 def create_custom_retreiver(description: Optional[str] = None):
     """
     Create a custom retriever for SOC code vector search.
@@ -365,3 +365,39 @@ def create_help_center_retriever():
     return help_center_retriever
 
 
+
+def create_reasoning_tool(
+    instructions: str = "only show reasoning no need for for action confidence",
+    add_instructions: bool = True,
+    think: bool = True,
+    analyze: bool = True,
+    add_few_shot: bool = False,
+    few_shot_examples: Optional[List[Dict[str, str]]] = None,
+) -> ReasoningTools:
+    """
+    Create a reasoning tool with customizable parameters.
+
+    Args:
+        instructions: Instructions for reasoning
+        add_instructions: Whether to add instructions
+        think: Enable thinking
+        analyze: Enable analysis
+        add_few_shot: Whether to add few-shot examples
+        few_shot_examples: List of few-shot examples
+
+    Returns:
+        Configured ReasoningTools instance
+    """
+    try:
+        tool = ReasoningTools(
+            instructions=instructions,
+            add_instructions=add_instructions,
+            enable_think=think,
+            enable_analyze=analyze,
+            add_few_shot=add_few_shot,
+            few_shot_examples=few_shot_examples,
+        )
+    
+        return tool
+    except Exception as e:
+        raise RuntimeError(f"Failed to create reasoning tool: {str(e)}")
