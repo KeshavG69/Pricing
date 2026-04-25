@@ -41,5 +41,5 @@ dependencies = [
     "redis>=5.0.0",
     "liteparse>=0.1.0",
     "uvicorn>=0.38.0",
-
+    "langchain-experimental>=0.4.1",
 ]
