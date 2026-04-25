@@ -199,6 +199,14 @@
         "documentation": {}
     },
     {
+        "label": "get_chat_llm",
+        "importPath": "client.llm_client",
+        "description": "client.llm_client",
+        "isExtraImport": true,
+        "detail": "client.llm_client",
+        "documentation": {}
+    },
+    {
         "label": "create_custom_retreiver",
         "importPath": "utils.agno_tools",
         "description": "utils.agno_tools",
@@ -423,6 +431,14 @@
         "documentation": {}
     },
     {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
         "label": "threading",
         "kind": 6,
         "isExtraImport": true,
@@ -442,6 +458,14 @@
     },
     {
         "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -1457,6 +1481,22 @@
         "documentation": {}
     },
     {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Any",
         "importPath": "typing",
         "description": "typing",
@@ -1534,6 +1574,166 @@
         "description": "client.agent_memory",
         "isExtraImport": true,
         "detail": "client.agent_memory",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
+        "label": "python_repl_tool",
+        "importPath": "utils.python_repl_tool",
+        "description": "utils.python_repl_tool",
+        "isExtraImport": true,
+        "detail": "utils.python_repl_tool",
+        "documentation": {}
+    },
+    {
+        "label": "set_session_id",
+        "importPath": "utils.python_repl_tool",
+        "description": "utils.python_repl_tool",
+        "isExtraImport": true,
+        "detail": "utils.python_repl_tool",
         "documentation": {}
     },
     {
@@ -2223,142 +2423,6 @@
         "description": "fastapi.responses",
         "isExtraImport": true,
         "detail": "fastapi.responses",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
-        "documentation": {}
-    },
-    {
-        "label": "Path",
-        "importPath": "pathlib",
-        "description": "pathlib",
-        "isExtraImport": true,
-        "detail": "pathlib",
         "documentation": {}
     },
     {
@@ -5105,6 +5169,14 @@
         "documentation": {}
     },
     {
+        "label": "tool",
+        "importPath": "agno.tools",
+        "description": "agno.tools",
+        "isExtraImport": true,
+        "detail": "agno.tools",
+        "documentation": {}
+    },
+    {
         "label": "get_help_center_pinecone_client",
         "importPath": "client.help_center_pinecone",
         "description": "client.help_center_pinecone",
@@ -5178,6 +5250,23 @@
         "importPath": "numpy",
         "description": "numpy",
         "detail": "numpy",
+        "documentation": {}
+    },
+    {
+        "label": "PythonREPL",
+        "importPath": "langchain_experimental.utilities",
+        "description": "langchain_experimental.utilities",
+        "isExtraImport": true,
+        "detail": "langchain_experimental.utilities",
+        "documentation": {}
+    },
+    {
+        "label": "contextvars",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "contextvars",
+        "description": "contextvars",
+        "detail": "contextvars",
         "documentation": {}
     },
     {
@@ -5307,11 +5396,20 @@
         "documentation": {}
     },
     {
+        "label": "_ComponentCache",
+        "kind": 6,
+        "importPath": "backend.agent.pricing_agent",
+        "description": "backend.agent.pricing_agent",
+        "peekOfCode": "class _ComponentCache:\n    def __init__(self):\n        self._lock = threading.Lock()\n        self._llm: Optional[Any] = None\n        self._db: Optional[Any] = None\n        self._memory_manager: Optional[Any] = None\n        self._reasoning_tool: Optional[Any] = None\n        self._formulas_text: Optional[str] = None\n    @property\n    def llm(self):",
+        "detail": "backend.agent.pricing_agent",
+        "documentation": {}
+    },
+    {
         "label": "get_pricing_agent",
         "kind": 2,
         "importPath": "backend.agent.pricing_agent",
         "description": "backend.agent.pricing_agent",
-        "peekOfCode": "def get_pricing_agent(session_id: str) -> Agent:\n    \"\"\"\n    Get the cached pricing agent singleton with session-specific binding.\n    The singleton does NOT bake proposal state into instructions — that would\n    freeze the first caller's state for every subsequent request. Proposal\n    state is passed inline with each user message instead.\n    Args:\n        session_id: Session ID for this request (used for history / memories)\n    Returns:\n        Cached Agent instance with updated session_id",
+        "peekOfCode": "def get_pricing_agent(session_id: str, proposal_context: str) -> Agent:\n    \"\"\"\n    Build a fresh pricing agent for this request with the live proposal\n    state injected as part of its instructions.\n    Heavy components (LLM, DB, memory, reasoning, formulas) are cached at\n    module level. Only the Agent shell is rebuilt per request so the\n    instructions block can carry the user's CURRENT proposal state.\n    Args:\n        session_id: Session ID for this chat (drives history / user memories)\n        proposal_context: Serialized JSON of the live computed proposal state",
         "detail": "backend.agent.pricing_agent",
         "documentation": {}
     },
@@ -5320,7 +5418,7 @@
         "kind": 2,
         "importPath": "backend.agent.pricing_agent",
         "description": "backend.agent.pricing_agent",
-        "peekOfCode": "def clear_cache():\n    \"\"\"Clear the cached pricing agent (for testing / maintenance).\"\"\"\n    global _pricing_agent\n    with _agent_lock:\n        _pricing_agent = None\n        logger.info(\"Cleared pricing agent cache\")",
+        "peekOfCode": "def clear_cache():\n    \"\"\"Clear the cached components (for testing / maintenance).\"\"\"\n    global _components\n    _components = _ComponentCache()\n    logger.info(\"Cleared pricing agent component cache\")",
         "detail": "backend.agent.pricing_agent",
         "documentation": {}
     },
@@ -5329,16 +5427,25 @@
         "kind": 5,
         "importPath": "backend.agent.pricing_agent",
         "description": "backend.agent.pricing_agent",
-        "peekOfCode": "logger = logging.getLogger(__name__)\n# Global singleton — context-free. proposal_state is passed inline per turn.\n_pricing_agent: Optional[Agent] = None\n_agent_lock = threading.Lock()\ndef get_pricing_agent(session_id: str) -> Agent:\n    \"\"\"\n    Get the cached pricing agent singleton with session-specific binding.\n    The singleton does NOT bake proposal state into instructions — that would\n    freeze the first caller's state for every subsequent request. Proposal\n    state is passed inline with each user message instead.",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# Resolve FORMULAS.md once at module load. Repo root is two levels up from\n# this file: backend/agent/pricing_agent.py → backend/ → repo root.\n_FORMULAS_PATH = Path(__file__).resolve().parent.parent.parent / \"FORMULAS.md\"\n# ─── Component cache (Kroolo pattern) ────────────────────────────────────\n# All the heavy stuff is built once and reused; only the Agent shell is rebuilt\n# per request so instructions can carry the live proposal state.\nclass _ComponentCache:\n    def __init__(self):\n        self._lock = threading.Lock()",
         "detail": "backend.agent.pricing_agent",
         "documentation": {}
     },
     {
-        "label": "_agent_lock",
+        "label": "_FORMULAS_PATH",
         "kind": 5,
         "importPath": "backend.agent.pricing_agent",
         "description": "backend.agent.pricing_agent",
-        "peekOfCode": "_agent_lock = threading.Lock()\ndef get_pricing_agent(session_id: str) -> Agent:\n    \"\"\"\n    Get the cached pricing agent singleton with session-specific binding.\n    The singleton does NOT bake proposal state into instructions — that would\n    freeze the first caller's state for every subsequent request. Proposal\n    state is passed inline with each user message instead.\n    Args:\n        session_id: Session ID for this request (used for history / memories)\n    Returns:",
+        "peekOfCode": "_FORMULAS_PATH = Path(__file__).resolve().parent.parent.parent / \"FORMULAS.md\"\n# ─── Component cache (Kroolo pattern) ────────────────────────────────────\n# All the heavy stuff is built once and reused; only the Agent shell is rebuilt\n# per request so instructions can carry the live proposal state.\nclass _ComponentCache:\n    def __init__(self):\n        self._lock = threading.Lock()\n        self._llm: Optional[Any] = None\n        self._db: Optional[Any] = None\n        self._memory_manager: Optional[Any] = None",
+        "detail": "backend.agent.pricing_agent",
+        "documentation": {}
+    },
+    {
+        "label": "_components",
+        "kind": 5,
+        "importPath": "backend.agent.pricing_agent",
+        "description": "backend.agent.pricing_agent",
+        "peekOfCode": "_components = _ComponentCache()\ndef _build_instructions(proposal_context: str, formulas_text: str) -> list[str]:\n    \"\"\"Build the agent's instruction blocks for a single request.\"\"\"\n    return [\n        # ── Role + state-block contract ───────────────────────────────\n        \"\"\"You are Q — the PriceIQ Pricing Assistant. You are a knowledgeable \\\nsidekick for government-contractor pricing teams. Your job is to be USEFUL \\\non whatever the user brings to you, grounded in the live proposal state.\nEngage broadly. The user may ask you to:\n- Read figures from the proposal (grand total, FBLR, hours, costs by year)",
         "detail": "backend.agent.pricing_agent",
         "documentation": {}
     },
@@ -8130,6 +8237,60 @@
         "description": "backend.utils.proposals",
         "peekOfCode": "_lock = threading.RLock()\ndef get_proposal_crud() -> ProposalCRUD:\n    \"\"\"\n    Get or create ProposalCRUD instance (singleton pattern)\n    Returns:\n        ProposalCRUD instance\n    \"\"\"\n    global _proposal_crud\n    with _lock:\n        if _proposal_crud is None:",
         "detail": "backend.utils.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "SafePythonREPL",
+        "kind": 6,
+        "importPath": "backend.utils.python_repl_tool",
+        "description": "backend.utils.python_repl_tool",
+        "peekOfCode": "class SafePythonREPL:\n    \"\"\"Session-scoped wrapper around LangChain's PythonREPL.\"\"\"\n    def __init__(self, session_id: str = None):\n        self._repl = PythonREPL()\n        # exec() uses separate globals/locals by default; top-level imports\n        # end up in locals and helper function bodies can't see them.\n        # Unifying them fixes NameError inside nested functions.\n        self._repl.locals = self._repl.globals\n        self.session_id = session_id or \"default\"\n        if self.session_id in _session_temp_dirs:",
+        "detail": "backend.utils.python_repl_tool",
+        "documentation": {}
+    },
+    {
+        "label": "get_session_id",
+        "kind": 2,
+        "importPath": "backend.utils.python_repl_tool",
+        "description": "backend.utils.python_repl_tool",
+        "peekOfCode": "def get_session_id() -> str:\n    return _current_session_id.get()\ndef set_session_id(session_id: str):\n    \"\"\"Set the current session_id in the context. Call before agent.run().\"\"\"\n    _current_session_id.set(session_id)\nclass SafePythonREPL:\n    \"\"\"Session-scoped wrapper around LangChain's PythonREPL.\"\"\"\n    def __init__(self, session_id: str = None):\n        self._repl = PythonREPL()\n        # exec() uses separate globals/locals by default; top-level imports",
+        "detail": "backend.utils.python_repl_tool",
+        "documentation": {}
+    },
+    {
+        "label": "set_session_id",
+        "kind": 2,
+        "importPath": "backend.utils.python_repl_tool",
+        "description": "backend.utils.python_repl_tool",
+        "peekOfCode": "def set_session_id(session_id: str):\n    \"\"\"Set the current session_id in the context. Call before agent.run().\"\"\"\n    _current_session_id.set(session_id)\nclass SafePythonREPL:\n    \"\"\"Session-scoped wrapper around LangChain's PythonREPL.\"\"\"\n    def __init__(self, session_id: str = None):\n        self._repl = PythonREPL()\n        # exec() uses separate globals/locals by default; top-level imports\n        # end up in locals and helper function bodies can't see them.\n        # Unifying them fixes NameError inside nested functions.",
+        "detail": "backend.utils.python_repl_tool",
+        "documentation": {}
+    },
+    {
+        "label": "cleanup_session",
+        "kind": 2,
+        "importPath": "backend.utils.python_repl_tool",
+        "description": "backend.utils.python_repl_tool",
+        "peekOfCode": "def cleanup_session(session_id: str):\n    \"\"\"Release the temp directory for a session (called on chat close).\"\"\"\n    if session_id in _session_temp_dirs:\n        temp_dir = _session_temp_dirs.pop(session_id)\n        temp_dir.cleanup()\n        logger.info(f\"[python_repl] cleaned up session={session_id}\")\nasync def _correct_python_with_llm(code: str, error: str) -> str:\n    \"\"\"Ask the LLM to fix broken Python once, given the error output.\"\"\"\n    llm = get_chat_llm(\n        model=\"anthropic/claude-sonnet-4.6\",",
+        "detail": "backend.utils.python_repl_tool",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.utils.python_repl_tool",
+        "description": "backend.utils.python_repl_tool",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# Keep TemporaryDirectory objects alive per session so files persist across\n# multiple tool calls within the same chat session.\n_session_temp_dirs: Dict[str, tempfile.TemporaryDirectory] = {}\n# Session ID is read from contextvar at runtime so tools don't have to pass it.\n_current_session_id = contextvars.ContextVar(\"session_id\", default=\"default\")\ndef get_session_id() -> str:\n    return _current_session_id.get()\ndef set_session_id(session_id: str):\n    \"\"\"Set the current session_id in the context. Call before agent.run().\"\"\"",
+        "detail": "backend.utils.python_repl_tool",
+        "documentation": {}
+    },
+    {
+        "label": "_current_session_id",
+        "kind": 5,
+        "importPath": "backend.utils.python_repl_tool",
+        "description": "backend.utils.python_repl_tool",
+        "peekOfCode": "_current_session_id = contextvars.ContextVar(\"session_id\", default=\"default\")\ndef get_session_id() -> str:\n    return _current_session_id.get()\ndef set_session_id(session_id: str):\n    \"\"\"Set the current session_id in the context. Call before agent.run().\"\"\"\n    _current_session_id.set(session_id)\nclass SafePythonREPL:\n    \"\"\"Session-scoped wrapper around LangChain's PythonREPL.\"\"\"\n    def __init__(self, session_id: str = None):\n        self._repl = PythonREPL()",
+        "detail": "backend.utils.python_repl_tool",
         "documentation": {}
     },
     {
