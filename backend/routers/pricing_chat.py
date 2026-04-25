@@ -13,6 +13,7 @@ import logging
 
 from agent.pricing_agent import get_pricing_agent
 from utils.agent_streaming import stream_agent_response
+from utils.python_repl_tool import set_session_id
 from utils.streaming import create_sse_event_stream
 
 logger = logging.getLogger(__name__)
@@ -58,16 +59,18 @@ async def ask_pricing(request: PricingChatQuery):
             f"query_len={len(request.query)} context_len={len(request.proposal_context)}"
         )
 
-        agent = get_pricing_agent(session_id=request.session_id)
-
-        # Wrap the user query with the CURRENT proposal state on every turn.
-        # The agent is a singleton — baking state into instructions would
-        # freeze the first caller's state for everyone else. Passing the
-        # state inline per-turn guarantees each message sees the live UI.
-        full_query = (
-            f"<proposal_state>\n{request.proposal_context.strip()}\n</proposal_state>\n\n"
-            f"{request.query.strip()}"
+        # Build a fresh agent for this request with the live proposal state
+        # baked into its instructions (Kroolo pattern — cache components,
+        # rebuild the Agent shell). Heavy components (LLM, DB, memory,
+        # reasoning, formulas text) are cached at module level.
+        agent = get_pricing_agent(
+            session_id=request.session_id,
+            proposal_context=request.proposal_context,
         )
+
+        # Bind the session_id into the contextvar that python_repl_tool reads
+        # at runtime. Each chat session gets its own isolated temp directory.
+        set_session_id(request.session_id)
 
         headers = {
             "Cache-Control": "no-cache",
@@ -80,7 +83,7 @@ async def ask_pricing(request: PricingChatQuery):
             # stream_agent_response yields the `analysis` event as its very
             # first chunk (matches Kroolo's "QueryAnalysing" pattern), so the
             # UI's thinking indicator fires before the agent is awaited.
-            events = stream_agent_response(full_query, agent)
+            events = stream_agent_response(request.query, agent)
             async for chunk in create_sse_event_stream(events):
                 yield chunk
 
