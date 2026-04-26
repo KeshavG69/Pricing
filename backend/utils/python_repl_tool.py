@@ -138,6 +138,16 @@ async def python_repl_tool(code: str, description: str = "") -> Dict[str, Any]:
     - ODC: amount × (1 + smh_rate)
     - Sub billable: baseRate × (1 + smh + ga_passthrough + sub_fee)
 
+    DOCUMENT GENERATION (write a file → s3_upload_tool returns a download URL):
+    - reportlab     → PDF reports (SimpleDocTemplate, Paragraph, Table)
+    - python-pptx   → PowerPoint decks (from pptx import Presentation)
+    - python-docx   → Word documents (from docx import Document)
+    - openpyxl      → Excel workbooks (from openpyxl import Workbook)
+    - xlsxwriter    → Excel with charts/formatting
+    - matplotlib    → PNG/SVG chart images
+    Save with a simple filename ("pricing_summary.pdf"), then call
+    s3_upload_tool(filename="pricing_summary.pdf") to get a shareable URL.
+
     GROUND RULES:
     - Do NOT invent numbers. Every figure must come from the state block.
     - For simple reads (already in the state), SKIP this tool and quote directly.
