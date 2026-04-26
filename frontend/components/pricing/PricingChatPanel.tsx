@@ -9,6 +9,21 @@ import { streamPricingChat } from '@/lib/api/pricingChat';
 import MarkdownRenderer from './chat/MarkdownRenderer';
 import ThinkingIndicator from './chat/ThinkingIndicator';
 import ReasoningSteps, { type ReasoningStep } from './chat/ReasoningSteps';
+import ChartArtifact, { parseChartConfig } from './chat/ChartArtifact';
+import ArtifactDownloadCard, {
+  parseArtifactPayload,
+  type ArtifactPayload,
+} from './chat/ArtifactDownloadCard';
+import ToolStatusPill, { type ToolPillSpec } from './chat/ToolStatusPill';
+import ShimmerText from './chat/ShimmerText';
+
+interface ToolCallEntry {
+  id: string;
+  name: string;
+  status: 'running' | 'completed' | 'error';
+  args?: Record<string, unknown>;
+  result?: unknown;
+}
 
 interface ChatMessage {
   id: string;
@@ -17,7 +32,12 @@ interface ChatMessage {
   streaming?: boolean;
   thinking?: boolean; // true from send-click until first content delta
   reasoning?: ReasoningStep[]; // think/analyze tool calls, accumulated in order
+  toolCalls?: ToolCallEntry[]; // python_repl, chart_tool, s3_upload, etc.
 }
+
+// Tool names the agent uses for reasoning. These render as collapsible
+// reasoning steps; all other tool calls render as status pills / artifacts.
+const REASONING_TOOL_NAMES = new Set(['think', 'analyze']);
 
 function newSessionId(proposalId: string | null): string {
   const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -35,6 +55,132 @@ function resultToStr(r: unknown): string | undefined {
   }
 }
 
+/**
+ * Resolve the human-readable title for a tool call.
+ *
+ * Priority (matches Kroolo's pattern):
+ *   1. tool_args.description — agent's own past-tense summary
+ *      (e.g. "Computed avg FBLR for on-site positions")
+ *   2. Skill-aware: get_skill_instructions → "Reading PDF skill"
+ *   3. s3_upload_tool with parsed payload → "Uploaded {filename}"
+ *   4. Pretty-printed tool name fallback
+ */
+function prettyToolName(name: string): string {
+  return name.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+const SKILL_FORMAT_LABELS: Record<string, string> = {
+  pdf: 'PDF',
+  docx: 'Word',
+  doc: 'Word',
+  pptx: 'PowerPoint',
+  ppt: 'PowerPoint',
+  xlsx: 'Excel',
+  xls: 'Excel',
+  csv: 'CSV',
+};
+
+function resolveToolCallTitle(call: ToolCallEntry): string {
+  const args = call.args || {};
+  const verbing = call.status === 'running';
+
+  // 1. Skill-aware: get_skill_instructions / get_skill_dependencies
+  if (call.name === 'get_skill_instructions' || call.name === 'get_skill_dependencies') {
+    const skillName =
+      typeof args.skill_name === 'string' ? args.skill_name.trim().toLowerCase() : '';
+    const label = SKILL_FORMAT_LABELS[skillName] || (skillName ? prettyToolName(skillName) : 'skill');
+    return verbing ? `Reading ${label} skill` : `Read ${label} skill`;
+  }
+
+  // 2. Agent-supplied description
+  const desc = typeof args.description === 'string' ? args.description.trim() : '';
+  if (desc) return desc;
+
+  // 3. s3_upload_tool — derive from filename if we can parse the result
+  if (call.name === 's3_upload_tool') {
+    const payload = parseArtifactPayload(call.result);
+    if (payload) return verbing ? `Uploading ${payload.filename}` : `Uploaded ${payload.filename}`;
+    const filenameArg = typeof args.filename === 'string' ? args.filename : '';
+    if (filenameArg) return verbing ? `Uploading ${filenameArg}` : `Uploaded ${filenameArg}`;
+    return verbing ? 'Uploading file' : 'Uploaded file';
+  }
+
+  // 4. python_repl_tool / chart_tool — neutral fallback
+  if (call.name === 'python_repl_tool') return verbing ? 'Running code' : 'Ran code';
+  if (call.name === 'chart_tool') return verbing ? 'Building chart' : 'Built chart';
+
+  // 5. Generic
+  const pretty = prettyToolName(call.name);
+  return verbing ? `Running ${pretty}` : pretty;
+}
+
+/**
+ * Render one non-reasoning tool call.
+ *
+ * - chart_tool (completed) → pill + ChartArtifact
+ * - s3_upload_tool (completed) → pill + ArtifactDownloadCard
+ * - everything else → pill only
+ *
+ * While running OR if parsing fails, falls back to a status pill.
+ */
+function ToolCallRender({
+  call,
+  isActiveStreamingTool,
+  showTimelineConnector,
+}: {
+  call: ToolCallEntry;
+  isActiveStreamingTool: boolean;
+  showTimelineConnector: boolean;
+}) {
+  const title = resolveToolCallTitle(call);
+  const pill: ToolPillSpec = {
+    id: call.id,
+    name: call.name,
+    status: call.status,
+    title,
+  };
+
+  const row = (
+    <ToolStatusPill
+      tool={pill}
+      isActiveStreamingTool={isActiveStreamingTool}
+      showTimelineConnector={showTimelineConnector}
+    />
+  );
+
+  if (call.status !== 'completed') {
+    return row;
+  }
+
+  if (call.name === 'chart_tool') {
+    const cfg = parseChartConfig(call.result);
+    if (cfg) {
+      return (
+        <>
+          {row}
+          <ChartArtifact config={cfg} />
+        </>
+      );
+    }
+    return row;
+  }
+
+  if (call.name === 's3_upload_tool') {
+    const payload: ArtifactPayload | null = parseArtifactPayload(call.result);
+    if (payload) {
+      return (
+        <>
+          {row}
+          <ArtifactDownloadCard payload={payload} />
+        </>
+      );
+    }
+    return row;
+  }
+
+  return row;
+}
+
 export default function PricingChatPanel() {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
@@ -43,6 +189,21 @@ export default function PricingChatPanel() {
   // Session ID: regenerated every time the panel opens and on "New chat"
   // so each chat opens as a fresh conversation with no history bleed.
   const [sessionId, setSessionId] = useState<string>(() => newSessionId(null));
+
+  // Resizable panel width — persisted across page loads. Bounded to a
+  // sensible range so the user can't shrink it below usable or push it
+  // wider than ~70% of the viewport.
+  const PANEL_MIN_PX = 360;
+  const PANEL_MAX_FRAC = 0.7;
+  const PANEL_DEFAULT_PX = 448; // 28rem — matches the previous max-w-md
+  const [panelWidth, setPanelWidth] = useState<number>(() => {
+    if (typeof window === 'undefined') return PANEL_DEFAULT_PX;
+    const stored = window.localStorage.getItem('priceiq:chat-panel-width');
+    const n = stored ? Number(stored) : NaN;
+    return Number.isFinite(n) && n >= PANEL_MIN_PX ? n : PANEL_DEFAULT_PX;
+  });
+  const [isResizing, setIsResizing] = useState(false);
+
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
@@ -73,19 +234,19 @@ export default function PricingChatPanel() {
     return () => abortRef.current?.abort();
   }, []);
 
-  // When the panel is open, push the main page content left by the panel width
-  // so nothing hides underneath. Uses document.body padding + transition for a
-  // smooth shift. Cleaned up on close/unmount.
+  // When the panel is open, push the main page content left by the panel
+  // width so nothing hides underneath. Tracks the live (resizable) width
+  // and disables the smooth transition while dragging so the page follows
+  // the cursor exactly. Cleaned up on close/unmount.
   useEffect(() => {
     if (typeof document === 'undefined') return;
     const body = document.body;
-    const panelWidth = '28rem'; // matches Tailwind's max-w-md
     const prevPadding = body.style.paddingRight;
     const prevTransition = body.style.transition;
 
     if (isOpen) {
-      body.style.transition = 'padding-right 200ms ease-out';
-      body.style.paddingRight = panelWidth;
+      body.style.transition = isResizing ? 'none' : 'padding-right 200ms ease-out';
+      body.style.paddingRight = `${panelWidth}px`;
     } else {
       body.style.transition = 'padding-right 200ms ease-out';
       body.style.paddingRight = '';
@@ -94,7 +255,41 @@ export default function PricingChatPanel() {
       body.style.paddingRight = prevPadding;
       body.style.transition = prevTransition;
     };
-  }, [isOpen]);
+  }, [isOpen, panelWidth, isResizing]);
+
+  // Persist the user-chosen panel width across page loads.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.localStorage.setItem('priceiq:chat-panel-width', String(panelWidth));
+  }, [panelWidth]);
+
+  // Drag-to-resize: pointermove updates panelWidth from the cursor X relative
+  // to the right edge. Bounded between PANEL_MIN_PX and 70% of viewport.
+  useEffect(() => {
+    if (!isResizing) return;
+
+    const onMove = (e: PointerEvent) => {
+      const next = window.innerWidth - e.clientX;
+      const max = Math.floor(window.innerWidth * PANEL_MAX_FRAC);
+      const clamped = Math.min(max, Math.max(PANEL_MIN_PX, next));
+      setPanelWidth(clamped);
+    };
+    const onUp = () => setIsResizing(false);
+
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'ew-resize';
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+
+    return () => {
+      document.body.style.userSelect = '';
+      document.body.style.cursor = '';
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+    };
+  }, [isResizing]);
 
   const handleSend = useCallback(async () => {
     const trimmed = input.trim();
@@ -209,68 +404,110 @@ export default function PricingChatPanel() {
             ),
           );
         } else if (evt.type === 'tool.started') {
-          // Append a new reasoning step (or no-op if we don't care about this tool).
-          // For now we accumulate ALL tool calls the agent makes, not just
-          // think/analyze — the UI only labels known ones, others show raw.
+          // Route by tool name:
+          //   think/analyze  -> reasoning steps (collapsible thoughts)
+          //   everything else -> toolCalls list (pills, charts, artifacts)
+          const toolName = evt.tool_name || 'tool';
+          const isReasoning = REASONING_TOOL_NAMES.has(toolName);
           setMessages((m) =>
             m.map((msg) => {
               if (msg.id !== assistantMsg.id) return msg;
-              const stepId = evt.tool_call_id || `step-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-              const nextSteps: ReasoningStep[] = [
-                ...(msg.reasoning || []),
-                {
-                  id: stepId,
-                  name: evt.tool_name || 'tool',
-                  args: evt.tool_args,
-                  running: true,
-                },
+              const stepId =
+                evt.tool_call_id ||
+                `step-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+              if (isReasoning) {
+                const nextSteps: ReasoningStep[] = [
+                  ...(msg.reasoning || []),
+                  {
+                    id: stepId,
+                    name: toolName,
+                    args: evt.tool_args,
+                    running: true,
+                  },
+                ];
+                return { ...msg, reasoning: nextSteps };
+              }
+              const nextCalls: ToolCallEntry[] = [
+                ...(msg.toolCalls || []),
+                { id: stepId, name: toolName, status: 'running', args: evt.tool_args },
               ];
-              return { ...msg, reasoning: nextSteps };
+              return { ...msg, toolCalls: nextCalls };
             }),
           );
         } else if (evt.type === 'tool.completed') {
+          const toolName = evt.tool_name || 'tool';
+          const isReasoning = REASONING_TOOL_NAMES.has(toolName);
           setMessages((m) =>
             m.map((msg) => {
               if (msg.id !== assistantMsg.id) return msg;
-              const steps = msg.reasoning || [];
-              // Find matching running step by tool_call_id, else the last running one
-              const idx = (() => {
-                if (evt.tool_call_id) {
-                  const i = steps.findIndex((s) => s.id === evt.tool_call_id);
-                  if (i >= 0) return i;
+              if (isReasoning) {
+                const steps = msg.reasoning || [];
+                const idx = (() => {
+                  if (evt.tool_call_id) {
+                    const i = steps.findIndex((s) => s.id === evt.tool_call_id);
+                    if (i >= 0) return i;
+                  }
+                  for (let i = steps.length - 1; i >= 0; i--)
+                    if (steps[i].running) return i;
+                  return -1;
+                })();
+                let next: ReasoningStep[];
+                if (idx >= 0) {
+                  next = steps.map((s, i) =>
+                    i === idx
+                      ? {
+                          ...s,
+                          args: evt.tool_args ?? s.args,
+                          result: resultToStr(evt.result),
+                          error: evt.error,
+                          running: false,
+                        }
+                      : s,
+                  );
+                } else {
+                  next = [
+                    ...steps,
+                    {
+                      id:
+                        evt.tool_call_id ||
+                        `step-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                      name: toolName,
+                      args: evt.tool_args,
+                      result: resultToStr(evt.result),
+                      error: evt.error,
+                      running: false,
+                    },
+                  ];
                 }
-                // fallback: the last still-running step
-                for (let i = steps.length - 1; i >= 0; i--) if (steps[i].running) return i;
-                return -1;
-              })();
-              let next: ReasoningStep[];
-              if (idx >= 0) {
-                next = steps.map((s, i) =>
-                  i === idx
-                    ? {
-                        ...s,
-                        args: evt.tool_args ?? s.args,
-                        result: resultToStr(evt.result),
-                        error: evt.error,
-                        running: false,
-                      }
-                    : s,
-                );
-              } else {
-                // No matching started event seen; synthesize the step from completed.
-                next = [
-                  ...steps,
-                  {
-                    id: evt.tool_call_id || `step-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-                    name: evt.tool_name || 'tool',
-                    args: evt.tool_args,
-                    result: resultToStr(evt.result),
-                    error: evt.error,
-                    running: false,
-                  },
-                ];
+                return { ...msg, reasoning: next };
               }
-              return { ...msg, reasoning: next };
+
+              // Non-reasoning tool — update the toolCalls entry by id (or
+              // append if we missed the started event).
+              const calls = msg.toolCalls || [];
+              const idx = evt.tool_call_id
+                ? calls.findIndex((c) => c.id === evt.tool_call_id)
+                : -1;
+              const status: ToolCallEntry['status'] = evt.error ? 'error' : 'completed';
+              // Merge args: keep prior args from started, augment with completed.
+              const mergedArgs =
+                idx >= 0
+                  ? { ...(calls[idx].args || {}), ...(evt.tool_args || {}) }
+                  : evt.tool_args;
+              const updated: ToolCallEntry = {
+                id:
+                  evt.tool_call_id ||
+                  `call-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                name: toolName,
+                status,
+                args: mergedArgs,
+                result: evt.result,
+              };
+              const nextCalls =
+                idx >= 0
+                  ? calls.map((c, i) => (i === idx ? { ...c, ...updated } : c))
+                  : [...calls, updated];
+              return { ...msg, toolCalls: nextCalls };
             }),
           );
         } else if (evt.type === 'error') {
@@ -332,7 +569,32 @@ export default function PricingChatPanel() {
       {/* Side panel — no backdrop; user can freely interact with the rest of the app */}
       {isOpen && (
         <>
-          <aside className="fixed bottom-0 right-0 top-0 z-50 flex w-full max-w-md flex-col border-l border-border bg-background shadow-2xl">
+          <aside
+            className="fixed bottom-0 right-0 top-0 z-50 flex flex-col border-l border-border bg-background shadow-2xl"
+            style={{ width: `${panelWidth}px` }}
+          >
+            {/* Resize handle on the left edge — drag to make the panel wider */}
+            <div
+              role="separator"
+              aria-label="Resize chat panel"
+              aria-orientation="vertical"
+              onPointerDown={(e) => {
+                e.preventDefault();
+                setIsResizing(true);
+              }}
+              onDoubleClick={() => setPanelWidth(PANEL_DEFAULT_PX)}
+              className={`group absolute inset-y-0 left-0 z-10 w-2 -translate-x-1/2 cursor-ew-resize select-none ${
+                isResizing ? '' : ''
+              }`}
+            >
+              <div
+                className={`mx-auto h-full w-px transition-colors ${
+                  isResizing
+                    ? 'bg-blue-500'
+                    : 'bg-transparent group-hover:bg-blue-500/50'
+                }`}
+              />
+            </div>
             {/* Header */}
             <div className="flex items-center justify-between border-b border-border bg-muted/30 px-4 py-3">
               <div className="flex items-center gap-2.5">
@@ -425,15 +687,67 @@ export default function PricingChatPanel() {
                                 isStreaming={!msg.content}
                               />
                             )}
+                            {/* Tool-call timeline (Kroolo-style):
+                                - Vertical 1px line connecting consecutive rows
+                                - The most recent running tool gets a shimmering title
+                                - When all tools are done but no text yet, append a
+                                  "Thinking" shimmer row so the user sees that we're
+                                  waiting for the next tool call or the answer text. */}
+                            {msg.toolCalls && msg.toolCalls.length > 0 && (() => {
+                              const calls = msg.toolCalls;
+                              const lastRunningIdx = (() => {
+                                for (let i = calls.length - 1; i >= 0; i--) {
+                                  if (calls[i].status === 'running') return i;
+                                }
+                                return -1;
+                              })();
+                              const allComplete = lastRunningIdx === -1;
+                              const showThinkingTrailer =
+                                msg.streaming && !msg.content && allComplete;
+                              return (
+                                <div className="my-2 rounded-xl border border-border bg-background/40 px-4 py-2 backdrop-blur-sm">
+                                  {calls.map((tc, i) => {
+                                    const isActive = Boolean(
+                                      msg.streaming && i === lastRunningIdx,
+                                    );
+                                    const hasNextRow = Boolean(
+                                      i < calls.length - 1 || showThinkingTrailer,
+                                    );
+                                    return (
+                                      <ToolCallRender
+                                        key={tc.id}
+                                        call={tc}
+                                        isActiveStreamingTool={isActive}
+                                        showTimelineConnector={hasNextRow}
+                                      />
+                                    );
+                                  })}
+                                  {showThinkingTrailer && (
+                                    <div className="relative flex items-start gap-3 py-1.5">
+                                      <div className="relative z-10 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-background">
+                                        <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground" />
+                                      </div>
+                                      <div className="min-w-0 flex-1 pt-[2px]">
+                                        <ShimmerText
+                                          text="Thinking…"
+                                          className="text-[13px] text-foreground"
+                                        />
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
                             {/*
                               Show the rotating thinking indicator only before the
-                              first reasoning step arrives. Once reasoning steps
-                              exist, the ReasoningSteps live view carries the
+                              first reasoning step OR tool call arrives. Once any
+                              tool activity exists, those views carry the
                               "something is happening" signal.
                             */}
                             {msg.thinking &&
                             !msg.content &&
-                            (!msg.reasoning || msg.reasoning.length === 0) ? (
+                            (!msg.reasoning || msg.reasoning.length === 0) &&
+                            (!msg.toolCalls || msg.toolCalls.length === 0) ? (
                               <ThinkingIndicator />
                             ) : (
                               <>

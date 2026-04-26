@@ -15,21 +15,53 @@ turn sees the user's CURRENT UI state without any cross-session bleed.
 
 import threading
 import logging
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, Optional
 
 from agno.agent import Agent
+from agno.skills import LocalSkills, Skills
 from app.settings import settings
 from client.llm_client import get_chat_llm_agno
 from client.agent_memory import get_agent_db, get_memory_manager
 from utils.agno_tools import create_reasoning_tool
+from utils.chart_tool import chart_tool
 from utils.python_repl_tool import python_repl_tool
+from utils.s3_upload_tool import s3_upload_tool
 
 logger = logging.getLogger(__name__)
 
 # Resolve FORMULAS.md once at module load. Repo root is two levels up from
 # this file: backend/agent/pricing_agent.py → backend/ → repo root.
 _FORMULAS_PATH = Path(__file__).resolve().parent.parent.parent / "FORMULAS.md"
+
+# Skills directory — sibling to this file: backend/agent/skills/
+# Each subdirectory is a skill (pdf/, docx/, pptx/, xlsx/)
+# containing SKILL.md + supporting scripts/references. Loaded via agno's
+# LocalSkills which exposes them to the agent through skill-access tools.
+_SKILLS_DIR = Path(__file__).resolve().parent / "skills"
+
+
+@lru_cache(maxsize=1)
+def get_pricing_skills() -> Optional[Skills]:
+    """
+    Return cached Skills bundle for Q (pdf, docx, xlsx, pptx).
+
+    Mirrors Kroolo's `get_orchestrator_skills()` — lru_cache(maxsize=1)
+    means the LocalSkills loader scans the disk exactly once per process,
+    not on every agent build.
+    """
+    if not _SKILLS_DIR.exists():
+        logger.warning(f"Skills directory not found: {_SKILLS_DIR}")
+        return None
+    try:
+        skills = Skills(loaders=[LocalSkills(str(_SKILLS_DIR), validate=True)])
+        names = skills.get_skill_names()
+        logger.info(f"Loaded {len(names)} skills from {_SKILLS_DIR}: {names}")
+        return skills
+    except Exception as e:
+        logger.error(f"Failed to load skills from {_SKILLS_DIR}: {e}", exc_info=True)
+        return None
 
 
 # ─── Component cache (Kroolo pattern) ────────────────────────────────────
@@ -42,6 +74,9 @@ class _ComponentCache:
         self._db: Optional[Any] = None
         self._memory_manager: Optional[Any] = None
         self._reasoning_tool: Optional[Any] = None
+        self._python_repl_tool: Optional[Any] = None
+        self._chart_tool: Optional[Any] = None
+        self._s3_upload_tool: Optional[Any] = None
         self._formulas_text: Optional[str] = None
 
     @property
@@ -91,6 +126,30 @@ class _ComponentCache:
         return self._reasoning_tool
 
     @property
+    def python_repl_tool(self):
+        if self._python_repl_tool is None:
+            with self._lock:
+                if self._python_repl_tool is None:
+                    self._python_repl_tool = python_repl_tool
+        return self._python_repl_tool
+
+    @property
+    def chart_tool(self):
+        if self._chart_tool is None:
+            with self._lock:
+                if self._chart_tool is None:
+                    self._chart_tool = chart_tool
+        return self._chart_tool
+
+    @property
+    def s3_upload_tool(self):
+        if self._s3_upload_tool is None:
+            with self._lock:
+                if self._s3_upload_tool is None:
+                    self._s3_upload_tool = s3_upload_tool
+        return self._s3_upload_tool
+
+    @property
     def formulas_text(self) -> str:
         if self._formulas_text is None:
             with self._lock:
@@ -126,6 +185,9 @@ cost impact, percentile choice impact, escalation strategy, fee positioning)
 - Advise on the proposal's competitiveness, risk, or structure
 - Discuss government-contracting conventions (DCAA, FAR, wrap rates, FBLR, \
 subcontract handling, fee policy)
+- VISUALIZE pricing data — charts, graphs, plots (via `chart_tool`)
+- GENERATE deliverables — PDF reports, PowerPoint slides, Word docs, \
+Excel exports (via `python_repl_tool` + `s3_upload_tool`)
 
 DO NOT refuse questions on the grounds that they are "strategy" or "outside \
 pricing." If the question can be informed by the numbers in front of you or \
@@ -218,8 +280,43 @@ group, rank, average, or re-cascade any pricing figure. It is your \
 calculator. Parse the state JSON in code, apply the formula, print the \
 result. Prefer the REPL over mental arithmetic on any number with three \
 or more digits.
+   • USE `chart_tool` whenever the user asks for a visualization, chart, \
+graph, plot, or "show me visually". First compute the data series in \
+`python_repl_tool`, then hardcode the numbers into Chart.js code and pass \
+to `chart_tool`. Frontend renders it as an interactive chart.
+   • USE `python_repl_tool` + `s3_upload_tool` to generate downloadable \
+deliverables. Available libraries: reportlab (PDF), python-pptx (PPT), \
+python-docx (DOCX), openpyxl/xlsxwriter (XLSX), matplotlib (chart images). \
+Workflow: write file in REPL with simple filename → call `s3_upload_tool` \
+with same filename → quote the returned URL as a markdown link to the user.
    • NEVER use reasoning or the REPL to ESTIMATE missing data. Only compute \
 from numbers actually present in the state.
+
+10. Deliverable generation — USE THE SKILL SYSTEM:
+    Before generating any PDF / DOCX / PPTX / XLSX, you MUST first \
+load the matching skill via `get_skill_instructions(skill_name)`. The \
+skills contain the canonical patterns — library choices, layout templates, \
+script paths, validation steps — for producing professional documents. \
+Available skills: `pdf`, `docx`, `pptx`, `xlsx`.
+
+    Workflow:
+    a) Pick the skill matching the requested format (e.g., user asks for a \
+PDF summary → load the `pdf` skill).
+    b) Call `get_skill_instructions("pdf")` to read the full guidance.
+    c) Follow the skill's recipe inside `python_repl_tool` to produce the file.
+    d) Call `s3_upload_tool` with the same filename to get a presigned URL.
+    e) Quote the URL to the user as a markdown link.
+
+    When to use each format:
+    • PDF — formal pricing summaries, executive briefs, cost narrative docs
+    • PPTX — boardroom slides, pricing overview decks, prime/sub split visuals
+    • DOCX — narrative writeups, basis-of-estimate sections, position memos
+    • XLSX — raw numbers, position rosters, year-by-year breakdowns
+
+    All numbers in deliverables MUST come from <proposal_state>. Compute \
+derived figures with the REPL before writing them to the file. Never \
+fabricate numbers in a deliverable. ALWAYS prefer the skill-guided approach \
+over ad-hoc code generation for professional output.
 </rules>""",
 
         # ── Canonical formulas (loaded from FORMULAS.md) ──────────────
@@ -268,7 +365,13 @@ def get_pricing_agent(session_id: str, proposal_context: str) -> Agent:
         model=_components.llm,
         db=_components.db,
         memory_manager=_components.memory_manager,
-        tools=[_components.reasoning_tool, python_repl_tool],
+        skills=get_pricing_skills(),
+        tools=[
+            _components.reasoning_tool,
+            _components.python_repl_tool,
+            _components.chart_tool,
+            _components.s3_upload_tool,
+        ],
         add_history_to_context=True,
         num_history_runs=4,
         enable_agentic_memory=True,
@@ -287,4 +390,5 @@ def clear_cache():
     """Clear the cached components (for testing / maintenance)."""
     global _components
     _components = _ComponentCache()
+    get_pricing_skills.cache_clear()
     logger.info("Cleared pricing agent component cache")
