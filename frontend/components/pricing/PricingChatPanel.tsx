@@ -808,7 +808,12 @@ export default function PricingChatPanel() {
                                   "Thinking" shimmer row so the user sees that we're
                                   waiting for the next tool call or the answer text. */}
                             {msg.toolCalls && msg.toolCalls.length > 0 && (() => {
-                              const calls = msg.toolCalls;
+                              // Hide chart_tool from the timeline — its
+                              // artifact already shows in the body, so a
+                              // duplicate "Built chart" row is just noise.
+                              const calls = msg.toolCalls.filter(
+                                (c) => c.name !== 'chart_tool',
+                              );
                               const lastRunningIdx = (() => {
                                 for (let i = calls.length - 1; i >= 0; i--) {
                                   if (calls[i].status === 'running') return i;
@@ -818,6 +823,9 @@ export default function PricingChatPanel() {
                               const allComplete = lastRunningIdx === -1;
                               const showThinkingTrailer =
                                 msg.streaming && !msg.content && allComplete;
+                              if (calls.length === 0 && !showThinkingTrailer) {
+                                return null;
+                              }
                               return (
                                 <div className="my-2 rounded-xl border border-border bg-background/40 px-4 py-2 backdrop-blur-sm">
                                   {calls.map((tc, i) => {
