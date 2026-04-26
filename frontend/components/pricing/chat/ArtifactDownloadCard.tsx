@@ -87,8 +87,22 @@ export function parseArtifactPayload(raw: unknown): ArtifactPayload | null {
     /* fall through */
   }
 
-  // Try Python-style dict (single quotes, True/False/None) — agno often
-  // hands tool results back as `str(dict)` which is Python repr.
+  // Try direct JS-literal eval with Python booleans replaced. Primary path
+  // for agno-serialized tool results: Python repr like
+  //   {'success': True, 'url': '...', 'filename': '...', ...}
+  // is valid JS once True/False/None are swapped.
+  try {
+    const jsLiteral = text
+      .replace(/\bTrue\b/g, 'true')
+      .replace(/\bFalse\b/g, 'false')
+      .replace(/\bNone\b/g, 'null');
+    const fn = new Function('return ' + jsLiteral);
+    return parseArtifactPayload(fn());
+  } catch {
+    /* fall through */
+  }
+
+  // Try Python-style dict via JSON parse (single→double substitution).
   try {
     const sanitized = text
       .replace(/\bTrue\b/g, 'true')

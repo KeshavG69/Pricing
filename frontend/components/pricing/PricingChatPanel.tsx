@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { memo, useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { MessageCircle, X, Send, Loader2, Sparkles } from 'lucide-react';
 import { usePricingStore } from '@/lib/stores/pricingStore';
 import { useAuthStore } from '@/lib/stores/authStore';
@@ -12,7 +12,6 @@ import ReasoningSteps, { type ReasoningStep } from './chat/ReasoningSteps';
 import ChartArtifact, { parseChartConfig } from './chat/ChartArtifact';
 import ArtifactDownloadCard, {
   parseArtifactPayload,
-  type ArtifactPayload,
 } from './chat/ArtifactDownloadCard';
 import ToolStatusPill, { type ToolPillSpec } from './chat/ToolStatusPill';
 import ShimmerText from './chat/ShimmerText';
@@ -25,6 +24,21 @@ interface ToolCallEntry {
   result?: unknown;
 }
 
+/**
+ * Ordered render-block within an assistant message body. The agent streams
+ * text deltas and tool calls in chronological order; we capture that order
+ * here so artifacts (charts, download cards) appear at the position they
+ * actually fired — interleaved with text — instead of bunched at the top.
+ *
+ * - `text` block: a contiguous run of streamed text deltas (mutated as more
+ *   deltas arrive).
+ * - `tool` block: a pointer to a ToolCallEntry; renders the artifact (chart /
+ *   download card) once the tool completes and parses successfully.
+ */
+type MessageBlock =
+  | { kind: 'text'; id: string; text: string }
+  | { kind: 'tool'; id: string; toolCallId: string };
+
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -33,6 +47,12 @@ interface ChatMessage {
   thinking?: boolean; // true from send-click until first content delta
   reasoning?: ReasoningStep[]; // think/analyze tool calls, accumulated in order
   toolCalls?: ToolCallEntry[]; // python_repl, chart_tool, s3_upload, etc.
+  /**
+   * Ordered timeline of text + tool blocks that compose the body, captured
+   * in the order events arrived from the stream. Used to interleave
+   * chart/download artifacts with text in their actual fire order.
+   */
+  blocks?: MessageBlock[];
 }
 
 // Tool names the agent uses for reasoning. These render as collapsible
@@ -115,13 +135,10 @@ function resolveToolCallTitle(call: ToolCallEntry): string {
 }
 
 /**
- * Render one non-reasoning tool call.
- *
- * - chart_tool (completed) → pill + ChartArtifact
- * - s3_upload_tool (completed) → pill + ArtifactDownloadCard
- * - everything else → pill only
- *
- * While running OR if parsing fails, falls back to a status pill.
+ * Render one tool-call timeline row. Compact — never includes the artifact.
+ * Charts and download cards are rendered separately, in stream order, by
+ * MessageBody (so a chart that fired BEFORE text appears above the text,
+ * and a chart that fired AFTER appears below).
  */
 function ToolCallRender({
   call,
@@ -140,45 +157,99 @@ function ToolCallRender({
     title,
   };
 
-  const row = (
+  return (
     <ToolStatusPill
       tool={pill}
       isActiveStreamingTool={isActiveStreamingTool}
       showTimelineConnector={showTimelineConnector}
     />
   );
+}
 
-  if (call.status !== 'completed') {
-    return row;
+/**
+ * One artifact block — memoized so the expensive `parseChartConfig` /
+ * `parseArtifactPayload` (which use `new Function` to eval JS literals)
+ * only run when the tool's result actually changes, not on every parent
+ * re-render (e.g. text-delta tick).
+ *
+ * Without this memo, every text delta would re-parse the chart and pass
+ * a new config object to ChartArtifact, forcing chart.js to rebuild the
+ * canvas each frame.
+ */
+const ToolArtifactBlock = memo(function ToolArtifactBlock({
+  call,
+}: {
+  call: ToolCallEntry;
+}) {
+  const config = useMemo(() => {
+    if (call.name !== 'chart_tool' || call.status !== 'completed') return null;
+    return parseChartConfig(call.result);
+  }, [call.name, call.status, call.result]);
+
+  const artifactPayload = useMemo(() => {
+    if (call.name !== 's3_upload_tool' || call.status !== 'completed') return null;
+    return parseArtifactPayload(call.result);
+  }, [call.name, call.status, call.result]);
+
+  if (config) return <ChartArtifact config={config} />;
+  if (artifactPayload) return <ArtifactDownloadCard payload={artifactPayload} />;
+  return null;
+});
+
+/**
+ * Stable wrapper around MessageBody — derives the toolCalls Map via
+ * useMemo so a fresh Map isn't built on every text-delta render.
+ */
+function AssistantBody({ msg }: { msg: ChatMessage }) {
+  const toolCallsById = useMemo(
+    () => new Map((msg.toolCalls || []).map((c) => [c.id, c])),
+    [msg.toolCalls],
+  );
+  return (
+    <MessageBody
+      blocks={msg.blocks}
+      content={msg.content}
+      toolCallsById={toolCallsById}
+    />
+  );
+}
+
+/**
+ * Render the body of an assistant message — walks `blocks` in stream order
+ * so text and artifacts (charts, download cards) appear interleaved exactly
+ * as the agent emitted them. Falls back to a single MarkdownRenderer over
+ * `content` if no blocks were captured (legacy / non-streaming path).
+ */
+function MessageBody({
+  blocks,
+  content,
+  toolCallsById,
+}: {
+  blocks?: MessageBlock[];
+  content: string;
+  toolCallsById: Map<string, ToolCallEntry>;
+}) {
+  if (!blocks || blocks.length === 0) {
+    return content ? <MarkdownRenderer>{content}</MarkdownRenderer> : null;
   }
 
-  if (call.name === 'chart_tool') {
-    const cfg = parseChartConfig(call.result);
-    if (cfg) {
-      return (
-        <>
-          {row}
-          <ChartArtifact config={cfg} />
-        </>
-      );
-    }
-    return row;
-  }
-
-  if (call.name === 's3_upload_tool') {
-    const payload: ArtifactPayload | null = parseArtifactPayload(call.result);
-    if (payload) {
-      return (
-        <>
-          {row}
-          <ArtifactDownloadCard payload={payload} />
-        </>
-      );
-    }
-    return row;
-  }
-
-  return row;
+  return (
+    <>
+      {blocks.map((b) => {
+        if (b.kind === 'text') {
+          if (!b.text) return null;
+          return (
+            <div key={b.id}>
+              <MarkdownRenderer>{b.text}</MarkdownRenderer>
+            </div>
+          );
+        }
+        const call = toolCallsById.get(b.toolCallId);
+        if (!call || call.status !== 'completed') return null;
+        return <ToolArtifactBlock key={b.id} call={call} />;
+      })}
+    </>
+  );
 }
 
 export default function PricingChatPanel() {
@@ -380,28 +451,60 @@ export default function PricingChatPanel() {
           continue;
         } else if (evt.type === 'delta') {
           setMessages((m) =>
-            m.map((msg) =>
-              msg.id === assistantMsg.id
-                ? {
-                    ...msg,
-                    content: msg.content + evt.content,
-                    thinking: false, // first real content → swap out the quotes
-                  }
-                : msg,
-            ),
+            m.map((msg) => {
+              if (msg.id !== assistantMsg.id) return msg;
+              // Append to the trailing text block in stream order. If the
+              // last block is text, extend it; otherwise open a new one.
+              const blocks = msg.blocks ? [...msg.blocks] : [];
+              const last = blocks[blocks.length - 1];
+              if (last && last.kind === 'text') {
+                blocks[blocks.length - 1] = {
+                  ...last,
+                  text: last.text + evt.content,
+                };
+              } else {
+                blocks.push({
+                  kind: 'text',
+                  id: `txt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                  text: evt.content,
+                });
+              }
+              return {
+                ...msg,
+                content: msg.content + evt.content,
+                blocks,
+                thinking: false, // first real content → swap out the quotes
+              };
+            }),
           );
         } else if (evt.type === 'done') {
           setMessages((m) =>
-            m.map((msg) =>
-              msg.id === assistantMsg.id
-                ? {
-                    ...msg,
-                    content: evt.content || msg.content,
-                    streaming: false,
-                    thinking: false,
-                  }
-                : msg,
-            ),
+            m.map((msg) => {
+              if (msg.id !== assistantMsg.id) return msg;
+              // If `done` carries final content but we have no blocks yet
+              // (no deltas were sent), seed a single text block. Otherwise
+              // leave the existing block stream intact.
+              const finalContent = evt.content || msg.content;
+              const blocks =
+                msg.blocks && msg.blocks.length > 0
+                  ? msg.blocks
+                  : finalContent
+                    ? [
+                        {
+                          kind: 'text' as const,
+                          id: `txt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+                          text: finalContent,
+                        },
+                      ]
+                    : [];
+              return {
+                ...msg,
+                content: finalContent,
+                blocks,
+                streaming: false,
+                thinking: false,
+              };
+            }),
           );
         } else if (evt.type === 'tool.started') {
           // Route by tool name:
@@ -431,7 +534,18 @@ export default function PricingChatPanel() {
                 ...(msg.toolCalls || []),
                 { id: stepId, name: toolName, status: 'running', args: evt.tool_args },
               ];
-              return { ...msg, toolCalls: nextCalls };
+              // Only tool calls that produce a visible body artifact get a
+              // block in the stream (so the body interleaves correctly).
+              // Code-only / skill tools just live in the timeline at top.
+              const producesArtifact =
+                toolName === 'chart_tool' || toolName === 's3_upload_tool';
+              const nextBlocks: MessageBlock[] | undefined = producesArtifact
+                ? [
+                    ...(msg.blocks || []),
+                    { kind: 'tool', id: `blk-${stepId}`, toolCallId: stepId },
+                  ]
+                : msg.blocks;
+              return { ...msg, toolCalls: nextCalls, blocks: nextBlocks };
             }),
           );
         } else if (evt.type === 'tool.completed') {
@@ -751,9 +865,7 @@ export default function PricingChatPanel() {
                               <ThinkingIndicator />
                             ) : (
                               <>
-                                {msg.content ? (
-                                  <MarkdownRenderer>{msg.content}</MarkdownRenderer>
-                                ) : null}
+                                <AssistantBody msg={msg} />
                                 {msg.streaming && msg.content && (
                                   <Loader2 className="ml-1 inline h-3 w-3 animate-spin opacity-60" />
                                 )}
