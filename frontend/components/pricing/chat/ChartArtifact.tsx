@@ -1,6 +1,6 @@
 'use client';
 
-import { memo, useMemo } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -17,6 +17,7 @@ import {
 } from 'chart.js';
 import 'chartjs-adapter-date-fns';
 import { Bar, Line, Pie, Doughnut } from 'react-chartjs-2';
+import { Download, FileText, FileImage, Sheet } from 'lucide-react';
 
 ChartJS.register(
   CategoryScale,
@@ -120,7 +121,28 @@ export function parseChartConfig(raw: unknown): ChartCfg | null {
     /* fall through */
   }
 
-  // Try Python-style dict
+  // Try direct JS-literal eval with Python booleans replaced. This is the
+  // primary path for agno-serialized tool results: Python repr like
+  //   {'success': True, 'code': "{ type: 'bar', data: {...} }", ...}
+  // is valid JS once True/False/None are swapped — JS object literals accept
+  // single-quoted keys and string values. Crucially we do NOT touch single
+  // quotes here, so embedded JS literals inside string values stay intact.
+  try {
+    const jsLiteral = text
+      .replace(/\bTrue\b/g, 'true')
+      .replace(/\bFalse\b/g, 'false')
+      .replace(/\bNone\b/g, 'null');
+    const fn = new Function('return ' + jsLiteral);
+    const value = fn();
+    const found = parseChartConfig(value);
+    if (found) return found;
+  } catch {
+    /* fall through */
+  }
+
+  // Try Python-style dict via JSON parse (single→double quote substitution).
+  // Only works when there are no embedded double-quoted substrings — kept
+  // as a last-resort alternative to the JS-literal path above.
   try {
     const sanitized = text
       .replace(/\bTrue\b/g, 'true')
@@ -129,16 +151,6 @@ export function parseChartConfig(raw: unknown): ChartCfg | null {
       .replace(/'/g, '"');
     const parsed = JSON.parse(sanitized);
     const found = parseChartConfig(parsed);
-    if (found) return found;
-  } catch {
-    /* fall through */
-  }
-
-  // JS object literal (chart configs use unquoted keys)
-  try {
-    const fn = new Function('return ' + text);
-    const value = fn();
-    const found = parseChartConfig(value);
     if (found) return found;
   } catch {
     /* fall through */
@@ -155,6 +167,15 @@ export function parseChartConfig(raw: unknown): ChartCfg | null {
     } catch {
       /* ignore */
     }
+  }
+
+  // Last resort: extract the `code` field value via regex and recurse.
+  // Handles cases where the surrounding envelope can't be evaluated but the
+  // code string itself is well-formed.
+  const codeFieldMatch = text.match(/['"]code['"]\s*:\s*(['"])([\s\S]*?)\1/);
+  if (codeFieldMatch) {
+    const found = parseChartConfig(codeFieldMatch[2]);
+    if (found) return found;
   }
 
   return null;
@@ -262,6 +283,137 @@ const ChartArtifact = memo(({ config }: ChartArtifactProps) => {
     return base;
   }, [config.options, chartType]);
 
+  const chartRef = useRef<ChartJS | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuWrapperRef = useRef<HTMLDivElement | null>(null);
+
+  // Close the export menu on outside-click / Escape
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onDown = (e: MouseEvent) => {
+      if (menuWrapperRef.current && !menuWrapperRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setMenuOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    document.addEventListener('keydown', onKey);
+    return () => {
+      document.removeEventListener('mousedown', onDown);
+      document.removeEventListener('keydown', onKey);
+    };
+  }, [menuOpen]);
+
+  const titleText = useMemo(() => {
+    const t = (config.options?.plugins as { title?: { text?: unknown } } | undefined)
+      ?.title?.text;
+    return typeof t === 'string' ? t : 'chart';
+  }, [config.options]);
+
+  const baseFilename = useMemo(
+    () =>
+      titleText
+        .replace(/[^a-z0-9]+/gi, '_')
+        .replace(/^_+|_+$/g, '')
+        .toLowerCase() || 'chart',
+    [titleText],
+  );
+
+  const triggerDownload = useCallback((blob: Blob, filename: string) => {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+  }, []);
+
+  const handleDownloadPng = useCallback(() => {
+    const inst = chartRef.current;
+    const canvas = inst?.canvas;
+    if (!canvas) return;
+    // Composite onto a white background so transparency doesn't render black
+    const tmp = document.createElement('canvas');
+    tmp.width = canvas.width;
+    tmp.height = canvas.height;
+    const ctx = tmp.getContext('2d');
+    if (!ctx) return;
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, tmp.width, tmp.height);
+    ctx.drawImage(canvas, 0, 0);
+    tmp.toBlob((blob) => {
+      if (blob) triggerDownload(blob, `${baseFilename}.png`);
+    }, 'image/png');
+    setMenuOpen(false);
+  }, [baseFilename, triggerDownload]);
+
+  const handleDownloadCsv = useCallback(() => {
+    setMenuOpen(false);
+    const labelsRaw = chartData?.labels;
+    const datasets = chartData?.datasets;
+    if (!labelsRaw || !datasets) return;
+
+    const labels = labelsRaw.map((l) => String(l));
+    const datasetNames = datasets.map(
+      (d, i) => (typeof d.label === 'string' && d.label) || `Series ${i + 1}`,
+    );
+
+    const escape = (v: unknown): string => {
+      const s = v == null ? '' : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+
+    const header = ['Label', ...datasetNames].map(escape).join(',');
+    const rows = labels.map((label, rowIdx) => {
+      const cells = [
+        label,
+        ...datasets.map((d) => {
+          const arr = d.data;
+          return Array.isArray(arr) ? arr[rowIdx] : '';
+        }),
+      ];
+      return cells.map(escape).join(',');
+    });
+    const csv = [header, ...rows].join('\n');
+    triggerDownload(new Blob([csv], { type: 'text/csv;charset=utf-8' }), `${baseFilename}.csv`);
+  }, [chartData, baseFilename, triggerDownload]);
+
+  const handleDownloadPdf = useCallback(async () => {
+    const inst = chartRef.current;
+    const canvas = inst?.canvas;
+    if (!canvas) return;
+    setMenuOpen(false);
+    try {
+      const mod = await import('jspdf');
+      const JsPdf = mod.default || mod.jsPDF;
+      // Composite to white background first (transparent → black in PDF)
+      const tmp = document.createElement('canvas');
+      tmp.width = canvas.width;
+      tmp.height = canvas.height;
+      const ctx = tmp.getContext('2d');
+      if (!ctx) return;
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, tmp.width, tmp.height);
+      ctx.drawImage(canvas, 0, 0);
+      const dataUrl = tmp.toDataURL('image/png');
+
+      const isLandscape = canvas.width > canvas.height;
+      const pdf = new JsPdf({
+        orientation: isLandscape ? 'landscape' : 'portrait',
+        unit: 'px',
+        format: [canvas.width, canvas.height],
+      });
+      pdf.addImage(dataUrl, 'PNG', 0, 0, canvas.width, canvas.height);
+      pdf.save(`${baseFilename}.pdf`);
+    } catch (err) {
+      console.error('Chart PDF export failed', err);
+    }
+  }, [baseFilename]);
+
   if (!chartData) {
     return null;
   }
@@ -276,10 +428,63 @@ const ChartArtifact = memo(({ config }: ChartArtifactProps) => {
           : Bar;
 
   return (
-    <div className="my-2 w-full rounded-lg border border-border bg-background p-3">
+    <div className="group relative my-2 w-full rounded-lg border border-border bg-background p-3">
+      {/* Hover-revealed export toolbar (top-right) */}
+      <div
+        ref={menuWrapperRef}
+        className={`absolute right-3 top-3 z-10 transition-opacity ${
+          menuOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+        }`}
+      >
+        <button
+          type="button"
+          onClick={() => setMenuOpen((v) => !v)}
+          className="inline-flex h-7 w-7 items-center justify-center rounded-md border border-border bg-background/80 text-muted-foreground shadow-sm backdrop-blur transition-colors hover:bg-muted hover:text-foreground"
+          aria-label="Download chart"
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+        >
+          <Download className="h-3.5 w-3.5" />
+        </button>
+        {menuOpen && (
+          <div
+            role="menu"
+            className="absolute right-0 mt-1 w-32 overflow-hidden rounded-md border border-border bg-background shadow-lg"
+          >
+            <button
+              type="button"
+              role="menuitem"
+              onClick={handleDownloadPng}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-foreground hover:bg-muted"
+            >
+              <FileImage className="h-3.5 w-3.5" />
+              PNG
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={handleDownloadCsv}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-foreground hover:bg-muted"
+            >
+              <Sheet className="h-3.5 w-3.5" />
+              CSV
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={handleDownloadPdf}
+              className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs text-foreground hover:bg-muted"
+            >
+              <FileText className="h-3.5 w-3.5" />
+              PDF
+            </button>
+          </div>
+        )}
+      </div>
+
       <div className="h-72 w-full">
         {/* @ts-expect-error chart.js types are loose for this dynamic ChartTag */}
-        <ChartTag data={chartData} options={chartOptions} />
+        <ChartTag ref={chartRef} data={chartData} options={chartOptions} />
       </div>
     </div>
   );
