@@ -777,11 +777,15 @@ export default function PricingChatPanel() {
                       }`}
                     >
                       <div
-                        className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
+                        className={
+                          // User messages stay as a right-aligned chat bubble
+                          // (limited width). Assistant responses span the full
+                          // panel width so charts, tables, and code can use
+                          // all the available space (Kroolo pattern).
                           msg.role === 'user'
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-muted text-foreground'
-                        }`}
+                            ? 'max-w-[85%] rounded-lg bg-blue-600 px-3 py-2 text-sm text-white'
+                            : 'w-full text-sm text-foreground'
+                        }
                       >
                         {msg.role === 'user' ? (
                           // User messages stay as plain text (no markdown parsing)
@@ -889,8 +893,8 @@ export default function PricingChatPanel() {
             </div>
 
             {/* Input */}
-            <div className="border-t border-border bg-background px-4 py-3">
-              <div className="flex items-end gap-2">
+            <div className="w-full border-t border-border bg-background px-4 py-3">
+              <div className="flex w-full items-end gap-2">
                 <textarea
                   ref={inputRef}
                   value={input}
@@ -903,7 +907,10 @@ export default function PricingChatPanel() {
                   }
                   disabled={!proposalId || isStreaming}
                   rows={1}
-                  className="flex-1 resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
+                  // min-w-0 + w-full overrides the textarea's implicit min-width
+                  // (browser default is ~cols×em) so flex-1 can actually grow
+                  // and shrink with the resizable panel.
+                  className="min-w-0 w-full flex-1 resize-none rounded-lg border border-input bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 disabled:opacity-50"
                   style={{
                     maxHeight: '120px',
                     minHeight: '38px',
