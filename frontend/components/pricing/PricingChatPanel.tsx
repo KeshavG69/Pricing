@@ -150,11 +150,21 @@ function ToolCallRender({
   showTimelineConnector: boolean;
 }) {
   const title = resolveToolCallTitle(call);
+
+  // Extract stdout output for python_repl_tool
+  let output: string | undefined;
+  if (call.name === 'python_repl_tool' && call.status === 'completed' && call.result) {
+    const r = call.result as Record<string, unknown>;
+    const raw = typeof r.output === 'string' ? r.output.trim() : '';
+    if (raw && raw !== '(no output)') output = raw;
+  }
+
   const pill: ToolPillSpec = {
     id: call.id,
     name: call.name,
     status: call.status,
     title,
+    output,
   };
 
   return (

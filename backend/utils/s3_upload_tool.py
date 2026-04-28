@@ -100,6 +100,14 @@ async def s3_upload_tool(filename: str, description: str = "") -> Dict[str, Any]
         )
 
         logger.info(f"[s3_upload_tool] uploaded {filename} → {object_key}")
+
+        # Clean up local file after successful upload to save disk space
+        try:
+            os.remove(local_path)
+            logger.info(f"[s3_upload_tool] deleted local file: {local_path}")
+        except Exception as cleanup_error:
+            logger.warning(f"[s3_upload_tool] failed to delete local file: {cleanup_error}")
+
         return {
             "success": True,
             "url": url,
