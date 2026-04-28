@@ -25,6 +25,8 @@ export interface ToolPillSpec {
    * and result — see resolveToolCallTitle in PricingChatPanel).
    */
   title: string;
+  /** stdout from python_repl_tool, shown as a small code block on completion. */
+  output?: string;
 }
 
 const TOOL_ICONS: Record<string, LucideIcon> = {
@@ -81,7 +83,7 @@ const ToolStatusPill = memo(
           <StatusIcon className={`h-3.5 w-3.5 ${statusClass}`} />
         </div>
 
-        {/* Title with optional shimmer */}
+        {/* Title with optional shimmer + output */}
         <div className="min-w-0 flex-1 pt-[1px]">
           <div className="flex items-center gap-2">
             <ToolIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground/70" />
@@ -96,6 +98,11 @@ const ToolStatusPill = memo(
               </span>
             )}
           </div>
+          {tool.status === 'completed' && tool.output && (
+            <pre className="mt-1.5 max-h-40 overflow-y-auto whitespace-pre-wrap break-all rounded-md bg-muted px-2.5 py-2 font-mono text-[11px] text-muted-foreground">
+              {tool.output}
+            </pre>
+          )}
         </div>
       </div>
     );
