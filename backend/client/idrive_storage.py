@@ -6,6 +6,7 @@ Thread-safe singleton pattern with RLock.
 """
 
 import boto3
+from botocore.config import Config
 from botocore.exceptions import ClientError
 import threading
 from typing import Optional
@@ -24,11 +25,18 @@ class IDriveStorage:
 
     def __init__(self):
         """Initialize S3 client with iDrive e2 credentials and thread lock."""
+        # Extract region from endpoint URL (e.g. "us-west-1" from
+        # "https://s3.us-west-1.idrivee2.com") — required for SigV4.
+        endpoint = settings.IDRIVE_E2_ENDPOINT
+        region = endpoint.split("//")[-1].split(".")[1] if endpoint else "us-east-1"
+
         self.s3 = boto3.client(
             's3',
-            endpoint_url=settings.IDRIVE_E2_ENDPOINT,
+            endpoint_url=endpoint,
             aws_access_key_id=settings.IDRIVE_E2_ACCESS_KEY,
-            aws_secret_access_key=settings.IDRIVE_E2_SECRET_KEY
+            aws_secret_access_key=settings.IDRIVE_E2_SECRET_KEY,
+            region_name=region,
+            config=Config(signature_version="s3v4"),
         )
         self.bucket = settings.IDRIVE_E2_BUCKET
         self._lock = threading.RLock()  # Thread lock for concurrent operations
