@@ -5032,6 +5032,14 @@
         "documentation": {}
     },
     {
+        "label": "Config",
+        "importPath": "botocore.config",
+        "description": "botocore.config",
+        "isExtraImport": true,
+        "detail": "botocore.config",
+        "documentation": {}
+    },
+    {
         "label": "ClientError",
         "importPath": "botocore.exceptions",
         "description": "botocore.exceptions",
@@ -8545,7 +8553,7 @@
         "kind": 6,
         "importPath": "backend.client.idrive_storage",
         "description": "backend.client.idrive_storage",
-        "peekOfCode": "class IDriveStorage:\n    \"\"\"\n    S3-compatible storage client for iDrive e2.\n    Manages document uploads and deletions with organized folder structure:\n    user_id/proposal_id/filename.pdf\n    Thread-safe with internal locking for concurrent operations.\n    \"\"\"\n    def __init__(self):\n        \"\"\"Initialize S3 client with iDrive e2 credentials and thread lock.\"\"\"\n        self.s3 = boto3.client(",
+        "peekOfCode": "class IDriveStorage:\n    \"\"\"\n    S3-compatible storage client for iDrive e2.\n    Manages document uploads and deletions with organized folder structure:\n    user_id/proposal_id/filename.pdf\n    Thread-safe with internal locking for concurrent operations.\n    \"\"\"\n    def __init__(self):\n        \"\"\"Initialize S3 client with iDrive e2 credentials and thread lock.\"\"\"\n        # Extract region from endpoint URL (e.g. \"us-west-1\" from",
         "detail": "backend.client.idrive_storage",
         "documentation": {}
     },
@@ -10651,7 +10659,7 @@
         "kind": 6,
         "importPath": "backend.utils.python_repl_tool",
         "description": "backend.utils.python_repl_tool",
-        "peekOfCode": "class SafePythonREPL:\n    \"\"\"Session-scoped wrapper around LangChain's PythonREPL.\"\"\"\n    def __init__(self, session_id: str = None):\n        self._repl = PythonREPL()\n        # exec() uses separate globals/locals by default; top-level imports\n        # end up in locals and helper function bodies can't see them.\n        # Unifying them fixes NameError inside nested functions.\n        self._repl.locals = self._repl.globals\n        self.session_id = session_id or \"default\"\n        if self.session_id in _session_temp_dirs:",
+        "peekOfCode": "class SafePythonREPL:\n    \"\"\"Session-scoped wrapper around LangChain's PythonREPL.\"\"\"\n    def __init__(self, session_id: str = None):\n        self.session_id = session_id or \"default\"\n        # Reuse the per-session REPL so imports, helpers, and variables defined\n        # in an earlier tool call remain available for the next call.\n        if self.session_id in _session_repls:\n            self._repl = _session_repls[self.session_id]\n        else:\n            self._repl = PythonREPL()",
         "detail": "backend.utils.python_repl_tool",
         "documentation": {}
     },
@@ -10660,7 +10668,7 @@
         "kind": 2,
         "importPath": "backend.utils.python_repl_tool",
         "description": "backend.utils.python_repl_tool",
-        "peekOfCode": "def get_session_id() -> str:\n    return _current_session_id.get()\ndef set_session_id(session_id: str):\n    \"\"\"Set the current session_id in the context. Call before agent.run().\"\"\"\n    _current_session_id.set(session_id)\nclass SafePythonREPL:\n    \"\"\"Session-scoped wrapper around LangChain's PythonREPL.\"\"\"\n    def __init__(self, session_id: str = None):\n        self._repl = PythonREPL()\n        # exec() uses separate globals/locals by default; top-level imports",
+        "peekOfCode": "def get_session_id() -> str:\n    return _current_session_id.get()\ndef set_session_id(session_id: str):\n    \"\"\"Set the current session_id in the context. Call before agent.run().\"\"\"\n    _current_session_id.set(session_id)\nclass SafePythonREPL:\n    \"\"\"Session-scoped wrapper around LangChain's PythonREPL.\"\"\"\n    def __init__(self, session_id: str = None):\n        self.session_id = session_id or \"default\"\n        # Reuse the per-session REPL so imports, helpers, and variables defined",
         "detail": "backend.utils.python_repl_tool",
         "documentation": {}
     },
@@ -10669,7 +10677,7 @@
         "kind": 2,
         "importPath": "backend.utils.python_repl_tool",
         "description": "backend.utils.python_repl_tool",
-        "peekOfCode": "def set_session_id(session_id: str):\n    \"\"\"Set the current session_id in the context. Call before agent.run().\"\"\"\n    _current_session_id.set(session_id)\nclass SafePythonREPL:\n    \"\"\"Session-scoped wrapper around LangChain's PythonREPL.\"\"\"\n    def __init__(self, session_id: str = None):\n        self._repl = PythonREPL()\n        # exec() uses separate globals/locals by default; top-level imports\n        # end up in locals and helper function bodies can't see them.\n        # Unifying them fixes NameError inside nested functions.",
+        "peekOfCode": "def set_session_id(session_id: str):\n    \"\"\"Set the current session_id in the context. Call before agent.run().\"\"\"\n    _current_session_id.set(session_id)\nclass SafePythonREPL:\n    \"\"\"Session-scoped wrapper around LangChain's PythonREPL.\"\"\"\n    def __init__(self, session_id: str = None):\n        self.session_id = session_id or \"default\"\n        # Reuse the per-session REPL so imports, helpers, and variables defined\n        # in an earlier tool call remain available for the next call.\n        if self.session_id in _session_repls:",
         "detail": "backend.utils.python_repl_tool",
         "documentation": {}
     },
@@ -10678,7 +10686,7 @@
         "kind": 2,
         "importPath": "backend.utils.python_repl_tool",
         "description": "backend.utils.python_repl_tool",
-        "peekOfCode": "def cleanup_session(session_id: str):\n    \"\"\"Release the temp directory for a session (called on chat close).\"\"\"\n    if session_id in _session_temp_dirs:\n        temp_dir = _session_temp_dirs.pop(session_id)\n        temp_dir.cleanup()\n        logger.info(f\"[python_repl] cleaned up session={session_id}\")\nasync def _correct_python_with_llm(code: str, error: str) -> str:\n    \"\"\"Ask the LLM to fix broken Python once, given the error output.\"\"\"\n    llm = get_chat_llm(\n        model=\"anthropic/claude-sonnet-4.6\",",
+        "peekOfCode": "def cleanup_session(session_id: str):\n    \"\"\"Release the temp directory and REPL state for a session (called on chat close).\"\"\"\n    _session_repls.pop(session_id, None)\n    if session_id in _session_temp_dirs:\n        temp_dir = _session_temp_dirs.pop(session_id)\n        temp_dir.cleanup()\n        logger.info(f\"[python_repl] cleaned up session={session_id}\")\nasync def _correct_python_with_llm(code: str, error: str) -> str:\n    \"\"\"Ask the LLM to fix broken Python once, given the error output.\"\"\"\n    llm = get_chat_llm(",
         "detail": "backend.utils.python_repl_tool",
         "documentation": {}
     },
@@ -10687,7 +10695,7 @@
         "kind": 5,
         "importPath": "backend.utils.python_repl_tool",
         "description": "backend.utils.python_repl_tool",
-        "peekOfCode": "logger = logging.getLogger(__name__)\n# Keep TemporaryDirectory objects alive per session so files persist across\n# multiple tool calls within the same chat session.\n_session_temp_dirs: Dict[str, tempfile.TemporaryDirectory] = {}\n# Session ID is read from contextvar at runtime so tools don't have to pass it.\n_current_session_id = contextvars.ContextVar(\"session_id\", default=\"default\")\ndef get_session_id() -> str:\n    return _current_session_id.get()\ndef set_session_id(session_id: str):\n    \"\"\"Set the current session_id in the context. Call before agent.run().\"\"\"",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# Keep TemporaryDirectory objects alive per session so files persist across\n# multiple tool calls within the same chat session.\n_session_temp_dirs: Dict[str, tempfile.TemporaryDirectory] = {}\n# Persistent PythonREPL per session — variables, imports, and helper functions\n# defined in one tool call stay alive for the next call in the same session.\n_session_repls: Dict[str, Any] = {}\n# Session ID is read from contextvar at runtime so tools don't have to pass it.\n_current_session_id = contextvars.ContextVar(\"session_id\", default=\"default\")\ndef get_session_id() -> str:",
         "detail": "backend.utils.python_repl_tool",
         "documentation": {}
     },
@@ -10696,7 +10704,7 @@
         "kind": 5,
         "importPath": "backend.utils.python_repl_tool",
         "description": "backend.utils.python_repl_tool",
-        "peekOfCode": "_current_session_id = contextvars.ContextVar(\"session_id\", default=\"default\")\ndef get_session_id() -> str:\n    return _current_session_id.get()\ndef set_session_id(session_id: str):\n    \"\"\"Set the current session_id in the context. Call before agent.run().\"\"\"\n    _current_session_id.set(session_id)\nclass SafePythonREPL:\n    \"\"\"Session-scoped wrapper around LangChain's PythonREPL.\"\"\"\n    def __init__(self, session_id: str = None):\n        self._repl = PythonREPL()",
+        "peekOfCode": "_current_session_id = contextvars.ContextVar(\"session_id\", default=\"default\")\ndef get_session_id() -> str:\n    return _current_session_id.get()\ndef set_session_id(session_id: str):\n    \"\"\"Set the current session_id in the context. Call before agent.run().\"\"\"\n    _current_session_id.set(session_id)\nclass SafePythonREPL:\n    \"\"\"Session-scoped wrapper around LangChain's PythonREPL.\"\"\"\n    def __init__(self, session_id: str = None):\n        self.session_id = session_id or \"default\"",
         "detail": "backend.utils.python_repl_tool",
         "documentation": {}
     },
