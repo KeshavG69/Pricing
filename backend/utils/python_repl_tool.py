@@ -24,6 +24,10 @@ logger = logging.getLogger(__name__)
 # multiple tool calls within the same chat session.
 _session_temp_dirs: Dict[str, tempfile.TemporaryDirectory] = {}
 
+# Persistent PythonREPL per session — variables, imports, and helper functions
+# defined in one tool call stay alive for the next call in the same session.
+_session_repls: Dict[str, Any] = {}
+
 # Session ID is read from contextvar at runtime so tools don't have to pass it.
 _current_session_id = contextvars.ContextVar("session_id", default="default")
 
@@ -41,12 +45,19 @@ class SafePythonREPL:
     """Session-scoped wrapper around LangChain's PythonREPL."""
 
     def __init__(self, session_id: str = None):
-        self._repl = PythonREPL()
-        # exec() uses separate globals/locals by default; top-level imports
-        # end up in locals and helper function bodies can't see them.
-        # Unifying them fixes NameError inside nested functions.
-        self._repl.locals = self._repl.globals
         self.session_id = session_id or "default"
+
+        # Reuse the per-session REPL so imports, helpers, and variables defined
+        # in an earlier tool call remain available for the next call.
+        if self.session_id in _session_repls:
+            self._repl = _session_repls[self.session_id]
+        else:
+            self._repl = PythonREPL()
+            # exec() uses separate globals/locals by default; top-level imports
+            # end up in locals and helper function bodies can't see them.
+            # Unifying them fixes NameError inside nested functions.
+            self._repl.locals = self._repl.globals
+            _session_repls[self.session_id] = self._repl
 
         if self.session_id in _session_temp_dirs:
             self._temp_dir_obj = _session_temp_dirs[self.session_id]
@@ -75,7 +86,8 @@ class SafePythonREPL:
 
 
 def cleanup_session(session_id: str):
-    """Release the temp directory for a session (called on chat close)."""
+    """Release the temp directory and REPL state for a session (called on chat close)."""
+    _session_repls.pop(session_id, None)
     if session_id in _session_temp_dirs:
         temp_dir = _session_temp_dirs.pop(session_id)
         temp_dir.cleanup()
@@ -137,6 +149,16 @@ async def python_repl_tool(code: str, description: str = "") -> Dict[str, Any]:
     - Travel: amount × (1 + ga_rate)
     - ODC: amount × (1 + smh_rate)
     - Sub billable: baseRate × (1 + smh + ga_passthrough + sub_fee)
+
+    DOCUMENT GENERATION (write a file → s3_upload_tool returns a download URL):
+    - reportlab     → PDF reports (SimpleDocTemplate, Paragraph, Table)
+    - python-pptx   → PowerPoint decks (from pptx import Presentation)
+    - python-docx   → Word documents (from docx import Document)
+    - openpyxl      → Excel workbooks (from openpyxl import Workbook)
+    - xlsxwriter    → Excel with charts/formatting
+    - matplotlib    → PNG/SVG chart images
+    Save with a simple filename ("pricing_summary.pdf"), then call
+    s3_upload_tool(filename="pricing_summary.pdf") to get a shareable URL.
 
     GROUND RULES:
     - Do NOT invent numbers. Every figure must come from the state block.

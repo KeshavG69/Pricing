@@ -42,4 +42,9 @@ dependencies = [
     "liteparse>=0.1.0",
     "uvicorn>=0.38.0",
     "langchain-experimental>=0.4.1",
+    "reportlab>=4.4.10",
+    "python-pptx>=1.0.2",
+    "matplotlib>=3.10.9",
+    "pdfplumber>=0.11.9",
+    "resend>=2.0.0",
 ]
