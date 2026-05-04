@@ -328,6 +328,14 @@
         "documentation": {}
     },
     {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Dict",
         "importPath": "typing",
         "description": "typing",
@@ -7923,7 +7931,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")",
+        "peekOfCode": "COOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\n# Preferred: Resend HTTP API (no SMTP auth pain). Set RESEND_API_KEY and",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -7932,7 +7940,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))",
+        "peekOfCode": "COOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\n# Preferred: Resend HTTP API (no SMTP auth pain). Set RESEND_API_KEY and\n# `EmailService` will route through Resend. SMTP_* vars below remain a",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -7941,7 +7949,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")",
+        "peekOfCode": "COOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\n# Preferred: Resend HTTP API (no SMTP auth pain). Set RESEND_API_KEY and\n# `EmailService` will route through Resend. SMTP_* vars below remain a\n# fallback used only when RESEND_API_KEY is empty (mostly local dev).\nRESEND_API_KEY = os.getenv(\"RESEND_API_KEY\", \"\")",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -7950,7 +7958,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")",
+        "peekOfCode": "COOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\n# Preferred: Resend HTTP API (no SMTP auth pain). Set RESEND_API_KEY and\n# `EmailService` will route through Resend. SMTP_* vars below remain a\n# fallback used only when RESEND_API_KEY is empty (mostly local dev).\nRESEND_API_KEY = os.getenv(\"RESEND_API_KEY\", \"\")\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -7959,7 +7967,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration",
+        "peekOfCode": "COOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\n# Preferred: Resend HTTP API (no SMTP auth pain). Set RESEND_API_KEY and\n# `EmailService` will route through Resend. SMTP_* vars below remain a\n# fallback used only when RESEND_API_KEY is empty (mostly local dev).\nRESEND_API_KEY = os.getenv(\"RESEND_API_KEY\", \"\")\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -7968,7 +7976,16 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "FRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration",
+        "peekOfCode": "FRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\n# Preferred: Resend HTTP API (no SMTP auth pain). Set RESEND_API_KEY and\n# `EmailService` will route through Resend. SMTP_* vars below remain a\n# fallback used only when RESEND_API_KEY is empty (mostly local dev).\nRESEND_API_KEY = os.getenv(\"RESEND_API_KEY\", \"\")\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")",
+        "detail": "backend.auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "RESEND_API_KEY",
+        "kind": 5,
+        "importPath": "backend.auth.config",
+        "description": "backend.auth.config",
+        "peekOfCode": "RESEND_API_KEY = os.getenv(\"RESEND_API_KEY\", \"\")\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\nFROM_NAME = os.getenv(\"FROM_NAME\", \"PriceIQ\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -7977,7 +7994,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "SMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
+        "peekOfCode": "SMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\nFROM_NAME = os.getenv(\"FROM_NAME\", \"PriceIQ\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -7986,7 +8003,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "SMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
+        "peekOfCode": "SMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\nFROM_NAME = os.getenv(\"FROM_NAME\", \"PriceIQ\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -7995,7 +8012,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "SMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
+        "peekOfCode": "SMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\nFROM_NAME = os.getenv(\"FROM_NAME\", \"PriceIQ\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -8004,7 +8021,7 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "SMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
+        "peekOfCode": "SMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\nFROM_NAME = os.getenv(\"FROM_NAME\", \"PriceIQ\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -8013,7 +8030,16 @@
         "kind": 5,
         "importPath": "backend.auth.config",
         "description": "backend.auth.config",
-        "peekOfCode": "FROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
+        "peekOfCode": "FROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\nFROM_NAME = os.getenv(\"FROM_NAME\", \"PriceIQ\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
+        "detail": "backend.auth.config",
+        "documentation": {}
+    },
+    {
+        "label": "FROM_NAME",
+        "kind": 5,
+        "importPath": "backend.auth.config",
+        "description": "backend.auth.config",
+        "peekOfCode": "FROM_NAME = os.getenv(\"FROM_NAME\", \"PriceIQ\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
         "detail": "backend.auth.config",
         "documentation": {}
     },
@@ -8454,7 +8480,7 @@
         "kind": 6,
         "importPath": "backend.client.email_service",
         "description": "backend.client.email_service",
-        "peekOfCode": "class EmailService:\n    def __init__(self):\n        self.smtp_host = config.SMTP_HOST\n        self.smtp_port = config.SMTP_PORT\n        self.smtp_user = config.SMTP_USER\n        self.smtp_password = config.SMTP_PASSWORD\n        self.from_email = config.FROM_EMAIL\n        self.frontend_url = config.FRONTEND_URL\n    def send_invitation_email(\n        self, to_email: str, token: str, organization_name: str, invited_by_name: str",
+        "peekOfCode": "class EmailService:\n    \"\"\"Sends transactional emails (invitations, verification, password reset,\n    contact form, etc.).\n    Backend selection (in order):\n      1. Resend HTTP API — preferred. Set `RESEND_API_KEY` env var. No SMTP\n         auth headaches, no Microsoft 365 conditional access policies, no\n         app-password rituals. Free tier covers 3,000/mo, 100/day.\n      2. SMTP fallback — used only when `RESEND_API_KEY` is unset (mainly\n         local dev with Mailhog/Mailcatcher). Production should use Resend.\n    \"\"\"",
         "detail": "backend.client.email_service",
         "documentation": {}
     },

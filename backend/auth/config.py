@@ -25,11 +25,16 @@ COOKIE_REFRESH_TOKEN_NAME = "refresh_token"
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 
 # Email Configuration
+# Preferred: Resend HTTP API (no SMTP auth pain). Set RESEND_API_KEY and
+# `EmailService` will route through Resend. SMTP_* vars below remain a
+# fallback used only when RESEND_API_KEY is empty (mostly local dev).
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
 SMTP_HOST = os.getenv("SMTP_HOST", "smtp.gmail.com")
 SMTP_PORT = int(os.getenv("SMTP_PORT", "587"))
 SMTP_USER = os.getenv("SMTP_USER", "")
 SMTP_PASSWORD = os.getenv("SMTP_PASSWORD", "")
 FROM_EMAIL = os.getenv("FROM_EMAIL", "noreply@priceiq.com")
+FROM_NAME = os.getenv("FROM_NAME", "PriceIQ")
 
 # Google OAuth Configuration
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")

@@ -1,17 +1,92 @@
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from typing import Optional
+
 from auth import config
 
 
 class EmailService:
+    """Sends transactional emails (invitations, verification, password reset,
+    contact form, etc.).
+
+    Backend selection (in order):
+      1. Resend HTTP API — preferred. Set `RESEND_API_KEY` env var. No SMTP
+         auth headaches, no Microsoft 365 conditional access policies, no
+         app-password rituals. Free tier covers 3,000/mo, 100/day.
+      2. SMTP fallback — used only when `RESEND_API_KEY` is unset (mainly
+         local dev with Mailhog/Mailcatcher). Production should use Resend.
+    """
+
     def __init__(self):
+        self.resend_api_key = config.RESEND_API_KEY
         self.smtp_host = config.SMTP_HOST
         self.smtp_port = config.SMTP_PORT
         self.smtp_user = config.SMTP_USER
         self.smtp_password = config.SMTP_PASSWORD
         self.from_email = config.FROM_EMAIL
+        self.from_name = config.FROM_NAME
         self.frontend_url = config.FRONTEND_URL
+
+    # ── Backend dispatch ─────────────────────────────────────────────────
+
+    def _send(
+        self,
+        to_email: str,
+        subject: str,
+        html: str,
+        reply_to: Optional[str] = None,
+    ) -> None:
+        """Single send entry-point used by every email method below."""
+        if self.resend_api_key:
+            self._send_via_resend(to_email, subject, html, reply_to)
+        else:
+            self._send_via_smtp(to_email, subject, html, reply_to)
+
+    def _send_via_resend(
+        self,
+        to_email: str,
+        subject: str,
+        html: str,
+        reply_to: Optional[str] = None,
+    ) -> None:
+        """Resend HTTP API. Lazy-import so a missing dependency only breaks
+        email sending, not server boot."""
+        import resend
+
+        resend.api_key = self.resend_api_key
+        payload: dict = {
+            "from": f"{self.from_name} <{self.from_email}>",
+            "to": [to_email],
+            "subject": subject,
+            "html": html,
+        }
+        if reply_to:
+            payload["reply_to"] = reply_to
+        resend.Emails.send(payload)
+
+    def _send_via_smtp(
+        self,
+        to_email: str,
+        subject: str,
+        html: str,
+        reply_to: Optional[str] = None,
+    ) -> None:
+        """Legacy SMTP send — kept for local dev / fallback."""
+        message = MIMEMultipart("alternative")
+        message["Subject"] = subject
+        message["From"] = f"{self.from_name} <{self.from_email}>"
+        message["To"] = to_email
+        if reply_to:
+            message["Reply-To"] = reply_to
+        message.attach(MIMEText(html, "html"))
+
+        with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
+            server.starttls()
+            server.login(self.smtp_user, self.smtp_password)
+            server.send_message(message)
+
+    # ── Public methods ───────────────────────────────────────────────────
 
     def send_invitation_email(
         self, to_email: str, token: str, organization_name: str, invited_by_name: str
@@ -39,19 +114,12 @@ class EmailService:
         </html>
         """
 
-        message = MIMEMultipart("alternative")
-        message["Subject"] = f"Invitation to join {organization_name}"
-        message["From"] = self.from_email
-        message["To"] = to_email
-
-        html_part = MIMEText(html, "html")
-        message.attach(html_part)
-
         try:
-            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
-                server.starttls()
-                server.login(self.smtp_user, self.smtp_password)
-                server.send_message(message)
+            self._send(
+                to_email=to_email,
+                subject=f"Invitation to join {organization_name}",
+                html=html,
+            )
         except Exception as e:
             print(f"Failed to send email: {e}")
             raise
@@ -93,19 +161,12 @@ class EmailService:
         </html>
         """
 
-        message = MIMEMultipart("alternative")
-        message["Subject"] = "Verify your email - PriceIQ"
-        message["From"] = self.from_email
-        message["To"] = to_email
-
-        html_part = MIMEText(html, "html")
-        message.attach(html_part)
-
         try:
-            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
-                server.starttls()
-                server.login(self.smtp_user, self.smtp_password)
-                server.send_message(message)
+            self._send(
+                to_email=to_email,
+                subject="Verify your email - PriceIQ",
+                html=html,
+            )
         except Exception as e:
             print(f"Failed to send verification email: {e}")
             raise
@@ -149,19 +210,12 @@ class EmailService:
         </html>
         """
 
-        message = MIMEMultipart("alternative")
-        message["Subject"] = "Reset your password - PriceIQ"
-        message["From"] = self.from_email
-        message["To"] = to_email
-
-        html_part = MIMEText(html, "html")
-        message.attach(html_part)
-
         try:
-            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
-                server.starttls()
-                server.login(self.smtp_user, self.smtp_password)
-                server.send_message(message)
+            self._send(
+                to_email=to_email,
+                subject="Reset your password - PriceIQ",
+                html=html,
+            )
         except Exception as e:
             print(f"Failed to send password reset email: {e}")
             raise
@@ -217,20 +271,13 @@ class EmailService:
         </html>
         """
 
-        email_message = MIMEMultipart("alternative")
-        email_message["Subject"] = f"[Contact Form] New inquiry from {from_name}"
-        email_message["From"] = self.from_email
-        email_message["To"] = to_email
-        email_message["Reply-To"] = from_email  # KEY: Reply goes to user!
-
-        html_part = MIMEText(html, "html")
-        email_message.attach(html_part)
-
         try:
-            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
-                server.starttls()
-                server.login(self.smtp_user, self.smtp_password)
-                server.send_message(email_message)
+            self._send(
+                to_email=to_email,
+                subject=f"[Contact Form] New inquiry from {from_name}",
+                html=html,
+                reply_to=from_email,  # KEY: Reply goes to user!
+            )
         except Exception as e:
             print(f"Failed to send contact form email: {e}")
             raise
@@ -278,19 +325,12 @@ class EmailService:
         </html>
         """
 
-        message = MIMEMultipart("alternative")
-        message["Subject"] = "We received your message - PriceIQ"
-        message["From"] = self.from_email
-        message["To"] = to_email
-
-        html_part = MIMEText(html, "html")
-        message.attach(html_part)
-
         try:
-            with smtplib.SMTP(self.smtp_host, self.smtp_port) as server:
-                server.starttls()
-                server.login(self.smtp_user, self.smtp_password)
-                server.send_message(message)
+            self._send(
+                to_email=to_email,
+                subject="We received your message - PriceIQ",
+                html=html,
+            )
         except Exception as e:
             print(f"Failed to send confirmation email: {e}")
             raise
