@@ -2855,6 +2855,14 @@
         "documentation": {}
     },
     {
+        "label": "get_web_search_tool",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "isExtraImport": true,
+        "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
         "label": "create_reasoning_tool",
         "importPath": "utils.agno_tools",
         "description": "utils.agno_tools",
@@ -2892,6 +2900,14 @@
         "description": "utils.company_repository",
         "isExtraImport": true,
         "detail": "utils.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
         "documentation": {}
     },
     {
@@ -3085,6 +3101,14 @@
         "description": "client.agent_memory",
         "isExtraImport": true,
         "detail": "client.agent_memory",
+        "documentation": {}
+    },
+    {
+        "label": "lru_cache",
+        "importPath": "functools",
+        "description": "functools",
+        "isExtraImport": true,
+        "detail": "functools",
         "documentation": {}
     },
     {
@@ -5117,6 +5141,14 @@
         "description": "agno.run.agent",
         "isExtraImport": true,
         "detail": "agno.run.agent",
+        "documentation": {}
+    },
+    {
+        "label": "ExaTools",
+        "importPath": "agno.tools.exa",
+        "description": "agno.tools.exa",
+        "isExtraImport": true,
+        "detail": "agno.tools.exa",
         "documentation": {}
     },
     {
@@ -10227,6 +10259,33 @@
         "importPath": "backend.utils.agno_tools",
         "description": "backend.utils.agno_tools",
         "peekOfCode": "def create_reasoning_tool(\n    instructions: str = \"only show reasoning no need for for action confidence\",\n    add_instructions: bool = True,\n    think: bool = True,\n    analyze: bool = True,\n    add_few_shot: bool = False,\n    few_shot_examples: Optional[List[Dict[str, str]]] = None,\n) -> ReasoningTools:\n    \"\"\"\n    Create a reasoning tool with customizable parameters.",
+        "detail": "backend.utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "get_web_search_tool",
+        "kind": 2,
+        "importPath": "backend.utils.agno_tools",
+        "description": "backend.utils.agno_tools",
+        "peekOfCode": "def get_web_search_tool(\n    num_results: int = 6,\n    text_length_limit: int = 2000,\n) -> Optional[ExaTools]:\n    \"\"\"\n    Return a cached ExaTools instance configured for govcon competitive intel.\n    Used by Q for Price-to-Win analysis: pulling past contract awards,\n    incumbent identification, agency buying patterns, GSA Schedule rates,\n    and indirect rate / fee benchmarks.\n    Configuration:",
+        "detail": "backend.utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.utils.agno_tools",
+        "description": "backend.utils.agno_tools",
+        "peekOfCode": "logger = logging.getLogger(__name__)\ndef create_custom_retreiver(description: Optional[str] = None):\n    \"\"\"\n    Create a custom retriever for SOC code vector search.\n    This retriever uses FAISS vector search with OpenAI embeddings to find\n    the most similar Standard Occupational Classification (SOC) codes for\n    a given job title or description.\n    Args:\n        description: Optional job description text to enhance semantic matching\n    Returns:",
+        "detail": "backend.utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "_GOVCON_INCLUDE_DOMAINS",
+        "kind": 5,
+        "importPath": "backend.utils.agno_tools",
+        "description": "backend.utils.agno_tools",
+        "peekOfCode": "_GOVCON_INCLUDE_DOMAINS = [\n    \"sam.gov\",\n    \"usaspending.gov\",\n    \"fpds.gov\",\n    \"apps.fpds.gov\",\n    \"gsa.gov\",\n    \"gsaadvantage.gov\",\n    \"highergov.com\",\n    \"govtribe.com\",\n    \"beta.sam.gov\",",
         "detail": "backend.utils.agno_tools",
         "documentation": {}
     },

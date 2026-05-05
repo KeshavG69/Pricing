@@ -2,17 +2,23 @@
 Custom agno tools for SOC code vector search retriever and GSA labor category tools.
 """
 
+import logging
+from functools import lru_cache
 from typing import Any, Optional, List, Dict
 from datetime import datetime
 import math
 from agno.agent import Agent
 from agno.tools import tool
+from agno.tools.exa import ExaTools
 from client.soc_vector_search import get_soc_vector_search_client
 from client.oews_mongodb import get_oews_mongo_client
 from client.gsa_pinecone import get_gsa_pinecone_client
 from utils.company_repository import get_company_repository_crud
 from client.help_center_pinecone import get_help_center_pinecone_client
 from agno.tools.reasoning import ReasoningTools
+from app.settings import settings
+
+logger = logging.getLogger(__name__)
 def create_custom_retreiver(description: Optional[str] = None):
     """
     Create a custom retriever for SOC code vector search.
@@ -401,3 +407,75 @@ def create_reasoning_tool(
         return tool
     except Exception as e:
         raise RuntimeError(f"Failed to create reasoning tool: {str(e)}")
+
+
+# ============================================================================
+# WEB SEARCH (Exa) — for govcon competitive intel in PtW analysis
+# ============================================================================
+
+# Authoritative govcon domains — bias Exa toward these so search results are
+# concrete award/wage data, not generic blog posts.
+_GOVCON_INCLUDE_DOMAINS = [
+    "sam.gov",
+    "usaspending.gov",
+    "fpds.gov",
+    "apps.fpds.gov",
+    "gsa.gov",
+    "gsaadvantage.gov",
+    "highergov.com",
+    "govtribe.com",
+    "beta.sam.gov",
+]
+
+
+@lru_cache(maxsize=1)
+def get_web_search_tool(
+    num_results: int = 6,
+    text_length_limit: int = 2000,
+) -> Optional[ExaTools]:
+    """
+    Return a cached ExaTools instance configured for govcon competitive intel.
+
+    Used by Q for Price-to-Win analysis: pulling past contract awards,
+    incumbent identification, agency buying patterns, GSA Schedule rates,
+    and indirect rate / fee benchmarks.
+
+    Configuration:
+    - Domain bias toward sam.gov, usaspending.gov, fpds.gov, gsa.gov, etc.
+    - `livecrawl='always'` for fresh data (Exa's index can be stale).
+    - Compact text limit so the LLM context stays small.
+    - `enable_answer=False` — we want raw results, not Exa's synthesis.
+
+    Args:
+        num_results: Max results per search (default 6 — small + focused).
+        text_length_limit: Cap on text per result (keeps LLM context lean).
+
+    Returns:
+        Configured ExaTools, or None if EXA_API_KEY is not set.
+    """
+    api_key = settings.EXA_API_KEY
+    if not api_key:
+        logger.warning("[web_search_tool] EXA_API_KEY not set — web search disabled")
+        return None
+
+    try:
+        tool = ExaTools(
+            api_key=api_key,
+            num_results=num_results,
+            include_domains=list(_GOVCON_INCLUDE_DOMAINS),
+            enable_get_contents=True,
+            enable_find_similar=False,
+            enable_answer=False,
+            text=True,
+            text_length_limit=text_length_limit,
+            summary=False,
+            livecrawl="always",
+        )
+        logger.info(
+            f"[web_search_tool] initialized (num_results={num_results}, "
+            f"domains={len(_GOVCON_INCLUDE_DOMAINS)})"
+        )
+        return tool
+    except Exception as e:
+        logger.error(f"[web_search_tool] failed to init ExaTools: {e}", exc_info=True)
+        return None

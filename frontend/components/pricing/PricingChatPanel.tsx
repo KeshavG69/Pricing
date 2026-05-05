@@ -1,7 +1,7 @@
 'use client';
 
 import { memo, useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { MessageCircle, X, Send, Loader2, Sparkles } from 'lucide-react';
+import { MessageCircle, X, Send, Loader2, Sparkles, Target } from 'lucide-react';
 import { usePricingStore } from '@/lib/stores/pricingStore';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { serializeProposalContext } from '@/lib/chat/proposalContext';
@@ -15,6 +15,7 @@ import ArtifactDownloadCard, {
 } from './chat/ArtifactDownloadCard';
 import ToolStatusPill, { type ToolPillSpec } from './chat/ToolStatusPill';
 import ShimmerText from './chat/ShimmerText';
+import SearchExaResults from './chat/SearchExaResults';
 
 interface ToolCallEntry {
   id: string;
@@ -58,6 +59,32 @@ interface ChatMessage {
 // Tool names the agent uses for reasoning. These render as collapsible
 // reasoning steps; all other tool calls render as status pills / artifacts.
 const REASONING_TOOL_NAMES = new Set(['think', 'analyze']);
+
+// Tool names whose output renders inline as a body artifact (chart, file
+// card, search results). These get a stream-block entry so they appear in
+// chronological order with text, AND are hidden from the top timeline so
+// the artifact isn't duplicated by a row.
+const EXA_TOOL_NAMES = new Set([
+  'exa',
+  'search_exa',
+  'exa_search',
+  'web_search',
+  'exa_answer',
+  'get_contents_exa',
+]);
+
+const ARTIFACT_TOOL_NAMES = new Set([
+  'chart_tool',
+  's3_upload_tool',
+  ...EXA_TOOL_NAMES,
+]);
+
+// Tool names hidden from the top timeline because their output renders as a
+// dedicated body artifact (chart canvas, download card, search results list).
+const TIMELINE_HIDDEN_TOOL_NAMES = new Set([
+  'chart_tool',
+  ...EXA_TOOL_NAMES,
+]);
 
 function newSessionId(proposalId: string | null): string {
   const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -129,7 +156,21 @@ function resolveToolCallTitle(call: ToolCallEntry): string {
   if (call.name === 'python_repl_tool') return verbing ? 'Running code' : 'Ran code';
   if (call.name === 'chart_tool') return verbing ? 'Building chart' : 'Built chart';
 
-  // 5. Generic
+  // 5. web_search (Exa) — surface the query if we have it
+  if (
+    call.name === 'exa' ||
+    call.name === 'search_exa' ||
+    call.name === 'exa_search' ||
+    call.name === 'web_search' ||
+    call.name === 'exa_answer' ||
+    call.name === 'get_contents_exa'
+  ) {
+    const query = typeof args.query === 'string' ? args.query : '';
+    if (query) return verbing ? `Searching: ${query}` : `Searched: ${query}`;
+    return verbing ? 'Searching the web' : 'Searched the web';
+  }
+
+  // 6. Generic
   const pretty = prettyToolName(call.name);
   return verbing ? `Running ${pretty}` : pretty;
 }
@@ -200,6 +241,25 @@ const ToolArtifactBlock = memo(function ToolArtifactBlock({
     if (call.name !== 's3_upload_tool' || call.status !== 'completed') return null;
     return parseArtifactPayload(call.result);
   }, [call.name, call.status, call.result]);
+
+  // Exa web-search tool — render results inline as a clickable list of
+  // links with favicons (Kroolo's SearchExaToolContent pattern).
+  if (EXA_TOOL_NAMES.has(call.name)) {
+    const args = call.args || {};
+    const query =
+      typeof args.query === 'string'
+        ? args.query
+        : Array.isArray(args.merged_queries)
+          ? 'Web search'
+          : '';
+    return (
+      <SearchExaResults
+        query={query}
+        isRunning={call.status !== 'completed'}
+        result={call.result}
+      />
+    );
+  }
 
   if (config) return <ChartArtifact config={config} />;
   if (artifactPayload) return <ArtifactDownloadCard payload={artifactPayload} />;
@@ -372,8 +432,35 @@ export default function PricingChatPanel() {
     };
   }, [isResizing]);
 
-  const handleSend = useCallback(async () => {
-    const trimmed = input.trim();
+  // External entry point: other components (e.g. PriceToWinCard) can dispatch
+  // a `priceiq:open-chat` CustomEvent with `{ prompt: string, autoSend: bool }`
+  // to open the chat panel and either populate the input or auto-send.
+  useEffect(() => {
+    type OpenChatDetail = { prompt?: string; autoSend?: boolean };
+    const onOpen = (e: Event) => {
+      const detail = (e as CustomEvent<OpenChatDetail>).detail || {};
+      setIsOpen(true);
+      if (typeof detail.prompt === 'string' && detail.prompt.trim()) {
+        if (detail.autoSend) {
+          // Defer the send by one tick so isOpen state has time to apply
+          // (sessionId regen + message reset run inside the isOpen effect).
+          setTimeout(() => handleSendRef.current?.(detail.prompt as string), 80);
+        } else {
+          setInput(detail.prompt);
+          setTimeout(() => inputRef.current?.focus(), 80);
+        }
+      }
+    };
+    window.addEventListener('priceiq:open-chat', onOpen as EventListener);
+    return () => window.removeEventListener('priceiq:open-chat', onOpen as EventListener);
+  }, []);
+
+  // Ref to the latest handleSend so the open-chat event listener can call it
+  // without re-binding (handleSend's identity changes on every input edit).
+  const handleSendRef = useRef<((text?: string) => Promise<void>) | null>(null);
+
+  const handleSend = useCallback(async (overrideText?: string) => {
+    const trimmed = (overrideText ?? input).trim();
     if (!trimmed || isStreaming) return;
     if (!proposalId) {
       setMessages((m) => [
@@ -547,14 +634,13 @@ export default function PricingChatPanel() {
               // Only tool calls that produce a visible body artifact get a
               // block in the stream (so the body interleaves correctly).
               // Code-only / skill tools just live in the timeline at top.
-              const producesArtifact =
-                toolName === 'chart_tool' || toolName === 's3_upload_tool';
-              const nextBlocks: MessageBlock[] | undefined = producesArtifact
-                ? [
-                    ...(msg.blocks || []),
-                    { kind: 'tool', id: `blk-${stepId}`, toolCallId: stepId },
-                  ]
-                : msg.blocks;
+              const nextBlocks: MessageBlock[] | undefined =
+                ARTIFACT_TOOL_NAMES.has(toolName)
+                  ? [
+                      ...(msg.blocks || []),
+                      { kind: 'tool', id: `blk-${stepId}`, toolCallId: stepId },
+                    ]
+                  : msg.blocks;
               return { ...msg, toolCalls: nextCalls, blocks: nextBlocks };
             }),
           );
@@ -660,6 +746,11 @@ export default function PricingChatPanel() {
     }
   }, [input, isStreaming, proposalId, organizationId]);
 
+  // Keep the latest handleSend reachable from the open-chat event listener.
+  useEffect(() => {
+    handleSendRef.current = handleSend;
+  }, [handleSend]);
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
@@ -761,7 +852,7 @@ export default function PricingChatPanel() {
               className="flex-1 overflow-y-auto px-4 py-4"
             >
               {messages.length === 0 ? (
-                <div className="flex h-full flex-col items-center justify-center gap-4 text-center">
+                <div className="flex h-full flex-col items-center justify-center gap-5 text-center">
                   <div className="flex h-12 w-12 items-center justify-center rounded-full bg-blue-600 text-white shadow-sm">
                     <span className="text-xl font-bold tracking-tight">Q</span>
                   </div>
@@ -776,6 +867,17 @@ export default function PricingChatPanel() {
                       <li>"What's the grand total breakdown by year?"</li>
                     </ul>
                   </div>
+                  <EmptyStateQuickActions
+                    onAskPriceToWin={() => {
+                      const ev = new CustomEvent('priceiq:open-chat', {
+                        detail: {
+                          prompt: buildPriceToWinPrompt(),
+                          autoSend: hasPriceToWinSet(),
+                        },
+                      });
+                      window.dispatchEvent(ev);
+                    }}
+                  />
                 </div>
               ) : (
                 <div className="space-y-3">
@@ -822,11 +924,11 @@ export default function PricingChatPanel() {
                                   "Thinking" shimmer row so the user sees that we're
                                   waiting for the next tool call or the answer text. */}
                             {msg.toolCalls && msg.toolCalls.length > 0 && (() => {
-                              // Hide chart_tool from the timeline — its
-                              // artifact already shows in the body, so a
-                              // duplicate "Built chart" row is just noise.
+                              // Hide tools whose output is already shown as a
+                              // body artifact (chart_tool, exa search) — a
+                              // duplicate row in the timeline is just noise.
                               const calls = msg.toolCalls.filter(
-                                (c) => c.name !== 'chart_tool',
+                                (c) => !TIMELINE_HIDDEN_TOOL_NAMES.has(c.name),
                               );
                               const lastRunningIdx = (() => {
                                 for (let i = calls.length - 1; i >= 0; i--) {
@@ -927,7 +1029,7 @@ export default function PricingChatPanel() {
                   }}
                 />
                 <button
-                  onClick={handleSend}
+                  onClick={() => handleSend()}
                   disabled={!input.trim() || isStreaming || !proposalId}
                   className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white transition hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600"
                   aria-label="Send message"
@@ -949,3 +1051,81 @@ export default function PricingChatPanel() {
     </>
   );
 }
+
+// ─── Helpers shared across the panel ────────────────────────────────────
+
+const formatCurrency = (n: number) =>
+  `$${n.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}`;
+
+const formatCompact = (n: number) => {
+  const abs = Math.abs(n);
+  if (abs >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
+  if (abs >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
+  return formatCurrency(n);
+};
+
+/**
+ * Read live store snapshot to decide whether the user has already set a PtW
+ * target. Used by the empty-state quick action to choose between auto-send
+ * (target set) and prompt-population (no target yet).
+ */
+function hasPriceToWinSet(): boolean {
+  const s = usePricingStore.getState();
+  return typeof s.priceToWin === 'number' && s.priceToWin > 0;
+}
+
+/**
+ * Build the prompt the chat agent receives when the user clicks "Analyze
+ * for price-to-win" from the empty state. If a target is already set,
+ * frame the gap explicitly. Otherwise leave a prompt for the user to fill in.
+ */
+function buildPriceToWinPrompt(): string {
+  const s = usePricingStore.getState();
+  const totals = s.aggregates;
+  // Use the same fee-inclusive grand total the OverviewTab shows.
+  const current =
+    (totals?.totalFBLR ?? 0) +
+    (totals?.totalOT ?? 0);
+  const target = typeof s.priceToWin === 'number' ? s.priceToWin : null;
+
+  if (target && current > 0) {
+    const gap = current - target;
+    const gapPct = (gap / current) * 100;
+    if (gap > 0) {
+      return (
+        `Our price-to-win target is ${formatCurrency(target)}, but the proposal currently lands at ${formatCompact(current)} — ` +
+        `a ${formatCompact(gap)} gap (${gapPct.toFixed(1)}%). Run a full PtW analysis: identify the top 5–7 levers to close ` +
+        `the gap, with $$ impact and risk for each. Use the playbook in your instructions.`
+      );
+    }
+    return (
+      `Our price-to-win target is ${formatCurrency(target)} and we're at ${formatCompact(current)} — ` +
+      `already ${formatCompact(-gap)} under target. Walk through how we could improve margin given the ` +
+      `current proposal structure.`
+    );
+  }
+  return `My price-to-win target is $___. Analyze the proposal and tell me how to close the gap.`;
+}
+
+interface EmptyStateQuickActionsProps {
+  onAskPriceToWin: () => void;
+}
+
+const EmptyStateQuickActions = ({ onAskPriceToWin }: EmptyStateQuickActionsProps) => (
+  <div className="w-full max-w-sm">
+    <div className="mb-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+      Quick actions
+    </div>
+    <button
+      type="button"
+      onClick={onAskPriceToWin}
+      className="group flex w-full items-center gap-2.5 rounded-lg border border-border bg-background px-3.5 py-2.5 text-left text-sm text-foreground transition-[transform,background-color] duration-160 ease-out hover:bg-muted active:scale-[0.97]"
+    >
+      <Target className="h-4 w-4 shrink-0 text-blue-600" />
+      <span className="flex-1 truncate">Analyze for price-to-win</span>
+      <span className="text-muted-foreground transition-transform duration-200 ease-out group-hover:translate-x-0.5">
+        →
+      </span>
+    </button>
+  </div>
+);
