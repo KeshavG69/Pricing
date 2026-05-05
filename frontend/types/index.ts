@@ -196,6 +196,8 @@ export interface Proposal {
   escalation_rates?: EscalationRates;
   spreadsheet_data?: any;
   total_cost?: number;
+  /** Optional Price-to-Win target ($) — used for competitive gap analysis. */
+  price_to_win?: number | null;
   progress?: number;
   message?: string;
   wage_source?: WageSource;  // BLS or GSA wage source configuration
@@ -212,6 +214,8 @@ export interface ProposalUpdate {
   prime_contractor_name?: string;
   status?: string;
   total_cost?: number;
+  /** Price-to-Win target ($). Pass null to clear. */
+  price_to_win?: number | null;
   rates?: IndirectRates;
   escalation_rates?: EscalationRates;
   spreadsheet_data?: any;

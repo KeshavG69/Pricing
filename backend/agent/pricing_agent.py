@@ -24,7 +24,7 @@ from agno.skills import LocalSkills, Skills
 from app.settings import settings
 from client.llm_client import get_chat_llm_agno
 from client.agent_memory import get_agent_db, get_memory_manager
-from utils.agno_tools import create_reasoning_tool
+from utils.agno_tools import create_reasoning_tool, get_web_search_tool
 from utils.chart_tool import chart_tool
 from utils.python_repl_tool import python_repl_tool
 from utils.s3_upload_tool import s3_upload_tool
@@ -77,6 +77,7 @@ class _ComponentCache:
         self._python_repl_tool: Optional[Any] = None
         self._chart_tool: Optional[Any] = None
         self._s3_upload_tool: Optional[Any] = None
+        self._web_search_tool: Optional[Any] = None
         self._formulas_text: Optional[str] = None
 
     @property
@@ -148,6 +149,15 @@ class _ComponentCache:
                 if self._s3_upload_tool is None:
                     self._s3_upload_tool = s3_upload_tool
         return self._s3_upload_tool
+
+    @property
+    def web_search_tool(self):
+        """Govcon-tuned Exa web search. May be None if EXA_API_KEY missing."""
+        if self._web_search_tool is None:
+            with self._lock:
+                if self._web_search_tool is None:
+                    self._web_search_tool = get_web_search_tool()
+        return self._web_search_tool
 
     @property
     def formulas_text(self) -> str:
@@ -289,6 +299,18 @@ deliverables. Available libraries: reportlab (PDF), python-pptx (PPT), \
 python-docx (DOCX), openpyxl/xlsxwriter (XLSX), matplotlib (chart images). \
 Workflow: write file in REPL with simple filename → call `s3_upload_tool` \
 with same filename → quote the returned URL as a markdown link to the user.
+   • USE `web_search` (Exa) for COMPETITIVE INTEL only — past contract \
+awards, incumbent identification, agency buying patterns, industry \
+benchmarks for indirect rates and fee, GSA Schedule rates. The tool is \
+biased toward sam.gov / usaspending.gov / fpds.gov / gsa.gov so prefer \
+queries that target real award data. STRICT GROUNDING RULES:
+       — Quote dollar figures, vendor names, contract numbers, dates ONLY \
+when explicitly stated in a search result.
+       — Cite the source URL in your answer.
+       — If no concrete data is found, say "no public data found" — never \
+extrapolate or invent numbers.
+       — Do NOT use web search for proposal math, formulas, or anything \
+already in <proposal_state>.
    • NEVER use reasoning or the REPL to ESTIMATE missing data. Only compute \
 from numbers actually present in the state.
 
@@ -334,6 +356,133 @@ billable rate → × hours → sum.
 ```
 </formulas>""",
 
+        # ── Price-to-Win playbook ─────────────────────────────────────
+        """<ptw_playbook>
+PRICE-TO-WIN (PtW) ANALYSIS — playbook for competitive bid pricing.
+
+When the user mentions a "price-to-win", "PtW", "target price", "we need \
+to be at $X", "close the gap", or names a target dollar amount lower than \
+the proposal's current grand total, run a structured PtW analysis.
+
+═══════════════════════════════════════════════════════════════════════════
+WORKFLOW
+═══════════════════════════════════════════════════════════════════════════
+
+1. State the gap clearly:
+   • Current grand total (from proposal_state.totals.grand_total)
+   • Target (PtW)
+   • Absolute gap and percentage gap
+
+2. (Optional but recommended) Use `web_search` to pull external context:
+   • "Recent awards [agency] [NAICS]" — benchmark prices for similar work
+   • "[incumbent vendor] [contract name]" — incumbent intel on recompetes
+   • "GSA Schedule rates [LCAT]" — public hourly rate benchmarks
+   • "DCAA fee G&A typical [NAICS]" — indirect rate benchmarks
+   Cite every dollar figure you quote with its source URL.
+
+3. For EACH of the levers below, run a `python_repl_tool` what-if to \
+compute the $$ impact of a realistic adjustment. Apply formulas from \
+<formulas>, NOT mental arithmetic. Format: parse proposal_state JSON, \
+clone the relevant inputs, apply the change, recompute the affected \
+piece of the grand total, print the delta.
+
+4. Return a ranked table sorted by descending $$ impact. Format:
+
+| # | Lever | Mechanism | Suggested Change | $$ Impact | Risk |
+|---|-------|-----------|------------------|-----------|------|
+| 1 | Drop prime fee | primeFee = primeLaborExFee × fee | 7.0% → 5.5% | -$1.40M | Low — fee compression is standard on competitive DoD bids |
+| ... | | | | | |
+| | **Cumulative** | | | **-$X.XM** | Lands at $X.X M |
+
+5. Close with one paragraph synthesis: which combination most credibly \
+closes the gap, what's the residual risk, what assumptions you made.
+
+═══════════════════════════════════════════════════════════════════════════
+LEVERS (in order of typical impact and feasibility)
+═══════════════════════════════════════════════════════════════════════════
+
+A. PRIME FEE (rates.fee)
+   Mechanism: primeFee = primeLaborExFee × fee
+   Typical reduction: 0.5–2 percentage points
+   Risk: LOW. Fee compression is the most common PtW lever on competitive \
+   bids. DoD competitive bids commonly clear at 5–7%; cost-type contracts \
+   sometimes lower.
+   Caveat: don't go below ~4% on commercial-equivalent work or the bid \
+   looks unsustainable.
+
+B. ESCALATION RATES (escalation_rates)
+   Mechanism: each prime position's wage is multiplied by Π(1 + esc_y) \
+   for years 2..N. Lowering escalation compounds.
+   Typical reduction: 0.5–1 pt per year-pair
+   Risk: MEDIUM. Below ~2.5%/yr is hard to defend on a 5-year contract \
+   unless the workforce is unionized/SCA-locked.
+
+C. OVERHEAD via location strategy (oh_onsite vs oh_offsite)
+   Mechanism: positions with location_type='Off-Site' use oh_offsite. \
+   Move positions off-site (when scope allows) → lower OH.
+   Typical reduction: depends on rate spread; 2–5 pts of OH on the \
+   moved positions.
+   Risk: MEDIUM. Customer must accept off-site delivery for those roles.
+
+D. WAGE PERCENTILE (BLS positions)
+   Mechanism: getEffectiveSalary uses the selected percentile. 75th → \
+   50th drops the wage materially; 50th → 25th more aggressive.
+   Typical reduction: 10–25% per affected position.
+   Risk: MEDIUM-HIGH. Recruiting/retention impact; may breach SCA floor \
+   on labor-category-driven solicitations. Always check SCA wage \
+   determinations before going below 50th.
+
+E. PRIME → SUBCONTRACTOR conversion
+   Mechanism: positions assigned to a sub trade prime fee on (DL+F+OH+G&A) \
+   for sub markup of (smh + ga_passthrough + sub_fee). Net often lower \
+   when sub_fee < prime fee.
+   Typical reduction: 1–3% on the converted positions' total.
+   Risk: LOW (if you have a real teaming partner). Higher if it's \
+   unverified — gov't will challenge fictitious teaming.
+
+F. GSA DISCOUNT (gsa_discount_rate, only for GSA positions)
+   Mechanism: gsaRate × (1 − discount) × hours
+   Typical reduction: 5–15%
+   Risk: LOW. Discounting your own GSA Schedule is unilateral. Just \
+   confirm against the contract's most-favored-customer clause.
+
+G. INDIRECT RATES (rates.fringe, rates.ga, rates.oh_*)
+   Mechanism: cascade through every prime position's FBLR.
+   Typical reduction: 1–3 pts per rate, but…
+   Risk: HIGH. Cuts to DCAA-approved rates require a formal rate \
+   amendment — slow and high friction. Usually NOT a real PtW lever \
+   unless the proposal is using PROPOSED rather than approved rates.
+
+H. HOURS / FTE rationalization
+   Mechanism: hours_per_year × FBLR
+   Typical reduction: varies; cutting 1 FTE = 1920 × FBLR
+   Risk: HIGH. Reducing scope is technically a different proposal. \
+   Only consider when the staffing plan is genuinely over-built.
+
+I. ODC / TRAVEL
+   Mechanism: amount × (1 + ga) for travel; amount × (1 + smh) for ODC.
+   Typical reduction: trim 10–20% of base.
+   Risk: LOW dollar-impact-wise. Usually a small lever unless ODC is a \
+   large share of the bid.
+
+═══════════════════════════════════════════════════════════════════════════
+GROUND RULES
+═══════════════════════════════════════════════════════════════════════════
+
+• Run each lever's $$ impact through `python_repl_tool` using formulas \
+from <formulas>. Show the math (briefly) so the user can audit.
+• Never quote a number you didn't compute or didn't pull from a cited \
+source. No vibes-based estimates.
+• If the user asks "should we do X" for a specific lever, answer for THAT \
+lever first, then optionally suggest others. Don't dump the full table \
+on every PtW question.
+• Be concrete on risk. "Low/Medium/High" with a one-line reason — never \
+hand-waving.
+• If the cumulative achievable savings is less than the gap, say so \
+honestly: "These levers close $X of the $Y gap; the remaining $Z would \
+require either scope reduction or accepting a thinner margin."
+</ptw_playbook>""",
+
         # ── Live proposal state ───────────────────────────────────────
         f"""<proposal_state>
 {proposal_context.strip()}
@@ -359,6 +508,17 @@ def get_pricing_agent(session_id: str, proposal_context: str) -> Agent:
     """
     instructions = _build_instructions(proposal_context, _components.formulas_text)
 
+    # Build the tools list. Web search is conditional on EXA_API_KEY being
+    # configured — if missing, Q runs without it instead of crashing.
+    tools_list: list[Any] = [
+        _components.reasoning_tool,
+        _components.python_repl_tool,
+        _components.chart_tool,
+        _components.s3_upload_tool,
+    ]
+    if _components.web_search_tool is not None:
+        tools_list.append(_components.web_search_tool)
+
     agent = Agent(
         name="Q",
         session_id=session_id,
@@ -366,12 +526,7 @@ def get_pricing_agent(session_id: str, proposal_context: str) -> Agent:
         db=_components.db,
         memory_manager=_components.memory_manager,
         skills=get_pricing_skills(),
-        tools=[
-            _components.reasoning_tool,
-            _components.python_repl_tool,
-            _components.chart_tool,
-            _components.s3_upload_tool,
-        ],
+        tools=tools_list,
         add_history_to_context=True,
         num_history_runs=4,
         enable_agentic_memory=True,

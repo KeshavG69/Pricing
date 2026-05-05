@@ -60,6 +60,10 @@ class ProposalUpdate(BaseModel):
         None,
         description="Total cost calculated from all positions"
     )
+    price_to_win: Optional[float] = Field(
+        None,
+        description="Optional Price-to-Win target ($) — used for competitive gap analysis."
+    )
     rates: Optional[Dict[str, float]] = Field(
         None,
         description="Indirect rates (fringe, oh_onsite, oh_offsite, ga, fee, smh, sub_fee, ga_passthrough)"
