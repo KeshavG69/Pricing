@@ -4,6 +4,7 @@ import { useMemo } from 'react';
 import { usePricingStore } from '@/lib/stores/pricingStore';
 import { getEffectiveSalary, isGSAPosition, getGSARateForYear, reverseEngineerGSARate } from '@/lib/utils/salaryHelpers';
 import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
+import PriceToWinCard from './PriceToWinCard';
 // Metric Card Component
 function MetricCard({
   title,
@@ -787,6 +788,9 @@ export default function OverviewTab() {
           subtitle={`${((costMetrics.feeTotal / costMetrics.grandTotal) * 100).toFixed(1)}% of total`}
         />
       </div>
+
+      {/* Price-to-Win — set a target, ask Q to close the gap */}
+      <PriceToWinCard currentTotal={costMetrics.grandTotal} />
 
       {/* Cost Breakdown */}
       <Card>
