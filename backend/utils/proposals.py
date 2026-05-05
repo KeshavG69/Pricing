@@ -373,6 +373,7 @@ class ProposalCRUD:
             "escalation_rates": source.get("escalation_rates"),
             "spreadsheet_data": source.get("spreadsheet_data"),
             "total_cost": source.get("total_cost"),
+            "price_to_win": source.get("price_to_win"),
             "documents": []  # Don't copy documents
         }
 

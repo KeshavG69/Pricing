@@ -30,6 +30,12 @@ interface PricingState {
   solicitationNumber?: string;
   primeContractorName: string;
   dcaaContact: string;
+  /**
+   * Optional Price-to-Win target ($). Used by the Q chat agent for
+   * gap analysis and by the OverviewTab's PriceToWinCard. Persists to
+   * MongoDB via `price_to_win` field on the proposal document.
+   */
+  priceToWin: number | null;
   positions: SpreadsheetPosition[];
   subcontractors: Subcontractor[];
   travel: TravelItem[];
@@ -111,6 +117,11 @@ interface PricingState {
   recalculateAdvanced: () => Promise<void>;
   toggleRatesReference: () => void;
   setActiveTab: (tab: 'files' | 'overview' | 'main' | 'subcontractors' | 'wage-data') => void;
+  /**
+   * Set the Price-to-Win target. Pass `null` to clear. Triggers an
+   * immediate save to MongoDB (single-field, no need to debounce).
+   */
+  setPriceToWin: (target: number | null) => Promise<void>;
   preCreateSubcontractors: (subs: { name: string }[]) => void;
   autoAllocateWorkshare: () => Promise<void>;
   assignPositionToContractor: (positionId: string, subcontractorId: string | null) => Promise<void>;
@@ -850,6 +861,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
     solicitationNumber: '',
     primeContractorName: 'TBD',
     dcaaContact: '',
+    priceToWin: null,
     positions: [],
     subcontractors: [],
     travel: [],
@@ -1218,6 +1230,7 @@ export const usePricingStore = create<PricingState>((set, get) => {
           solicitationNumber: proposal.solicitation_number,
           primeContractorName,
           dcaaContact: proposal.dcaa_contact || '',
+          priceToWin: typeof proposal.price_to_win === 'number' ? proposal.price_to_win : null,
           positions,
           subcontractors,
           travel: proposal.spreadsheet_data?.travel || [],
@@ -2809,6 +2822,22 @@ export const usePricingStore = create<PricingState>((set, get) => {
 
     setActiveTab: (tab) => {
       set({ activeTab: tab });
+    },
+
+    setPriceToWin: async (target) => {
+      // Optimistic UI update — single field, no need to debounce.
+      set({ priceToWin: target });
+      const state = get();
+      if (!state.proposalId) return;
+      try {
+        await proposalsApi.update(state.proposalId, {
+          price_to_win: target,
+        });
+        // Invalidate the cached proposal so next load reflects the change.
+        proposalCache.delete(state.proposalId);
+      } catch (err) {
+        console.error('[STORE] Failed to save price_to_win:', err);
+      }
     },
 
     preCreateSubcontractors: (subs) => {

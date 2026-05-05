@@ -9,6 +9,7 @@ import {
   BarChart3,
   Upload,
   BookOpen,
+  Search,
   Wrench,
   type LucideIcon,
 } from 'lucide-react';
@@ -34,6 +35,14 @@ const TOOL_ICONS: Record<string, LucideIcon> = {
   chart_tool: BarChart3,
   s3_upload_tool: Upload,
   get_skill_instructions: BookOpen,
+  // Exa web search — agno registers the toolkit under "exa" with sub-methods
+  // like search_exa / get_contents_exa. Map all variants to the search icon.
+  exa: Search,
+  search_exa: Search,
+  exa_search: Search,
+  web_search: Search,
+  exa_answer: Search,
+  get_contents_exa: Search,
 };
 
 interface ToolStatusPillProps {
