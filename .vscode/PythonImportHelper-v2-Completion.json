@@ -792,6 +792,14 @@
         "documentation": {}
     },
     {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "List",
         "importPath": "typing",
         "description": "typing",
@@ -960,6 +968,14 @@
         "documentation": {}
     },
     {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Any",
         "importPath": "typing",
         "description": "typing",
@@ -1121,6 +1137,38 @@
     },
     {
         "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -2847,7 +2895,55 @@
         "documentation": {}
     },
     {
+        "label": "create_custom_retreiver",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "isExtraImport": true,
+        "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_gsa_rate_tool",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "isExtraImport": true,
+        "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_gsa_retriever",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "isExtraImport": true,
+        "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
         "label": "create_reasoning_tool",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "isExtraImport": true,
+        "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_update_positions_tool",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "isExtraImport": true,
+        "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_update_rates_tool",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "isExtraImport": true,
+        "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_wage_tool",
         "importPath": "utils.agno_tools",
         "description": "utils.agno_tools",
         "isExtraImport": true,
@@ -5875,6 +5971,14 @@
         "documentation": {}
     },
     {
+        "label": "get_proposal_crud",
+        "importPath": "utils.proposals",
+        "description": "utils.proposals",
+        "isExtraImport": true,
+        "detail": "utils.proposals",
+        "documentation": {}
+    },
+    {
         "label": "parse_gsa_contract",
         "importPath": "client.gsa_parser",
         "description": "client.gsa_parser",
@@ -6043,6 +6147,14 @@
         "documentation": {}
     },
     {
+        "label": "stream_agent_continuation",
+        "importPath": "utils.agent_streaming",
+        "description": "utils.agent_streaming",
+        "isExtraImport": true,
+        "detail": "utils.agent_streaming",
+        "documentation": {}
+    },
+    {
         "label": "stream_agent_response",
         "importPath": "utils.agent_streaming",
         "description": "utils.agent_streaming",
@@ -6112,6 +6224,22 @@
         "description": "agent.pricing_agent",
         "isExtraImport": true,
         "detail": "agent.pricing_agent",
+        "documentation": {}
+    },
+    {
+        "label": "RunRequirement",
+        "importPath": "agno.run.requirement",
+        "description": "agno.run.requirement",
+        "isExtraImport": true,
+        "detail": "agno.run.requirement",
+        "documentation": {}
+    },
+    {
+        "label": "RunRequirement",
+        "importPath": "agno.run.requirement",
+        "description": "agno.run.requirement",
+        "isExtraImport": true,
+        "detail": "agno.run.requirement",
         "documentation": {}
     },
     {
@@ -6322,6 +6450,22 @@
         "description": "agno.tools.reasoning",
         "isExtraImport": true,
         "detail": "agno.tools.reasoning",
+        "documentation": {}
+    },
+    {
+        "label": "# noqa: E402\n    apply_position_update",
+        "importPath": "utils.proposal_mutation_tools",
+        "description": "utils.proposal_mutation_tools",
+        "isExtraImport": true,
+        "detail": "utils.proposal_mutation_tools",
+        "documentation": {}
+    },
+    {
+        "label": "apply_rate_update",
+        "importPath": "utils.proposal_mutation_tools",
+        "description": "utils.proposal_mutation_tools",
+        "isExtraImport": true,
+        "detail": "utils.proposal_mutation_tools",
         "documentation": {}
     },
     {
@@ -7792,7 +7936,7 @@
         "kind": 2,
         "importPath": "backend.agent.pricing_agent",
         "description": "backend.agent.pricing_agent",
-        "peekOfCode": "def get_pricing_agent(session_id: str, proposal_context: str) -> Agent:\n    \"\"\"\n    Build a fresh pricing agent for this request with the live proposal\n    state injected as part of its instructions.\n    Heavy components (LLM, DB, memory, reasoning, formulas) are cached at\n    module level. Only the Agent shell is rebuilt per request so the\n    instructions block can carry the user's CURRENT proposal state.\n    Args:\n        session_id: Session ID for this chat (drives history / user memories)\n        proposal_context: Serialized JSON of the live computed proposal state",
+        "peekOfCode": "def get_pricing_agent(\n    session_id: str,\n    proposal_context: str,\n    proposal_id: Optional[str] = None,\n    user_id: Optional[str] = None,\n    organization_id: Optional[str] = None,\n    role: Optional[str] = None,\n    proposal_type: Optional[str] = None,  # \"bls\" | \"gsa\"\n    gsa_file_id: Optional[str] = None,\n    gsa_current_year: Optional[int] = None,  # sent directly from frontend positions",
         "detail": "backend.agent.pricing_agent",
         "documentation": {}
     },
@@ -9475,7 +9619,16 @@
         "kind": 6,
         "importPath": "backend.routers.pricing_chat",
         "description": "backend.routers.pricing_chat",
-        "peekOfCode": "class PricingChatQuery(BaseModel):\n    \"\"\"Request body for the pricing chat endpoint.\"\"\"\n    query: str\n    proposal_context: str  # Serialized computed state from the frontend\n    session_id: str\n    organization_id: (\n        str  # Org scope for future tool calls (Mongo query, cross-proposal, billing)\n    )\n@router.post(\"/ask\")\nasync def ask_pricing(request: PricingChatQuery):",
+        "peekOfCode": "class PricingChatQuery(BaseModel):\n    \"\"\"Request body for the pricing chat endpoint.\"\"\"\n    query: str\n    proposal_context: str  # Serialized computed state from the frontend\n    session_id: str\n    organization_id: str\n    # Identity fields for mutation tools (update_rates / update_positions).\n    # Optional so existing clients don't break; mutation tools are simply\n    # omitted when not provided.\n    proposal_id: Optional[str] = None",
+        "detail": "backend.routers.pricing_chat",
+        "documentation": {}
+    },
+    {
+        "label": "PricingChatResumeRequest",
+        "kind": 6,
+        "importPath": "backend.routers.pricing_chat",
+        "description": "backend.routers.pricing_chat",
+        "peekOfCode": "class PricingChatResumeRequest(BaseModel):\n    \"\"\"Request body for resuming a paused (requires_confirmation) agent run.\"\"\"\n    run_id: str\n    session_id: str\n    proposal_context: str  # Resent by frontend to rebuild the agent identically\n    organization_id: str\n    confirmed: bool  # True = approve the pending tool, False = reject\n    confirmation_note: Optional[str] = None  # Optional rejection reason\n    # Mirror of /ask identity fields — needed to rebuild mutation tools identically\n    proposal_id: Optional[str] = None",
         "detail": "backend.routers.pricing_chat",
         "documentation": {}
     },
@@ -9484,7 +9637,7 @@
         "kind": 5,
         "importPath": "backend.routers.pricing_chat",
         "description": "backend.routers.pricing_chat",
-        "peekOfCode": "logger = logging.getLogger(__name__)\nrouter = APIRouter(prefix=\"/api/pricing-chat\", tags=[\"pricing-chat\"])\nclass PricingChatQuery(BaseModel):\n    \"\"\"Request body for the pricing chat endpoint.\"\"\"\n    query: str\n    proposal_context: str  # Serialized computed state from the frontend\n    session_id: str\n    organization_id: (\n        str  # Org scope for future tool calls (Mongo query, cross-proposal, billing)\n    )",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nrouter = APIRouter(prefix=\"/api/pricing-chat\", tags=[\"pricing-chat\"])\nclass PricingChatQuery(BaseModel):\n    \"\"\"Request body for the pricing chat endpoint.\"\"\"\n    query: str\n    proposal_context: str  # Serialized computed state from the frontend\n    session_id: str\n    organization_id: str\n    # Identity fields for mutation tools (update_rates / update_positions).\n    # Optional so existing clients don't break; mutation tools are simply",
         "detail": "backend.routers.pricing_chat",
         "documentation": {}
     },
@@ -9493,7 +9646,7 @@
         "kind": 5,
         "importPath": "backend.routers.pricing_chat",
         "description": "backend.routers.pricing_chat",
-        "peekOfCode": "router = APIRouter(prefix=\"/api/pricing-chat\", tags=[\"pricing-chat\"])\nclass PricingChatQuery(BaseModel):\n    \"\"\"Request body for the pricing chat endpoint.\"\"\"\n    query: str\n    proposal_context: str  # Serialized computed state from the frontend\n    session_id: str\n    organization_id: (\n        str  # Org scope for future tool calls (Mongo query, cross-proposal, billing)\n    )\n@router.post(\"/ask\")",
+        "peekOfCode": "router = APIRouter(prefix=\"/api/pricing-chat\", tags=[\"pricing-chat\"])\nclass PricingChatQuery(BaseModel):\n    \"\"\"Request body for the pricing chat endpoint.\"\"\"\n    query: str\n    proposal_context: str  # Serialized computed state from the frontend\n    session_id: str\n    organization_id: str\n    # Identity fields for mutation tools (update_rates / update_positions).\n    # Optional so existing clients don't break; mutation tools are simply\n    # omitted when not provided.",
         "detail": "backend.routers.pricing_chat",
         "documentation": {}
     },
@@ -10240,7 +10393,7 @@
         "kind": 2,
         "importPath": "backend.utils.agno_tools",
         "description": "backend.utils.agno_tools",
-        "peekOfCode": "def create_gsa_rate_tool(organization_id: str, file_id: str, contract_start_date: str):\n    \"\"\"\n    Create a tool for retrieving GSA rates from MongoDB.\n    Args:\n        organization_id: Organization ID\n        file_id: GSA contract file ID\n        contract_start_date: Contract start date for year calculation\n    Returns:\n        Callable tool function for agno agents\n    \"\"\"",
+        "peekOfCode": "def create_gsa_rate_tool(\n    organization_id: str,\n    file_id: str,\n    contract_start_date: str = \"\",\n    gsa_current_year: Optional[int] = None,\n):\n    \"\"\"\n    Create a tool for retrieving GSA rates from MongoDB.\n    Args:\n        organization_id: Organization ID",
         "detail": "backend.utils.agno_tools",
         "documentation": {}
     },
@@ -10268,6 +10421,24 @@
         "importPath": "backend.utils.agno_tools",
         "description": "backend.utils.agno_tools",
         "peekOfCode": "def get_web_search_tool(\n    num_results: int = 6,\n    text_length_limit: int = 2000,\n) -> Optional[ExaTools]:\n    \"\"\"\n    Return a cached ExaTools instance configured for govcon competitive intel.\n    Used by Q for Price-to-Win analysis: pulling past contract awards,\n    incumbent identification, agency buying patterns, GSA Schedule rates,\n    and indirect rate / fee benchmarks.\n    Configuration:",
+        "detail": "backend.utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_update_rates_tool",
+        "kind": 2,
+        "importPath": "backend.utils.agno_tools",
+        "description": "backend.utils.agno_tools",
+        "peekOfCode": "def create_update_rates_tool(\n    proposal_id: str,\n    user_id: str,\n    organization_id: Optional[str] = None,\n    role: Optional[str] = None,\n):\n    \"\"\"\n    Build a request-scoped `update_rates` tool. Identity is bound at creation\n    time via closure — the inner @tool function captures proposal/user/org so\n    the agent never has to pass them.",
+        "detail": "backend.utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_update_positions_tool",
+        "kind": 2,
+        "importPath": "backend.utils.agno_tools",
+        "description": "backend.utils.agno_tools",
+        "peekOfCode": "def create_update_positions_tool(\n    proposal_id: str,\n    user_id: str,\n    organization_id: Optional[str] = None,\n    role: Optional[str] = None,\n):\n    \"\"\"\n    Build a request-scoped `update_positions` tool. Same closure pattern as\n    create_update_rates_tool.\n    Returns:",
         "detail": "backend.utils.agno_tools",
         "documentation": {}
     },
@@ -10701,6 +10872,69 @@
         "description": "backend.utils.processing",
         "peekOfCode": "logger = logging.getLogger(__name__)\n# ============================================================================\n# HELPER\n# ============================================================================\ndef convert_intelligent_output_to_dataframe(intelligent_result: Dict[str, Any]) -> Dict[str, Any]:\n    \"\"\"\n    Convert intelligent parser output to the same format as jd_parser output.\n    Returns:\n        Dict with keys: df, travel, odcs, extensions\n    \"\"\"",
         "detail": "backend.utils.processing",
+        "documentation": {}
+    },
+    {
+        "label": "apply_rate_update",
+        "kind": 2,
+        "importPath": "backend.utils.proposal_mutation_tools",
+        "description": "backend.utils.proposal_mutation_tools",
+        "peekOfCode": "def apply_rate_update(\n    *,\n    proposal_id: str,\n    user_id: str,\n    organization_id: Optional[str],\n    role: Optional[str],\n    rates: Optional[Dict[str, Any]] = None,\n    escalation_rates: Optional[Dict[str, Any]] = None,\n    rationale: str = \"\",\n) -> Dict[str, Any]:",
+        "detail": "backend.utils.proposal_mutation_tools",
+        "documentation": {}
+    },
+    {
+        "label": "apply_position_update",
+        "kind": 2,
+        "importPath": "backend.utils.proposal_mutation_tools",
+        "description": "backend.utils.proposal_mutation_tools",
+        "peekOfCode": "def apply_position_update(\n    *,\n    proposal_id: str,\n    user_id: str,\n    organization_id: Optional[str],\n    role: Optional[str],\n    updates: List[Dict[str, Any]],\n    rationale: str = \"\",\n) -> Dict[str, Any]:\n    \"\"\"",
+        "detail": "backend.utils.proposal_mutation_tools",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.utils.proposal_mutation_tools",
+        "description": "backend.utils.proposal_mutation_tools",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# ─── Validation tables ───────────────────────────────────────────────────\n# Indirect rate keys we accept on update_rates.\n_VALID_RATE_KEYS = {\n    \"fringe\",\n    \"oh_onsite\",\n    \"oh_offsite\",\n    \"ga\",\n    \"fee\",\n    \"smh\",",
+        "detail": "backend.utils.proposal_mutation_tools",
+        "documentation": {}
+    },
+    {
+        "label": "_VALID_RATE_KEYS",
+        "kind": 5,
+        "importPath": "backend.utils.proposal_mutation_tools",
+        "description": "backend.utils.proposal_mutation_tools",
+        "peekOfCode": "_VALID_RATE_KEYS = {\n    \"fringe\",\n    \"oh_onsite\",\n    \"oh_offsite\",\n    \"ga\",\n    \"fee\",\n    \"smh\",\n    \"ga_passthrough\",\n    \"sub_fee\",\n    \"ot_multiplier\",",
+        "detail": "backend.utils.proposal_mutation_tools",
+        "documentation": {}
+    },
+    {
+        "label": "_VALID_PERCENTILES",
+        "kind": 5,
+        "importPath": "backend.utils.proposal_mutation_tools",
+        "description": "backend.utils.proposal_mutation_tools",
+        "peekOfCode": "_VALID_PERCENTILES = {\"10th\", \"25th\", \"50th\", \"75th\", \"90th\"}\n_VALID_LOCATION_TYPES = {\"On-Site\", \"Off-Site\"}\n_VALID_POSITION_FIELDS = {\n    \"percentile\",\n    \"location_type\",\n    \"custom_salary\",\n    \"hours_per_year\",\n    \"gsa_discount_rate\",\n    \"ot_hours_per_year\",\n    \"is_key_position\",",
+        "detail": "backend.utils.proposal_mutation_tools",
+        "documentation": {}
+    },
+    {
+        "label": "_VALID_LOCATION_TYPES",
+        "kind": 5,
+        "importPath": "backend.utils.proposal_mutation_tools",
+        "description": "backend.utils.proposal_mutation_tools",
+        "peekOfCode": "_VALID_LOCATION_TYPES = {\"On-Site\", \"Off-Site\"}\n_VALID_POSITION_FIELDS = {\n    \"percentile\",\n    \"location_type\",\n    \"custom_salary\",\n    \"hours_per_year\",\n    \"gsa_discount_rate\",\n    \"ot_hours_per_year\",\n    \"is_key_position\",\n}",
+        "detail": "backend.utils.proposal_mutation_tools",
+        "documentation": {}
+    },
+    {
+        "label": "_VALID_POSITION_FIELDS",
+        "kind": 5,
+        "importPath": "backend.utils.proposal_mutation_tools",
+        "description": "backend.utils.proposal_mutation_tools",
+        "peekOfCode": "_VALID_POSITION_FIELDS = {\n    \"percentile\",\n    \"location_type\",\n    \"custom_salary\",\n    \"hours_per_year\",\n    \"gsa_discount_rate\",\n    \"ot_hours_per_year\",\n    \"is_key_position\",\n}\n# ─── Validation helpers ───────────────────────────────────────────────────",
+        "detail": "backend.utils.proposal_mutation_tools",
         "documentation": {}
     },
     {

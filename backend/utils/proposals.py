@@ -153,13 +153,19 @@ class ProposalCRUD:
             Proposal document or None if not found/unauthorized
         """
 
+        # Coerce organization_id to ObjectId when stored as such (mutations
+        # from the pricing agent pass it as a plain string from the frontend).
+        org_id_query = organization_id
+        if organization_id and ObjectId.is_valid(organization_id):
+            org_id_query = ObjectId(organization_id)
+
         # Build query based on access level
-        if organization_id:
+        if org_id_query:
             if role == "admin":
                 # Admin can access any proposal in their org
                 query = {
                     "_id": ObjectId(proposal_id),
-                    "organization_id": organization_id
+                    "organization_id": org_id_query
                 }
             else:
                 # Regular user: owned by them OR shared with them
@@ -169,7 +175,7 @@ class ProposalCRUD:
                         {"user_id": user_id},
                         {"shared_with": user_id}
                     ],
-                    "organization_id": organization_id
+                    "organization_id": org_id_query
                 }
         else:
             # No organization - simple ownership check
@@ -259,13 +265,17 @@ class ProposalCRUD:
             Updated proposal document or None if not found/unauthorized
         """
 
+        org_id_query = organization_id
+        if organization_id and ObjectId.is_valid(organization_id):
+            org_id_query = ObjectId(organization_id)
+
         # Build query based on access level (same as get_proposal)
-        if organization_id:
+        if org_id_query:
             if role == "admin":
                 # Admin can update any proposal in their org
                 query = {
                     "_id": ObjectId(proposal_id),
-                    "organization_id": organization_id
+                    "organization_id": org_id_query
                 }
             else:
                 # Regular user: owned by them OR shared with them
@@ -275,7 +285,7 @@ class ProposalCRUD:
                         {"user_id": user_id},
                         {"shared_with": user_id}
                     ],
-                    "organization_id": organization_id
+                    "organization_id": org_id_query
                 }
         else:
             # No organization - simple ownership check
