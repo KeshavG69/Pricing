@@ -5,7 +5,7 @@ import { MessageCircle, X, Send, Loader2, Sparkles, Target } from 'lucide-react'
 import { usePricingStore } from '@/lib/stores/pricingStore';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { serializeProposalContext } from '@/lib/chat/proposalContext';
-import { streamPricingChat } from '@/lib/api/pricingChat';
+import { streamPricingChat, streamPricingChatResume } from '@/lib/api/pricingChat';
 import MarkdownRenderer from './chat/MarkdownRenderer';
 import ThinkingIndicator from './chat/ThinkingIndicator';
 import ReasoningSteps, { type ReasoningStep } from './chat/ReasoningSteps';
@@ -40,6 +40,20 @@ type MessageBlock =
   | { kind: 'text'; id: string; text: string }
   | { kind: 'tool'; id: string; toolCallId: string };
 
+/** State saved when the agent emits run.paused (requires_confirmation). */
+interface PausedRun {
+  run_id: string;
+  session_id?: string;
+  /** Rationale text extracted from the pending tool's args (if any). */
+  rationale?: string;
+  /** The tool that needs approval (update_rates | update_positions). */
+  tool_name?: string;
+  /** Serialized args of the pending tool — shown in the approval card. */
+  tool_args?: Record<string, unknown>;
+  /** The message ID this pause belongs to — so we anchor the card inline. */
+  message_id: string;
+}
+
 interface ChatMessage {
   id: string;
   role: 'user' | 'assistant';
@@ -54,6 +68,8 @@ interface ChatMessage {
    * chart/download artifacts with text in their actual fire order.
    */
   blocks?: MessageBlock[];
+  /** Set when the agent paused mid-message for confirmation. */
+  pausedRun?: PausedRun;
 }
 
 // Tool names the agent uses for reasoning. These render as collapsible
@@ -346,11 +362,42 @@ export default function PricingChatPanel() {
   const [isResizing, setIsResizing] = useState(false);
 
   const abortRef = useRef<AbortController | null>(null);
+  const resumeAbortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
+  // Ref mirror of messages so event handlers can read current state without
+  // stale closures (React state reads inside async generators capture the
+  // value at closure creation time, not the current value).
+  const messagesRef = useRef<ChatMessage[]>([]);
+  // Ref mirror of sessionId — lets handleSend always read the latest session
+  // without capturing a stale closure (sessionId can change between the
+  // open-chat event firing and the deferred handleSend executing).
+  const sessionIdRef = useRef<string>(sessionId);
+  // Snapshot of the last proposal_context sent, so /resume can resend it.
+  const lastProposalContextRef = useRef<string>('');
+  // Active paused run waiting for user approval (at most one at a time).
+  const [pausedRun, setPausedRun] = useState<PausedRun | null>(null);
 
   const proposalId = usePricingStore((s) => s.proposalId);
-  const organizationId = useAuthStore((s) => s.user?.organization_id);
+  const wageSource = usePricingStore((s) => s.wageSource);
+  const user = useAuthStore((s) => s.user);
+  const organizationId = user?.organization_id;
+  // For GSA proposals: read gsa_current_year from the first GSA position —
+  // it's already computed and stored per-position, so no extra fetch needed.
+  const gsaCurrentYear = usePricingStore((s) => {
+    if (s.wageSource?.type !== 'gsa') return undefined;
+    const firstGSA = s.positions.find((p) => p.wage_source === 'gsa');
+    return (firstGSA as unknown as { gsa_current_year?: number })?.gsa_current_year ?? undefined;
+  });
+
+  // Keep messagesRef in sync so async event handlers can read current state.
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
+    sessionIdRef.current = sessionId;
+  }, [sessionId]);
 
   // Auto-scroll to bottom on new messages
   useEffect(() => {
@@ -531,13 +578,22 @@ export default function PricingChatPanel() {
     const controller = new AbortController();
     abortRef.current = controller;
 
+    // Snapshot for /resume
+    lastProposalContextRef.current = proposalContext;
+
     try {
       for await (const evt of streamPricingChat(
         {
           query: trimmed,
           proposal_context: proposalContext,
-          session_id: sessionId,
+          session_id: sessionIdRef.current,
           organization_id: organizationId,
+          proposal_id: proposalId ?? undefined,
+          user_id: user?.id,
+          role: user?.role,
+          proposal_type: wageSource?.type,
+          gsa_file_id: wageSource?.type === 'gsa' ? wageSource.file_id : undefined,
+          gsa_current_year: gsaCurrentYear,
         },
         controller.signal,
       )) {
@@ -720,6 +776,47 @@ export default function PricingChatPanel() {
               return { ...msg, toolCalls: nextCalls };
             }),
           );
+        } else if (evt.type === 'run.paused') {
+          // Agent hit a requires_confirmation gate. Extract the pending tool
+          // info from the last running tool call in this message.
+          // Read the last running tool call directly from the captured
+          // assistantMsg closure — it's the most recently started tool.
+          // We snapshot toolCalls at the time run.paused fires; the
+          // mutation tool (update_rates/update_positions) is always the
+          // last entry because requires_confirmation pauses before executing.
+          const lastToolCall = messagesRef.current
+            .find((x) => x.id === assistantMsg.id)
+            ?.toolCalls?.filter((c) => c.status === 'running')
+            .at(-1);
+          const paused: PausedRun = {
+            run_id: evt.run_id,
+            session_id: evt.session_id,
+            tool_name: lastToolCall?.name,
+            tool_args: lastToolCall?.args,
+            rationale: typeof lastToolCall?.args?.rationale === 'string'
+              ? lastToolCall.args.rationale
+              : undefined,
+            message_id: assistantMsg.id,
+          };
+          setPausedRun(paused);
+          // Stamp the paused run onto the message so the card renders inline.
+          setMessages((m) =>
+            m.map((msg) =>
+              msg.id === assistantMsg.id
+                ? { ...msg, streaming: false, thinking: false, pausedRun: paused }
+                : msg,
+            ),
+          );
+          // Stop the stream — user must approve/reject via handleResume.
+          break;
+        } else if (evt.type === 'run.continued') {
+          // Resume confirmed and streaming — clear the paused state.
+          setPausedRun(null);
+          setMessages((m) =>
+            m.map((msg) =>
+              msg.id === assistantMsg.id ? { ...msg, pausedRun: undefined } : msg,
+            ),
+          );
         } else if (evt.type === 'error') {
           setMessages((m) =>
             m.map((msg) =>
@@ -750,6 +847,134 @@ export default function PricingChatPanel() {
   useEffect(() => {
     handleSendRef.current = handleSend;
   }, [handleSend]);
+
+  const handleResume = useCallback(async (confirmed: boolean, note?: string) => {
+    if (!pausedRun || !organizationId) return;
+
+    const pr = pausedRun;
+    setPausedRun(null);
+    setIsStreaming(true);
+
+    // Find the paused message and re-open it for streaming continuation.
+    setMessages((m) =>
+      m.map((msg) =>
+        msg.id === pr.message_id
+          ? { ...msg, streaming: true, thinking: false, pausedRun: undefined }
+          : msg,
+      ),
+    );
+
+    const controller = new AbortController();
+    resumeAbortRef.current = controller;
+
+    try {
+      for await (const evt of streamPricingChatResume(
+        {
+          run_id: pr.run_id,
+          session_id: sessionIdRef.current,
+          proposal_context: lastProposalContextRef.current,
+          organization_id: organizationId,
+          confirmed,
+          confirmation_note: note,
+          proposal_id: proposalId ?? undefined,
+          user_id: user?.id,
+          role: user?.role,
+          proposal_type: wageSource?.type,
+          gsa_file_id: wageSource?.type === 'gsa' ? wageSource.file_id : undefined,
+          gsa_current_year: gsaCurrentYear,
+        },
+        controller.signal,
+      )) {
+        if (evt.type === 'run.continued') {
+          // Stream is live — nothing to do here.
+        } else if (evt.type === 'delta') {
+          setMessages((m) =>
+            m.map((msg) => {
+              if (msg.id !== pr.message_id) return msg;
+              const blocks = msg.blocks ? [...msg.blocks] : [];
+              const last = blocks[blocks.length - 1];
+              if (last && last.kind === 'text') {
+                blocks[blocks.length - 1] = { ...last, text: last.text + evt.content };
+              } else {
+                blocks.push({ kind: 'text', id: `txt-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, text: evt.content });
+              }
+              return { ...msg, content: msg.content + evt.content, blocks };
+            }),
+          );
+        } else if (evt.type === 'done') {
+          setMessages((m) =>
+            m.map((msg) => {
+              if (msg.id !== pr.message_id) return msg;
+              const finalContent = evt.content || msg.content;
+              const blocks = msg.blocks && msg.blocks.length > 0
+                ? msg.blocks
+                : finalContent
+                  ? [{ kind: 'text' as const, id: `txt-${Date.now()}`, text: finalContent }]
+                  : [];
+              return { ...msg, content: finalContent, blocks, streaming: false, thinking: false };
+            }),
+          );
+        } else if (evt.type === 'tool.started') {
+          const toolName = evt.tool_name || 'tool';
+          const isReasoning = REASONING_TOOL_NAMES.has(toolName);
+          setMessages((m) =>
+            m.map((msg) => {
+              if (msg.id !== pr.message_id) return msg;
+              const stepId = evt.tool_call_id || `step-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
+              if (isReasoning) {
+                return { ...msg, reasoning: [...(msg.reasoning || []), { id: stepId, name: toolName, args: evt.tool_args, running: true }] };
+              }
+              const nextCalls = [...(msg.toolCalls || []), { id: stepId, name: toolName, status: 'running' as const, args: evt.tool_args }];
+              const nextBlocks = ARTIFACT_TOOL_NAMES.has(toolName)
+                ? [...(msg.blocks || []), { kind: 'tool' as const, id: `blk-${stepId}`, toolCallId: stepId }]
+                : msg.blocks;
+              return { ...msg, toolCalls: nextCalls, blocks: nextBlocks };
+            }),
+          );
+        } else if (evt.type === 'tool.completed') {
+          const toolName = evt.tool_name || 'tool';
+          const isReasoning = REASONING_TOOL_NAMES.has(toolName);
+          setMessages((m) =>
+            m.map((msg) => {
+              if (msg.id !== pr.message_id) return msg;
+              if (isReasoning) {
+                const steps = msg.reasoning || [];
+                const idx = evt.tool_call_id ? steps.findIndex((s) => s.id === evt.tool_call_id) : steps.length - 1;
+                const next = idx >= 0
+                  ? steps.map((s, i) => i === idx ? { ...s, args: evt.tool_args ?? s.args, result: resultToStr(evt.result), error: evt.error, running: false } : s)
+                  : [...steps, { id: evt.tool_call_id || `step-${Date.now()}`, name: toolName, args: evt.tool_args, result: resultToStr(evt.result), running: false }];
+                return { ...msg, reasoning: next };
+              }
+              const calls = msg.toolCalls || [];
+              const idx = evt.tool_call_id ? calls.findIndex((c) => c.id === evt.tool_call_id) : -1;
+              const updated: ToolCallEntry = { id: evt.tool_call_id || `call-${Date.now()}`, name: toolName, status: evt.error ? 'error' : 'completed', args: idx >= 0 ? { ...(calls[idx].args || {}), ...(evt.tool_args || {}) } : evt.tool_args, result: evt.result };
+              return { ...msg, toolCalls: idx >= 0 ? calls.map((c, i) => i === idx ? { ...c, ...updated } : c) : [...calls, updated] };
+            }),
+          );
+        } else if (evt.type === 'run.paused') {
+          // Re-paused (chained confirmations) — re-show the card.
+          const paused: PausedRun = { run_id: evt.run_id, session_id: evt.session_id, message_id: pr.message_id };
+          setPausedRun(paused);
+          setMessages((m) => m.map((msg) => msg.id === pr.message_id ? { ...msg, streaming: false, pausedRun: paused } : msg));
+          break;
+        } else if (evt.type === 'error') {
+          setMessages((m) =>
+            m.map((msg) =>
+              msg.id === pr.message_id
+                ? { ...msg, content: msg.content + `\n\n⚠️ ${evt.error}`, streaming: false }
+                : msg,
+            ),
+          );
+        }
+      }
+    } finally {
+      setMessages((m) =>
+        m.map((msg) => msg.id === pr.message_id ? { ...msg, streaming: false } : msg),
+      );
+      setIsStreaming(false);
+      resumeAbortRef.current = null;
+    }
+  }, [pausedRun, organizationId, proposalId, user, wageSource, gsaCurrentYear]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -993,6 +1218,14 @@ export default function PricingChatPanel() {
                                 {msg.streaming && msg.content && (
                                   <Loader2 className="ml-1 inline h-3 w-3 animate-spin opacity-60" />
                                 )}
+                                {msg.pausedRun && (
+                                  <ToolApprovalCard
+                                    paused={msg.pausedRun}
+                                    onApprove={() => handleResume(true)}
+                                    onReject={() => handleResume(false)}
+                                    isResuming={isStreaming && !pausedRun}
+                                  />
+                                )}
                               </>
                             )}
                           </div>
@@ -1095,7 +1328,7 @@ function buildPriceToWinPrompt(): string {
       return (
         `Our price-to-win target is ${formatCurrency(target)}, but the proposal currently lands at ${formatCompact(current)} — ` +
         `a ${formatCompact(gap)} gap (${gapPct.toFixed(1)}%). Run a full PtW analysis: identify the top 5–7 levers to close ` +
-        `the gap, with $$ impact and risk for each. Use the playbook in your instructions.`
+        `the gap, with $$ impact and risk for each.`
       );
     }
     return (
@@ -1105,6 +1338,64 @@ function buildPriceToWinPrompt(): string {
     );
   }
   return `My price-to-win target is $___. Analyze the proposal and tell me how to close the gap.`;
+}
+
+// ─── Tool Approval Card ──────────────────────────────────────────────────────
+
+function formatToolLabel(name?: string): string {
+  if (!name) return 'Pending change';
+  if (name === 'update_rates') return 'Update rates';
+  if (name === 'update_positions') return 'Update positions';
+  return name.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+function ToolApprovalCard({
+  paused,
+  onApprove,
+  onReject,
+  isResuming,
+}: {
+  paused: PausedRun;
+  onApprove: () => void;
+  onReject: () => void;
+  isResuming: boolean;
+}) {
+  const args = paused.tool_args || {};
+  const rationale = paused.rationale || (typeof args.rationale === 'string' ? args.rationale : '');
+
+  return (
+    <div className="my-3 rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-800/50 dark:bg-amber-950/30 p-4">
+      <div className="flex items-start gap-3">
+        <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 text-base">
+          ✦
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-foreground">
+            {formatToolLabel(paused.tool_name)} — approval required
+          </p>
+          {rationale && (
+            <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{rationale}</p>
+          )}
+        </div>
+      </div>
+      <div className="mt-3 flex gap-2">
+        <button
+          onClick={onApprove}
+          disabled={isResuming}
+          className="flex-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
+        >
+          {isResuming ? 'Applying…' : 'Approve'}
+        </button>
+        <button
+          onClick={onReject}
+          disabled={isResuming}
+          className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted disabled:opacity-50"
+        >
+          Reject
+        </button>
+      </div>
+    </div>
+  );
 }
 
 interface EmptyStateQuickActionsProps {

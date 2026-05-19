@@ -79,7 +79,7 @@ function dispatchAnalyze(currentTotal: number, target: number) {
     gap > 0
       ? `Our price-to-win target is ${formatMoney(target)}, but the proposal currently lands at ${formatCompact(currentTotal)} — ` +
         `a ${formatCompact(gap)} gap (${gapPct.toFixed(1)}%). Run a full PtW analysis: identify the top 5–7 levers to ` +
-        `close the gap, with $$ impact and risk for each. Use the playbook in your instructions.`
+        `close the gap, with $$ impact and risk for each.`
       : `Our price-to-win target is ${formatMoney(target)} and we're at ${formatCompact(currentTotal)} — ` +
         `already ${formatCompact(-gap)} under target. Walk through how we could improve margin given the ` +
         `current proposal structure.`;

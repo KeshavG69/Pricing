@@ -276,20 +276,27 @@ def create_gsa_retriever(organization_id: str, file_id: str, description: Option
     return gsa_retriever
 
 
-def create_gsa_rate_tool(organization_id: str, file_id: str, contract_start_date: str):
+def create_gsa_rate_tool(
+    organization_id: str,
+    file_id: str,
+    contract_start_date: str = "",
+    gsa_current_year: Optional[int] = None,
+):
     """
     Create a tool for retrieving GSA rates from MongoDB.
 
     Args:
         organization_id: Organization ID
         file_id: GSA contract file ID
-        contract_start_date: Contract start date for year calculation
+        contract_start_date: Contract start date for year calculation (fallback)
+        gsa_current_year: Current GSA year if already known (takes precedence
+                          over contract_start_date calculation)
 
     Returns:
         Callable tool function for agno agents
     """
     crud = get_company_repository_crud()
-    current_gsa_year = calculate_gsa_year(contract_start_date)
+    current_gsa_year = gsa_current_year if gsa_current_year is not None else calculate_gsa_year(contract_start_date)
 
     @tool(stop_after_tool_call=True)
     def gsa_rate_tool(lcat_id: str) -> Dict[str, Any]:
@@ -479,3 +486,174 @@ def get_web_search_tool(
     except Exception as e:
         logger.error(f"[web_search_tool] failed to init ExaTools: {e}", exc_info=True)
         return None
+
+
+# ============================================================================
+# PROPOSAL MUTATION TOOLS — direct $set on proposal documents, gated by
+# `requires_confirmation=True` (agno emits run_paused → frontend shows an
+# approval card → /resume endpoint executes after user approves).
+#
+# Identity (proposal_id, user_id, org, role) is captured by closure at tool-
+# creation time so the agent never has to pass it. Mirrors the closure
+# pattern used by Kroolo's create_custom_retreiver, create_mongodb_query_tool,
+# etc. The actual mutation logic lives in proposal_mutation_tools.py — these
+# factories are thin agno-wrapping shells.
+# ============================================================================
+
+from utils.proposal_mutation_tools import (  # noqa: E402
+    apply_position_update,
+    apply_rate_update,
+)
+
+
+def create_update_rates_tool(
+    proposal_id: str,
+    user_id: str,
+    organization_id: Optional[str] = None,
+    role: Optional[str] = None,
+):
+    """
+    Build a request-scoped `update_rates` tool. Identity is bound at creation
+    time via closure — the inner @tool function captures proposal/user/org so
+    the agent never has to pass them.
+
+    The inner function is `requires_confirmation=True` — agno emits
+    `run_paused` before execution and the frontend renders an approval card.
+
+    Args:
+        proposal_id: MongoDB ObjectId (as string) of the proposal to mutate.
+        user_id: MongoDB ObjectId of the calling user (for authz check).
+        organization_id: User's organization ID for org-scoped access.
+        role: User's role ('admin' gets full org access).
+
+    Returns:
+        An agno @tool function ready to register on an Agent.
+    """
+    if not proposal_id or not str(proposal_id).strip():
+        raise ValueError("proposal_id is required to build update_rates tool")
+    if not user_id or not str(user_id).strip():
+        raise ValueError("user_id is required to build update_rates tool")
+
+    @tool(requires_confirmation=True)
+    def update_rates(
+        rates: Optional[Dict[str, Any]] = None,
+        escalation_rates: Optional[Dict[str, Any]] = None,
+        rationale: str = "",
+    ) -> Dict[str, Any]:
+        """
+        💰 Update the proposal's indirect rates and/or escalation rates.
+
+        REQUIRES USER CONFIRMATION. The frontend renders an approval card
+        before execution; only after the user clicks Approve does the change
+        land in MongoDB.
+
+        Use this tool whenever you've identified that a rate change would
+        help the user — e.g. closing a Price-to-Win gap, reflecting a
+        DCAA-approved rate change, or correcting a number. Do NOT just
+        describe the change in plain text — the user needs the explicit
+        Approve gate.
+
+        Args:
+            rates: Subset of indirect rate keys to update. Each value is a
+                decimal (NOT a percent — pass 0.055 for 5.5%, not 5.5).
+                Accepted keys:
+                - fringe          (e.g. 0.247)
+                - oh_onsite       (e.g. 0.0711)
+                - oh_offsite      (e.g. 0.0711)
+                - ga              (e.g. 0.2243)
+                - fee             (e.g. 0.07)
+                - smh             (e.g. 0.065)
+                - ga_passthrough  (e.g. 0.025)
+                - sub_fee         (e.g. 0.05)
+                - ot_multiplier   (e.g. 1.5)
+                - surge_multiplier(e.g. 1.15)
+                Pass None or {} to leave indirect rates untouched.
+            escalation_rates: Year-to-year escalation rates. Keys are of the
+                form "N_to_M" (e.g. "1_to_2", "2_to_3"). Each value is a
+                decimal. Pass None or {} to leave escalation untouched.
+            rationale: Short past-tense explanation surfaced to the user on
+                the approval card. E.g. "Drop fee 1.5pt to close the $1.4M
+                PtW gap".
+
+        Returns:
+            Dict with success status, the change descriptor the frontend
+            uses to patch its local store, and the proposal_id.
+        """
+        return apply_rate_update(
+            proposal_id=proposal_id,
+            user_id=user_id,
+            organization_id=organization_id,
+            role=role,
+            rates=rates,
+            escalation_rates=escalation_rates,
+            rationale=rationale,
+        )
+
+    return update_rates
+
+
+def create_update_positions_tool(
+    proposal_id: str,
+    user_id: str,
+    organization_id: Optional[str] = None,
+    role: Optional[str] = None,
+):
+    """
+    Build a request-scoped `update_positions` tool. Same closure pattern as
+    create_update_rates_tool.
+
+    Returns:
+        An agno @tool function with `requires_confirmation=True`.
+    """
+    if not proposal_id or not str(proposal_id).strip():
+        raise ValueError("proposal_id is required to build update_positions tool")
+    if not user_id or not str(user_id).strip():
+        raise ValueError("user_id is required to build update_positions tool")
+
+    @tool(requires_confirmation=True)
+    def update_positions(
+        updates: List[Dict[str, Any]],
+        rationale: str = "",
+    ) -> Dict[str, Any]:
+        """
+        👥 Update fields on one or more positions in the current proposal.
+
+        REQUIRES USER CONFIRMATION. The frontend renders an approval card
+        showing every field change before execution; only after Approve does
+        the change land in MongoDB.
+
+        Use this tool whenever a position-level change would help — e.g.
+        dropping a senior wage from 75th to 50th percentile to close a PtW
+        gap, moving positions off-site to lower OH cost, or applying a GSA
+        discount.
+
+        Args:
+            updates: List of position-update entries. Each entry has:
+                - position_id (str, required): the `id` field from
+                  proposal_state.positions[i] (e.g. "pos_0_177...")
+                - fields (dict, required): subset of editable fields. Keys:
+                    * percentile         "10th" | "25th" | "50th" | "75th" | "90th"
+                    * location_type      "On-Site" | "Off-Site"
+                    * custom_salary      annual $ (number)
+                    * hours_per_year     {"1": 1920, "2": 1920, ...}
+                    * gsa_discount_rate  decimal 0..1 (only for GSA positions)
+                    * ot_hours_per_year  {"1": 80, ...}
+                    * is_key_position    true | false
+            rationale: Short past-tense explanation surfaced on the approval
+                card. E.g. "Drop senior-staff to 50th and move SATCOM SME
+                off-site (saves $520K)".
+
+        Returns:
+            Dict with success, the per-position change descriptor (used by
+            the frontend to patch its local store), and the proposal_id.
+        """
+        return apply_position_update(
+            proposal_id=proposal_id,
+            user_id=user_id,
+            organization_id=organization_id,
+            role=role,
+            updates=updates,
+            rationale=rationale,
+        )
+
+    return update_positions
