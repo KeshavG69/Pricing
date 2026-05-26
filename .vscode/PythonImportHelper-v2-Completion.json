@@ -17,6 +17,14 @@
         "documentation": {}
     },
     {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
         "label": "os",
         "kind": 6,
         "isExtraImport": true,
@@ -1137,6 +1145,38 @@
     },
     {
         "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -5979,6 +6019,14 @@
         "documentation": {}
     },
     {
+        "label": "get_proposal_crud",
+        "importPath": "utils.proposals",
+        "description": "utils.proposals",
+        "isExtraImport": true,
+        "detail": "utils.proposals",
+        "documentation": {}
+    },
+    {
         "label": "parse_gsa_contract",
         "importPath": "client.gsa_parser",
         "description": "client.gsa_parser",
@@ -6131,6 +6179,14 @@
         "documentation": {}
     },
     {
+        "label": "Calculator",
+        "importPath": "client.calculation_service",
+        "description": "client.calculation_service",
+        "isExtraImport": true,
+        "detail": "client.calculation_service",
+        "documentation": {}
+    },
+    {
         "label": "get_help_center_agent",
         "importPath": "agent.help_center_agent",
         "description": "agent.help_center_agent",
@@ -6240,6 +6296,14 @@
         "description": "agno.run.requirement",
         "isExtraImport": true,
         "detail": "agno.run.requirement",
+        "documentation": {}
+    },
+    {
+        "label": "build_proposal_context",
+        "importPath": "utils.proposal_context_builder",
+        "description": "utils.proposal_context_builder",
+        "isExtraImport": true,
+        "detail": "utils.proposal_context_builder",
         "documentation": {}
     },
     {
@@ -9619,7 +9683,7 @@
         "kind": 6,
         "importPath": "backend.routers.pricing_chat",
         "description": "backend.routers.pricing_chat",
-        "peekOfCode": "class PricingChatQuery(BaseModel):\n    \"\"\"Request body for the pricing chat endpoint.\"\"\"\n    query: str\n    proposal_context: str  # Serialized computed state from the frontend\n    session_id: str\n    organization_id: str\n    # Identity fields for mutation tools (update_rates / update_positions).\n    # Optional so existing clients don't break; mutation tools are simply\n    # omitted when not provided.\n    proposal_id: Optional[str] = None",
+        "peekOfCode": "class PricingChatQuery(BaseModel):\n    \"\"\"Request body for the pricing chat endpoint.\"\"\"\n    query: str\n    session_id: str\n    organization_id: str\n    proposal_id: str          # now required — the agent reads context from DB\n    user_id: str              # now required — used for org-scoped access check\n    role: Optional[str] = None\n    # Retrieval tools — \"bls\" enables SOC retriever + wage lookup;\n    # \"gsa\" enables GSA labor-category retriever + rate lookup.",
         "detail": "backend.routers.pricing_chat",
         "documentation": {}
     },
@@ -9628,7 +9692,7 @@
         "kind": 6,
         "importPath": "backend.routers.pricing_chat",
         "description": "backend.routers.pricing_chat",
-        "peekOfCode": "class PricingChatResumeRequest(BaseModel):\n    \"\"\"Request body for resuming a paused (requires_confirmation) agent run.\"\"\"\n    run_id: str\n    session_id: str\n    proposal_context: str  # Resent by frontend to rebuild the agent identically\n    organization_id: str\n    confirmed: bool  # True = approve the pending tool, False = reject\n    confirmation_note: Optional[str] = None  # Optional rejection reason\n    # Mirror of /ask identity fields — needed to rebuild mutation tools identically\n    proposal_id: Optional[str] = None",
+        "peekOfCode": "class PricingChatResumeRequest(BaseModel):\n    \"\"\"Request body for resuming a paused (requires_confirmation) agent run.\"\"\"\n    run_id: str\n    session_id: str\n    organization_id: str\n    confirmed: bool  # True = approve the pending tool, False = reject\n    confirmation_note: Optional[str] = None  # Optional rejection reason\n    # Identity needed to rebuild mutation tools + refetch proposal context\n    proposal_id: str\n    user_id: str",
         "detail": "backend.routers.pricing_chat",
         "documentation": {}
     },
@@ -9637,7 +9701,7 @@
         "kind": 5,
         "importPath": "backend.routers.pricing_chat",
         "description": "backend.routers.pricing_chat",
-        "peekOfCode": "logger = logging.getLogger(__name__)\nrouter = APIRouter(prefix=\"/api/pricing-chat\", tags=[\"pricing-chat\"])\nclass PricingChatQuery(BaseModel):\n    \"\"\"Request body for the pricing chat endpoint.\"\"\"\n    query: str\n    proposal_context: str  # Serialized computed state from the frontend\n    session_id: str\n    organization_id: str\n    # Identity fields for mutation tools (update_rates / update_positions).\n    # Optional so existing clients don't break; mutation tools are simply",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nrouter = APIRouter(prefix=\"/api/pricing-chat\", tags=[\"pricing-chat\"])\nclass PricingChatQuery(BaseModel):\n    \"\"\"Request body for the pricing chat endpoint.\"\"\"\n    query: str\n    session_id: str\n    organization_id: str\n    proposal_id: str          # now required — the agent reads context from DB\n    user_id: str              # now required — used for org-scoped access check\n    role: Optional[str] = None",
         "detail": "backend.routers.pricing_chat",
         "documentation": {}
     },
@@ -9646,7 +9710,7 @@
         "kind": 5,
         "importPath": "backend.routers.pricing_chat",
         "description": "backend.routers.pricing_chat",
-        "peekOfCode": "router = APIRouter(prefix=\"/api/pricing-chat\", tags=[\"pricing-chat\"])\nclass PricingChatQuery(BaseModel):\n    \"\"\"Request body for the pricing chat endpoint.\"\"\"\n    query: str\n    proposal_context: str  # Serialized computed state from the frontend\n    session_id: str\n    organization_id: str\n    # Identity fields for mutation tools (update_rates / update_positions).\n    # Optional so existing clients don't break; mutation tools are simply\n    # omitted when not provided.",
+        "peekOfCode": "router = APIRouter(prefix=\"/api/pricing-chat\", tags=[\"pricing-chat\"])\nclass PricingChatQuery(BaseModel):\n    \"\"\"Request body for the pricing chat endpoint.\"\"\"\n    query: str\n    session_id: str\n    organization_id: str\n    proposal_id: str          # now required — the agent reads context from DB\n    user_id: str              # now required — used for org-scoped access check\n    role: Optional[str] = None\n    # Retrieval tools — \"bls\" enables SOC retriever + wage lookup;",
         "detail": "backend.routers.pricing_chat",
         "documentation": {}
     },
@@ -10872,6 +10936,24 @@
         "description": "backend.utils.processing",
         "peekOfCode": "logger = logging.getLogger(__name__)\n# ============================================================================\n# HELPER\n# ============================================================================\ndef convert_intelligent_output_to_dataframe(intelligent_result: Dict[str, Any]) -> Dict[str, Any]:\n    \"\"\"\n    Convert intelligent parser output to the same format as jd_parser output.\n    Returns:\n        Dict with keys: df, travel, odcs, extensions\n    \"\"\"",
         "detail": "backend.utils.processing",
+        "documentation": {}
+    },
+    {
+        "label": "build_proposal_context",
+        "kind": 2,
+        "importPath": "backend.utils.proposal_context_builder",
+        "description": "backend.utils.proposal_context_builder",
+        "peekOfCode": "def build_proposal_context(proposal: Dict[str, Any]) -> Dict[str, Any]:\n    \"\"\"\n    Convert a MongoDB proposal document into the agent's per-turn context JSON.\n    Args:\n        proposal: The proposal document as returned by ProposalCRUD.get_proposal\n                  (already serialized — _id → id as string).\n    Returns:\n        Dict matching the schema documented in this module's docstring. Safe to\n        json.dumps() and inject into the agent instructions.\n    \"\"\"",
+        "detail": "backend.utils.proposal_context_builder",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.utils.proposal_context_builder",
+        "description": "backend.utils.proposal_context_builder",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# ─── Tiny helpers ──────────────────────────────────────────────────────\ndef _round(n: Any, decimals: int = 2) -> float:\n    \"\"\"Safe round — handles None / NaN / non-finite without raising.\"\"\"\n    try:\n        f = float(n)\n    except (TypeError, ValueError):\n        return 0.0\n    if f != f or f in (float(\"inf\"), float(\"-inf\")):  # NaN / inf\n        return 0.0",
+        "detail": "backend.utils.proposal_context_builder",
         "documentation": {}
     },
     {

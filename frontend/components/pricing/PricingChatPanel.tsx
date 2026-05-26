@@ -4,7 +4,6 @@ import { memo, useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { MessageCircle, X, Send, Loader2, Sparkles, Target } from 'lucide-react';
 import { usePricingStore } from '@/lib/stores/pricingStore';
 import { useAuthStore } from '@/lib/stores/authStore';
-import { serializeProposalContext } from '@/lib/chat/proposalContext';
 import { streamPricingChat, streamPricingChatResume } from '@/lib/api/pricingChat';
 import MarkdownRenderer from './chat/MarkdownRenderer';
 import ThinkingIndicator from './chat/ThinkingIndicator';
@@ -373,8 +372,6 @@ export default function PricingChatPanel() {
   // without capturing a stale closure (sessionId can change between the
   // open-chat event firing and the deferred handleSend executing).
   const sessionIdRef = useRef<string>(sessionId);
-  // Snapshot of the last proposal_context sent, so /resume can resend it.
-  const lastProposalContextRef = useRef<string>('');
   // Active paused run waiting for user approval (at most one at a time).
   const [pausedRun, setPausedRun] = useState<PausedRun | null>(null);
 
@@ -532,33 +529,6 @@ export default function PricingChatPanel() {
       return;
     }
 
-    // Snapshot store state and serialize the full proposal context
-    const state = usePricingStore.getState();
-    const proposalContext = serializeProposalContext({
-      proposalId: state.proposalId,
-      proposalName: state.proposalName,
-      solicitationNumber: state.solicitationNumber,
-      primeContractorName: state.primeContractorName,
-      dcaaContact: state.dcaaContact,
-      totalYears: state.totalYears,
-      baseYears: state.baseYears,
-      optionYears: state.optionYears,
-      monthsPerYear: state.monthsPerYear,
-      extensions: state.extensions,
-      surge: state.surge,
-      positions: state.positions,
-      subcontractors: state.subcontractors,
-      travel: state.travel,
-      odcs: state.odcs,
-      rates: state.rates,
-      escalationRates: state.escalationRates,
-      positionsAdvanced: state.positionsAdvanced,
-      aggregates: state.aggregates,
-      advancedMode: state.advancedMode,
-      subcontractorConfigured: state.subcontractorConfigured,
-      activeTab: state.activeTab,
-    });
-
     const userMsg: ChatMessage = {
       id: `u-${Date.now()}`,
       role: 'user',
@@ -575,22 +545,41 @@ export default function PricingChatPanel() {
     setInput('');
     setIsStreaming(true);
 
+    // Flush any pending auto-save before opening the SSE so the backend
+    // builds context from fresh MongoDB data, not the 2s-stale snapshot.
+    // Silent — the assistant's "thinking" indicator already covers the wait.
+    const preState = usePricingStore.getState();
+    if (preState.isDirty && preState.proposalId) {
+      try {
+        await preState.saveProposal();
+      } catch (err) {
+        console.warn('[pricing-chat] pre-send save failed (continuing):', err);
+      }
+    }
+    if (!user?.id) {
+      setMessages((m) =>
+        m.map((msg) =>
+          msg.id === assistantMsg.id
+            ? { ...msg, content: '⚠️ Sign-in required.', streaming: false, thinking: false }
+            : msg,
+        ),
+      );
+      setIsStreaming(false);
+      return;
+    }
+
     const controller = new AbortController();
     abortRef.current = controller;
-
-    // Snapshot for /resume
-    lastProposalContextRef.current = proposalContext;
 
     try {
       for await (const evt of streamPricingChat(
         {
           query: trimmed,
-          proposal_context: proposalContext,
           session_id: sessionIdRef.current,
           organization_id: organizationId,
-          proposal_id: proposalId ?? undefined,
-          user_id: user?.id,
-          role: user?.role,
+          proposal_id: proposalId,
+          user_id: user.id,
+          role: user.role,
           proposal_type: wageSource?.type,
           gsa_file_id: wageSource?.type === 'gsa' ? wageSource.file_id : undefined,
           gsa_current_year: gsaCurrentYear,
@@ -849,7 +838,7 @@ export default function PricingChatPanel() {
   }, [handleSend]);
 
   const handleResume = useCallback(async (confirmed: boolean, note?: string) => {
-    if (!pausedRun || !organizationId) return;
+    if (!pausedRun || !organizationId || !proposalId || !user?.id) return;
 
     const pr = pausedRun;
     setPausedRun(null);
@@ -872,13 +861,12 @@ export default function PricingChatPanel() {
         {
           run_id: pr.run_id,
           session_id: sessionIdRef.current,
-          proposal_context: lastProposalContextRef.current,
           organization_id: organizationId,
           confirmed,
           confirmation_note: note,
-          proposal_id: proposalId ?? undefined,
-          user_id: user?.id,
-          role: user?.role,
+          proposal_id: proposalId,
+          user_id: user.id,
+          role: user.role,
           proposal_type: wageSource?.type,
           gsa_file_id: wageSource?.type === 'gsa' ? wageSource.file_id : undefined,
           gsa_current_year: gsaCurrentYear,

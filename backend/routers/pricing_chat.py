@@ -1,11 +1,13 @@
 """
 Pricing chat router — streams answers from the Pricing Agent via SSE.
 
-The frontend passes its fully-computed proposal state as `proposal_context`;
-the agent reads figures directly from it (readable-state pattern). No
-compute tools in v1.
+The proposal-state context is built server-side from MongoDB on every request
+(see `utils.proposal_context_builder.build_proposal_context`). The frontend
+just sends `proposal_id` + identity; no need to ship a 200-300 KB JSON blob
+over the wire each turn. Same source of truth as the Excel export.
 """
 
+import json
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException
@@ -16,6 +18,8 @@ import logging
 from agent.pricing_agent import get_pricing_agent
 from agno.run.requirement import RunRequirement
 from utils.agent_streaming import stream_agent_continuation, stream_agent_response
+from utils.proposal_context_builder import build_proposal_context
+from utils.proposals import get_proposal_crud
 from utils.python_repl_tool import set_session_id
 from utils.streaming import create_sse_event_stream
 
@@ -27,14 +31,10 @@ class PricingChatQuery(BaseModel):
     """Request body for the pricing chat endpoint."""
 
     query: str
-    proposal_context: str  # Serialized computed state from the frontend
     session_id: str
     organization_id: str
-    # Identity fields for mutation tools (update_rates / update_positions).
-    # Optional so existing clients don't break; mutation tools are simply
-    # omitted when not provided.
-    proposal_id: Optional[str] = None
-    user_id: Optional[str] = None
+    proposal_id: str          # now required — the agent reads context from DB
+    user_id: str              # now required — used for org-scoped access check
     role: Optional[str] = None
     # Retrieval tools — "bls" enables SOC retriever + wage lookup;
     # "gsa" enables GSA labor-category retriever + rate lookup.
@@ -48,30 +48,63 @@ class PricingChatResumeRequest(BaseModel):
 
     run_id: str
     session_id: str
-    proposal_context: str  # Resent by frontend to rebuild the agent identically
     organization_id: str
     confirmed: bool  # True = approve the pending tool, False = reject
     confirmation_note: Optional[str] = None  # Optional rejection reason
-    # Mirror of /ask identity fields — needed to rebuild mutation tools identically
-    proposal_id: Optional[str] = None
-    user_id: Optional[str] = None
+    # Identity needed to rebuild mutation tools + refetch proposal context
+    proposal_id: str
+    user_id: str
     role: Optional[str] = None
     proposal_type: Optional[str] = None
     gsa_file_id: Optional[str] = None
     gsa_current_year: Optional[int] = None
 
 
+def _load_proposal_context(
+    proposal_id: str,
+    user_id: str,
+    organization_id: str,
+    role: Optional[str],
+) -> str:
+    """
+    Fetch the proposal from MongoDB and serialize it as the JSON blob the
+    agent consumes inside its <proposal_state> instruction block.
+
+    Raises HTTPException(404) if the proposal is missing or the caller can't
+    access it.
+    """
+    crud = get_proposal_crud()
+    doc = crud.get_proposal(
+        proposal_id=proposal_id,
+        user_id=user_id,
+        organization_id=organization_id,
+        role=role,
+    )
+    if not doc:
+        raise HTTPException(
+            status_code=404,
+            detail="Proposal not found or access denied",
+        )
+    ctx = build_proposal_context(doc)
+    return json.dumps(ctx, default=str)
+
+
 @router.post("/ask")
 async def ask_pricing(request: PricingChatQuery):
     """
-    Ask a question about the currently-open proposal.
+    Ask a question about a proposal.
 
     Request body:
         {
             "query": "How many off-site positions and what's their total cost?",
-            "proposal_context": "<YAML/JSON of computed proposal state>",
             "session_id": "session_abc123",
-            "organization_id": "6939ab..."
+            "organization_id": "6939ab...",
+            "proposal_id": "6929ae...",
+            "user_id": "d843...",
+            "role": "admin",
+            "proposal_type": "bls" | "gsa",   // optional, enables retrieval tools
+            "gsa_file_id": "...",             // required when proposal_type=="gsa"
+            "gsa_current_year": 5             // optional, GSA contract year
         }
 
     Response: SSE stream (same event shape as /api/help/ask).
@@ -83,10 +116,24 @@ async def ask_pricing(request: PricingChatQuery):
             )
         if not request.organization_id or not request.organization_id.strip():
             raise HTTPException(status_code=400, detail="organization_id is required")
+        if not request.proposal_id or not request.proposal_id.strip():
+            raise HTTPException(status_code=400, detail="proposal_id is required")
+        if not request.user_id or not request.user_id.strip():
+            raise HTTPException(status_code=400, detail="user_id is required")
+
+        # Build context server-side from MongoDB. Single source of truth with
+        # the Excel export; no stale-frontend-blob risk.
+        proposal_context = _load_proposal_context(
+            proposal_id=request.proposal_id,
+            user_id=request.user_id,
+            organization_id=request.organization_id,
+            role=request.role,
+        )
 
         logger.info(
             f"[pricing-chat] session={request.session_id} org={request.organization_id} "
-            f"query_len={len(request.query)} context_len={len(request.proposal_context)}"
+            f"proposal_id={request.proposal_id} query_len={len(request.query)} "
+            f"context_len={len(proposal_context)}"
         )
 
         # Build a fresh agent for this request with the live proposal state
@@ -95,7 +142,7 @@ async def ask_pricing(request: PricingChatQuery):
         # reasoning, formulas text) are cached at module level.
         agent = get_pricing_agent(
             session_id=request.session_id,
-            proposal_context=request.proposal_context,
+            proposal_context=proposal_context,
             proposal_id=request.proposal_id,
             user_id=request.user_id,
             organization_id=request.organization_id,
@@ -143,20 +190,9 @@ async def resume_pricing(request: PricingChatResumeRequest):
     Resume a paused pricing-agent run after the user approves or rejects
     the pending requires_confirmation tool call.
 
-    The frontend receives a `run.paused` SSE event from /ask, shows the
-    approval card, and POSTs here with the user's decision.
-
-    Request body:
-        {
-            "run_id": "run_abc123",
-            "session_id": "session_abc123",
-            "proposal_context": "<same YAML/JSON sent to /ask>",
-            "organization_id": "6939ab...",
-            "confirmed": true,
-            "confirmation_note": null
-        }
-
-    Response: SSE stream (same event shape as /ask).
+    Like /ask, this refetches the proposal from MongoDB so the post-approval
+    continuation sees the latest state (which now includes whatever the
+    mutation just wrote).
     """
     try:
         if not request.run_id or not request.run_id.strip():
@@ -165,6 +201,10 @@ async def resume_pricing(request: PricingChatResumeRequest):
             raise HTTPException(status_code=400, detail="session_id is required")
         if not request.organization_id or not request.organization_id.strip():
             raise HTTPException(status_code=400, detail="organization_id is required")
+        if not request.proposal_id or not request.proposal_id.strip():
+            raise HTTPException(status_code=400, detail="proposal_id is required")
+        if not request.user_id or not request.user_id.strip():
+            raise HTTPException(status_code=400, detail="user_id is required")
 
         logger.info(
             f"[pricing-chat/resume] run={request.run_id} session={request.session_id} "
@@ -172,11 +212,19 @@ async def resume_pricing(request: PricingChatResumeRequest):
             f"user_id={request.user_id!r} org={request.organization_id!r} role={request.role!r}"
         )
 
+        # Rebuild context from MongoDB (mutation may already have landed).
+        proposal_context = _load_proposal_context(
+            proposal_id=request.proposal_id,
+            user_id=request.user_id,
+            organization_id=request.organization_id,
+            role=request.role,
+        )
+
         # Rebuild the agent identically to the original /ask call so agno can
         # locate the stored run in its agent_sessions collection.
         agent = get_pricing_agent(
             session_id=request.session_id,
-            proposal_context=request.proposal_context,
+            proposal_context=proposal_context,
             proposal_id=request.proposal_id,
             user_id=request.user_id,
             organization_id=request.organization_id,

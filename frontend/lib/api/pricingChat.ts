@@ -1,17 +1,22 @@
 /**
  * Streaming client for /api/pricing-chat/ask.
  *
- * Posts the serialized proposal context + user query, consumes the SSE
- * response, and yields message deltas to the caller.
+ * The backend builds the proposal-state context server-side from MongoDB
+ * (see backend/utils/proposal_context_builder.py). Callers only need to send
+ * `proposal_id` + identity; no large JSON payload over the wire.
+ *
+ * IMPORTANT: callers should flush any pending auto-save before invoking
+ * `streamPricingChat` so the agent reads fresh data, not stale-by-2s data.
  */
 
 export interface PricingChatRequest {
   query: string;
-  proposal_context: string;
   session_id: string;
   organization_id: string;
-  proposal_id?: string;
-  user_id?: string;
+  // proposal_id + user_id are required server-side — typed as required here
+  // so the TS compiler catches missing values at the call site.
+  proposal_id: string;
+  user_id: string;
   role?: string;
   proposal_type?: 'bls' | 'gsa';
   gsa_file_id?: string;
@@ -21,12 +26,11 @@ export interface PricingChatRequest {
 export interface PricingChatResumeRequest {
   run_id: string;
   session_id: string;
-  proposal_context: string;
   organization_id: string;
   confirmed: boolean;
   confirmation_note?: string;
-  proposal_id?: string;
-  user_id?: string;
+  proposal_id: string;
+  user_id: string;
   role?: string;
   proposal_type?: 'bls' | 'gsa';
   gsa_file_id?: string;
