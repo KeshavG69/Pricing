@@ -450,6 +450,66 @@ def create_indexes():
         print("   ⚠ Already exists: user_id + organization_id (unique)")
 
     # =====================================================================
+    # CHAT_CONVERSATIONS COLLECTION (Q pricing chat — sidebar metadata)
+    # =====================================================================
+    print("\n14. CHAT_CONVERSATIONS Collection:")
+    chat_conversations = db.chat_conversations
+
+    # Unique session_id — guards against double-create races when two
+    # background-persist tasks fire for the same session.
+    if safe_create_index(chat_conversations, "session_id", "session_id_unique_index", unique=True):
+        print("   ✓ Created: session_id (unique)")
+    else:
+        print("   ⚠ Already exists: session_id (unique)")
+
+    # Primary sidebar query: "show my active chats, newest first."
+    if safe_create_index(
+        chat_conversations,
+        [("user_id", ASCENDING), ("organization_id", ASCENDING),
+         ("status", ASCENDING), ("updated_at", DESCENDING)],
+        "user_org_status_updated_index",
+    ):
+        print("   ✓ Created: user_id + organization_id + status + updated_at")
+    else:
+        print("   ⚠ Already exists: user_id + organization_id + status + updated_at")
+
+    # Grouped-by-proposal sidebar: "show chats about this proposal."
+    if safe_create_index(
+        chat_conversations,
+        [("proposal_id", ASCENDING), ("status", ASCENDING), ("updated_at", DESCENDING)],
+        "proposal_status_updated_index",
+    ):
+        print("   ✓ Created: proposal_id + status + updated_at")
+    else:
+        print("   ⚠ Already exists: proposal_id + status + updated_at")
+
+    # =====================================================================
+    # CHAT_MESSAGES COLLECTION (Q pricing chat — per-turn message store)
+    # =====================================================================
+    print("\n15. CHAT_MESSAGES Collection:")
+    chat_messages = db.chat_messages
+
+    # Primary chat-replay query: "all messages for this conversation, oldest first."
+    if safe_create_index(
+        chat_messages,
+        [("conversation_id", ASCENDING), ("created_at", ASCENDING)],
+        "conversation_created_index",
+    ):
+        print("   ✓ Created: conversation_id + created_at")
+    else:
+        print("   ⚠ Already exists: conversation_id + created_at")
+
+    # /resume lookup: find the paused message to finalize after approval.
+    if safe_create_index(
+        chat_messages,
+        [("conversation_id", ASCENDING), ("paused_run_id", ASCENDING)],
+        "conversation_paused_run_index",
+    ):
+        print("   ✓ Created: conversation_id + paused_run_id")
+    else:
+        print("   ⚠ Already exists: conversation_id + paused_run_id")
+
+    # =====================================================================
     # SUMMARY
     # =====================================================================
     print("\n" + "=" * 60)
@@ -457,7 +517,7 @@ def create_indexes():
     print("=" * 60)
 
     # List all indexes per collection
-    collections = ["proposals", "wage_data", "areas", "occupations", "users", "organizations", "invitations", "token_blacklist", "company_repositories", "billing", "refresh_tokens", "datatypes", "onboarding_progress"]
+    collections = ["proposals", "wage_data", "areas", "occupations", "users", "organizations", "invitations", "token_blacklist", "company_repositories", "billing", "refresh_tokens", "datatypes", "onboarding_progress", "chat_conversations", "chat_messages"]
     for coll_name in collections:
         coll = db[coll_name]
         indexes = list(coll.list_indexes())
