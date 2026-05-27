@@ -19,7 +19,7 @@
  *   - Quiet chrome — content leads, layout recedes
  */
 
-import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -94,7 +94,26 @@ function groupByProposal(
 
 // ─── Page ─────────────────────────────────────────────────────────
 
+/**
+ * Page entry — wraps the real component in a Suspense boundary so
+ * Next.js 16 can prerender `/q` (required because `useSearchParams()`
+ * forces client-side bailout otherwise).
+ */
 export default function QHistoryPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center bg-background text-sm text-muted-foreground">
+          Loading
+        </div>
+      }
+    >
+      <QHistoryPageInner />
+    </Suspense>
+  );
+}
+
+function QHistoryPageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user } = useAuthStore();
