@@ -4,7 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
-import { LayoutGrid, FileText, Building, Building2, Menu, ChevronDown, Settings, LogOut } from 'lucide-react';
+import { LayoutGrid, FileText, Building, Building2, Menu, ChevronDown, Settings, LogOut, MessageSquare } from 'lucide-react';
 import { isAdmin } from '@/lib/utils/permissions';
 import { useAuthStore } from '@/lib/stores/authStore';
 import RoleBadge from '../ui/RoleBadge';
@@ -44,6 +44,7 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
     { href: '/dashboard', label: 'Dashboard', icon: LayoutGrid },
     { href: '/dashboard/proposals', label: 'Proposals', icon: FileText },
     { href: '/dashboard/company-repository', label: 'Company Rates', icon: Building2 },
+    { href: '/q', label: 'Agent Q', icon: MessageSquare },
   ];
 
   const adminNavItems = [
@@ -100,8 +101,8 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
                   }`}
                   style={{ animationDelay: `${index * 50}ms` }}
                 >
-                  <Icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`} />
-                  <span className="text-sm hidden sm:inline">{item.label}</span>
+                  <Icon className={`w-5 h-5 shrink-0 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`} />
+                  <span className="text-sm hidden sm:inline whitespace-nowrap">{item.label}</span>
                 </div>
               </Link>
             );
@@ -126,8 +127,8 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
                         }`}
                         style={{ animationDelay: `${(index + 3) * 50}ms` }}
                       >
-                        <Icon className={`w-5 h-5 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`} />
-                        <span className="text-sm">{item.label}</span>
+                        <Icon className={`w-5 h-5 shrink-0 transition-transform duration-200 ${isActive ? 'scale-110' : ''}`} />
+                        <span className="text-sm whitespace-nowrap">{item.label}</span>
                       </div>
                     </Link>
                   );
