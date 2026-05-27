@@ -5,19 +5,41 @@ The proposal-state context is built server-side from MongoDB on every request
 (see `utils.proposal_context_builder.build_proposal_context`). The frontend
 just sends `proposal_id` + identity; no need to ship a 200-300 KB JSON blob
 over the wire each turn. Same source of truth as the Excel export.
+
+Chat history is persisted out-of-band via `utils.chat_persistence`: a
+MessageTracker observes the SSE events as they flow through, and a
+fire-and-forget asyncio task writes the turn into chat_conversations /
+chat_messages after the stream ends. The streaming hot path never awaits
+a DB write.
+
+The /conversations endpoints under this router expose that chat history:
+listing for the sidebar, full replay for resuming a past chat, rename, and
+soft-delete (trash). Identity (user_id / organization_id) is passed as
+query params / body fields to match the rest of this router.
 """
 
 import json
-from typing import Optional
+from typing import List, Literal, Optional, Tuple
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import logging
 
 from agent.pricing_agent import get_pricing_agent
 from agno.run.requirement import RunRequirement
 from utils.agent_streaming import stream_agent_continuation, stream_agent_response
+from utils.chat_conversations import get_chat_conversation_crud
+from utils.chat_messages import get_chat_message_crud
+from utils.chat_persistence import (
+    persist_continuation,
+    persist_turn,
+    stream_with_tracking,
+)
+from utils.chat_title_generator import (
+    generate_title,
+    is_generation_worthwhile,
+)
 from utils.proposal_context_builder import build_proposal_context
 from utils.proposals import get_proposal_crud
 from utils.python_repl_tool import set_session_id
@@ -65,10 +87,14 @@ def _load_proposal_context(
     user_id: str,
     organization_id: str,
     role: Optional[str],
-) -> str:
+) -> Tuple[str, Optional[str]]:
     """
     Fetch the proposal from MongoDB and serialize it as the JSON blob the
     agent consumes inside its <proposal_state> instruction block.
+
+    Returns a tuple of (serialized_context, proposal_name). The proposal_name
+    is denormalized into chat_conversations so the sidebar can render without
+    a second collection lookup.
 
     Raises HTTPException(404) if the proposal is missing or the caller can't
     access it.
@@ -86,7 +112,7 @@ def _load_proposal_context(
             detail="Proposal not found or access denied",
         )
     ctx = build_proposal_context(doc)
-    return json.dumps(ctx, default=str)
+    return json.dumps(ctx, default=str), doc.get("name")
 
 
 @router.post("/ask")
@@ -123,7 +149,7 @@ async def ask_pricing(request: PricingChatQuery):
 
         # Build context server-side from MongoDB. Single source of truth with
         # the Excel export; no stale-frontend-blob risk.
-        proposal_context = _load_proposal_context(
+        proposal_context, proposal_name = _load_proposal_context(
             proposal_id=request.proposal_id,
             user_id=request.user_id,
             organization_id=request.organization_id,
@@ -163,11 +189,32 @@ async def ask_pricing(request: PricingChatQuery):
             "Vary": "Accept",
         }
 
+        # Capture identity into the persistence callback closure — the SSE
+        # generator must be able to call this after the stream ends without
+        # re-reading `request` (which is gone by then).
+        async def _on_turn_complete(tracker):
+            await persist_turn(
+                session_id=request.session_id,
+                user_id=request.user_id,
+                organization_id=request.organization_id,
+                proposal_id=request.proposal_id,
+                proposal_name=proposal_name,
+                user_query=request.query,
+                tracker=tracker,
+            )
+
         async def sse_stream():
             # stream_agent_response yields the `analysis` event as its very
             # first chunk (matches Kroolo's "QueryAnalysing" pattern), so the
             # UI's thinking indicator fires before the agent is awaited.
-            events = stream_agent_response(request.query, agent)
+            #
+            # stream_with_tracking observes events as they pass through, then
+            # fires `_on_turn_complete` as a fire-and-forget background task
+            # when the upstream generator exhausts — zero blocking on the user.
+            events = stream_with_tracking(
+                stream_agent_response(request.query, agent),
+                on_complete=_on_turn_complete,
+            )
             async for chunk in create_sse_event_stream(events):
                 yield chunk
 
@@ -213,7 +260,7 @@ async def resume_pricing(request: PricingChatResumeRequest):
         )
 
         # Rebuild context from MongoDB (mutation may already have landed).
-        proposal_context = _load_proposal_context(
+        proposal_context, _proposal_name = _load_proposal_context(
             proposal_id=request.proposal_id,
             user_id=request.user_id,
             organization_id=request.organization_id,
@@ -262,8 +309,24 @@ async def resume_pricing(request: PricingChatResumeRequest):
             "Vary": "Accept",
         }
 
+        # Capture for the persistence callback closure.
+        paused_run_id_for_persist = request.run_id
+        confirmed_for_persist = request.confirmed
+        session_id_for_persist = request.session_id
+
+        async def _on_continuation_complete(tracker):
+            await persist_continuation(
+                session_id=session_id_for_persist,
+                paused_run_id=paused_run_id_for_persist,
+                confirmed=confirmed_for_persist,
+                tracker=tracker,
+            )
+
         async def sse_stream():
-            events = stream_agent_continuation(agent, run_response, requirements)
+            events = stream_with_tracking(
+                stream_agent_continuation(agent, run_response, requirements),
+                on_complete=_on_continuation_complete,
+            )
             async for chunk in create_sse_event_stream(events):
                 yield chunk
 
@@ -277,4 +340,281 @@ async def resume_pricing(request: PricingChatResumeRequest):
         raise
     except Exception as e:
         logger.error(f"Error in pricing chat resume endpoint: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# =============================================================================
+# CHAT HISTORY — list / load / rename / trash
+# =============================================================================
+
+class ConversationRenameRequest(BaseModel):
+    """Body for PATCH /conversations/{id} (rename)."""
+
+    user_id: str
+    chat_name: str = Field(..., min_length=1, max_length=200)
+
+
+class ConversationTrashRequest(BaseModel):
+    """Body for PATCH /conversations/{id}/trash (soft delete)."""
+
+    user_id: str
+
+
+class ConversationGenerateTitleRequest(BaseModel):
+    """Body for POST /conversations/{id}/generate-title (LLM-summarised title)."""
+
+    user_id: str
+    # Allow overwriting a title the user manually renamed. Default False so
+    # the auto-trigger from "first message persisted" can fire safely
+    # without clobbering anything the user typed.
+    force: bool = False
+
+
+def _hydrate_conversation_for_list(conv: dict) -> dict:
+    """
+    Add `message_count` and `last_message_preview` to a conversation row for
+    the sidebar feed. Two extra MongoDB roundtrips per conversation, fine at
+    50 rows; if it ever becomes a hotspot we'd switch to an aggregation
+    pipeline or denormalize counters onto the conversation doc.
+    """
+    cm = get_chat_message_crud()
+    conv_id = conv["id"]
+    conv["message_count"] = cm.count_for_conversation(conv_id)
+    last = cm.last_for_conversation(conv_id)
+    if last:
+        content = (last.get("content") or "").strip()
+        conv["last_message_preview"] = content[:120] if content else None
+    else:
+        conv["last_message_preview"] = None
+    return conv
+
+
+@router.get("/conversations")
+async def list_conversations(
+    user_id: str = Query(..., description="Authenticated user ID (owner of the chats)"),
+    organization_id: str = Query(..., description="Organization scope"),
+    proposal_id: Optional[str] = Query(
+        None, description="Filter to chats about this proposal"
+    ),
+    status: Literal["active", "deleted"] = Query(
+        "active", description="active = inbox, deleted = trash"
+    ),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+):
+    """
+    List the user's chat conversations for the sidebar.
+
+    Sorted by `updated_at` descending (most recently used first). Each row
+    is hydrated with `message_count` and `last_message_preview` for display
+    without needing a second roundtrip.
+
+    Returns:
+        { "conversations": [...], "total": <hydrated count> }
+    """
+    try:
+        if not user_id.strip() or not organization_id.strip():
+            raise HTTPException(
+                status_code=400, detail="user_id and organization_id are required"
+            )
+
+        cc = get_chat_conversation_crud()
+        rows = cc.list(
+            user_id=user_id,
+            organization_id=organization_id,
+            proposal_id=proposal_id,
+            status=status,
+            limit=limit,
+            offset=offset,
+        )
+
+        hydrated = [_hydrate_conversation_for_list(r) for r in rows]
+        return {
+            "conversations": hydrated,
+            "total": len(hydrated),
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error listing conversations: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/conversations/{conversation_id}")
+async def get_conversation_with_messages(
+    conversation_id: str,
+    user_id: str = Query(..., description="Authenticated user ID (owner)"),
+):
+    """
+    Load one conversation with its full message history — used by the panel
+    or fullscreen view to re-hydrate a past chat for the user to read /
+    continue.
+
+    Owner-scoped: returns 404 if the conversation doesn't exist OR isn't
+    owned by `user_id`. Same response for both to avoid leaking existence.
+
+    Returns:
+        { "conversation": {...}, "messages": [...] }
+    """
+    try:
+        if not user_id.strip():
+            raise HTTPException(status_code=400, detail="user_id is required")
+
+        cc = get_chat_conversation_crud()
+        cm = get_chat_message_crud()
+
+        conv = cc.get(conversation_id=conversation_id, user_id=user_id)
+        if not conv:
+            raise HTTPException(
+                status_code=404, detail="Conversation not found or access denied"
+            )
+
+        messages = cm.list_for_conversation(conversation_id=conv["id"])
+        return {
+            "conversation": conv,
+            "messages": messages,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error loading conversation {conversation_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.patch("/conversations/{conversation_id}")
+async def rename_conversation(
+    conversation_id: str,
+    request: ConversationRenameRequest,
+):
+    """
+    Rename a conversation (sidebar title). Owner-only.
+
+    Returns:
+        { "conversation": <updated row> }
+    """
+    try:
+        cc = get_chat_conversation_crud()
+        updated = cc.rename(
+            conversation_id=conversation_id,
+            user_id=request.user_id,
+            new_name=request.chat_name,
+        )
+        if not updated:
+            raise HTTPException(
+                status_code=404, detail="Conversation not found or access denied"
+            )
+        return {"conversation": updated}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error renaming conversation {conversation_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.patch("/conversations/{conversation_id}/trash")
+async def trash_conversation(
+    conversation_id: str,
+    request: ConversationTrashRequest,
+):
+    """
+    Soft-delete a conversation — flips status to "deleted". Row stays in
+    Mongo (and so do its messages); the sidebar list filters them out by
+    default. Recoverable if/when we build a trash view.
+
+    Returns:
+        { "success": true }
+    """
+    try:
+        cc = get_chat_conversation_crud()
+        ok = cc.soft_delete(
+            conversation_id=conversation_id,
+            user_id=request.user_id,
+        )
+        if not ok:
+            raise HTTPException(
+                status_code=404, detail="Conversation not found or access denied"
+            )
+        return {"success": True}
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error trashing conversation {conversation_id}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/conversations/{conversation_id}/generate-title")
+async def generate_conversation_title(
+    conversation_id: str,
+    request: ConversationGenerateTitleRequest,
+):
+    """
+    Use the LLM to produce a short scannable title for the conversation,
+    based on its first user message. Mirrors Kroolo's
+    /api/ai-chat/generate-title pattern.
+
+    Behavior:
+      - Authz: caller must own the conversation (user_id match).
+      - Skips the LLM round-trip on greetings / very short messages and
+        keeps the default title.
+      - Respects `title_is_custom=True` (user manually renamed) unless
+        the request passes `force=true`.
+      - On any error, returns the conversation unchanged with the existing
+        title — never breaks the chat experience.
+
+    Returns:
+        { "conversation": <conversation>, "generated_title": <str> }
+    """
+    try:
+        cc = get_chat_conversation_crud()
+        cm = get_chat_message_crud()
+
+        conv = cc.get(conversation_id=conversation_id, user_id=request.user_id)
+        if not conv:
+            raise HTTPException(
+                status_code=404, detail="Conversation not found or access denied"
+            )
+
+        # If user already renamed manually, don't waste the LLM call (unless
+        # the caller explicitly forces a regeneration).
+        if conv.get("title_is_custom") and not request.force:
+            return {"conversation": conv, "generated_title": conv["chat_name"]}
+
+        # Find the first user message — that's what we summarise.
+        messages = cm.list_for_conversation(conversation_id=conv["id"], limit=5)
+        first_query: Optional[str] = next(
+            (m.get("user_query") for m in messages if m.get("user_query")),
+            None,
+        )
+        if not first_query or not is_generation_worthwhile(first_query):
+            # Not worth an LLM call — return current title as-is.
+            return {"conversation": conv, "generated_title": conv["chat_name"]}
+
+        new_title = generate_title(first_query)
+
+        # If the LLM produced essentially what we already have, skip the write.
+        if new_title.strip().lower() == conv["chat_name"].strip().lower():
+            return {"conversation": conv, "generated_title": new_title}
+
+        updated = cc.set_generated_title(
+            conversation_id=conv["id"],
+            user_id=request.user_id,
+            new_name=new_title,
+            force=request.force,
+        )
+        return {
+            "conversation": updated or conv,
+            "generated_title": new_title,
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(
+            f"Error generating title for conversation {conversation_id}: {e}",
+            exc_info=True,
+        )
+        # Fail soft — never block the chat UX on title generation.
+        cc = get_chat_conversation_crud()
+        conv = cc.get(conversation_id=conversation_id, user_id=request.user_id)
+        if conv:
+            return {"conversation": conv, "generated_title": conv["chat_name"]}
         raise HTTPException(status_code=500, detail=str(e))

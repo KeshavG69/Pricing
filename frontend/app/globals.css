@@ -124,6 +124,21 @@
     to { transform: scale(1); opacity: 1; }
   }
 
+  /* Chat — Q sidebar/message entry. Lifted slightly with strong ease-out
+     so cascading entries feel intentional, not jittery. */
+  @keyframes chatRowIn {
+    from { transform: translateY(6px); opacity: 0; }
+    to   { transform: translateY(0);   opacity: 1; }
+  }
+  @keyframes scaleIn {
+    from { transform: scale(0.94); opacity: 0; }
+    to   { transform: scale(1);    opacity: 1; }
+  }
+  @keyframes msgIn {
+    from { transform: translateY(8px); opacity: 0; }
+    to   { transform: translateY(0);   opacity: 1; }
+  }
+
   @keyframes slide-in-left {
     from {
       transform: translateX(-50px);

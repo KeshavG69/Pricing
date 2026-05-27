@@ -1,10 +1,20 @@
 'use client';
 
 import { memo, useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { MessageCircle, X, Send, Loader2, Sparkles, Target } from 'lucide-react';
+import { MessageCircle, X, Send, Loader2, Sparkles, Target, Clock, Maximize2, Trash2, Pencil } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { usePricingStore } from '@/lib/stores/pricingStore';
 import { useAuthStore } from '@/lib/stores/authStore';
-import { streamPricingChat, streamPricingChatResume } from '@/lib/api/pricingChat';
+import {
+  streamPricingChat,
+  streamPricingChatResume,
+  listConversations,
+  getConversationWithMessages,
+  renameConversation,
+  trashConversation,
+  type ChatConversation,
+  type ChatMessageRecord,
+} from '@/lib/api/pricingChat';
 import MarkdownRenderer from './chat/MarkdownRenderer';
 import ThinkingIndicator from './chat/ThinkingIndicator';
 import ReasoningSteps, { type ReasoningStep } from './chat/ReasoningSteps';
@@ -104,6 +114,109 @@ const TIMELINE_HIDDEN_TOOL_NAMES = new Set([
 function newSessionId(proposalId: string | null): string {
   const suffix = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   return proposalId ? `chat-${proposalId}-${suffix}` : `ephemeral-${suffix}`;
+}
+
+/**
+ * Format a timestamp into a sidebar-friendly relative label
+ * ("just now", "12m", "3h", "Yesterday", "Mar 4"). Mirrors how Linear /
+ * Notion show timestamps in their lists.
+ */
+function relativeTime(iso: string): string {
+  const then = new Date(iso).getTime();
+  const now = Date.now();
+  const diffMs = Math.max(0, now - then);
+  const min = Math.floor(diffMs / 60_000);
+  if (min < 1) return 'just now';
+  if (min < 60) return `${min}m`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h`;
+  if (hr < 48) return 'Yesterday';
+  const days = Math.floor(hr / 24);
+  if (days < 7) return `${days}d`;
+  const d = new Date(iso);
+  return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+}
+
+/**
+ * Convert persisted `ChatMessageRecord` rows from the backend back into the
+ * panel's `ChatMessage[]` shape so a past chat re-renders identically to
+ * when it originally streamed.
+ *
+ * Two messages per turn: one user, one assistant. The assistant carries
+ * the full content + blocks + reasoning + toolCalls captured by
+ * MessageTracker.
+ */
+function hydrateMessagesFromRecords(
+  records: ChatMessageRecord[],
+): ChatMessage[] {
+  const out: ChatMessage[] = [];
+  for (const rec of records) {
+    out.push({
+      id: `hist-u-${rec.id}`,
+      role: 'user',
+      content: rec.user_query,
+    });
+
+    // Map persisted blocks → MessageBlock with fresh ids
+    const blocks: MessageBlock[] = (rec.blocks || []).map((b, idx) => {
+      if (b.kind === 'text') {
+        return { kind: 'text', id: `hist-blk-${rec.id}-${idx}`, text: b.text };
+      }
+      return {
+        kind: 'tool',
+        id: `hist-blk-${rec.id}-${idx}`,
+        toolCallId: b.tool_call_id || `hist-tc-${rec.id}-${idx}`,
+      };
+    });
+
+    // Map tool_calls / reasoning back to the panel's local shape
+    const toolCalls: ToolCallEntry[] = (rec.tool_calls || []).map((tc, idx) => ({
+      id: tc.id || `hist-tc-${rec.id}-${idx}`,
+      name: tc.name,
+      status: tc.status,
+      args: tc.args as Record<string, unknown> | undefined,
+      result: tc.result,
+    }));
+    const reasoning: ReasoningStep[] = (rec.reasoning_steps || []).map((r, idx) => ({
+      id: r.id || `hist-rs-${rec.id}-${idx}`,
+      name: r.name,
+      args:
+        r.args && typeof r.args === 'object' && !Array.isArray(r.args)
+          ? (r.args as Record<string, unknown>)
+          : undefined,
+      result: typeof r.result === 'string' ? r.result : resultToStr(r.result),
+      error: r.error,
+      running: r.running,
+    }));
+
+    // If the turn ended in a still-pending approval card, reconstruct it
+    const pausedRun: PausedRun | undefined =
+      rec.paused_run_id && rec.confirmed === null
+        ? {
+            run_id: rec.paused_run_id,
+            tool_name: toolCalls.at(-1)?.name,
+            tool_args: toolCalls.at(-1)?.args,
+            rationale:
+              typeof toolCalls.at(-1)?.args?.rationale === 'string'
+                ? (toolCalls.at(-1)!.args!.rationale as string)
+                : undefined,
+            message_id: `hist-a-${rec.id}`,
+          }
+        : undefined;
+
+    out.push({
+      id: `hist-a-${rec.id}`,
+      role: 'assistant',
+      content: rec.content,
+      blocks,
+      toolCalls,
+      reasoning,
+      pausedRun,
+      streaming: false,
+      thinking: false,
+    });
+  }
+  return out;
 }
 
 // Stringify tool.completed `result` (may be string, object, or anything else).
@@ -387,6 +500,22 @@ export default function PricingChatPanel() {
     return (firstGSA as unknown as { gsa_current_year?: number })?.gsa_current_year ?? undefined;
   });
 
+  // ─── Chat history state ─────────────────────────────────────────
+  // History dropdown (top-right of panel header). Lists past chats for THIS
+  // proposal so the user can resume any of them in-place.
+  const router = useRouter();
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [historyItems, setHistoryItems] = useState<ChatConversation[]>([]);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(false);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+  // The conversation_id currently loaded into the panel (null = fresh, no
+  // history association). Used so rename / trash know which row to mutate.
+  const [activeConversationId, setActiveConversationId] = useState<string | null>(
+    null,
+  );
+  const historyButtonRef = useRef<HTMLButtonElement | null>(null);
+  const historyPopoverRef = useRef<HTMLDivElement | null>(null);
+
   // Keep messagesRef in sync so async event handlers can read current state.
   useEffect(() => {
     messagesRef.current = messages;
@@ -406,13 +535,72 @@ export default function PricingChatPanel() {
   // Focus input + start a fresh session every time the panel opens.
   // New session id => fresh agent-side conversation history, no bleed from
   // a previous open.
+  //
+  // Exception: if the URL has `?chat=<conversation_id>` (e.g. user clicked
+  // "Continue in workspace" from the /q page), we skip the reset and let
+  // the dedicated effect below hydrate the conversation instead.
   useEffect(() => {
     if (isOpen) {
-      setSessionId(newSessionId(proposalId));
-      setMessages([]);
+      const urlChat =
+        typeof window !== 'undefined'
+          ? new URLSearchParams(window.location.search).get('chat')
+          : null;
+      if (!urlChat) {
+        setSessionId(newSessionId(proposalId));
+        setMessages([]);
+      }
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }, [isOpen, proposalId]);
+
+  // Deep-link: workspace URL params trigger one of two panel auto-actions.
+  //   ?chat=<conversation_id>  → open panel + hydrate that past chat
+  //   ?new_chat=true           → open panel fresh (from /q's "+ New chat")
+  // Runs once per mount; URL is cleaned after consumption so refresh doesn't
+  // re-trigger.
+  const [deepLinkConsumed, setDeepLinkConsumed] = useState(false);
+  useEffect(() => {
+    if (deepLinkConsumed) return;
+    if (!user?.id || !organizationId) return;
+    if (typeof window === 'undefined') return;
+
+    const params = new URLSearchParams(window.location.search);
+    const urlChat = params.get('chat');
+    const urlNewChat = params.get('new_chat');
+
+    if (!urlChat && urlNewChat !== 'true') return;
+
+    setDeepLinkConsumed(true);
+    setIsOpen(true);
+
+    const cleanUrl = () => {
+      const url = new URL(window.location.href);
+      url.searchParams.delete('chat');
+      url.searchParams.delete('new_chat');
+      window.history.replaceState(null, '', url.toString());
+    };
+
+    if (urlChat) {
+      // Hydrate the past conversation
+      void (async () => {
+        try {
+          const { conversation } = await getConversationWithMessages(
+            urlChat,
+            user.id,
+          );
+          await handleLoadConversation(conversation);
+          cleanUrl();
+        } catch (err) {
+          console.warn('[chat-panel] deep-link hydrate failed:', err);
+          cleanUrl();
+        }
+      })();
+    } else {
+      // Fresh new chat — panel will reset session via the isOpen effect
+      cleanUrl();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, organizationId, deepLinkConsumed]);
 
   // Cancel any in-flight stream when panel closes or component unmounts
   useEffect(() => {
@@ -976,7 +1164,154 @@ export default function PricingChatPanel() {
     setSessionId(newSessionId(proposalId));
     setMessages([]);
     setIsStreaming(false);
+    setActiveConversationId(null);
   };
+
+  // ─── History dropdown handlers ─────────────────────────────────
+
+  /** Fetch the most recent chats for the current proposal + user. */
+  const refreshHistory = useCallback(async () => {
+    if (!user?.id || !organizationId) return;
+    setIsHistoryLoading(true);
+    setHistoryError(null);
+    try {
+      const items = await listConversations({
+        user_id: user.id,
+        organization_id: organizationId,
+        proposal_id: proposalId ?? undefined,
+        status: 'active',
+        limit: 20,
+      });
+      setHistoryItems(items);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setHistoryError(msg);
+    } finally {
+      setIsHistoryLoading(false);
+    }
+  }, [user?.id, organizationId, proposalId]);
+
+  /** Refresh history every time the dropdown opens (cheap, ~50ms). */
+  useEffect(() => {
+    if (isHistoryOpen) {
+      void refreshHistory();
+    }
+  }, [isHistoryOpen, refreshHistory]);
+
+  /** Close the dropdown when clicking outside it. */
+  useEffect(() => {
+    if (!isHistoryOpen) return;
+    const onDown = (e: MouseEvent) => {
+      const target = e.target as Node;
+      if (
+        historyButtonRef.current?.contains(target) ||
+        historyPopoverRef.current?.contains(target)
+      ) {
+        return;
+      }
+      setIsHistoryOpen(false);
+    };
+    document.addEventListener('mousedown', onDown);
+    return () => document.removeEventListener('mousedown', onDown);
+  }, [isHistoryOpen]);
+
+  /**
+   * Load a past conversation into the panel. Aborts any in-flight stream,
+   * fetches the messages, hydrates them, and switches the local session_id
+   * to the conversation's session_id so any new messages append to the same
+   * agno thread.
+   */
+  const handleLoadConversation = useCallback(
+    async (conv: ChatConversation) => {
+      if (!user?.id) return;
+      if (abortRef.current) abortRef.current.abort();
+      setIsHistoryOpen(false);
+      setIsStreaming(true); // brief loading state
+      setHistoryError(null);
+      try {
+        const { messages: records } = await getConversationWithMessages(
+          conv.id,
+          user.id,
+        );
+        const hydrated = hydrateMessagesFromRecords(records);
+        setMessages(hydrated);
+        setSessionId(conv.session_id);
+        setActiveConversationId(conv.id);
+        // If the most recent assistant turn ended with an unresolved pause,
+        // restore the paused-run state so the approval card re-renders.
+        const lastAssistant = [...hydrated]
+          .reverse()
+          .find((m) => m.role === 'assistant');
+        if (lastAssistant?.pausedRun) {
+          setPausedRun(lastAssistant.pausedRun);
+        } else {
+          setPausedRun(null);
+        }
+        setTimeout(() => {
+          if (scrollRef.current) {
+            scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+          }
+        }, 50);
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setHistoryError(`Failed to load chat: ${msg}`);
+      } finally {
+        setIsStreaming(false);
+      }
+    },
+    [user?.id],
+  );
+
+  /** Inline rename — uses window.prompt for v1; can swap to inline editor later. */
+  const handleRenameConversation = useCallback(
+    async (conv: ChatConversation) => {
+      if (!user?.id) return;
+      const next = window.prompt('Rename chat:', conv.chat_name);
+      if (!next || !next.trim() || next.trim() === conv.chat_name) return;
+      try {
+        const updated = await renameConversation(conv.id, user.id, next.trim());
+        setHistoryItems((items) =>
+          items.map((it) => (it.id === conv.id ? { ...it, chat_name: updated.chat_name } : it)),
+        );
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setHistoryError(`Rename failed: ${msg}`);
+      }
+    },
+    [user?.id],
+  );
+
+  /** Soft-delete — drops from sidebar; if it's the currently-loaded chat, also starts fresh. */
+  const handleTrashConversation = useCallback(
+    async (conv: ChatConversation) => {
+      if (!user?.id) return;
+      if (!window.confirm(`Delete "${conv.chat_name}"?`)) return;
+      try {
+        await trashConversation(conv.id, user.id);
+        setHistoryItems((items) => items.filter((it) => it.id !== conv.id));
+        if (activeConversationId === conv.id) {
+          handleNewSession();
+        }
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setHistoryError(`Delete failed: ${msg}`);
+      }
+    },
+    [user?.id, activeConversationId],
+  );
+
+  /** Open the dedicated /q page, carrying the current session for continuity. */
+  const handleExpandToFullscreen = useCallback(() => {
+    const params = new URLSearchParams();
+    if (activeConversationId) {
+      params.set('conversation', activeConversationId);
+    } else if (sessionIdRef.current) {
+      params.set('session', sessionIdRef.current);
+    }
+    if (proposalId) params.set('proposal_id', proposalId);
+    const qs = params.toString();
+    router.push(qs ? `/q?${qs}` : '/q');
+  }, [router, activeConversationId, proposalId]);
 
   return (
     <>
@@ -1041,7 +1376,20 @@ export default function PricingChatPanel() {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="relative flex items-center gap-1">
+                <button
+                  ref={historyButtonRef}
+                  onClick={() => setIsHistoryOpen((v) => !v)}
+                  className={`rounded-md p-1.5 ${
+                    isHistoryOpen
+                      ? 'bg-muted text-foreground'
+                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                  }`}
+                  aria-label="Chat history"
+                  title="Past conversations"
+                >
+                  <Clock className="h-4 w-4" />
+                </button>
                 <button
                   onClick={handleNewSession}
                   className="rounded-md px-2 py-1 text-xs text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -1050,12 +1398,125 @@ export default function PricingChatPanel() {
                   New chat
                 </button>
                 <button
+                  onClick={handleExpandToFullscreen}
+                  className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  aria-label="Open in fullscreen"
+                  title="Open in fullscreen"
+                >
+                  <Maximize2 className="h-4 w-4" />
+                </button>
+                <button
                   onClick={() => setIsOpen(false)}
                   className="rounded-md p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground"
                   aria-label="Close"
                 >
                   <X className="h-4 w-4" />
                 </button>
+
+                {/* History dropdown popover */}
+                {isHistoryOpen && (
+                  <div
+                    ref={historyPopoverRef}
+                    className="absolute right-0 top-10 z-50 w-80 overflow-hidden rounded-lg border border-border bg-popover text-popover-foreground shadow-xl"
+                  >
+                    <div className="border-b border-border px-3 py-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                          {proposalId ? 'Chats about this proposal' : 'Recent chats'}
+                        </span>
+                        <button
+                          onClick={() => {
+                            setIsHistoryOpen(false);
+                            handleExpandToFullscreen();
+                          }}
+                          className="text-[11px] text-blue-600 hover:underline"
+                        >
+                          View all
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="max-h-96 overflow-y-auto">
+                      {isHistoryLoading ? (
+                        <div className="flex items-center justify-center gap-2 px-3 py-6 text-xs text-muted-foreground">
+                          <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          Loading…
+                        </div>
+                      ) : historyError ? (
+                        <div className="px-3 py-4 text-xs text-red-600">
+                          {historyError}
+                        </div>
+                      ) : historyItems.length === 0 ? (
+                        <div className="px-3 py-6 text-center text-xs text-muted-foreground">
+                          No past chats yet.
+                          <div className="mt-1 text-[11px]">
+                            Send your first message to start one.
+                          </div>
+                        </div>
+                      ) : (
+                        <ul className="py-1">
+                          {historyItems.map((conv) => {
+                            const isActive = activeConversationId === conv.id;
+                            return (
+                              <li key={conv.id}>
+                                <div
+                                  className={`group flex w-full items-start gap-2 px-3 py-2 ${
+                                    isActive
+                                      ? 'bg-muted/70'
+                                      : 'hover:bg-muted/50'
+                                  }`}
+                                >
+                                  <button
+                                    onClick={() => void handleLoadConversation(conv)}
+                                    className="flex-1 text-left"
+                                  >
+                                    <div className="truncate text-sm font-medium text-foreground">
+                                      {conv.chat_name}
+                                    </div>
+                                    <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                                      <span>{relativeTime(conv.updated_at)}</span>
+                                      <span>·</span>
+                                      <span>{conv.message_count} msg{conv.message_count === 1 ? '' : 's'}</span>
+                                    </div>
+                                    {conv.last_message_preview && (
+                                      <div className="mt-0.5 line-clamp-1 text-[11px] text-muted-foreground/80">
+                                        {conv.last_message_preview}
+                                      </div>
+                                    )}
+                                  </button>
+                                  <div className="flex flex-col items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        void handleRenameConversation(conv);
+                                      }}
+                                      className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-foreground"
+                                      title="Rename"
+                                      aria-label="Rename chat"
+                                    >
+                                      <Pencil className="h-3 w-3" />
+                                    </button>
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        void handleTrashConversation(conv);
+                                      }}
+                                      className="rounded p-1 text-muted-foreground hover:bg-muted hover:text-red-600"
+                                      title="Delete"
+                                      aria-label="Delete chat"
+                                    >
+                                      <Trash2 className="h-3 w-3" />
+                                    </button>
+                                  </div>
+                                </div>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
