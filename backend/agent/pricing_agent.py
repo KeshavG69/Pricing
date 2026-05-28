@@ -24,7 +24,16 @@ from agno.skills import LocalSkills, Skills
 from app.settings import settings
 from client.llm_client import get_chat_llm_agno
 from client.agent_memory import get_agent_db, get_memory_manager
-from utils.agno_tools import create_reasoning_tool, get_web_search_tool
+from utils.agno_tools import (
+    create_custom_retreiver,
+    create_gsa_rate_tool,
+    create_gsa_retriever,
+    create_reasoning_tool,
+    create_update_positions_tool,
+    create_update_rates_tool,
+    create_wage_tool,
+    get_web_search_tool,
+)
 from utils.chart_tool import chart_tool
 from utils.python_repl_tool import python_repl_tool
 from utils.s3_upload_tool import s3_upload_tool
@@ -263,22 +272,50 @@ at 30%: …") and keep the original figure alongside for comparison. When \
 asked for a recommendation, give one — qualified by the assumptions you \
 made.
 
-6. Format dollar amounts with commas and two decimals: $1,234,567.89.
+6. SHOW YOUR WORK on every optimization or recommendation. The user is a \
+pricing analyst who is accountable to DCAA / the contracting officer for \
+every number that goes in the bid — they cannot accept "trust me, this \
+saves $X". For ANY claim of the form "you can save X", "drop Y to gain \
+Z", "this is competitive", "X is too high/low", "we should move/change \
+Y", you MUST back it up with:
+   a) THE CURRENT FIGURE — quote the exact value from proposal_state \
+(e.g. "current fringe = 24.7%, current Year 1 fringe dollars = $298,807").
+   b) THE PROPOSED FIGURE — name the specific new value (e.g. "proposed \
+fringe = 22.0%").
+   c) THE MATH — run it through python_repl_tool using the formulas in \
+<formulas>. Print the inputs, the formula applied, the intermediate \
+subtotal, and the new total. Quote the REPL output in your answer; do \
+NOT paraphrase numbers you didn't compute.
+   d) THE DELTA — absolute $ AND % change, both signed (e.g. "-$32,189 \
+or -10.8% on Y1 fringe; -$167K across the 5-year contract").
+   e) THE LIMIT / RISK — one line on what would make this not work \
+(e.g. "below 22% fringe risks SCA Health & Welfare floor compliance" \
+or "DCAA-approved rate is 24.7% — any change requires a rate amendment").
+
+Never quote a number you didn't pull verbatim from proposal_state or \
+compute in the REPL on this turn. Vibes-based estimates ("around $200K", \
+"roughly 5–10%") are forbidden unless you explicitly flag them as \
+"rough order of magnitude, not computed".
+
+If you can't back a claim with the five points above, don't make it. \
+Say "I can't compute that with the data on this turn" instead.
+
+7. Format dollar amounts with commas and two decimals: $1,234,567.89.
    Format rates as percentages: 7.11%.
    Format hours as integers with commas: 1,920 hours.
 
-7. Be concise. Direct answers, no filler. If a one-line answer suffices, give \
+8. Be concise. Direct answers, no filler. If a one-line answer suffices, give \
 a one-line answer. Use emojis sparingly — at most one per response, only when \
 it adds genuine clarity (e.g., ⚠ for a concrete warning). No decorative emojis \
 in headings, bullets, section markers, or as sentence punctuation. Default to \
 zero emojis.
 
-8. If the user asks "how is X calculated?" or "why is this number what it \
+9. If the user asks "how is X calculated?" or "why is this number what it \
 is?", explain conceptually using the formulas in <formulas> and the inputs \
 visible in the state block. You may use the Python REPL to verify your \
 explanation produces the observed number.
 
-9. Tool selection:
+10. Tool selection:
    • SKIP all tools for simple reads ("what's the grand total?", "how many \
 positions?", "show me year 3 fee", "what's the proposal name / contract \
 number?"). Quote from the state block.
@@ -299,6 +336,74 @@ deliverables. Available libraries: reportlab (PDF), python-pptx (PPT), \
 python-docx (DOCX), openpyxl/xlsxwriter (XLSX), matplotlib (chart images). \
 Workflow: write file in REPL with simple filename → call `s3_upload_tool` \
 with same filename → quote the returned URL as a markdown link to the user.
+
+   BLS PROPOSALS — finding alternative labor categories:
+   • USE `custom_retriever` when the user asks "what else could we use \
+instead of X", "any alternatives to this role", "find a cheaper LCAT", or \
+similar. Pass the position's labor_category as the query; it returns \
+ranked SOC codes by semantic similarity.
+   • USE `wage_tool` immediately after `custom_retriever` to fetch BLS wage \
+percentiles (10th/25th/50th/75th/90th) for each candidate SOC. Compare \
+against the current position's wage at its current percentile. Compute \
+the FBLR delta using `python_repl_tool` and the Forward Calculation \
+formulas (§15) — multiply DL delta × indirect cascade × hours × years \
+to get contract-period savings.
+   • Workflow: custom_retriever(labor_category) → pick top 3-5 candidates \
+→ wage_tool(soc_code, area) for each → python_repl_tool to model FBLR \
+delta → present a ranked comparison table.
+   • If the user then says "use that one" or "switch to SOC XXXXXX": the \
+SOC code is not a direct position field — guide the user to update the \
+position via the UI, OR use `update_positions` with `percentile` if only \
+the percentile is changing (e.g., downgrading from 75th to 50th).
+
+   GSA PROPOSALS — finding alternative labor categories:
+   • USE `gsa_retriever` when the user asks for alternatives or comparable \
+roles on the GSA schedule. Pass the position's labor_category as the query.
+   • USE `gsa_rate_tool` immediately after to fetch rates_by_year for each \
+candidate lcat_id. The tool also returns `current_gsa_year` so you know \
+which year's rate is live. Compare against the current position's \
+gsa_rate × (1 − gsa_discount_rate). Show year-by-year and total delta \
+with `python_repl_tool` and GSA formulas (§15.2).
+   • Workflow: gsa_retriever(labor_category) → pick top 3-5 candidates \
+→ gsa_rate_tool(lcat_id) for each → python_repl_tool for delta → table.
+   • If the user then says "apply that discount" or "drop the rate": call \
+`update_positions` with `gsa_discount_rate` (decimal 0–1) on the relevant \
+position(s).
+
+   MUTATION TOOLS — applying changes to the proposal:
+   • USE `update_rates` for indirect-rate or escalation changes.
+     Accepted `rates` keys (pass decimals, NOT percentages — 0.055 for 5.5%):
+       fringe, oh_onsite, oh_offsite, ga, fee,
+       smh, ga_passthrough, sub_fee, ot_multiplier, surge_multiplier
+     Accepted `escalation_rates` keys: "1_to_2", "2_to_3", "3_to_4", … (decimal)
+     Always pass `rationale` — one past-tense sentence shown on the approval card,
+     e.g. "Dropped fee from 8% to 6% to close the $1.4M PtW gap."
+   • USE `update_positions` for per-position changes.
+     Accepted `fields` keys per position:
+       percentile        → "10th" | "25th" | "50th" | "75th" | "90th"
+       location_type     → "On-Site" | "Off-Site"
+       custom_salary     → annual dollars (number)
+       hours_per_year    → {"1": 1920, "2": 1920, …}  (dict keyed by year string)
+       gsa_discount_rate → decimal 0–1 (GSA positions only)
+       ot_hours_per_year → {"1": 80, …}
+       is_key_position   → true | false
+     Read position_ids from proposal_state.positions[i].id (look like \
+"pos_0_177..."). NEVER fabricate an id. Batch ALL changes into ONE call.
+   • BOTH tools REQUIRE USER CONFIRMATION — agno pauses the run and the \
+frontend shows an approval card with your rationale. The user clicks Approve \
+before any write reaches MongoDB. Never try to describe what the tool \
+"would do" — just call it with the correct args and let the approval gate \
+handle disclosure.
+   • NEVER describe a rate or position change in prose and skip the tool. \
+If the user says "drop fringe to 22%", call `update_rates({"fringe": 0.22})`. \
+If they say "move the SATCOM SME off-site", call `update_positions` with \
+`location_type: "Off-Site"` on that position_id.
+   • After the mutation tool result comes back (success: true post-approval): \
+confirm the change in one sentence and offer to show the recomputed impact \
+in the REPL using the new values. The UI will reload the proposal \
+automatically — do NOT re-quote the old stale numbers from proposal_state \
+as if they're the new totals.
+
    • USE `web_search` (Exa) for COMPETITIVE INTEL only — past contract \
 awards, incumbent identification, agency buying patterns, industry \
 benchmarks for indirect rates and fee, GSA Schedule rates. The tool is \
@@ -314,7 +419,7 @@ already in <proposal_state>.
    • NEVER use reasoning or the REPL to ESTIMATE missing data. Only compute \
 from numbers actually present in the state.
 
-10. Deliverable generation — USE THE SKILL SYSTEM:
+11. Deliverable generation — USE THE SKILL SYSTEM:
     Before generating any PDF / DOCX / PPTX / XLSX, you MUST first \
 load the matching skill via `get_skill_instructions(skill_name)`. The \
 skills contain the canonical patterns — library choices, layout templates, \
@@ -490,7 +595,17 @@ require either scope reduction or accepting a thinner margin."
     ]
 
 
-def get_pricing_agent(session_id: str, proposal_context: str) -> Agent:
+def get_pricing_agent(
+    session_id: str,
+    proposal_context: str,
+    proposal_id: Optional[str] = None,
+    user_id: Optional[str] = None,
+    organization_id: Optional[str] = None,
+    role: Optional[str] = None,
+    proposal_type: Optional[str] = None,  # "bls" | "gsa"
+    gsa_file_id: Optional[str] = None,
+    gsa_current_year: Optional[int] = None,  # sent directly from frontend positions
+) -> Agent:
     """
     Build a fresh pricing agent for this request with the live proposal
     state injected as part of its instructions.
@@ -499,9 +614,24 @@ def get_pricing_agent(session_id: str, proposal_context: str) -> Agent:
     module level. Only the Agent shell is rebuilt per request so the
     instructions block can carry the user's CURRENT proposal state.
 
+    When proposal_id + user_id are provided, the mutation tools
+    (update_rates, update_positions) are included. They require user
+    confirmation before writing to MongoDB.
+
+    When proposal_type is provided, the matching retrieval tools are added:
+    - "bls": SOC vector-search retriever + BLS OEWS wage lookup tool
+    - "gsa": GSA Pinecone retriever + GSA rate lookup tool (needs gsa_file_id)
+
     Args:
-        session_id: Session ID for this chat (drives history / user memories)
-        proposal_context: Serialized JSON of the live computed proposal state
+        session_id:              Session ID for this chat
+        proposal_context:        Serialized JSON of the live computed proposal state
+        proposal_id:             Proposal to mutate (optional — enables mutation tools)
+        user_id:                 Authenticated user (optional — enables mutation tools)
+        organization_id:         Org scope for mutation tools / GSA retriever
+        role:                    User role for mutation tools
+        proposal_type:           "bls" or "gsa" — selects retrieval tools
+        gsa_file_id:             GSA contract file ID (required for "gsa")
+        gsa_current_year:         Current GSA contract year (from frontend positions)
 
     Returns:
         A new Agent instance ready to run for this single request
@@ -518,6 +648,64 @@ def get_pricing_agent(session_id: str, proposal_context: str) -> Agent:
     ]
     if _components.web_search_tool is not None:
         tools_list.append(_components.web_search_tool)
+
+    # Mutation tools are request-scoped (closure binds identity at build time).
+    # Only added when the caller supplies proposal_id + user_id.
+    if proposal_id and user_id:
+        try:
+            tools_list.append(
+                create_update_rates_tool(
+                    proposal_id=proposal_id,
+                    user_id=user_id,
+                    organization_id=organization_id,
+                    role=role,
+                )
+            )
+            tools_list.append(
+                create_update_positions_tool(
+                    proposal_id=proposal_id,
+                    user_id=user_id,
+                    organization_id=organization_id,
+                    role=role,
+                )
+            )
+        except Exception as e:
+            logger.warning(f"Could not build mutation tools: {e}")
+
+    # Retrieval tools — selected based on the proposal's wage-data source.
+    # BLS proposals: SOC vector-search retriever + OEWS wage lookup so Q can
+    #   suggest alternative labor categories and compare their wages.
+    # GSA proposals: Pinecone GSA-lcat retriever + rate lookup so Q can find
+    #   similar labor categories on the same GSA schedule and compare rates.
+    if proposal_type == "bls":
+        try:
+            tools_list.append(create_custom_retreiver())
+            tools_list.append(create_wage_tool())
+        except Exception as e:
+            logger.warning(f"Could not build BLS retrieval tools: {e}")
+    elif proposal_type == "gsa":
+        if organization_id and gsa_file_id:
+            try:
+                tools_list.append(
+                    create_gsa_retriever(
+                        organization_id=organization_id,
+                        file_id=gsa_file_id,
+                    )
+                )
+                tools_list.append(
+                    create_gsa_rate_tool(
+                        organization_id=organization_id,
+                        file_id=gsa_file_id,
+                        gsa_current_year=gsa_current_year,
+                    )
+                )
+            except Exception as e:
+                logger.warning(f"Could not build GSA retrieval tools: {e}")
+        else:
+            logger.warning(
+                "proposal_type='gsa' but organization_id or gsa_file_id missing — "
+                "GSA retrieval tools not added"
+            )
 
     agent = Agent(
         name="Q",

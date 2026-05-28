@@ -17,6 +17,46 @@
         "documentation": {}
     },
     {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
         "label": "os",
         "kind": 6,
         "isExtraImport": true,
@@ -800,6 +840,38 @@
         "documentation": {}
     },
     {
+        "label": "Literal",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Tuple",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Dict",
         "importPath": "typing",
         "description": "typing",
@@ -960,6 +1032,14 @@
         "documentation": {}
     },
     {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Any",
         "importPath": "typing",
         "description": "typing",
@@ -1032,6 +1112,134 @@
         "documentation": {}
     },
     {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "AsyncGenerator",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Awaitable",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Callable",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "List",
         "importPath": "typing",
         "description": "typing",
@@ -1121,6 +1329,70 @@
     },
     {
         "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -2437,6 +2709,22 @@
         "documentation": {}
     },
     {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
         "label": "timedelta",
         "importPath": "datetime",
         "description": "datetime",
@@ -2807,6 +3095,14 @@
         "documentation": {}
     },
     {
+        "label": "get_chat_llm",
+        "importPath": "client.llm_client",
+        "description": "client.llm_client",
+        "isExtraImport": true,
+        "detail": "client.llm_client",
+        "documentation": {}
+    },
+    {
         "label": "create_custom_retreiver",
         "importPath": "utils.agno_tools",
         "description": "utils.agno_tools",
@@ -2847,7 +3143,55 @@
         "documentation": {}
     },
     {
+        "label": "create_custom_retreiver",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "isExtraImport": true,
+        "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_gsa_rate_tool",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "isExtraImport": true,
+        "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_gsa_retriever",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "isExtraImport": true,
+        "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
         "label": "create_reasoning_tool",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "isExtraImport": true,
+        "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_update_positions_tool",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "isExtraImport": true,
+        "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_update_rates_tool",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "isExtraImport": true,
+        "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_wage_tool",
         "importPath": "utils.agno_tools",
         "description": "utils.agno_tools",
         "isExtraImport": true,
@@ -2900,6 +3244,14 @@
         "description": "utils.company_repository",
         "isExtraImport": true,
         "detail": "utils.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
         "documentation": {}
     },
     {
@@ -3601,6 +3953,14 @@
         "documentation": {}
     },
     {
+        "label": "Query",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
         "label": "APIRouter",
         "importPath": "fastapi",
         "description": "fastapi",
@@ -4275,6 +4635,22 @@
         "documentation": {}
     },
     {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
+        "documentation": {}
+    },
+    {
         "label": "bcrypt",
         "kind": 6,
         "isExtraImport": true,
@@ -4465,6 +4841,22 @@
         "description": "auth",
         "isExtraImport": true,
         "detail": "auth",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
         "documentation": {}
     },
     {
@@ -4821,6 +5213,14 @@
     },
     {
         "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
         "importPath": "pydantic",
         "description": "pydantic",
         "isExtraImport": true,
@@ -5875,6 +6275,22 @@
         "documentation": {}
     },
     {
+        "label": "get_proposal_crud",
+        "importPath": "utils.proposals",
+        "description": "utils.proposals",
+        "isExtraImport": true,
+        "detail": "utils.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "get_proposal_crud",
+        "importPath": "utils.proposals",
+        "description": "utils.proposals",
+        "isExtraImport": true,
+        "detail": "utils.proposals",
+        "documentation": {}
+    },
+    {
         "label": "parse_gsa_contract",
         "importPath": "client.gsa_parser",
         "description": "client.gsa_parser",
@@ -6027,6 +6443,14 @@
         "documentation": {}
     },
     {
+        "label": "Calculator",
+        "importPath": "client.calculation_service",
+        "description": "client.calculation_service",
+        "isExtraImport": true,
+        "detail": "client.calculation_service",
+        "documentation": {}
+    },
+    {
         "label": "get_help_center_agent",
         "importPath": "agent.help_center_agent",
         "description": "agent.help_center_agent",
@@ -6036,6 +6460,14 @@
     },
     {
         "label": "stream_agent_response",
+        "importPath": "utils.agent_streaming",
+        "description": "utils.agent_streaming",
+        "isExtraImport": true,
+        "detail": "utils.agent_streaming",
+        "documentation": {}
+    },
+    {
+        "label": "stream_agent_continuation",
         "importPath": "utils.agent_streaming",
         "description": "utils.agent_streaming",
         "isExtraImport": true,
@@ -6112,6 +6544,118 @@
         "description": "agent.pricing_agent",
         "isExtraImport": true,
         "detail": "agent.pricing_agent",
+        "documentation": {}
+    },
+    {
+        "label": "RunRequirement",
+        "importPath": "agno.run.requirement",
+        "description": "agno.run.requirement",
+        "isExtraImport": true,
+        "detail": "agno.run.requirement",
+        "documentation": {}
+    },
+    {
+        "label": "RunRequirement",
+        "importPath": "agno.run.requirement",
+        "description": "agno.run.requirement",
+        "isExtraImport": true,
+        "detail": "agno.run.requirement",
+        "documentation": {}
+    },
+    {
+        "label": "get_chat_conversation_crud",
+        "importPath": "utils.chat_conversations",
+        "description": "utils.chat_conversations",
+        "isExtraImport": true,
+        "detail": "utils.chat_conversations",
+        "documentation": {}
+    },
+    {
+        "label": "get_chat_conversation_crud",
+        "importPath": "utils.chat_conversations",
+        "description": "utils.chat_conversations",
+        "isExtraImport": true,
+        "detail": "utils.chat_conversations",
+        "documentation": {}
+    },
+    {
+        "label": "get_chat_message_crud",
+        "importPath": "utils.chat_messages",
+        "description": "utils.chat_messages",
+        "isExtraImport": true,
+        "detail": "utils.chat_messages",
+        "documentation": {}
+    },
+    {
+        "label": "get_chat_message_crud",
+        "importPath": "utils.chat_messages",
+        "description": "utils.chat_messages",
+        "isExtraImport": true,
+        "detail": "utils.chat_messages",
+        "documentation": {}
+    },
+    {
+        "label": "persist_continuation",
+        "importPath": "utils.chat_persistence",
+        "description": "utils.chat_persistence",
+        "isExtraImport": true,
+        "detail": "utils.chat_persistence",
+        "documentation": {}
+    },
+    {
+        "label": "persist_turn",
+        "importPath": "utils.chat_persistence",
+        "description": "utils.chat_persistence",
+        "isExtraImport": true,
+        "detail": "utils.chat_persistence",
+        "documentation": {}
+    },
+    {
+        "label": "stream_with_tracking",
+        "importPath": "utils.chat_persistence",
+        "description": "utils.chat_persistence",
+        "isExtraImport": true,
+        "detail": "utils.chat_persistence",
+        "documentation": {}
+    },
+    {
+        "label": "generate_title",
+        "importPath": "utils.chat_title_generator",
+        "description": "utils.chat_title_generator",
+        "isExtraImport": true,
+        "detail": "utils.chat_title_generator",
+        "documentation": {}
+    },
+    {
+        "label": "is_generation_worthwhile",
+        "importPath": "utils.chat_title_generator",
+        "description": "utils.chat_title_generator",
+        "isExtraImport": true,
+        "detail": "utils.chat_title_generator",
+        "documentation": {}
+    },
+    {
+        "label": "generate_title",
+        "importPath": "utils.chat_title_generator",
+        "description": "utils.chat_title_generator",
+        "isExtraImport": true,
+        "detail": "utils.chat_title_generator",
+        "documentation": {}
+    },
+    {
+        "label": "is_generation_worthwhile",
+        "importPath": "utils.chat_title_generator",
+        "description": "utils.chat_title_generator",
+        "isExtraImport": true,
+        "detail": "utils.chat_title_generator",
+        "documentation": {}
+    },
+    {
+        "label": "build_proposal_context",
+        "importPath": "utils.proposal_context_builder",
+        "description": "utils.proposal_context_builder",
+        "isExtraImport": true,
+        "detail": "utils.proposal_context_builder",
         "documentation": {}
     },
     {
@@ -6322,6 +6866,22 @@
         "description": "agno.tools.reasoning",
         "isExtraImport": true,
         "detail": "agno.tools.reasoning",
+        "documentation": {}
+    },
+    {
+        "label": "# noqa: E402\n    apply_position_update",
+        "importPath": "utils.proposal_mutation_tools",
+        "description": "utils.proposal_mutation_tools",
+        "isExtraImport": true,
+        "detail": "utils.proposal_mutation_tools",
+        "documentation": {}
+    },
+    {
+        "label": "apply_rate_update",
+        "importPath": "utils.proposal_mutation_tools",
+        "description": "utils.proposal_mutation_tools",
+        "isExtraImport": true,
+        "detail": "utils.proposal_mutation_tools",
         "documentation": {}
     },
     {
@@ -7792,7 +8352,7 @@
         "kind": 2,
         "importPath": "backend.agent.pricing_agent",
         "description": "backend.agent.pricing_agent",
-        "peekOfCode": "def get_pricing_agent(session_id: str, proposal_context: str) -> Agent:\n    \"\"\"\n    Build a fresh pricing agent for this request with the live proposal\n    state injected as part of its instructions.\n    Heavy components (LLM, DB, memory, reasoning, formulas) are cached at\n    module level. Only the Agent shell is rebuilt per request so the\n    instructions block can carry the user's CURRENT proposal state.\n    Args:\n        session_id: Session ID for this chat (drives history / user memories)\n        proposal_context: Serialized JSON of the live computed proposal state",
+        "peekOfCode": "def get_pricing_agent(\n    session_id: str,\n    proposal_context: str,\n    proposal_id: Optional[str] = None,\n    user_id: Optional[str] = None,\n    organization_id: Optional[str] = None,\n    role: Optional[str] = None,\n    proposal_type: Optional[str] = None,  # \"bls\" | \"gsa\"\n    gsa_file_id: Optional[str] = None,\n    gsa_current_year: Optional[int] = None,  # sent directly from frontend positions",
         "detail": "backend.agent.pricing_agent",
         "documentation": {}
     },
@@ -7838,6 +8398,15 @@
         "importPath": "backend.agent.pricing_agent",
         "description": "backend.agent.pricing_agent",
         "peekOfCode": "_components = _ComponentCache()\ndef _build_instructions(proposal_context: str, formulas_text: str) -> list[str]:\n    \"\"\"Build the agent's instruction blocks for a single request.\"\"\"\n    return [\n        # ── Role + state-block contract ───────────────────────────────\n        \"\"\"You are Q — the PriceIQ Pricing Assistant. You are a knowledgeable \\\nsidekick for government-contractor pricing teams. Your job is to be USEFUL \\\non whatever the user brings to you, grounded in the live proposal state.\nEngage broadly. The user may ask you to:\n- Read figures from the proposal (grand total, FBLR, hours, costs by year)",
+        "detail": "backend.agent.pricing_agent",
+        "documentation": {}
+    },
+    {
+        "label": "fringe",
+        "kind": 5,
+        "importPath": "backend.agent.pricing_agent",
+        "description": "backend.agent.pricing_agent",
+        "peekOfCode": "fringe = 22.0%\").\n   c) THE MATH — run it through python_repl_tool using the formulas in \\\n<formulas>. Print the inputs, the formula applied, the intermediate \\\nsubtotal, and the new total. Quote the REPL output in your answer; do \\\nNOT paraphrase numbers you didn't compute.\n   d) THE DELTA — absolute $ AND % change, both signed (e.g. \"-$32,189 \\\nor -10.8% on Y1 fringe; -$167K across the 5-year contract\").\n   e) THE LIMIT / RISK — one line on what would make this not work \\\n(e.g. \"below 22% fringe risks SCA Health & Welfare floor compliance\" \\\nor \"DCAA-approved rate is 24.7% — any change requires a rate amendment\").",
         "detail": "backend.agent.pricing_agent",
         "documentation": {}
     },
@@ -9475,7 +10044,43 @@
         "kind": 6,
         "importPath": "backend.routers.pricing_chat",
         "description": "backend.routers.pricing_chat",
-        "peekOfCode": "class PricingChatQuery(BaseModel):\n    \"\"\"Request body for the pricing chat endpoint.\"\"\"\n    query: str\n    proposal_context: str  # Serialized computed state from the frontend\n    session_id: str\n    organization_id: (\n        str  # Org scope for future tool calls (Mongo query, cross-proposal, billing)\n    )\n@router.post(\"/ask\")\nasync def ask_pricing(request: PricingChatQuery):",
+        "peekOfCode": "class PricingChatQuery(BaseModel):\n    \"\"\"Request body for the pricing chat endpoint.\"\"\"\n    query: str\n    session_id: str\n    organization_id: str\n    proposal_id: str          # now required — the agent reads context from DB\n    user_id: str              # now required — used for org-scoped access check\n    role: Optional[str] = None\n    # Retrieval tools — \"bls\" enables SOC retriever + wage lookup;\n    # \"gsa\" enables GSA labor-category retriever + rate lookup.",
+        "detail": "backend.routers.pricing_chat",
+        "documentation": {}
+    },
+    {
+        "label": "PricingChatResumeRequest",
+        "kind": 6,
+        "importPath": "backend.routers.pricing_chat",
+        "description": "backend.routers.pricing_chat",
+        "peekOfCode": "class PricingChatResumeRequest(BaseModel):\n    \"\"\"Request body for resuming a paused (requires_confirmation) agent run.\"\"\"\n    run_id: str\n    session_id: str\n    organization_id: str\n    confirmed: bool  # True = approve the pending tool, False = reject\n    confirmation_note: Optional[str] = None  # Optional rejection reason\n    # Identity needed to rebuild mutation tools + refetch proposal context\n    proposal_id: str\n    user_id: str",
+        "detail": "backend.routers.pricing_chat",
+        "documentation": {}
+    },
+    {
+        "label": "ConversationRenameRequest",
+        "kind": 6,
+        "importPath": "backend.routers.pricing_chat",
+        "description": "backend.routers.pricing_chat",
+        "peekOfCode": "class ConversationRenameRequest(BaseModel):\n    \"\"\"Body for PATCH /conversations/{id} (rename).\"\"\"\n    user_id: str\n    chat_name: str = Field(..., min_length=1, max_length=200)\nclass ConversationTrashRequest(BaseModel):\n    \"\"\"Body for PATCH /conversations/{id}/trash (soft delete).\"\"\"\n    user_id: str\nclass ConversationGenerateTitleRequest(BaseModel):\n    \"\"\"Body for POST /conversations/{id}/generate-title (LLM-summarised title).\"\"\"\n    user_id: str",
+        "detail": "backend.routers.pricing_chat",
+        "documentation": {}
+    },
+    {
+        "label": "ConversationTrashRequest",
+        "kind": 6,
+        "importPath": "backend.routers.pricing_chat",
+        "description": "backend.routers.pricing_chat",
+        "peekOfCode": "class ConversationTrashRequest(BaseModel):\n    \"\"\"Body for PATCH /conversations/{id}/trash (soft delete).\"\"\"\n    user_id: str\nclass ConversationGenerateTitleRequest(BaseModel):\n    \"\"\"Body for POST /conversations/{id}/generate-title (LLM-summarised title).\"\"\"\n    user_id: str\n    # Allow overwriting a title the user manually renamed. Default False so\n    # the auto-trigger from \"first message persisted\" can fire safely\n    # without clobbering anything the user typed.\n    force: bool = False",
+        "detail": "backend.routers.pricing_chat",
+        "documentation": {}
+    },
+    {
+        "label": "ConversationGenerateTitleRequest",
+        "kind": 6,
+        "importPath": "backend.routers.pricing_chat",
+        "description": "backend.routers.pricing_chat",
+        "peekOfCode": "class ConversationGenerateTitleRequest(BaseModel):\n    \"\"\"Body for POST /conversations/{id}/generate-title (LLM-summarised title).\"\"\"\n    user_id: str\n    # Allow overwriting a title the user manually renamed. Default False so\n    # the auto-trigger from \"first message persisted\" can fire safely\n    # without clobbering anything the user typed.\n    force: bool = False\ndef _hydrate_conversation_for_list(conv: dict) -> dict:\n    \"\"\"\n    Add `message_count` and `last_message_preview` to a conversation row for",
         "detail": "backend.routers.pricing_chat",
         "documentation": {}
     },
@@ -9484,7 +10089,7 @@
         "kind": 5,
         "importPath": "backend.routers.pricing_chat",
         "description": "backend.routers.pricing_chat",
-        "peekOfCode": "logger = logging.getLogger(__name__)\nrouter = APIRouter(prefix=\"/api/pricing-chat\", tags=[\"pricing-chat\"])\nclass PricingChatQuery(BaseModel):\n    \"\"\"Request body for the pricing chat endpoint.\"\"\"\n    query: str\n    proposal_context: str  # Serialized computed state from the frontend\n    session_id: str\n    organization_id: (\n        str  # Org scope for future tool calls (Mongo query, cross-proposal, billing)\n    )",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nrouter = APIRouter(prefix=\"/api/pricing-chat\", tags=[\"pricing-chat\"])\nclass PricingChatQuery(BaseModel):\n    \"\"\"Request body for the pricing chat endpoint.\"\"\"\n    query: str\n    session_id: str\n    organization_id: str\n    proposal_id: str          # now required — the agent reads context from DB\n    user_id: str              # now required — used for org-scoped access check\n    role: Optional[str] = None",
         "detail": "backend.routers.pricing_chat",
         "documentation": {}
     },
@@ -9493,7 +10098,7 @@
         "kind": 5,
         "importPath": "backend.routers.pricing_chat",
         "description": "backend.routers.pricing_chat",
-        "peekOfCode": "router = APIRouter(prefix=\"/api/pricing-chat\", tags=[\"pricing-chat\"])\nclass PricingChatQuery(BaseModel):\n    \"\"\"Request body for the pricing chat endpoint.\"\"\"\n    query: str\n    proposal_context: str  # Serialized computed state from the frontend\n    session_id: str\n    organization_id: (\n        str  # Org scope for future tool calls (Mongo query, cross-proposal, billing)\n    )\n@router.post(\"/ask\")",
+        "peekOfCode": "router = APIRouter(prefix=\"/api/pricing-chat\", tags=[\"pricing-chat\"])\nclass PricingChatQuery(BaseModel):\n    \"\"\"Request body for the pricing chat endpoint.\"\"\"\n    query: str\n    session_id: str\n    organization_id: str\n    proposal_id: str          # now required — the agent reads context from DB\n    user_id: str              # now required — used for org-scoped access check\n    role: Optional[str] = None\n    # Retrieval tools — \"bls\" enables SOC retriever + wage lookup;",
         "detail": "backend.routers.pricing_chat",
         "documentation": {}
     },
@@ -10240,7 +10845,7 @@
         "kind": 2,
         "importPath": "backend.utils.agno_tools",
         "description": "backend.utils.agno_tools",
-        "peekOfCode": "def create_gsa_rate_tool(organization_id: str, file_id: str, contract_start_date: str):\n    \"\"\"\n    Create a tool for retrieving GSA rates from MongoDB.\n    Args:\n        organization_id: Organization ID\n        file_id: GSA contract file ID\n        contract_start_date: Contract start date for year calculation\n    Returns:\n        Callable tool function for agno agents\n    \"\"\"",
+        "peekOfCode": "def create_gsa_rate_tool(\n    organization_id: str,\n    file_id: str,\n    contract_start_date: str = \"\",\n    gsa_current_year: Optional[int] = None,\n):\n    \"\"\"\n    Create a tool for retrieving GSA rates from MongoDB.\n    Args:\n        organization_id: Organization ID",
         "detail": "backend.utils.agno_tools",
         "documentation": {}
     },
@@ -10268,6 +10873,24 @@
         "importPath": "backend.utils.agno_tools",
         "description": "backend.utils.agno_tools",
         "peekOfCode": "def get_web_search_tool(\n    num_results: int = 6,\n    text_length_limit: int = 2000,\n) -> Optional[ExaTools]:\n    \"\"\"\n    Return a cached ExaTools instance configured for govcon competitive intel.\n    Used by Q for Price-to-Win analysis: pulling past contract awards,\n    incumbent identification, agency buying patterns, GSA Schedule rates,\n    and indirect rate / fee benchmarks.\n    Configuration:",
+        "detail": "backend.utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_update_rates_tool",
+        "kind": 2,
+        "importPath": "backend.utils.agno_tools",
+        "description": "backend.utils.agno_tools",
+        "peekOfCode": "def create_update_rates_tool(\n    proposal_id: str,\n    user_id: str,\n    organization_id: Optional[str] = None,\n    role: Optional[str] = None,\n):\n    \"\"\"\n    Build a request-scoped `update_rates` tool. Identity is bound at creation\n    time via closure — the inner @tool function captures proposal/user/org so\n    the agent never has to pass them.",
+        "detail": "backend.utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_update_positions_tool",
+        "kind": 2,
+        "importPath": "backend.utils.agno_tools",
+        "description": "backend.utils.agno_tools",
+        "peekOfCode": "def create_update_positions_tool(\n    proposal_id: str,\n    user_id: str,\n    organization_id: Optional[str] = None,\n    role: Optional[str] = None,\n):\n    \"\"\"\n    Build a request-scoped `update_positions` tool. Same closure pattern as\n    create_update_rates_tool.\n    Returns:",
         "detail": "backend.utils.agno_tools",
         "documentation": {}
     },
@@ -10359,6 +10982,150 @@
         "description": "backend.utils.chart_tool",
         "peekOfCode": "_CORRECTION_SYSTEM_PROMPT = \"\"\"You are an expert JavaScript developer specializing in Chart.js visualizations.\nYour task is to fix and rewrite broken JavaScript Chart.js code into complete, production-ready, executable code.\nMANDATORY REQUIREMENTS:\n1. Use new Chart(ctx, {...}) constructor\n2. Include complete chart configuration object with:\n   - type: 'line' | 'bar' | 'pie' | 'doughnut' | 'radar' | 'polarArea' | 'bubble' | 'scatter'\n   - data: { labels: [...], datasets: [{ label, data, backgroundColor, borderColor }] }\n   - options: { plugins: { title, legend }, scales: { x, y } }\n3. All braces, brackets, and parentheses must be properly matched\n4. Syntactically correct, executable JavaScript",
         "detail": "backend.utils.chart_tool",
+        "documentation": {}
+    },
+    {
+        "label": "ChatConversationCRUD",
+        "kind": 6,
+        "importPath": "backend.utils.chat_conversations",
+        "description": "backend.utils.chat_conversations",
+        "peekOfCode": "class ChatConversationCRUD:\n    \"\"\"\n    MongoDB CRUD for chat_conversations. Sync — fast enough for the\n    background-task path; switching to motor would force everything to async\n    for no real win at this volume.\n    \"\"\"\n    def __init__(self) -> None:\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"chat_conversations\"]",
+        "detail": "backend.utils.chat_conversations",
+        "documentation": {}
+    },
+    {
+        "label": "get_chat_conversation_crud",
+        "kind": 2,
+        "importPath": "backend.utils.chat_conversations",
+        "description": "backend.utils.chat_conversations",
+        "peekOfCode": "def get_chat_conversation_crud() -> ChatConversationCRUD:\n    \"\"\"Lazy singleton — matches the pattern in utils/proposals.py.\"\"\"\n    global _instance\n    if _instance is None:\n        with _lock:\n            if _instance is None:\n                _instance = ChatConversationCRUD()\n    return _instance",
+        "detail": "backend.utils.chat_conversations",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.utils.chat_conversations",
+        "description": "backend.utils.chat_conversations",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nclass ChatConversationCRUD:\n    \"\"\"\n    MongoDB CRUD for chat_conversations. Sync — fast enough for the\n    background-task path; switching to motor would force everything to async\n    for no real win at this volume.\n    \"\"\"\n    def __init__(self) -> None:\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()",
+        "detail": "backend.utils.chat_conversations",
+        "documentation": {}
+    },
+    {
+        "label": "_lock",
+        "kind": 5,
+        "importPath": "backend.utils.chat_conversations",
+        "description": "backend.utils.chat_conversations",
+        "peekOfCode": "_lock = threading.Lock()\ndef get_chat_conversation_crud() -> ChatConversationCRUD:\n    \"\"\"Lazy singleton — matches the pattern in utils/proposals.py.\"\"\"\n    global _instance\n    if _instance is None:\n        with _lock:\n            if _instance is None:\n                _instance = ChatConversationCRUD()\n    return _instance",
+        "detail": "backend.utils.chat_conversations",
+        "documentation": {}
+    },
+    {
+        "label": "ChatMessageCRUD",
+        "kind": 6,
+        "importPath": "backend.utils.chat_messages",
+        "description": "backend.utils.chat_messages",
+        "peekOfCode": "class ChatMessageCRUD:\n    \"\"\"MongoDB CRUD for chat_messages.\"\"\"\n    def __init__(self) -> None:\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"chat_messages\"]\n        try:\n            # Single compound index covers the only read pattern: \"give me\n            # all messages for a conversation in order.\"\n            self.collection.create_index([",
+        "detail": "backend.utils.chat_messages",
+        "documentation": {}
+    },
+    {
+        "label": "get_chat_message_crud",
+        "kind": 2,
+        "importPath": "backend.utils.chat_messages",
+        "description": "backend.utils.chat_messages",
+        "peekOfCode": "def get_chat_message_crud() -> ChatMessageCRUD:\n    global _instance\n    if _instance is None:\n        with _lock:\n            if _instance is None:\n                _instance = ChatMessageCRUD()\n    return _instance",
+        "detail": "backend.utils.chat_messages",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.utils.chat_messages",
+        "description": "backend.utils.chat_messages",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nclass ChatMessageCRUD:\n    \"\"\"MongoDB CRUD for chat_messages.\"\"\"\n    def __init__(self) -> None:\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"chat_messages\"]\n        try:\n            # Single compound index covers the only read pattern: \"give me\n            # all messages for a conversation in order.\"",
+        "detail": "backend.utils.chat_messages",
+        "documentation": {}
+    },
+    {
+        "label": "_lock",
+        "kind": 5,
+        "importPath": "backend.utils.chat_messages",
+        "description": "backend.utils.chat_messages",
+        "peekOfCode": "_lock = threading.Lock()\ndef get_chat_message_crud() -> ChatMessageCRUD:\n    global _instance\n    if _instance is None:\n        with _lock:\n            if _instance is None:\n                _instance = ChatMessageCRUD()\n    return _instance",
+        "detail": "backend.utils.chat_messages",
+        "documentation": {}
+    },
+    {
+        "label": "MessageTracker",
+        "kind": 6,
+        "importPath": "backend.utils.chat_persistence",
+        "description": "backend.utils.chat_persistence",
+        "peekOfCode": "class MessageTracker:\n    \"\"\"\n    Observes SSE events as they flow through `stream_agent_response` /\n    `stream_agent_continuation` and accumulates the per-turn fields that\n    `chat_messages` needs.\n    Render-shape mirrors PricingChatPanel so replaying a saved turn looks\n    identical to the original.\n    \"\"\"\n    def __init__(self) -> None:\n        self.final_content: str = \"\"",
+        "detail": "backend.utils.chat_persistence",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.utils.chat_persistence",
+        "description": "backend.utils.chat_persistence",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# Tool names whose output renders as a reasoning step (collapsible \"thinking\")\n# in the panel rather than a tool-call pill. Keep in sync with\n# REASONING_TOOL_NAMES on the frontend.\n_REASONING_TOOL_NAMES = {\"think\", \"analyze\"}\n# Tool names that produce an inline body artifact (chart, file download,\n# search result). These get an entry in `blocks` so the artifact renders at\n# the right spot in the message body when we replay later. Keep in sync with\n# ARTIFACT_TOOL_NAMES on the frontend.\n_ARTIFACT_TOOL_NAMES = {",
+        "detail": "backend.utils.chat_persistence",
+        "documentation": {}
+    },
+    {
+        "label": "_REASONING_TOOL_NAMES",
+        "kind": 5,
+        "importPath": "backend.utils.chat_persistence",
+        "description": "backend.utils.chat_persistence",
+        "peekOfCode": "_REASONING_TOOL_NAMES = {\"think\", \"analyze\"}\n# Tool names that produce an inline body artifact (chart, file download,\n# search result). These get an entry in `blocks` so the artifact renders at\n# the right spot in the message body when we replay later. Keep in sync with\n# ARTIFACT_TOOL_NAMES on the frontend.\n_ARTIFACT_TOOL_NAMES = {\n    \"chart_tool\",\n    \"s3_upload_tool\",\n    \"exa\",\n    \"search_exa\",",
+        "detail": "backend.utils.chat_persistence",
+        "documentation": {}
+    },
+    {
+        "label": "_ARTIFACT_TOOL_NAMES",
+        "kind": 5,
+        "importPath": "backend.utils.chat_persistence",
+        "description": "backend.utils.chat_persistence",
+        "peekOfCode": "_ARTIFACT_TOOL_NAMES = {\n    \"chart_tool\",\n    \"s3_upload_tool\",\n    \"exa\",\n    \"search_exa\",\n    \"exa_search\",\n    \"web_search\",\n    \"exa_answer\",\n    \"get_contents_exa\",\n}",
+        "detail": "backend.utils.chat_persistence",
+        "documentation": {}
+    },
+    {
+        "label": "generate_title",
+        "kind": 2,
+        "importPath": "backend.utils.chat_title_generator",
+        "description": "backend.utils.chat_title_generator",
+        "peekOfCode": "def generate_title(user_message: str, *, max_words: int = 6) -> str:\n    \"\"\"\n    Produce a short title for a chat given its first user message.\n    Synchronous (LangChain call). Safe to call from a background task or\n    a request handler. Returns a fallback (truncated first message) if the\n    LLM is unreachable or returns nothing usable — the caller should\n    always receive a non-empty string.\n    \"\"\"\n    cleaned = (user_message or \"\").strip()\n    if not cleaned:",
+        "detail": "backend.utils.chat_title_generator",
+        "documentation": {}
+    },
+    {
+        "label": "is_generation_worthwhile",
+        "kind": 2,
+        "importPath": "backend.utils.chat_title_generator",
+        "description": "backend.utils.chat_title_generator",
+        "peekOfCode": "def is_generation_worthwhile(message: Optional[str]) -> bool:\n    \"\"\"\n    Lightweight check the caller can use to skip the LLM round-trip for\n    obvious no-ops (empty messages, tiny greetings). Centralized so\n    callers stay consistent.\n    \"\"\"\n    if not message:\n        return False\n    s = message.strip()\n    if len(s) < 6:",
+        "detail": "backend.utils.chat_title_generator",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.utils.chat_title_generator",
+        "description": "backend.utils.chat_title_generator",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# Keep the prompt small and surgical — title gen runs on every new chat,\n# so token cost matters. Few-shot examples teach domain abbreviations and\n# the \"be specific, not generic\" rule without a long rule list.\n_SYSTEM_PROMPT = \"\"\"\\\nYou generate short, scannable chat titles for Q — an AI assistant that helps \\\nfederal-contractor pricing analysts. Topics include indirect rates (fringe, \\\nOH, G&A, fee), FBLR, escalation, subcontractor markup, GSA discounts, BLS \\\nwages, Price-to-Win (PtW), and proposal structure.\nRules:",
+        "detail": "backend.utils.chat_title_generator",
+        "documentation": {}
+    },
+    {
+        "label": "_SYSTEM_PROMPT",
+        "kind": 5,
+        "importPath": "backend.utils.chat_title_generator",
+        "description": "backend.utils.chat_title_generator",
+        "peekOfCode": "_SYSTEM_PROMPT = \"\"\"\\\nYou generate short, scannable chat titles for Q — an AI assistant that helps \\\nfederal-contractor pricing analysts. Topics include indirect rates (fringe, \\\nOH, G&A, fee), FBLR, escalation, subcontractor markup, GSA discounts, BLS \\\nwages, Price-to-Win (PtW), and proposal structure.\nRules:\n- 3 to 6 words. Title Case.\n- No quotation marks, no period at the end, no emojis.\n- Be specific over generic. Capture the topic, not the verb.\n- Use natural abbreviations: PtW, FBLR, GSA, BLS, G&A, OH, SCA, FTE.",
+        "detail": "backend.utils.chat_title_generator",
         "documentation": {}
     },
     {
@@ -10701,6 +11468,87 @@
         "description": "backend.utils.processing",
         "peekOfCode": "logger = logging.getLogger(__name__)\n# ============================================================================\n# HELPER\n# ============================================================================\ndef convert_intelligent_output_to_dataframe(intelligent_result: Dict[str, Any]) -> Dict[str, Any]:\n    \"\"\"\n    Convert intelligent parser output to the same format as jd_parser output.\n    Returns:\n        Dict with keys: df, travel, odcs, extensions\n    \"\"\"",
         "detail": "backend.utils.processing",
+        "documentation": {}
+    },
+    {
+        "label": "build_proposal_context",
+        "kind": 2,
+        "importPath": "backend.utils.proposal_context_builder",
+        "description": "backend.utils.proposal_context_builder",
+        "peekOfCode": "def build_proposal_context(proposal: Dict[str, Any]) -> Dict[str, Any]:\n    \"\"\"\n    Convert a MongoDB proposal document into the agent's per-turn context JSON.\n    Args:\n        proposal: The proposal document as returned by ProposalCRUD.get_proposal\n                  (already serialized — _id → id as string).\n    Returns:\n        Dict matching the schema documented in this module's docstring. Safe to\n        json.dumps() and inject into the agent instructions.\n    \"\"\"",
+        "detail": "backend.utils.proposal_context_builder",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.utils.proposal_context_builder",
+        "description": "backend.utils.proposal_context_builder",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# ─── Tiny helpers ──────────────────────────────────────────────────────\ndef _round(n: Any, decimals: int = 2) -> float:\n    \"\"\"Safe round — handles None / NaN / non-finite without raising.\"\"\"\n    try:\n        f = float(n)\n    except (TypeError, ValueError):\n        return 0.0\n    if f != f or f in (float(\"inf\"), float(\"-inf\")):  # NaN / inf\n        return 0.0",
+        "detail": "backend.utils.proposal_context_builder",
+        "documentation": {}
+    },
+    {
+        "label": "apply_rate_update",
+        "kind": 2,
+        "importPath": "backend.utils.proposal_mutation_tools",
+        "description": "backend.utils.proposal_mutation_tools",
+        "peekOfCode": "def apply_rate_update(\n    *,\n    proposal_id: str,\n    user_id: str,\n    organization_id: Optional[str],\n    role: Optional[str],\n    rates: Optional[Dict[str, Any]] = None,\n    escalation_rates: Optional[Dict[str, Any]] = None,\n    rationale: str = \"\",\n) -> Dict[str, Any]:",
+        "detail": "backend.utils.proposal_mutation_tools",
+        "documentation": {}
+    },
+    {
+        "label": "apply_position_update",
+        "kind": 2,
+        "importPath": "backend.utils.proposal_mutation_tools",
+        "description": "backend.utils.proposal_mutation_tools",
+        "peekOfCode": "def apply_position_update(\n    *,\n    proposal_id: str,\n    user_id: str,\n    organization_id: Optional[str],\n    role: Optional[str],\n    updates: List[Dict[str, Any]],\n    rationale: str = \"\",\n) -> Dict[str, Any]:\n    \"\"\"",
+        "detail": "backend.utils.proposal_mutation_tools",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.utils.proposal_mutation_tools",
+        "description": "backend.utils.proposal_mutation_tools",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# ─── Validation tables ───────────────────────────────────────────────────\n# Indirect rate keys we accept on update_rates.\n_VALID_RATE_KEYS = {\n    \"fringe\",\n    \"oh_onsite\",\n    \"oh_offsite\",\n    \"ga\",\n    \"fee\",\n    \"smh\",",
+        "detail": "backend.utils.proposal_mutation_tools",
+        "documentation": {}
+    },
+    {
+        "label": "_VALID_RATE_KEYS",
+        "kind": 5,
+        "importPath": "backend.utils.proposal_mutation_tools",
+        "description": "backend.utils.proposal_mutation_tools",
+        "peekOfCode": "_VALID_RATE_KEYS = {\n    \"fringe\",\n    \"oh_onsite\",\n    \"oh_offsite\",\n    \"ga\",\n    \"fee\",\n    \"smh\",\n    \"ga_passthrough\",\n    \"sub_fee\",\n    \"ot_multiplier\",",
+        "detail": "backend.utils.proposal_mutation_tools",
+        "documentation": {}
+    },
+    {
+        "label": "_VALID_PERCENTILES",
+        "kind": 5,
+        "importPath": "backend.utils.proposal_mutation_tools",
+        "description": "backend.utils.proposal_mutation_tools",
+        "peekOfCode": "_VALID_PERCENTILES = {\"10th\", \"25th\", \"50th\", \"75th\", \"90th\"}\n_VALID_LOCATION_TYPES = {\"On-Site\", \"Off-Site\"}\n_VALID_POSITION_FIELDS = {\n    \"percentile\",\n    \"location_type\",\n    \"custom_salary\",\n    \"hours_per_year\",\n    \"gsa_discount_rate\",\n    \"ot_hours_per_year\",\n    \"is_key_position\",",
+        "detail": "backend.utils.proposal_mutation_tools",
+        "documentation": {}
+    },
+    {
+        "label": "_VALID_LOCATION_TYPES",
+        "kind": 5,
+        "importPath": "backend.utils.proposal_mutation_tools",
+        "description": "backend.utils.proposal_mutation_tools",
+        "peekOfCode": "_VALID_LOCATION_TYPES = {\"On-Site\", \"Off-Site\"}\n_VALID_POSITION_FIELDS = {\n    \"percentile\",\n    \"location_type\",\n    \"custom_salary\",\n    \"hours_per_year\",\n    \"gsa_discount_rate\",\n    \"ot_hours_per_year\",\n    \"is_key_position\",\n}",
+        "detail": "backend.utils.proposal_mutation_tools",
+        "documentation": {}
+    },
+    {
+        "label": "_VALID_POSITION_FIELDS",
+        "kind": 5,
+        "importPath": "backend.utils.proposal_mutation_tools",
+        "description": "backend.utils.proposal_mutation_tools",
+        "peekOfCode": "_VALID_POSITION_FIELDS = {\n    \"percentile\",\n    \"location_type\",\n    \"custom_salary\",\n    \"hours_per_year\",\n    \"gsa_discount_rate\",\n    \"ot_hours_per_year\",\n    \"is_key_position\",\n}\n# ─── Validation helpers ───────────────────────────────────────────────────",
+        "detail": "backend.utils.proposal_mutation_tools",
         "documentation": {}
     },
     {

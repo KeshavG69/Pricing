@@ -9,7 +9,7 @@ features actually used by PriceIQ:
   - Reasoning-tool (`think` / `analyze`) output cleanup — strips the
     "CRITICAL INSTRUCTION" boilerplate Agno's ReasoningTools appends
   - Compression events (Agno emits these when context gets large)
-  - HITL `run.paused` passthrough (not used yet but kept for forward compat)
+  - HITL `run.paused` passthrough + `stream_agent_continuation` for resume
   - Accumulated content fallback so `message.completed` always fires even if
     the provider skips it on the final chunk
 
@@ -17,15 +17,16 @@ Not ported (Kroolo-specific, not applicable here):
   - Sub-agent dual-queue streaming (no sub-agents)
   - Intent suggestions / smart replies
   - Token cost tracking to DB
-  - HITL continue endpoint
 """
 
+import asyncio
 import logging
 import time
-from typing import Any, AsyncGenerator, Dict
+from typing import Any, AsyncGenerator, Dict, List
 
 from agno.agent import Agent
 from agno.run.agent import RunEvent, RunOutput, RunOutputEvent
+from agno.run.requirement import RunRequirement
 
 from utils.streaming import extract_text, sanitize_payload
 
@@ -329,4 +330,206 @@ async def stream_agent_response(
             "error": f"Agent execution failed: {str(exc)[:200]}",
             "error_type": type(exc).__name__,
             "query_preview": query[:100] + "..." if len(query) > 100 else query,
+        }
+
+
+# ─── HITL continuation streaming ────────────────────────────────────────────
+
+async def stream_agent_continuation(
+    agent: Agent,
+    run_response: RunOutput,
+    requirements: List[RunRequirement],
+) -> AsyncGenerator[Dict[str, Any], None]:
+    """Stream the agent response after resuming a paused HITL (requires_confirmation) run.
+
+    Mirrors stream_agent_response's event format exactly so the frontend
+    handles both flows with the same SSE consumer.
+
+    Args:
+        agent:        Rebuilt pricing agent (same session_id as the paused run).
+        run_response: The patched RunOutput fetched + mutated in the router
+                      (requirements already confirmed/rejected in-memory).
+        requirements: The same patched requirements list — passed explicitly
+                      so agno uses them instead of re-fetching from DB.
+    """
+    run_id = run_response.run_id
+
+    yield {"event": "run.continued", "run_id": run_id}
+
+    # agno only merges `requirements` into run_response.tools when run_id is
+    # passed (not when run_response is passed directly). Sync manually so the
+    # confirmed/rejected state actually reaches _tools.py before we hand the
+    # object to acontinue_run.
+    if requirements:
+        updated_tools = [
+            req.tool_execution
+            for req in requirements
+            if req.tool_execution is not None
+        ]
+        if updated_tools:
+            if run_response.tools:
+                tools_map = {t.tool_call_id: t for t in updated_tools if t.tool_call_id}
+                run_response.tools = [
+                    tools_map.get(t.tool_call_id, t) for t in run_response.tools
+                ]
+            else:
+                run_response.tools = updated_tools
+        run_response.requirements = requirements
+
+    start_time = time.monotonic()
+    first_delta_emitted = False
+    accumulated_content: list[str] = []
+    run_metrics: Dict[str, Any] | None = None
+    completed_run_id: str | None = None
+
+    _DONE = object()
+    queue: asyncio.Queue = asyncio.Queue()
+
+    async def _feed():
+        try:
+            async for chunk in agent.acontinue_run(
+                run_response=run_response,
+                stream=True,
+                stream_events=True,
+            ):
+                await queue.put(chunk)
+        except Exception as exc:
+            await queue.put(exc)
+        finally:
+            await queue.put(_DONE)
+
+    asyncio.create_task(_feed())
+
+    try:
+        while True:
+            run_chunk = await queue.get()
+
+            if run_chunk is _DONE:
+                break
+            if isinstance(run_chunk, Exception):
+                raise run_chunk
+
+            if isinstance(run_chunk, RunOutputEvent):
+                payload = run_chunk.to_dict()
+            elif isinstance(run_chunk, RunOutput):
+                payload = run_chunk.to_dict()
+                payload.setdefault("event", RunEvent.run_completed.value)
+            else:
+                payload = {
+                    "event": getattr(run_chunk, "event", RunEvent.run_content.value),
+                    "content": str(run_chunk),
+                }
+
+            from utils.streaming import sanitize_payload as _sanitize
+            payload = _sanitize(payload)
+            agno_event = payload.get("event", RunEvent.run_content.value)
+
+            if payload.get("run_id") and not completed_run_id:
+                completed_run_id = payload.get("run_id")
+            if payload.get("metrics"):
+                run_metrics = payload.get("metrics")
+
+            if agno_event == RunEvent.run_started.value:
+                yield {
+                    "event": "run.started",
+                    "run_id": completed_run_id,
+                    "session_id": payload.get("session_id"),
+                }
+                continue
+
+            if agno_event in {RunEvent.run_content.value, RunEvent.run_intermediate_content.value}:
+                delta_text = extract_text(payload.get("content"))
+                if delta_text:
+                    accumulated_content.append(delta_text)
+                    if not first_delta_emitted:
+                        first_delta_emitted = True
+                        ttft_ms = (time.monotonic() - start_time) * 1000.0
+                        logger.info(f"HITL continuation TTFT: {ttft_ms:.1f}ms | Run: {run_id}")
+                    yield {"event": "message.delta", "content": delta_text, "run_id": completed_run_id}
+                continue
+
+            if agno_event == RunEvent.tool_call_started.value:
+                tool = payload.get("tool") or {}
+                tool_name = tool.get("tool_name", "")
+                is_reasoning = tool_name in _REASONING_TOOL_NAMES
+                yield {
+                    "event": "tool.started",
+                    "tool_name": tool_name,
+                    "tool_args": (
+                        _clean_reasoning_args(tool.get("tool_args")) if is_reasoning else tool.get("tool_args")
+                    ),
+                    "tool_call_id": tool.get("tool_call_id"),
+                }
+                continue
+
+            if agno_event == RunEvent.tool_call_completed.value:
+                tool = payload.get("tool") or {}
+                tool_name = tool.get("tool_name", "")
+                is_reasoning = tool_name in _REASONING_TOOL_NAMES
+                raw_result = tool.get("result")
+                yield {
+                    "event": "tool.completed",
+                    "tool_name": tool_name,
+                    "tool_args": (
+                        _clean_reasoning_args(tool.get("tool_args")) if is_reasoning else tool.get("tool_args")
+                    ),
+                    "result": (
+                        _strip_boilerplate(raw_result)
+                        if is_reasoning and isinstance(raw_result, str)
+                        else raw_result
+                    ),
+                    "error": tool.get("tool_call_error"),
+                    "metrics": tool.get("metrics"),
+                    "tool_call_id": tool.get("tool_call_id"),
+                }
+                continue
+
+            # If the run pauses again (chained confirmations), forward it
+            if agno_event == RunEvent.run_paused.value:
+                yield {
+                    "event": "run.paused",
+                    "run_id": payload.get("run_id"),
+                    "session_id": payload.get("session_id"),
+                    "requirements": payload.get("requirements"),
+                }
+                logger.info(f"[HITL] Run re-paused during continuation: run_id={payload.get('run_id')}")
+                return
+
+            if agno_event == RunEvent.run_error.value:
+                yield {
+                    "event": "error",
+                    "error": payload.get("content") or payload.get("message"),
+                    "error_type": payload.get("error_type") or payload.get("status"),
+                    "run_id": payload.get("run_id"),
+                }
+                continue
+
+            if agno_event == RunEvent.run_completed.value:
+                yield {
+                    "event": "run.completed",
+                    "run_id": payload.get("run_id"),
+                    "session_id": payload.get("session_id"),
+                    "status": payload.get("status"),
+                    "metrics": payload.get("metrics"),
+                }
+                final_text = extract_text(payload.get("content"))
+                if final_text:
+                    yield {
+                        "event": "message.completed",
+                        "content": final_text,
+                        "run_id": payload.get("run_id"),
+                        "finish_reason": payload.get("status"),
+                    }
+                if payload.get("metrics"):
+                    yield {"event": "usage", "usage": payload.get("metrics")}
+                continue
+
+            yield {"event": "agent.event", "data": payload}
+
+    except Exception as exc:
+        logger.error(f"[HITL] Continuation streaming error: run_id={run_id}: {exc}", exc_info=True)
+        yield {
+            "event": "error",
+            "error": f"Continuation failed: {str(exc)[:200]}",
+            "error_type": type(exc).__name__,
         }
