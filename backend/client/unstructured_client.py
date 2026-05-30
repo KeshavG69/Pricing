@@ -97,9 +97,10 @@ class UnstructuredClient:
                 return text
 
             if ext in _LITEPARSE_EXTS:
-                with open(file_path, "rb") as f:
-                    content = f.read()
-                result = _parser.parse(content)
+                # Pass the Path (not raw bytes) so liteparse can sniff the
+                # file extension. Reading bytes first strips that signal and
+                # liteparse then errors with "unsupported file format: ."
+                result = _parser.parse(Path(file_path))
                 text = result.text or ""
                 logger.info(f"LiteParse extracted {len(text):,} chars from {filename}")
                 return text
