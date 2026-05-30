@@ -6,6 +6,7 @@ import type { Column } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
 import type { Extension } from '@/types';
+import { useChatPanelOffset } from '@/lib/hooks/useChatPanelOffset';
 
 interface CombinedLaborTotalsSectionProps {
   primeHoursByYear: Record<string, number>;
@@ -37,6 +38,8 @@ export const CombinedLaborTotalsSection = ({
   totalYears,
   extensions = [],
 }: CombinedLaborTotalsSectionProps) => {
+  const { pick: W } = useChatPanelOffset();
+
   // Format number with commas
   const formatNumber = (value: number) => {
     return value.toLocaleString('en-US', {
@@ -97,7 +100,7 @@ export const CombinedLaborTotalsSection = ({
       {
         key: 'label',
         name: '',
-        width: 350,
+        width: W(350, 160),
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => {
@@ -217,7 +220,7 @@ export const CombinedLaborTotalsSection = ({
     cols.push({
       key: 'total',
       name: 'Total',
-      width: 220,
+      width: W(220, 130),
       resizable: true,
       frozen: true,
       renderCell: ({ row }) => {
@@ -294,7 +297,7 @@ export const CombinedLaborTotalsSection = ({
 
     return cols;
   }, [totalYears, extensions, primeHoursByYear, subHoursByYear, primeLaborByYear, otCostsByYear,
-      subLaborByYear, passthroughByYear, feeByYear, totals, formatNumber, formatCurrency]);
+      subLaborByYear, passthroughByYear, feeByYear, totals, formatNumber, formatCurrency, W]);
 
   return (
     <div className="space-y-4">

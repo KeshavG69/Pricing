@@ -6,6 +6,7 @@ import type { Column } from 'react-data-grid';
 import type { Extension } from '@/types';
 import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
+import { useChatPanelOffset } from '@/lib/hooks/useChatPanelOffset';
 
 interface FeeSectionProps {
   primeLaborByYear: Record<string, number>;
@@ -29,6 +30,8 @@ export const FeeSection = ({
   totalYears,
   extensions = [],
 }: FeeSectionProps) => {
+  const { pick: W } = useChatPanelOffset();
+
   // Format currency
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -117,7 +120,7 @@ export const FeeSection = ({
       {
         key: 'label',
         name: 'Fee Category',
-        width: 320,
+        width: W(320, 150),
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => (
@@ -193,7 +196,7 @@ export const FeeSection = ({
     cols.push({
       key: 'total',
       name: 'Total Amount ($)',
-      width: 180,
+      width: W(180, 120),
       resizable: true,
       frozen: true,
       renderCell: ({ row }) => {
@@ -221,7 +224,7 @@ export const FeeSection = ({
     });
 
     return cols;
-  }, [totalYears, extensions, feeByYear, totals]);
+  }, [totalYears, extensions, feeByYear, totals, W]);
 
   return (
     <div className="space-y-4">
