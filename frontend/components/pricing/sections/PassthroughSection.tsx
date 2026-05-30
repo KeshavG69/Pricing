@@ -6,6 +6,7 @@ import type { Column } from 'react-data-grid';
 import type { Extension } from '@/types';
 import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
+import { useChatPanelOffset } from '@/lib/hooks/useChatPanelOffset';
 
 interface PassthroughSectionProps {
   subcontractorCostsByYear: Record<string, number>;
@@ -27,6 +28,8 @@ export const PassthroughSection = ({
   totalYears,
   extensions = [],
 }: PassthroughSectionProps) => {
+  const { pick: W } = useChatPanelOffset();
+
   // Format currency
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -105,7 +108,7 @@ export const PassthroughSection = ({
       {
         key: 'label',
         name: 'Labor Category',
-        width: 280,
+        width: W(280, 140),
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => (
@@ -179,7 +182,7 @@ export const PassthroughSection = ({
     cols.push({
       key: 'total',
       name: 'Total Amount ($)',
-      width: 180,
+      width: W(180, 120),
       resizable: true,
       frozen: true,
       renderCell: ({ row }) => {
@@ -207,7 +210,7 @@ export const PassthroughSection = ({
     });
 
     return cols;
-  }, [totalYears, extensions, passthroughByYear, totals]);
+  }, [totalYears, extensions, passthroughByYear, totals, W]);
 
   // Don't render if no subcontractor costs
   const hasSubcontractorCosts = Object.values(subcontractorCostsByYear).some(cost => cost > 0);

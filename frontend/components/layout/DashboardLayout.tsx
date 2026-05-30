@@ -66,10 +66,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         onMobileClose={() => setIsMobileSidebarOpen(false)}
       />
 
-      {/* Main Content */}
-      <main className={`pt-16 md:ml-72 p-6 transition-all duration-300 ${
-        isHelpModalOpen ? 'md:mr-[520px]' : ''
-      }`}>
+      {/* Main Content. PricingChatPanel writes `paddingRight` to this
+          element imperatively when it opens — pushing the workspace inward
+          so data grids and tables shrink within the visible area instead
+          of extending behind the panel. We don't set padding-right via
+          inline style here because React re-renders would compete with
+          the panel's writes; the panel owns it while open. */}
+      <main
+        className={`pt-16 md:ml-72 p-6 transition-all duration-300 ${
+          isHelpModalOpen ? 'md:mr-[520px]' : ''
+        }`}
+      >
         <div className="animate-fade-in">
           {children}
         </div>

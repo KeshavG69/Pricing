@@ -347,6 +347,10 @@ WORKFLOW:
     "option_years": 4,
     "total_years": 5,
     "standard_fte_hours": {default_fte_hours},
+    "naics_code": "541330",  # 6-digit NAICS code. Extract from the document if explicitly stated; otherwise INFER the best-fit NAICS from the work described. See NAICS rules below.
+    "agency": "Department of the Navy",  # OPTIONAL: Awarding agency at department level. See agency extraction rules below. Use null if not determinable.
+    "contracting_office": "NAVSUP FLC Norfolk",  # OPTIONAL: Specific contracting office issuing the solicitation. Use null if not stated.
+    "scope_keywords": ["SATCOM", "C5I", "RC3"],  # 2-5 distinctive scope terms used to narrow comparable-award lookups. See rules below. Use [] (empty array) if nothing distinctive stands out.
     "notes": "REQUIRED: Explain data quality and sources. If staffing was generated/estimated (not explicitly in document), clearly state: 'GENERATED: This staffing plan was created based on contract objectives and typical industry patterns. All positions and hours are estimates and should be reviewed.' Include any assumptions made."
   }},
 
@@ -487,6 +491,77 @@ IMPORTANT:
     - If document has NEITHER, set surge: null and all positions get is_surge: false
     - ONLY extract surge PERCENTAGE - do NOT extract multipliers, premiums, or pricing details
     - Default all positions to is_surge: false unless clear evidence they are surge positions
+
+- NAICS code extraction (TWO-STEP: explicit first, then infer):
+  * NAICS is a 6-digit industry classification code (e.g., "541330", "541611", "541512")
+  * Output must always match \\d{{6}} (exactly 6 digits). Set to null ONLY when the
+    document is too vague to even infer (e.g., a blank or completely off-topic file).
+
+  STEP 1 — Try explicit extraction first:
+  * Typically lives on the solicitation cover sheet (SF1449 Block 10), not the PWS body
+  * Look for labels: "NAICS Code:", "NAICS:", "NAICS Code (Block 10)", "Applicable NAICS"
+  * If found and well-formed, use it as-is.
+
+  STEP 2 — If not explicit, INFER the best-fit NAICS from the work described:
+  * The downstream PTW lookup needs a NAICS to find comparable past awards; a
+    reasonable inference beats no answer for the user.
+  * Pick the single best-fit code from the common DoD services list below based
+    on the actual scope of work in the document. Be specific rather than generic.
+  * Common service-contract NAICS to choose from:
+    - 541330 — Engineering Services (SATCOM, C5I, RF, weapons engineering, technical SME work)
+    - 541512 — Computer Systems Design (software dev, IT integration, custom systems)
+    - 541513 — Computer Facilities Management
+    - 541519 — Other Computer-Related Services (cybersecurity ops, IT support)
+    - 541611 — Management Consulting (strategic advisory, BPR, change management)
+    - 541612 — HR Consulting
+    - 541618 — Other Mgmt Consulting (program management, acquisition support)
+    - 541690 — Other Scientific & Technical Consulting
+    - 541715 — R&D in Engineering/Physical Sciences (prototyping, applied research)
+    - 541990 — All Other Professional/Scientific/Technical Services
+    - 561210 — Facilities Support Services
+    - 561612 — Security Guards & Patrol
+    - 561621 — Security Systems
+    - 611430 — Professional & Management Development Training
+  * If the work is engineering subject-matter-expert support (SATCOM, C5I, networks,
+    weapons, comms, RF) → choose 541330.
+  * If the work is software development or computer systems → choose 541512.
+  * If the work is strategic/management advisory (not technical engineering) → 541611.
+  * If you genuinely cannot tell what the work is → set naics_code to null (rare).
+
+- Agency extraction (OPTIONAL — extract conservatively):
+  * "agency" is the AWARDING DEPARTMENT — use the official department name:
+    - "Department of the Navy", "Department of the Army", "Department of the Air Force"
+    - "Department of Defense" (use for joint/OSD work only, NOT as a default)
+    - "Department of Veterans Affairs", "Department of Homeland Security", etc.
+  * Infer from the issuing organization, command, or letterhead:
+    - "NAVIFOR", "NAVSEA", "NAVAIR", "SPAWAR", "Marine Corps" → "Department of the Navy"
+    - "Army Corps of Engineers", "PEO", "AMC", "MICC" → "Department of the Army"
+    - "Air Force", "USAF", "AFMC" → "Department of the Air Force"
+    - "Joint Staff", "USCYBERCOM", "DISA", "OSD" → "Department of Defense"
+  * If you cannot identify the awarding department with confidence, set agency to null
+
+- Contracting office extraction (OPTIONAL):
+  * The specific office issuing/managing the contract (vs the customer command)
+  * Usually appears in the SF1449 "Issued By" block or near contract clauses
+  * Examples: "NAVSUP FLC Norfolk", "NAVSEA HQ", "ACC-APG", "MICC Fort Eustis"
+  * The customer command (e.g., "NAVIFOR") is often DIFFERENT from the contracting office
+  * Set contracting_office to null if not explicitly named
+
+- Scope keywords extraction (REQUIRED — pick 2-5 distinctive terms):
+  * These keywords are passed to USASpending to find comparable past awards.
+    More specific = tighter comparable pool = better PTW estimate.
+  * Pick technical acronyms, program names, or distinctive scope terms from the doc.
+  * Examples:
+    - SATCOM PWS → ["SATCOM", "C5I", "RC3"]
+    - Cyber operations RFP → ["cybersecurity", "SOC", "incident response"]
+    - Financial audit task → ["DCAA", "financial audit", "compliance"]
+    - Systems engineering → ["systems engineering", "MBSE", "DoDAF"]
+    - Logistics support → ["logistics", "supply chain", "ILS"]
+  * AVOID generic words: "services", "support", "consulting", "contractor",
+    "personnel", "tasks", "deliverables" — these match thousands of unrelated
+    contracts and add noise.
+  * Prefer ACRONYMS and PROGRAM NAMES over generic descriptors.
+  * If the document is too generic to extract distinctive terms, return [].
 
 Return ONLY valid JSON, no markdown code blocks.
 """

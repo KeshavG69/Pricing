@@ -16,6 +16,7 @@ import {
   SubcontractorPosition,
   Proposal,
   WageSource,
+  PTWSuggestResponse,
 } from '@/types';
 import { pricingApi } from '../api/pricing';
 import { proposalsApi } from '../api/proposals';
@@ -36,6 +37,14 @@ interface PricingState {
    * MongoDB via `price_to_win` field on the proposal document.
    */
   priceToWin: number | null;
+  /**
+   * Last PTW suggestion fetched from /api/pricing/ptw/suggest. Held
+   * separately from `priceToWin` so the UI can show "Suggested: $X"
+   * alongside the user's accepted value. Cleared on proposal load.
+   */
+  ptwSuggestion: PTWSuggestResponse | null;
+  ptwSuggestionLoading: boolean;
+  ptwSuggestionError: string | null;
   positions: SpreadsheetPosition[];
   subcontractors: Subcontractor[];
   travel: TravelItem[];
@@ -122,6 +131,10 @@ interface PricingState {
    * immediate save to MongoDB (single-field, no need to debounce).
    */
   setPriceToWin: (target: number | null) => Promise<void>;
+  /** Fetch a PTW suggestion for the currently loaded proposal. */
+  fetchPTWSuggestion: (opts?: { keywords?: string[] }) => Promise<void>;
+  /** Clear any cached PTW suggestion + error (e.g. on dismiss). */
+  clearPTWSuggestion: () => void;
   preCreateSubcontractors: (subs: { name: string }[]) => void;
   autoAllocateWorkshare: () => Promise<void>;
   assignPositionToContractor: (positionId: string, subcontractorId: string | null) => Promise<void>;
@@ -862,6 +875,9 @@ export const usePricingStore = create<PricingState>((set, get) => {
     primeContractorName: 'TBD',
     dcaaContact: '',
     priceToWin: null,
+    ptwSuggestion: null,
+    ptwSuggestionLoading: false,
+    ptwSuggestionError: null,
     positions: [],
     subcontractors: [],
     travel: [],
@@ -1231,6 +1247,10 @@ export const usePricingStore = create<PricingState>((set, get) => {
           primeContractorName,
           dcaaContact: proposal.dcaa_contact || '',
           priceToWin: typeof proposal.price_to_win === 'number' ? proposal.price_to_win : null,
+          // Drop any PTW suggestion from a previously loaded proposal.
+          ptwSuggestion: null,
+          ptwSuggestionLoading: false,
+          ptwSuggestionError: null,
           positions,
           subcontractors,
           travel: proposal.spreadsheet_data?.travel || [],
@@ -2838,6 +2858,36 @@ export const usePricingStore = create<PricingState>((set, get) => {
       } catch (err) {
         console.error('[STORE] Failed to save price_to_win:', err);
       }
+    },
+
+    fetchPTWSuggestion: async (opts) => {
+      const state = get();
+      if (!state.proposalId) {
+        set({ ptwSuggestionError: 'No proposal loaded.' });
+        return;
+      }
+      set({ ptwSuggestionLoading: true, ptwSuggestionError: null });
+      try {
+        const result = await pricingApi.suggestPTW(state.proposalId, opts?.keywords);
+        set({ ptwSuggestion: result, ptwSuggestionLoading: false });
+      } catch (err: any) {
+        // Backend uses 400 (missing NAICS/agency), 422 (no comparables), 502 (USASpending down)
+        // — surface the backend's own `detail` so the UI can render an actionable message.
+        const detail =
+          err?.response?.data?.detail ||
+          err?.message ||
+          'Failed to fetch PTW suggestion.';
+        set({
+          ptwSuggestion: null,
+          ptwSuggestionLoading: false,
+          ptwSuggestionError: typeof detail === 'string' ? detail : JSON.stringify(detail),
+        });
+        console.error('[STORE] fetchPTWSuggestion failed:', err);
+      }
+    },
+
+    clearPTWSuggestion: () => {
+      set({ ptwSuggestion: null, ptwSuggestionError: null });
     },
 
     preCreateSubcontractors: (subs) => {

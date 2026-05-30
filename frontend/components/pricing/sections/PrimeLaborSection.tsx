@@ -21,6 +21,7 @@ import AddPositionModal from '@/components/pricing/AddPositionModal';
 import { getAvailablePercentiles } from '@/lib/utils/percentileHelpers';
 import { getEffectiveSalary, getSalaryDisplayLabel, getSalarySelectionCount, isMultiSelectMode, isGSAPosition, getGSARateForYear, reverseEngineerGSARate } from '@/lib/utils/salaryHelpers';
 import { formatSocCode } from '@/lib/utils/socHelpers';
+import { useChatPanelOffset } from '@/lib/hooks/useChatPanelOffset';
 import Button from '@/components/ui/Button';
 import { usePricingStore, isKeyPosition } from '@/lib/stores/pricingStore';
 import apiClient from '@/lib/api/client';
@@ -180,6 +181,10 @@ export const PrimeLaborSection = ({
   const saveScrollPosition = usePricingStore((state) => state.saveScrollPosition);
   const restoreScrollPosition = usePricingStore((state) => state.restoreScrollPosition);
   const isGSAProposal = wageSource?.type === 'gsa';
+
+  // Compact-mode: shrink frozen column widths when the chat panel is open
+  // so year columns still have room. See `lib/hooks/useChatPanelOffset.ts`.
+  const { pick: W } = useChatPanelOffset();
 
   // Track optimistic contractor assignments (persists across renders)
   const optimisticContractorRef = React.useRef<Map<string, string | null>>(new Map());
@@ -1298,7 +1303,7 @@ export const PrimeLaborSection = ({
       {
         key: 'actions',
         name: '',
-        width: 50,
+        width: W(50, 40),
         resizable: false,
         frozen: true,
         renderCell: ({ row }) => {
@@ -1339,7 +1344,7 @@ export const PrimeLaborSection = ({
       {
         key: 'location',
         name: 'Location',
-        width: 180,
+        width: W(180, 80),
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => {
@@ -1375,7 +1380,7 @@ export const PrimeLaborSection = ({
       {
         key: 'location_type',
         name: 'Onsite/Offsite',
-        width: 110,
+        width: W(110, 70),
         resizable: true,
         frozen: true,
         editable: false,
@@ -1481,7 +1486,7 @@ export const PrimeLaborSection = ({
       {
         key: 'contractor_assignment',
         name: 'Contractor',
-        width: 150,
+        width: W(150, 80),
         resizable: true,
         frozen: true,
         editable: false,
@@ -1520,7 +1525,7 @@ export const PrimeLaborSection = ({
       {
         key: 'cost_element',
         name: 'Labor Category',
-        width: 320,
+        width: W(320, 140),
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => {
@@ -2832,7 +2837,7 @@ export const PrimeLaborSection = ({
     );
 
     return cols;
-  }, [totalYears, expandedPositions, manualOverrides, onToggleExpand, onDeletePosition, handleContextMenu, rates, escalationRates, isGSAProposal, advancedModeVersion]);
+  }, [totalYears, expandedPositions, manualOverrides, onToggleExpand, onDeletePosition, handleContextMenu, rates, escalationRates, isGSAProposal, advancedModeVersion, W]);
 
   // Get store methods (positions for the modal) - must be before any early returns
   const { addPosition, positions: basicPositions } = usePricingStore();

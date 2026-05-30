@@ -212,6 +212,14 @@ export interface ProposalUpdate {
   name?: string;
   solicitation_number?: string;
   prime_contractor_name?: string;
+  /** 6-digit NAICS code used for PTW comparable-award lookup. */
+  naics_code?: string | null;
+  /** Awarding agency name used for PTW comparable-award lookup. */
+  agency?: string | null;
+  /** Optional contracting sub-office. */
+  contracting_office?: string | null;
+  /** Distinctive scope terms for PTW search refinement. */
+  scope_keywords?: string[] | null;
   status?: string;
   total_cost?: number;
   /** Price-to-Win target ($). Pass null to clear. */
@@ -219,6 +227,40 @@ export interface ProposalUpdate {
   rates?: IndirectRates;
   escalation_rates?: EscalationRates;
   spreadsheet_data?: any;
+}
+
+// ---------------------------------------------------------------------------
+// Price-to-Win (PTW) suggestion
+// ---------------------------------------------------------------------------
+
+export type PTWConfidence = 'high' | 'medium' | 'low';
+export type PTWMethod = 'reconciled' | 'top_down_only' | 'bottom_up_only';
+
+/** Headline output of the PTW reconciliation engine. */
+export interface PTWReconciliation {
+  /** Recommended PTW dollar amount (rounded to nearest $1K). */
+  suggested_ptw: number;
+  /** Competitive low end of the band. */
+  low: number;
+  /** Competitive high end of the band. */
+  high: number;
+  /** Confidence rating based on top-down vs bottom-up agreement and sample size. */
+  confidence: PTWConfidence;
+  /** Which inputs the headline came from. */
+  method: PTWMethod;
+  /** How much top-down and bottom-up estimates differ (%, rounded to 1 decimal). Null when only one input was usable. */
+  disagreement_pct: number | null;
+  /** Plain-English explanation surfaceable in the UI. */
+  rationale: string;
+}
+
+/** Response from POST /api/pricing/ptw/suggest. */
+export interface PTWSuggestResponse {
+  proposal_id: string;
+  naics_code: string;
+  agency: string;
+  total_years: number;
+  reconciliation: PTWReconciliation;
 }
 
 export interface ProposalStatus {

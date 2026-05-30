@@ -6,6 +6,7 @@ import type { Column } from 'react-data-grid';
 import { ODCItem, Extension } from '@/types';
 import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
+import { useChatPanelOffset } from '@/lib/hooks/useChatPanelOffset';
 
 interface ODCSectionProps {
   odcs: ODCItem[];
@@ -39,6 +40,7 @@ export const ODCSection = ({
   onDelete,
 }: ODCSectionProps) => {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const { pick: W } = useChatPanelOffset();
 
   // Format currency
   const formatCurrency = (value: number) => {
@@ -158,7 +160,7 @@ export const ODCSection = ({
       {
         key: 'category',
         name: 'Category',
-        width: 200,
+        width: W(200, 110),
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => (
@@ -261,7 +263,7 @@ export const ODCSection = ({
     cols.push({
       key: 'total',
       name: 'Total Amount ($)',
-      width: 180,
+      width: W(180, 120),
       resizable: true,
       frozen: true,
       renderCell: ({ row }) => {
@@ -348,7 +350,7 @@ export const ODCSection = ({
     });
 
     return cols;
-  }, [totalYears, extensions, onEdit]);
+  }, [totalYears, extensions, onEdit, W]);
 
   const handleConfirmDelete = (id: string) => {
     onDelete(id);

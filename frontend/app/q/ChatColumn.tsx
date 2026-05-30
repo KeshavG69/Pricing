@@ -31,6 +31,8 @@ import {
   streamPricingChatResume,
   type ChatMessageRecord,
 } from '@/lib/api/pricingChat';
+import { usePricingStore } from '@/lib/stores/pricingStore';
+import { proposalsApi } from '@/lib/api/proposals';
 import {
   ARTIFACT_TOOL_NAMES,
   EXA_TOOL_NAMES,
@@ -76,6 +78,91 @@ export interface ChatColumnProps {
 
 function newId(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
+/** Tool names that mutate the proposal in MongoDB. */
+const MUTATION_TOOL_NAMES = new Set(['update_rates', 'update_positions']);
+
+/**
+ * Extract pending tool name/args from a `run.paused` event's `requirements`
+ * array — agno's authoritative source. Used by the approval card so it
+ * doesn't depend on React having committed `tool.started` first.
+ */
+function extractToolFromRequirements(
+  requirements: unknown,
+): { name?: string; args?: Record<string, unknown>; tool_call_id?: string } {
+  if (!Array.isArray(requirements) || requirements.length === 0) return {};
+  for (const r of requirements) {
+    if (!r || typeof r !== 'object') continue;
+    const exec = (r as { tool_execution?: unknown }).tool_execution;
+    if (!exec || typeof exec !== 'object') continue;
+    const e = exec as {
+      tool_name?: string;
+      tool_args?: unknown;
+      tool_call_id?: string;
+    };
+    const args =
+      e.tool_args && typeof e.tool_args === 'object' && !Array.isArray(e.tool_args)
+        ? (e.tool_args as Record<string, unknown>)
+        : undefined;
+    return { name: e.tool_name, args, tool_call_id: e.tool_call_id };
+  }
+  return {};
+}
+
+/**
+ * Auto-refresh the pricingStore when an agent mutation completes — only
+ * if the user happens to also have that proposal loaded in the workspace
+ * (which is uncommon when chatting from /q, but possible if both surfaces
+ * are open). Silent no-op otherwise.
+ */
+function maybeReloadProposalAfterMutation(
+  evt: { tool_name?: string; result?: unknown; error?: unknown },
+  mutationProposalId: string,
+): void {
+  if (!evt.tool_name || !MUTATION_TOOL_NAMES.has(evt.tool_name)) return;
+  if (evt.error) {
+    console.debug('[chat-column] mutation errored, skipping reload:', evt.error);
+    return;
+  }
+
+  // Be permissive on the result shape — only bail if there's an explicit
+  // success=false. Otherwise assume the mutation worked (we already
+  // filtered on evt.error).
+  let parsed: unknown = evt.result;
+  if (typeof parsed === 'string') {
+    try { parsed = JSON.parse(parsed); } catch { /* leave as string */ }
+  }
+  if (parsed && typeof parsed === 'object') {
+    if ((parsed as { success?: unknown }).success === false) {
+      console.debug('[chat-column] mutation result.success=false, skipping reload');
+      return;
+    }
+  }
+
+  // Only refresh if the workspace currently has THIS proposal loaded —
+  // otherwise we'd clobber an unrelated proposal the user is editing.
+  const state = usePricingStore.getState();
+  if (state.proposalId !== mutationProposalId) {
+    console.debug(
+      `[chat-column] active proposal (${state.proposalId?.slice(0, 8)}) doesn't match mutation target (${mutationProposalId.slice(0, 8)}); skipping reload`,
+    );
+    return;
+  }
+
+  console.info(
+    `[chat-column] mutation "${evt.tool_name}" succeeded — refetching proposal ${mutationProposalId.slice(0, 8)}…`,
+  );
+  void (async () => {
+    try {
+      const fresh = await proposalsApi.get(mutationProposalId);
+      await usePricingStore.getState().loadProposal(mutationProposalId, fresh);
+      usePricingStore.getState().transformToAdvanced();
+      console.info('[chat-column] post-mutation reload + transform complete');
+    } catch (err) {
+      console.warn('[chat-column] post-mutation reload failed:', err);
+    }
+  })();
 }
 
 // ─── Component ──────────────────────────────────────────────────
@@ -190,6 +277,9 @@ export default function ChatColumn({
         controller.signal,
       )) {
         applyEventToMessage(evt, assistantMsg.id, setMessages, setPausedRun);
+        if (evt.type === 'tool.completed') {
+          maybeReloadProposalAfterMutation(evt, proposalId);
+        }
         if (evt.type === 'run.paused') break;
       }
     } finally {
@@ -260,6 +350,9 @@ export default function ChatColumn({
           controller.signal,
         )) {
           applyEventToMessage(evt, pr.message_id, setMessages, setPausedRun);
+          if (evt.type === 'tool.completed') {
+            maybeReloadProposalAfterMutation(evt, proposalId);
+          }
           if (evt.type === 'run.paused') break;
         }
       } finally {
@@ -788,17 +881,24 @@ function applyEventToMessage(
   }
 
   if (evt.type === 'run.paused') {
+    // Pull tool info from the event's requirements (authoritative — included
+    // in the run.paused event itself, no React state-timing race) and only
+    // fall back to scanning toolCalls if requirements didn't carry it.
+    const fromReq = extractToolFromRequirements(evt.requirements);
     setMessages((m) => {
       const msg = m.find((x) => x.id === assistantMsgId);
-      const lastRunningCall = msg?.toolCalls?.filter((c) => c.status === 'running').at(-1);
+      const fallback = msg?.toolCalls?.at(-1);
+      const toolName = fromReq.name ?? fallback?.name;
+      const toolArgs =
+        fromReq.args ?? (fallback?.args as Record<string, unknown> | undefined);
       const paused: PausedRun = {
         run_id: evt.run_id,
         session_id: evt.session_id,
-        tool_name: lastRunningCall?.name,
-        tool_args: lastRunningCall?.args,
+        tool_name: toolName,
+        tool_args: toolArgs,
         rationale:
-          typeof lastRunningCall?.args?.rationale === 'string'
-            ? (lastRunningCall.args.rationale as string)
+          typeof toolArgs?.rationale === 'string'
+            ? (toolArgs.rationale as string)
             : undefined,
         message_id: assistantMsgId,
       };

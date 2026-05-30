@@ -6,6 +6,7 @@ import type { Column } from 'react-data-grid';
 import { SurgeOption } from '@/types';
 import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
+import { useChatPanelOffset } from '@/lib/hooks/useChatPanelOffset';
 
 interface SurgeSectionProps {
   surge: SurgeOption | null;
@@ -29,6 +30,8 @@ export const SurgeSection = ({
   surgeMultiplier,
   onUpdatePercentage,
 }: SurgeSectionProps) => {
+  const { pick: W } = useChatPanelOffset();
+
   // Format currency
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -124,7 +127,7 @@ export const SurgeSection = ({
     cols.push({
       key: 'description',
       name: 'Description',
-      width: 300,
+      width: W(300, 150),
       frozen: true,
       resizable: true,
       renderCell: ({ row }) => {
@@ -173,7 +176,7 @@ export const SurgeSection = ({
     cols.push({
       key: 'grandTotal',
       name: 'Grand Total ($)',
-      width: 140,
+      width: W(140, 100),
       frozen: true,
       resizable: true,
       renderCell: ({ row }) => {
@@ -197,7 +200,7 @@ export const SurgeSection = ({
     });
 
     return cols;
-  }, [totalYears, baseGrandTotal, surgeGrandTotal, grandTotal]);
+  }, [totalYears, baseGrandTotal, surgeGrandTotal, grandTotal, W]);
 
   // If no surge option, show message
   if (!surge || !surge.percentage) {

@@ -6,6 +6,7 @@ import type { Column } from 'react-data-grid';
 import { TravelItem, Extension } from '@/types';
 import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
+import { useChatPanelOffset } from '@/lib/hooks/useChatPanelOffset';
 
 interface TravelSectionProps {
   travel: TravelItem[];
@@ -38,6 +39,7 @@ export const TravelSection = ({
   onDelete,
 }: TravelSectionProps) => {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const { pick: W } = useChatPanelOffset();
 
   // Format currency
   const formatCurrency = (value: number) => {
@@ -156,7 +158,7 @@ export const TravelSection = ({
       {
         key: 'description',
         name: 'Description',
-        width: 300,
+        width: W(300, 150),
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => (
@@ -235,7 +237,7 @@ export const TravelSection = ({
     cols.push({
       key: 'total',
       name: 'Total Amount ($)',
-      width: 180,
+      width: W(180, 120),
       resizable: true,
       frozen: true,
       renderCell: ({ row }) => {
@@ -322,7 +324,7 @@ export const TravelSection = ({
     });
 
     return cols;
-  }, [totalYears, extensions, onEdit]);
+  }, [totalYears, extensions, onEdit, W]);
 
   const handleConfirmDelete = (id: string) => {
     onDelete(id);

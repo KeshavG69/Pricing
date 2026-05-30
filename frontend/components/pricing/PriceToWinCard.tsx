@@ -17,9 +17,11 @@
  */
 
 import { useEffect, useRef, useState } from 'react';
-import { Target, ArrowRight, X, Pencil } from 'lucide-react';
+import { Target, ArrowRight, X, Pencil, Sparkles, Loader2, AlertCircle, Check } from 'lucide-react';
 import Card, { CardContent } from '@/components/ui/Card';
 import { usePricingStore } from '@/lib/stores/pricingStore';
+import { proposalsApi } from '@/lib/api/proposals';
+import type { PTWConfidence } from '@/types';
 
 const formatMoney = (n: number) =>
   `$${n.toLocaleString('en-US', { maximumFractionDigits: 2, minimumFractionDigits: 2 })}`;
@@ -89,10 +91,23 @@ function dispatchAnalyze(currentTotal: number, target: number) {
   );
 }
 
+// Confidence → visual styling. Keeps the inline rationale chip honest about
+// how much weight to give the suggestion.
+const CONFIDENCE_STYLES: Record<PTWConfidence, { dot: string; label: string }> = {
+  high:   { dot: 'bg-emerald-500', label: 'high confidence' },
+  medium: { dot: 'bg-amber-500',   label: 'medium confidence' },
+  low:    { dot: 'bg-red-500',     label: 'low confidence' },
+};
+
 export default function PriceToWinCard({ currentTotal }: PriceToWinCardProps) {
   const priceToWin = usePricingStore((s) => s.priceToWin);
   const setPriceToWin = usePricingStore((s) => s.setPriceToWin);
   const proposalId = usePricingStore((s) => s.proposalId);
+  const ptwSuggestion = usePricingStore((s) => s.ptwSuggestion);
+  const ptwSuggestionLoading = usePricingStore((s) => s.ptwSuggestionLoading);
+  const ptwSuggestionError = usePricingStore((s) => s.ptwSuggestionError);
+  const fetchPTWSuggestion = usePricingStore((s) => s.fetchPTWSuggestion);
+  const clearPTWSuggestion = usePricingStore((s) => s.clearPTWSuggestion);
 
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState('');
@@ -161,32 +176,184 @@ export default function PriceToWinCard({ currentTotal }: PriceToWinCardProps) {
   // ── Disable when no proposal is loaded ──────────────────────────────
   if (!proposalId) return null;
 
+  // Suggestion sub-state (reused in both State A and State B/C below).
+  const suggestion = ptwSuggestion?.reconciliation ?? null;
+
+  // Renders the success suggestion panel — extracted so both empty and
+  // target-set states can show the same rich block when a suggestion exists.
+  const renderSuggestionPanel = () => (
+    <div className="rounded-lg border border-blue-200 bg-blue-50/50 p-3 dark:border-blue-900 dark:bg-blue-950/20">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="text-xs uppercase tracking-wider text-muted-foreground">
+              Suggested
+            </span>
+            <span className="text-base font-semibold text-foreground tabular-nums">
+              {formatCompact(suggestion!.suggested_ptw)}
+            </span>
+            <span className="text-xs text-muted-foreground tabular-nums">
+              ({formatCompact(suggestion!.low)}–{formatCompact(suggestion!.high)})
+            </span>
+            <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
+              <span className={`h-1.5 w-1.5 rounded-full ${CONFIDENCE_STYLES[suggestion!.confidence].dot}`} />
+              {CONFIDENCE_STYLES[suggestion!.confidence].label}
+            </span>
+          </div>
+          <p className="mt-1.5 text-xs text-muted-foreground leading-snug">
+            {suggestion!.rationale}
+          </p>
+        </div>
+        <div className="flex shrink-0 items-center gap-1">
+          <button
+            type="button"
+            onClick={async () => {
+              await setPriceToWin(suggestion!.suggested_ptw);
+              clearPTWSuggestion();
+            }}
+            className="inline-flex items-center gap-1 rounded-md bg-blue-600 px-2.5 py-1.5 text-xs font-medium text-white shadow-sm transition-[transform,background-color] duration-160 ease-out hover:bg-blue-700 active:scale-[0.97]"
+          >
+            <Check className="h-3 w-3" />
+            {priceToWin == null ? 'Use this' : 'Replace target'}
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setDraft(String(Math.round(suggestion!.suggested_ptw)));
+              setEditing(true);
+            }}
+            className="inline-flex items-center gap-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs text-foreground transition-colors duration-100 hover:bg-muted"
+          >
+            <Pencil className="h-3 w-3" />
+            Edit
+          </button>
+          <button
+            type="button"
+            onClick={clearPTWSuggestion}
+            aria-label="Dismiss suggestion"
+            className="inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground transition-colors duration-100 hover:bg-muted hover:text-foreground"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderErrorPanel = () => {
+    // If the error is the "missing NAICS/agency" path, show an inline form so
+    // the user can fill them in without leaving the card. Older proposals
+    // (uploaded before the parser changes) hit this every time.
+    const isMissingMetadata =
+      !!ptwSuggestionError && /missing required field/i.test(ptwSuggestionError);
+
+    if (isMissingMetadata) {
+      return (
+        <MissingMetadataForm
+          onSaved={() => {
+            // Save succeeded — auto-retry the suggestion so the user doesn't
+            // have to click Retry themselves.
+            clearPTWSuggestion();
+            void fetchPTWSuggestion();
+          }}
+          onDismiss={clearPTWSuggestion}
+        />
+      );
+    }
+
+    return (
+      <div className="flex items-start gap-2 rounded-lg border border-amber-200 bg-amber-50/50 p-3 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/20 dark:text-amber-200">
+        <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+        <div className="flex-1">
+          <p className="leading-snug">{ptwSuggestionError}</p>
+          <div className="mt-2 flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void fetchPTWSuggestion()}
+              className="rounded-md border border-amber-300 bg-background px-2 py-0.5 text-[11px] font-medium text-foreground transition-colors duration-100 hover:bg-muted dark:border-amber-800"
+            >
+              Retry
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                clearPTWSuggestion();
+                if (priceToWin == null) startEditing();
+              }}
+              className="rounded-md px-2 py-0.5 text-[11px] text-amber-700 transition-colors duration-100 hover:text-amber-900 dark:text-amber-300 dark:hover:text-amber-100"
+            >
+              Dismiss
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // ── State A: no target set ──────────────────────────────────────────
   if (priceToWin == null) {
     return (
       <Card className="relative overflow-visible">
-        <CardContent className="flex flex-col gap-4 pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <div className="flex items-start gap-3">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/40">
-              <Target className="h-4 w-4" />
+        <CardContent className="flex flex-col gap-3 pt-6">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-start gap-3">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950/40">
+                <Target className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-foreground">Price-to-Win</p>
+                <p className="text-xs text-muted-foreground">
+                  Set a target price and Q will analyze the gap, lever by lever.
+                </p>
+              </div>
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-foreground">Price-to-Win</p>
-              <p className="text-xs text-muted-foreground">
-                Set a target price and Q will analyze the gap, lever by lever.
-              </p>
-            </div>
+
+            {/* Action buttons — only when no suggestion / loading / error in progress. */}
+            {!ptwSuggestionLoading && !suggestion && !ptwSuggestionError && (
+              <div className="relative flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => void fetchPTWSuggestion()}
+                  className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3.5 py-2 text-sm font-medium text-white shadow-sm transition-[transform,background-color] duration-160 ease-out hover:bg-blue-700 active:scale-[0.97]"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  Suggest
+                </button>
+                <button
+                  type="button"
+                  onClick={startEditing}
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3.5 py-2 text-sm font-medium text-foreground transition-[transform,background-color] duration-160 ease-out hover:bg-muted active:scale-[0.97]"
+                >
+                  Set manually
+                </button>
+                {editing && (
+                  <SetTargetPopover
+                    ref={popoverRef}
+                    draft={draft}
+                    onChange={setDraft}
+                    onCommit={commit}
+                    onCancel={() => setEditing(false)}
+                    onKeyDown={onInputKeyDown}
+                    inputRef={inputRef}
+                  />
+                )}
+              </div>
+            )}
+
+            {ptwSuggestionLoading && (
+              <div className="inline-flex items-center gap-2 rounded-lg border border-border bg-muted/30 px-3.5 py-2 text-sm text-muted-foreground">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                Analyzing comparable awards…
+              </div>
+            )}
           </div>
-          <div className="relative">
-            <button
-              type="button"
-              onClick={startEditing}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-background px-3.5 py-2 text-sm font-medium text-foreground transition-[transform,background-color] duration-160 ease-out hover:bg-muted active:scale-[0.97]"
-            >
-              Set target
-              <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-            {editing && (
+
+          {suggestion && !ptwSuggestionLoading && renderSuggestionPanel()}
+          {ptwSuggestionError && !ptwSuggestionLoading && !suggestion && renderErrorPanel()}
+
+          {/* Popover for when "Edit" was clicked from inside the suggestion panel. */}
+          {editing && suggestion && (
+            <div className="relative">
               <SetTargetPopover
                 ref={popoverRef}
                 draft={draft}
@@ -196,8 +363,8 @@ export default function PriceToWinCard({ currentTotal }: PriceToWinCardProps) {
                 onKeyDown={onInputKeyDown}
                 inputRef={inputRef}
               />
-            )}
-          </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     );
@@ -210,7 +377,8 @@ export default function PriceToWinCard({ currentTotal }: PriceToWinCardProps) {
 
   return (
     <Card className="relative overflow-visible">
-      <CardContent className="flex flex-col gap-4 pt-6 lg:flex-row lg:items-center lg:justify-between">
+      <CardContent className="flex flex-col gap-3 pt-6">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         {/* Left: identity + numbers */}
         <div className="flex items-start gap-3 min-w-0 flex-1">
           <div
@@ -231,8 +399,25 @@ export default function PriceToWinCard({ currentTotal }: PriceToWinCardProps) {
                 className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-muted-foreground transition-colors duration-100 hover:bg-muted hover:text-foreground"
                 aria-label="Edit target"
               >
-                <Pencil className="h-3 w-3" /> edit
+                <Pencil className="h-3 w-3" /> Edit
               </button>
+              {/* Re-suggest from data — always reachable even after target is set. */}
+              {!ptwSuggestionLoading && !suggestion && (
+                <button
+                  type="button"
+                  onClick={() => void fetchPTWSuggestion()}
+                  className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-muted-foreground transition-colors duration-100 hover:bg-muted hover:text-foreground"
+                  aria-label="Compare to data-driven suggestion"
+                  title="Compare to data-driven suggestion"
+                >
+                  <Sparkles className="h-3 w-3" /> Suggest
+                </button>
+              )}
+              {ptwSuggestionLoading && (
+                <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-muted-foreground">
+                  <Loader2 className="h-3 w-3 animate-spin" /> Analyzing…
+                </span>
+              )}
             </div>
             <div className="mt-1.5 flex flex-wrap items-baseline gap-x-5 gap-y-1">
               <div>
@@ -287,6 +472,11 @@ export default function PriceToWinCard({ currentTotal }: PriceToWinCardProps) {
             />
           )}
         </div>
+      </div>
+      {/* Same suggestion / error panels as State A — lets users compare their
+          manual target against the data-driven number after the fact. */}
+      {suggestion && !ptwSuggestionLoading && renderSuggestionPanel()}
+      {ptwSuggestionError && !ptwSuggestionLoading && !suggestion && renderErrorPanel()}
       </CardContent>
     </Card>
   );
@@ -410,6 +600,119 @@ function SetTargetPopover({
             Save
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Inline NAICS/agency form for the error panel ─────────────────────
+
+interface MissingMetadataFormProps {
+  /** Called after a successful PATCH — caller should clear error and re-fetch. */
+  onSaved: () => void;
+  onDismiss: () => void;
+}
+
+function MissingMetadataForm({ onSaved, onDismiss }: MissingMetadataFormProps) {
+  const proposalId = usePricingStore((s) => s.proposalId);
+
+  const [naics, setNaics] = useState('');
+  const [agency, setAgency] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+
+  const naicsValid = /^\d{6}$/.test(naics.trim());
+  const agencyValid = agency.trim().length >= 3;
+  const canSave = naicsValid && agencyValid && !!proposalId && !saving;
+
+  const handleSave = async () => {
+    if (!canSave || !proposalId) return;
+    setSaving(true);
+    setSaveError(null);
+    try {
+      await proposalsApi.update(proposalId, {
+        naics_code: naics.trim(),
+        agency: agency.trim(),
+      });
+      onSaved();
+    } catch (err: any) {
+      setSaveError(err?.response?.data?.detail || err?.message || 'Failed to save.');
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="rounded-lg border border-amber-200 bg-amber-50/50 p-3 dark:border-amber-900 dark:bg-amber-950/20">
+      <div className="flex items-start gap-2">
+        <AlertCircle className="h-3.5 w-3.5 shrink-0 mt-0.5 text-amber-700 dark:text-amber-300" />
+        <p className="text-xs text-amber-900 dark:text-amber-200 leading-snug">
+          This proposal needs a NAICS code and awarding agency to find comparable past awards.
+        </p>
+      </div>
+      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <div>
+          <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            NAICS code
+          </label>
+          <input
+            type="text"
+            inputMode="numeric"
+            value={naics}
+            onChange={(e) => setNaics(e.target.value)}
+            placeholder="541330"
+            maxLength={6}
+            className="w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-sm text-foreground tabular-nums outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-muted-foreground/60"
+          />
+          <p className="mt-1 text-[10px] text-muted-foreground">
+            6 digits. e.g. 541330 (Engineering), 541512 (IT/Software), 541611 (Mgmt Consulting)
+          </p>
+        </div>
+        <div>
+          <label className="mb-1 block text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            Awarding agency
+          </label>
+          <input
+            type="text"
+            value={agency}
+            onChange={(e) => setAgency(e.target.value)}
+            placeholder="Department of the Navy"
+            className="w-full rounded-md border border-input bg-background px-2.5 py-1.5 text-sm text-foreground outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 placeholder:text-muted-foreground/60"
+          />
+          <p className="mt-1 text-[10px] text-muted-foreground">
+            Department-level, e.g. Department of the Army, Office of Personnel Management
+          </p>
+        </div>
+      </div>
+      {saveError && (
+        <p className="mt-2 text-[11px] text-red-600 dark:text-red-400">{saveError}</p>
+      )}
+      <div className="mt-3 flex items-center justify-end gap-2">
+        <button
+          type="button"
+          onClick={onDismiss}
+          disabled={saving}
+          className="rounded-md px-2.5 py-1 text-xs text-muted-foreground transition-colors duration-100 hover:bg-muted hover:text-foreground disabled:opacity-50"
+        >
+          Dismiss
+        </button>
+        <button
+          type="button"
+          onClick={() => void handleSave()}
+          disabled={!canSave}
+          className="inline-flex items-center gap-1.5 rounded-md bg-blue-600 px-3 py-1 text-xs font-medium text-white transition-[transform,background-color] duration-160 ease-out hover:bg-blue-700 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-blue-600"
+        >
+          {saving ? (
+            <>
+              <Loader2 className="h-3 w-3 animate-spin" />
+              Saving…
+            </>
+          ) : (
+            <>
+              <Check className="h-3 w-3" />
+              Save &amp; Retry
+            </>
+          )}
+        </button>
       </div>
     </div>
   );
