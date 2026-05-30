@@ -397,6 +397,15 @@ async def process_proposal_documents(
             "progress": 100,
             "message": billing_message or "Processing complete",
             "billing_status": billing_status,
+            # NAICS / agency / contracting_office come from the intelligent parser's
+            # metadata block. We persist them at top level on the proposal (matching
+            # the pattern of solicitation_number / prime_contractor_name) so the PTW
+            # endpoint can read them directly without unpacking metadata. Null when
+            # the parser couldn't find them — the user can fill them in via the UI.
+            "naics_code": (intelligent_result.get("metadata") or {}).get("naics_code"),
+            "agency": (intelligent_result.get("metadata") or {}).get("agency"),
+            "contracting_office": (intelligent_result.get("metadata") or {}).get("contracting_office"),
+            "scope_keywords": (intelligent_result.get("metadata") or {}).get("scope_keywords") or [],
             "metadata": {
                 "total_jobs": len(cleaned_jobs),
                 "base_years": base_years,

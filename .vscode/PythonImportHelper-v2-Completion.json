@@ -584,6 +584,14 @@
         "documentation": {}
     },
     {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "List",
         "importPath": "typing",
         "description": "typing",
@@ -640,6 +648,14 @@
         "documentation": {}
     },
     {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Dict",
         "importPath": "typing",
         "description": "typing",
@@ -673,6 +689,14 @@
     },
     {
         "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -2565,6 +2589,14 @@
         "documentation": {}
     },
     {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
         "label": "timedelta",
         "importPath": "datetime",
         "description": "datetime",
@@ -2814,6 +2846,46 @@
     },
     {
         "label": "dataclass",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "dataclass",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "field",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "asdict",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "dataclass",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "field",
         "importPath": "dataclasses",
         "description": "dataclasses",
         "isExtraImport": true,
@@ -3244,6 +3316,14 @@
         "description": "utils.company_repository",
         "isExtraImport": true,
         "detail": "utils.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
         "documentation": {}
     },
     {
@@ -3929,7 +4009,23 @@
         "documentation": {}
     },
     {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
         "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "status",
         "importPath": "fastapi",
         "description": "fastapi",
         "isExtraImport": true,
@@ -5236,6 +5332,22 @@
         "documentation": {}
     },
     {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
         "label": "BaseModel",
         "importPath": "pydantic",
         "description": "pydantic",
@@ -5634,6 +5746,30 @@
         "documentation": {}
     },
     {
+        "label": "Calculator",
+        "importPath": "client.calculation_service",
+        "description": "client.calculation_service",
+        "isExtraImport": true,
+        "detail": "client.calculation_service",
+        "documentation": {}
+    },
+    {
+        "label": "Calculator",
+        "importPath": "client.calculation_service",
+        "description": "client.calculation_service",
+        "isExtraImport": true,
+        "detail": "client.calculation_service",
+        "documentation": {}
+    },
+    {
+        "label": "Calculator",
+        "importPath": "client.calculation_service",
+        "description": "client.calculation_service",
+        "isExtraImport": true,
+        "detail": "client.calculation_service",
+        "documentation": {}
+    },
+    {
         "label": "FAISS",
         "importPath": "langchain_community.vectorstores",
         "description": "langchain_community.vectorstores",
@@ -5672,6 +5808,33 @@
         "description": "striprtf.striprtf",
         "isExtraImport": true,
         "detail": "striprtf.striprtf",
+        "documentation": {}
+    },
+    {
+        "label": "statistics",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "statistics",
+        "description": "statistics",
+        "detail": "statistics",
+        "documentation": {}
+    },
+    {
+        "label": "httpx",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "httpx",
+        "description": "httpx",
+        "detail": "httpx",
+        "documentation": {}
+    },
+    {
+        "label": "redis.asyncio",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "redis.asyncio",
+        "description": "redis.asyncio",
+        "detail": "redis.asyncio",
         "documentation": {}
     },
     {
@@ -5964,6 +6127,14 @@
     },
     {
         "label": "require_admin",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
+        "label": "get_current_user",
         "importPath": "auth.dependencies",
         "description": "auth.dependencies",
         "isExtraImport": true,
@@ -6291,6 +6462,14 @@
         "documentation": {}
     },
     {
+        "label": "get_proposal_crud",
+        "importPath": "utils.proposals",
+        "description": "utils.proposals",
+        "isExtraImport": true,
+        "detail": "utils.proposals",
+        "documentation": {}
+    },
+    {
         "label": "parse_gsa_contract",
         "importPath": "client.gsa_parser",
         "description": "client.gsa_parser",
@@ -6435,22 +6614,6 @@
         "documentation": {}
     },
     {
-        "label": "Calculator",
-        "importPath": "client.calculation_service",
-        "description": "client.calculation_service",
-        "isExtraImport": true,
-        "detail": "client.calculation_service",
-        "documentation": {}
-    },
-    {
-        "label": "Calculator",
-        "importPath": "client.calculation_service",
-        "description": "client.calculation_service",
-        "isExtraImport": true,
-        "detail": "client.calculation_service",
-        "documentation": {}
-    },
-    {
         "label": "get_help_center_agent",
         "importPath": "agent.help_center_agent",
         "description": "agent.help_center_agent",
@@ -6536,6 +6699,38 @@
         "description": "auth.rbac",
         "isExtraImport": true,
         "detail": "auth.rbac",
+        "documentation": {}
+    },
+    {
+        "label": "compute_bottom_up_ptw",
+        "importPath": "client.ptw_calculator",
+        "description": "client.ptw_calculator",
+        "isExtraImport": true,
+        "detail": "client.ptw_calculator",
+        "documentation": {}
+    },
+    {
+        "label": "reconcile",
+        "importPath": "client.ptw_calculator",
+        "description": "client.ptw_calculator",
+        "isExtraImport": true,
+        "detail": "client.ptw_calculator",
+        "documentation": {}
+    },
+    {
+        "label": "get_usaspending_client",
+        "importPath": "client.usaspending_client",
+        "description": "client.usaspending_client",
+        "isExtraImport": true,
+        "detail": "client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "USASpendingError",
+        "importPath": "client.usaspending_client",
+        "description": "client.usaspending_client",
+        "isExtraImport": true,
+        "detail": "client.usaspending_client",
         "documentation": {}
     },
     {
@@ -9428,6 +9623,69 @@
         "documentation": {}
     },
     {
+        "label": "PositionContribution",
+        "kind": 6,
+        "importPath": "backend.client.ptw_calculator",
+        "description": "backend.client.ptw_calculator",
+        "peekOfCode": "class PositionContribution:\n    \"\"\"Per-position bottom-up breakdown.\"\"\"\n    labor_category: str\n    wage_source: str  # 'gsa' | 'bls'\n    annual_wage_or_hourly_rate: float  # what was used as the input\n    year_1_fblr: float  # without fee (== hourly rate for GSA)\n    year_1_billable_rate: float  # with fee (== same as fblr for GSA — already fully burdened)\n    total_hours: int\n    total_cost: float\n    note: Optional[str] = None",
+        "detail": "backend.client.ptw_calculator",
+        "documentation": {}
+    },
+    {
+        "label": "BottomUpEstimate",
+        "kind": 6,
+        "importPath": "backend.client.ptw_calculator",
+        "description": "backend.client.ptw_calculator",
+        "peekOfCode": "class BottomUpEstimate:\n    \"\"\"End-to-end bottom-up PTW calculation result.\"\"\"\n    total: float\n    year_1: float\n    total_years: int\n    positions_priced: int\n    positions_skipped: int\n    rates_used: dict\n    by_position: list[PositionContribution] = field(default_factory=list)\n    notes: list[str] = field(default_factory=list)",
+        "detail": "backend.client.ptw_calculator",
+        "documentation": {}
+    },
+    {
+        "label": "ReconciledPTW",
+        "kind": 6,
+        "importPath": "backend.client.ptw_calculator",
+        "description": "backend.client.ptw_calculator",
+        "peekOfCode": "class ReconciledPTW:\n    \"\"\"Headline PTW + reasoning, blending top-down and bottom-up.\"\"\"\n    suggested_ptw: float\n    low: float\n    high: float\n    confidence: str  # \"high\" | \"medium\" | \"low\"\n    method: str  # \"reconciled\" | \"bottom_up_only\" | \"top_down_only\"\n    disagreement_pct: Optional[float]\n    rationale: str\n    def to_dict(self) -> dict:",
+        "detail": "backend.client.ptw_calculator",
+        "documentation": {}
+    },
+    {
+        "label": "compute_bottom_up_ptw",
+        "kind": 2,
+        "importPath": "backend.client.ptw_calculator",
+        "description": "backend.client.ptw_calculator",
+        "peekOfCode": "def compute_bottom_up_ptw(\n    proposal: dict,\n    total_years: Optional[int] = None,\n    default_rates: Optional[dict] = None,\n) -> BottomUpEstimate:\n    \"\"\"\n    Bottom-up PTW from a proposal's positions.\n    Args:\n        proposal: The MongoDB proposal document (post-processing, with spreadsheet_data).\n        total_years: Override for proposal.metadata.total_years. Optional.",
+        "detail": "backend.client.ptw_calculator",
+        "documentation": {}
+    },
+    {
+        "label": "reconcile",
+        "kind": 2,
+        "importPath": "backend.client.ptw_calculator",
+        "description": "backend.client.ptw_calculator",
+        "peekOfCode": "def reconcile(top_down: dict, bottom_up: BottomUpEstimate) -> ReconciledPTW:\n    \"\"\"\n    Pick a headline PTW number from top-down + bottom-up.\n    Rules:\n      - If bottom-up is unusable → fall back to top-down alone.\n      - If they agree within 15% → average them, \"high\" confidence.\n      - If they disagree 15-40% → prefer bottom-up (proposal-anchored), \"medium\".\n      - If they disagree >40% → use bottom-up, \"low\" confidence, surface the gap.\n      - Low/high band: union of (top-down P25/P75) and (bottom-up ±10%).\n    \"\"\"",
+        "detail": "backend.client.ptw_calculator",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.client.ptw_calculator",
+        "description": "backend.client.ptw_calculator",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# Last-resort FTE used only when neither the position nor the proposal metadata\n# specifies one. Industry standard (40hr/wk × 48wks). Surfaces a note in the\n# output when this fallback fires so the user knows it happened.\nLAST_RESORT_FTE_HOURS = 1920\n# ---------------------------------------------------------------------------\n# Data classes\n# ---------------------------------------------------------------------------\n@dataclass\nclass PositionContribution:",
+        "detail": "backend.client.ptw_calculator",
+        "documentation": {}
+    },
+    {
+        "label": "LAST_RESORT_FTE_HOURS",
+        "kind": 5,
+        "importPath": "backend.client.ptw_calculator",
+        "description": "backend.client.ptw_calculator",
+        "peekOfCode": "LAST_RESORT_FTE_HOURS = 1920\n# ---------------------------------------------------------------------------\n# Data classes\n# ---------------------------------------------------------------------------\n@dataclass\nclass PositionContribution:\n    \"\"\"Per-position bottom-up breakdown.\"\"\"\n    labor_category: str\n    wage_source: str  # 'gsa' | 'bls'\n    annual_wage_or_hourly_rate: float  # what was used as the input",
+        "detail": "backend.client.ptw_calculator",
+        "documentation": {}
+    },
+    {
         "label": "SOCVectorSearch",
         "kind": 6,
         "importPath": "backend.client.soc_vector_search",
@@ -9608,6 +9866,168 @@
         "documentation": {}
     },
     {
+        "label": "USASpendingError",
+        "kind": 6,
+        "importPath": "backend.client.usaspending_client",
+        "description": "backend.client.usaspending_client",
+        "peekOfCode": "class USASpendingError(Exception):\n    \"\"\"Raised when the USASpending API call fails or returns no usable data.\"\"\"\n    def __init__(self, message: str, status_code: Optional[int] = None):\n        self.message = message\n        self.status_code = status_code\n        super().__init__(self.message)\n# ---------------------------------------------------------------------------\n# Data classes\n# ---------------------------------------------------------------------------\n@dataclass",
+        "detail": "backend.client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "Award",
+        "kind": 6,
+        "importPath": "backend.client.usaspending_client",
+        "description": "backend.client.usaspending_client",
+        "peekOfCode": "class Award:\n    \"\"\"A single federal contract award returned from USASpending.\"\"\"\n    award_id: str\n    recipient_name: str\n    amount: float\n    description: str\n    start_date: Optional[str]\n    end_date: Optional[str]\n    awarding_sub_agency: Optional[str]\n    internal_id: str  # used to build the public usaspending.gov URL",
+        "detail": "backend.client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "Distribution",
+        "kind": 6,
+        "importPath": "backend.client.usaspending_client",
+        "description": "backend.client.usaspending_client",
+        "peekOfCode": "class Distribution:\n    \"\"\"Statistical summary of comparable award annual costs ($/year).\"\"\"\n    count: int\n    p25: float\n    median: float\n    p75: float\n    min_val: float\n    max_val: float\n    def to_dict(self) -> dict:\n        return {",
+        "detail": "backend.client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "PTWSuggestion",
+        "kind": 6,
+        "importPath": "backend.client.usaspending_client",
+        "description": "backend.client.usaspending_client",
+        "peekOfCode": "class PTWSuggestion:\n    \"\"\"Bundle returned to the API consumer: a suggested PTW + supporting context.\"\"\"\n    suggested_ptw: float\n    low: float\n    high: float\n    methodology: str\n    num_comparables: int\n    distribution: Distribution\n    top_comparables: list[dict]\n    confidence: str  # \"high\" | \"medium\" | \"low\"",
+        "detail": "backend.client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "_USASpendingCache",
+        "kind": 6,
+        "importPath": "backend.client.usaspending_client",
+        "description": "backend.client.usaspending_client",
+        "peekOfCode": "class _USASpendingCache:\n    \"\"\"Async cache for award lists. Redis-backed with in-memory fallback.\"\"\"\n    def __init__(self):\n        self._redis: Optional[aioredis.Redis] = None\n        self._redis_init_attempted = False\n        self._redis_lock = asyncio.Lock()\n        # Per-process fallback when Redis is unavailable\n        self._memory: dict[str, tuple[float, list[Award]]] = {}\n        self._memory_lock = threading.RLock()\n    async def _get_redis(self) -> Optional[aioredis.Redis]:",
+        "detail": "backend.client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "USASpendingClient",
+        "kind": 6,
+        "importPath": "backend.client.usaspending_client",
+        "description": "backend.client.usaspending_client",
+        "peekOfCode": "class USASpendingClient:\n    \"\"\"\n    Async client for USASpending.gov.\n    Singleton via get_usaspending_client(). Shares one httpx.AsyncClient across\n    the app for connection pooling.\n    \"\"\"\n    def __init__(self):\n        self._client: Optional[httpx.AsyncClient] = None\n        self._client_lock = asyncio.Lock()\n    async def _get_http(self) -> httpx.AsyncClient:",
+        "detail": "backend.client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "get_usaspending_client",
+        "kind": 2,
+        "importPath": "backend.client.usaspending_client",
+        "description": "backend.client.usaspending_client",
+        "peekOfCode": "def get_usaspending_client() -> USASpendingClient:\n    \"\"\"Get the singleton USASpending client.\"\"\"\n    global _client_instance\n    if _client_instance is None:\n        with _instance_lock:\n            if _client_instance is None:\n                _client_instance = USASpendingClient()\n    return _client_instance",
+        "detail": "backend.client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.client.usaspending_client",
+        "description": "backend.client.usaspending_client",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nUSASPENDING_BASE_URL = \"https://api.usaspending.gov/api/v2\"\nDEFAULT_TIMEOUT = 30.0\nMAX_RESULTS_PER_PAGE = 100\n# Procurement award type codes considered \"contracts\":\n#   A = BPA Call\n#   B = Purchase Order\n#   C = Delivery Order\n#   D = Definitive Contract\nCONTRACT_AWARD_TYPES = [\"A\", \"B\", \"C\", \"D\"]",
+        "detail": "backend.client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "USASPENDING_BASE_URL",
+        "kind": 5,
+        "importPath": "backend.client.usaspending_client",
+        "description": "backend.client.usaspending_client",
+        "peekOfCode": "USASPENDING_BASE_URL = \"https://api.usaspending.gov/api/v2\"\nDEFAULT_TIMEOUT = 30.0\nMAX_RESULTS_PER_PAGE = 100\n# Procurement award type codes considered \"contracts\":\n#   A = BPA Call\n#   B = Purchase Order\n#   C = Delivery Order\n#   D = Definitive Contract\nCONTRACT_AWARD_TYPES = [\"A\", \"B\", \"C\", \"D\"]\nCACHE_TTL_SECONDS = 24 * 3600  # 24h — USASpending data updates daily",
+        "detail": "backend.client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "DEFAULT_TIMEOUT",
+        "kind": 5,
+        "importPath": "backend.client.usaspending_client",
+        "description": "backend.client.usaspending_client",
+        "peekOfCode": "DEFAULT_TIMEOUT = 30.0\nMAX_RESULTS_PER_PAGE = 100\n# Procurement award type codes considered \"contracts\":\n#   A = BPA Call\n#   B = Purchase Order\n#   C = Delivery Order\n#   D = Definitive Contract\nCONTRACT_AWARD_TYPES = [\"A\", \"B\", \"C\", \"D\"]\nCACHE_TTL_SECONDS = 24 * 3600  # 24h — USASpending data updates daily\n# Minimum award duration to be considered a meaningful comparable.",
+        "detail": "backend.client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "MAX_RESULTS_PER_PAGE",
+        "kind": 5,
+        "importPath": "backend.client.usaspending_client",
+        "description": "backend.client.usaspending_client",
+        "peekOfCode": "MAX_RESULTS_PER_PAGE = 100\n# Procurement award type codes considered \"contracts\":\n#   A = BPA Call\n#   B = Purchase Order\n#   C = Delivery Order\n#   D = Definitive Contract\nCONTRACT_AWARD_TYPES = [\"A\", \"B\", \"C\", \"D\"]\nCACHE_TTL_SECONDS = 24 * 3600  # 24h — USASpending data updates daily\n# Minimum award duration to be considered a meaningful comparable.\n# Sub-3-month awards are usually closeouts or one-off mods.",
+        "detail": "backend.client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "CONTRACT_AWARD_TYPES",
+        "kind": 5,
+        "importPath": "backend.client.usaspending_client",
+        "description": "backend.client.usaspending_client",
+        "peekOfCode": "CONTRACT_AWARD_TYPES = [\"A\", \"B\", \"C\", \"D\"]\nCACHE_TTL_SECONDS = 24 * 3600  # 24h — USASpending data updates daily\n# Minimum award duration to be considered a meaningful comparable.\n# Sub-3-month awards are usually closeouts or one-off mods.\nMIN_DURATION_YEARS = 0.25\n# ---------------------------------------------------------------------------\n# Exceptions\n# ---------------------------------------------------------------------------\nclass USASpendingError(Exception):\n    \"\"\"Raised when the USASpending API call fails or returns no usable data.\"\"\"",
+        "detail": "backend.client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "CACHE_TTL_SECONDS",
+        "kind": 5,
+        "importPath": "backend.client.usaspending_client",
+        "description": "backend.client.usaspending_client",
+        "peekOfCode": "CACHE_TTL_SECONDS = 24 * 3600  # 24h — USASpending data updates daily\n# Minimum award duration to be considered a meaningful comparable.\n# Sub-3-month awards are usually closeouts or one-off mods.\nMIN_DURATION_YEARS = 0.25\n# ---------------------------------------------------------------------------\n# Exceptions\n# ---------------------------------------------------------------------------\nclass USASpendingError(Exception):\n    \"\"\"Raised when the USASpending API call fails or returns no usable data.\"\"\"\n    def __init__(self, message: str, status_code: Optional[int] = None):",
+        "detail": "backend.client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "MIN_DURATION_YEARS",
+        "kind": 5,
+        "importPath": "backend.client.usaspending_client",
+        "description": "backend.client.usaspending_client",
+        "peekOfCode": "MIN_DURATION_YEARS = 0.25\n# ---------------------------------------------------------------------------\n# Exceptions\n# ---------------------------------------------------------------------------\nclass USASpendingError(Exception):\n    \"\"\"Raised when the USASpending API call fails or returns no usable data.\"\"\"\n    def __init__(self, message: str, status_code: Optional[int] = None):\n        self.message = message\n        self.status_code = status_code\n        super().__init__(self.message)",
+        "detail": "backend.client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "REDIS_KEY_PREFIX",
+        "kind": 5,
+        "importPath": "backend.client.usaspending_client",
+        "description": "backend.client.usaspending_client",
+        "peekOfCode": "REDIS_KEY_PREFIX = \"usaspending:\"\nREDIS_CONNECT_TIMEOUT = 2.0  # seconds — fail fast so we don't block on a dead Redis\nclass _USASpendingCache:\n    \"\"\"Async cache for award lists. Redis-backed with in-memory fallback.\"\"\"\n    def __init__(self):\n        self._redis: Optional[aioredis.Redis] = None\n        self._redis_init_attempted = False\n        self._redis_lock = asyncio.Lock()\n        # Per-process fallback when Redis is unavailable\n        self._memory: dict[str, tuple[float, list[Award]]] = {}",
+        "detail": "backend.client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "REDIS_CONNECT_TIMEOUT",
+        "kind": 5,
+        "importPath": "backend.client.usaspending_client",
+        "description": "backend.client.usaspending_client",
+        "peekOfCode": "REDIS_CONNECT_TIMEOUT = 2.0  # seconds — fail fast so we don't block on a dead Redis\nclass _USASpendingCache:\n    \"\"\"Async cache for award lists. Redis-backed with in-memory fallback.\"\"\"\n    def __init__(self):\n        self._redis: Optional[aioredis.Redis] = None\n        self._redis_init_attempted = False\n        self._redis_lock = asyncio.Lock()\n        # Per-process fallback when Redis is unavailable\n        self._memory: dict[str, tuple[float, list[Award]]] = {}\n        self._memory_lock = threading.RLock()",
+        "detail": "backend.client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "_cache",
+        "kind": 5,
+        "importPath": "backend.client.usaspending_client",
+        "description": "backend.client.usaspending_client",
+        "peekOfCode": "_cache = _USASpendingCache()\n# ---------------------------------------------------------------------------\n# Client\n# ---------------------------------------------------------------------------\nclass USASpendingClient:\n    \"\"\"\n    Async client for USASpending.gov.\n    Singleton via get_usaspending_client(). Shares one httpx.AsyncClient across\n    the app for connection pooling.\n    \"\"\"",
+        "detail": "backend.client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "_instance_lock",
+        "kind": 5,
+        "importPath": "backend.client.usaspending_client",
+        "description": "backend.client.usaspending_client",
+        "peekOfCode": "_instance_lock = threading.RLock()\ndef get_usaspending_client() -> USASpendingClient:\n    \"\"\"Get the singleton USASpending client.\"\"\"\n    global _client_instance\n    if _client_instance is None:\n        with _instance_lock:\n            if _client_instance is None:\n                _client_instance = USASpendingClient()\n    return _client_instance",
+        "detail": "backend.client.usaspending_client",
+        "documentation": {}
+    },
+    {
         "label": "LaborCategory",
         "kind": 6,
         "importPath": "backend.models.company_repository",
@@ -9684,7 +10104,7 @@
         "kind": 6,
         "importPath": "backend.models.proposal",
         "description": "backend.models.proposal",
-        "peekOfCode": "class ProposalUpdate(BaseModel):\n    \"\"\"Schema for updating an existing proposal.\"\"\"\n    name: Optional[str] = Field(None, description=\"Updated proposal name\")\n    solicitation_number: Optional[str] = Field(None, description=\"Updated solicitation number\")\n    prime_contractor_name: Optional[str] = Field(None, description=\"Updated prime contractor name\")\n    status: Optional[str] = Field(\n        None,\n        description=\"Proposal status (draft, processing, completed, error)\"\n    )\n    business_status: Optional[str] = Field(",
+        "peekOfCode": "class ProposalUpdate(BaseModel):\n    \"\"\"Schema for updating an existing proposal.\"\"\"\n    name: Optional[str] = Field(None, description=\"Updated proposal name\")\n    solicitation_number: Optional[str] = Field(None, description=\"Updated solicitation number\")\n    prime_contractor_name: Optional[str] = Field(None, description=\"Updated prime contractor name\")\n    naics_code: Optional[str] = Field(\n        None,\n        description=\"6-digit NAICS industry classification code (e.g. '541330'). Used to look up comparable past awards for PTW suggestions.\"\n    )\n    agency: Optional[str] = Field(",
         "detail": "backend.models.proposal",
         "documentation": {}
     },
@@ -10013,6 +10433,15 @@
         "documentation": {}
     },
     {
+        "label": "PTWSuggestRequest",
+        "kind": 6,
+        "importPath": "backend.routers.pricing",
+        "description": "backend.routers.pricing",
+        "peekOfCode": "class PTWSuggestRequest(BaseModel):\n    \"\"\"Request body for POST /api/pricing/ptw/suggest.\"\"\"\n    proposal_id: str = Field(description=\"Proposal MongoDB ObjectId (as string).\")\n    keywords: Optional[List[str]] = Field(\n        None,\n        description=(\n            \"Optional keywords to narrow the comparable-award search \"\n            \"(e.g. ['SATCOM']). When omitted, the search runs on NAICS + agency alone.\"\n        ),\n    )",
+        "detail": "backend.routers.pricing",
+        "documentation": {}
+    },
+    {
         "label": "split_position_by_hours",
         "kind": 2,
         "importPath": "backend.routers.pricing",
@@ -10027,6 +10456,15 @@
         "importPath": "backend.routers.pricing",
         "description": "backend.routers.pricing",
         "peekOfCode": "def split_multi_year_position(\n    position: Dict,\n    max_hours: int = 1920,\n    months_per_year: Optional[Dict[str, int]] = None\n) -> List[Dict]:\n    \"\"\"\n    Split a multi-year position into multiple FTE rows if any year has hours > max_hours.\n    Finds the year with maximum hours and creates that many FTE positions.\n    Each position gets up to max_hours per year, unused FTEs get 0 hours.\n    NOW SUPPORTS VARIABLE MONTH DURATIONS:",
+        "detail": "backend.routers.pricing",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.routers.pricing",
+        "description": "backend.routers.pricing",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nrouter = APIRouter()\ndef split_position_by_hours(position: Dict, max_hours: int = 1920) -> List[Dict]:\n    \"\"\"\n    Split a position into multiple FTE rows if hours > max_hours.\n    Args:\n        position: Job position dict with 'hours' field\n        max_hours: Max hours per person (default 1920)\n    Returns:\n        List of position dicts (1 or more)",
         "detail": "backend.routers.pricing",
         "documentation": {}
     },

@@ -1,7 +1,7 @@
 """Pydantic models for proposal management."""
 
 from pydantic import BaseModel, Field
-from typing import Dict, Optional, Any
+from typing import Dict, List, Optional, Any
 from datetime import datetime
 
 
@@ -48,6 +48,22 @@ class ProposalUpdate(BaseModel):
     name: Optional[str] = Field(None, description="Updated proposal name")
     solicitation_number: Optional[str] = Field(None, description="Updated solicitation number")
     prime_contractor_name: Optional[str] = Field(None, description="Updated prime contractor name")
+    naics_code: Optional[str] = Field(
+        None,
+        description="6-digit NAICS industry classification code (e.g. '541330'). Used to look up comparable past awards for PTW suggestions."
+    )
+    agency: Optional[str] = Field(
+        None,
+        description="Awarding agency name (e.g. 'Department of the Navy'). Used together with NAICS for PTW comparable-award lookup."
+    )
+    contracting_office: Optional[str] = Field(
+        None,
+        description="Contracting sub-office (e.g. 'NAVSUP FLC Norfolk'). Used to further narrow PTW comparables when available."
+    )
+    scope_keywords: Optional[List[str]] = Field(
+        None,
+        description="Distinctive scope terms extracted by the parser (e.g. ['SATCOM', 'C5I']). The PTW endpoint uses these as USASpending search keywords by default."
+    )
     status: Optional[str] = Field(
         None,
         description="Proposal status (draft, processing, completed, error)"

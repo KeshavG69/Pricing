@@ -6,6 +6,7 @@ import type { Column } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
 import type { Extension } from '@/types';
+import { useChatPanelOffset } from '@/lib/hooks/useChatPanelOffset';
 
 interface GrandTotalSectionProps {
   grandTotal: {
@@ -43,6 +44,8 @@ export const GrandTotalSection = ({
   totalYears,
   extensions = [],
 }: GrandTotalSectionProps) => {
+  const { pick: W } = useChatPanelOffset();
+
   // Format currency
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -87,7 +90,7 @@ export const GrandTotalSection = ({
       {
         key: 'label',
         name: '',
-        width: 350,
+        width: W(350, 160),
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => {
@@ -205,7 +208,7 @@ export const GrandTotalSection = ({
     cols.push({
       key: 'total',
       name: 'Total',
-      width: 220,
+      width: W(220, 130),
       resizable: true,
       frozen: true,
       renderCell: ({ row }) => {
@@ -272,7 +275,7 @@ export const GrandTotalSection = ({
     });
 
     return cols;
-  }, [totalYears, grandTotal, primeLaborByYear, otCostsByYear, subLaborByYear, passthroughByYear, feeByYear, travelByYear, odcByYear, surgeByYear, totals]);
+  }, [totalYears, grandTotal, primeLaborByYear, otCostsByYear, subLaborByYear, passthroughByYear, feeByYear, travelByYear, odcByYear, surgeByYear, totals, W]);
 
   return (
     <div className="space-y-4">

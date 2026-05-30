@@ -12,6 +12,7 @@ import { TransferSubcontractorModal } from './TransferSubcontractorModal';
 import { AddSubcontractorModal } from './AddSubcontractorModal';
 import { Trash2, Building2, ChevronDown, ArrowRightLeft, Plus } from 'lucide-react';
 import { getEffectiveSalary, isGSAPosition, getGSARateForYear } from '@/lib/utils/salaryHelpers';
+import { useChatPanelOffset } from '@/lib/hooks/useChatPanelOffset';
 
 interface YearData {
   rate: number;      // Escalated rate for this year
@@ -40,6 +41,7 @@ interface ContextMenuState {
 }
 
 export const SubcontractorSection = () => {
+  const { pick: W } = useChatPanelOffset();
   const {
     subcontractors,
     totalYears,
@@ -322,7 +324,7 @@ export const SubcontractorSection = () => {
       {
         key: 'labor_category',
         name: 'Labor Category',
-        width: 300,
+        width: W(300, 140),
         frozen: true,
         resizable: true,
         headerCellClass: 'bg-muted/50 font-semibold text-foreground border-r border-border',
@@ -336,7 +338,7 @@ export const SubcontractorSection = () => {
       {
         key: 'baseRate',
         name: 'Base Rate\n($/hr)',
-        width: 120,
+        width: W(120, 80),
         frozen: true,
         resizable: true,
         headerCellClass: 'bg-emerald-50 font-semibold text-emerald-700 border-r border-border whitespace-pre-line text-center',
@@ -391,7 +393,7 @@ export const SubcontractorSection = () => {
       {
         key: 'originalBaseRate',
         name: 'Original Rate\n($/hr)',
-        width: 135,
+        width: W(135, 90),
         frozen: true,
         resizable: true,
         headerCellClass: 'bg-gray-50 font-semibold text-gray-700 border-r border-border whitespace-pre-line text-center',
@@ -581,7 +583,7 @@ export const SubcontractorSection = () => {
     }
 
     return cols;
-  }, [totalYears, selectedSub, updateSubcontractorPosition]);
+  }, [totalYears, selectedSub, updateSubcontractorPosition, W]);
 
   // Calculate grand total for selected subcontractor (including OT)
   const grandTotal = useMemo(() => {
