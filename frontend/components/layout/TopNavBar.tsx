@@ -4,8 +4,38 @@ import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
-import { LayoutGrid, FileText, Building, Building2, Menu, ChevronDown, Settings, LogOut, MessageSquare } from 'lucide-react';
+import { LayoutGrid, FileText, Building, Building2, Menu, ChevronDown, Settings, LogOut } from 'lucide-react';
 import { isAdmin } from '@/lib/utils/permissions';
+
+/**
+ * Custom "Q" mark for the Ask Q nav entry. Styled like a lucide icon
+ * (24×24, stroke=currentColor, 2px) so it matches every other icon in
+ * the row — picks up the active/inactive colors automatically.
+ *
+ * Visually: a stroked circle (the Q body) + a diagonal tail at the
+ * bottom-right (the Q descender). Reads unmistakably as "Q" while
+ * looking like it belongs in the lucide family.
+ */
+function QIcon({ className }: { className?: string }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      aria-hidden
+    >
+      <circle cx="11" cy="11" r="8" />
+      <line x1="16" y1="16" x2="20" y2="20" />
+    </svg>
+  );
+}
 import { useAuthStore } from '@/lib/stores/authStore';
 import RoleBadge from '../ui/RoleBadge';
 import HelpCenterButton from '../help/HelpCenterButton';
@@ -44,7 +74,7 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
     { href: '/dashboard', label: 'Dashboard', icon: LayoutGrid },
     { href: '/dashboard/proposals', label: 'Proposals', icon: FileText },
     { href: '/dashboard/company-repository', label: 'Company Rates', icon: Building2 },
-    { href: '/q', label: 'Agent Q', icon: MessageSquare },
+    { href: '/q', label: 'Ask Q', icon: QIcon },
   ];
 
   const adminNavItems = [

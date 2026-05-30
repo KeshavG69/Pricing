@@ -6,6 +6,7 @@ import type { Column } from 'react-data-grid';
 import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
 import { Aggregates, Extension } from '@/types';
+import { useChatPanelOffset } from '@/lib/hooks/useChatPanelOffset';
 
 interface PrimeLaborAggregatesSectionProps {
   aggregates: Aggregates;
@@ -31,6 +32,9 @@ export const PrimeLaborAggregatesSection = ({
   passthroughByYear = {},
   subFeeByYear = {},
 }: PrimeLaborAggregatesSectionProps) => {
+  // Compact frozen-column widths when the Q chat panel is open
+  const { pick: W } = useChatPanelOffset();
+
   // Format currency
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-US', {
@@ -83,7 +87,7 @@ export const PrimeLaborAggregatesSection = ({
       {
         key: 'label',
         name: 'Cost Category',
-        width: 380,
+        width: W(380, 180),
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => {
@@ -210,7 +214,7 @@ export const PrimeLaborAggregatesSection = ({
     cols.push({
       key: 'total',
       name: 'Total Amount ($)',
-      width: 220,
+      width: W(220, 130),
       resizable: true,
       frozen: true,
       renderCell: ({ row }) => {
@@ -287,7 +291,7 @@ export const PrimeLaborAggregatesSection = ({
     });
 
     return cols;
-  }, [totalYears, aggregates, subLaborByYear, passthroughByYear, subFeeByYear, subTotals, extensions, formatCurrency]);
+  }, [totalYears, aggregates, subLaborByYear, passthroughByYear, subFeeByYear, subTotals, extensions, formatCurrency, W]);
 
   return (
     <div className="space-y-4">

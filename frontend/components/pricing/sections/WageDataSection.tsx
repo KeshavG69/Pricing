@@ -7,6 +7,7 @@ import 'react-data-grid/lib/styles.css';
 import styles from './PrimeLaborSection.module.css';
 import { AdvancedPosition } from '@/types';
 import { formatSocCode } from '@/lib/utils/socHelpers';
+import { useChatPanelOffset } from '@/lib/hooks/useChatPanelOffset';
 
 interface WageDataSectionProps {
   positions: AdvancedPosition[];
@@ -35,6 +36,8 @@ interface WageDataRow {
 }
 
 export const WageDataSection = ({ positions }: WageDataSectionProps) => {
+  const { pick: W } = useChatPanelOffset();
+
   // Format currency
   const formatCurrency = (value: number | undefined) => {
     if (value === undefined || value === null) return '-';
@@ -119,7 +122,7 @@ export const WageDataSection = ({ positions }: WageDataSectionProps) => {
       {
         key: 'labor_category',
         name: 'Labor Category',
-        width: 250,
+        width: W(250, 140),
         resizable: true,
         frozen: true,
         renderCell: ({ row }) => (
@@ -133,7 +136,7 @@ export const WageDataSection = ({ positions }: WageDataSectionProps) => {
     {
       key: 'location',
       name: 'Location',
-      width: 200,
+      width: W(200, 110),
       resizable: true,
       frozen: true,
       renderCell: ({ row }) => (
@@ -298,7 +301,7 @@ export const WageDataSection = ({ positions }: WageDataSectionProps) => {
     {
       key: 'selected_wage',
       name: 'Selected\nWage/Rate',
-      width: 140,
+      width: W(140, 100),
       resizable: true,
       frozen: true,
       renderCell: ({ row }) => {
@@ -322,7 +325,7 @@ export const WageDataSection = ({ positions }: WageDataSectionProps) => {
   ];
 
   return finalColumns;
-  }, [isAllGSA]);
+  }, [isAllGSA, W]);
 
   return (
     <div className="space-y-4">

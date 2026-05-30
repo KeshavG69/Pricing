@@ -5,6 +5,7 @@ import { MessageCircle, X, Send, Loader2, Sparkles, Target, Clock, Maximize2, Tr
 import { useRouter } from 'next/navigation';
 import { usePricingStore } from '@/lib/stores/pricingStore';
 import { useAuthStore } from '@/lib/stores/authStore';
+import { proposalsApi } from '@/lib/api/proposals';
 import {
   streamPricingChat,
   streamPricingChatResume,
@@ -228,6 +229,102 @@ function resultToStr(r: unknown): string | undefined {
   } catch {
     return String(r);
   }
+}
+
+/** Tool names that mutate the proposal in MongoDB and need a workspace reload. */
+const MUTATION_TOOL_NAMES = new Set(['update_rates', 'update_positions']);
+
+/**
+ * Pull the pending tool name + args out of a `run.paused` event's
+ * `requirements` array. This is agno's authoritative source — included
+ * in the event itself, so unlike reading from messagesRef it has zero
+ * dependency on React state having committed `tool.started` yet.
+ *
+ * The serialized requirement looks like:
+ *   { tool_execution: { tool_name, tool_args, tool_call_id, ... }, ... }
+ */
+function extractToolFromRequirements(
+  requirements: unknown,
+): { name?: string; args?: Record<string, unknown>; tool_call_id?: string } {
+  if (!Array.isArray(requirements) || requirements.length === 0) return {};
+  // Take the first confirmable requirement — mutation tools fire one at a time
+  for (const r of requirements) {
+    if (!r || typeof r !== 'object') continue;
+    const exec = (r as { tool_execution?: unknown }).tool_execution;
+    if (!exec || typeof exec !== 'object') continue;
+    const e = exec as {
+      tool_name?: string;
+      tool_args?: unknown;
+      tool_call_id?: string;
+    };
+    const args = e.tool_args && typeof e.tool_args === 'object' && !Array.isArray(e.tool_args)
+      ? (e.tool_args as Record<string, unknown>)
+      : undefined;
+    return { name: e.tool_name, args, tool_call_id: e.tool_call_id };
+  }
+  return {};
+}
+
+/**
+ * After a mutation tool completes (no error), refetch the proposal from
+ * MongoDB and force-load it into the pricingStore so the spreadsheet
+ * rerenders with the agent's new values — no manual refresh.
+ *
+ * Permissive on the result shape: agno can hand back the dict directly,
+ * a JSON string, or sometimes nothing at all. We refresh as long as the
+ * tool completed without error, because the alternative ("don't refresh
+ * if we can't parse the result") was failing in practice.
+ */
+function maybeReloadProposalAfterMutation(evt: {
+  tool_name?: string;
+  result?: unknown;
+  error?: unknown;
+}): void {
+  if (!evt.tool_name || !MUTATION_TOOL_NAMES.has(evt.tool_name)) return;
+  if (evt.error) {
+    console.debug('[chat-panel] mutation errored, skipping reload:', evt.error);
+    return;
+  }
+
+  // Parse the result if it came across as a JSON string. If it's an object,
+  // honor an explicit `success: false`; otherwise assume the mutation
+  // worked (we already filtered on `evt.error`).
+  let parsed: unknown = evt.result;
+  if (typeof parsed === 'string') {
+    try { parsed = JSON.parse(parsed); } catch { /* leave as string */ }
+  }
+  if (parsed && typeof parsed === 'object') {
+    const success = (parsed as { success?: unknown }).success;
+    if (success === false) {
+      console.debug('[chat-panel] mutation result.success=false, skipping reload');
+      return;
+    }
+  }
+
+  const state = usePricingStore.getState();
+  const proposalId = state.proposalId;
+  if (!proposalId) {
+    console.debug('[chat-panel] no proposalId in store; user not on workspace');
+    return;
+  }
+
+  console.info(
+    `[chat-panel] mutation "${evt.tool_name}" succeeded — refetching proposal ${proposalId.slice(0, 8)}…`,
+  );
+  void (async () => {
+    try {
+      const fresh = await proposalsApi.get(proposalId);
+      await usePricingStore.getState().loadProposal(proposalId, fresh);
+      // Force-recompute derived state (FBLR breakdowns, aggregates, totals)
+      // — loadProposal only re-runs the transform when advancedMode was
+      // saved as true, so for the basic-mode case this is the guarantee
+      // that the spreadsheet's computed values refresh.
+      usePricingStore.getState().transformToAdvanced();
+      console.info('[chat-panel] post-mutation reload + transform complete');
+    } catch (err) {
+      console.warn('[chat-panel] post-mutation reload failed:', err);
+    }
+  })();
 }
 
 /**
@@ -611,24 +708,70 @@ export default function PricingChatPanel() {
   // width so nothing hides underneath. Tracks the live (resizable) width
   // and disables the smooth transition while dragging so the page follows
   // the cursor exactly. Cleaned up on close/unmount.
+  // Push <main>'s right edge in by the chat panel's width so the workspace
+  // content (data grids, tables) actually shrinks instead of extending
+  // behind the panel.
+  //
+  // Implementation: imperative paddingRight on the <main> element (we can't
+  // rely on a CSS variable here — Tailwind's `p-6` on main has higher real-
+  // world precedence than an inline `var()`-based override in some build
+  // setups, and react-data-grid's ResizeObserver wasn't catching the body-
+  // padding approach reliably). Also exposes `--chat-panel-offset` on :root
+  // for any other component that wants to opt in.
   useEffect(() => {
     if (typeof document === 'undefined') return;
-    const body = document.body;
-    const prevPadding = body.style.paddingRight;
-    const prevTransition = body.style.transition;
+    const root = document.documentElement;
+    const main = document.querySelector('main') as HTMLElement | null;
+    const prevVar = root.style.getPropertyValue('--chat-panel-offset');
+    const prevMainPad = main?.style.paddingRight ?? '';
+    const prevMainTransition = main?.style.transition ?? '';
 
     if (isOpen) {
-      body.style.transition = isResizing ? 'none' : 'padding-right 200ms ease-out';
-      body.style.paddingRight = `${panelWidth}px`;
+      root.style.setProperty('--chat-panel-offset', `${panelWidth}px`);
+      if (main) {
+        main.style.transition = isResizing
+          ? 'none'
+          : 'padding-right 200ms ease-out';
+        // Preserve the original 1.5rem (p-6) horizontal padding by adding
+        // it explicitly — inline style replaces the Tailwind padding-right.
+        main.style.paddingRight = `calc(1.5rem + ${panelWidth}px)`;
+      }
     } else {
-      body.style.transition = 'padding-right 200ms ease-out';
-      body.style.paddingRight = '';
+      root.style.removeProperty('--chat-panel-offset');
+      if (main) {
+        main.style.transition = 'padding-right 200ms ease-out';
+        main.style.paddingRight = '';
+      }
     }
     return () => {
-      body.style.paddingRight = prevPadding;
-      body.style.transition = prevTransition;
+      if (prevVar) root.style.setProperty('--chat-panel-offset', prevVar);
+      else root.style.removeProperty('--chat-panel-offset');
+      if (main) {
+        main.style.paddingRight = prevMainPad;
+        main.style.transition = prevMainTransition;
+      }
     };
   }, [isOpen, panelWidth, isResizing]);
+
+  // Force a window-resize event a tick after the panel state changes —
+  // many libraries (react-data-grid, virtual lists, charts) use
+  // ResizeObserver to remeasure their viewport, but ResizeObserver doesn't
+  // fire reliably when only body padding-right changes (no element's
+  // border-box size changes in some browsers). Dispatching a synthetic
+  // resize forces every component to recompute its layout, which fixes
+  // "I can't horizontally scroll the spreadsheet when the chat is open"
+  // and similar issues. ~30ms after the padding transition starts and
+  // ~250ms after to catch the end of the transition too.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const fire = () => window.dispatchEvent(new Event('resize'));
+    const early = window.setTimeout(fire, 30);
+    const late = window.setTimeout(fire, 250);
+    return () => {
+      window.clearTimeout(early);
+      window.clearTimeout(late);
+    };
+  }, [isOpen, panelWidth]);
 
   // Persist the user-chosen panel width across page loads.
   useEffect(() => {
@@ -953,26 +1096,31 @@ export default function PricingChatPanel() {
               return { ...msg, toolCalls: nextCalls };
             }),
           );
+          // If this was a successful mutation (update_rates/update_positions),
+          // refetch the proposal so the workspace spreadsheet rerenders with
+          // the new values — no manual refresh.
+          maybeReloadProposalAfterMutation(evt);
         } else if (evt.type === 'run.paused') {
-          // Agent hit a requires_confirmation gate. Extract the pending tool
-          // info from the last running tool call in this message.
-          // Read the last running tool call directly from the captured
-          // assistantMsg closure — it's the most recently started tool.
-          // We snapshot toolCalls at the time run.paused fires; the
-          // mutation tool (update_rates/update_positions) is always the
-          // last entry because requires_confirmation pauses before executing.
-          const lastToolCall = messagesRef.current
+          // Agent hit a requires_confirmation gate. Pull tool name + args from
+          // the event's `requirements` array first (agno-authoritative, no
+          // state-timing race). Fall back to the most-recent tool call in
+          // messagesRef only if requirements didn't carry it.
+          const fromReq = extractToolFromRequirements(evt.requirements);
+          const fallback = messagesRef.current
             .find((x) => x.id === assistantMsg.id)
-            ?.toolCalls?.filter((c) => c.status === 'running')
-            .at(-1);
+            ?.toolCalls?.at(-1);
+          const toolName = fromReq.name ?? fallback?.name;
+          const toolArgs =
+            fromReq.args ?? (fallback?.args as Record<string, unknown> | undefined);
           const paused: PausedRun = {
             run_id: evt.run_id,
             session_id: evt.session_id,
-            tool_name: lastToolCall?.name,
-            tool_args: lastToolCall?.args,
-            rationale: typeof lastToolCall?.args?.rationale === 'string'
-              ? lastToolCall.args.rationale
-              : undefined,
+            tool_name: toolName,
+            tool_args: toolArgs,
+            rationale:
+              typeof toolArgs?.rationale === 'string'
+                ? (toolArgs.rationale as string)
+                : undefined,
             message_id: assistantMsg.id,
           };
           setPausedRun(paused);
@@ -1127,9 +1275,32 @@ export default function PricingChatPanel() {
               return { ...msg, toolCalls: idx >= 0 ? calls.map((c, i) => i === idx ? { ...c, ...updated } : c) : [...calls, updated] };
             }),
           );
+          // Refresh the workspace if this was a successful mutation —
+          // this is the primary path because update_rates/update_positions
+          // always pause for approval and execute via /resume.
+          maybeReloadProposalAfterMutation(evt);
         } else if (evt.type === 'run.paused') {
           // Re-paused (chained confirmations) — re-show the card.
-          const paused: PausedRun = { run_id: evt.run_id, session_id: evt.session_id, message_id: pr.message_id };
+          // Same requirements-first extraction as the main branch so the
+          // diff renderer has tool info.
+          const fromReq = extractToolFromRequirements(evt.requirements);
+          const fallback = messagesRef.current
+            .find((x) => x.id === pr.message_id)
+            ?.toolCalls?.at(-1);
+          const toolName = fromReq.name ?? fallback?.name;
+          const toolArgs =
+            fromReq.args ?? (fallback?.args as Record<string, unknown> | undefined);
+          const paused: PausedRun = {
+            run_id: evt.run_id,
+            session_id: evt.session_id,
+            tool_name: toolName,
+            tool_args: toolArgs,
+            rationale:
+              typeof toolArgs?.rationale === 'string'
+                ? (toolArgs.rationale as string)
+                : undefined,
+            message_id: pr.message_id,
+          };
           setPausedRun(paused);
           setMessages((m) => m.map((msg) => msg.id === pr.message_id ? { ...msg, streaming: false, pausedRun: paused } : msg));
           break;
@@ -1798,6 +1969,191 @@ function formatToolLabel(name?: string): string {
   return name.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+// Rates the agent can change — display labels + format hints. Order also
+// determines display order so the card reads top-to-bottom logically.
+const RATE_DISPLAY: Array<{
+  key: string;
+  label: string;
+  format: 'percent' | 'multiplier';
+}> = [
+  { key: 'fringe', label: 'Fringe', format: 'percent' },
+  { key: 'oh_onsite', label: 'OH (On-Site)', format: 'percent' },
+  { key: 'oh_offsite', label: 'OH (Off-Site)', format: 'percent' },
+  { key: 'ga', label: 'G&A', format: 'percent' },
+  { key: 'fee', label: 'Fee', format: 'percent' },
+  { key: 'smh', label: 'S&MH', format: 'percent' },
+  { key: 'ga_passthrough', label: 'G&A Passthrough', format: 'percent' },
+  { key: 'sub_fee', label: 'Sub Fee', format: 'percent' },
+  { key: 'ot_multiplier', label: 'OT Multiplier', format: 'multiplier' },
+  { key: 'surge_multiplier', label: 'Surge Multiplier', format: 'multiplier' },
+];
+
+// Position fields the agent can change — same idea
+const POSITION_FIELD_DISPLAY: Record<
+  string,
+  { label: string; format: 'percent' | 'currency' | 'hours' | 'string' | 'bool' }
+> = {
+  percentile: { label: 'Percentile', format: 'string' },
+  location_type: { label: 'Location', format: 'string' },
+  custom_salary: { label: 'Custom salary', format: 'currency' },
+  gsa_discount_rate: { label: 'GSA discount', format: 'percent' },
+  is_key_position: { label: 'Key position', format: 'bool' },
+};
+
+function fmtPct(v: unknown): string {
+  if (v == null) return '—';
+  const n = Number(v);
+  if (!Number.isFinite(n)) return String(v);
+  return `${(n * 100).toFixed(2).replace(/\.?0+$/, '')}%`;
+}
+function fmtMult(v: unknown): string {
+  if (v == null) return '—';
+  const n = Number(v);
+  if (!Number.isFinite(n)) return String(v);
+  return `${n}×`;
+}
+function fmtCurrency(v: unknown): string {
+  if (v == null) return '—';
+  const n = Number(v);
+  if (!Number.isFinite(n)) return String(v);
+  return `$${n.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+}
+function fmtHours(v: unknown): string {
+  if (v == null) return '—';
+  const n = Number(v);
+  if (!Number.isFinite(n)) return String(v);
+  return `${n.toLocaleString('en-US')} hrs`;
+}
+function fmtBool(v: unknown): string {
+  return v ? 'Yes' : 'No';
+}
+function fmtByType(format: string, v: unknown): string {
+  switch (format) {
+    case 'percent': return fmtPct(v);
+    case 'multiplier': return fmtMult(v);
+    case 'currency': return fmtCurrency(v);
+    case 'hours': return fmtHours(v);
+    case 'bool': return fmtBool(v);
+    default: return v == null ? '—' : String(v);
+  }
+}
+
+/** One row in the change list: "Fringe   24.7%  →  22%" */
+interface ChangeRow {
+  group?: string;       // optional group header (e.g. position labor_category)
+  label: string;        // "Fringe", "Year 1 hours", "GSA discount"
+  before: string;       // formatted current value
+  after: string;        // formatted proposed value
+  unchanged?: boolean;  // dim row if old === new
+}
+
+/**
+ * Diff the proposed tool_args against current pricingStore state and
+ * produce a flat list of "label / before / after" rows.
+ */
+function buildChangeRows(
+  toolName: string | undefined,
+  toolArgs: Record<string, unknown>,
+  storeState: {
+    rates: Record<string, unknown>;
+    escalationRates: Record<string, unknown>;
+    positions: Array<{ id: string; labor_category: string } & Record<string, unknown>>;
+  },
+): ChangeRow[] {
+  if (toolName === 'update_rates') {
+    const rows: ChangeRow[] = [];
+    const newRates = (toolArgs.rates as Record<string, unknown>) || {};
+    for (const { key, label, format } of RATE_DISPLAY) {
+      if (!(key in newRates)) continue;
+      const before = fmtByType(format, storeState.rates[key]);
+      const after = fmtByType(format, newRates[key]);
+      rows.push({ label, before, after, unchanged: before === after });
+    }
+    // Catch-all for rate keys we don't have in RATE_DISPLAY yet
+    for (const k of Object.keys(newRates)) {
+      if (RATE_DISPLAY.some((r) => r.key === k)) continue;
+      const before = storeState.rates[k];
+      const after = newRates[k];
+      rows.push({
+        label: k.replace(/_/g, ' '),
+        before: before == null ? '—' : String(before),
+        after: after == null ? '—' : String(after),
+        unchanged: String(before) === String(after),
+      });
+    }
+    // Escalation rates
+    const newEsc = (toolArgs.escalation_rates as Record<string, unknown>) || {};
+    for (const k of Object.keys(newEsc)) {
+      const yearLabel = k.replace('_to_', ' → ');
+      rows.push({
+        group: 'Escalation',
+        label: `Year ${yearLabel}`,
+        before: fmtPct(storeState.escalationRates[k]),
+        after: fmtPct(newEsc[k]),
+        unchanged: fmtPct(storeState.escalationRates[k]) === fmtPct(newEsc[k]),
+      });
+    }
+    return rows;
+  }
+
+  if (toolName === 'update_positions') {
+    const rows: ChangeRow[] = [];
+    const updates = (toolArgs.updates as Array<{
+      position_id: string;
+      fields: Record<string, unknown>;
+    }>) || [];
+    for (const u of updates) {
+      const pos = storeState.positions.find((p) => p.id === u.position_id);
+      const groupLabel = pos
+        ? pos.labor_category
+        : `Position ${(u.position_id || '').slice(0, 8)}…`;
+      for (const [field, newVal] of Object.entries(u.fields || {})) {
+        // hours_per_year / ot_hours_per_year are dicts — one row per year
+        if (field === 'hours_per_year' || field === 'ot_hours_per_year') {
+          const isOT = field === 'ot_hours_per_year';
+          const newDict = newVal as Record<string, unknown>;
+          const oldDict = (pos?.[field] as Record<string, unknown>) || {};
+          for (const yr of Object.keys(newDict)) {
+            const before = fmtHours(oldDict[yr]);
+            const after = fmtHours(newDict[yr]);
+            rows.push({
+              group: groupLabel,
+              label: `${isOT ? 'OT hours' : 'Hours'} Y${yr}`,
+              before,
+              after,
+              unchanged: before === after,
+            });
+          }
+          continue;
+        }
+        const display = POSITION_FIELD_DISPLAY[field];
+        if (display) {
+          const before = fmtByType(display.format, pos?.[field]);
+          const after = fmtByType(display.format, newVal);
+          rows.push({
+            group: groupLabel,
+            label: display.label,
+            before,
+            after,
+            unchanged: before === after,
+          });
+        } else {
+          rows.push({
+            group: groupLabel,
+            label: field.replace(/_/g, ' '),
+            before: pos?.[field] == null ? '—' : String(pos[field]),
+            after: newVal == null ? '—' : String(newVal),
+            unchanged: String(pos?.[field]) === String(newVal),
+          });
+        }
+      }
+    }
+    return rows;
+  }
+
+  return [];
+}
+
 function ToolApprovalCard({
   paused,
   onApprove,
@@ -1812,33 +2168,114 @@ function ToolApprovalCard({
   const args = paused.tool_args || {};
   const rationale = paused.rationale || (typeof args.rationale === 'string' ? args.rationale : '');
 
+  // Pull current store state so we can compute before/after deltas
+  const rates = usePricingStore((s) => s.rates);
+  const escalationRates = usePricingStore((s) => s.escalationRates);
+  const positions = usePricingStore((s) => s.positions);
+  const rows = useMemo(
+    () =>
+      buildChangeRows(paused.tool_name, args, {
+        rates: rates as unknown as Record<string, unknown>,
+        escalationRates: escalationRates as unknown as Record<string, unknown>,
+        positions: positions as unknown as Array<
+          { id: string; labor_category: string } & Record<string, unknown>
+        >,
+      }),
+    [paused.tool_name, args, rates, escalationRates, positions],
+  );
+
+  // Group rows by `group` while preserving order (positions group by labor_cat,
+  // rates have no group, escalation rates group under "Escalation")
+  const groups: Array<{ name: string | null; rows: ChangeRow[] }> = useMemo(() => {
+    const out: Array<{ name: string | null; rows: ChangeRow[] }> = [];
+    for (const r of rows) {
+      const last = out[out.length - 1];
+      const key = r.group ?? null;
+      if (last && last.name === key) last.rows.push(r);
+      else out.push({ name: key, rows: [r] });
+    }
+    return out;
+  }, [rows]);
+
+  const nonEmpty = rows.length > 0;
+
   return (
-    <div className="my-3 rounded-xl border border-amber-200 bg-amber-50 dark:border-amber-800/50 dark:bg-amber-950/30 p-4">
-      <div className="flex items-start gap-3">
-        <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/50 text-amber-600 dark:text-amber-400 text-base">
-          ✦
+    <div className="my-3 overflow-hidden rounded-xl border border-amber-200/70 bg-amber-50/80 dark:border-amber-800/40 dark:bg-amber-950/20">
+      {/* Header */}
+      <div className="flex items-start gap-3 border-b border-amber-200/60 px-4 py-3 dark:border-amber-800/40">
+        <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-600 dark:bg-amber-900/50 dark:text-amber-400">
+          <Sparkles className="h-3.5 w-3.5" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-foreground">
-            {formatToolLabel(paused.tool_name)} — approval required
+            {formatToolLabel(paused.tool_name)}
+            <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+              · approval required
+            </span>
           </p>
           {rationale && (
-            <p className="mt-1 text-xs text-muted-foreground leading-relaxed">{rationale}</p>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{rationale}</p>
           )}
         </div>
       </div>
-      <div className="mt-3 flex gap-2">
+
+      {/* Diff body */}
+      {nonEmpty ? (
+        <div className="bg-background/60 px-4 py-3">
+          <div className="space-y-3">
+            {groups.map((g, gi) => (
+              <div key={gi}>
+                {g.name && (
+                  <div className="mb-1 text-[10.5px] font-semibold uppercase tracking-wider text-muted-foreground/80">
+                    {g.name}
+                  </div>
+                )}
+                <div className="space-y-0.5">
+                  {g.rows.map((r, i) => (
+                    <div
+                      key={i}
+                      className={`grid grid-cols-[1fr_auto_auto_auto] items-baseline gap-x-2 py-0.5 text-[12.5px] ${
+                        r.unchanged ? 'opacity-50' : ''
+                      }`}
+                    >
+                      <span className="truncate text-muted-foreground">{r.label}</span>
+                      <span className="font-mono text-muted-foreground line-through">
+                        {r.before}
+                      </span>
+                      <span className="text-muted-foreground/60">→</span>
+                      <span className="font-mono font-semibold text-foreground">
+                        {r.after}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : (
+        // Fall back to raw args if we couldn't build a diff
+        <details className="border-t border-amber-200/60 bg-background/60 px-4 py-2 text-[11px] text-muted-foreground dark:border-amber-800/40">
+          <summary className="cursor-pointer select-none">View raw arguments</summary>
+          <pre className="mt-2 max-h-40 overflow-auto rounded bg-muted/60 p-2">
+            {JSON.stringify(args, null, 2)}
+          </pre>
+        </details>
+      )}
+
+      {/* Actions */}
+      <div className="flex gap-2 border-t border-amber-200/60 px-4 py-3 dark:border-amber-800/40">
         <button
           onClick={onApprove}
           disabled={isResuming}
-          className="flex-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
+          className="flex-1 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm transition-[transform,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-blue-700 active:scale-[0.97] disabled:opacity-50"
         >
           {isResuming ? 'Applying…' : 'Approve'}
         </button>
         <button
           onClick={onReject}
           disabled={isResuming}
-          className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition hover:bg-muted disabled:opacity-50"
+          className="flex-1 rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-semibold text-foreground transition-[transform,background-color] duration-150 ease-[cubic-bezier(0.23,1,0.32,1)] hover:bg-muted active:scale-[0.97] disabled:opacity-50"
         >
           Reject
         </button>
