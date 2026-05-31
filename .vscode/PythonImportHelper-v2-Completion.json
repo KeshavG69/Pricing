@@ -10496,6 +10496,15 @@
         "documentation": {}
     },
     {
+        "label": "PricingChatCancelRequest",
+        "kind": 6,
+        "importPath": "backend.routers.pricing_chat",
+        "description": "backend.routers.pricing_chat",
+        "peekOfCode": "class PricingChatCancelRequest(BaseModel):\n    \"\"\"Request body for cancelling an in-flight pricing-agent run.\"\"\"\n    run_id: str\n    session_id: str\n    organization_id: str\n    proposal_id: str\n    user_id: str\n    role: Optional[str] = None\n@router.post(\"/cancel\")\nasync def cancel_pricing_run(request: PricingChatCancelRequest):",
+        "detail": "backend.routers.pricing_chat",
+        "documentation": {}
+    },
+    {
         "label": "ConversationRenameRequest",
         "kind": 6,
         "importPath": "backend.routers.pricing_chat",

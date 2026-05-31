@@ -1,7 +1,7 @@
 'use client';
 
 import { memo, useState, useRef, useEffect, useCallback, useMemo } from 'react';
-import { MessageCircle, X, Send, Loader2, Sparkles, Target, Clock, Maximize2, Trash2, Pencil } from 'lucide-react';
+import { MessageCircle, X, Send, Square, Loader2, Sparkles, Target, Clock, Maximize2, Trash2, Pencil } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { usePricingStore } from '@/lib/stores/pricingStore';
 import { useAuthStore } from '@/lib/stores/authStore';
@@ -9,6 +9,7 @@ import { proposalsApi } from '@/lib/api/proposals';
 import {
   streamPricingChat,
   streamPricingChatResume,
+  cancelPricingRun,
   listConversations,
   getConversationWithMessages,
   renameConversation,
@@ -572,6 +573,14 @@ export default function PricingChatPanel() {
 
   const abortRef = useRef<AbortController | null>(null);
   const resumeAbortRef = useRef<AbortController | null>(null);
+  // Latest agent run_id observed in this turn. Captured from the SSE
+  // run.started event and consumed by handleStop to call /cancel. Cleared
+  // when the turn ends (done / error / cancelled / new send).
+  const runIdRef = useRef<string | null>(null);
+  // Whether a cancellation is in-flight for the current turn. Lets handleStop
+  // ignore double-clicks and the stream consumer differentiate user-cancel
+  // from server error.
+  const cancellingRef = useRef<boolean>(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const inputRef = useRef<HTMLTextAreaElement | null>(null);
   // Ref mirror of messages so event handlers can read current state without
@@ -837,6 +846,10 @@ export default function PricingChatPanel() {
   const handleSend = useCallback(async (overrideText?: string) => {
     const trimmed = (overrideText ?? input).trim();
     if (!trimmed || isStreaming) return;
+    // Reset per-turn cancel state. runIdRef gets repopulated by the first
+    // run.started event from the SSE stream.
+    runIdRef.current = null;
+    cancellingRef.current = false;
     if (!proposalId) {
       setMessages((m) => [
         ...m,
@@ -922,6 +935,21 @@ export default function PricingChatPanel() {
           // (thinking is already true from send-click; no-op here, but logged
           // for observability when debugging streams.)
           continue;
+        } else if (evt.type === 'run.started') {
+          // Capture run_id once — handleStop reads this to call /cancel.
+          if (evt.run_id) runIdRef.current = evt.run_id;
+          continue;
+        } else if (evt.type === 'run.cancelled') {
+          // Server confirmed the cancel. Treat like done — keep partial
+          // content visible, no error styling (user-intent stop ≠ failure).
+          setMessages((m) =>
+            m.map((msg) =>
+              msg.id === assistantMsg.id
+                ? { ...msg, streaming: false, thinking: false }
+                : msg,
+            ),
+          );
+          break;  // exit the for-await loop; finally{} cleans up
         } else if (evt.type === 'delta') {
           setMessages((m) =>
             m.map((msg) => {
@@ -1165,8 +1193,40 @@ export default function PricingChatPanel() {
       );
       setIsStreaming(false);
       abortRef.current = null;
+      runIdRef.current = null;
+      cancellingRef.current = false;
     }
   }, [input, isStreaming, proposalId, organizationId]);
+
+  // Stop the current agent run mid-stream. Two-step:
+  //   1. Tell the backend to cancel — agno aborts the LLM stream, persistence
+  //      still fires on the cleanly-exited generator so partial content is saved.
+  //   2. Abort the local fetch so the UI doesn't keep its stream connection
+  //      open waiting for the run.cancelled SSE event.
+  // The cancellingRef + idempotent button guard prevents double-cancels.
+  const handleStop = useCallback(() => {
+    if (cancellingRef.current) return;
+    cancellingRef.current = true;
+    const runId = runIdRef.current;
+
+    // Fire-and-forget: kill the backend LLM stream. We don't await — the
+    // user sees the stop happen via the local abort below.
+    if (runId && organizationId && proposalId && user?.id) {
+      void cancelPricingRun({
+        run_id: runId,
+        session_id: sessionIdRef.current,
+        organization_id: organizationId,
+        proposal_id: proposalId,
+        user_id: user.id,
+        role: user.role,
+      });
+    }
+
+    // Close the local SSE connection. Both /ask and /resume share the same
+    // abortRef pair — kill whichever is alive.
+    abortRef.current?.abort();
+    resumeAbortRef.current?.abort();
+  }, [organizationId, proposalId, user?.id, user?.role]);
 
   // Keep the latest handleSend reachable from the open-chat event listener.
   useEffect(() => {
@@ -1881,18 +1941,26 @@ export default function PricingChatPanel() {
                     minHeight: '38px',
                   }}
                 />
-                <button
-                  onClick={() => handleSend()}
-                  disabled={!input.trim() || isStreaming || !proposalId}
-                  className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white transition hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600"
-                  aria-label="Send message"
-                >
-                  {isStreaming ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
+                {isStreaming ? (
+                  <button
+                    onClick={handleStop}
+                    disabled={cancellingRef.current}
+                    className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white transition hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600"
+                    aria-label="Stop generating"
+                    title="Stop generating"
+                  >
+                    <Square className="h-3.5 w-3.5 fill-current" />
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleSend()}
+                    disabled={!input.trim() || !proposalId}
+                    className="flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-lg bg-blue-600 text-white transition hover:bg-blue-700 disabled:opacity-50 disabled:hover:bg-blue-600"
+                    aria-label="Send message"
+                  >
                     <Send className="h-4 w-4" />
-                  )}
-                </button>
+                  </button>
+                )}
               </div>
               <p className="mt-2 text-[10px] text-muted-foreground">
                 Q reads your current proposal state. Numbers match what you see on screen.

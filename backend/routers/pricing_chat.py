@@ -344,6 +344,84 @@ async def resume_pricing(request: PricingChatResumeRequest):
 
 
 # =============================================================================
+# RUN CANCELLATION — user-initiated mid-stream stop
+# =============================================================================
+
+
+class PricingChatCancelRequest(BaseModel):
+    """Request body for cancelling an in-flight pricing-agent run."""
+
+    run_id: str
+    session_id: str
+    organization_id: str
+    proposal_id: str
+    user_id: str
+    role: Optional[str] = None
+
+
+@router.post("/cancel")
+async def cancel_pricing_run(request: PricingChatCancelRequest):
+    """
+    Cancel an in-flight agent run (user clicked Stop mid-response).
+
+    Mechanism (per agno's run-cancellation docs):
+      1. We rebuild a minimal Agent shell — same session_id and component
+         cache as /ask, just without re-fetching the heavy proposal context
+         from MongoDB. Cancellation is keyed on run_id, not on agent state.
+      2. We call agent.acancel_run(run_id), which flips a cancellation flag
+         in agno's run store.
+      3. The in-progress SSE stream from /ask (or /resume) observes the flag,
+         emits a RunEvent.run_cancelled, and exits — our agent_streaming
+         layer forwards that as a "run.cancelled" SSE event the frontend can
+         react to (close the streaming UI, mark the partial message done).
+      4. The MessageTracker / persistence callback still fires on stream
+         end, so the partial answer is saved into chat history — no silent
+         loss when the user stops mid-reply.
+
+    Returns:
+        { "cancelled": <bool>, "run_id": str }
+        cancelled=False either means the run already finished or the run_id
+        isn't recognized — both are NOT errors, just no-ops.
+    """
+    try:
+        if not request.run_id or not request.run_id.strip():
+            raise HTTPException(status_code=400, detail="run_id is required")
+        if not request.session_id or not request.session_id.strip():
+            raise HTTPException(status_code=400, detail="session_id is required")
+        if not request.proposal_id or not request.proposal_id.strip():
+            raise HTTPException(status_code=400, detail="proposal_id is required")
+        if not request.user_id or not request.user_id.strip():
+            raise HTTPException(status_code=400, detail="user_id is required")
+
+        logger.info(
+            f"[pricing-chat/cancel] run={request.run_id} session={request.session_id} "
+            f"proposal={request.proposal_id} user={request.user_id}"
+        )
+
+        # Cancel only needs the agno db connection (cancellation state lives
+        # in agent_sessions). Skip the MongoDB proposal-context fetch /ask
+        # does — pass an empty string. All cached agent components (LLM, db,
+        # memory) are reused via _components, so this build is cheap.
+        agent = get_pricing_agent(
+            session_id=request.session_id,
+            proposal_context="",
+            proposal_id=request.proposal_id,
+            user_id=request.user_id,
+            organization_id=request.organization_id,
+            role=request.role,
+        )
+
+        cancelled = await agent.acancel_run(request.run_id)
+        return {"cancelled": bool(cancelled), "run_id": request.run_id}
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error in pricing chat cancel endpoint: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to cancel run")
+
+
+# =============================================================================
 # CHAT HISTORY — list / load / rename / trash
 # =============================================================================
 
