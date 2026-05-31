@@ -253,6 +253,19 @@ async def stream_agent_response(
                 )
                 return  # stop streaming — client must resume via a continue endpoint
 
+            # ── run.cancelled — user clicked Stop, agno aborted the run ──
+            # Persistence still runs (the MessageTracker has whatever partial
+            # content arrived before the abort), so the chat history records
+            # the cancelled turn instead of silently dropping it.
+            if agno_event == RunEvent.run_cancelled.value:
+                yield {
+                    "event": "run.cancelled",
+                    "run_id": payload.get("run_id"),
+                    "session_id": payload.get("session_id"),
+                }
+                logger.info(f"[cancel] Run cancelled: run_id={payload.get('run_id')}")
+                return  # stop streaming — generator exits, persistence fires
+
             # ── run.error ─────────────────────────────────────────────
             if agno_event == RunEvent.run_error.value:
                 yield {
@@ -493,6 +506,17 @@ async def stream_agent_continuation(
                     "requirements": payload.get("requirements"),
                 }
                 logger.info(f"[HITL] Run re-paused during continuation: run_id={payload.get('run_id')}")
+                return
+
+            # Cancel can land during a resumed continuation just like the
+            # initial /ask stream — forward the same shape.
+            if agno_event == RunEvent.run_cancelled.value:
+                yield {
+                    "event": "run.cancelled",
+                    "run_id": payload.get("run_id"),
+                    "session_id": payload.get("session_id"),
+                }
+                logger.info(f"[cancel] Continuation cancelled: run_id={payload.get('run_id')}")
                 return
 
             if agno_event == RunEvent.run_error.value:
