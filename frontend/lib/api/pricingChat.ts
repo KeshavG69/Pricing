@@ -42,7 +42,9 @@ export type PricingChatEvent =
   | { type: 'delta'; content: string }
   | { type: 'done'; content?: string }
   | { type: 'error'; error: string }
+  | { type: 'run.started'; run_id: string }
   | { type: 'run.continued'; run_id: string }
+  | { type: 'run.cancelled'; run_id?: string }
   | {
       type: 'run.paused';
       run_id: string;
@@ -63,6 +65,42 @@ export type PricingChatEvent =
       error?: unknown;
       tool_call_id?: string;
     };
+
+export interface PricingChatCancelRequest {
+  run_id: string;
+  session_id: string;
+  organization_id: string;
+  proposal_id: string;
+  user_id: string;
+  role?: string;
+}
+
+/**
+ * Cancel an in-flight pricing-agent run. Fire-and-forget pattern is fine —
+ * the SSE stream from /ask will emit a `run.cancelled` event on success, OR
+ * the client-side AbortController will close the connection a beat later.
+ * Returns the backend's `{cancelled, run_id}` ack; callers can ignore it.
+ */
+export async function cancelPricingRun(
+  req: PricingChatCancelRequest,
+): Promise<{ cancelled: boolean; run_id: string }> {
+  const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
+  const res = await fetch(`${apiBase}/api/pricing-chat/cancel`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(req),
+    // No AbortSignal — we want the cancel request itself to land even if
+    // the caller is racing to abort the streaming fetch.
+  });
+  if (!res.ok) {
+    return { cancelled: false, run_id: req.run_id };
+  }
+  try {
+    return await res.json();
+  } catch {
+    return { cancelled: false, run_id: req.run_id };
+  }
+}
 
 export async function* streamPricingChat(
   req: PricingChatRequest,
@@ -130,6 +168,18 @@ export async function* streamPricingChat(
           yield { type: 'delta', content };
         } else if (parsed.event === 'message.completed') {
           yield { type: 'done', content };
+        } else if (parsed.event === 'run.started') {
+          // Surface the run_id so the panel can capture it for /cancel.
+          yield {
+            type: 'run.started',
+            run_id: typeof data.run_id === 'string' ? data.run_id : '',
+          };
+        } else if (parsed.event === 'run.cancelled') {
+          // Backend confirmed cancellation via agno's RunEvent.run_cancelled.
+          yield {
+            type: 'run.cancelled',
+            run_id: typeof data.run_id === 'string' ? data.run_id : undefined,
+          };
         } else if (parsed.event === 'run.paused') {
           yield {
             type: 'run.paused',
@@ -161,7 +211,7 @@ export async function* streamPricingChat(
         } else if (parsed.event === 'error') {
           yield { type: 'error', error: errText || 'Unknown error' };
         }
-        // Ignored: run.started / run.completed / usage / compression.* / agent.event
+        // Ignored: run.completed / usage / compression.* / agent.event
       }
     }
   } catch (err: unknown) {
@@ -231,6 +281,11 @@ export async function* streamPricingChatResume(
 
         if (parsed.event === 'run.continued') {
           yield { type: 'run.continued', run_id: typeof data.run_id === 'string' ? data.run_id : '' };
+        } else if (parsed.event === 'run.cancelled') {
+          yield {
+            type: 'run.cancelled',
+            run_id: typeof data.run_id === 'string' ? data.run_id : undefined,
+          };
         } else if (parsed.event === 'message.delta' && content) {
           yield { type: 'delta', content };
         } else if (parsed.event === 'message.completed') {
