@@ -10,6 +10,7 @@ import {
   Upload,
   BookOpen,
   Search,
+  FileSearch,
   Wrench,
   type LucideIcon,
 } from 'lucide-react';
@@ -43,6 +44,9 @@ const TOOL_ICONS: Record<string, LucideIcon> = {
   web_search: Search,
   exa_answer: Search,
   get_contents_exa: Search,
+  // Proposal source-document retriever — agno wraps our knowledge_retriever
+  // as the built-in search_knowledge_base tool. Distinct from web search.
+  search_knowledge_base: FileSearch,
 };
 
 interface ToolStatusPillProps {

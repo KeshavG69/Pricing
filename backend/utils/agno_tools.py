@@ -13,6 +13,7 @@ from agno.tools.exa import ExaTools
 from client.soc_vector_search import get_soc_vector_search_client
 from client.oews_mongodb import get_oews_mongo_client
 from client.gsa_pinecone import get_gsa_pinecone_client
+from client.proposal_docs_pinecone import get_proposal_docs_pinecone_client
 from utils.company_repository import get_company_repository_crud
 from client.help_center_pinecone import get_help_center_pinecone_client
 from agno.tools.reasoning import ReasoningTools
@@ -657,3 +658,74 @@ def create_update_positions_tool(
         )
 
     return update_positions
+
+
+# =============================================================================
+# Proposal source-document retriever (chat: "what does the RFP say…")
+# =============================================================================
+
+
+def create_document_retriever(organization_id: str, proposal_id: str):
+    """
+    Build a retriever over the proposal's uploaded source documents (RFP,
+    PWS, SOW, JDs). The returned callable matches Agno's retriever spec
+    (`def f(query, agent=None, num_documents=None, **kwargs) -> list[dict]`),
+    so it can be passed EITHER as:
+
+      - `tools=[create_document_retriever(...)]`        (LLM-invoked tool), OR
+      - `knowledge_retriever=create_document_retriever(...)` (agno knowledge hook)
+
+    Identity (organization_id, proposal_id) is closure-bound at build time
+    so the LLM can never reach into another tenant's docs.
+    """
+    pinecone_client = get_proposal_docs_pinecone_client()
+
+    def document_retriever(
+        query: str,
+        agent: Optional[Agent] = None,
+        num_documents: Optional[int] = 8,
+        **kwargs: Any,
+    ) -> List[Dict[str, Any]]:
+        """
+        Search this proposal's uploaded source documents for passages relevant
+        to the query. Returns ranked chunks with file + page citations.
+
+        USE THIS when the user asks anything that depends on the contents of
+        the uploaded RFP, PWS, SOW, JDs, attachments, or solicitation —
+        examples:
+            - "what does the RFP say about Top Secret clearance?"
+            - "find the deliverables for PWS Section 3.2"
+            - "what's the period of performance the solicitation describes?"
+            - "any mention of cybersecurity requirements?"
+            - "what experience does the JD require for the SATCOM SME?"
+
+        DO NOT use for:
+            - Numbers / totals already in proposal_state (use that block instead)
+            - Hypothetical math (use python_repl_tool)
+            - External / public data (use web_search)
+
+        Args:
+            query: Natural-language question or topic. Be specific — full
+                   questions retrieve better than 1-2 word fragments.
+            num_documents: Max chunks to return (default 8). Capped at 20.
+
+        Returns:
+            List of {filename, page, text, score}, ranked most-relevant first.
+            Empty list if nothing relevant is found OR no documents are
+            indexed for this proposal yet.
+
+        CITATION RULE: when you quote or paraphrase from these results, ALWAYS
+        cite as [<filename>, p. <page>]. Never quote document text without a
+        citation. If this returns [], say "I couldn't find that in the
+        uploaded documents" — do NOT guess from labor categories, filenames,
+        or general knowledge.
+        """
+        k = num_documents if num_documents is not None else 8
+        return pinecone_client.search(
+            query=query,
+            organization_id=organization_id,
+            proposal_id=proposal_id,
+            top_k=min(max(int(k), 1), 20),
+        )
+
+    return document_retriever

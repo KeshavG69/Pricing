@@ -156,6 +156,13 @@ export interface DocumentInfo {
   idrive_key: string;
   idrive_url_expires_at?: number; // Unix timestamp (seconds)
   extracted_content?: string;
+  // Set on upload by the backend. Older proposals predate it; treat as optional.
+  document_id?: string;
+  // Chat retriever indexing state. `indexed: true` means this file's chunks
+  // are searchable from the chat panel; `chunks_indexed` is the count for
+  // operator visibility. Both populated by the Celery indexing step.
+  indexed?: boolean;
+  chunks_indexed?: number;
 }
 
 // Proposal types

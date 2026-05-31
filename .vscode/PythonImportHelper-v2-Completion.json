@@ -57,6 +57,22 @@
         "documentation": {}
     },
     {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
+        "label": "annotations",
+        "importPath": "__future__",
+        "description": "__future__",
+        "isExtraImport": true,
+        "detail": "__future__",
+        "documentation": {}
+    },
+    {
         "label": "os",
         "kind": 6,
         "isExtraImport": true,
@@ -577,6 +593,30 @@
     },
     {
         "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -1273,6 +1313,22 @@
     },
     {
         "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -3151,6 +3207,14 @@
         "documentation": {}
     },
     {
+        "label": "get_embeddings",
+        "importPath": "client.llm_client",
+        "description": "client.llm_client",
+        "isExtraImport": true,
+        "detail": "client.llm_client",
+        "documentation": {}
+    },
+    {
         "label": "get_chat_llm",
         "importPath": "client.llm_client",
         "description": "client.llm_client",
@@ -3216,6 +3280,14 @@
     },
     {
         "label": "create_custom_retreiver",
+        "importPath": "utils.agno_tools",
+        "description": "utils.agno_tools",
+        "isExtraImport": true,
+        "detail": "utils.agno_tools",
+        "documentation": {}
+    },
+    {
+        "label": "create_document_retriever",
         "importPath": "utils.agno_tools",
         "description": "utils.agno_tools",
         "isExtraImport": true,
@@ -3316,6 +3388,14 @@
         "description": "utils.company_repository",
         "isExtraImport": true,
         "detail": "utils.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
         "documentation": {}
     },
     {
@@ -5543,6 +5623,22 @@
         "documentation": {}
     },
     {
+        "label": "Pinecone",
+        "importPath": "pinecone",
+        "description": "pinecone",
+        "isExtraImport": true,
+        "detail": "pinecone",
+        "documentation": {}
+    },
+    {
+        "label": "ServerlessSpec",
+        "importPath": "pinecone",
+        "description": "pinecone",
+        "isExtraImport": true,
+        "detail": "pinecone",
+        "documentation": {}
+    },
+    {
         "label": "PineconeVectorStore",
         "importPath": "langchain_pinecone",
         "description": "langchain_pinecone",
@@ -7048,6 +7144,22 @@
         "documentation": {}
     },
     {
+        "label": "get_proposal_docs_pinecone_client",
+        "importPath": "client.proposal_docs_pinecone",
+        "description": "client.proposal_docs_pinecone",
+        "isExtraImport": true,
+        "detail": "client.proposal_docs_pinecone",
+        "documentation": {}
+    },
+    {
+        "label": "get_proposal_docs_pinecone_client",
+        "importPath": "client.proposal_docs_pinecone",
+        "description": "client.proposal_docs_pinecone",
+        "isExtraImport": true,
+        "detail": "client.proposal_docs_pinecone",
+        "documentation": {}
+    },
+    {
         "label": "get_help_center_pinecone_client",
         "importPath": "client.help_center_pinecone",
         "description": "client.help_center_pinecone",
@@ -7077,6 +7189,14 @@
         "description": "utils.proposal_mutation_tools",
         "isExtraImport": true,
         "detail": "utils.proposal_mutation_tools",
+        "documentation": {}
+    },
+    {
+        "label": "RecursiveChunker",
+        "importPath": "chonkie",
+        "description": "chonkie",
+        "isExtraImport": true,
+        "detail": "chonkie",
         "documentation": {}
     },
     {
@@ -9402,7 +9522,7 @@
         "kind": 2,
         "importPath": "backend.client.intelligent_parser",
         "description": "backend.client.intelligent_parser",
-        "peekOfCode": "def test_intelligent_parser(file_path: str) -> Dict[str, Any]:\n    \"\"\"Test the intelligent parser on a file.\"\"\"\n    import asyncio\n    return asyncio.run(parse_document_intelligent(file_path))\nif __name__ == \"__main__\":\n    import sys\n    if len(sys.argv) > 1:\n        result = test_intelligent_parser(sys.argv[1])\n        print(f\"\\n\\n=== FINAL JSON ===\")\n        print(json.dumps(result, indent=2, default=str))",
+        "peekOfCode": "def test_intelligent_parser(file_path: str) -> Dict[str, Any]:\n    \"\"\"Test the intelligent parser on a file (CLI convenience).\"\"\"\n    import asyncio\n    text = _extract_text(file_path)\n    return asyncio.run(\n        parse_document_intelligent(\n            text,\n            source_label=Path(file_path).name,\n        )\n    )",
         "detail": "backend.client.intelligent_parser",
         "documentation": {}
     },
@@ -9623,6 +9743,42 @@
         "documentation": {}
     },
     {
+        "label": "ProposalDocsPineconeClient",
+        "kind": 6,
+        "importPath": "backend.client.proposal_docs_pinecone",
+        "description": "backend.client.proposal_docs_pinecone",
+        "peekOfCode": "class ProposalDocsPineconeClient:\n    \"\"\"Stores + searches proposal source-document chunks in Pinecone.\"\"\"\n    def __init__(self):\n        self._lock = threading.RLock()\n        self._pc: Optional[Pinecone] = None\n        self._index = None\n        self._embeddings = None\n    def _get_pinecone(self) -> Pinecone:\n        if self._pc is None:\n            if not settings.PINECONE_API_KEY:",
+        "detail": "backend.client.proposal_docs_pinecone",
+        "documentation": {}
+    },
+    {
+        "label": "get_proposal_docs_pinecone_client",
+        "kind": 2,
+        "importPath": "backend.client.proposal_docs_pinecone",
+        "description": "backend.client.proposal_docs_pinecone",
+        "peekOfCode": "def get_proposal_docs_pinecone_client() -> ProposalDocsPineconeClient:\n    \"\"\"Get or create the proposal-docs Pinecone client (singleton).\"\"\"\n    global _client\n    with _client_lock:\n        if _client is None:\n            _client = ProposalDocsPineconeClient()\n        return _client",
+        "detail": "backend.client.proposal_docs_pinecone",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.client.proposal_docs_pinecone",
+        "description": "backend.client.proposal_docs_pinecone",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nclass ProposalDocsPineconeClient:\n    \"\"\"Stores + searches proposal source-document chunks in Pinecone.\"\"\"\n    def __init__(self):\n        self._lock = threading.RLock()\n        self._pc: Optional[Pinecone] = None\n        self._index = None\n        self._embeddings = None\n    def _get_pinecone(self) -> Pinecone:\n        if self._pc is None:",
+        "detail": "backend.client.proposal_docs_pinecone",
+        "documentation": {}
+    },
+    {
+        "label": "_client_lock",
+        "kind": 5,
+        "importPath": "backend.client.proposal_docs_pinecone",
+        "description": "backend.client.proposal_docs_pinecone",
+        "peekOfCode": "_client_lock = threading.RLock()\ndef get_proposal_docs_pinecone_client() -> ProposalDocsPineconeClient:\n    \"\"\"Get or create the proposal-docs Pinecone client (singleton).\"\"\"\n    global _client\n    with _client_lock:\n        if _client is None:\n            _client = ProposalDocsPineconeClient()\n        return _client",
+        "detail": "backend.client.proposal_docs_pinecone",
+        "documentation": {}
+    },
+    {
         "label": "PositionContribution",
         "kind": 6,
         "importPath": "backend.client.ptw_calculator",
@@ -9807,7 +9963,7 @@
         "kind": 6,
         "importPath": "backend.client.unstructured_client",
         "description": "backend.client.unstructured_client",
-        "peekOfCode": "class UnstructuredClient:\n    \"\"\"Document text extractor.\n    Kept as UnstructuredClient class name for backward compatibility\n    with existing imports (intelligent_parser, gsa_parser).\n    \"\"\"\n    def cleanup(self):\n        \"\"\"No-op — no resources to clean up.\"\"\"\n        pass\n    def extract_from_path(self, file_path: str) -> str:\n        \"\"\"",
+        "peekOfCode": "class UnstructuredClient:\n    \"\"\"Document text extractor.\n    Kept as UnstructuredClient class name for backward compatibility\n    with existing imports (intelligent_parser, gsa_parser).\n    \"\"\"\n    def cleanup(self):\n        \"\"\"No-op — no resources to clean up.\"\"\"\n        pass\n    def parse_full(self, file_path: str) -> dict:\n        \"\"\"",
         "detail": "backend.client.unstructured_client",
         "documentation": {}
     },
@@ -10564,6 +10720,15 @@
         "importPath": "backend.routers.proposals",
         "description": "backend.routers.proposals",
         "peekOfCode": "def serialize_proposal(proposal: dict) -> dict:\n    \"\"\"\n    Convert all ObjectId fields to strings for JSON serialization.\n    Also converts snake_case date fields to camelCase for frontend consistency.\n    Args:\n        proposal: Proposal document from MongoDB\n    Returns:\n        Proposal with all ObjectIds converted to strings and dates in camelCase\n    \"\"\"\n    if not proposal:",
+        "detail": "backend.routers.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.routers.proposals",
+        "description": "backend.routers.proposals",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# Authentication\nfrom auth.dependencies import get_current_user\n# Proposal models and CRUD\nfrom models.proposal import ProposalCreate, ProposalUpdate, DocumentInfo\nfrom utils.proposals import get_proposal_crud\n# Document processing\n# OLD: from client.jd_parser import parse_documents_to_dataframe  # Replaced by intelligent parser\nfrom client.intelligent_parser import parse_document_intelligent\nfrom utils.pipeline import process_dataframe_with_agents",
         "detail": "backend.routers.proposals",
         "documentation": {}
     },
@@ -11333,6 +11498,15 @@
         "documentation": {}
     },
     {
+        "label": "create_document_retriever",
+        "kind": 2,
+        "importPath": "backend.utils.agno_tools",
+        "description": "backend.utils.agno_tools",
+        "peekOfCode": "def create_document_retriever(organization_id: str, proposal_id: str):\n    \"\"\"\n    Build a retriever over the proposal's uploaded source documents (RFP,\n    PWS, SOW, JDs). The returned callable matches Agno's retriever spec\n    (`def f(query, agent=None, num_documents=None, **kwargs) -> list[dict]`),\n    so it can be passed EITHER as:\n      - `tools=[create_document_retriever(...)]`        (LLM-invoked tool), OR\n      - `knowledge_retriever=create_document_retriever(...)` (agno knowledge hook)\n    Identity (organization_id, proposal_id) is closure-bound at build time\n    so the LLM can never reach into another tenant's docs.",
+        "detail": "backend.utils.agno_tools",
+        "documentation": {}
+    },
+    {
         "label": "logger",
         "kind": 5,
         "importPath": "backend.utils.agno_tools",
@@ -11600,6 +11774,33 @@
         "description": "backend.utils.company_repository",
         "peekOfCode": "_lock = threading.RLock()\ndef get_company_repository_crud() -> CompanyRepositoryCRUD:\n    \"\"\"Get or create CompanyRepositoryCRUD instance.\"\"\"\n    global _company_repo_crud\n    with _lock:\n        if _company_repo_crud is None:\n            _company_repo_crud = CompanyRepositoryCRUD()\n        return _company_repo_crud",
         "detail": "backend.utils.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "index_document_pages",
+        "kind": 2,
+        "importPath": "backend.utils.document_indexer",
+        "description": "backend.utils.document_indexer",
+        "peekOfCode": "def index_document_pages(\n    *,\n    organization_id: str,\n    proposal_id: str,\n    document_id: str,\n    filename: str,\n    pages: List[Dict],\n) -> int:\n    \"\"\"\n    Chunk + embed + upsert one document's pages.",
+        "detail": "backend.utils.document_indexer",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.utils.document_indexer",
+        "description": "backend.utils.document_indexer",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# RecursiveChunker defaults give paragraph → sentence → word fallback —\n# exactly what we want for plain-text per-page chunking. chunk_size is in\n# characters (no tokenizer dragged into the worker); ~512 chars ≈ 100-130\n# tokens, which retrieves well at top_k=8.\n_chunker = RecursiveChunker(\n    chunk_size=512,\n    min_characters_per_chunk=64,\n)\ndef index_document_pages(",
+        "detail": "backend.utils.document_indexer",
+        "documentation": {}
+    },
+    {
+        "label": "_chunker",
+        "kind": 5,
+        "importPath": "backend.utils.document_indexer",
+        "description": "backend.utils.document_indexer",
+        "peekOfCode": "_chunker = RecursiveChunker(\n    chunk_size=512,\n    min_characters_per_chunk=64,\n)\ndef index_document_pages(\n    *,\n    organization_id: str,\n    proposal_id: str,\n    document_id: str,\n    filename: str,",
+        "detail": "backend.utils.document_indexer",
         "documentation": {}
     },
     {

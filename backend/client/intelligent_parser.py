@@ -258,41 +258,42 @@ async def _run_agent_streaming(
 
 
 async def parse_document_intelligent(
-    file_path: str,
+    text: str,
+    *,
     default_fte_hours: int = 1920,
     default_years: int = 5,
     proposal_id: Optional[str] = None,
+    source_label: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
-    Parse document with intelligent agent that reasons first, then extracts.
+    Parse already-extracted document text with the intelligent agent.
 
-    The agent:
-    - Reads the entire contract and understands context
-    - Recognizes when staffing varies by year
-    - Uses web search only when needed
-    - Extracts year-specific staffing intelligently
+    Parsing (LiteParse / extract-from-path) is the caller's job — this
+    function only handles reasoning + structured extraction. Callers that
+    upload multiple files concatenate them into one `text` blob with clear
+    `=== DOCUMENT N: filename ===` delimiters so the LLM can reason across
+    docs (e.g., RFP referencing a JD attachment).
 
     Args:
-        file_path: Path to document (PDF, DOCX, XLSX, XLS, TXT, CSV)
-        default_fte_hours: Default FTE hours per year
-        default_years: Default contract duration
-        proposal_id: If provided, publishes tool-call / reasoning events to the
-            proposal_events log so the frontend can stream the agent's
-            reasoning to the user. Optional — callers that don't need a live
-            feed (tests, CLI) omit it.
+        text: Pre-extracted document text. For multi-file uploads, the
+              concatenation of all files with file-delimiter markers.
+        default_fte_hours: Default FTE hours per year.
+        default_years: Default contract duration.
+        proposal_id: If provided, publishes tool-call / reasoning events to
+                     the proposal_events log so the frontend can stream the
+                     agent's reasoning to the user.
+        source_label: Free-form string used only in log output to identify
+                      what was parsed (e.g., "RFP.pdf + JD.docx").
 
     Returns:
-        Dict with metadata, positions, travel, odcs
+        Dict with metadata, positions, travel, odcs.
     """
     print(f"\n{'='*70}")
     print(f"Intelligent Parser - Context-Aware Extraction")
     print(f"{'='*70}")
-    print(f"\nFile: {Path(file_path).name}")
-
-    # Extract text
-    print(f"\n📄 Step 1: Extracting document text...")
-    text = _extract_text(file_path)
-    print(f"  ✓ Extracted {len(text):,} characters")
+    if source_label:
+        print(f"\nSource: {source_label}")
+    print(f"\n📄 Step 1: Using pre-extracted text ({len(text):,} chars)")
 
     # Create agent
     print(f"\n🤖 Step 2: Creating intelligent agent...")
@@ -673,9 +674,15 @@ Return ONLY valid JSON, no markdown code blocks.
 
 
 def test_intelligent_parser(file_path: str) -> Dict[str, Any]:
-    """Test the intelligent parser on a file."""
+    """Test the intelligent parser on a file (CLI convenience)."""
     import asyncio
-    return asyncio.run(parse_document_intelligent(file_path))
+    text = _extract_text(file_path)
+    return asyncio.run(
+        parse_document_intelligent(
+            text,
+            source_label=Path(file_path).name,
+        )
+    )
 
 
 if __name__ == "__main__":

@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     # Help Center Pinecone index (separate from GSA)
     HELP_CENTER_PINECONE_INDEX_NAME: str = "help-center"
 
+    # Proposal source-document index — chat retriever queries chunks scoped
+    # to {namespace=organization_id, filter={proposal_id}}.
+    PROPOSAL_DOCS_PINECONE_INDEX_NAME: str = "proposal-docs"
+
     # Redis (Celery broker/backend)
     REDIS_URL: str = "redis://localhost:6379"
 

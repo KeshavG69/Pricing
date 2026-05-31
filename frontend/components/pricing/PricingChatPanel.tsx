@@ -395,7 +395,19 @@ function resolveToolCallTitle(call: ToolCallEntry): string {
     return verbing ? 'Searching the web' : 'Searched the web';
   }
 
-  // 6. Generic
+  // 6. search_knowledge_base — agno's built-in tool wraps our proposal-scoped
+  // document retriever. Surface the query so the user sees what was searched.
+  if (call.name === 'search_knowledge_base') {
+    const query = typeof args.query === 'string' ? args.query : '';
+    if (query) {
+      return verbing
+        ? `Searching uploaded documents: ${query}`
+        : `Searched uploaded documents: ${query}`;
+    }
+    return verbing ? 'Searching uploaded documents' : 'Searched uploaded documents';
+  }
+
+  // 7. Generic
   const pretty = prettyToolName(call.name);
   return verbing ? `Running ${pretty}` : pretty;
 }

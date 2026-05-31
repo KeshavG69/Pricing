@@ -145,10 +145,58 @@ async def process_proposal_documents(
             {"status": "processing", "progress": 0, "message": "Parsing documents..."},
         )
 
-        # Step 1: Parse document (streams tool calls + reasoning to proposal_events)
+        # Step 1: Parse uploaded files one at a time. LiteParse is a blocking
+        # CLI call; for the few seconds each parse takes we just let the
+        # event loop block. (Celery worker isn't running anything else
+        # waiting on this loop, so it's fine.) A single bad file is logged
+        # and skipped with empty content; the rest still go through.
+        from client.unstructured_client import get_unstructured_client
+        _uc = get_unstructured_client()
+        parsed_files: List[Dict[str, Any]] = []  # [{filename, text, pages}]
+        try:
+            for fp, fn in zip(file_paths, file_names):
+                try:
+                    full = _uc.parse_full(fp)
+                    parsed_files.append({
+                        "filename": fn,
+                        "text": full.get("text") or "",
+                        "pages": full.get("pages") or [],
+                    })
+                except Exception as e:
+                    logger.warning(f"[parse] failed for {fn}: {e}")
+                    parsed_files.append({
+                        "filename": fn,
+                        "text": "",
+                        "pages": [],
+                    })
+        finally:
+            _uc.cleanup()
+
+        # Concatenate texts for the LLM with explicit file delimiters so it
+        # can reason across documents (typical govcon shape: RFP says "see
+        # attachment for JDs," and the JD has the actual labor categories).
+        non_empty = [pf for pf in parsed_files if pf["text"]]
+        if len(non_empty) == 0:
+            crud.update_proposal(
+                proposal_id,
+                user_id,
+                {"status": "error", "progress": 0, "message": "Could not extract text from any uploaded file."},
+            )
+            return
+        elif len(non_empty) == 1:
+            combined_text = non_empty[0]["text"]
+            source_label = non_empty[0]["filename"]
+        else:
+            combined_text = "\n\n".join(
+                f"=== DOCUMENT {i}: {pf['filename']} ===\n\n{pf['text']}"
+                for i, pf in enumerate(non_empty, start=1)
+            )
+            source_label = " + ".join(pf["filename"] for pf in non_empty)
+
         intelligent_result = await parse_document_intelligent(
-            file_paths[0],
+            combined_text,
             proposal_id=proposal_id,
+            source_label=source_label,
         )
         parse_result = convert_intelligent_output_to_dataframe(intelligent_result)
         df = parse_result["df"]
@@ -390,6 +438,103 @@ async def process_proposal_documents(
         for i, job in enumerate(cleaned_jobs):
             if not job.get("id"):
                 job["id"] = f"pos_{i}_{timestamp}_{random.randint(1000, 9999)}"
+
+        # ─── Step N: Index source documents for chat retrieval ────────────
+        # One file at a time, sequential chunk+embed+upsert per file. Each
+        # file emits a phase.started/phase.completed pair keyed on its
+        # document_id so the live feed renders one row per file (running →
+        # done). A per-file failure flips `indexed=False`, marks the phase
+        # done with a "Skipped" title, and continues — the proposal still
+        # completes for pricing.
+        try:
+            from utils.document_indexer import index_document_pages
+            from utils.event_stream import get_event_stream
+            event_stream = get_event_stream()
+
+            existing_proposal = crud.get_proposal(proposal_id, user_id)
+            existing_docs = (existing_proposal or {}).get("documents") or []
+            pages_by_filename = {pf["filename"]: pf["pages"] for pf in parsed_files}
+
+            indexed_docs = []
+            for i, doc in enumerate(existing_docs):
+                doc_id = doc.get("document_id")
+                filename = doc.get("filename") or f"document_{i}"
+
+                if not doc_id:
+                    # Pre-document_id row — can't safely target deletes
+                    # later without a stable id; leave its state alone.
+                    indexed_docs.append({
+                        **doc,
+                        "indexed": doc.get("indexed", False),
+                        "chunks_indexed": doc.get("chunks_indexed", 0),
+                    })
+                    continue
+
+                pages = pages_by_filename.get(filename) or []
+                if not pages:
+                    # Surface the skip in the feed so the user sees WHY this
+                    # file isn't searchable in chat (parse failure earlier,
+                    # empty doc, etc.). Single completed event — no started
+                    # since we didn't actually do work.
+                    try:
+                        event_stream.publish(
+                            proposal_id,
+                            "phase.completed",
+                            {
+                                "key": f"indexing:{doc_id}",
+                                "title": f"Skipped {filename} (no content extracted)",
+                            },
+                        )
+                    except Exception:
+                        pass
+                    indexed_docs.append({**doc, "indexed": False, "chunks_indexed": 0})
+                    continue
+
+                phase_key = f"indexing:{doc_id}"
+                try:
+                    event_stream.publish(
+                        proposal_id,
+                        "phase.started",
+                        {
+                            "key": phase_key,
+                            "title": f"Indexing {filename} for chat",
+                        },
+                    )
+                except Exception:
+                    pass
+
+                try:
+                    n = index_document_pages(
+                        organization_id=organization_id or "",
+                        proposal_id=proposal_id,
+                        document_id=doc_id,
+                        filename=filename,
+                        pages=pages,
+                    )
+                except Exception as e:
+                    logger.warning(f"[doc-index] {filename} failed: {e}")
+                    n = 0
+                indexed_docs.append({**doc, "indexed": n > 0, "chunks_indexed": n})
+
+                try:
+                    event_stream.publish(
+                        proposal_id,
+                        "phase.completed",
+                        {
+                            "key": phase_key,
+                            "title": (
+                                f"Indexed {filename} ({n:,} chunks)"
+                                if n > 0
+                                else f"Skipped {filename} (indexing failed)"
+                            ),
+                        },
+                    )
+                except Exception:
+                    pass
+
+            crud.update_proposal(proposal_id, user_id, {"documents": indexed_docs})
+        except Exception as _idx_err:
+            logger.warning(f"[doc-index] indexing failed (proposal will still complete): {_idx_err}")
 
         update_data = {
             "status": "completed",

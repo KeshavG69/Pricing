@@ -26,6 +26,7 @@ from client.llm_client import get_chat_llm_agno
 from client.agent_memory import get_agent_db, get_memory_manager
 from utils.agno_tools import (
     create_custom_retreiver,
+    create_document_retriever,
     create_gsa_rate_tool,
     create_gsa_retriever,
     create_reasoning_tool,
@@ -336,6 +337,34 @@ deliverables. Available libraries: reportlab (PDF), python-pptx (PPT), \
 python-docx (DOCX), openpyxl/xlsxwriter (XLSX), matplotlib (chart images). \
 Workflow: write file in REPL with simple filename → call `s3_upload_tool` \
 with same filename → quote the returned URL as a markdown link to the user.
+
+   SOURCE DOCUMENTS — answering "what does the RFP/PWS/SOW/JD say…":
+   • USE `search_knowledge_base` whenever the user's question depends on \
+the contents of the uploaded solicitation, statement of work, performance \
+work statement, attachments, or job descriptions. This is wired to a \
+proposal-scoped index over the user's uploaded source documents — it \
+returns chunks ONLY from this proposal's files. Examples that REQUIRE it:
+       — "what does the RFP say about Top Secret clearance?"
+       — "find the deliverables in PWS Section 3.2"
+       — "what's the period of performance?"
+       — "any mention of cybersecurity requirements?"
+       — "the JD I uploaded — what experience does it require?"
+       — "what's the evaluation criteria in Section M?"
+   • Pass a full natural-language query, not a 1-2 word fragment. Results \
+come back as ranked chunks with {filename, page, text, score}.
+   • CITATION RULE — absolute: when you quote or paraphrase any passage \
+from search_knowledge_base results, ALWAYS cite as `[<filename>, p. <page>]` \
+inline at the point of use. Multiple sources → cite each one. Never quote \
+document text without a citation.
+   • If search_knowledge_base returns nothing relevant, say "I couldn't \
+find that in the uploaded documents" and stop. DO NOT guess from labor \
+categories, filenames, the proposal name, or general government-contracting \
+knowledge — those are not the source document. Offer to web-search instead \
+if the question can be answered from public data.
+   • Combine with proposal_state when the user asks both a document \
+question AND a numeric question ("what does the RFP say about overtime, \
+and what's our OT cost?"): search_knowledge_base for the prose, quote \
+state for the number, cite both.
 
    BLS PROPOSALS — finding alternative labor categories:
    • USE `custom_retriever` when the user asks "what else could we use \
@@ -672,6 +701,23 @@ def get_pricing_agent(
         except Exception as e:
             logger.warning(f"Could not build mutation tools: {e}")
 
+    # Source-document retriever — enables grounded answers about the uploaded
+    # RFP/PWS/SOW/JDs. Closure-bound identity so the LLM can't reach into
+    # another proposal's docs. Passed as agno's `knowledge_retriever` (not as
+    # a tool) so it routes through the built-in search_knowledge_base flow,
+    # with the standard reference-attachment + citation handling agno already
+    # does for knowledge retrievers. Best-effort: failure here logs + leaves
+    # the slot None; chat still works on proposal_state alone.
+    document_knowledge_retriever = None
+    if proposal_id and organization_id:
+        try:
+            document_knowledge_retriever = create_document_retriever(
+                organization_id=organization_id,
+                proposal_id=proposal_id,
+            )
+        except Exception as e:
+            logger.warning(f"Could not build document retriever: {e}")
+
     # Retrieval tools — selected based on the proposal's wage-data source.
     # BLS proposals: SOC vector-search retriever + OEWS wage lookup so Q can
     #   suggest alternative labor categories and compare their wages.
@@ -715,6 +761,7 @@ def get_pricing_agent(
         memory_manager=_components.memory_manager,
         skills=get_pricing_skills(),
         tools=tools_list,
+        knowledge_retriever=document_knowledge_retriever,
         add_history_to_context=True,
         num_history_runs=4,
         enable_agentic_memory=True,

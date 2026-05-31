@@ -10,9 +10,13 @@ from typing import List, Dict, Any
 from pathlib import Path
 import tempfile
 import shutil
+import uuid
+import logging
 from datetime import datetime
 import asyncio
 from bson import ObjectId
+
+logger = logging.getLogger(__name__)
 
 # Authentication
 from auth.dependencies import get_current_user
@@ -212,12 +216,18 @@ async def upload_proposal_documents(
             )
 
             doc_info = {
+                # Stable, immutable per upload. Pinecone vector deletes target
+                # this; without it we'd be stuck on array-index identity which
+                # breaks the moment a doc is removed and renumbers the rest.
+                "document_id": uuid.uuid4().hex,
                 "filename": file.filename,
                 "file_size": file.size,
                 "upload_date": datetime.utcnow(),
                 "idrive_url": idrive_url,
                 "idrive_key": idrive_key,
-                "extracted_content": None  # Will be filled during processing
+                "extracted_content": None,  # Will be filled during processing
+                "indexed": False,            # Flipped True by the indexing step
+                "chunks_indexed": 0,
             }
             documents_info.append(doc_info)
 
@@ -381,14 +391,29 @@ async def reingest_proposal_documents(
             )
 
             doc_info = {
+                "document_id": uuid.uuid4().hex,
                 "filename": file.filename,
                 "file_size": file.size,
                 "upload_date": datetime.utcnow(),
                 "idrive_url": idrive_url,
                 "idrive_key": idrive_key,
-                "extracted_content": None  # Will be filled during processing
+                "extracted_content": None,
+                "indexed": False,
+                "chunks_indexed": 0,
             }
             documents_info.append(doc_info)
+
+        # Re-ingest replaces the documents array → the old chunks in Pinecone
+        # are now orphans pointing at files that no longer exist. Purge them
+        # before the task runs so chat retrieval never returns stale RFP text.
+        try:
+            from client.proposal_docs_pinecone import get_proposal_docs_pinecone_client
+            get_proposal_docs_pinecone_client().delete_proposal_vectors(
+                organization_id=str(current_user.get("organization_id") or ""),
+                proposal_id=proposal_id,
+            )
+        except Exception as e:
+            logger.warning(f"[reingest] vector purge failed (continuing): {e}")
 
         # Update proposal with new documents and reset status to processing
         # IMPORTANT: Use direct collection update to avoid user_id permission issues
@@ -1251,6 +1276,18 @@ async def delete_proposal(
         print(f"Warning: Failed to delete documents from iDrive: {e}")
         # Continue with proposal deletion even if iDrive cleanup fails
 
+    # Purge chat-retriever vectors for this proposal. Fail-soft: if Pinecone
+    # is down or the proposal was never indexed, we still want the Mongo +
+    # iDrive delete to complete (the user clicked Delete; honor the intent).
+    try:
+        from client.proposal_docs_pinecone import get_proposal_docs_pinecone_client
+        get_proposal_docs_pinecone_client().delete_proposal_vectors(
+            organization_id=str(organization_id or ""),
+            proposal_id=proposal_id,
+        )
+    except Exception as e:
+        logger.warning(f"[delete-proposal] vector purge failed: {e}")
+
     # Delete proposal from MongoDB (with org/role access control)
     success = crud.delete_proposal(
         proposal_id,
@@ -1499,6 +1536,22 @@ async def delete_proposal_document(
         storage.delete_document(doc["idrive_key"])
     except Exception as e:
         print(f"Warning: Failed to delete document from iDrive: {e}")
+
+    # Purge this document's vectors from the chat-retriever index. Needs the
+    # stable document_id set at upload time; older proposals predate it, in
+    # which case we skip (their vectors will linger until proposal-delete).
+    try:
+        doc_id = doc.get("document_id")
+        org_id = str(proposal.get("organization_id") or "")
+        if doc_id and org_id:
+            from client.proposal_docs_pinecone import get_proposal_docs_pinecone_client
+            get_proposal_docs_pinecone_client().delete_document_vectors(
+                organization_id=org_id,
+                proposal_id=proposal_id,
+                document_id=doc_id,
+            )
+    except Exception as e:
+        logger.warning(f"[delete-document] vector purge failed: {e}")
 
     # Remove from documents array
     documents.pop(document_index)
