@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { useProposalsStore } from '@/lib/stores/proposalsStore';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { proposalsApi } from '@/lib/api/proposals';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import Card, { CardContent, CardHeader, CardTitle } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
@@ -43,6 +42,7 @@ export default function ProposalsPage() {
     resetPagination,
     deleteProposal,
     duplicateProposal,
+    lastFetchedOrgId,
   } = useProposalsStore();
   const toast = useToast();
 
@@ -80,14 +80,24 @@ export default function ProposalsPage() {
   const [renameName, setRenameName] = useState('');
   const [isRenaming, setIsRenaming] = useState(false);
 
-  // Load initial data - sidebar already fetches, so only fetch if proposals empty
+  // Load initial data — but only when we genuinely need to.
+  //
+  // The Zustand store is module-level, so the proposals list survives across
+  // navigations. We only want to wipe + refetch when the organization
+  // *actually* changed. Otherwise, the cached array from the sidebar (or a
+  // previous visit to this tab) is reused instantly.
   useEffect(() => {
-    // Reset pagination state when org changes
-    resetPagination();
+    if (!user) return;
+    const orgId = user.organization_id;
 
-    // Only fetch if proposals haven't been loaded yet
-    // ProposalsSidebar already fetches on mount, so we can reuse that data
-    if (proposals.length === 0 && !isLoading) {
+    const orgChanged =
+      lastFetchedOrgId !== null && lastFetchedOrgId !== orgId;
+    const neverLoaded = proposals.length === 0 && lastFetchedOrgId !== orgId;
+
+    if (orgChanged) {
+      resetPagination();
+    }
+    if ((orgChanged || neverLoaded) && !isLoading) {
       fetchProposalsPaginated(false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -229,7 +239,7 @@ export default function ProposalsPage() {
   };
 
   return (
-    <DashboardLayout>
+    <>
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -419,6 +429,7 @@ export default function ProposalsPage() {
           </div>
         </div>
       </Dialog>
-    </DashboardLayout>
+    
+    </>
   );
 }

@@ -6,7 +6,6 @@ import { useAuthStore } from '@/lib/stores/authStore';
 import { useCompanyRepositoryStore } from '@/lib/stores/companyRepositoryStore';
 import { useOrganizationStore } from '@/lib/stores/organizationStore';
 import { cacheManager } from '@/lib/cache';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import Card, { CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -1037,18 +1036,19 @@ export default function CompanyRepositoryPage() {
   // Show loading state while checking auth
   if (!user) {
     return (
-      <DashboardLayout>
+      <>
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
-      </DashboardLayout>
-    );
+      
+      </>
+  );
   }
 
   const userIsAdmin = isAdmin(user);
 
   return (
-    <DashboardLayout>
+    <>
       <div className="space-y-2 max-w-5xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-2">
@@ -2366,6 +2366,7 @@ export default function CompanyRepositoryPage() {
           </div>
         </div>
       )}
-    </DashboardLayout>
+    
+    </>
   );
 }

@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import Card, { CardContent } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -252,18 +251,19 @@ export default function DashboardPage() {
   // Loading state
   if (statsLoading) {
     return (
-      <DashboardLayout>
+      <>
         <div className="flex items-center justify-center h-[calc(100vh-200px)]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
-      </DashboardLayout>
-    );
+      
+      </>
+  );
   }
 
   // Overview cards
   if (!selectedSection) {
     return (
-      <DashboardLayout>
+      <>
         <div className="p-8 max-w-7xl mx-auto">
           <h1 className="text-3xl font-bold text-foreground mb-8">Dashboard</h1>
 
@@ -338,8 +338,9 @@ export default function DashboardPage() {
             </Card>
           </div>
         </div>
-      </DashboardLayout>
-    );
+      
+      </>
+  );
   }
 
   // Analytics view
@@ -349,7 +350,7 @@ export default function DashboardPage() {
                        'Submitted Proposals';
 
   return (
-    <DashboardLayout>
+    <>
       <div className="p-8 max-w-7xl mx-auto">
         <div className="mb-6">
           <Button variant="ghost" onClick={handleBack} className="mb-4">
@@ -575,6 +576,7 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
-    </DashboardLayout>
+    
+    </>
   );
 }

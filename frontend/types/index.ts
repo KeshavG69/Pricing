@@ -263,6 +263,141 @@ export interface PTWSuggestResponse {
   reconciliation: PTWReconciliation;
 }
 
+// ---------------------------------------------------------------------------
+// RFP Radar — Capability profile + matches
+// ---------------------------------------------------------------------------
+
+export interface NAICSContribution {
+  code: string;
+  description: string;
+  wins: number;
+  total_amount: number;
+}
+
+export interface SubAgencyContribution {
+  name: string;
+  wins: number;
+  total_amount: number;
+}
+
+/** Auto-built capability profile for an organization. One per org. */
+export interface CapabilityProfile {
+  id: string;
+  organization_id: string;
+  uei: string;
+  company_name: string;
+  hq_location: string | null;
+
+  // Matching signals — editable in place
+  naics_codes: NAICSContribution[];
+  sub_agencies_of_interest: SubAgencyContribution[];
+  set_asides_qualified: string[];
+  scope_keywords: string[];
+  pop_states_primary: string[];
+
+  // Audit / context
+  past_awards_count: number;
+  past_awards_total: number;
+  most_recent_award_date: string | null;
+
+  // Lifecycle
+  built_at: string;
+  rebuilt_count: number;
+  last_edited_at: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Request to build a new profile (or rebuild an existing one). */
+export interface CapabilityProfileBuildRequest {
+  company_search: string;
+  uei_filter?: string | null;
+}
+
+/** Partial update to a saved profile. */
+export interface CapabilityProfileUpdate {
+  naics_codes?: NAICSContribution[];
+  sub_agencies_of_interest?: SubAgencyContribution[];
+  set_asides_qualified?: string[];
+  scope_keywords?: string[];
+  pop_states_primary?: string[];
+}
+
+// ----- Matches -----
+
+export interface MatchSignalBreakdown {
+  naics_match?: number;
+  sub_agency_match?: number;
+  top_customer?: number;
+  set_aside_match?: number;
+  keyword_match?: number;
+  excluded_keyword?: number;
+}
+
+/** The auto-picked PWS document for an opportunity. Piece 6 uses this. */
+export interface PWSAttachment {
+  attachment_id: string;
+  resource_id: string;
+  filename: string;
+  size_bytes: number;
+  mime_type: string;
+  confidence: 'high' | 'medium' | 'low';
+  score: number;
+}
+
+/** One of the day's top-N matches for an organization. */
+export interface RFPRadarMatch {
+  id: string;
+  organization_id: string;
+
+  scan_date: string;
+  rank: number;
+
+  match_score: number;
+  match_reasons: string[];
+  signal_breakdown: MatchSignalBreakdown;
+
+  notice_id: string;
+  title: string;
+  awarding_top_agency: string | null;
+  awarding_sub_agency: string | null;
+  notice_type_code: string | null;
+  notice_type_label: string | null;
+  posted_date: string | null;
+  response_deadline: string | null;
+  solicitation_number: string | null;
+  naics_codes: string[];
+  set_aside_code: string | null;
+  set_aside_description: string | null;
+  pop_state: string | null;
+  pop_city: string | null;
+  ui_link: string | null;
+
+  pws: PWSAttachment;
+
+  scanned_at: string;
+}
+
+/** Response from GET /api/capability-builder/matches?date=... */
+export interface MatchesForDateResponse {
+  scan_date: string;
+  count: number;
+  matches: RFPRadarMatch[];
+}
+
+/** Response from GET /api/capability-builder/matches/dates */
+export interface MatchDatesResponse {
+  count: number;
+  dates: string[]; // ISO date strings, newest first
+}
+
+/** Response from POST /api/capability-builder/matches/scan/run-now */
+export interface ScanRunResponse {
+  scan_date: string;
+  matches_saved: number;
+  note?: string;
+}
+
 export interface ProposalStatus {
   status: 'processing' | 'completed' | 'error';
   progress: number;

@@ -4,7 +4,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useState, useRef, useEffect } from 'react';
-import { LayoutGrid, FileText, Building, Building2, Menu, ChevronDown, Settings, LogOut } from 'lucide-react';
+import { LayoutGrid, FileText, Building, Building2, Menu, ChevronDown, Settings, LogOut, Radar } from 'lucide-react';
 import { isAdmin } from '@/lib/utils/permissions';
 
 /**
@@ -73,6 +73,7 @@ export default function TopNavBar({ user, onMobileSidebarToggle }: TopNavBarProp
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutGrid },
     { href: '/dashboard/proposals', label: 'Proposals', icon: FileText },
+    { href: '/dashboard/rfp-radar', label: 'RFP Radar', icon: Radar },
     { href: '/dashboard/company-repository', label: 'Company Rates', icon: Building2 },
     { href: '/q', label: 'Ask Q', icon: QIcon },
   ];

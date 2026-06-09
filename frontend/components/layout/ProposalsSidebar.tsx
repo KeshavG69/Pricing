@@ -30,7 +30,8 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
     fetchProposalsPaginated,
     deleteProposal,
     hasMore,
-    resetPagination
+    resetPagination,
+    lastFetchedOrgId,
   } = useProposalsStore();
 
   // Local loading state for sidebar (don't use global isLoading)
@@ -59,18 +60,31 @@ export default function ProposalsSidebar({ isMobileOpen, onMobileClose }: Propos
   const [shareProposalId, setShareProposalId] = useState<string | null>(null);
   const [shareProposalName, setShareProposalName] = useState('');
 
-  // Load initial proposals when organization changes
+  // Load initial proposals — but ONLY if the Zustand cache is empty for this
+  // org. The store is module-singleton so its data survives every navigation
+  // (Proposals tab, opening a proposal, RFP Radar, etc). Without this guard
+  // every remount would wipe the list and re-fetch, causing the sidebar to
+  // flash empty on every page change.
   useEffect(() => {
-    if (user) {
-      console.log('[SIDEBAR] Loading initial proposals for org:', user.organization_id);
-      // Reset pagination and fetch first page
-      resetPagination();
-      setIsLoadingMore(true);
-      fetchProposalsPaginated(false).finally(() => {
-        console.log('[SIDEBAR] Initial proposals loaded');
-        setIsLoadingMore(false);
-      });
+    if (!user) return;
+    const orgId = user.organization_id;
+
+    const alreadyLoaded =
+      lastFetchedOrgId === orgId && proposals.length > 0;
+
+    if (alreadyLoaded) {
+      console.log('[SIDEBAR] Using cached proposals for org:', orgId);
+      return;
     }
+
+    console.log('[SIDEBAR] Loading initial proposals for org:', orgId);
+    // Org changed (or first ever load): reset pagination, fetch fresh.
+    resetPagination();
+    setIsLoadingMore(true);
+    fetchProposalsPaginated(false).finally(() => {
+      console.log('[SIDEBAR] Initial proposals loaded');
+      setIsLoadingMore(false);
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.organization_id]);
 
