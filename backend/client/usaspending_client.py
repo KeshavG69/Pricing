@@ -88,6 +88,13 @@ class Award:
     awarding_sub_agency: Optional[str]
     internal_id: str  # used to build the public usaspending.gov URL
 
+    # Extra fields populated by recipient-keyed searches (profile builder).
+    # Default None so PTW cache entries (which omitted these) still deserialize.
+    recipient_uei: Optional[str] = None
+    naics_code: Optional[str] = None
+    naics_description: Optional[str] = None
+    pop_state: Optional[str] = None
+
     @property
     def duration_years(self) -> Optional[float]:
         if not (self.start_date and self.end_date):
@@ -291,17 +298,39 @@ class USASpendingClient:
 
     def __init__(self):
         self._client: Optional[httpx.AsyncClient] = None
+        self._client_loop: Optional[asyncio.AbstractEventLoop] = None
         self._client_lock = asyncio.Lock()
 
     async def _get_http(self) -> httpx.AsyncClient:
-        if self._client is None or self._client.is_closed:
+        """
+        Return a healthy httpx client for the current event loop.
+
+        Production (uvicorn) runs on a single persistent loop, so the singleton
+        client is reused across requests. TestClient spins up a fresh loop per
+        request, which leaves the cached client attached to a dead loop and
+        breaks subsequent requests — detect a loop mismatch and rebuild.
+        """
+        current_loop = asyncio.get_event_loop()
+        needs_rebuild = (
+            self._client is None
+            or self._client.is_closed
+            or self._client_loop is not current_loop
+        )
+        if needs_rebuild:
             async with self._client_lock:
-                if self._client is None or self._client.is_closed:
+                # Re-check inside the lock (someone else may have rebuilt)
+                needs_rebuild = (
+                    self._client is None
+                    or self._client.is_closed
+                    or self._client_loop is not current_loop
+                )
+                if needs_rebuild:
                     self._client = httpx.AsyncClient(
                         base_url=USASPENDING_BASE_URL,
                         timeout=DEFAULT_TIMEOUT,
                         headers={"Content-Type": "application/json"},
                     )
+                    self._client_loop = current_loop
         return self._client
 
     async def close(self) -> None:
@@ -400,6 +429,18 @@ class USASpendingClient:
 
     @staticmethod
     def _parse_award(r: dict) -> Award:
+        # NAICS is returned as either a string (PTW search fields) or a nested
+        # dict {'code': ..., 'description': ...} (richer recipient searches).
+        naics_raw = r.get("NAICS")
+        naics_code: Optional[str] = None
+        naics_description: Optional[str] = None
+        if isinstance(naics_raw, dict):
+            naics_code = naics_raw.get("code")
+            naics_description = naics_raw.get("description")
+        elif isinstance(naics_raw, str):
+            naics_code = naics_raw
+            naics_description = r.get("NAICS Description")
+
         return Award(
             award_id=r.get("Award ID") or "",
             recipient_name=r.get("Recipient Name") or "",
@@ -409,7 +450,127 @@ class USASpendingClient:
             end_date=r.get("End Date"),
             awarding_sub_agency=r.get("Awarding Sub Agency"),
             internal_id=r.get("generated_internal_id") or "",
+            recipient_uei=r.get("Recipient UEI"),
+            naics_code=naics_code,
+            naics_description=naics_description,
+            pop_state=r.get("Place of Performance State Code"),
         )
+
+    # ----- recipient-keyed search (RFP Radar profile builder) -----
+
+    async def search_awards_by_recipient(
+        self,
+        company_search: str,
+        uei_filter: Optional[str] = None,
+        years_back: int = 5,
+        limit_per_page: int = 100,
+        max_pages: int = 5,
+    ) -> list[Award]:
+        """
+        Pull historical contract awards for a specific contractor.
+
+        Used by the RFP Radar capability profile builder to learn what a company
+        has won over time. USASpending has no direct UEI filter, so we use the
+        free-text recipient_search_text (matches company name) and optionally
+        post-filter results by exact UEI to drop disambiguation noise.
+
+        Args:
+            company_search: company name (or partial) to search USASpending by.
+                            e.g. "Nexagen Networks".
+            uei_filter: if provided, post-filter results to this exact UEI.
+            years_back: how far back to search (default 5 years).
+            limit_per_page: results per page (USASpending caps at 100).
+            max_pages: cap on pagination — 100*5 = 500 awards is plenty.
+        """
+        cache_key = _cache.key(
+            "recipient", company_search, uei_filter, years_back,
+            limit_per_page, max_pages,
+        )
+        cached = await _cache.get(cache_key)
+        if cached is not None:
+            logger.debug(f"USASpending recipient cache hit ({len(cached)} awards)")
+            return cached
+
+        end_date = datetime.utcnow().strftime("%Y-%m-%d")
+        start_date = f"{datetime.utcnow().year - years_back}-01-01"
+
+        body_base = {
+            "filters": {
+                "award_type_codes": CONTRACT_AWARD_TYPES,
+                "recipient_search_text": [company_search],
+                "time_period": [{"start_date": start_date, "end_date": end_date}],
+            },
+            "fields": [
+                "Award ID", "Recipient Name", "Recipient UEI", "Award Amount",
+                "Description", "Start Date", "End Date",
+                "Awarding Agency", "Awarding Sub Agency",
+                "NAICS", "Place of Performance State Code",
+            ],
+            "limit": min(limit_per_page, MAX_RESULTS_PER_PAGE),
+            "sort": "Award Amount",
+            "order": "desc",
+        }
+
+        http = await self._get_http()
+        out: list[Award] = []
+        for page in range(1, max_pages + 1):
+            body = {**body_base, "page": page}
+            try:
+                resp = await http.post("/search/spending_by_award/", json=body)
+                resp.raise_for_status()
+            except httpx.HTTPStatusError as e:
+                logger.error(
+                    f"USASpending recipient search HTTP {e.response.status_code}"
+                )
+                raise USASpendingError(
+                    f"USASpending recipient search failed: HTTP {e.response.status_code}",
+                    status_code=e.response.status_code,
+                ) from e
+            except httpx.HTTPError as e:
+                raise USASpendingError(
+                    f"USASpending recipient request failed: {e}"
+                ) from e
+
+            data = resp.json()
+            page_results = data.get("results", [])
+            awards_page = [self._parse_award(r) for r in page_results]
+            if uei_filter:
+                awards_page = [a for a in awards_page if a.recipient_uei == uei_filter]
+            out.extend(awards_page)
+            if not data.get("page_metadata", {}).get("hasNext"):
+                break
+
+        logger.info(
+            f"USASpending: {len(out)} awards for '{company_search}'"
+            + (f" (UEI {uei_filter})" if uei_filter else "")
+        )
+        await _cache.set(cache_key, out)
+        return out
+
+    async def get_award_detail(self, generated_internal_id: str) -> dict:
+        """
+        Fetch full award detail. Critical for profile building because the
+        `recipient.business_categories` list (set-asides the company qualifies
+        for) only lives on this endpoint, not the awards search response.
+        """
+        cache_key = _cache.key("award_detail", generated_internal_id)
+        # Stored in the awards cache by hashing under a marker key. Since detail
+        # is a plain dict (not Award), we use a separate dict-based cache here
+        # to avoid type confusion. Simplest is just one direct fetch — detail
+        # endpoints are fast and the use case (build_profile) is once per signup.
+
+        http = await self._get_http()
+        try:
+            resp = await http.get(f"/awards/{generated_internal_id}/")
+            resp.raise_for_status()
+        except httpx.HTTPStatusError as e:
+            raise USASpendingError(
+                f"Award detail HTTP {e.response.status_code}",
+                status_code=e.response.status_code,
+            ) from e
+        except httpx.HTTPError as e:
+            raise USASpendingError(f"Award detail request failed: {e}") from e
+        return resp.json()
 
     # ----- distribution math -----
 

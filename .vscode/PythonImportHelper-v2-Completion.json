@@ -376,6 +376,14 @@
         "documentation": {}
     },
     {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Dict",
         "importPath": "typing",
         "description": "typing",
@@ -560,6 +568,14 @@
         "documentation": {}
     },
     {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Dict",
         "importPath": "typing",
         "description": "typing",
@@ -577,6 +593,30 @@
     },
     {
         "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "AsyncIterator",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -656,6 +696,22 @@
         "documentation": {}
     },
     {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Dict",
         "importPath": "typing",
         "description": "typing",
@@ -713,6 +769,30 @@
     },
     {
         "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -1040,6 +1120,22 @@
         "documentation": {}
     },
     {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "AsyncGenerator",
         "importPath": "typing",
         "description": "typing",
@@ -1121,6 +1217,22 @@
     },
     {
         "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -1497,6 +1609,22 @@
     },
     {
         "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Any",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
         "importPath": "typing",
         "description": "typing",
         "isExtraImport": true,
@@ -2573,7 +2701,7 @@
         "documentation": {}
     },
     {
-        "label": "datetime",
+        "label": "timezone",
         "importPath": "datetime",
         "description": "datetime",
         "isExtraImport": true,
@@ -2581,7 +2709,7 @@
         "documentation": {}
     },
     {
-        "label": "datetime",
+        "label": "date",
         "importPath": "datetime",
         "description": "datetime",
         "isExtraImport": true,
@@ -2614,6 +2742,94 @@
     },
     {
         "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "date",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "date",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timezone",
         "importPath": "datetime",
         "description": "datetime",
         "isExtraImport": true,
@@ -2709,6 +2925,38 @@
         "documentation": {}
     },
     {
+        "label": "date",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timedelta",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timezone",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
         "label": "datetime",
         "importPath": "datetime",
         "description": "datetime",
@@ -2718,6 +2966,22 @@
     },
     {
         "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timezone",
         "importPath": "datetime",
         "description": "datetime",
         "isExtraImport": true,
@@ -2838,6 +3102,30 @@
     },
     {
         "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "date",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
+        "label": "timezone",
         "importPath": "datetime",
         "description": "datetime",
         "isExtraImport": true,
@@ -2846,6 +3134,70 @@
     },
     {
         "label": "dataclass",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "dataclass",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "field",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "dataclass",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "field",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "dataclass",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "field",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "dataclass",
+        "importPath": "dataclasses",
+        "description": "dataclasses",
+        "isExtraImport": true,
+        "detail": "dataclasses",
+        "documentation": {}
+    },
+    {
+        "label": "asdict",
         "importPath": "dataclasses",
         "description": "dataclasses",
         "isExtraImport": true,
@@ -3119,6 +3471,14 @@
         "documentation": {}
     },
     {
+        "label": "get_chat_llm",
+        "importPath": "client.llm_client",
+        "description": "client.llm_client",
+        "isExtraImport": true,
+        "detail": "client.llm_client",
+        "documentation": {}
+    },
+    {
         "label": "get_embeddings",
         "importPath": "client.llm_client",
         "description": "client.llm_client",
@@ -3316,6 +3676,22 @@
         "description": "utils.company_repository",
         "isExtraImport": true,
         "detail": "utils.company_repository",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
         "documentation": {}
     },
     {
@@ -3778,6 +4154,46 @@
     },
     {
         "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "status",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Query",
         "importPath": "fastapi",
         "description": "fastapi",
         "isExtraImport": true,
@@ -4473,6 +4889,14 @@
         "documentation": {}
     },
     {
+        "label": "capability_builder",
+        "importPath": "routers",
+        "description": "routers",
+        "isExtraImport": true,
+        "detail": "routers",
+        "documentation": {}
+    },
+    {
         "label": "FRONTEND_URL",
         "importPath": "auth.config",
         "description": "auth.config",
@@ -4514,6 +4938,14 @@
         "documentation": {}
     },
     {
+        "label": "crontab",
+        "importPath": "celery.schedules",
+        "description": "celery.schedules",
+        "isExtraImport": true,
+        "detail": "celery.schedules",
+        "documentation": {}
+    },
+    {
         "label": "tasks.processing_tasks",
         "kind": 6,
         "isExtraImport": true,
@@ -4531,11 +4963,12 @@
         "documentation": {}
     },
     {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
+        "label": "tasks.rfp_radar_scanner",
+        "kind": 6,
         "isExtraImport": true,
-        "detail": "dotenv",
+        "importPath": "tasks.rfp_radar_scanner",
+        "description": "tasks.rfp_radar_scanner",
+        "detail": "tasks.rfp_radar_scanner",
         "documentation": {}
     },
     {
@@ -4560,6 +4993,30 @@
         "description": "dotenv",
         "isExtraImport": true,
         "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
+        "documentation": {}
+    },
+    {
+        "label": "ObjectId",
+        "importPath": "bson",
+        "description": "bson",
+        "isExtraImport": true,
+        "detail": "bson",
         "documentation": {}
     },
     {
@@ -4852,6 +5309,30 @@
         "documentation": {}
     },
     {
+        "label": "ReturnDocument",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "ASCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
+        "label": "DESCENDING",
+        "importPath": "pymongo",
+        "description": "pymongo",
+        "isExtraImport": true,
+        "detail": "pymongo",
+        "documentation": {}
+    },
+    {
         "label": "HTTPBearer",
         "importPath": "fastapi.security",
         "description": "fastapi.security",
@@ -5076,6 +5557,30 @@
         "documentation": {}
     },
     {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
+        "documentation": {}
+    },
+    {
         "label": "requests",
         "importPath": "google.auth.transport",
         "description": "google.auth.transport",
@@ -5101,6 +5606,38 @@
     },
     {
         "label": "EmailStr",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
         "importPath": "pydantic",
         "description": "pydantic",
         "isExtraImport": true,
@@ -5403,6 +5940,78 @@
         "description": "agno.memory.manager",
         "isExtraImport": true,
         "detail": "agno.memory.manager",
+        "documentation": {}
+    },
+    {
+        "label": "Counter",
+        "importPath": "collections",
+        "description": "collections",
+        "isExtraImport": true,
+        "detail": "collections",
+        "documentation": {}
+    },
+    {
+        "label": "defaultdict",
+        "importPath": "collections",
+        "description": "collections",
+        "isExtraImport": true,
+        "detail": "collections",
+        "documentation": {}
+    },
+    {
+        "label": "defaultdict",
+        "importPath": "collections",
+        "description": "collections",
+        "isExtraImport": true,
+        "detail": "collections",
+        "documentation": {}
+    },
+    {
+        "label": "Award",
+        "importPath": "client.usaspending_client",
+        "description": "client.usaspending_client",
+        "isExtraImport": true,
+        "detail": "client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "USASpendingError",
+        "importPath": "client.usaspending_client",
+        "description": "client.usaspending_client",
+        "isExtraImport": true,
+        "detail": "client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "get_usaspending_client",
+        "importPath": "client.usaspending_client",
+        "description": "client.usaspending_client",
+        "isExtraImport": true,
+        "detail": "client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "USASpendingError",
+        "importPath": "client.usaspending_client",
+        "description": "client.usaspending_client",
+        "isExtraImport": true,
+        "detail": "client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "get_usaspending_client",
+        "importPath": "client.usaspending_client",
+        "description": "client.usaspending_client",
+        "isExtraImport": true,
+        "detail": "client.usaspending_client",
+        "documentation": {}
+    },
+    {
+        "label": "USASpendingError",
+        "importPath": "client.usaspending_client",
+        "description": "client.usaspending_client",
+        "isExtraImport": true,
+        "detail": "client.usaspending_client",
         "documentation": {}
     },
     {
@@ -5721,6 +6330,102 @@
         "documentation": {}
     },
     {
+        "label": "CapabilityProfile",
+        "importPath": "client.capability_profile_builder",
+        "description": "client.capability_profile_builder",
+        "isExtraImport": true,
+        "detail": "client.capability_profile_builder",
+        "documentation": {}
+    },
+    {
+        "label": "build_profile",
+        "importPath": "client.capability_profile_builder",
+        "description": "client.capability_profile_builder",
+        "isExtraImport": true,
+        "detail": "client.capability_profile_builder",
+        "documentation": {}
+    },
+    {
+        "label": "CapabilityProfile",
+        "importPath": "client.capability_profile_builder",
+        "description": "client.capability_profile_builder",
+        "isExtraImport": true,
+        "detail": "client.capability_profile_builder",
+        "documentation": {}
+    },
+    {
+        "label": "NAICSContribution",
+        "importPath": "client.capability_profile_builder",
+        "description": "client.capability_profile_builder",
+        "isExtraImport": true,
+        "detail": "client.capability_profile_builder",
+        "documentation": {}
+    },
+    {
+        "label": "SubAgencyContribution",
+        "importPath": "client.capability_profile_builder",
+        "description": "client.capability_profile_builder",
+        "isExtraImport": true,
+        "detail": "client.capability_profile_builder",
+        "documentation": {}
+    },
+    {
+        "label": "CapabilityProfile",
+        "importPath": "client.capability_profile_builder",
+        "description": "client.capability_profile_builder",
+        "isExtraImport": true,
+        "detail": "client.capability_profile_builder",
+        "documentation": {}
+    },
+    {
+        "label": "Opportunity",
+        "importPath": "client.samgov_client",
+        "description": "client.samgov_client",
+        "isExtraImport": true,
+        "detail": "client.samgov_client",
+        "documentation": {}
+    },
+    {
+        "label": "BULK_DOWNLOAD_TIMEOUT",
+        "importPath": "client.samgov_client",
+        "description": "client.samgov_client",
+        "isExtraImport": true,
+        "detail": "client.samgov_client",
+        "documentation": {}
+    },
+    {
+        "label": "NOTICE_TYPE_MAP",
+        "importPath": "client.samgov_client",
+        "description": "client.samgov_client",
+        "isExtraImport": true,
+        "detail": "client.samgov_client",
+        "documentation": {}
+    },
+    {
+        "label": "Opportunity",
+        "importPath": "client.samgov_client",
+        "description": "client.samgov_client",
+        "isExtraImport": true,
+        "detail": "client.samgov_client",
+        "documentation": {}
+    },
+    {
+        "label": "SAMGOV_BULK_CSV_URL",
+        "importPath": "client.samgov_client",
+        "description": "client.samgov_client",
+        "isExtraImport": true,
+        "detail": "client.samgov_client",
+        "documentation": {}
+    },
+    {
+        "label": "get_samgov_client",
+        "importPath": "client.samgov_client",
+        "description": "client.samgov_client",
+        "isExtraImport": true,
+        "detail": "client.samgov_client",
+        "documentation": {}
+    },
+    {
         "label": "AsyncIOMotorClient",
         "importPath": "motor.motor_asyncio",
         "description": "motor.motor_asyncio",
@@ -5770,6 +6475,64 @@
         "documentation": {}
     },
     {
+        "label": "Enum",
+        "importPath": "enum",
+        "description": "enum",
+        "isExtraImport": true,
+        "detail": "enum",
+        "documentation": {}
+    },
+    {
+        "label": "Enum",
+        "importPath": "enum",
+        "description": "enum",
+        "isExtraImport": true,
+        "detail": "enum",
+        "documentation": {}
+    },
+    {
+        "label": "csv",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "csv",
+        "description": "csv",
+        "detail": "csv",
+        "documentation": {}
+    },
+    {
+        "label": "httpx",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "httpx",
+        "description": "httpx",
+        "detail": "httpx",
+        "documentation": {}
+    },
+    {
+        "label": "Attachment",
+        "importPath": "client.pws_picker",
+        "description": "client.pws_picker",
+        "isExtraImport": true,
+        "detail": "client.pws_picker",
+        "documentation": {}
+    },
+    {
+        "label": "PWSConfidence",
+        "importPath": "client.pws_picker",
+        "description": "client.pws_picker",
+        "isExtraImport": true,
+        "detail": "client.pws_picker",
+        "documentation": {}
+    },
+    {
+        "label": "pick_likely_pws",
+        "importPath": "client.pws_picker",
+        "description": "client.pws_picker",
+        "isExtraImport": true,
+        "detail": "client.pws_picker",
+        "documentation": {}
+    },
+    {
         "label": "FAISS",
         "importPath": "langchain_community.vectorstores",
         "description": "langchain_community.vectorstores",
@@ -5784,14 +6547,6 @@
         "importPath": "stripe",
         "description": "stripe",
         "detail": "stripe",
-        "documentation": {}
-    },
-    {
-        "label": "Enum",
-        "importPath": "enum",
-        "description": "enum",
-        "isExtraImport": true,
-        "detail": "enum",
         "documentation": {}
     },
     {
@@ -5817,15 +6572,6 @@
         "importPath": "statistics",
         "description": "statistics",
         "detail": "statistics",
-        "documentation": {}
-    },
-    {
-        "label": "httpx",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "httpx",
-        "description": "httpx",
-        "detail": "httpx",
         "documentation": {}
     },
     {
@@ -6086,6 +6832,14 @@
         "documentation": {}
     },
     {
+        "label": "get_current_user",
+        "importPath": "auth.dependencies",
+        "description": "auth.dependencies",
+        "isExtraImport": true,
+        "detail": "auth.dependencies",
+        "documentation": {}
+    },
+    {
         "label": "require_admin",
         "importPath": "auth.dependencies",
         "description": "auth.dependencies",
@@ -6215,6 +6969,22 @@
     },
     {
         "label": "serialize_doc",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_doc",
+        "importPath": "utils.helpers",
+        "description": "utils.helpers",
+        "isExtraImport": true,
+        "detail": "utils.helpers",
+        "documentation": {}
+    },
+    {
+        "label": "serialize_docs",
         "importPath": "utils.helpers",
         "description": "utils.helpers",
         "isExtraImport": true,
@@ -6470,6 +7240,46 @@
         "documentation": {}
     },
     {
+        "label": "CapabilityProfileBuildRequest",
+        "importPath": "models.capability_profile",
+        "description": "models.capability_profile",
+        "isExtraImport": true,
+        "detail": "models.capability_profile",
+        "documentation": {}
+    },
+    {
+        "label": "CapabilityProfileUpdate",
+        "importPath": "models.capability_profile",
+        "description": "models.capability_profile",
+        "isExtraImport": true,
+        "detail": "models.capability_profile",
+        "documentation": {}
+    },
+    {
+        "label": "get_capability_profile_crud",
+        "importPath": "utils.capability_profile_crud",
+        "description": "utils.capability_profile_crud",
+        "isExtraImport": true,
+        "detail": "utils.capability_profile_crud",
+        "documentation": {}
+    },
+    {
+        "label": "get_rfp_radar_match_crud",
+        "importPath": "utils.rfp_radar_match_crud",
+        "description": "utils.rfp_radar_match_crud",
+        "isExtraImport": true,
+        "detail": "utils.rfp_radar_match_crud",
+        "documentation": {}
+    },
+    {
+        "label": "get_rfp_radar_match_crud",
+        "importPath": "utils.rfp_radar_match_crud",
+        "description": "utils.rfp_radar_match_crud",
+        "isExtraImport": true,
+        "detail": "utils.rfp_radar_match_crud",
+        "documentation": {}
+    },
+    {
         "label": "parse_gsa_contract",
         "importPath": "client.gsa_parser",
         "description": "client.gsa_parser",
@@ -6715,22 +7525,6 @@
         "description": "client.ptw_calculator",
         "isExtraImport": true,
         "detail": "client.ptw_calculator",
-        "documentation": {}
-    },
-    {
-        "label": "get_usaspending_client",
-        "importPath": "client.usaspending_client",
-        "description": "client.usaspending_client",
-        "isExtraImport": true,
-        "detail": "client.usaspending_client",
-        "documentation": {}
-    },
-    {
-        "label": "USASpendingError",
-        "importPath": "client.usaspending_client",
-        "description": "client.usaspending_client",
-        "isExtraImport": true,
-        "detail": "client.usaspending_client",
         "documentation": {}
     },
     {
@@ -7013,6 +7807,14 @@
         "description": "app.worker",
         "isExtraImport": true,
         "detail": "app.worker",
+        "documentation": {}
+    },
+    {
+        "label": "score_opportunity",
+        "importPath": "client.match_scorer",
+        "description": "client.match_scorer",
+        "isExtraImport": true,
+        "detail": "client.match_scorer",
         "documentation": {}
     },
     {
@@ -8664,7 +9466,7 @@
         "kind": 5,
         "importPath": "backend.app.worker",
         "description": "backend.app.worker",
-        "peekOfCode": "backend_dir = str(Path(__file__).resolve().parent.parent)\nif backend_dir not in sys.path:\n    sys.path.insert(0, backend_dir)\nfrom celery import Celery\nfrom app.settings import settings\nlogger = logging.getLogger(__name__)\ncelery_app = Celery(\n    \"priceiq_worker\",\n    broker=f\"{settings.REDIS_URL.rstrip('/')}/0\",\n    backend=f\"{settings.REDIS_URL.rstrip('/')}/1\",",
+        "peekOfCode": "backend_dir = str(Path(__file__).resolve().parent.parent)\nif backend_dir not in sys.path:\n    sys.path.insert(0, backend_dir)\nfrom celery import Celery\nfrom celery.schedules import crontab\nfrom app.settings import settings\nlogger = logging.getLogger(__name__)\ncelery_app = Celery(\n    \"priceiq_worker\",\n    broker=f\"{settings.REDIS_URL.rstrip('/')}/0\",",
         "detail": "backend.app.worker",
         "documentation": {}
     },
@@ -8673,7 +9475,7 @@
         "kind": 5,
         "importPath": "backend.app.worker",
         "description": "backend.app.worker",
-        "peekOfCode": "logger = logging.getLogger(__name__)\ncelery_app = Celery(\n    \"priceiq_worker\",\n    broker=f\"{settings.REDIS_URL.rstrip('/')}/0\",\n    backend=f\"{settings.REDIS_URL.rstrip('/')}/1\",\n)\n# Import task modules to register them with Celery\nimport tasks.processing_tasks  # noqa: E402, F401\ncelery_app.conf.update(\n    task_serializer=\"json\",",
+        "peekOfCode": "logger = logging.getLogger(__name__)\ncelery_app = Celery(\n    \"priceiq_worker\",\n    broker=f\"{settings.REDIS_URL.rstrip('/')}/0\",\n    backend=f\"{settings.REDIS_URL.rstrip('/')}/1\",\n)\n# Import task modules to register them with Celery\nimport tasks.processing_tasks  # noqa: E402, F401\nimport tasks.rfp_radar_scanner  # noqa: E402, F401\ncelery_app.conf.update(",
         "detail": "backend.app.worker",
         "documentation": {}
     },
@@ -8682,7 +9484,16 @@
         "kind": 5,
         "importPath": "backend.app.worker",
         "description": "backend.app.worker",
-        "peekOfCode": "celery_app = Celery(\n    \"priceiq_worker\",\n    broker=f\"{settings.REDIS_URL.rstrip('/')}/0\",\n    backend=f\"{settings.REDIS_URL.rstrip('/')}/1\",\n)\n# Import task modules to register them with Celery\nimport tasks.processing_tasks  # noqa: E402, F401\ncelery_app.conf.update(\n    task_serializer=\"json\",\n    result_serializer=\"json\",",
+        "peekOfCode": "celery_app = Celery(\n    \"priceiq_worker\",\n    broker=f\"{settings.REDIS_URL.rstrip('/')}/0\",\n    backend=f\"{settings.REDIS_URL.rstrip('/')}/1\",\n)\n# Import task modules to register them with Celery\nimport tasks.processing_tasks  # noqa: E402, F401\nimport tasks.rfp_radar_scanner  # noqa: E402, F401\ncelery_app.conf.update(\n    task_serializer=\"json\",",
+        "detail": "backend.app.worker",
+        "documentation": {}
+    },
+    {
+        "label": "celery_app.conf.beat_schedule",
+        "kind": 5,
+        "importPath": "backend.app.worker",
+        "description": "backend.app.worker",
+        "peekOfCode": "celery_app.conf.beat_schedule = {\n    # RFP Radar daily scan — produces top-10 matches per org per day.\n    # 10:00 UTC ≈ 06:00 ET (EDT) / 05:00 ET (EST). SAM.gov refreshes its\n    # bulk CSV at ~03:30 UTC, so 10:00 gives a 6.5-hour buffer for any\n    # delays on their side.\n    \"rfp-radar-daily-scan\": {\n        \"task\": \"rfp_radar.daily_scan\",\n        \"schedule\": crontab(hour=10, minute=0),\n    },\n}",
         "detail": "backend.app.worker",
         "documentation": {}
     },
@@ -9272,6 +10083,78 @@
         "documentation": {}
     },
     {
+        "label": "NAICSContribution",
+        "kind": 6,
+        "importPath": "backend.client.capability_profile_builder",
+        "description": "backend.client.capability_profile_builder",
+        "peekOfCode": "class NAICSContribution:\n    \"\"\"A NAICS code in the profile, with weight context.\"\"\"\n    code: str\n    description: str\n    wins: int\n    total_amount: float\n    def to_dict(self) -> dict:\n        return {\n            \"code\": self.code,\n            \"description\": self.description,",
+        "detail": "backend.client.capability_profile_builder",
+        "documentation": {}
+    },
+    {
+        "label": "SubAgencyContribution",
+        "kind": 6,
+        "importPath": "backend.client.capability_profile_builder",
+        "description": "backend.client.capability_profile_builder",
+        "peekOfCode": "class SubAgencyContribution:\n    \"\"\"A sub-agency the company has worked with.\"\"\"\n    name: str\n    wins: int\n    total_amount: float\n    def to_dict(self) -> dict:\n        return {\n            \"name\": self.name,\n            \"wins\": self.wins,\n            \"total_amount\": round(self.total_amount, 2),",
+        "detail": "backend.client.capability_profile_builder",
+        "documentation": {}
+    },
+    {
+        "label": "CapabilityProfile",
+        "kind": 6,
+        "importPath": "backend.client.capability_profile_builder",
+        "description": "backend.client.capability_profile_builder",
+        "peekOfCode": "class CapabilityProfile:\n    \"\"\"The auto-built profile that drives SAM.gov match scoring.\"\"\"\n    uei: str\n    company_name: str\n    hq_location: Optional[str]\n    naics_codes: list[NAICSContribution]\n    sub_agencies_of_interest: list[SubAgencyContribution]\n    set_asides_qualified: list[str]\n    scope_keywords: list[str]\n    pop_states_primary: list[str]",
+        "detail": "backend.client.capability_profile_builder",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.client.capability_profile_builder",
+        "description": "backend.client.capability_profile_builder",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# ---------------------------------------------------------------------------\n# Constants\n# ---------------------------------------------------------------------------\nDEFAULT_YEARS_BACK = 5\nDEFAULT_MAX_NAICS = 5\nDEFAULT_MAX_SUB_AGENCIES = 5\nDEFAULT_TOP_KEYWORDS = 5\n# Mapping from USASpending's free-text business_categories to SAM.gov set-aside\n# codes used in the opportunities search. Categories not in this map (e.g.",
+        "detail": "backend.client.capability_profile_builder",
+        "documentation": {}
+    },
+    {
+        "label": "DEFAULT_YEARS_BACK",
+        "kind": 5,
+        "importPath": "backend.client.capability_profile_builder",
+        "description": "backend.client.capability_profile_builder",
+        "peekOfCode": "DEFAULT_YEARS_BACK = 5\nDEFAULT_MAX_NAICS = 5\nDEFAULT_MAX_SUB_AGENCIES = 5\nDEFAULT_TOP_KEYWORDS = 5\n# Mapping from USASpending's free-text business_categories to SAM.gov set-aside\n# codes used in the opportunities search. Categories not in this map (e.g.\n# \"Corporate Entity Not Tax Exempt\", \"Subchapter S Corporation\") are\n# administrative tags, not set-aside qualifications, so we drop them.\nBUSINESS_CATEGORY_TO_SET_ASIDE: dict[str, str] = {\n    # Small business basics",
+        "detail": "backend.client.capability_profile_builder",
+        "documentation": {}
+    },
+    {
+        "label": "DEFAULT_MAX_NAICS",
+        "kind": 5,
+        "importPath": "backend.client.capability_profile_builder",
+        "description": "backend.client.capability_profile_builder",
+        "peekOfCode": "DEFAULT_MAX_NAICS = 5\nDEFAULT_MAX_SUB_AGENCIES = 5\nDEFAULT_TOP_KEYWORDS = 5\n# Mapping from USASpending's free-text business_categories to SAM.gov set-aside\n# codes used in the opportunities search. Categories not in this map (e.g.\n# \"Corporate Entity Not Tax Exempt\", \"Subchapter S Corporation\") are\n# administrative tags, not set-aside qualifications, so we drop them.\nBUSINESS_CATEGORY_TO_SET_ASIDE: dict[str, str] = {\n    # Small business basics\n    \"Small Business\": \"Small Business\",",
+        "detail": "backend.client.capability_profile_builder",
+        "documentation": {}
+    },
+    {
+        "label": "DEFAULT_MAX_SUB_AGENCIES",
+        "kind": 5,
+        "importPath": "backend.client.capability_profile_builder",
+        "description": "backend.client.capability_profile_builder",
+        "peekOfCode": "DEFAULT_MAX_SUB_AGENCIES = 5\nDEFAULT_TOP_KEYWORDS = 5\n# Mapping from USASpending's free-text business_categories to SAM.gov set-aside\n# codes used in the opportunities search. Categories not in this map (e.g.\n# \"Corporate Entity Not Tax Exempt\", \"Subchapter S Corporation\") are\n# administrative tags, not set-aside qualifications, so we drop them.\nBUSINESS_CATEGORY_TO_SET_ASIDE: dict[str, str] = {\n    # Small business basics\n    \"Small Business\": \"Small Business\",\n    # Disadvantaged",
+        "detail": "backend.client.capability_profile_builder",
+        "documentation": {}
+    },
+    {
+        "label": "DEFAULT_TOP_KEYWORDS",
+        "kind": 5,
+        "importPath": "backend.client.capability_profile_builder",
+        "description": "backend.client.capability_profile_builder",
+        "peekOfCode": "DEFAULT_TOP_KEYWORDS = 5\n# Mapping from USASpending's free-text business_categories to SAM.gov set-aside\n# codes used in the opportunities search. Categories not in this map (e.g.\n# \"Corporate Entity Not Tax Exempt\", \"Subchapter S Corporation\") are\n# administrative tags, not set-aside qualifications, so we drop them.\nBUSINESS_CATEGORY_TO_SET_ASIDE: dict[str, str] = {\n    # Small business basics\n    \"Small Business\": \"Small Business\",\n    # Disadvantaged\n    \"Self-Certified Small Disadvantaged Business\": \"SDB\",",
+        "detail": "backend.client.capability_profile_builder",
+        "documentation": {}
+    },
+    {
         "label": "EmailService",
         "kind": 6,
         "importPath": "backend.client.email_service",
@@ -9596,6 +10479,132 @@
         "documentation": {}
     },
     {
+        "label": "MatchScore",
+        "kind": 6,
+        "importPath": "backend.client.match_scorer",
+        "description": "backend.client.match_scorer",
+        "peekOfCode": "class MatchScore:\n    \"\"\"Output of score_opportunity().\"\"\"\n    score: int                              # 0-100\n    reasons: list[str] = field(default_factory=list)\n    signal_breakdown: dict[str, int] = field(default_factory=dict)\n    def to_dict(self) -> dict:\n        return {\n            \"score\": self.score,\n            \"reasons\": self.reasons,\n            \"signal_breakdown\": self.signal_breakdown,",
+        "detail": "backend.client.match_scorer",
+        "documentation": {}
+    },
+    {
+        "label": "normalize_agency_name",
+        "kind": 2,
+        "importPath": "backend.client.match_scorer",
+        "description": "backend.client.match_scorer",
+        "peekOfCode": "def normalize_agency_name(name: Optional[str]) -> str:\n    \"\"\"\n    Reduce an agency name to a canonical key for matching.\n    Handles the USASpending vs SAM.gov format mismatch:\n        \"Department of the Navy\"  →  \"navy\"\n        \"DEPT OF THE NAVY\"         →  \"navy\"\n        \"Dept. of Defense\"         →  \"defense\"\n    \"\"\"\n    if not name:\n        return \"\"",
+        "detail": "backend.client.match_scorer",
+        "documentation": {}
+    },
+    {
+        "label": "score_opportunity",
+        "kind": 2,
+        "importPath": "backend.client.match_scorer",
+        "description": "backend.client.match_scorer",
+        "peekOfCode": "def score_opportunity(\n    opp: Opportunity,\n    profile: CapabilityProfile,\n    opp_description: str = \"\",\n    excluded_keywords: Optional[list[str]] = None,\n) -> MatchScore:\n    \"\"\"\n    Score how well an opportunity matches the org's profile.\n    Args:\n        opp: SAM.gov opportunity (from search or bulk CSV)",
+        "detail": "backend.client.match_scorer",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.client.match_scorer",
+        "description": "backend.client.match_scorer",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# ---------------------------------------------------------------------------\n# Tunable weights\n# ---------------------------------------------------------------------------\nW_NAICS_MATCH = 15\nW_SUB_AGENCY_MATCH = 30\nW_SET_ASIDE_MATCH = 20\nW_KEYWORD_MAX = 25\nW_KEYWORD_PER_HIT = 8       # capped at W_KEYWORD_MAX\nW_TOP_CUSTOMER = 10",
+        "detail": "backend.client.match_scorer",
+        "documentation": {}
+    },
+    {
+        "label": "W_NAICS_MATCH",
+        "kind": 5,
+        "importPath": "backend.client.match_scorer",
+        "description": "backend.client.match_scorer",
+        "peekOfCode": "W_NAICS_MATCH = 15\nW_SUB_AGENCY_MATCH = 30\nW_SET_ASIDE_MATCH = 20\nW_KEYWORD_MAX = 25\nW_KEYWORD_PER_HIT = 8       # capped at W_KEYWORD_MAX\nW_TOP_CUSTOMER = 10\nW_EXCLUDED_KEYWORD = -20\n# Generic federal-contract boilerplate. When tokenizing scope_keywords for\n# matching we drop these — they'd match everything (\"system\", \"engineering\")\n# and add no signal.",
+        "detail": "backend.client.match_scorer",
+        "documentation": {}
+    },
+    {
+        "label": "W_SUB_AGENCY_MATCH",
+        "kind": 5,
+        "importPath": "backend.client.match_scorer",
+        "description": "backend.client.match_scorer",
+        "peekOfCode": "W_SUB_AGENCY_MATCH = 30\nW_SET_ASIDE_MATCH = 20\nW_KEYWORD_MAX = 25\nW_KEYWORD_PER_HIT = 8       # capped at W_KEYWORD_MAX\nW_TOP_CUSTOMER = 10\nW_EXCLUDED_KEYWORD = -20\n# Generic federal-contract boilerplate. When tokenizing scope_keywords for\n# matching we drop these — they'd match everything (\"system\", \"engineering\")\n# and add no signal.\nGENERIC_TOKEN_STOPLIST = {",
+        "detail": "backend.client.match_scorer",
+        "documentation": {}
+    },
+    {
+        "label": "W_SET_ASIDE_MATCH",
+        "kind": 5,
+        "importPath": "backend.client.match_scorer",
+        "description": "backend.client.match_scorer",
+        "peekOfCode": "W_SET_ASIDE_MATCH = 20\nW_KEYWORD_MAX = 25\nW_KEYWORD_PER_HIT = 8       # capped at W_KEYWORD_MAX\nW_TOP_CUSTOMER = 10\nW_EXCLUDED_KEYWORD = -20\n# Generic federal-contract boilerplate. When tokenizing scope_keywords for\n# matching we drop these — they'd match everything (\"system\", \"engineering\")\n# and add no signal.\nGENERIC_TOKEN_STOPLIST = {\n    # Verbs / qualifiers",
+        "detail": "backend.client.match_scorer",
+        "documentation": {}
+    },
+    {
+        "label": "W_KEYWORD_MAX",
+        "kind": 5,
+        "importPath": "backend.client.match_scorer",
+        "description": "backend.client.match_scorer",
+        "peekOfCode": "W_KEYWORD_MAX = 25\nW_KEYWORD_PER_HIT = 8       # capped at W_KEYWORD_MAX\nW_TOP_CUSTOMER = 10\nW_EXCLUDED_KEYWORD = -20\n# Generic federal-contract boilerplate. When tokenizing scope_keywords for\n# matching we drop these — they'd match everything (\"system\", \"engineering\")\n# and add no signal.\nGENERIC_TOKEN_STOPLIST = {\n    # Verbs / qualifiers\n    \"support\", \"services\", \"service\", \"technical\", \"professional\", \"general\",",
+        "detail": "backend.client.match_scorer",
+        "documentation": {}
+    },
+    {
+        "label": "W_KEYWORD_PER_HIT",
+        "kind": 5,
+        "importPath": "backend.client.match_scorer",
+        "description": "backend.client.match_scorer",
+        "peekOfCode": "W_KEYWORD_PER_HIT = 8       # capped at W_KEYWORD_MAX\nW_TOP_CUSTOMER = 10\nW_EXCLUDED_KEYWORD = -20\n# Generic federal-contract boilerplate. When tokenizing scope_keywords for\n# matching we drop these — they'd match everything (\"system\", \"engineering\")\n# and add no signal.\nGENERIC_TOKEN_STOPLIST = {\n    # Verbs / qualifiers\n    \"support\", \"services\", \"service\", \"technical\", \"professional\", \"general\",\n    \"comprehensive\", \"advanced\", \"modern\", \"modernization\", \"integrated\",",
+        "detail": "backend.client.match_scorer",
+        "documentation": {}
+    },
+    {
+        "label": "W_TOP_CUSTOMER",
+        "kind": 5,
+        "importPath": "backend.client.match_scorer",
+        "description": "backend.client.match_scorer",
+        "peekOfCode": "W_TOP_CUSTOMER = 10\nW_EXCLUDED_KEYWORD = -20\n# Generic federal-contract boilerplate. When tokenizing scope_keywords for\n# matching we drop these — they'd match everything (\"system\", \"engineering\")\n# and add no signal.\nGENERIC_TOKEN_STOPLIST = {\n    # Verbs / qualifiers\n    \"support\", \"services\", \"service\", \"technical\", \"professional\", \"general\",\n    \"comprehensive\", \"advanced\", \"modern\", \"modernization\", \"integrated\",\n    \"solution\", \"solutions\", \"program\", \"project\", \"management\", \"operations\",",
+        "detail": "backend.client.match_scorer",
+        "documentation": {}
+    },
+    {
+        "label": "W_EXCLUDED_KEYWORD",
+        "kind": 5,
+        "importPath": "backend.client.match_scorer",
+        "description": "backend.client.match_scorer",
+        "peekOfCode": "W_EXCLUDED_KEYWORD = -20\n# Generic federal-contract boilerplate. When tokenizing scope_keywords for\n# matching we drop these — they'd match everything (\"system\", \"engineering\")\n# and add no signal.\nGENERIC_TOKEN_STOPLIST = {\n    # Verbs / qualifiers\n    \"support\", \"services\", \"service\", \"technical\", \"professional\", \"general\",\n    \"comprehensive\", \"advanced\", \"modern\", \"modernization\", \"integrated\",\n    \"solution\", \"solutions\", \"program\", \"project\", \"management\", \"operations\",\n    # Nouns too broad to be distinctive on their own",
+        "detail": "backend.client.match_scorer",
+        "documentation": {}
+    },
+    {
+        "label": "GENERIC_TOKEN_STOPLIST",
+        "kind": 5,
+        "importPath": "backend.client.match_scorer",
+        "description": "backend.client.match_scorer",
+        "peekOfCode": "GENERIC_TOKEN_STOPLIST = {\n    # Verbs / qualifiers\n    \"support\", \"services\", \"service\", \"technical\", \"professional\", \"general\",\n    \"comprehensive\", \"advanced\", \"modern\", \"modernization\", \"integrated\",\n    \"solution\", \"solutions\", \"program\", \"project\", \"management\", \"operations\",\n    # Nouns too broad to be distinctive on their own\n    \"system\", \"systems\", \"engineering\", \"analysis\", \"development\", \"design\",\n    \"production\", \"operations\", \"operation\", \"training\", \"maintenance\",\n    \"software\", \"hardware\", \"infrastructure\", \"platform\",\n    # Connectives",
+        "detail": "backend.client.match_scorer",
+        "documentation": {}
+    },
+    {
+        "label": "_AGENCY_PREFIX_RE",
+        "kind": 5,
+        "importPath": "backend.client.match_scorer",
+        "description": "backend.client.match_scorer",
+        "peekOfCode": "_AGENCY_PREFIX_RE = re.compile(\n    r\"\\b(department\\s+of\\s+(the\\s+)?|dept\\s+of\\s+(the\\s+)?|dept\\.?\\s+of\\s+(the\\s+)?)\",\n    re.IGNORECASE,\n)\n_AGENCY_NONWORD_RE = re.compile(r\"[^a-z0-9]+\")\ndef normalize_agency_name(name: Optional[str]) -> str:\n    \"\"\"\n    Reduce an agency name to a canonical key for matching.\n    Handles the USASpending vs SAM.gov format mismatch:\n        \"Department of the Navy\"  →  \"navy\"",
+        "detail": "backend.client.match_scorer",
+        "documentation": {}
+    },
+    {
+        "label": "_AGENCY_NONWORD_RE",
+        "kind": 5,
+        "importPath": "backend.client.match_scorer",
+        "description": "backend.client.match_scorer",
+        "peekOfCode": "_AGENCY_NONWORD_RE = re.compile(r\"[^a-z0-9]+\")\ndef normalize_agency_name(name: Optional[str]) -> str:\n    \"\"\"\n    Reduce an agency name to a canonical key for matching.\n    Handles the USASpending vs SAM.gov format mismatch:\n        \"Department of the Navy\"  →  \"navy\"\n        \"DEPT OF THE NAVY\"         →  \"navy\"\n        \"Dept. of Defense\"         →  \"defense\"\n    \"\"\"\n    if not name:",
+        "detail": "backend.client.match_scorer",
+        "documentation": {}
+    },
+    {
         "label": "OEWSMongoLookup",
         "kind": 6,
         "importPath": "backend.client.oews_mongodb",
@@ -9683,6 +10692,213 @@
         "description": "backend.client.ptw_calculator",
         "peekOfCode": "LAST_RESORT_FTE_HOURS = 1920\n# ---------------------------------------------------------------------------\n# Data classes\n# ---------------------------------------------------------------------------\n@dataclass\nclass PositionContribution:\n    \"\"\"Per-position bottom-up breakdown.\"\"\"\n    labor_category: str\n    wage_source: str  # 'gsa' | 'bls'\n    annual_wage_or_hourly_rate: float  # what was used as the input",
         "detail": "backend.client.ptw_calculator",
+        "documentation": {}
+    },
+    {
+        "label": "Attachment",
+        "kind": 6,
+        "importPath": "backend.client.pws_picker",
+        "description": "backend.client.pws_picker",
+        "peekOfCode": "class Attachment:\n    \"\"\"One attachment on a SAM.gov opportunity.\"\"\"\n    attachment_id: str\n    resource_id: str\n    name: str\n    size: int                # bytes\n    mime_type: str           # e.g. \".pdf\", \".docx\", \".xlsx\"\n    posted_date: Optional[str] = None\n    order: Optional[int] = None  # SAM.gov's attachmentOrder\n    def to_dict(self) -> dict:",
+        "detail": "backend.client.pws_picker",
+        "documentation": {}
+    },
+    {
+        "label": "PWSConfidence",
+        "kind": 6,
+        "importPath": "backend.client.pws_picker",
+        "description": "backend.client.pws_picker",
+        "peekOfCode": "class PWSConfidence(str, Enum):\n    \"\"\"How sure we are the picked attachment is actually the PWS/SOW.\"\"\"\n    HIGH = \"high\"        # ship into recommendations\n    MEDIUM = \"medium\"    # uncertain — only surfaced if user asks\n    LOW = \"low\"          # drop from recommendations\n    NONE = \"none\"        # no attachments at all\n# ---------------------------------------------------------------------------\n# Scorer\n# ---------------------------------------------------------------------------\ndef score_pws_likelihood(",
+        "detail": "backend.client.pws_picker",
+        "documentation": {}
+    },
+    {
+        "label": "PWSPick",
+        "kind": 6,
+        "importPath": "backend.client.pws_picker",
+        "description": "backend.client.pws_picker",
+        "peekOfCode": "class PWSPick:\n    \"\"\"Result of pick_likely_pws — the best candidate plus confidence.\"\"\"\n    attachment: Optional[Attachment]\n    confidence: PWSConfidence\n    score: int\n    lead_over_next: int       # gap to the second-best score\n    reasons: list[str]\n    def to_dict(self) -> dict:\n        return {\n            \"attachment\": self.attachment.to_dict() if self.attachment else None,",
+        "detail": "backend.client.pws_picker",
+        "documentation": {}
+    },
+    {
+        "label": "score_pws_likelihood",
+        "kind": 2,
+        "importPath": "backend.client.pws_picker",
+        "description": "backend.client.pws_picker",
+        "peekOfCode": "def score_pws_likelihood(\n    name: str, size: int, mime_type: str\n) -> tuple[int, list[str]]:\n    \"\"\"\n    Score a filename 0–N on how likely it is the PWS/SOW.\n    Returns (score, reasons[]) — reasons are short labels for debugging\n    why a file scored what it did.\n    \"\"\"\n    s = 0\n    reasons: list[str] = []",
+        "detail": "backend.client.pws_picker",
+        "documentation": {}
+    },
+    {
+        "label": "pick_likely_pws",
+        "kind": 2,
+        "importPath": "backend.client.pws_picker",
+        "description": "backend.client.pws_picker",
+        "peekOfCode": "def pick_likely_pws(attachments: list[Attachment]) -> PWSPick:\n    \"\"\"\n    Pick the most-likely PWS/SOW from an opportunity's file attachments.\n    Returns a PWSPick with:\n      - HIGH    : confident enough to silently feed to the parser\n      - MEDIUM  : best candidate scored OK but lead over runner-up is small\n      - LOW     : weak best score — no signal in the filenames\n      - NONE    : no attachments at all\n    \"\"\"\n    if not attachments:",
+        "detail": "backend.client.pws_picker",
+        "documentation": {}
+    },
+    {
+        "label": "HIGH_MIN_SCORE",
+        "kind": 5,
+        "importPath": "backend.client.pws_picker",
+        "description": "backend.client.pws_picker",
+        "peekOfCode": "HIGH_MIN_SCORE = 50          # top scorer must be at least this strong\nHIGH_MIN_LEAD = 30           # and must lead the runner-up by this much\nMEDIUM_MIN_SCORE = 20\n@dataclass\nclass PWSPick:\n    \"\"\"Result of pick_likely_pws — the best candidate plus confidence.\"\"\"\n    attachment: Optional[Attachment]\n    confidence: PWSConfidence\n    score: int\n    lead_over_next: int       # gap to the second-best score",
+        "detail": "backend.client.pws_picker",
+        "documentation": {}
+    },
+    {
+        "label": "HIGH_MIN_LEAD",
+        "kind": 5,
+        "importPath": "backend.client.pws_picker",
+        "description": "backend.client.pws_picker",
+        "peekOfCode": "HIGH_MIN_LEAD = 30           # and must lead the runner-up by this much\nMEDIUM_MIN_SCORE = 20\n@dataclass\nclass PWSPick:\n    \"\"\"Result of pick_likely_pws — the best candidate plus confidence.\"\"\"\n    attachment: Optional[Attachment]\n    confidence: PWSConfidence\n    score: int\n    lead_over_next: int       # gap to the second-best score\n    reasons: list[str]",
+        "detail": "backend.client.pws_picker",
+        "documentation": {}
+    },
+    {
+        "label": "MEDIUM_MIN_SCORE",
+        "kind": 5,
+        "importPath": "backend.client.pws_picker",
+        "description": "backend.client.pws_picker",
+        "peekOfCode": "MEDIUM_MIN_SCORE = 20\n@dataclass\nclass PWSPick:\n    \"\"\"Result of pick_likely_pws — the best candidate plus confidence.\"\"\"\n    attachment: Optional[Attachment]\n    confidence: PWSConfidence\n    score: int\n    lead_over_next: int       # gap to the second-best score\n    reasons: list[str]\n    def to_dict(self) -> dict:",
+        "detail": "backend.client.pws_picker",
+        "documentation": {}
+    },
+    {
+        "label": "SamGovError",
+        "kind": 6,
+        "importPath": "backend.client.samgov_client",
+        "description": "backend.client.samgov_client",
+        "peekOfCode": "class SamGovError(Exception):\n    \"\"\"Raised when SAM.gov API returns an error or no usable data.\"\"\"\n    def __init__(self, message: str, status_code: Optional[int] = None):\n        self.message = message\n        self.status_code = status_code\n        super().__init__(message)\n# ---------------------------------------------------------------------------\n# Data classes\n# ---------------------------------------------------------------------------\n# Map SAM.gov's single-letter notice type codes to human labels.",
+        "detail": "backend.client.samgov_client",
+        "documentation": {}
+    },
+    {
+        "label": "Opportunity",
+        "kind": 6,
+        "importPath": "backend.client.samgov_client",
+        "description": "backend.client.samgov_client",
+        "peekOfCode": "class Opportunity:\n    \"\"\"\n    A SAM.gov opportunity. v2 returns rich-enough data on the search response\n    that we don't need a separate detail call — everything we need to score and\n    later hand off lands here in one shot.\n    \"\"\"\n    notice_id: str\n    title: str\n    # Hierarchy parsed from fullParentPathName (period-delimited string).\n    awarding_top_agency: Optional[str]    # e.g. \"DEPT OF DEFENSE\"",
+        "detail": "backend.client.samgov_client",
+        "documentation": {}
+    },
+    {
+        "label": "SamGovClient",
+        "kind": 6,
+        "importPath": "backend.client.samgov_client",
+        "description": "backend.client.samgov_client",
+        "peekOfCode": "class SamGovClient:\n    \"\"\"\n    Async client for SAM.gov v2 opportunities API.\n    Singleton via get_samgov_client(). Loop-safe — handles TestClient's\n    per-request event-loop spin-up.\n    \"\"\"\n    def __init__(self):\n        self._client: Optional[httpx.AsyncClient] = None\n        self._client_loop: Optional[asyncio.AbstractEventLoop] = None\n        self._client_lock = asyncio.Lock()",
+        "detail": "backend.client.samgov_client",
+        "documentation": {}
+    },
+    {
+        "label": "get_samgov_client",
+        "kind": 2,
+        "importPath": "backend.client.samgov_client",
+        "description": "backend.client.samgov_client",
+        "peekOfCode": "def get_samgov_client() -> SamGovClient:\n    \"\"\"Get the singleton SAM.gov client.\"\"\"\n    global _client_instance\n    if _client_instance is None:\n        with _instance_lock:\n            if _client_instance is None:\n                _client_instance = SamGovClient()\n    return _client_instance",
+        "detail": "backend.client.samgov_client",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.client.samgov_client",
+        "description": "backend.client.samgov_client",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nSAMGOV_BASE = \"https://api.sam.gov\"\nSAMGOV_SEARCH_PATH = \"/opportunities/v2/search\"\n# Public daily bulk CSV — refreshed by SAM.gov ~03:30 GMT each day. No key needed.\n# Contains ALL opportunities (active + archived), ~217 MB. We stream-parse it\n# in the daily scanner instead of fanning out per-NAICS API calls.\nSAMGOV_BULK_CSV_URL = (\n    \"https://falextracts.s3.amazonaws.com/Contract%20Opportunities/datagov/\"\n    \"ContractOpportunitiesFullCSV.csv\"\n)",
+        "detail": "backend.client.samgov_client",
+        "documentation": {}
+    },
+    {
+        "label": "SAMGOV_BASE",
+        "kind": 5,
+        "importPath": "backend.client.samgov_client",
+        "description": "backend.client.samgov_client",
+        "peekOfCode": "SAMGOV_BASE = \"https://api.sam.gov\"\nSAMGOV_SEARCH_PATH = \"/opportunities/v2/search\"\n# Public daily bulk CSV — refreshed by SAM.gov ~03:30 GMT each day. No key needed.\n# Contains ALL opportunities (active + archived), ~217 MB. We stream-parse it\n# in the daily scanner instead of fanning out per-NAICS API calls.\nSAMGOV_BULK_CSV_URL = (\n    \"https://falextracts.s3.amazonaws.com/Contract%20Opportunities/datagov/\"\n    \"ContractOpportunitiesFullCSV.csv\"\n)\nBULK_DOWNLOAD_TIMEOUT = 300.0  # 5 min — 217 MB download",
+        "detail": "backend.client.samgov_client",
+        "documentation": {}
+    },
+    {
+        "label": "SAMGOV_SEARCH_PATH",
+        "kind": 5,
+        "importPath": "backend.client.samgov_client",
+        "description": "backend.client.samgov_client",
+        "peekOfCode": "SAMGOV_SEARCH_PATH = \"/opportunities/v2/search\"\n# Public daily bulk CSV — refreshed by SAM.gov ~03:30 GMT each day. No key needed.\n# Contains ALL opportunities (active + archived), ~217 MB. We stream-parse it\n# in the daily scanner instead of fanning out per-NAICS API calls.\nSAMGOV_BULK_CSV_URL = (\n    \"https://falextracts.s3.amazonaws.com/Contract%20Opportunities/datagov/\"\n    \"ContractOpportunitiesFullCSV.csv\"\n)\nBULK_DOWNLOAD_TIMEOUT = 300.0  # 5 min — 217 MB download\nDEFAULT_TIMEOUT = 30.0",
+        "detail": "backend.client.samgov_client",
+        "documentation": {}
+    },
+    {
+        "label": "SAMGOV_BULK_CSV_URL",
+        "kind": 5,
+        "importPath": "backend.client.samgov_client",
+        "description": "backend.client.samgov_client",
+        "peekOfCode": "SAMGOV_BULK_CSV_URL = (\n    \"https://falextracts.s3.amazonaws.com/Contract%20Opportunities/datagov/\"\n    \"ContractOpportunitiesFullCSV.csv\"\n)\nBULK_DOWNLOAD_TIMEOUT = 300.0  # 5 min — 217 MB download\nDEFAULT_TIMEOUT = 30.0\nDEFAULT_MAX_PER_NAICS = 25\nMAX_CONCURRENCY = 5  # parallel NAICS fan-out\nDEFAULT_POSTED_WINDOW_DAYS = 60  # how far back to look — 2 months keeps recs fresh\n# ---------------------------------------------------------------------------",
+        "detail": "backend.client.samgov_client",
+        "documentation": {}
+    },
+    {
+        "label": "BULK_DOWNLOAD_TIMEOUT",
+        "kind": 5,
+        "importPath": "backend.client.samgov_client",
+        "description": "backend.client.samgov_client",
+        "peekOfCode": "BULK_DOWNLOAD_TIMEOUT = 300.0  # 5 min — 217 MB download\nDEFAULT_TIMEOUT = 30.0\nDEFAULT_MAX_PER_NAICS = 25\nMAX_CONCURRENCY = 5  # parallel NAICS fan-out\nDEFAULT_POSTED_WINDOW_DAYS = 60  # how far back to look — 2 months keeps recs fresh\n# ---------------------------------------------------------------------------\n# Exceptions\n# ---------------------------------------------------------------------------\nclass SamGovError(Exception):\n    \"\"\"Raised when SAM.gov API returns an error or no usable data.\"\"\"",
+        "detail": "backend.client.samgov_client",
+        "documentation": {}
+    },
+    {
+        "label": "DEFAULT_TIMEOUT",
+        "kind": 5,
+        "importPath": "backend.client.samgov_client",
+        "description": "backend.client.samgov_client",
+        "peekOfCode": "DEFAULT_TIMEOUT = 30.0\nDEFAULT_MAX_PER_NAICS = 25\nMAX_CONCURRENCY = 5  # parallel NAICS fan-out\nDEFAULT_POSTED_WINDOW_DAYS = 60  # how far back to look — 2 months keeps recs fresh\n# ---------------------------------------------------------------------------\n# Exceptions\n# ---------------------------------------------------------------------------\nclass SamGovError(Exception):\n    \"\"\"Raised when SAM.gov API returns an error or no usable data.\"\"\"\n    def __init__(self, message: str, status_code: Optional[int] = None):",
+        "detail": "backend.client.samgov_client",
+        "documentation": {}
+    },
+    {
+        "label": "DEFAULT_MAX_PER_NAICS",
+        "kind": 5,
+        "importPath": "backend.client.samgov_client",
+        "description": "backend.client.samgov_client",
+        "peekOfCode": "DEFAULT_MAX_PER_NAICS = 25\nMAX_CONCURRENCY = 5  # parallel NAICS fan-out\nDEFAULT_POSTED_WINDOW_DAYS = 60  # how far back to look — 2 months keeps recs fresh\n# ---------------------------------------------------------------------------\n# Exceptions\n# ---------------------------------------------------------------------------\nclass SamGovError(Exception):\n    \"\"\"Raised when SAM.gov API returns an error or no usable data.\"\"\"\n    def __init__(self, message: str, status_code: Optional[int] = None):\n        self.message = message",
+        "detail": "backend.client.samgov_client",
+        "documentation": {}
+    },
+    {
+        "label": "MAX_CONCURRENCY",
+        "kind": 5,
+        "importPath": "backend.client.samgov_client",
+        "description": "backend.client.samgov_client",
+        "peekOfCode": "MAX_CONCURRENCY = 5  # parallel NAICS fan-out\nDEFAULT_POSTED_WINDOW_DAYS = 60  # how far back to look — 2 months keeps recs fresh\n# ---------------------------------------------------------------------------\n# Exceptions\n# ---------------------------------------------------------------------------\nclass SamGovError(Exception):\n    \"\"\"Raised when SAM.gov API returns an error or no usable data.\"\"\"\n    def __init__(self, message: str, status_code: Optional[int] = None):\n        self.message = message\n        self.status_code = status_code",
+        "detail": "backend.client.samgov_client",
+        "documentation": {}
+    },
+    {
+        "label": "DEFAULT_POSTED_WINDOW_DAYS",
+        "kind": 5,
+        "importPath": "backend.client.samgov_client",
+        "description": "backend.client.samgov_client",
+        "peekOfCode": "DEFAULT_POSTED_WINDOW_DAYS = 60  # how far back to look — 2 months keeps recs fresh\n# ---------------------------------------------------------------------------\n# Exceptions\n# ---------------------------------------------------------------------------\nclass SamGovError(Exception):\n    \"\"\"Raised when SAM.gov API returns an error or no usable data.\"\"\"\n    def __init__(self, message: str, status_code: Optional[int] = None):\n        self.message = message\n        self.status_code = status_code\n        super().__init__(message)",
+        "detail": "backend.client.samgov_client",
+        "documentation": {}
+    },
+    {
+        "label": "NOTICE_TYPE_MAP",
+        "kind": 5,
+        "importPath": "backend.client.samgov_client",
+        "description": "backend.client.samgov_client",
+        "peekOfCode": "NOTICE_TYPE_MAP = {\n    \"o\": \"Solicitation\",\n    \"p\": \"Presolicitation\",\n    \"k\": \"Combined Synopsis/Solicitation\",\n    \"r\": \"Sources Sought\",\n    \"g\": \"Sale of Surplus Property\",\n    \"i\": \"Intent to Bundle Requirements\",\n    \"s\": \"Special Notice\",\n    \"a\": \"Award Notice\",\n    \"u\": \"Justification and Authorization\",",
+        "detail": "backend.client.samgov_client",
+        "documentation": {}
+    },
+    {
+        "label": "_instance_lock",
+        "kind": 5,
+        "importPath": "backend.client.samgov_client",
+        "description": "backend.client.samgov_client",
+        "peekOfCode": "_instance_lock = threading.RLock()\ndef get_samgov_client() -> SamGovClient:\n    \"\"\"Get the singleton SAM.gov client.\"\"\"\n    global _client_instance\n    if _client_instance is None:\n        with _instance_lock:\n            if _client_instance is None:\n                _client_instance = SamGovClient()\n    return _client_instance",
+        "detail": "backend.client.samgov_client",
         "documentation": {}
     },
     {
@@ -9915,7 +11131,7 @@
         "kind": 6,
         "importPath": "backend.client.usaspending_client",
         "description": "backend.client.usaspending_client",
-        "peekOfCode": "class USASpendingClient:\n    \"\"\"\n    Async client for USASpending.gov.\n    Singleton via get_usaspending_client(). Shares one httpx.AsyncClient across\n    the app for connection pooling.\n    \"\"\"\n    def __init__(self):\n        self._client: Optional[httpx.AsyncClient] = None\n        self._client_lock = asyncio.Lock()\n    async def _get_http(self) -> httpx.AsyncClient:",
+        "peekOfCode": "class USASpendingClient:\n    \"\"\"\n    Async client for USASpending.gov.\n    Singleton via get_usaspending_client(). Shares one httpx.AsyncClient across\n    the app for connection pooling.\n    \"\"\"\n    def __init__(self):\n        self._client: Optional[httpx.AsyncClient] = None\n        self._client_loop: Optional[asyncio.AbstractEventLoop] = None\n        self._client_lock = asyncio.Lock()",
         "detail": "backend.client.usaspending_client",
         "documentation": {}
     },
@@ -10028,6 +11244,51 @@
         "documentation": {}
     },
     {
+        "label": "NAICSContributionDoc",
+        "kind": 6,
+        "importPath": "backend.models.capability_profile",
+        "description": "backend.models.capability_profile",
+        "peekOfCode": "class NAICSContributionDoc(BaseModel):\n    \"\"\"A NAICS code with weight context (wins + dollars) from past awards.\"\"\"\n    code: str = Field(description=\"6-digit NAICS code, e.g. '541512'.\")\n    description: str = Field(default=\"\", description=\"Plain-English NAICS description.\")\n    wins: int = Field(description=\"Number of awards under this NAICS in the analysis window.\")\n    total_amount: float = Field(description=\"Total dollar value awarded under this NAICS.\")\nclass SubAgencyContributionDoc(BaseModel):\n    \"\"\"A sub-agency (e.g. 'Department of the Navy') the contractor has worked with.\"\"\"\n    name: str = Field(description=\"Sub-agency name as it appears on USASpending.\")\n    wins: int = Field(description=\"Number of awards from this sub-agency.\")",
+        "detail": "backend.models.capability_profile",
+        "documentation": {}
+    },
+    {
+        "label": "SubAgencyContributionDoc",
+        "kind": 6,
+        "importPath": "backend.models.capability_profile",
+        "description": "backend.models.capability_profile",
+        "peekOfCode": "class SubAgencyContributionDoc(BaseModel):\n    \"\"\"A sub-agency (e.g. 'Department of the Navy') the contractor has worked with.\"\"\"\n    name: str = Field(description=\"Sub-agency name as it appears on USASpending.\")\n    wins: int = Field(description=\"Number of awards from this sub-agency.\")\n    total_amount: float = Field(description=\"Total dollar value from this sub-agency.\")\n# ---------------------------------------------------------------------------\n# Lifecycle request bodies\n# ---------------------------------------------------------------------------\nclass CapabilityProfileBuildRequest(BaseModel):\n    \"\"\"Request body for POST /api/rfp-radar/profile/build.\"\"\"",
+        "detail": "backend.models.capability_profile",
+        "documentation": {}
+    },
+    {
+        "label": "CapabilityProfileBuildRequest",
+        "kind": 6,
+        "importPath": "backend.models.capability_profile",
+        "description": "backend.models.capability_profile",
+        "peekOfCode": "class CapabilityProfileBuildRequest(BaseModel):\n    \"\"\"Request body for POST /api/rfp-radar/profile/build.\"\"\"\n    company_search: str = Field(\n        min_length=2,\n        description=(\n            \"Company name (or partial) to find on USASpending. Used as the \"\n            \"free-text recipient_search_text in the awards search.\"\n        ),\n    )\n    uei_filter: Optional[str] = Field(",
+        "detail": "backend.models.capability_profile",
+        "documentation": {}
+    },
+    {
+        "label": "CapabilityProfileUpdate",
+        "kind": 6,
+        "importPath": "backend.models.capability_profile",
+        "description": "backend.models.capability_profile",
+        "peekOfCode": "class CapabilityProfileUpdate(BaseModel):\n    \"\"\"\n    Request body for PATCH /api/rfp-radar/profile.\n    All fields optional — only the keys present in the payload get updated.\n    Edits replace the field outright (no merge): if the user PATCHes\n    scope_keywords with [\"A\", \"B\"], that becomes the new list.\n    \"\"\"\n    naics_codes: Optional[List[NAICSContributionDoc]] = None\n    sub_agencies_of_interest: Optional[List[SubAgencyContributionDoc]] = None\n    set_asides_qualified: Optional[List[str]] = None",
+        "detail": "backend.models.capability_profile",
+        "documentation": {}
+    },
+    {
+        "label": "CapabilityProfileResponse",
+        "kind": 6,
+        "importPath": "backend.models.capability_profile",
+        "description": "backend.models.capability_profile",
+        "peekOfCode": "class CapabilityProfileResponse(BaseModel):\n    \"\"\"Full capability profile as returned by the API.\"\"\"\n    id: str = Field(description=\"MongoDB ObjectId, serialized as a hex string.\")\n    organization_id: str\n    # Identity (auto-built)\n    uei: str\n    company_name: str\n    hq_location: Optional[str] = None\n    # Matching signals — auto-built initially, user-editable in place\n    naics_codes: List[NAICSContributionDoc] = Field(default_factory=list)",
+        "detail": "backend.models.capability_profile",
+        "documentation": {}
+    },
+    {
         "label": "LaborCategory",
         "kind": 6,
         "importPath": "backend.models.company_repository",
@@ -10106,6 +11367,33 @@
         "description": "backend.models.proposal",
         "peekOfCode": "class ProposalUpdate(BaseModel):\n    \"\"\"Schema for updating an existing proposal.\"\"\"\n    name: Optional[str] = Field(None, description=\"Updated proposal name\")\n    solicitation_number: Optional[str] = Field(None, description=\"Updated solicitation number\")\n    prime_contractor_name: Optional[str] = Field(None, description=\"Updated prime contractor name\")\n    naics_code: Optional[str] = Field(\n        None,\n        description=\"6-digit NAICS industry classification code (e.g. '541330'). Used to look up comparable past awards for PTW suggestions.\"\n    )\n    agency: Optional[str] = Field(",
         "detail": "backend.models.proposal",
+        "documentation": {}
+    },
+    {
+        "label": "MatchSignalBreakdown",
+        "kind": 6,
+        "importPath": "backend.models.rfp_radar_match",
+        "description": "backend.models.rfp_radar_match",
+        "peekOfCode": "class MatchSignalBreakdown(BaseModel):\n    \"\"\"\n    How each signal in the scoring rubric contributed. Sums to match_score.\n    Missing fields default to 0 so old documents stay readable if we add\n    more signals later.\n    \"\"\"\n    naics_match: int = 0\n    sub_agency_match: int = 0\n    top_customer: int = 0\n    set_aside_match: int = 0",
+        "detail": "backend.models.rfp_radar_match",
+        "documentation": {}
+    },
+    {
+        "label": "PWSAttachment",
+        "kind": 6,
+        "importPath": "backend.models.rfp_radar_match",
+        "description": "backend.models.rfp_radar_match",
+        "peekOfCode": "class PWSAttachment(BaseModel):\n    \"\"\"\n    The auto-picked PWS/SOW document for this opportunity. Captured at scan\n    time so piece 6's \"Price this RFP\" handoff knows exactly which file to\n    extract from the bulk ZIP — no re-scoring at click time.\n    \"\"\"\n    attachment_id: str\n    resource_id: str\n    filename: str\n    size_bytes: int",
+        "detail": "backend.models.rfp_radar_match",
+        "documentation": {}
+    },
+    {
+        "label": "RFPRadarMatch",
+        "kind": 6,
+        "importPath": "backend.models.rfp_radar_match",
+        "description": "backend.models.rfp_radar_match",
+        "peekOfCode": "class RFPRadarMatch(BaseModel):\n    \"\"\"\n    One of the day's top-N matches for an organization.\n    Mirrors the MongoDB document shape 1:1, except _id is exposed as `id`\n    (str) for JSON serialization.\n    \"\"\"\n    id: Optional[str] = Field(default=None, alias=\"_id\")\n    organization_id: str\n    # Calendar partition\n    scan_date: date                          # the date this scan ran (YYYY-MM-DD)",
+        "detail": "backend.models.rfp_radar_match",
         "documentation": {}
     },
     {
@@ -10214,6 +11502,24 @@
         "description": "backend.routers.billing",
         "peekOfCode": "router = APIRouter(prefix=\"/api/billing\", tags=[\"billing\"])\n# =============================================================================\n# REQUEST MODELS (Only what we need)\n# =============================================================================\nclass PaymentMethodRequest(BaseModel):\n    payment_method_id: str\nclass ChargeRequest(BaseModel):\n    proposal_id: str\n    charge_type: str  # \"basic\" or \"advanced\"\n# =============================================================================",
         "detail": "backend.routers.billing",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.routers.capability_builder",
+        "description": "backend.routers.capability_builder",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nrouter = APIRouter()\n# ---------------------------------------------------------------------------\n# Helpers\n# ---------------------------------------------------------------------------\ndef _require_org(current_user: dict) -> str:\n    \"\"\"Pull organization_id off the auth context, or 403.\"\"\"\n    org_id = current_user.get(\"organization_id\")\n    if not org_id:\n        raise HTTPException(",
+        "detail": "backend.routers.capability_builder",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.routers.capability_builder",
+        "description": "backend.routers.capability_builder",
+        "peekOfCode": "router = APIRouter()\n# ---------------------------------------------------------------------------\n# Helpers\n# ---------------------------------------------------------------------------\ndef _require_org(current_user: dict) -> str:\n    \"\"\"Pull organization_id off the auth context, or 403.\"\"\"\n    org_id = current_user.get(\"organization_id\")\n    if not org_id:\n        raise HTTPException(\n            status_code=status.HTTP_403_FORBIDDEN,",
+        "detail": "backend.routers.capability_builder",
         "documentation": {}
     },
     {
@@ -11234,6 +12540,69 @@
         "documentation": {}
     },
     {
+        "label": "parse_csv_to_naics_buckets",
+        "kind": 2,
+        "importPath": "backend.tasks.rfp_radar_scanner",
+        "description": "backend.tasks.rfp_radar_scanner",
+        "peekOfCode": "def parse_csv_to_naics_buckets(\n    csv_path: str,\n    posted_within_days: int = POSTED_WITHIN_DAYS,\n    active_only: bool = True,\n) -> dict[str, list[tuple[Opportunity, str]]]:\n    \"\"\"\n    Stream-parse the bulk CSV once and index by NAICS code.\n    Returns: { naics_code: [(opportunity, description), ...] }\n    Description is kept alongside each Opportunity so it can be passed to the\n    match scorer for keyword matching — the bulk CSV is the only path that",
+        "detail": "backend.tasks.rfp_radar_scanner",
+        "documentation": {}
+    },
+    {
+        "label": "daily_rfp_radar_scan_sync",
+        "kind": 2,
+        "importPath": "backend.tasks.rfp_radar_scanner",
+        "description": "backend.tasks.rfp_radar_scanner",
+        "peekOfCode": "def daily_rfp_radar_scan_sync() -> dict:\n    \"\"\"\n    Sync entry point — runs the async daily scan inside an event loop.\n    Use this from Celery tasks (sync) or any CLI. For async callers (FastAPI\n    endpoints, tests), call `run_daily_scan_for_all_orgs()` directly.\n    \"\"\"\n    return asyncio.run(run_daily_scan_for_all_orgs())\nasync def run_daily_scan_for_all_orgs() -> dict:\n    \"\"\"\n    Daily scan for every organization with a capability profile.",
+        "detail": "backend.tasks.rfp_radar_scanner",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.tasks.rfp_radar_scanner",
+        "description": "backend.tasks.rfp_radar_scanner",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# ---------------------------------------------------------------------------\n# Tunables\n# ---------------------------------------------------------------------------\n# Top N matches to save per org per day\nTOP_N_MATCHES = 10\n# Cap on how many top-scored candidates to PWS-check before giving up filling\n# the top-N quota. Calibrated against our validation run (40% pass HIGH) —\n# 30 candidates expected to yield ~10–12 survivors.\nPWS_CHECK_CANDIDATES = 30",
+        "detail": "backend.tasks.rfp_radar_scanner",
+        "documentation": {}
+    },
+    {
+        "label": "TOP_N_MATCHES",
+        "kind": 5,
+        "importPath": "backend.tasks.rfp_radar_scanner",
+        "description": "backend.tasks.rfp_radar_scanner",
+        "peekOfCode": "TOP_N_MATCHES = 10\n# Cap on how many top-scored candidates to PWS-check before giving up filling\n# the top-N quota. Calibrated against our validation run (40% pass HIGH) —\n# 30 candidates expected to yield ~10–12 survivors.\nPWS_CHECK_CANDIDATES = 30\n# Concurrent /resources calls during the PWS gate\nPWS_CHECK_CONCURRENCY = 5\n# Only consider opportunities posted within this window\nPOSTED_WITHIN_DAYS = 60\n# ---------------------------------------------------------------------------",
+        "detail": "backend.tasks.rfp_radar_scanner",
+        "documentation": {}
+    },
+    {
+        "label": "PWS_CHECK_CANDIDATES",
+        "kind": 5,
+        "importPath": "backend.tasks.rfp_radar_scanner",
+        "description": "backend.tasks.rfp_radar_scanner",
+        "peekOfCode": "PWS_CHECK_CANDIDATES = 30\n# Concurrent /resources calls during the PWS gate\nPWS_CHECK_CONCURRENCY = 5\n# Only consider opportunities posted within this window\nPOSTED_WITHIN_DAYS = 60\n# ---------------------------------------------------------------------------\n# Bulk CSV download + parse\n# ---------------------------------------------------------------------------\nasync def download_bulk_csv() -> str:\n    \"\"\"",
+        "detail": "backend.tasks.rfp_radar_scanner",
+        "documentation": {}
+    },
+    {
+        "label": "PWS_CHECK_CONCURRENCY",
+        "kind": 5,
+        "importPath": "backend.tasks.rfp_radar_scanner",
+        "description": "backend.tasks.rfp_radar_scanner",
+        "peekOfCode": "PWS_CHECK_CONCURRENCY = 5\n# Only consider opportunities posted within this window\nPOSTED_WITHIN_DAYS = 60\n# ---------------------------------------------------------------------------\n# Bulk CSV download + parse\n# ---------------------------------------------------------------------------\nasync def download_bulk_csv() -> str:\n    \"\"\"\n    Stream-download SAM.gov's daily bulk CSV (~217 MB) to a temp file.\n    Returns the path. Caller is responsible for cleanup.",
+        "detail": "backend.tasks.rfp_radar_scanner",
+        "documentation": {}
+    },
+    {
+        "label": "POSTED_WITHIN_DAYS",
+        "kind": 5,
+        "importPath": "backend.tasks.rfp_radar_scanner",
+        "description": "backend.tasks.rfp_radar_scanner",
+        "peekOfCode": "POSTED_WITHIN_DAYS = 60\n# ---------------------------------------------------------------------------\n# Bulk CSV download + parse\n# ---------------------------------------------------------------------------\nasync def download_bulk_csv() -> str:\n    \"\"\"\n    Stream-download SAM.gov's daily bulk CSV (~217 MB) to a temp file.\n    Returns the path. Caller is responsible for cleanup.\n    \"\"\"\n    tmp = tempfile.NamedTemporaryFile(",
+        "detail": "backend.tasks.rfp_radar_scanner",
+        "documentation": {}
+    },
+    {
         "label": "logger",
         "kind": 5,
         "importPath": "backend.utils.agent_streaming",
@@ -11393,6 +12762,42 @@
         "description": "backend.utils.billing_crud",
         "peekOfCode": "BILLING_COLLECTION = \"billing\"\nclass BillingCRUD:\n    \"\"\"\n    CRUD operations for billing records.\n    Thread-safe singleton pattern matching other CRUD classes in the codebase.\n    \"\"\"\n    def __init__(self):\n        \"\"\"Initialize with MongoDB connection.\"\"\"\n        self.client = get_mongodb_client()\n        self.db = self.client.get_database()",
         "detail": "backend.utils.billing_crud",
+        "documentation": {}
+    },
+    {
+        "label": "CapabilityProfileCRUD",
+        "kind": 6,
+        "importPath": "backend.utils.capability_profile_crud",
+        "description": "backend.utils.capability_profile_crud",
+        "peekOfCode": "class CapabilityProfileCRUD:\n    \"\"\"\n    Capability profile CRUD with MongoDB (sync singleton).\n    Multi-tenant — every method requires an organization_id. v1 enforces\n    one-profile-per-org via a unique index.\n    \"\"\"\n    def __init__(self):\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"capability_profiles\"]",
+        "detail": "backend.utils.capability_profile_crud",
+        "documentation": {}
+    },
+    {
+        "label": "get_capability_profile_crud",
+        "kind": 2,
+        "importPath": "backend.utils.capability_profile_crud",
+        "description": "backend.utils.capability_profile_crud",
+        "peekOfCode": "def get_capability_profile_crud() -> CapabilityProfileCRUD:\n    \"\"\"Get the singleton CapabilityProfileCRUD.\"\"\"\n    global _crud_instance\n    with _crud_lock:\n        if _crud_instance is None:\n            _crud_instance = CapabilityProfileCRUD()\n        return _crud_instance",
+        "detail": "backend.utils.capability_profile_crud",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.utils.capability_profile_crud",
+        "description": "backend.utils.capability_profile_crud",
+        "peekOfCode": "logger = logging.getLogger(__name__)\ndef _coerce_org_id(organization_id: Any) -> ObjectId:\n    \"\"\"Accept either a hex string or a bson ObjectId — return ObjectId.\"\"\"\n    if isinstance(organization_id, ObjectId):\n        return organization_id\n    return ObjectId(str(organization_id))\ndef _parse_iso(ts: Any) -> Optional[datetime]:\n    \"\"\"Tolerate ISO strings (from the builder) and datetime objects alike.\"\"\"\n    if ts is None or isinstance(ts, datetime):\n        return ts",
+        "detail": "backend.utils.capability_profile_crud",
+        "documentation": {}
+    },
+    {
+        "label": "_crud_lock",
+        "kind": 5,
+        "importPath": "backend.utils.capability_profile_crud",
+        "description": "backend.utils.capability_profile_crud",
+        "peekOfCode": "_crud_lock = threading.RLock()\ndef get_capability_profile_crud() -> CapabilityProfileCRUD:\n    \"\"\"Get the singleton CapabilityProfileCRUD.\"\"\"\n    global _crud_instance\n    with _crud_lock:\n        if _crud_instance is None:\n            _crud_instance = CapabilityProfileCRUD()\n        return _crud_instance",
+        "detail": "backend.utils.capability_profile_crud",
         "documentation": {}
     },
     {
@@ -12086,6 +13491,42 @@
         "description": "backend.utils.python_repl_tool",
         "peekOfCode": "_current_session_id = contextvars.ContextVar(\"session_id\", default=\"default\")\ndef get_session_id() -> str:\n    return _current_session_id.get()\ndef set_session_id(session_id: str):\n    \"\"\"Set the current session_id in the context. Call before agent.run().\"\"\"\n    _current_session_id.set(session_id)\nclass SafePythonREPL:\n    \"\"\"Session-scoped wrapper around LangChain's PythonREPL.\"\"\"\n    def __init__(self, session_id: str = None):\n        self.session_id = session_id or \"default\"",
         "detail": "backend.utils.python_repl_tool",
+        "documentation": {}
+    },
+    {
+        "label": "RFPRadarMatchCRUD",
+        "kind": 6,
+        "importPath": "backend.utils.rfp_radar_match_crud",
+        "description": "backend.utils.rfp_radar_match_crud",
+        "peekOfCode": "class RFPRadarMatchCRUD:\n    \"\"\"\n    CRUD for the rfp_radar_matches collection (sync singleton).\n    Multi-tenant — every method requires an organization_id.\n    \"\"\"\n    def __init__(self):\n        mongodb = get_mongodb_client()\n        self.db = mongodb.get_database()\n        self.collection = self.db[\"rfp_radar_matches\"]\n        # Idempotent index creation",
+        "detail": "backend.utils.rfp_radar_match_crud",
+        "documentation": {}
+    },
+    {
+        "label": "get_rfp_radar_match_crud",
+        "kind": 2,
+        "importPath": "backend.utils.rfp_radar_match_crud",
+        "description": "backend.utils.rfp_radar_match_crud",
+        "peekOfCode": "def get_rfp_radar_match_crud() -> RFPRadarMatchCRUD:\n    \"\"\"Get the singleton RFPRadarMatchCRUD.\"\"\"\n    global _crud_instance\n    with _crud_lock:\n        if _crud_instance is None:\n            _crud_instance = RFPRadarMatchCRUD()\n        return _crud_instance",
+        "detail": "backend.utils.rfp_radar_match_crud",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.utils.rfp_radar_match_crud",
+        "description": "backend.utils.rfp_radar_match_crud",
+        "peekOfCode": "logger = logging.getLogger(__name__)\ndef _coerce_org_id(organization_id: Any) -> ObjectId:\n    \"\"\"Accept a hex string or bson ObjectId.\"\"\"\n    if isinstance(organization_id, ObjectId):\n        return organization_id\n    return ObjectId(str(organization_id))\ndef _date_to_dt(d: Any) -> datetime:\n    \"\"\"\n    Convert a date / datetime / ISO string to a UTC datetime suitable for\n    MongoDB (BSON doesn't have a date-only type, so we store midnight UTC).",
+        "detail": "backend.utils.rfp_radar_match_crud",
+        "documentation": {}
+    },
+    {
+        "label": "_crud_lock",
+        "kind": 5,
+        "importPath": "backend.utils.rfp_radar_match_crud",
+        "description": "backend.utils.rfp_radar_match_crud",
+        "peekOfCode": "_crud_lock = threading.RLock()\ndef get_rfp_radar_match_crud() -> RFPRadarMatchCRUD:\n    \"\"\"Get the singleton RFPRadarMatchCRUD.\"\"\"\n    global _crud_instance\n    with _crud_lock:\n        if _crud_instance is None:\n            _crud_instance = RFPRadarMatchCRUD()\n        return _crud_instance",
+        "detail": "backend.utils.rfp_radar_match_crud",
         "documentation": {}
     },
     {
