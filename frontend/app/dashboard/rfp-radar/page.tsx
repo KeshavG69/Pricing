@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   AlertCircle,
   Loader2,
@@ -43,6 +44,7 @@ function todayIso(): string {
 }
 
 export default function RFPRadarPage() {
+  const router = useRouter();
   const profile = useCapabilityBuilderStore((s) => s.profile);
   const profileLoading = useCapabilityBuilderStore((s) => s.profileLoading);
   const profileError = useCapabilityBuilderStore((s) => s.profileError);
@@ -53,23 +55,35 @@ export default function RFPRadarPage() {
   const viewingDate = useCapabilityBuilderStore((s) => s.viewingDate);
   const scanning = useCapabilityBuilderStore((s) => s.scanning);
   const scanError = useCapabilityBuilderStore((s) => s.scanError);
+  const pricingNoticeId = useCapabilityBuilderStore((s) => s.pricingNoticeId);
+  const priceError = useCapabilityBuilderStore((s) => s.priceError);
 
-  const loadProfile = useCapabilityBuilderStore((s) => s.loadProfile);
+  const loadInitial = useCapabilityBuilderStore((s) => s.loadInitial);
   const loadMatches = useCapabilityBuilderStore((s) => s.loadMatches);
-  const loadAvailableDates = useCapabilityBuilderStore((s) => s.loadAvailableDates);
   const setViewingDate = useCapabilityBuilderStore((s) => s.setViewingDate);
   const runScanNow = useCapabilityBuilderStore((s) => s.runScanNow);
+  const priceMatch = useCapabilityBuilderStore((s) => s.priceMatch);
 
-  // Initial load — profile first, then matches + dates (in parallel).
+  // Initial load — runs the network only on first visit or after an org
+  // switch. On subsequent navigations the store is already hydrated, so this
+  // is a no-op and the cached profile/matches render instantly (no reload).
   useEffect(() => {
-    void loadProfile();
-    void loadAvailableDates();
-    void loadMatches();
-  }, [loadProfile, loadAvailableDates, loadMatches]);
+    void loadInitial();
+  }, [loadInitial]);
 
-  const handlePriceClick = (m: RFPRadarMatch) => {
-    // Piece 6 hook — for now just open the SAM.gov page in a new tab.
-    if (m.ui_link) window.open(m.ui_link, '_blank', 'noopener,noreferrer');
+  /**
+   * "Price this RFP" handoff: download the pre-picked PWS through the
+   * backend, push it through the standard proposals upload API, then land
+   * on the proposal page — the same live parser-event experience as a
+   * manual upload.
+   */
+  const handlePriceClick = async (m: RFPRadarMatch) => {
+    try {
+      const proposalId = await priceMatch(m);
+      router.push(`/proposals/${proposalId}`);
+    } catch {
+      // priceError is set in the store and rendered below the calendar.
+    }
   };
 
   // ── State 0: profile still loading ────────────────────────────────
@@ -183,6 +197,16 @@ export default function RFPRadarPage() {
         </Card>
       )}
 
+      {/* Price-handoff error */}
+      {priceError && (
+        <Card className="mb-4 border-amber-200 bg-amber-50/50 dark:border-amber-900 dark:bg-amber-950/20">
+          <div className="flex items-start gap-2 p-3">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-300" />
+            <p className="text-xs text-amber-900 dark:text-amber-200">{priceError}</p>
+          </div>
+        </Card>
+      )}
+
       {/* Matches loading */}
       {matchesLoading && matches.length === 0 && (
         <div className="space-y-3">
@@ -196,7 +220,13 @@ export default function RFPRadarPage() {
       {!matchesLoading && matches.length > 0 && (
         <div className="space-y-3">
           {matches.map((m) => (
-            <MatchCard key={m.id || m.notice_id} match={m} onPriceClick={handlePriceClick} />
+            <MatchCard
+              key={m.id || m.notice_id}
+              match={m}
+              onPriceClick={handlePriceClick}
+              isPricing={pricingNoticeId === m.notice_id}
+              pricingDisabled={pricingNoticeId !== null}
+            />
           ))}
         </div>
       )}

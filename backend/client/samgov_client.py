@@ -443,6 +443,48 @@ class SamGovClient:
             ))
         return out
 
+    async def download_attachment(self, resource_id: str) -> bytes:
+        """
+        Download a single attachment file by its resource_id via the public
+        no-key endpoint. SAM.gov answers with a 303 redirect to a pre-signed
+        S3 URL, so redirects must be followed.
+
+        Verified against live data: the downloaded byte count matches the
+        `size` reported by /resources exactly.
+
+        Raises SamGovError on HTTP failure or an empty body.
+        """
+        if not resource_id:
+            raise SamGovError("download_attachment: resource_id is required")
+        url = (
+            "https://sam.gov/api/prod/opps/v3/opportunities/resources/files/"
+            f"{resource_id}/download"
+        )
+        try:
+            async with httpx.AsyncClient(
+                timeout=120.0,
+                follow_redirects=True,
+                headers={"Accept": "*/*"},
+            ) as c:
+                resp = await c.get(url)
+                resp.raise_for_status()
+                content = resp.content
+        except httpx.HTTPStatusError as e:
+            raise SamGovError(
+                f"SAM.gov attachment download failed for {resource_id}: "
+                f"HTTP {e.response.status_code}",
+                status_code=e.response.status_code,
+            )
+        except httpx.HTTPError as e:
+            raise SamGovError(
+                f"SAM.gov attachment download failed for {resource_id}: {e}"
+            )
+        if not content:
+            raise SamGovError(
+                f"SAM.gov attachment download returned empty body for {resource_id}"
+            )
+        return content
+
     # ----- bulk daily CSV (no API key, no quota) -----
 
     async def stream_daily_csv(

@@ -6,6 +6,7 @@ import {
   Check,
   ExternalLink,
   FileText,
+  Loader2,
   MapPin,
   Sparkles,
   Tag,
@@ -17,8 +18,12 @@ import type { RFPRadarMatch } from '@/types';
 
 interface MatchCardProps {
   match: RFPRadarMatch;
-  /** Fires when the user clicks "Price this RFP" — wired to piece 6 later. */
+  /** "Price this RFP" — downloads the PWS and hands off to PriceIQ. */
   onPriceClick?: (match: RFPRadarMatch) => void;
+  /** True while THIS card's handoff is in flight — shows the spinner. */
+  isPricing?: boolean;
+  /** True while ANY card's handoff is in flight — disables the button. */
+  pricingDisabled?: boolean;
 }
 
 // ── Visual helpers ────────────────────────────────────────────────────
@@ -58,7 +63,12 @@ function formatBytes(n: number): string {
 
 // ── Component ─────────────────────────────────────────────────────────
 
-export default function MatchCard({ match, onPriceClick }: MatchCardProps) {
+export default function MatchCard({
+  match,
+  onPriceClick,
+  isPricing = false,
+  pricingDisabled = false,
+}: MatchCardProps) {
   const days = daysUntil(match.response_deadline);
   // Plain-English deadline label. "X days left" was ambiguous (left of
   // what?) — now it's framed as a response due-date.
@@ -216,9 +226,19 @@ export default function MatchCard({ match, onPriceClick }: MatchCardProps) {
               variant="primary"
               size="sm"
               onClick={() => onPriceClick?.(match)}
+              disabled={pricingDisabled}
             >
-              <Sparkles className="h-4 w-4 mr-2" />
-              Price this RFP
+              {isPricing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Preparing…
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Price this RFP
+                </>
+              )}
             </Button>
           </div>
         </div>

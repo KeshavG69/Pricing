@@ -101,4 +101,18 @@ export const capabilityBuilderApi = {
     );
     return response.data;
   },
+
+  /**
+   * Proxy-download the pre-picked PWS file for a saved match. The backend
+   * fetches it from SAM.gov (browser can't — CORS) and streams the bytes.
+   * Used by the "Price this RFP" handoff: the blob gets wrapped in a File
+   * and fed to the standard proposals upload API.
+   */
+  downloadPwsFile: async (noticeId: string): Promise<Blob> => {
+    const response = await apiClient.get<Blob>(
+      `/capability-builder/matches/${noticeId}/pws-file`,
+      { responseType: 'blob' }
+    );
+    return response.data;
+  },
 };

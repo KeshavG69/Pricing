@@ -226,6 +226,57 @@ def _profile_from_doc(doc: dict) -> CapabilityProfile:
 # ---------------------------------------------------------------------------
 
 
+def _dedup_by_solicitation(
+    candidate_map: dict[str, tuple[Opportunity, str]],
+) -> dict[str, tuple[Opportunity, str]]:
+    """
+    Collapse opportunities that share a solicitation number, keeping the
+    most-recently-posted version.
+
+    SAM.gov mints a new notice_id for every re-post/amendment of the same
+    solicitation, so a single Sol# can appear several times across posted
+    dates. We keep the latest posting (the current/active amendment) and
+    merge NAICS codes from the dropped duplicates so scoring still sees the
+    full set.
+
+    Opportunities without a solicitation number are never collapsed — each is
+    kept on its own notice_id, since we have no reliable identity to group on.
+
+    Returned keys are arbitrary (notice_id of the survivor); only the values
+    matter downstream.
+    """
+    # group_key -> (winning opp, desc)
+    winners: dict[str, tuple[Opportunity, str]] = {}
+
+    for opp, desc in candidate_map.values():
+        sol = (opp.solicitation_number or "").strip().upper()
+        # No solicitation number → unique by notice_id (never merge).
+        group_key = sol if sol else f"__noticeid__{opp.notice_id}"
+
+        existing = winners.get(group_key)
+        if existing is None:
+            winners[group_key] = (opp, desc)
+            continue
+
+        old_opp, old_desc = existing
+        # Merge the loser's NAICS codes into whichever opp survives, so we
+        # don't lose a NAICS signal just because it rode in on the older post.
+        merged_naics = list(old_opp.naics_codes)
+        for c in opp.naics_codes:
+            if c not in merged_naics:
+                merged_naics.append(c)
+
+        # Most recent posted_date wins. ISO YYYY-MM-DD compares lexically;
+        # a missing date is treated as oldest.
+        new_is_newer = (opp.posted_date or "") > (old_opp.posted_date or "")
+        winner_opp, winner_desc = (opp, desc) if new_is_newer else (old_opp, old_desc)
+        winner_opp.naics_codes = merged_naics
+        winners[group_key] = (winner_opp, winner_desc)
+
+    # Re-key by the survivor's notice_id for a clean caller-facing map.
+    return {opp.notice_id: (opp, desc) for opp, desc in winners.values()}
+
+
 async def run_scan_for_org(
     profile_doc: dict,
     naics_buckets: dict[str, list[tuple[Opportunity, str]]],
@@ -264,9 +315,20 @@ async def run_scan_for_org(
         logger.info(f"Org {org_id}: no candidates in CSV for their NAICS")
         return []
 
+    # 1b. Collapse re-posts of the same solicitation. SAM.gov issues a fresh
+    # notice_id for every amendment/re-post, so the notice_id dedup above lets
+    # the same Sol# (e.g. N0018926RL020) through 4× on different posted dates.
+    # Keep only the most-recently-posted version of each solicitation number.
+    deduped = _dedup_by_solicitation(candidate_map)
+    if len(deduped) < len(candidate_map):
+        logger.info(
+            f"Org {org_id}: collapsed {len(candidate_map)} → {len(deduped)} "
+            f"candidates after solicitation-number dedup"
+        )
+
     # 2. Score each
     scored: list[tuple[Any, Opportunity, str]] = []
-    for opp, desc in candidate_map.values():
+    for opp, desc in deduped.values():
         ms = score_opportunity(opp, profile, opp_description=desc)
         scored.append((ms, opp, desc))
     scored.sort(key=lambda t: t[0].score, reverse=True)

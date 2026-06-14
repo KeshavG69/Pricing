@@ -12,13 +12,18 @@ Endpoints
     DELETE /api/capability-builder/profile         — wipe it
     GET    /api/capability-builder/matches         — today's RFP Radar matches
     GET    /api/capability-builder/matches/dates   — calendar nav (dates with matches)
+    GET    /api/capability-builder/matches/{notice_id}/pws-file
+                                                   — proxy-download the saved PWS
 """
 
 import logging
+import re
+import unicodedata
 from datetime import date, datetime, timezone
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi.responses import Response
 
 from auth.dependencies import get_current_user
 from client.capability_profile_builder import build_profile
@@ -270,6 +275,96 @@ async def list_match_dates(
         "count": len(dates),
         "dates": [d.isoformat() for d in dates],
     }
+
+
+# Extension → Content-Type for the PWS proxy. SAM.gov stores mime_type as a
+# bare extension (".pdf"), so we map it ourselves.
+_PWS_CONTENT_TYPES = {
+    ".pdf": "application/pdf",
+    ".doc": "application/msword",
+    ".docx": (
+        "application/vnd.openxmlformats-officedocument"
+        ".wordprocessingml.document"
+    ),
+    ".xls": "application/vnd.ms-excel",
+    ".xlsx": (
+        "application/vnd.openxmlformats-officedocument"
+        ".spreadsheetml.sheet"
+    ),
+    ".txt": "text/plain",
+    ".rtf": "application/rtf",
+}
+
+
+def _ascii_filename(name: str) -> str:
+    """Squash a filename to a safe ASCII Content-Disposition token."""
+    normalized = unicodedata.normalize("NFKD", name)
+    ascii_only = normalized.encode("ascii", "ignore").decode("ascii")
+    # Collapse runs of whitespace, strip quote/control chars
+    cleaned = re.sub(r'[\\"\r\n]+', "", ascii_only)
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    return cleaned or "pws-document"
+
+
+@router.get("/matches/{notice_id}/pws-file")
+async def download_match_pws_file(
+    notice_id: str,
+    current_user: dict = Depends(get_current_user),
+):
+    """
+    Proxy-download the pre-picked PWS attachment for one of this org's saved
+    matches.
+
+    The browser can't fetch SAM.gov attachments directly (CORS), so this
+    endpoint streams the bytes through. The frontend wraps the response in a
+    File and feeds it to the standard POST /proposals/upload flow — the
+    "Price this RFP" handoff reuses the manual-upload pipeline end to end.
+    """
+    org_id = _require_org(current_user)
+
+    match = get_rfp_radar_match_crud().get_by_notice_id(org_id, notice_id)
+    if match is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"No saved match for notice {notice_id} in this organization.",
+        )
+
+    pws = match.get("pws") or {}
+    resource_id = pws.get("resource_id")
+    if not resource_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="This match has no saved PWS attachment.",
+        )
+
+    from client.samgov_client import SamGovError, get_samgov_client
+
+    try:
+        content = await get_samgov_client().download_attachment(resource_id)
+    except SamGovError as e:
+        logger.warning(
+            f"PWS download failed org={org_id} notice={notice_id}: {e}"
+        )
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=(
+                "Couldn't download the PWS from SAM.gov. The file may have "
+                "been removed — try View on SAM.gov to check."
+            ),
+        )
+
+    filename = _ascii_filename(pws.get("filename") or "pws-document.pdf")
+    ext = ("." + filename.rsplit(".", 1)[-1].lower()) if "." in filename else ""
+    media_type = _PWS_CONTENT_TYPES.get(ext, "application/octet-stream")
+
+    return Response(
+        content=content,
+        media_type=media_type,
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"',
+            "X-PWS-Filename": filename,
+        },
+    )
 
 
 @router.post("/matches/scan/run-now")

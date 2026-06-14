@@ -439,22 +439,24 @@ export default function ProposalPage() {
   }
 
   const renderProcessingView = () => (
-    <Card>
-      <CardContent className="py-10">
-        <ParserEventFeed
-          events={parserEvents}
-          status="processing"
-          fallbackMessage={
-            pollingStatus?.message ||
-            currentProposal?.message ||
-            'Processing your documents…'
-          }
-        />
-        <p className="text-xs text-muted-foreground text-center mt-8">
-          You can safely close this page — processing will continue in the background.
-        </p>
-      </CardContent>
-    </Card>
+    <div className="flex min-h-[70vh] items-center justify-center">
+      <Card className="w-full max-w-2xl">
+        <CardContent className="py-10">
+          <ParserEventFeed
+            events={parserEvents}
+            status="processing"
+            fallbackMessage={
+              pollingStatus?.message ||
+              currentProposal?.message ||
+              'Processing your documents…'
+            }
+          />
+          <p className="text-xs text-muted-foreground text-center mt-8">
+            You can safely close this page — processing will continue in the background.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   );
 
   const renderErrorView = () => (

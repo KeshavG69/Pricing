@@ -4729,6 +4729,14 @@
         "documentation": {}
     },
     {
+        "label": "Response",
+        "importPath": "fastapi.responses",
+        "description": "fastapi.responses",
+        "isExtraImport": true,
+        "detail": "fastapi.responses",
+        "documentation": {}
+    },
+    {
         "label": "StreamingResponse",
         "importPath": "fastapi.responses",
         "description": "fastapi.responses",
@@ -7237,6 +7245,15 @@
         "description": "utils.proposals",
         "isExtraImport": true,
         "detail": "utils.proposals",
+        "documentation": {}
+    },
+    {
+        "label": "unicodedata",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "unicodedata",
+        "description": "unicodedata",
+        "detail": "unicodedata",
         "documentation": {}
     },
     {
@@ -11519,6 +11536,15 @@
         "importPath": "backend.routers.capability_builder",
         "description": "backend.routers.capability_builder",
         "peekOfCode": "router = APIRouter()\n# ---------------------------------------------------------------------------\n# Helpers\n# ---------------------------------------------------------------------------\ndef _require_org(current_user: dict) -> str:\n    \"\"\"Pull organization_id off the auth context, or 403.\"\"\"\n    org_id = current_user.get(\"organization_id\")\n    if not org_id:\n        raise HTTPException(\n            status_code=status.HTTP_403_FORBIDDEN,",
+        "detail": "backend.routers.capability_builder",
+        "documentation": {}
+    },
+    {
+        "label": "_PWS_CONTENT_TYPES",
+        "kind": 5,
+        "importPath": "backend.routers.capability_builder",
+        "description": "backend.routers.capability_builder",
+        "peekOfCode": "_PWS_CONTENT_TYPES = {\n    \".pdf\": \"application/pdf\",\n    \".doc\": \"application/msword\",\n    \".docx\": (\n        \"application/vnd.openxmlformats-officedocument\"\n        \".wordprocessingml.document\"\n    ),\n    \".xls\": \"application/vnd.ms-excel\",\n    \".xlsx\": (\n        \"application/vnd.openxmlformats-officedocument\"",
         "detail": "backend.routers.capability_builder",
         "documentation": {}
     },

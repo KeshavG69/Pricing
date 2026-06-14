@@ -332,10 +332,16 @@ export const useProposalsStore = create<ProposalsState>((set, get) => ({
         new Map(finalProposals.map((p) => [p.id, p])).values()
       );
 
+      // Stamp the org so remounting components (e.g. the sidebar crossing
+      // the /dashboard ↔ /proposals layout boundary) can tell the store
+      // already holds this org's data and skip a wasteful refetch.
+      const orgId = useAuthStore.getState().user?.organization_id ?? null;
+
       set((state) => ({
         proposals: deduplicatedFinalProposals,
         hasMore: hasMoreData,
         currentPage: sortChanged ? 1 : state.currentPage + 1,
+        lastFetchedOrgId: orgId,
         // DON'T set isLoading here - pagination should use local loading state
       }));
     } catch (error: any) {
