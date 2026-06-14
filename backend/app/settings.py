@@ -42,6 +42,12 @@ class Settings(BaseSettings):
     # Redis (Celery broker/backend)
     REDIS_URL: str = "redis://localhost:6379"
 
+    # SAM.gov API key (RFP Radar opportunity scanner).
+    # Free key from sam.gov → Account Details → API Key (rotates every 90 days).
+    # When empty, samgov_client raises a clear error; when set, all requests
+    # use the documented keyed v2 endpoint at api.sam.gov/opportunities/v2.
+    SAMGOV_API_KEY: str = ""
+
     class Config:
         env_file = ".env"
 

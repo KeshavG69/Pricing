@@ -36,7 +36,16 @@ class IDriveStorage:
             aws_access_key_id=settings.IDRIVE_E2_ACCESS_KEY,
             aws_secret_access_key=settings.IDRIVE_E2_SECRET_KEY,
             region_name=region,
-            config=Config(signature_version="s3v4"),
+            # Timeouts are load-bearing: without them a dead socket
+            # mid-transfer wedges the Celery worker indefinitely (observed:
+            # download stalled at 82%, task silent for 10+ min). read_timeout
+            # fires when NO bytes arrive for that window; retries reconnect.
+            config=Config(
+                signature_version="s3v4",
+                connect_timeout=10,
+                read_timeout=60,
+                retries={"max_attempts": 3, "mode": "standard"},
+            ),
         )
         self.bucket = settings.IDRIVE_E2_BUCKET
         self._lock = threading.RLock()  # Thread lock for concurrent operations

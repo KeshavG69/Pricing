@@ -53,5 +53,22 @@ ENV PATH="/app/.venv/bin:$PATH" \
 EXPOSE 8000
 
 
-
-CMD ["sh", "-c", "uvicorn app.server:app --host 0.0.0.0 --port 8000 & celery -A app.worker.celery_app worker --loglevel=info --pool=threads --concurrency=2"]
+# Container runs three processes:
+#   1. FastAPI API server (uvicorn, port 8000)
+#   2. Celery worker — processes async tasks (proposal parsing, GSA ingest,
+#      RFP Radar daily scan)
+#   3. Celery beat — schedules the RFP Radar daily scan at 10:00 UTC
+#
+# IMPORTANT — beat must NOT be horizontally scaled. If you later scale this
+# image to multiple replicas (e.g. via Railway/ECS), run beat in a SEPARATE
+# single-instance container and remove the `celery ... beat` clause below
+# from the API/worker containers. Otherwise you get duplicate scheduled jobs.
+#
+# Beat is the foreground process — if it crashes the container exits and the
+# orchestrator restarts everything. Default scheduler state file lives in
+# /app/celerybeat-schedule (lost on restart, which is fine for our daily cron).
+CMD ["sh", "-c", "\
+    uvicorn app.server:app --host 0.0.0.0 --port 8000 & \
+    celery -A app.worker.celery_app worker --loglevel=info --pool=threads --concurrency=2 & \
+    celery -A app.worker.celery_app beat --loglevel=info \
+"]

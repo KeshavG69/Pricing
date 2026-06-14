@@ -12,7 +12,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
 
-from routers import pricing, auth, excel_export, proposals, organizations, invitations, workspace, soc, company_repository, billing, stripe_webhooks, terms, help_center, users, contact, pricing_chat
+from routers import pricing, auth, excel_export, proposals, organizations, invitations, workspace, soc, company_repository, billing, stripe_webhooks, terms, help_center, users, contact, pricing_chat, capability_builder
 from auth.config import FRONTEND_URL
 from app.startup import startup_manager
 
@@ -82,6 +82,7 @@ app.include_router(stripe_webhooks.router, tags=["webhooks"])
 app.include_router(help_center.router, tags=["help-center"])
 app.include_router(pricing_chat.router, tags=["pricing-chat"])
 app.include_router(contact.router, tags=["contact"])
+app.include_router(capability_builder.router, prefix="/api/capability-builder", tags=["capability-builder"])
 
 
 @app.get("/")
