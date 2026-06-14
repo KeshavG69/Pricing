@@ -3,7 +3,6 @@
 import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useDropzone } from 'react-dropzone';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useProposalsStore } from '@/lib/stores/proposalsStore';
 import { useCompanyRepositoryStore } from '@/lib/stores/companyRepositoryStore';
 import { useAuthStore } from '@/lib/stores/authStore';
@@ -219,7 +218,7 @@ export default function UploadPage() {
   // right UX since there's nothing to stream.
   if (isLoading || isPolling) {
     return (
-      <DashboardLayout>
+      <>
         <div className="min-h-[calc(100vh-100px)] flex items-start justify-center px-4 py-10 overflow-y-auto">
           {uploadedProposalId ? (
             <ParserEventFeed
@@ -236,12 +235,13 @@ export default function UploadPage() {
             />
           )}
         </div>
-      </DashboardLayout>
-    );
+      
+      </>
+  );
   }
 
   return (
-    <DashboardLayout>
+    <>
       <div className="p-8 max-w-4xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-semibold text-foreground mb-2">Upload Documents</h1>
@@ -563,6 +563,7 @@ export default function UploadPage() {
           'Fully editable pricing workspace',
         ]}
       />
-    </DashboardLayout>
+    
+    </>
   );
 }

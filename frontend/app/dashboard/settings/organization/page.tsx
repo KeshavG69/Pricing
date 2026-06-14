@@ -5,7 +5,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/lib/stores/authStore';
 import { useOrganizationStore } from '@/lib/stores/organizationStore';
 import { useBillingStore } from '@/lib/stores/billingStore';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import Card, { CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/Card';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
@@ -16,6 +15,7 @@ import StatusBadge from '@/components/ui/StatusBadge';
 import { StripeProvider } from '@/components/billing/StripeProvider';
 import { PaymentMethodForm } from '@/components/billing/PaymentMethodForm';
 import OrganizationDeletionModal from '@/components/settings/OrganizationDeletionModal';
+import OrgRFPRadarSection from '@/components/rfp-radar/OrgRFPRadarSection';
 import {
   Building,
   Save,
@@ -33,6 +33,7 @@ import {
   AlertCircle,
   Loader2,
   FileText,
+  Radar,
 } from 'lucide-react';
 import { useToast } from '@/lib/hooks/useToast';
 import { isAdmin, canRemoveUser, getUserDisplayName, getUserInitials } from '@/lib/utils/permissions';
@@ -40,17 +41,17 @@ import { OrganizationSettings, InviteUserRequest } from '@/types';
 import apiClient from '@/lib/api/client';
 import { pricing } from '@/lib/config';
 
-type TabType = 'settings' | 'team' | 'billing' | 'legal';
+type TabType = 'settings' | 'team' | 'billing' | 'legal' | 'rfp-radar';
 
 // Wrapper component to handle Suspense for useSearchParams
 export default function OrganizationPage() {
   return (
     <Suspense fallback={
-      <DashboardLayout>
+      
         <div className="flex items-center justify-center h-64">
           <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
         </div>
-      </DashboardLayout>
+      
     }>
       <OrganizationPageContent />
     </Suspense>
@@ -97,7 +98,7 @@ function OrganizationPageContent() {
   // Tab state - read initial value from URL
   const tabFromUrl = searchParams.get('tab') as TabType | null;
   const [activeTab, setActiveTab] = useState<TabType>(
-    tabFromUrl && ['settings', 'team', 'billing', 'legal'].includes(tabFromUrl) ? tabFromUrl : 'settings'
+    tabFromUrl && ['settings', 'team', 'billing', 'legal', 'rfp-radar'].includes(tabFromUrl) ? tabFromUrl : 'settings'
   );
 
   // Settings form state
@@ -414,18 +415,19 @@ function OrganizationPageContent() {
   // Show loading state
   if (!user || !isAdmin(user) || !settings || !organization) {
     return (
-      <DashboardLayout>
+      <>
         <div className="flex items-center justify-center min-h-[400px]">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
         </div>
-      </DashboardLayout>
-    );
+      
+      </>
+  );
   }
 
   const pendingInvitations = invitations.filter((inv) => inv.status === 'pending');
 
   return (
-    <DashboardLayout>
+    <>
       <div className="space-y-2 max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mt-2">
@@ -483,6 +485,17 @@ function OrganizationPageContent() {
             >
               <FileText className="w-4 h-4 inline-block mr-2" />
               Terms and Conditions
+            </button>
+            <button
+              onClick={() => setActiveTab('rfp-radar')}
+              className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                activeTab === 'rfp-radar'
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border'
+              }`}
+            >
+              <Radar className="w-4 h-4 inline-block mr-2" />
+              RFP Radar
             </button>
           </nav>
         </div>
@@ -1309,6 +1322,9 @@ function OrganizationPageContent() {
           </div>
         )}
 
+        {/* RFP Radar Tab */}
+        {activeTab === 'rfp-radar' && <OrgRFPRadarSection />}
+
         {/* Danger Zone - Admin Only */}
         {isAdmin(user) && (
           <div className="mt-8">
@@ -1475,6 +1491,7 @@ function OrganizationPageContent() {
         isOpen={showDeleteOrgModal}
         onClose={() => setShowDeleteOrgModal(false)}
       />
-    </DashboardLayout>
+    
+    </>
   );
 }
