@@ -1,0 +1,65 @@
+<svg width="1000" height="430" viewBox="0 0 1000 430" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Five security questions that actually matter: encryption, access control, tenant isolation, audit trails, and standards alignment">
+  <defs>
+    <linearGradient id="spblue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5B7FFF"/><stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+  </defs>
+  <rect width="1000" height="430" rx="20" fill="#0B1120"/>
+  <text x="500" y="52" text-anchor="middle" fill="white" font-family="Inter,Arial,sans-serif" font-size="24" font-weight="800">The five questions that actually matter</text>
+  <text x="500" y="82" text-anchor="middle" fill="#94a3b8" font-family="Inter,Arial,sans-serif" font-size="15">Every one deserves a real answer — not a promise</text>
+
+  <g font-family="Inter,Arial,sans-serif">
+    <!-- card 1 Encryption -->
+    <g transform="translate(40,120)">
+      <rect width="285" height="130" rx="16" fill="#0f172a" stroke="#1e293b"/>
+      <g transform="translate(24,28)" stroke="url(#spblue)" stroke-width="3.5" fill="none">
+        <path d="M-2 8 a10 10 0 0 1 20 0" stroke-linecap="round"/>
+        <rect x="-6" y="8" width="28" height="22" rx="5" fill="url(#spblue)" stroke="none"/>
+      </g>
+      <text x="68" y="38" fill="white" font-size="17" font-weight="700">Encryption</text>
+      <text x="24" y="78" fill="#94a3b8" font-size="13.5">In transit and at rest —</text>
+      <text x="24" y="100" fill="#cbd5e1" font-size="13.5" font-weight="600">TLS 1.3 · AES-256</text>
+    </g>
+    <!-- card 2 Access control -->
+    <g transform="translate(357,120)">
+      <rect width="285" height="130" rx="16" fill="#0f172a" stroke="#1e293b"/>
+      <g transform="translate(38,24)" stroke="url(#spblue)" stroke-width="3.5" fill="none">
+        <circle cx="0" cy="0" r="8"/><path d="M-14 26 a14 12 0 0 1 28 0" stroke-linecap="round"/>
+      </g>
+      <text x="68" y="38" fill="white" font-size="17" font-weight="700">Access control</text>
+      <text x="24" y="78" fill="#94a3b8" font-size="13.5">Role-based, least-privilege —</text>
+      <text x="24" y="100" fill="#cbd5e1" font-size="13.5" font-weight="600">enforced, not assumed</text>
+    </g>
+    <!-- card 3 Isolation -->
+    <g transform="translate(674,120)">
+      <rect width="285" height="130" rx="16" fill="#0f172a" stroke="#1e293b"/>
+      <g transform="translate(26,18)" stroke="url(#spblue)" stroke-width="3.5" fill="none">
+        <rect x="0" y="0" width="16" height="28" rx="3"/><rect x="22" y="0" width="16" height="28" rx="3"/>
+      </g>
+      <text x="78" y="38" fill="white" font-size="17" font-weight="700">Tenant isolation</text>
+      <text x="24" y="78" fill="#94a3b8" font-size="13.5">Your data walled off —</text>
+      <text x="24" y="100" fill="#cbd5e1" font-size="13.5" font-weight="600">no cross-contamination</text>
+    </g>
+    <!-- card 4 Audit trails -->
+    <g transform="translate(198,272)">
+      <rect width="285" height="130" rx="16" fill="#0f172a" stroke="#1e293b"/>
+      <g transform="translate(24,18)" stroke="url(#spblue)" stroke-width="3.5" fill="none" stroke-linecap="round">
+        <rect x="0" y="0" width="26" height="30" rx="4"/><path d="M6 9h14M6 17h14M6 25h9"/>
+      </g>
+      <text x="70" y="38" fill="white" font-size="17" font-weight="700">Audit trails</text>
+      <text x="24" y="78" fill="#94a3b8" font-size="13.5">Tamper-evident log of</text>
+      <text x="24" y="100" fill="#cbd5e1" font-size="13.5" font-weight="600">who did what, when</text>
+    </g>
+    <!-- card 5 Standards -->
+    <g transform="translate(515,272)">
+      <rect width="285" height="130" rx="16" fill="#0f172a" stroke="#1e293b"/>
+      <g transform="translate(38,16)" stroke="url(#spblue)" stroke-width="3.5" fill="none" stroke-linejoin="round" stroke-linecap="round">
+        <path d="M0 -2 l16 6 v14 c0 12-8 20-16 25 -8-5-16-13-16-25 V4 Z"/>
+        <path d="M-7 11l5 5 10-11"/>
+      </g>
+      <text x="74" y="38" fill="white" font-size="17" font-weight="700">Standards</text>
+      <text x="24" y="78" fill="#94a3b8" font-size="13.5">NIST-aligned, SOC 2 Type II</text>
+      <text x="24" y="100" fill="#cbd5e1" font-size="13.5" font-weight="600">being pursued</text>
+    </g>
+  </g>
+</svg>

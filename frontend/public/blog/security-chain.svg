@@ -1,0 +1,39 @@
+<svg width="1000" height="340" viewBox="0 0 1000 340" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="From scattered spreadsheets and email to a purpose-built, secured platform">
+  <defs>
+    <linearGradient id="scblue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5B7FFF"/><stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+  </defs>
+  <rect width="1000" height="340" rx="20" fill="#0B1120"/>
+  <text x="500" y="50" text-anchor="middle" fill="white" font-family="Inter,Arial,sans-serif" font-size="22" font-weight="800">Your security is only as strong as your weakest vendor</text>
+
+  <!-- LEFT: status quo -->
+  <g transform="translate(60,90)" font-family="Inter,Arial,sans-serif">
+    <rect width="370" height="200" rx="16" fill="#160f12" stroke="#5c2a2a" stroke-width="1.5"/>
+    <text x="24" y="40" fill="#f87171" font-size="16" font-weight="800">THE STATUS QUO</text>
+    <g fill="#cbd5e1" font-size="14.5">
+      <text x="24" y="80"><tspan fill="#f87171">✕</tspan><tspan dx="12">Spreadsheet emailed around</tspan></text>
+      <text x="24" y="112"><tspan fill="#f87171">✕</tspan><tspan dx="12">Stored on someone&apos;s laptop</tspan></text>
+      <text x="24" y="144"><tspan fill="#f87171">✕</tspan><tspan dx="12">Copied into an open shared drive</tspan></text>
+      <text x="24" y="176"><tspan fill="#f87171">✕</tspan><tspan dx="12">No log of who touched what</tspan></text>
+    </g>
+  </g>
+
+  <!-- arrow -->
+  <g transform="translate(450,190)">
+    <path d="M0 0H80" stroke="#5B7FFF" stroke-width="3" stroke-dasharray="6 6"/>
+    <path d="M76 -7L92 0L76 7Z" fill="#5B7FFF"/>
+  </g>
+
+  <!-- RIGHT: platform -->
+  <g transform="translate(570,90)" font-family="Inter,Arial,sans-serif">
+    <rect width="370" height="200" rx="16" fill="#0e1a14" stroke="url(#scblue)" stroke-width="2"/>
+    <text x="24" y="40" fill="#5B7FFF" font-size="16" font-weight="800">A PURPOSE-BUILT PLATFORM</text>
+    <g fill="#cbd5e1" font-size="14.5">
+      <text x="24" y="80"><tspan fill="#22c55e">✓</tspan><tspan dx="12">Enterprise-grade encryption</tspan></text>
+      <text x="24" y="112"><tspan fill="#22c55e">✓</tspan><tspan dx="12">Enforced access controls</tspan></text>
+      <text x="24" y="144"><tspan fill="#22c55e">✓</tspan><tspan dx="12">True multi-tenant isolation</tspan></text>
+      <text x="24" y="176"><tspan fill="#22c55e">✓</tspan><tspan dx="12">Complete, auditable trails</tspan></text>
+    </g>
+  </g>
+</svg>
