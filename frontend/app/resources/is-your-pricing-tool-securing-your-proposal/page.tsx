@@ -3,6 +3,15 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, ArrowRight, Lock, Users, Server, ScrollText, ShieldCheck } from 'lucide-react';
+import ArticleTOC from '@/components/blog/ArticleTOC';
+import RelatedArticles from '@/components/blog/RelatedArticles';
+
+const TOC_SECTIONS = [
+  { id: 'questions-that-matter', label: 'The questions that actually matter' },
+  { id: 'security-is-a-chain', label: 'Security is a chain' },
+  { id: 'how-priceiq-approaches', label: 'How PriceIQ approaches security' },
+  { id: 'bottom-line', label: 'The bottom line' },
+];
 
 export default function ProposalSecurityArticle() {
   return (
@@ -70,16 +79,25 @@ export default function ProposalSecurityArticle() {
             <h1 className="text-4xl sm:text-5xl font-bold leading-tight mb-6">
               Your Proposal Is Your Most Sensitive Asset. Is Your Pricing Tool Treating It That Way?
             </h1>
-            <p className="text-xl text-white/80 leading-relaxed">
+            <p className="text-xl text-white/80 leading-relaxed mb-8">
               A pricing volume is a map of how your business wins — and what it would cost a competitor
               to know it. Before you upload a single RFP, there&apos;s one question worth asking: where is
               this data going, and who can touch it?
             </p>
+            <div className="flex items-center gap-3 pt-6 border-t border-white/10">
+              <div className="w-11 h-11 rounded-full bg-[#2563eb] flex items-center justify-center font-bold text-white">
+                P
+              </div>
+              <div className="text-sm">
+                <p className="font-semibold text-white">PriceIQ Team</p>
+                <p className="text-white/60">Published June 2026</p>
+              </div>
+            </div>
           </div>
         </header>
 
         {/* Cover image */}
-        <div className="max-w-4xl mx-auto px-6 sm:px-8 mt-10 lg:mt-12 relative z-10">
+        <div className="max-w-5xl mx-auto px-6 sm:px-8 mt-10 lg:mt-12 relative z-10">
           <div className="rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/5">
             <Image
               src="/blog/proposal-security-cover.svg"
@@ -93,7 +111,9 @@ export default function ProposalSecurityArticle() {
         </div>
 
         {/* Article body */}
-        <article className="max-w-3xl mx-auto px-6 sm:px-8 py-14 lg:py-20">
+        <div className="max-w-6xl mx-auto px-6 sm:px-8 py-14 lg:py-20 lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-14">
+          <ArticleTOC sections={TOC_SECTIONS} />
+          <article className="max-w-[720px] w-full">
           <div className="prose-article">
             <p>
               When a government contractor builds a pricing volume, they&apos;re not just assembling numbers.
@@ -121,7 +141,7 @@ export default function ProposalSecurityArticle() {
               for — and how to think about your own security posture in the process.
             </p>
 
-            <h2>The security questions that actually matter</h2>
+            <h2 id="questions-that-matter">The security questions that actually matter</h2>
             <p>
               When contractors raise security concerns about a cloud pricing tool, the worry usually isn&apos;t
               abstract. It clusters around a handful of specific, legitimate fears. Each one deserves a real
@@ -202,7 +222,7 @@ export default function ProposalSecurityArticle() {
               meet the bar you&apos;re held to.
             </p>
 
-            <h2>Security is a chain, and your vendor is a link</h2>
+            <h2 id="security-is-a-chain">Security is a chain, and your vendor is a link</h2>
             <p>
               Here&apos;s the strategic reframe that mature contractors have internalized: your security is only
               as strong as your weakest vendor. You can run a tight ship internally — trained staff,
@@ -234,7 +254,7 @@ export default function ProposalSecurityArticle() {
               they handle that data today.
             </blockquote>
 
-            <h2>How PriceIQ approaches security</h2>
+            <h2 id="how-priceiq-approaches">How PriceIQ approaches security</h2>
             <p>
               PriceIQ was built on the premise that proposal data is critical and should be treated that way —
               with security designed into every layer of the platform, not bolted on afterward. Here&apos;s how
@@ -277,7 +297,7 @@ export default function ProposalSecurityArticle() {
               </li>
             </ul>
 
-            <h2>The bottom line</h2>
+            <h2 id="bottom-line">The bottom line</h2>
             <p>
               Adopting an AI pricing tool shouldn&apos;t mean trading away control of your most sensitive data —
               it should mean giving that data a safer home than it has today. The right platform meets you at
@@ -304,7 +324,22 @@ export default function ProposalSecurityArticle() {
               </button>
             </Link>
           </div>
-        </article>
+          </article>
+        </div>
+
+        <RelatedArticles
+          articles={[
+            {
+              href: '/resources/how-ai-is-rewriting-federal-pricing',
+              image: '/blog/federal-pricing-cover.svg',
+              category: 'Federal Pricing',
+              readTime: '6 min read',
+              title: 'Less Time, Fewer Errors, Better Decisions: How AI Is Quietly Rewriting the Rules of Federal Pricing',
+              excerpt:
+                'The hidden tax of federal pricing was never the difficulty of the work — it was the volume of manual, error-prone effort. See how automation changes that.',
+            },
+          ]}
+        />
       </main>
 
       {/* Footer */}
