@@ -1,0 +1,92 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="AI is rewriting the rules of federal pricing">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="630" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0B1120"/>
+      <stop offset="0.55" stop-color="#111c34"/>
+      <stop offset="1" stop-color="#0B1120"/>
+    </linearGradient>
+    <linearGradient id="blue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5B7FFF"/>
+      <stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+    <linearGradient id="fade" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#1e293b" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#1e293b" stop-opacity="0.2"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="14" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- subtle grid -->
+  <g stroke="#5B7FFF" stroke-opacity="0.06">
+    <path d="M0 90H1200M0 180H1200M0 270H1200M0 360H1200M0 450H1200M0 540H1200"/>
+    <path d="M150 0V630M300 0V630M450 0V630M600 0V630M750 0V630M900 0V630M1050 0V630"/>
+  </g>
+
+  <!-- LEFT: messy manual spreadsheet -->
+  <g transform="translate(70,150)" opacity="0.85">
+    <rect x="0" y="0" width="330" height="330" rx="14" fill="#0f172a" stroke="#334155" stroke-width="1.5"/>
+    <rect x="0" y="0" width="330" height="40" rx="14" fill="#1e293b"/>
+    <rect x="0" y="26" width="330" height="14" fill="#1e293b"/>
+    <circle cx="22" cy="20" r="5" fill="#ef4444"/><circle cx="42" cy="20" r="5" fill="#f59e0b"/><circle cx="62" cy="20" r="5" fill="#475569"/>
+    <g stroke="#334155">
+      <path d="M0 80H330M0 120H330M0 160H330M0 200H330M0 240H330M0 280H330"/>
+      <path d="M90 40V330M170 40V330M250 40V330"/>
+    </g>
+    <!-- error cells -->
+    <rect x="172" y="122" width="76" height="36" fill="#ef4444" fill-opacity="0.2" stroke="#ef4444" stroke-opacity="0.6"/>
+    <rect x="252" y="202" width="76" height="36" fill="#ef4444" fill-opacity="0.2" stroke="#ef4444" stroke-opacity="0.6"/>
+    <g fill="#64748b" font-family="monospace" font-size="13">
+      <text x="14" y="104">SOC</text><text x="104" y="104">Wage</text><text x="184" y="104">#REF!</text><text x="264" y="104">FBLR</text>
+      <text x="14" y="144">2541</text><text x="104" y="144">$48k</text><text x="184" y="144" fill="#ef4444">#REF!</text><text x="264" y="144">...</text>
+      <text x="14" y="184">1799</text><text x="104" y="184">$61k</text><text x="184" y="184">1.42</text><text x="264" y="184">...</text>
+      <text x="14" y="224">3051</text><text x="104" y="224">$73k</text><text x="184" y="224">1.39</text><text x="264" y="224" fill="#ef4444">#N/A</text>
+      <text x="14" y="264">4011</text><text x="104" y="264">$55k</text><text x="184" y="264">1.41</text><text x="264" y="264">...</text>
+    </g>
+    <text x="0" y="362" fill="#64748b" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="600">Weeks of manual work</text>
+  </g>
+
+  <!-- arrow / AI core -->
+  <g transform="translate(470,300)">
+    <circle cx="65" cy="0" r="54" fill="url(#blue)" filter="url(#glow)"/>
+    <text x="65" y="9" text-anchor="middle" fill="white" font-family="Inter,Arial,sans-serif" font-size="26" font-weight="800">AI</text>
+    <path d="M0 0H-30M160 0H210" stroke="#5B7FFF" stroke-width="2.5" stroke-dasharray="6 6"/>
+    <path d="M205 -7L218 0L205 7Z" fill="#5B7FFF"/>
+  </g>
+
+  <!-- RIGHT: clean automated output -->
+  <g transform="translate(700,150)">
+    <rect x="0" y="0" width="330" height="330" rx="14" fill="#0f172a" stroke="url(#blue)" stroke-width="2"/>
+    <rect x="0" y="0" width="330" height="40" rx="14" fill="#16233f"/>
+    <rect x="0" y="26" width="330" height="14" fill="#16233f"/>
+    <circle cx="22" cy="20" r="5" fill="#22c55e"/>
+    <text x="44" y="25" fill="#94a3b8" font-family="Inter,Arial,sans-serif" font-size="13" font-weight="600">Bid-ready pricing volume</text>
+    <!-- clean bars -->
+    <g>
+      <rect x="24" y="70" width="220" height="14" rx="7" fill="#1e293b"/><rect x="24" y="70" width="180" height="14" rx="7" fill="url(#blue)"/>
+      <text x="262" y="82" fill="#22c55e" font-family="monospace" font-size="13">✓</text>
+      <rect x="24" y="106" width="220" height="14" rx="7" fill="#1e293b"/><rect x="24" y="106" width="140" height="14" rx="7" fill="url(#blue)"/>
+      <text x="262" y="118" fill="#22c55e" font-family="monospace" font-size="13">✓</text>
+      <rect x="24" y="142" width="220" height="14" rx="7" fill="#1e293b"/><rect x="24" y="142" width="210" height="14" rx="7" fill="url(#blue)"/>
+      <text x="262" y="154" fill="#22c55e" font-family="monospace" font-size="13">✓</text>
+      <rect x="24" y="178" width="220" height="14" rx="7" fill="#1e293b"/><rect x="24" y="178" width="120" height="14" rx="7" fill="url(#blue)"/>
+      <text x="262" y="190" fill="#22c55e" font-family="monospace" font-size="13">✓</text>
+    </g>
+    <g transform="translate(24,228)">
+      <rect width="282" height="74" rx="10" fill="#16233f"/>
+      <text x="16" y="30" fill="#94a3b8" font-family="Inter,Arial,sans-serif" font-size="13">Total Evaluated Price</text>
+      <text x="16" y="58" fill="white" font-family="Inter,Arial,sans-serif" font-size="24" font-weight="800">$4,182,640</text>
+    </g>
+    <text x="0" y="362" fill="#5B7FFF" font-family="Inter,Arial,sans-serif" font-size="15" font-weight="600">Work measured in minutes</text>
+  </g>
+
+  <!-- headline -->
+  <g transform="translate(70,60)">
+    <text x="0" y="0" fill="#5B7FFF" font-family="Inter,Arial,sans-serif" font-size="16" font-weight="700" letter-spacing="3">PRICEIQ · FEDERAL PRICING</text>
+  </g>
+  <text x="70" y="560" fill="white" font-family="Georgia,serif" font-size="34" font-weight="700">How AI Is Quietly Rewriting the Rules of Federal Pricing</text>
+</svg>
