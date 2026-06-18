@@ -1,0 +1,39 @@
+<svg width="1000" height="360" viewBox="0 0 1000 360" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="The three things AI gives back: time, peace of mind, and good judgment">
+  <defs>
+    <linearGradient id="g3blue" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#5B7FFF"/><stop offset="1" stop-color="#2563eb"/>
+    </linearGradient>
+  </defs>
+  <rect width="1000" height="360" rx="20" fill="#0B1120"/>
+  <text x="500" y="56" text-anchor="middle" fill="white" font-family="Inter,Arial,sans-serif" font-size="24" font-weight="800">What automation gives back</text>
+  <text x="500" y="86" text-anchor="middle" fill="#94a3b8" font-family="Inter,Arial,sans-serif" font-size="15">The three things every contractor is short on</text>
+
+  <!-- Time -->
+  <g transform="translate(70,130)">
+    <rect width="270" height="180" rx="16" fill="#0f172a" stroke="#1e293b"/>
+    <circle cx="135" cy="62" r="34" fill="none" stroke="url(#g3blue)" stroke-width="4"/>
+    <path d="M135 62V38M135 62L154 72" stroke="#5B7FFF" stroke-width="4" stroke-linecap="round"/>
+    <text x="135" y="128" text-anchor="middle" fill="white" font-family="Inter,Arial,sans-serif" font-size="19" font-weight="700">Time</text>
+    <text x="135" y="154" text-anchor="middle" fill="#94a3b8" font-family="Inter,Arial,sans-serif" font-size="13">Weeks → an afternoon</text>
+  </g>
+
+  <!-- Peace of mind -->
+  <g transform="translate(365,130)">
+    <rect width="270" height="180" rx="16" fill="#0f172a" stroke="#1e293b"/>
+    <path d="M135 30l30 12v22c0 20-13 34-30 42-17-8-30-22-30-42V42z" fill="none" stroke="url(#g3blue)" stroke-width="4" stroke-linejoin="round"/>
+    <path d="M122 64l9 9 18-19" stroke="#5B7FFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <text x="135" y="128" text-anchor="middle" fill="white" font-family="Inter,Arial,sans-serif" font-size="19" font-weight="700">Peace of mind</text>
+    <text x="135" y="154" text-anchor="middle" fill="#94a3b8" font-family="Inter,Arial,sans-serif" font-size="13">Fewer errors, clean submissions</text>
+  </g>
+
+  <!-- Good judgment -->
+  <g transform="translate(660,130)">
+    <rect width="270" height="180" rx="16" fill="#0f172a" stroke="#1e293b"/>
+    <g stroke="url(#g3blue)" stroke-width="4" fill="none" stroke-linecap="round">
+      <path d="M135 32v60"/><path d="M105 92h60"/>
+      <path d="M105 92l-16 26h32z"/><path d="M165 92l-16 26h32z"/>
+    </g>
+    <text x="135" y="128" text-anchor="middle" fill="white" font-family="Inter,Arial,sans-serif" font-size="19" font-weight="700">Good judgment</text>
+    <text x="135" y="154" text-anchor="middle" fill="#94a3b8" font-family="Inter,Arial,sans-serif" font-size="13">Strategists, not data clerks</text>
+  </g>
+</svg>

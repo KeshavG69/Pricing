@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import DashboardLayout from '@/components/layout/DashboardLayout';
 import { useProposalsStore } from '@/lib/stores/proposalsStore';
 import { usePricingStore } from '@/lib/stores/pricingStore';
 import { proposalsApi } from '@/lib/api/proposals';
@@ -433,31 +432,31 @@ export default function ProposalPage() {
 
   if (isLoading || !currentProposal) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-screen">
-          <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
+      </div>
     );
   }
 
   const renderProcessingView = () => (
-    <Card>
-      <CardContent className="py-10">
-        <ParserEventFeed
-          events={parserEvents}
-          status="processing"
-          fallbackMessage={
-            pollingStatus?.message ||
-            currentProposal?.message ||
-            'Processing your documents…'
-          }
-        />
-        <p className="text-xs text-muted-foreground text-center mt-8">
-          You can safely close this page — processing will continue in the background.
-        </p>
-      </CardContent>
-    </Card>
+    <div className="flex min-h-[70vh] items-center justify-center">
+      <Card className="w-full max-w-2xl">
+        <CardContent className="py-10">
+          <ParserEventFeed
+            events={parserEvents}
+            status="processing"
+            fallbackMessage={
+              pollingStatus?.message ||
+              currentProposal?.message ||
+              'Processing your documents…'
+            }
+          />
+          <p className="text-xs text-muted-foreground text-center mt-8">
+            You can safely close this page — processing will continue in the background.
+          </p>
+        </CardContent>
+      </Card>
+    </div>
   );
 
   const renderErrorView = () => (
@@ -639,7 +638,7 @@ export default function ProposalPage() {
   );
 
   return (
-    <DashboardLayout>
+    <>
       <div className="w-full px-6">
         <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-6 flex-wrap mt-2">
@@ -956,6 +955,6 @@ export default function ProposalPage() {
 
       {/* Pricing chat assistant — floating panel */}
       <PricingChatPanel />
-    </DashboardLayout>
+    </>
   );
 }

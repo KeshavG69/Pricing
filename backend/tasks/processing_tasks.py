@@ -73,7 +73,7 @@ def process_proposal_task(
         storage = get_idrive_storage()
         for key, name in zip(idrive_keys, file_names):
             local_path = temp_dir / name
-            storage.download_document(key, str(local_path))
+            _download_with_retry(storage, key, str(local_path))
             file_paths.append(str(local_path))
 
         asyncio.run(process_proposal_documents(
@@ -107,6 +107,52 @@ def process_proposal_task(
         if temp_dir is not None:
             shutil.rmtree(temp_dir, ignore_errors=True)
         gc.collect()
+
+
+def _download_with_retry(
+    storage,
+    key: str,
+    local_path: str,
+    attempts: int = 3,
+) -> None:
+    """
+    Download one document from iDrive with bounded retries.
+
+    A flaky route to iDrive e2 can stall a transfer mid-file; the boto client
+    now has read timeouts so the call fails instead of wedging, and each
+    retry opens a fresh connection. Logs each attempt so a slow/stuck
+    download is visible in the worker log instead of silent.
+    """
+    import time
+
+    last_err: Optional[Exception] = None
+    for attempt in range(1, attempts + 1):
+        try:
+            logger.info(
+                f"Downloading from iDrive (attempt {attempt}/{attempts}): {key}"
+            )
+            started = time.monotonic()
+            storage.download_document(key, local_path)
+            logger.info(
+                f"Downloaded {key} in {time.monotonic() - started:.1f}s"
+            )
+            return
+        except Exception as e:
+            last_err = e
+            logger.warning(
+                f"iDrive download attempt {attempt}/{attempts} failed for "
+                f"{key}: {e}"
+            )
+            # Remove any partial part-file boto left behind
+            try:
+                Path(local_path).unlink(missing_ok=True)
+            except OSError:
+                pass
+            if attempt < attempts:
+                time.sleep(2 * attempt)
+    raise RuntimeError(
+        f"Failed to download {key} from storage after {attempts} attempts"
+    ) from last_err
 
 
 def _mark_proposal_timed_out(proposal_id: str, user_id: str) -> None:
