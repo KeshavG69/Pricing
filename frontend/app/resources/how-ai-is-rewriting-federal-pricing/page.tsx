@@ -3,6 +3,16 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { ArrowLeft, ArrowRight, Clock, ShieldCheck, Brain } from 'lucide-react';
+import ArticleTOC from '@/components/blog/ArticleTOC';
+import RelatedArticles from '@/components/blog/RelatedArticles';
+
+const TOC_SECTIONS = [
+  { id: 'real-cost', label: 'The real cost of manual pricing' },
+  { id: 'time', label: 'Time: the resource you can’t manufacture' },
+  { id: 'fewer-errors', label: 'Fewer errors: a minefield to a checklist' },
+  { id: 'better-decisions', label: 'Better decisions: clarity over guesswork' },
+  { id: 'where-priceiq-fits', label: 'Where PriceIQ fits' },
+];
 
 export default function FederalPricingArticle() {
   return (
@@ -70,16 +80,25 @@ export default function FederalPricingArticle() {
             <h1 className="text-4xl sm:text-5xl font-bold leading-tight mb-6">
               Less Time, Fewer Errors, Better Decisions: How AI Is Quietly Rewriting the Rules of Federal Pricing
             </h1>
-            <p className="text-xl text-white/80 leading-relaxed">
+            <p className="text-xl text-white/80 leading-relaxed mb-8">
               The hidden tax of federal pricing was never the difficulty of the work — it was the
               sheer volume of manual, error-prone effort behind a single compliant pricing volume.
               That tax isn&apos;t the cost of doing business anymore.
             </p>
+            <div className="flex items-center gap-3 pt-6 border-t border-white/10">
+              <div className="w-11 h-11 rounded-full bg-[#2563eb] flex items-center justify-center font-bold text-white">
+                P
+              </div>
+              <div className="text-sm">
+                <p className="font-semibold text-white">PriceIQ Team</p>
+                <p className="text-white/60">Published June 2026</p>
+              </div>
+            </div>
           </div>
         </header>
 
         {/* Cover image */}
-        <div className="max-w-4xl mx-auto px-6 sm:px-8 mt-10 lg:mt-12 relative z-10">
+        <div className="max-w-5xl mx-auto px-6 sm:px-8 mt-10 lg:mt-12 relative z-10">
           <div className="rounded-2xl overflow-hidden shadow-2xl ring-1 ring-black/5">
             <Image
               src="/blog/federal-pricing-cover.svg"
@@ -93,7 +112,9 @@ export default function FederalPricingArticle() {
         </div>
 
         {/* Article body */}
-        <article className="max-w-3xl mx-auto px-6 sm:px-8 py-14 lg:py-20">
+        <div className="max-w-6xl mx-auto px-6 sm:px-8 py-14 lg:py-20 lg:grid lg:grid-cols-[240px_minmax(0,1fr)] lg:gap-14">
+          <ArticleTOC sections={TOC_SECTIONS} />
+          <article className="max-w-[720px] w-full">
           <div className="prose-article">
             <p>
               There is a particular kind of exhaustion that only government contractors know. It usually
@@ -127,7 +148,7 @@ export default function FederalPricingArticle() {
               />
             </figure>
 
-            <h2>The real cost of manual pricing</h2>
+            <h2 id="real-cost">The real cost of manual pricing</h2>
             <p>
               Before talking about the solution, it&apos;s worth being honest about the scale of the problem.
             </p>
@@ -167,7 +188,7 @@ export default function FederalPricingArticle() {
               wrestling with formulas.
             </p>
 
-            <h2>
+            <h2 id="time">
               <Clock className="inline-block w-7 h-7 text-[#2563eb] mr-2 -mt-1" />
               Time: the resource you can&apos;t manufacture
             </h2>
@@ -209,7 +230,7 @@ export default function FederalPricingArticle() {
               bottleneck on how many bids they can responsibly pursue.
             </p>
 
-            <h2>
+            <h2 id="fewer-errors">
               <ShieldCheck className="inline-block w-7 h-7 text-[#2563eb] mr-2 -mt-1" />
               Fewer errors: turning a minefield into a checklist
             </h2>
@@ -238,7 +259,7 @@ export default function FederalPricingArticle() {
               instead of crossing your fingers.
             </p>
 
-            <h2>
+            <h2 id="better-decisions">
               <Brain className="inline-block w-7 h-7 text-[#2563eb] mr-2 -mt-1" />
               Better decisions: clarity instead of guesswork
             </h2>
@@ -264,7 +285,7 @@ export default function FederalPricingArticle() {
               genuine competitive advantage lives.
             </p>
 
-            <h2>Where PriceIQ fits</h2>
+            <h2 id="where-priceiq-fits">Where PriceIQ fits</h2>
             <p>
               Everything above describes the promise of AI in federal pricing. PriceIQ is what it looks like
               when that promise is built specifically — and only — for the pricing volume itself.
@@ -309,7 +330,22 @@ export default function FederalPricingArticle() {
               </button>
             </Link>
           </div>
-        </article>
+          </article>
+        </div>
+
+        <RelatedArticles
+          articles={[
+            {
+              href: '/resources/is-your-pricing-tool-securing-your-proposal',
+              image: '/blog/proposal-security-cover.svg',
+              category: 'Security',
+              readTime: '6 min read',
+              title: 'Your Proposal Is Your Most Sensitive Asset. Is Your Pricing Tool Treating It That Way?',
+              excerpt:
+                'A pricing volume is a map of how your business wins. Here are the security questions every contractor should ask before uploading a single RFP.',
+            },
+          ]}
+        />
       </main>
 
       {/* Footer */}
