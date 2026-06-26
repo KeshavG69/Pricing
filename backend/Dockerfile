@@ -58,3 +58,4 @@ EXPOSE 8000
 # To split into separate Railway services, set SERVICE_ROLE per service.
 # Uvicorn is the foreground process so Railway's port health check works.
 CMD ["sh", "start.sh"]
+
