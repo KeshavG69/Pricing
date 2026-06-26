@@ -53,12 +53,8 @@ ENV PATH="/app/.venv/bin:$PATH" \
 EXPOSE 8000
 
 
-# Single-container mode (current default).
-# start.sh is available for splitting into separate Railway services when ready
-# (set SERVICE_ROLE=web|worker|beat per service). Not the default yet because
-# Railway needs a deliberate split — using the proven inline CMD for now.
-CMD ["sh", "-c", "\
-    uvicorn app.server:app --host 0.0.0.0 --port ${PORT:-8000} & \
-    celery -A app.worker.celery_app worker --loglevel=info --pool=prefork --concurrency=2 --max-tasks-per-child=1 & \
-    celery -A app.worker.celery_app beat --loglevel=info \
-"]
+# start.sh dispatches on $SERVICE_ROLE (web|worker|beat|worker-beat|all).
+# Default `all` runs all three in one container (current single-service mode).
+# To split into separate Railway services, set SERVICE_ROLE per service.
+# Uvicorn is the foreground process so Railway's port health check works.
+CMD ["sh", "start.sh"]
