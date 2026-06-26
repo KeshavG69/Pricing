@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PriceIQ — Admin</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #0f1117;
+      color: #e2e8f0;
+      min-height: 100vh;
+    }
+
+    /* ── Header ── */
+    header {
+      background: #1a1d27;
+      border-bottom: 1px solid #2d3148;
+      padding: 0 32px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .logo { font-size: 18px; font-weight: 700; color: #fff; letter-spacing: -0.3px; }
+    .logo span { color: #6366f1; }
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      background: #6366f120;
+      color: #818cf8;
+      border: 1px solid #6366f140;
+      border-radius: 4px;
+      padding: 2px 8px;
+      margin-left: 10px;
+    }
+    .last-updated { font-size: 12px; color: #64748b; }
+
+    /* ── Main ── */
+    main { max-width: 1280px; margin: 0 auto; padding: 32px 24px; }
+
+    /* ── Stats row ── */
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+    .stat-card {
+      background: #1a1d27;
+      border: 1px solid #2d3148;
+      border-radius: 10px;
+      padding: 20px 22px;
+    }
+    .stat-label { font-size: 12px; color: #64748b; font-weight: 500; text-transform: uppercase; letter-spacing: 0.6px; }
+    .stat-value { font-size: 28px; font-weight: 700; color: #fff; margin-top: 6px; }
+    .stat-value.green { color: #34d399; }
+    .stat-value.blue  { color: #60a5fa; }
+    .stat-value.amber { color: #fbbf24; }
+
+    /* ── Toolbar ── */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .search-wrap { position: relative; flex: 1; min-width: 200px; max-width: 340px; }
+    .search-wrap input {
+      width: 100%;
+      background: #1a1d27;
+      border: 1px solid #2d3148;
+      border-radius: 8px;
+      padding: 8px 12px 8px 36px;
+      font-size: 13px;
+      color: #e2e8f0;
+      outline: none;
+      transition: border-color .15s;
+    }
+    .search-wrap input:focus { border-color: #6366f1; }
+    .search-wrap svg {
+      position: absolute;
+      left: 11px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #64748b;
+    }
+    select {
+      background: #1a1d27;
+      border: 1px solid #2d3148;
+      border-radius: 8px;
+      padding: 8px 12px;
+      font-size: 13px;
+      color: #e2e8f0;
+      outline: none;
+      cursor: pointer;
+    }
+    select:focus { border-color: #6366f1; }
+    .btn-refresh {
+      margin-left: auto;
+      background: #6366f1;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      cursor: pointer;
+      transition: background .15s;
+    }
+    .btn-refresh:hover { background: #4f46e5; }
+    .btn-refresh:disabled { background: #3730a3; opacity: .6; cursor: default; }
+
+    /* ── Table ── */
+    .table-wrap {
+      background: #1a1d27;
+      border: 1px solid #2d3148;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    thead { background: #12141f; }
+    th {
+      padding: 12px 16px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      color: #64748b;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+    }
+    th:hover { color: #94a3b8; }
+    th.sorted { color: #818cf8; }
+    th .sort-icon { margin-left: 4px; opacity: .5; }
+    th.sorted .sort-icon { opacity: 1; }
+    tbody tr {
+      border-top: 1px solid #1e2235;
+      transition: background .1s;
+    }
+    tbody tr:hover { background: #1e2235; }
+    td { padding: 13px 16px; color: #cbd5e1; vertical-align: middle; }
+    td.name { color: #f1f5f9; font-weight: 500; }
+    td.email { color: #94a3b8; font-family: monospace; font-size: 12px; }
+    td.proposals { font-weight: 600; color: #60a5fa; }
+    td.date { color: #94a3b8; white-space: nowrap; font-size: 12px; }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      border-radius: 4px;
+      padding: 2px 8px;
+    }
+    .pill.admin   { background: #6366f120; color: #818cf8; border: 1px solid #6366f130; }
+    .pill.user    { background: #0f172a;   color: #64748b; border: 1px solid #1e293b; }
+    .pill.active  { background: #05966920; color: #34d399; border: 1px solid #05966930; }
+    .pill.deleted,
+    .pill.removed,
+    .pill.suspended { background: #7f1d1d20; color: #f87171; border: 1px solid #7f1d1d30; }
+    .pill.google  { background: #1d4ed820; color: #60a5fa; border: 1px solid #1d4ed830; }
+    .pill.email   { background: #0f172a;   color: #64748b; border: 1px solid #1e293b; }
+
+    /* ── Loading / empty ── */
+    .state-row td {
+      text-align: center;
+      padding: 60px 16px;
+      color: #475569;
+      font-size: 14px;
+    }
+    .spinner {
+      display: inline-block;
+      width: 20px; height: 20px;
+      border: 2px solid #2d3148;
+      border-top-color: #6366f1;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Pagination ── */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-top: 1px solid #1e2235;
+      font-size: 12px;
+      color: #64748b;
+    }
+    .page-btns { display: flex; gap: 6px; }
+    .page-btn {
+      background: #1e2235;
+      border: 1px solid #2d3148;
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 12px;
+      color: #cbd5e1;
+      cursor: pointer;
+    }
+    .page-btn:hover:not(:disabled) { background: #2d3148; }
+    .page-btn:disabled { opacity: .4; cursor: default; }
+    .page-btn.active { background: #6366f1; border-color: #6366f1; color: #fff; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div style="display:flex;align-items:center">
+    <span class="logo">Price<span>IQ</span></span>
+    <span class="badge">Admin</span>
+  </div>
+  <span class="last-updated" id="lastUpdated">—</span>
+</header>
+
+<main>
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card">
+      <div class="stat-label">Total Users</div>
+      <div class="stat-value" id="statTotal">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Active Users</div>
+      <div class="stat-value green" id="statActive">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Total Proposals</div>
+      <div class="stat-value blue" id="statProposals">—</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Admins</div>
+      <div class="stat-value amber" id="statAdmins">—</div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input type="text" id="searchInput" placeholder="Search name or email…" oninput="applyFilters()" />
+    </div>
+    <select id="roleFilter" onchange="applyFilters()">
+      <option value="">All roles</option>
+      <option value="admin">Admin</option>
+      <option value="user">User</option>
+    </select>
+    <select id="statusFilter" onchange="applyFilters()">
+      <option value="">All statuses</option>
+      <option value="active">Active</option>
+      <option value="removed">Removed</option>
+      <option value="suspended">Suspended</option>
+    </select>
+    <button class="btn-refresh" id="refreshBtn" onclick="loadData()">↻ Refresh</button>
+  </div>
+
+  <!-- Table -->
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th onclick="sortBy('name')">Name <span class="sort-icon" id="sort-name">↕</span></th>
+          <th onclick="sortBy('email')">Email <span class="sort-icon" id="sort-email">↕</span></th>
+          <th onclick="sortBy('org_name')">Organization <span class="sort-icon" id="sort-org_name">↕</span></th>
+          <th onclick="sortBy('role')">Role <span class="sort-icon" id="sort-role">↕</span></th>
+          <th onclick="sortBy('status')">Status <span class="sort-icon" id="sort-status">↕</span></th>
+          <th onclick="sortBy('auth_method')">Auth <span class="sort-icon" id="sort-auth_method">↕</span></th>
+          <th onclick="sortBy('proposals')">Proposals <span class="sort-icon" id="sort-proposals">↕</span></th>
+          <th onclick="sortBy('created_at')">Joined <span class="sort-icon" id="sort-created_at">↕</span></th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <tr class="state-row"><td colspan="8"><span class="spinner"></span>Loading…</td></tr>
+      </tbody>
+    </table>
+    <div class="pagination">
+      <span id="pageInfo">—</span>
+      <div class="page-btns" id="pageBtns"></div>
+    </div>
+  </div>
+</main>
+
+<script>
+  const PAGE_SIZE = 25;
+  let allUsers = [];
+  let filtered = [];
+  let sortCol = 'created_at';
+  let sortAsc = false;
+  let page = 0;
+
+  async function loadData() {
+    const btn = document.getElementById('refreshBtn');
+    btn.disabled = true;
+    btn.textContent = '↻ Loading…';
+    setTableState('loading');
+    try {
+      const res = await fetch('/admin/api/users');
+      if (!res.ok) throw new Error(res.statusText);
+      const data = await res.json();
+      allUsers = data.users;
+      updateStats();
+      applyFilters();
+      document.getElementById('lastUpdated').textContent =
+        'Updated ' + new Date().toLocaleTimeString();
+    } catch (e) {
+      setTableState('error', e.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = '↻ Refresh';
+    }
+  }
+
+  function updateStats() {
+    document.getElementById('statTotal').textContent = allUsers.length;
+    document.getElementById('statActive').textContent =
+      allUsers.filter(u => u.status === 'active').length;
+    document.getElementById('statProposals').textContent =
+      allUsers.reduce((s, u) => s + u.proposals, 0);
+    document.getElementById('statAdmins').textContent =
+      allUsers.filter(u => u.role === 'admin').length;
+  }
+
+  function applyFilters() {
+    const q = document.getElementById('searchInput').value.toLowerCase();
+    const role = document.getElementById('roleFilter').value;
+    const status = document.getElementById('statusFilter').value;
+    filtered = allUsers.filter(u => {
+      if (q && !u.name.toLowerCase().includes(q) && !u.email.toLowerCase().includes(q)) return false;
+      if (role && u.role !== role) return false;
+      if (status && u.status !== status) return false;
+      return true;
+    });
+    sortData();
+    page = 0;
+    renderPage();
+  }
+
+  function sortBy(col) {
+    if (sortCol === col) { sortAsc = !sortAsc; }
+    else { sortCol = col; sortAsc = true; }
+    // update header indicators
+    document.querySelectorAll('th').forEach(th => th.classList.remove('sorted'));
+    document.querySelectorAll('[id^="sort-"]').forEach(el => el.textContent = '↕');
+    const th = document.querySelector(`[id="sort-${col}"]`);
+    if (th) {
+      th.textContent = sortAsc ? '↑' : '↓';
+      th.closest('th').classList.add('sorted');
+    }
+    sortData();
+    page = 0;
+    renderPage();
+  }
+
+  function sortData() {
+    filtered.sort((a, b) => {
+      let va = a[sortCol] ?? '', vb = b[sortCol] ?? '';
+      if (sortCol === 'proposals') { va = +va; vb = +vb; }
+      if (va < vb) return sortAsc ? -1 : 1;
+      if (va > vb) return sortAsc ? 1 : -1;
+      return 0;
+    });
+  }
+
+  function renderPage() {
+    const start = page * PAGE_SIZE;
+    const slice = filtered.slice(start, start + PAGE_SIZE);
+    const tbody = document.getElementById('tableBody');
+    if (filtered.length === 0) {
+      tbody.innerHTML = '<tr class="state-row"><td colspan="8">No users match the current filters.</td></tr>';
+      document.getElementById('pageInfo').textContent = '0 users';
+      document.getElementById('pageBtns').innerHTML = '';
+      return;
+    }
+    tbody.innerHTML = slice.map(u => `
+      <tr>
+        <td class="name">${esc(u.name)}</td>
+        <td class="email">${esc(u.email)}</td>
+        <td>${esc(u.org_name)}</td>
+        <td><span class="pill ${u.role}">${u.role}</span></td>
+        <td><span class="pill ${u.status}">${u.status}</span></td>
+        <td><span class="pill ${u.auth_method}">${u.auth_method}</span></td>
+        <td class="proposals">${u.proposals}</td>
+        <td class="date">${fmtDate(u.created_at)}</td>
+      </tr>`).join('');
+
+    const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+    document.getElementById('pageInfo').textContent =
+      `${start + 1}–${Math.min(start + PAGE_SIZE, filtered.length)} of ${filtered.length} users`;
+
+    const btns = document.getElementById('pageBtns');
+    btns.innerHTML = `
+      <button class="page-btn" onclick="goPage(${page-1})" ${page===0?'disabled':''}>‹ Prev</button>
+      ${Array.from({length: totalPages}, (_, i) =>
+        `<button class="page-btn${i===page?' active':''}" onclick="goPage(${i})">${i+1}</button>`
+      ).join('')}
+      <button class="page-btn" onclick="goPage(${page+1})" ${page>=totalPages-1?'disabled':''}>Next ›</button>`;
+  }
+
+  function goPage(p) { page = p; renderPage(); }
+
+  function setTableState(state, msg) {
+    const tbody = document.getElementById('tableBody');
+    if (state === 'loading')
+      tbody.innerHTML = '<tr class="state-row"><td colspan="8"><span class="spinner"></span>Loading…</td></tr>';
+    else if (state === 'error')
+      tbody.innerHTML = `<tr class="state-row"><td colspan="8">Error: ${esc(msg)}</td></tr>`;
+  }
+
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    const d = new Date(iso);
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  // Initial sort indicator
+  document.getElementById('sort-created_at').textContent = '↓';
+  document.querySelector('[onclick="sortBy(\'created_at\')"]').classList.add('sorted');
+
+  loadData();
+</script>
+</body>
+</html>
