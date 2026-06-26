@@ -42,6 +42,10 @@ class Settings(BaseSettings):
     # Redis (Celery broker/backend)
     REDIS_URL: str = "redis://localhost:6379"
 
+    # Admin dashboard credentials (HTTP Basic Auth at /admin/users)
+    ADMIN_USERNAME: str = "admin"
+    ADMIN_PASSWORD: str = "changeme"
+
     # SAM.gov API key (RFP Radar opportunity scanner).
     # Free key from sam.gov → Account Details → API Key (rotates every 90 days).
     # When empty, samgov_client raises a clear error; when set, all requests
