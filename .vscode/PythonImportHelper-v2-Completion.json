@@ -2317,6 +2317,14 @@
         "documentation": {}
     },
     {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
+        "documentation": {}
+    },
+    {
         "label": "defusedxml.minidom",
         "kind": 6,
         "isExtraImport": true,
@@ -3871,6 +3879,14 @@
         "documentation": {}
     },
     {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
         "label": "threading",
         "kind": 6,
         "isExtraImport": true,
@@ -4008,28 +4024,36 @@
         "documentation": {}
     },
     {
-        "label": "asyncio",
+        "label": "secrets",
         "kind": 6,
         "isExtraImport": true,
-        "importPath": "asyncio",
-        "description": "asyncio",
-        "detail": "asyncio",
+        "importPath": "secrets",
+        "description": "secrets",
+        "detail": "secrets",
         "documentation": {}
     },
     {
-        "label": "asynccontextmanager",
-        "importPath": "contextlib",
-        "description": "contextlib",
+        "label": "Depends",
+        "importPath": "fastapi",
+        "description": "fastapi",
         "isExtraImport": true,
-        "detail": "contextlib",
+        "detail": "fastapi",
         "documentation": {}
     },
     {
-        "label": "suppress",
-        "importPath": "contextlib",
-        "description": "contextlib",
+        "label": "HTTPException",
+        "importPath": "fastapi",
+        "description": "fastapi",
         "isExtraImport": true,
-        "detail": "contextlib",
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "status",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
         "documentation": {}
     },
     {
@@ -4074,6 +4098,22 @@
     },
     {
         "label": "status",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "APIRouter",
+        "importPath": "fastapi",
+        "description": "fastapi",
+        "isExtraImport": true,
+        "detail": "fastapi",
+        "documentation": {}
+    },
+    {
+        "label": "Depends",
         "importPath": "fastapi",
         "description": "fastapi",
         "isExtraImport": true,
@@ -4697,6 +4737,63 @@
         "documentation": {}
     },
     {
+        "label": "HTTPBasic",
+        "importPath": "fastapi.security",
+        "description": "fastapi.security",
+        "isExtraImport": true,
+        "detail": "fastapi.security",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPBasicCredentials",
+        "importPath": "fastapi.security",
+        "description": "fastapi.security",
+        "isExtraImport": true,
+        "detail": "fastapi.security",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPBearer",
+        "importPath": "fastapi.security",
+        "description": "fastapi.security",
+        "isExtraImport": true,
+        "detail": "fastapi.security",
+        "documentation": {}
+    },
+    {
+        "label": "HTTPAuthorizationCredentials",
+        "importPath": "fastapi.security",
+        "description": "fastapi.security",
+        "isExtraImport": true,
+        "detail": "fastapi.security",
+        "documentation": {}
+    },
+    {
+        "label": "asyncio",
+        "kind": 6,
+        "isExtraImport": true,
+        "importPath": "asyncio",
+        "description": "asyncio",
+        "detail": "asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "asynccontextmanager",
+        "importPath": "contextlib",
+        "description": "contextlib",
+        "isExtraImport": true,
+        "detail": "contextlib",
+        "documentation": {}
+    },
+    {
+        "label": "suppress",
+        "importPath": "contextlib",
+        "description": "contextlib",
+        "isExtraImport": true,
+        "detail": "contextlib",
+        "documentation": {}
+    },
+    {
         "label": "CORSMiddleware",
         "importPath": "fastapi.middleware.cors",
         "description": "fastapi.middleware.cors",
@@ -4722,6 +4819,22 @@
     },
     {
         "label": "FileResponse",
+        "importPath": "fastapi.responses",
+        "description": "fastapi.responses",
+        "isExtraImport": true,
+        "detail": "fastapi.responses",
+        "documentation": {}
+    },
+    {
+        "label": "FileResponse",
+        "importPath": "fastapi.responses",
+        "description": "fastapi.responses",
+        "isExtraImport": true,
+        "detail": "fastapi.responses",
+        "documentation": {}
+    },
+    {
+        "label": "JSONResponse",
         "importPath": "fastapi.responses",
         "description": "fastapi.responses",
         "isExtraImport": true,
@@ -4898,6 +5011,14 @@
     },
     {
         "label": "capability_builder",
+        "importPath": "routers",
+        "description": "routers",
+        "isExtraImport": true,
+        "detail": "routers",
+        "documentation": {}
+    },
+    {
+        "label": "admin",
         "importPath": "routers",
         "description": "routers",
         "isExtraImport": true,
@@ -5341,22 +5462,6 @@
         "documentation": {}
     },
     {
-        "label": "HTTPBearer",
-        "importPath": "fastapi.security",
-        "description": "fastapi.security",
-        "isExtraImport": true,
-        "detail": "fastapi.security",
-        "documentation": {}
-    },
-    {
-        "label": "HTTPAuthorizationCredentials",
-        "importPath": "fastapi.security",
-        "description": "fastapi.security",
-        "isExtraImport": true,
-        "detail": "fastapi.security",
-        "documentation": {}
-    },
-    {
         "label": "jwt",
         "importPath": "jose",
         "description": "jose",
@@ -5426,6 +5531,14 @@
         "description": "auth",
         "isExtraImport": true,
         "detail": "auth",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
         "documentation": {}
     },
     {
@@ -6597,6 +6710,14 @@
         "importPath": "redis.asyncio",
         "description": "redis.asyncio",
         "detail": "redis.asyncio",
+        "documentation": {}
+    },
+    {
+        "label": "verify_admin",
+        "importPath": "app.admin_auth",
+        "description": "app.admin_auth",
+        "isExtraImport": true,
+        "detail": "app.admin_auth",
         "documentation": {}
     },
     {
@@ -7904,15 +8025,6 @@
         "description": "utils.proposal_mutation_tools",
         "isExtraImport": true,
         "detail": "utils.proposal_mutation_tools",
-        "documentation": {}
-    },
-    {
-        "label": "secrets",
-        "kind": 6,
-        "isExtraImport": true,
-        "importPath": "secrets",
-        "description": "secrets",
-        "detail": "secrets",
         "documentation": {}
     },
     {
@@ -9433,11 +9545,38 @@
         "documentation": {}
     },
     {
+        "label": "verify_admin",
+        "kind": 2,
+        "importPath": "backend.app.admin_auth",
+        "description": "backend.app.admin_auth",
+        "peekOfCode": "def verify_admin(credentials: HTTPBasicCredentials = Depends(security)) -> str:\n    ok_user = secrets.compare_digest(credentials.username, settings.ADMIN_USERNAME)\n    ok_pass = secrets.compare_digest(credentials.password, settings.ADMIN_PASSWORD)\n    if not (ok_user and ok_pass):\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=\"Invalid credentials\",\n            headers={\"WWW-Authenticate\": \"Basic\"},\n        )\n    return credentials.username",
+        "detail": "backend.app.admin_auth",
+        "documentation": {}
+    },
+    {
+        "label": "security",
+        "kind": 5,
+        "importPath": "backend.app.admin_auth",
+        "description": "backend.app.admin_auth",
+        "peekOfCode": "security = HTTPBasic()\ndef verify_admin(credentials: HTTPBasicCredentials = Depends(security)) -> str:\n    ok_user = secrets.compare_digest(credentials.username, settings.ADMIN_USERNAME)\n    ok_pass = secrets.compare_digest(credentials.password, settings.ADMIN_PASSWORD)\n    if not (ok_user and ok_pass):\n        raise HTTPException(\n            status_code=status.HTTP_401_UNAUTHORIZED,\n            detail=\"Invalid credentials\",\n            headers={\"WWW-Authenticate\": \"Basic\"},\n        )",
+        "detail": "backend.app.admin_auth",
+        "documentation": {}
+    },
+    {
         "label": "app",
         "kind": 5,
         "importPath": "backend.app.server",
         "description": "backend.app.server",
         "peekOfCode": "app = FastAPI(\n    title=\"Government Contractor Pricing API\",\n    description=\"API for pricing government contractor labor categories using BLS OEWS wage data\",\n    version=\"1.0.0\",\n    lifespan=lifespan\n)\n# Add GZip compression middleware (compress responses > 1KB)\n# This significantly reduces network payload for large JSON responses\napp.add_middleware(GZipMiddleware, minimum_size=1000)\n# Configure CORS - IMPORTANT: Specific origin required for cookies",
+        "detail": "backend.app.server",
+        "documentation": {}
+    },
+    {
+        "label": "_static_path",
+        "kind": 5,
+        "importPath": "backend.app.server",
+        "description": "backend.app.server",
+        "peekOfCode": "_static_path = Path(__file__).resolve().parent.parent / \"static\"\nif _static_path.exists():\n    app.mount(\"/static\", StaticFiles(directory=str(_static_path)), name=\"static\")\n@app.get(\"/\")\nasync def root():\n    \"\"\"Root endpoint - serve the UI.\"\"\"\n    return {\n        \"message\": \"Government Contractor Pricing API\",\n        \"docs\": \"/docs\",\n        \"version\": \"1.0.0\",",
         "detail": "backend.app.server",
         "documentation": {}
     },
@@ -11428,6 +11567,42 @@
         "description": "backend.models.rfp_radar_match",
         "peekOfCode": "class RFPRadarMatch(BaseModel):\n    \"\"\"\n    One of the day's top-N matches for an organization.\n    Mirrors the MongoDB document shape 1:1, except _id is exposed as `id`\n    (str) for JSON serialization.\n    \"\"\"\n    id: Optional[str] = Field(default=None, alias=\"_id\")\n    organization_id: str\n    # Calendar partition\n    scan_date: date                          # the date this scan ran (YYYY-MM-DD)",
         "detail": "backend.models.rfp_radar_match",
+        "documentation": {}
+    },
+    {
+        "label": "admin_dashboard",
+        "kind": 2,
+        "importPath": "backend.routers.admin",
+        "description": "backend.routers.admin",
+        "peekOfCode": "def admin_dashboard(_: str = Depends(verify_admin)):\n    return FileResponse(_STATIC / \"admin-users.html\")\n@router.get(\"/admin/api/users\", include_in_schema=False)\ndef admin_users_data(_: str = Depends(verify_admin)):\n    \"\"\"\n    Returns all users with their proposal counts and org name.\n    Aggregates in two MongoDB calls — no N+1.\n    \"\"\"\n    db = get_mongodb_client().get_database()\n    # --- proposals per user ---",
+        "detail": "backend.routers.admin",
+        "documentation": {}
+    },
+    {
+        "label": "admin_users_data",
+        "kind": 2,
+        "importPath": "backend.routers.admin",
+        "description": "backend.routers.admin",
+        "peekOfCode": "def admin_users_data(_: str = Depends(verify_admin)):\n    \"\"\"\n    Returns all users with their proposal counts and org name.\n    Aggregates in two MongoDB calls — no N+1.\n    \"\"\"\n    db = get_mongodb_client().get_database()\n    # --- proposals per user ---\n    pipeline = [\n        {\"$group\": {\"_id\": \"$user_id\", \"count\": {\"$sum\": 1}}},\n    ]",
+        "detail": "backend.routers.admin",
+        "documentation": {}
+    },
+    {
+        "label": "router",
+        "kind": 5,
+        "importPath": "backend.routers.admin",
+        "description": "backend.routers.admin",
+        "peekOfCode": "router = APIRouter()\n_STATIC = Path(__file__).resolve().parent.parent / \"static\"\n@router.get(\"/admin/users\", include_in_schema=False)\ndef admin_dashboard(_: str = Depends(verify_admin)):\n    return FileResponse(_STATIC / \"admin-users.html\")\n@router.get(\"/admin/api/users\", include_in_schema=False)\ndef admin_users_data(_: str = Depends(verify_admin)):\n    \"\"\"\n    Returns all users with their proposal counts and org name.\n    Aggregates in two MongoDB calls — no N+1.",
+        "detail": "backend.routers.admin",
+        "documentation": {}
+    },
+    {
+        "label": "_STATIC",
+        "kind": 5,
+        "importPath": "backend.routers.admin",
+        "description": "backend.routers.admin",
+        "peekOfCode": "_STATIC = Path(__file__).resolve().parent.parent / \"static\"\n@router.get(\"/admin/users\", include_in_schema=False)\ndef admin_dashboard(_: str = Depends(verify_admin)):\n    return FileResponse(_STATIC / \"admin-users.html\")\n@router.get(\"/admin/api/users\", include_in_schema=False)\ndef admin_users_data(_: str = Depends(verify_admin)):\n    \"\"\"\n    Returns all users with their proposal counts and org name.\n    Aggregates in two MongoDB calls — no N+1.\n    \"\"\"",
+        "detail": "backend.routers.admin",
         "documentation": {}
     },
     {
