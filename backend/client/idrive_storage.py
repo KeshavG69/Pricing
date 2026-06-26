@@ -6,11 +6,20 @@ Thread-safe singleton pattern with RLock.
 """
 
 import boto3
+from boto3.s3.transfer import TransferConfig
 from botocore.config import Config
 from botocore.exceptions import ClientError
 import threading
 from typing import Optional
 from app.settings import settings
+
+
+# Transfer documents in the calling thread instead of boto3's default pool of
+# up to `max_concurrency` (10) worker threads per upload/download. Proposal
+# documents are small (single-digit MB), so multipart concurrency buys nothing
+# — and spawning a fresh thread pool per transfer is what tips an already
+# thread-starved process over into "RuntimeError: can't start new thread".
+_SINGLE_THREAD_TRANSFER = TransferConfig(use_threads=False)
 
 
 class IDriveStorage:
@@ -79,8 +88,11 @@ class IDriveStorage:
 
         with self._lock:
             try:
-                # Upload file to S3
-                self.s3.upload_file(file_path, self.bucket, object_key)
+                # Upload file to S3 (single-threaded — see _SINGLE_THREAD_TRANSFER)
+                self.s3.upload_file(
+                    file_path, self.bucket, object_key,
+                    Config=_SINGLE_THREAD_TRANSFER,
+                )
 
                 # Generate pre-signed URL (7 days expiration - maximum allowed)
                 presigned_url = self.get_presigned_url(object_key)
@@ -126,7 +138,10 @@ class IDriveStorage:
         """
         with self._lock:
             try:
-                self.s3.download_file(self.bucket, object_key, local_path)
+                self.s3.download_file(
+                    self.bucket, object_key, local_path,
+                    Config=_SINGLE_THREAD_TRANSFER,
+                )
                 return True
             except ClientError as e:
                 print(f"Error downloading {object_key}: {e}")

@@ -43,6 +43,16 @@ function todayIso(): string {
   return `${y}-${m}-${d}`;
 }
 
+/**
+ * Manual "Run scan now" is temporarily disabled. The endpoint ran a 217 MB
+ * SAM.gov download + parse synchronously inside the web process; under
+ * repeated clicks it exhausted the container's threads/memory and broke
+ * unrelated requests (e.g. document upload → "can't start new thread"). The
+ * daily Celery beat scan still runs automatically every morning. Flip this
+ * back to `true` once the scan is offloaded to a background worker task.
+ */
+const SCAN_NOW_ENABLED = false;
+
 export default function RFPRadarPage() {
   const router = useRouter();
   const profile = useCapabilityBuilderStore((s) => s.profile);
@@ -157,24 +167,26 @@ export default function RFPRadarPage() {
               Profile
             </Button>
           </Link>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => void runScanNow()}
-            disabled={scanning}
-          >
-            {scanning ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Scanning…
-              </>
-            ) : (
-              <>
-                <RefreshCcw className="h-4 w-4 mr-2" />
-                Run scan now
-              </>
-            )}
-          </Button>
+          {SCAN_NOW_ENABLED && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => void runScanNow()}
+              disabled={scanning}
+            >
+              {scanning ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Scanning…
+                </>
+              ) : (
+                <>
+                  <RefreshCcw className="h-4 w-4 mr-2" />
+                  Run scan now
+                </>
+              )}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -239,27 +251,30 @@ export default function RFPRadarPage() {
             No scans yet
           </h3>
           <p className="mx-auto mb-4 max-w-md text-xs text-muted-foreground">
-            We run a fresh scan every morning at 6am ET. You can also trigger one
-            now — takes about 30–60 seconds.
+            {SCAN_NOW_ENABLED
+              ? 'We run a fresh scan every morning at 6am ET. You can also trigger one now — takes about 30–60 seconds.'
+              : 'We run a fresh scan every morning at 6am ET. Your first matches will appear here after the next scan.'}
           </p>
-          <Button
-            variant="primary"
-            size="sm"
-            onClick={() => void runScanNow()}
-            disabled={scanning}
-          >
-            {scanning ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Scanning… (30–60s)
-              </>
-            ) : (
-              <>
-                <Sparkles className="h-4 w-4 mr-2" />
-                Run my first scan
-              </>
-            )}
-          </Button>
+          {SCAN_NOW_ENABLED && (
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={() => void runScanNow()}
+              disabled={scanning}
+            >
+              {scanning ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Scanning… (30–60s)
+                </>
+              ) : (
+                <>
+                  <Sparkles className="h-4 w-4 mr-2" />
+                  Run my first scan
+                </>
+              )}
+            </Button>
+          )}
         </Card>
       )}
 
@@ -274,7 +289,7 @@ export default function RFPRadarPage() {
               ? "Today's scan may not have run yet, or no opportunities passed the quality filter today."
               : 'No scan was run that day, or no opportunities passed the quality filter.'}
           </p>
-          {isToday && (
+          {SCAN_NOW_ENABLED && isToday && (
             <div className="mt-4">
               <Button
                 variant="primary"
