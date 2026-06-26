@@ -53,6 +53,7 @@ ENV PATH="/app/.venv/bin:$PATH" \
 EXPOSE 8000
 
 
+
 # Single-container mode (current default).
 # start.sh is available for splitting into separate Railway services when ready
 # (set SERVICE_ROLE=web|worker|beat per service). Not the default yet because
