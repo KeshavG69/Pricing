@@ -33,7 +33,7 @@ set -eu
 
 ROLE="${SERVICE_ROLE:-all}"
 PORT="${PORT:-8000}"
-CELERY_CONCURRENCY="${CELERY_CONCURRENCY:-1}"
+CELERY_CONCURRENCY="${CELERY_CONCURRENCY:-2}"
 
 echo "[start.sh] SERVICE_ROLE=${ROLE} PORT=${PORT} CELERY_CONCURRENCY=${CELERY_CONCURRENCY}"
 
@@ -62,11 +62,12 @@ case "${ROLE}" in
     exec celery -A app.worker.celery_app beat --loglevel=info
     ;;
   all)
-    # Legacy single-container mode: keeps the current single Railway service
-    # working unchanged until you create separate web/worker services.
-    run_web &
+    # Legacy single-container mode: web is foreground so Railway's health
+    # check (port binding) fails fast if uvicorn crashes. Worker and beat
+    # run in the background.
     run_worker &
-    exec celery -A app.worker.celery_app beat --loglevel=info
+    celery -A app.worker.celery_app beat --loglevel=info &
+    exec uvicorn app.server:app --host 0.0.0.0 --port "${PORT}"
     ;;
   *)
     echo "[start.sh] Unknown SERVICE_ROLE='${ROLE}' (use web|worker|beat|worker-beat|all)" >&2
