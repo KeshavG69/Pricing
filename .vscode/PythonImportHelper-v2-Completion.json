@@ -6193,6 +6193,14 @@
         "documentation": {}
     },
     {
+        "label": "TransferConfig",
+        "importPath": "boto3.s3.transfer",
+        "description": "boto3.s3.transfer",
+        "isExtraImport": true,
+        "detail": "boto3.s3.transfer",
+        "documentation": {}
+    },
+    {
         "label": "Config",
         "importPath": "botocore.config",
         "description": "botocore.config",
@@ -10285,6 +10293,15 @@
         "importPath": "backend.client.idrive_storage",
         "description": "backend.client.idrive_storage",
         "peekOfCode": "def get_idrive_storage() -> IDriveStorage:\n    \"\"\"\n    Get or create iDrive storage client (singleton pattern).\n    Returns:\n        IDriveStorage instance\n    \"\"\"\n    global _idrive_storage_client\n    with _client_lock:\n        if _idrive_storage_client is None:\n            _idrive_storage_client = IDriveStorage()",
+        "detail": "backend.client.idrive_storage",
+        "documentation": {}
+    },
+    {
+        "label": "_SINGLE_THREAD_TRANSFER",
+        "kind": 5,
+        "importPath": "backend.client.idrive_storage",
+        "description": "backend.client.idrive_storage",
+        "peekOfCode": "_SINGLE_THREAD_TRANSFER = TransferConfig(use_threads=False)\nclass IDriveStorage:\n    \"\"\"\n    S3-compatible storage client for iDrive e2.\n    Manages document uploads and deletions with organized folder structure:\n    user_id/proposal_id/filename.pdf\n    Thread-safe with internal locking for concurrent operations.\n    \"\"\"\n    def __init__(self):\n        \"\"\"Initialize S3 client with iDrive e2 credentials and thread lock.\"\"\"",
         "detail": "backend.client.idrive_storage",
         "documentation": {}
     },

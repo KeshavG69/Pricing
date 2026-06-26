@@ -53,22 +53,19 @@ ENV PATH="/app/.venv/bin:$PATH" \
 EXPOSE 8000
 
 
-# Container runs three processes:
-#   1. FastAPI API server (uvicorn, port 8000)
-#   2. Celery worker — processes async tasks (proposal parsing, GSA ingest,
-#      RFP Radar daily scan)
-#   3. Celery beat — schedules the RFP Radar daily scan at 10:00 UTC
+# Entrypoint is start.sh, which selects what to run from $SERVICE_ROLE:
+#   web | worker | beat | worker-beat | all  (default: all)
 #
-# IMPORTANT — beat must NOT be horizontally scaled. If you later scale this
-# image to multiple replicas (e.g. via Railway/ECS), run beat in a SEPARATE
-# single-instance container and remove the `celery ... beat` clause below
-# from the API/worker containers. Otherwise you get duplicate scheduled jobs.
+# Default `all` runs uvicorn + worker + beat in one container — backward
+# compatible with a single Railway service. To stop a heavy background job
+# from starving the web process (the "can't start new thread" outage), split
+# into separate Railway services that share this image and Redis:
+#   web service     SERVICE_ROLE=web      (Railway provides $PORT)
+#   worker service  SERVICE_ROLE=worker   (no public domain / healthcheck)
+#   beat service    SERVICE_ROLE=beat     (EXACTLY ONE instance)
+# Or fold beat into a single worker with SERVICE_ROLE=worker-beat.
 #
-# Beat is the foreground process — if it crashes the container exits and the
-# orchestrator restarts everything. Default scheduler state file lives in
-# /app/celerybeat-schedule (lost on restart, which is fine for our daily cron).
-CMD ["sh", "-c", "\
-    uvicorn app.server:app --host 0.0.0.0 --port 8000 & \
-    celery -A app.worker.celery_app worker --loglevel=info --pool=threads --concurrency=2 & \
-    celery -A app.worker.celery_app beat --loglevel=info \
-"]
+# NEVER run more than one beat (or worker-beat) instance, or scheduled jobs
+# fire multiple times. Beat's schedule state lives at /app/celerybeat-schedule
+# (lost on restart, fine for a daily cron).
+CMD ["sh", "start.sh"]
