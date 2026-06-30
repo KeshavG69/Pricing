@@ -72,10 +72,11 @@ export function SetupGuideButton() {
     <div ref={dropdownRef} className="relative">
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="p-2 rounded-lg hover:bg-muted transition-all duration-200 hover:scale-105 active:scale-95 text-muted-foreground hover:text-foreground relative"
-        title={`Setup Guide (${stats.completed_count}/${stats.total_count})`}
+        className="flex items-center gap-1.5 px-3 py-2 rounded-lg hover:bg-muted transition-all duration-200 active:scale-95 text-muted-foreground hover:text-foreground relative text-sm font-medium"
+        title={`Onboarding (${stats.completed_count}/${stats.total_count})`}
       >
-        <CheckCircle2 className="w-5 h-5" />
+        <CheckCircle2 className="w-4 h-4" />
+        Onboarding
       </button>
 
       {/* Dropdown */}
