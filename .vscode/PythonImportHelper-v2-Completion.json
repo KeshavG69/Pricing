@@ -7313,6 +7313,14 @@
         "documentation": {}
     },
     {
+        "label": "get_organization_crud",
+        "importPath": "utils.organizations",
+        "description": "utils.organizations",
+        "isExtraImport": true,
+        "detail": "utils.organizations",
+        "documentation": {}
+    },
+    {
         "label": "get_proposal_crud",
         "importPath": "utils.proposals",
         "description": "utils.proposals",

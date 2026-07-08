@@ -32,6 +32,7 @@ from routers.pricing import split_position_by_hours, split_multi_year_position
 # Billing
 from client.stripe_client import get_stripe_service, ChargeType
 from utils.billing_crud import get_billing_crud
+from utils.organizations import get_organization_crud
 
 # Storage
 from client.idrive_storage import get_idrive_storage
@@ -130,6 +131,42 @@ from utils.processing import convert_intelligent_output_to_dataframe, process_pr
 
 
 
+def _ensure_org_can_process(organization_id: str | None) -> None:
+    """
+    Block expensive document processing (LLM extraction, SOC matching, wage
+    lookup) for an org that has no way to ever pay for it — mirrors the
+    has_payment_method/free_proposal_available gate in GET /billing/status
+    so the frontend's pre-upload check can't be bypassed by calling these
+    endpoints directly. No-ops for legacy accounts with no organization_id
+    and when Stripe isn't configured (self-hosted/dev).
+    """
+    if not organization_id:
+        return
+
+    stripe_service = get_stripe_service()
+    if not stripe_service.is_configured:
+        return
+
+    org_crud = get_organization_crud()
+    org = org_crud.get_by_id(organization_id)
+    if not org:
+        return
+
+    # Live-check against Stripe, not just field presence in Mongo — a card
+    # removed directly in Stripe, or a customer orphaned by a Stripe
+    # account/key switch, leaves stale stripe_customer_id/
+    # default_payment_method_id fields that would otherwise wrongly read as
+    # payable.
+    has_payment_method = stripe_service.has_valid_default_payment_method(org)
+    free_proposal_available = org.get("first_free_proposal_id") is None
+
+    if not has_payment_method and not free_proposal_available:
+        raise HTTPException(
+            status_code=status.HTTP_402_PAYMENT_REQUIRED,
+            detail="Payment method required before processing proposals. Add a payment method in organization billing settings.",
+        )
+
+
 @router.post("/upload")
 async def upload_proposal_documents(
     files: List[UploadFile] = File(...),
@@ -151,6 +188,8 @@ async def upload_proposal_documents(
 
     Returns proposal_id immediately for status polling.
     """
+    _ensure_org_can_process(current_user.get("organization_id"))
+
     try:
         # Build wage source config
         wage_source = {"type": wage_source_type}
@@ -305,6 +344,8 @@ async def reingest_proposal_documents(
     """
     from datetime import datetime
     from pymongo import ReturnDocument
+
+    _ensure_org_can_process(current_user.get("organization_id"))
 
     try:
         # Initialize services
@@ -1155,6 +1196,15 @@ async def get_proposal(
             detail="You do not have access to this proposal"
         )
 
+    # Processing (extraction/wage lookup) always runs to completion and sets
+    # billing_status independently — an unpaid/failed basic charge must not
+    # let the extracted analysis reach the client. Data stays in Mongo so a
+    # successful retry (POST /billing/charge) can reveal it without
+    # re-running the pipeline.
+    if proposal.get("billing_status") in ("unpaid", "failed"):
+        proposal["spreadsheet_data"] = None
+        proposal.pop("jobs", None)
+
     print(f"[GET PROPOSAL] Serializing proposal...")
     # Convert all ObjectIds to strings
     serialized = serialize_proposal(proposal)
@@ -1330,6 +1380,8 @@ async def retry_proposal_processing(
     Retry processing for a stuck or failed proposal.
     Re-downloads documents from iDrive and re-runs processing.
     """
+    _ensure_org_can_process(current_user.get("organization_id"))
+
     crud = await get_crud()
 
     # Get user's organization and role for access control

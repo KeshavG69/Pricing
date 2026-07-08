@@ -183,6 +183,8 @@ export interface Proposal {
   prime_contractor_name?: string;
   dcaa_contact?: string;
   status: 'processing' | 'completed' | 'error' | 'draft';
+  /** Basic-tier charge outcome. Missing/undefined on legacy proposals means paid. */
+  billing_status?: 'paid' | 'unpaid' | 'failed';
   business_status?: 'active' | 'no-bid' | 'submitted';  // NEW: business workflow status
   excel_downloaded?: boolean;
   visibility?: 'private' | 'shared';

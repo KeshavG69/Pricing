@@ -326,6 +326,28 @@ class StripeService:
             logger.error(f"Failed to list payment methods: {e}")
             raise StripeError(str(e), code="payment_method_list_failed")
 
+    def has_valid_default_payment_method(self, org: Dict[str, Any]) -> bool:
+        """
+        Check whether an org's default_payment_method_id is still attached to
+        its Stripe customer, not just present in Mongo. The Mongo fields go
+        stale whenever a card is removed/expires directly in Stripe (or the
+        customer itself is gone, e.g. after switching Stripe accounts/keys)
+        without going through our detach endpoint — a plain field-presence
+        check would then wrongly treat the org as payable.
+        """
+        stripe_customer_id = org.get("stripe_customer_id")
+        default_pm_id = org.get("default_payment_method_id")
+        if not stripe_customer_id or not default_pm_id:
+            return False
+
+        try:
+            methods = self.list_payment_methods(stripe_customer_id)
+        except StripeError as e:
+            logger.warning(f"Payment method validity check failed for {stripe_customer_id}: {e}")
+            return False
+
+        return any(m["id"] == default_pm_id for m in methods)
+
     def detach_payment_method(self, payment_method_id: str) -> bool:
         """
         Remove a payment method.

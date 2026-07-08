@@ -73,6 +73,11 @@ async def generate_excel_from_proposal(
                 if current_user['organization_id'] != proposal.get('organization_id'):
                     raise HTTPException(status_code=403, detail="Access denied")
 
+        # An unpaid/failed basic charge must not let the analysis leave the
+        # server, even via a direct export request.
+        if proposal.get('billing_status') in ('unpaid', 'failed'):
+            raise HTTPException(status_code=402, detail="Payment required before this proposal can be exported")
+
         # Extract spreadsheet data
         spreadsheet_data = proposal.get('spreadsheet_data', {})
 
