@@ -65,6 +65,10 @@ export default function ProposalPage() {
   // still-processing proposal sees the live reasoning instead of a spinner.
   const isProcessingStatus =
     (pollingStatus?.status ?? currentProposal?.status) === 'processing';
+  // billing_status is only ever 'unpaid'/'failed' when the basic-tier charge
+  // didn't succeed — the server withholds spreadsheet_data in that case.
+  const isPaymentBlocked =
+    !!currentProposal?.billing_status && currentProposal.billing_status !== 'paid';
   const parserEvents = useProposalEvents(
     isProcessingStatus ? proposalId : null,
   );
@@ -80,6 +84,7 @@ export default function ProposalPage() {
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [advancedModalOpen, setAdvancedModalOpen] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
+  const [isRetryingBasicPayment, setIsRetryingBasicPayment] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [showAdvancedChargeConfirmation, setShowAdvancedChargeConfirmation] = useState(false);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
@@ -127,7 +132,7 @@ export default function ProposalPage() {
   // Load pricing data when proposal is completed
   useEffect(() => {
     const loadPricingData = async () => {
-      if (currentProposal?.status === 'completed' && proposalId && !pricingLoaded) {
+      if (currentProposal?.status === 'completed' && proposalId && !pricingLoaded && !isPaymentBlocked) {
         // Always fetch fresh data from API (don't use cached currentProposal)
         await loadProposal(proposalId);
         // Transform to advanced format immediately so we can show expandable grid in initial view
@@ -145,7 +150,7 @@ export default function ProposalPage() {
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentProposal?.status, proposalId, pricingLoaded]);
+  }, [currentProposal?.status, currentProposal?.billing_status, proposalId, pricingLoaded]);
 
   // Poll status if proposal is processing
   useEffect(() => {
@@ -495,6 +500,58 @@ export default function ProposalPage() {
     </Card>
   );
 
+  const handleRetryBasicPayment = async () => {
+    setIsRetryingBasicPayment(true);
+    try {
+      await chargeForProposal(proposalId, 'basic');
+      toast.success('Payment successful!');
+      // Refresh currentProposal so billing_status flips to 'paid' and the
+      // loadPricingData effect above picks up the now-unredacted analysis.
+      await fetchProposal(proposalId);
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.detail || 'Payment failed. Please check your payment method.';
+      toast.error(errorMsg);
+    } finally {
+      setIsRetryingBasicPayment(false);
+    }
+  };
+
+  const renderPaymentRequiredView = () => (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-amber-600">Payment Required</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="text-center py-12">
+          <AlertCircle className="w-16 h-16 text-amber-600 mx-auto mb-4" />
+          <p className="text-lg text-foreground mb-2">Your documents were processed, but payment didn&apos;t go through</p>
+          <p className="text-sm text-muted-foreground mb-6">
+            {currentProposal.message || 'A valid payment method is required before you can view this analysis.'}
+          </p>
+          <div className="flex items-center justify-center space-x-4">
+            <Button variant="outline" onClick={() => router.push('/dashboard')}>
+              Back to Dashboard
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleRetryBasicPayment}
+              disabled={isRetryingBasicPayment}
+            >
+              {isRetryingBasicPayment ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                'Retry Payment'
+              )}
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+
   const handleAddPosition = () => {
     setAddPositionModalOpen(true);
   };
@@ -742,7 +799,7 @@ export default function ProposalPage() {
           {/* Action buttons */}
           <div className="mt-2 flex items-center gap-2">
             {/* Business Status Dropdown - only show for completed proposals */}
-            {currentProposal.status === 'completed' && (
+            {currentProposal.status === 'completed' && !isPaymentBlocked && (
               <div className="relative" ref={statusDropdownRef}>
                 <button
                   onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
@@ -831,7 +888,7 @@ export default function ProposalPage() {
               </div>
             )}
             {/* Share button (admin only) */}
-            {currentProposal.status === 'completed' && user?.role === 'admin' && (
+            {currentProposal.status === 'completed' && !isPaymentBlocked && user?.role === 'admin' && (
               <Button
                 variant="outline"
                 onClick={() => setShareModalOpen(true)}
@@ -841,7 +898,7 @@ export default function ProposalPage() {
               </Button>
             )}
             {/* Save button (shows in both basic and advanced mode) */}
-            {currentProposal.status === 'completed' && (
+            {currentProposal.status === 'completed' && !isPaymentBlocked && (
               <Button
                 variant="outline"
                 onClick={handleManualSave}
@@ -861,7 +918,7 @@ export default function ProposalPage() {
               </Button>
             )}
             {/* Advanced Analysis or Export Excel button */}
-            {currentProposal.status === 'completed' && (
+            {currentProposal.status === 'completed' && !isPaymentBlocked && (
               <>
                 {!advancedMode ? (
                   <Button
@@ -905,7 +962,8 @@ export default function ProposalPage() {
 
         {currentProposal.status === 'processing' && renderProcessingView()}
         {currentProposal.status === 'error' && renderErrorView()}
-        {currentProposal.status === 'completed' && renderPricingWorkspace()}
+        {currentProposal.status === 'completed' && isPaymentBlocked && renderPaymentRequiredView()}
+        {currentProposal.status === 'completed' && !isPaymentBlocked && renderPricingWorkspace()}
       </div>
 
       {/* Add Position Modal */}
