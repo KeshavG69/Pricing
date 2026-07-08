@@ -54,8 +54,15 @@ async def create_setup_intent(current_user: dict = Depends(require_admin)):
         raise HTTPException(404, "Organization not found")
 
     try:
-        # Create Stripe customer if needed
-        if not org.get("stripe_customer_id"):
+        # Create Stripe customer if needed, or if the stored one has gone
+        # stale (Stripe account/key rotation, manual deletion) — otherwise
+        # this org would be permanently stuck unable to ever add a card.
+        customer_id = org.get("stripe_customer_id")
+        if customer_id and not stripe_service.customer_exists(customer_id):
+            logger.warning(f"Stale stripe_customer_id {customer_id} for org {org['_id']}; recreating")
+            customer_id = None
+
+        if not customer_id:
             customer_id = stripe_service.create_customer(
                 email=current_user["email"],
                 name=org["name"],
@@ -63,10 +70,13 @@ async def create_setup_intent(current_user: dict = Depends(require_admin)):
             )
             org_crud.collection.update_one(
                 {"_id": org["_id"]},
-                {"$set": {"stripe_customer_id": customer_id, "updated_at": datetime.utcnow()}}
+                {
+                    "$set": {"stripe_customer_id": customer_id, "updated_at": datetime.utcnow()},
+                    # Any saved default payment method belonged to the old
+                    # (now-invalid) customer — it can't carry over.
+                    "$unset": {"default_payment_method_id": ""},
+                }
             )
-        else:
-            customer_id = org["stripe_customer_id"]
 
         result = stripe_service.create_setup_intent(customer_id)
         return result
@@ -236,9 +246,11 @@ async def get_billing_status(current_user: dict = Depends(get_current_user)):
     # Live-check against Stripe — a stale default_payment_method_id (card
     # removed directly in Stripe, or an orphaned customer from a Stripe
     # account/key switch) must not report as payable, since it also drives
-    # the frontend's pre-upload gate and the payment-required modal.
+    # the frontend's pre-upload gate and the payment-required modal. Falls
+    # back to (and promotes) another attached card if only the flagged
+    # default went stale — an org can have more than one on file.
     has_payment_method = (
-        stripe_service.has_valid_default_payment_method(org)
+        org_crud.resolve_payment_method(org, stripe_service)
         if stripe_service.is_configured
         else False
     )
@@ -308,9 +320,12 @@ async def charge_for_proposal(data: ChargeRequest, current_user: dict = Depends(
     is_first_proposal = (first_free_proposal_id is None and charge_type == ChargeType.BASIC) or \
                        (first_free_proposal_id is not None and str(first_free_proposal_id) == data.proposal_id)
 
-    # Only require payment method if not first proposal
+    # Only require payment method if not first proposal. resolve_payment_method
+    # also self-heals org["default_payment_method_id"] in place if the stored
+    # default went stale but another card is still attached, so the actual
+    # Stripe charge below uses a card that's really there.
     if not is_first_proposal:
-        if not org.get("stripe_customer_id") or not org.get("default_payment_method_id"):
+        if not org_crud.resolve_payment_method(org, stripe_service):
             raise HTTPException(402, "No payment method configured. Admin must add a card.")
 
     # Check if already charged (idempotent) - use pre-fetched value

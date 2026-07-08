@@ -132,6 +132,47 @@ class OrganizationCRUD:
             {"$set": {"owner_id": owner_id, "updated_at": datetime.utcnow()}}
         )
 
+    def resolve_payment_method(self, org: dict, stripe_service) -> bool:
+        """
+        True if this org has a usable payment method attached in Stripe.
+
+        An org can have multiple cards on file, but the actual charge path
+        (billing.py charge_for_proposal / processing.py) only ever reads
+        default_payment_method_id. So this prefers the stored default; if
+        that one was removed/expired directly in Stripe while another card
+        is still attached, it promotes that card to default instead of
+        reporting "no payment method" — otherwise the gate and the real
+        charge would silently disagree once a default goes stale.
+        """
+        from client.stripe_client import StripeError
+
+        stripe_customer_id = org.get("stripe_customer_id")
+        if not stripe_customer_id:
+            return False
+
+        try:
+            methods = stripe_service.list_payment_methods(stripe_customer_id)
+        except StripeError:
+            return False
+
+        if not methods:
+            return False
+
+        default_pm_id = org.get("default_payment_method_id")
+        if default_pm_id and any(m["id"] == default_pm_id for m in methods):
+            return True
+
+        fallback_id = methods[0]["id"]
+        self.collection.update_one(
+            {"_id": org["_id"]},
+            {"$set": {"default_payment_method_id": fallback_id, "updated_at": datetime.utcnow()}}
+        )
+        # Keep the caller's in-memory org dict consistent with the write
+        # above, so it can immediately use default_payment_method_id
+        # (e.g. to charge) without re-fetching from Mongo.
+        org["default_payment_method_id"] = fallback_id
+        return True
+
     def _generate_slug(self, name: str) -> str:
         """Generate URL-friendly slug from organization name (async)"""
 
