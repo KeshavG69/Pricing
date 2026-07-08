@@ -233,8 +233,14 @@ async def get_billing_status(current_user: dict = Depends(get_current_user)):
     if not org:
         raise HTTPException(404, "Organization not found")
 
-    has_payment_method = bool(
-        org.get("stripe_customer_id") and org.get("default_payment_method_id")
+    # Live-check against Stripe — a stale default_payment_method_id (card
+    # removed directly in Stripe, or an orphaned customer from a Stripe
+    # account/key switch) must not report as payable, since it also drives
+    # the frontend's pre-upload gate and the payment-required modal.
+    has_payment_method = (
+        stripe_service.has_valid_default_payment_method(org)
+        if stripe_service.is_configured
+        else False
     )
 
     # Check if org qualifies for free first proposal
