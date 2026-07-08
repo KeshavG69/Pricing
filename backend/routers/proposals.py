@@ -156,8 +156,9 @@ def _ensure_org_can_process(organization_id: str | None) -> None:
     # removed directly in Stripe, or a customer orphaned by a Stripe
     # account/key switch, leaves stale stripe_customer_id/
     # default_payment_method_id fields that would otherwise wrongly read as
-    # payable.
-    has_payment_method = stripe_service.has_valid_default_payment_method(org)
+    # payable. Also falls back to any other attached card if the flagged
+    # default is the one that went stale (an org can have more than one).
+    has_payment_method = org_crud.resolve_payment_method(org, stripe_service)
     free_proposal_available = org.get("first_free_proposal_id") is None
 
     if not has_payment_method and not free_proposal_available:

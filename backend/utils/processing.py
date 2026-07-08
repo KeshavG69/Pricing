@@ -337,7 +337,7 @@ async def process_proposal_documents(
                     billing_status = "paid"
                     should_trigger_advanced = True
 
-                elif stripe_service.is_configured and org and org.get("stripe_customer_id") and org.get("default_payment_method_id"):
+                elif stripe_service.is_configured and org and org_crud and org_crud.resolve_payment_method(org, stripe_service):
                     amount_cents = stripe_service.get_price(ChargeType.BASIC)
                     billing_id = billing_crud.create_billing_record(
                         organization_id=str(org["_id"]),
