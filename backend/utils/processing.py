@@ -149,6 +149,8 @@ async def process_proposal_documents(
         intelligent_result = await parse_document_intelligent(
             file_paths[0],
             proposal_id=proposal_id,
+            user_id=user_id,
+            organization_id=organization_id,
         )
         parse_result = convert_intelligent_output_to_dataframe(intelligent_result)
         df = parse_result["df"]
