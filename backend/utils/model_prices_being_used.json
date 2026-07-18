@@ -66,6 +66,12 @@
         "supports_response_schema": true,
         "supports_tool_choice": true
     },
+    "google/gemini-3-flash-preview": {
+        "input_cost_per_token": 1.5e-07,
+        "output_cost_per_token": 6e-07,
+        "litellm_provider": "openrouter",
+        "mode": "chat"
+    },
     "google/gemini-2.0-flash-001": {
         "max_tokens": 8192,
         "max_input_tokens": 1048576,
