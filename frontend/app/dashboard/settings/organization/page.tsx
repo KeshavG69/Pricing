@@ -341,6 +341,8 @@ function OrganizationPageContent() {
     const clientSecret = await createSetupIntent();
     if (clientSecret) {
       setShowAddCard(true);
+    } else {
+      toast.error(useBillingStore.getState().error || 'Failed to start adding a payment method');
     }
   };
 
@@ -362,6 +364,8 @@ function OrganizationPageContent() {
       const success = await removePaymentMethod(cardToDelete.id);
       if (success) {
         toast.success('Payment method removed');
+      } else {
+        toast.error(useBillingStore.getState().error || 'Failed to remove payment method');
       }
     } catch {
       toast.error('Failed to remove payment method');
@@ -378,6 +382,8 @@ function OrganizationPageContent() {
       const success = await setAsDefaultPaymentMethod(paymentMethodId);
       if (success) {
         toast.success('Default payment method updated');
+      } else {
+        toast.error(useBillingStore.getState().error || 'Failed to set default payment method');
       }
     } catch {
       toast.error('Failed to set default payment method');

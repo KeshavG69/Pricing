@@ -212,7 +212,15 @@ async def ask_pricing(request: PricingChatQuery):
             # fires `_on_turn_complete` as a fire-and-forget background task
             # when the upstream generator exhausts — zero blocking on the user.
             events = stream_with_tracking(
-                stream_agent_response(request.query, agent),
+                stream_agent_response(
+                    request.query,
+                    agent,
+                    module="pricing_chat",
+                    user_id=request.user_id,
+                    organization_id=request.organization_id,
+                    proposal_id=request.proposal_id,
+                    session_id=request.session_id,
+                ),
                 on_complete=_on_turn_complete,
             )
             async for chunk in create_sse_event_stream(events):
@@ -324,7 +332,16 @@ async def resume_pricing(request: PricingChatResumeRequest):
 
         async def sse_stream():
             events = stream_with_tracking(
-                stream_agent_continuation(agent, run_response, requirements),
+                stream_agent_continuation(
+                    agent,
+                    run_response,
+                    requirements,
+                    module="pricing_chat",
+                    user_id=request.user_id,
+                    organization_id=request.organization_id,
+                    proposal_id=request.proposal_id,
+                    session_id=request.session_id,
+                ),
                 on_complete=_on_continuation_complete,
             )
             async for chunk in create_sse_event_stream(events):

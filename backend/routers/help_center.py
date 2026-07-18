@@ -74,7 +74,12 @@ async def ask_help_center(request: HelpCenterQuery):
 
         # Stream agent response as SSE
         async def sse_stream():
-            events = stream_agent_response(request.query, agent)
+            events = stream_agent_response(
+                request.query,
+                agent,
+                module="help_center",
+                session_id=request.session_id,
+            )
             async for chunk in create_sse_event_stream(events):
                 yield chunk
 
