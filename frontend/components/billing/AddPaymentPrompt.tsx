@@ -22,6 +22,7 @@ export function AddPaymentPrompt() {
     setupIntentClientSecret,
     createSetupIntent,
     isCreatingSetupIntent,
+    error,
   } = useBillingStore();
 
   const [showForm, setShowForm] = useState(false);
@@ -82,6 +83,12 @@ export function AddPaymentPrompt() {
               <li>• All organization members can create proposals</li>
             </ul>
           </div>
+
+          {error && (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
 
           <div className="flex gap-3">
             <Button variant="outline" onClick={handleSkip} className="flex-1">

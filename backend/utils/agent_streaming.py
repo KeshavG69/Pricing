@@ -77,11 +77,21 @@ _REASONING_TOOL_NAMES = {"think", "analyze"}
 async def stream_agent_response(
     query: str,
     agent: Agent,
+    *,
+    module: str = "chat",
+    user_id: str | None = None,
+    organization_id: str | None = None,
+    proposal_id: str | None = None,
+    session_id: str | None = None,
 ) -> AsyncGenerator[Dict[str, Any], None]:
     """Stream Agno agent events as structured payloads.
 
     Yields dicts with an `event` key plus event-specific fields. Downstream
     `create_sse_event_stream` converts each dict to an SSE frame.
+
+    The identity args (module/user_id/organization_id/proposal_id/session_id)
+    are used only to attribute this run's LLM token cost — passed explicitly by
+    the caller, recorded once when the run's metrics finalize.
     """
 
     if not query or not query.strip():
@@ -332,6 +342,16 @@ async def stream_agent_response(
 
         if run_metrics:
             logger.debug(f"Final run_metrics: {run_metrics}")
+            from utils.token_cost import record_usage
+            record_usage(
+                module=module,
+                model=getattr(agent.model, "id", None),
+                metrics=run_metrics,
+                user_id=user_id,
+                organization_id=organization_id,
+                proposal_id=proposal_id,
+                session_id=session_id,
+            )
 
     except Exception as exc:
         logger.error(
@@ -352,6 +372,12 @@ async def stream_agent_continuation(
     agent: Agent,
     run_response: RunOutput,
     requirements: List[RunRequirement],
+    *,
+    module: str = "chat",
+    user_id: str | None = None,
+    organization_id: str | None = None,
+    proposal_id: str | None = None,
+    session_id: str | None = None,
 ) -> AsyncGenerator[Dict[str, Any], None]:
     """Stream the agent response after resuming a paused HITL (requires_confirmation) run.
 
@@ -546,6 +572,16 @@ async def stream_agent_continuation(
                     }
                 if payload.get("metrics"):
                     yield {"event": "usage", "usage": payload.get("metrics")}
+                    from utils.token_cost import record_usage
+                    record_usage(
+                        module=module,
+                        model=getattr(agent.model, "id", None),
+                        metrics=payload.get("metrics"),
+                        user_id=user_id,
+                        organization_id=organization_id,
+                        proposal_id=proposal_id,
+                        session_id=session_id,
+                    )
                 continue
 
             yield {"event": "agent.event", "data": payload}
