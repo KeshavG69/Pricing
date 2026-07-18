@@ -243,16 +243,14 @@ async def get_billing_status(current_user: dict = Depends(get_current_user)):
     if not org:
         raise HTTPException(404, "Organization not found")
 
-    # Live-check against Stripe — a stale default_payment_method_id (card
-    # removed directly in Stripe, or an orphaned customer from a Stripe
-    # account/key switch) must not report as payable, since it also drives
-    # the frontend's pre-upload gate and the payment-required modal. Falls
-    # back to (and promotes) another attached card if only the flagged
-    # default went stale — an org can have more than one on file.
-    has_payment_method = (
-        org_crud.resolve_payment_method(org, stripe_service)
-        if stripe_service.is_configured
-        else False
+    # Fast field-read only — NO live Stripe call here. /status is polled on
+    # every dashboard/upload/settings mount and after every card mutation, so
+    # a live Stripe round-trip on this hot path can block the event loop and
+    # hang the whole app during a Stripe slowdown. This drives UI hints only;
+    # the authoritative live check (resolve_payment_method) runs where it
+    # matters and can tolerate the latency — the upload gate and /charge.
+    has_payment_method = bool(
+        org.get("stripe_customer_id") and org.get("default_payment_method_id")
     )
 
     # Check if org qualifies for free first proposal
@@ -313,12 +311,25 @@ async def charge_for_proposal(data: ChargeRequest, current_user: dict = Depends(
     # Check if this is the org's first proposal (free)
     # We track the first_free_proposal_id to allow BOTH basic AND advanced to be free
     first_free_proposal_id = org.get("first_free_proposal_id")
+    already_free_proposal = (
+        first_free_proposal_id is not None and str(first_free_proposal_id) == data.proposal_id
+    )
 
-    # Determine if this charge should be free:
-    # 1. No free proposal used yet AND this is a BASIC charge (first time)
-    # 2. OR this is the same proposal that got free basic (allows free advanced too)
-    is_first_proposal = (first_free_proposal_id is None and charge_type == ChargeType.BASIC) or \
-                       (first_free_proposal_id is not None and str(first_free_proposal_id) == data.proposal_id)
+    # Try to atomically claim the free-first-proposal slot for this exact
+    # proposal if the org hasn't used one yet. A plain read-then-write here
+    # would let two concurrent charge requests (e.g. two different
+    # proposals finishing processing around the same time) each observe
+    # first_free_proposal_id=None and each be granted a free charge before
+    # either commits — find_one_and_update makes the claim atomic.
+    won_free_slot = False
+    if first_free_proposal_id is None and charge_type == ChargeType.BASIC:
+        claimed = org_crud.collection.find_one_and_update(
+            {"_id": org["_id"], "first_free_proposal_id": None},
+            {"$set": {"first_free_proposal_id": ObjectId(data.proposal_id), "updated_at": datetime.utcnow()}},
+        )
+        won_free_slot = claimed is not None
+
+    is_first_proposal = won_free_slot or already_free_proposal
 
     # Only require payment method if not first proposal. resolve_payment_method
     # also self-heals org["default_payment_method_id"] in place if the stored
@@ -347,38 +358,24 @@ async def charge_for_proposal(data: ChargeRequest, current_user: dict = Depends(
             status="succeeded"
         )
 
-        # Mark first proposal as used (only on first BASIC charge)
-        # Update proposal billing status + set first_free_proposal_id
+        # first_free_proposal_id is already claimed atomically above when
+        # won_free_slot is True — only the proposal's own billing_status
+        # needs updating here (also covers the already_free_proposal case:
+        # charging advanced on the same proposal that already got a free
+        # basic charge).
         now = datetime.utcnow()
-
-        # Only set first_free_proposal_id if it's not already set (first basic charge)
-        if first_free_proposal_id is None:
-            await asyncio.gather(
-                asyncio.to_thread(
-                    proposal_crud.collection.update_one,
-                    {"_id": ObjectId(data.proposal_id)},
-                    {"$set": {"billing_status": "paid", "updated_at": now}}
-                ),
-                asyncio.to_thread(
-                    org_crud.collection.update_one,
-                    {"_id": org["_id"]},
-                    {"$set": {"first_free_proposal_id": ObjectId(data.proposal_id), "updated_at": now}}
-                )
-            )
-        else:
-            # Advanced analysis on already-free proposal, just update proposal status
-            await asyncio.to_thread(
-                proposal_crud.collection.update_one,
-                {"_id": ObjectId(data.proposal_id)},
-                {"$set": {"billing_status": "paid", "updated_at": now}}
-            )
+        await asyncio.to_thread(
+            proposal_crud.collection.update_one,
+            {"_id": ObjectId(data.proposal_id)},
+            {"$set": {"billing_status": "paid", "updated_at": now}}
+        )
 
         return {
             "success": True,
             "billing_id": billing_id,
             "free_proposal": True,
             "amount_cents": 0,
-            "auto_trigger_advanced": first_free_proposal_id is None and charge_type == ChargeType.BASIC
+            "auto_trigger_advanced": won_free_slot
         }
 
     # Get price and create billing record
