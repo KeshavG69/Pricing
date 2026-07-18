@@ -3141,6 +3141,14 @@
         "documentation": {}
     },
     {
+        "label": "datetime",
+        "importPath": "datetime",
+        "description": "datetime",
+        "isExtraImport": true,
+        "detail": "datetime",
+        "documentation": {}
+    },
+    {
         "label": "dataclass",
         "importPath": "dataclasses",
         "description": "dataclasses",
@@ -5531,6 +5539,14 @@
         "description": "auth",
         "isExtraImport": true,
         "detail": "auth",
+        "documentation": {}
+    },
+    {
+        "label": "get_mongodb_client",
+        "importPath": "auth.database",
+        "description": "auth.database",
+        "isExtraImport": true,
+        "detail": "auth.database",
         "documentation": {}
     },
     {
@@ -12842,7 +12858,7 @@
         "kind": 5,
         "importPath": "backend.utils.agent_streaming",
         "description": "backend.utils.agent_streaming",
-        "peekOfCode": "_REASONING_TOOL_NAMES = {\"think\", \"analyze\"}\n# ─── Main streaming generator ───────────────────────────────────────────────\nasync def stream_agent_response(\n    query: str,\n    agent: Agent,\n) -> AsyncGenerator[Dict[str, Any], None]:\n    \"\"\"Stream Agno agent events as structured payloads.\n    Yields dicts with an `event` key plus event-specific fields. Downstream\n    `create_sse_event_stream` converts each dict to an SSE frame.\n    \"\"\"",
+        "peekOfCode": "_REASONING_TOOL_NAMES = {\"think\", \"analyze\"}\n# ─── Main streaming generator ───────────────────────────────────────────────\nasync def stream_agent_response(\n    query: str,\n    agent: Agent,\n    *,\n    module: str = \"chat\",\n    user_id: str | None = None,\n    organization_id: str | None = None,\n    proposal_id: str | None = None,",
         "detail": "backend.utils.agent_streaming",
         "documentation": {}
     },
@@ -13798,6 +13814,33 @@
         "description": "backend.utils.streaming",
         "peekOfCode": "logger = logging.getLogger(__name__)\ndef extract_text(content: Any) -> Optional[str]:\n    \"\"\"Best-effort extraction of textual content from heterogeneous payloads.\"\"\"\n    if content is None:\n        return None\n    if isinstance(content, str):\n        return content\n    if isinstance(content, dict):\n        if \"text\" in content and isinstance(content[\"text\"], str):\n            return content[\"text\"]",
         "detail": "backend.utils.streaming",
+        "documentation": {}
+    },
+    {
+        "label": "calculate_cost",
+        "kind": 2,
+        "importPath": "backend.utils.token_cost",
+        "description": "backend.utils.token_cost",
+        "peekOfCode": "def calculate_cost(model, input_tokens, output_tokens):\n    \"\"\"Return (input_cost, output_cost, total_cost) in USD.\n    Returns zeros (and logs) when the model isn't in the price table, so an\n    unpriced model records tokens at $0 rather than breaking the caller.\n    \"\"\"\n    inp = int(input_tokens or 0)\n    out = int(output_tokens or 0)\n    price = _price(model)\n    if not price:\n        logger.warning(f\"[token_cost] no price for model '{model}'; recording $0\")",
+        "detail": "backend.utils.token_cost",
+        "documentation": {}
+    },
+    {
+        "label": "record_usage",
+        "kind": 2,
+        "importPath": "backend.utils.token_cost",
+        "description": "backend.utils.token_cost",
+        "peekOfCode": "def record_usage(\n    *,\n    module,\n    model,\n    metrics,\n    user_id=None,\n    organization_id=None,\n    proposal_id=None,\n    session_id=None,\n):",
+        "detail": "backend.utils.token_cost",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.utils.token_cost",
+        "description": "backend.utils.token_cost",
+        "peekOfCode": "logger = logging.getLogger(__name__)\n# Static per-token price table (LiteLLM format, same file used elsewhere).\nwith open(os.path.join(os.path.dirname(__file__), \"model_prices_being_used.json\")) as _f:\n    _PRICES = json.load(_f)\ndef _price(model):\n    \"\"\"Resolve a runtime model id to a price-table entry.\n    Runtime ids look like ``anthropic/claude-sonnet-4.6`` or ``openai/gpt-4.1``;\n    table keys are a mix of prefixed and bare, so try exact then provider-stripped.\n    \"\"\"\n    if not model:",
+        "detail": "backend.utils.token_cost",
         "documentation": {}
     },
     {

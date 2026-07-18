@@ -130,6 +130,8 @@ async def _run_agent_streaming(
     agent: Agent,
     prompt: str,
     proposal_id: Optional[str] = None,
+    user_id: Optional[str] = None,
+    organization_id: Optional[str] = None,
 ) -> str:
     """Run the parser agent with event streaming and return accumulated text.
 
@@ -241,6 +243,15 @@ async def _run_agent_streaming(
                 content = payload.get("content")
                 if isinstance(content, str) and not accumulated:
                     accumulated.append(content)
+                from utils.token_cost import record_usage
+                record_usage(
+                    module="document_parse",
+                    model=getattr(agent.model, "id", None),
+                    metrics=payload.get("metrics"),
+                    user_id=user_id,
+                    organization_id=organization_id,
+                    proposal_id=proposal_id,
+                )
                 continue
 
             if agno_event == RunEvent.run_error.value:
@@ -262,6 +273,8 @@ async def parse_document_intelligent(
     default_fte_hours: int = 1920,
     default_years: int = 5,
     proposal_id: Optional[str] = None,
+    user_id: Optional[str] = None,
+    organization_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Parse document with intelligent agent that reasons first, then extracts.
@@ -587,6 +600,8 @@ Return ONLY valid JSON, no markdown code blocks.
                 agent,
                 current_prompt,
                 proposal_id=proposal_id,
+                user_id=user_id,
+                organization_id=organization_id,
             )
 
             # Clean up markdown if present

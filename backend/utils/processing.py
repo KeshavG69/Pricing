@@ -149,6 +149,8 @@ async def process_proposal_documents(
         intelligent_result = await parse_document_intelligent(
             file_paths[0],
             proposal_id=proposal_id,
+            user_id=user_id,
+            organization_id=organization_id,
         )
         parse_result = convert_intelligent_output_to_dataframe(intelligent_result)
         df = parse_result["df"]
@@ -319,7 +321,20 @@ async def process_proposal_documents(
                 proposal_name = proposal_doc.get("name", "Untitled") if proposal_doc else "Untitled"
                 first_free_proposal_id = org.get("first_free_proposal_id") if org else None
 
-                if first_free_proposal_id is None:
+                won_free_slot = False
+                if first_free_proposal_id is None and org and org_crud:
+                    # Atomically claim the free-first-proposal slot. Multiple
+                    # proposals can be uploaded and processed concurrently —
+                    # without this compare-and-set, each one would read
+                    # first_free_proposal_id=None and independently grant
+                    # itself a free basic charge before any of them commits.
+                    claimed = org_crud.collection.find_one_and_update(
+                        {"_id": org["_id"], "first_free_proposal_id": None},
+                        {"$set": {"first_free_proposal_id": ObjectId(proposal_id), "updated_at": datetime.utcnow()}},
+                    )
+                    won_free_slot = claimed is not None
+
+                if won_free_slot:
                     billing_crud.create_billing_record(
                         organization_id=str(org["_id"]),
                         proposal_id=proposal_id,
@@ -329,11 +344,6 @@ async def process_proposal_documents(
                         triggered_by_user_id=user_id,
                         status="succeeded",
                     )
-                    if org_crud:
-                        org_crud.collection.update_one(
-                            {"_id": org["_id"]},
-                            {"$set": {"first_free_proposal_id": ObjectId(proposal_id), "updated_at": datetime.utcnow()}},
-                        )
                     billing_status = "paid"
                     should_trigger_advanced = True
 
