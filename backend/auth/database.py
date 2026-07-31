@@ -27,7 +27,21 @@ class MongoDB:
     def _initialize_connection(self):
         """Initialize MongoDB connection with error handling"""
         try:
-            self._client = MongoClient(settings.MONGODB_URL)
+            # Connection pool tuning for Railway's MongoDB TCP proxy, which
+            # resets idle sockets. maxIdleTimeMS below the proxy's idle window
+            # makes pymongo close sockets first, avoiding "Connection reset by
+            # peer" noise; retryReads/Writes transparently retry on a fresh
+            # socket if one is reset mid-op.
+            self._client = MongoClient(
+                settings.MONGODB_URL,
+                maxIdleTimeMS=60000,          # close idle sockets before the proxy does
+                socketTimeoutMS=30000,
+                connectTimeoutMS=20000,
+                serverSelectionTimeoutMS=20000,
+                retryWrites=True,
+                retryReads=True,
+                heartbeatFrequencyMS=120000,  # 2min heartbeat instead of default 10s
+            )
             self._db = self._client[settings.MONGODB_DATABASE]
 
             # Test connection
