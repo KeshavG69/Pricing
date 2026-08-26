@@ -1,5 +1,8 @@
 """Application settings and configuration."""
 
+from typing import Optional
+
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings
 
 
@@ -52,11 +55,68 @@ class Settings(BaseSettings):
     # use the documented keyed v2 endpoint at api.sam.gov/opportunities/v2.
     SAMGOV_API_KEY: str = ""
 
+    # ── Authentication / JWT ─────────────────────────────────────────────
+    # In production, use a secure random key
+    SECRET_KEY: str = "your-secret-key-change-this-in-production"
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    # Deployment environment (drives cookie security defaults)
+    ENVIRONMENT: str = "development"
+
+    # ── Cookie configuration ─────────────────────────────────────────────
+    COOKIE_DOMAIN: Optional[str] = None  # None = current domain
+    # env var COOKIE_SAMESITE overrides the derived default (see property below)
+    COOKIE_SAMESITE_OVERRIDE: Optional[str] = Field(default=None, alias="COOKIE_SAMESITE")
+    COOKIE_ACCESS_TOKEN_NAME: str = "access_token"
+    COOKIE_REFRESH_TOKEN_NAME: str = "refresh_token"
+
+    # ── Frontend URL (CORS, email links) ─────────────────────────────────
+    FRONTEND_URL: str = "http://localhost:3000"
+
+    # ── Email configuration ──────────────────────────────────────────────
+    # Preferred: Resend HTTP API (no SMTP auth pain). Set RESEND_API_KEY and
+    # `EmailService` will route through Resend. SMTP_* vars below remain a
+    # fallback used only when RESEND_API_KEY is empty (mostly local dev).
+    RESEND_API_KEY: str = ""
+    SMTP_HOST: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
+    FROM_EMAIL: str = "noreply@priceiq.com"
+    FROM_NAME: str = "PriceIQ"
+
+    # ── Google OAuth ─────────────────────────────────────────────────────
+    GOOGLE_CLIENT_ID: Optional[str] = None
+
+    # ── Terms and Conditions ─────────────────────────────────────────────
+    CURRENT_TERMS_VERSION: str = "1.0.0"
+
+    @field_validator("COOKIE_DOMAIN", mode="before")
+    @classmethod
+    def _empty_cookie_domain_to_none(cls, v):
+        # Treat an empty COOKIE_DOMAIN env value as "current domain"
+        return v or None
+
+    @property
+    def COOKIE_SECURE(self) -> bool:
+        """HTTPS-only cookies in production."""
+        return self.ENVIRONMENT == "production"
+
+    @property
+    def COOKIE_SAMESITE(self) -> str:
+        """Cross-origin cookies need "none" with secure=True; "lax" otherwise."""
+        if self.COOKIE_SAMESITE_OVERRIDE:
+            return self.COOKIE_SAMESITE_OVERRIDE
+        return "none" if self.COOKIE_SECURE else "lax"
+
     class Config:
         env_file = ".env"
 
         env_file_encoding = "utf-8"
         extra = "ignore"
+        populate_by_name = True
 
 
 settings = Settings()
