@@ -216,6 +216,14 @@
         "documentation": {}
     },
     {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Dict",
         "importPath": "typing",
         "description": "typing",
@@ -3895,6 +3903,78 @@
         "documentation": {}
     },
     {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
+        "label": "settings",
+        "importPath": "app.settings",
+        "description": "app.settings",
+        "isExtraImport": true,
+        "detail": "app.settings",
+        "documentation": {}
+    },
+    {
         "label": "threading",
         "kind": 6,
         "isExtraImport": true,
@@ -5034,19 +5114,339 @@
         "documentation": {}
     },
     {
-        "label": "FRONTEND_URL",
-        "importPath": "auth.config",
-        "description": "auth.config",
-        "isExtraImport": true,
-        "detail": "auth.config",
-        "documentation": {}
-    },
-    {
         "label": "startup_manager",
         "importPath": "app.startup",
         "description": "app.startup",
         "isExtraImport": true,
         "detail": "app.startup",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "field_validator",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "EmailStr",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "EmailStr",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "EmailStr",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "EmailStr",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "Field",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
+        "documentation": {}
+    },
+    {
+        "label": "BaseModel",
+        "importPath": "pydantic",
+        "description": "pydantic",
+        "isExtraImport": true,
+        "detail": "pydantic",
         "documentation": {}
     },
     {
@@ -5106,38 +5506,6 @@
         "importPath": "tasks.rfp_radar_scanner",
         "description": "tasks.rfp_radar_scanner",
         "detail": "tasks.rfp_radar_scanner",
-        "documentation": {}
-    },
-    {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
-        "isExtraImport": true,
-        "detail": "dotenv",
-        "documentation": {}
-    },
-    {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
-        "isExtraImport": true,
-        "detail": "dotenv",
-        "documentation": {}
-    },
-    {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
-        "isExtraImport": true,
-        "detail": "dotenv",
-        "documentation": {}
-    },
-    {
-        "label": "load_dotenv",
-        "importPath": "dotenv",
-        "description": "dotenv",
-        "isExtraImport": true,
-        "detail": "dotenv",
         "documentation": {}
     },
     {
@@ -5518,30 +5886,6 @@
         "documentation": {}
     },
     {
-        "label": "config",
-        "importPath": "auth",
-        "description": "auth",
-        "isExtraImport": true,
-        "detail": "auth",
-        "documentation": {}
-    },
-    {
-        "label": "config",
-        "importPath": "auth",
-        "description": "auth",
-        "isExtraImport": true,
-        "detail": "auth",
-        "documentation": {}
-    },
-    {
-        "label": "config",
-        "importPath": "auth",
-        "description": "auth",
-        "isExtraImport": true,
-        "detail": "auth",
-        "documentation": {}
-    },
-    {
         "label": "get_mongodb_client",
         "importPath": "auth.database",
         "description": "auth.database",
@@ -5731,318 +6075,6 @@
         "description": "google.oauth2",
         "isExtraImport": true,
         "detail": "google.oauth2",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "EmailStr",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "Field",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "Field",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "Field",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "Field",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "Field",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "Field",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "Field",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "EmailStr",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "Field",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "EmailStr",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "Field",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "Field",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "EmailStr",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "Field",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "Field",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "Field",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "Field",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
-        "documentation": {}
-    },
-    {
-        "label": "BaseModel",
-        "importPath": "pydantic",
-        "description": "pydantic",
-        "isExtraImport": true,
-        "detail": "pydantic",
         "documentation": {}
     },
     {
@@ -7922,6 +7954,30 @@
         "documentation": {}
     },
     {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
+        "label": "load_dotenv",
+        "importPath": "dotenv",
+        "description": "dotenv",
+        "isExtraImport": true,
+        "detail": "dotenv",
+        "documentation": {}
+    },
+    {
         "label": "Database",
         "importPath": "pymongo.database",
         "description": "pymongo.database",
@@ -9587,6 +9643,15 @@
         "documentation": {}
     },
     {
+        "label": "FRONTEND_URL",
+        "kind": 5,
+        "importPath": "backend.app.server",
+        "description": "backend.app.server",
+        "peekOfCode": "FRONTEND_URL = settings.FRONTEND_URL\nfrom app.startup import startup_manager\n@asynccontextmanager\nasync def lifespan(app: FastAPI):\n    \"\"\"\n    Lifespan context manager for FastAPI.\n    Startup: Pre-warm expensive clients in background (non-blocking)\n    Shutdown: Cleanup resources\n    \"\"\"\n    # Startup: Pre-warm clients in background",
+        "detail": "backend.app.server",
+        "documentation": {}
+    },
+    {
         "label": "app",
         "kind": 5,
         "importPath": "backend.app.server",
@@ -9686,174 +9751,12 @@
         "documentation": {}
     },
     {
-        "label": "SECRET_KEY",
-        "kind": 5,
-        "importPath": "backend.auth.config",
-        "description": "backend.auth.config",
-        "peekOfCode": "SECRET_KEY = os.getenv(\"SECRET_KEY\", \"your-secret-key-change-this-in-production\")\nALGORITHM = os.getenv(\"ALGORITHM\", \"HS256\")\nACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv(\"ACCESS_TOKEN_EXPIRE_MINUTES\", \"30\"))\nREFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv(\"REFRESH_TOKEN_EXPIRE_DAYS\", \"7\"))\n# Cookie Configuration\nCOOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"",
-        "detail": "backend.auth.config",
-        "documentation": {}
-    },
-    {
-        "label": "ALGORITHM",
-        "kind": 5,
-        "importPath": "backend.auth.config",
-        "description": "backend.auth.config",
-        "peekOfCode": "ALGORITHM = os.getenv(\"ALGORITHM\", \"HS256\")\nACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv(\"ACCESS_TOKEN_EXPIRE_MINUTES\", \"30\"))\nREFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv(\"REFRESH_TOKEN_EXPIRE_DAYS\", \"7\"))\n# Cookie Configuration\nCOOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"",
-        "detail": "backend.auth.config",
-        "documentation": {}
-    },
-    {
         "label": "ACCESS_TOKEN_EXPIRE_MINUTES",
         "kind": 5,
-        "importPath": "backend.auth.config",
-        "description": "backend.auth.config",
-        "peekOfCode": "ACCESS_TOKEN_EXPIRE_MINUTES = int(os.getenv(\"ACCESS_TOKEN_EXPIRE_MINUTES\", \"30\"))\nREFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv(\"REFRESH_TOKEN_EXPIRE_DAYS\", \"7\"))\n# Cookie Configuration\nCOOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS",
-        "detail": "backend.auth.config",
-        "documentation": {}
-    },
-    {
-        "label": "REFRESH_TOKEN_EXPIRE_DAYS",
-        "kind": 5,
-        "importPath": "backend.auth.config",
-        "description": "backend.auth.config",
-        "peekOfCode": "REFRESH_TOKEN_EXPIRE_DAYS = int(os.getenv(\"REFRESH_TOKEN_EXPIRE_DAYS\", \"7\"))\n# Cookie Configuration\nCOOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")",
-        "detail": "backend.auth.config",
-        "documentation": {}
-    },
-    {
-        "label": "COOKIE_DOMAIN",
-        "kind": 5,
-        "importPath": "backend.auth.config",
-        "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_DOMAIN = os.getenv(\"COOKIE_DOMAIN\", None) or None  # None = current domain\nCOOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\n# Preferred: Resend HTTP API (no SMTP auth pain). Set RESEND_API_KEY and",
-        "detail": "backend.auth.config",
-        "documentation": {}
-    },
-    {
-        "label": "COOKIE_SECURE",
-        "kind": 5,
-        "importPath": "backend.auth.config",
-        "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_SECURE = os.getenv(\"ENVIRONMENT\", \"development\") == \"production\"\n# For cross-origin cookies (different subdomains), use \"none\" with secure=True\nCOOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\n# Preferred: Resend HTTP API (no SMTP auth pain). Set RESEND_API_KEY and\n# `EmailService` will route through Resend. SMTP_* vars below remain a",
-        "detail": "backend.auth.config",
-        "documentation": {}
-    },
-    {
-        "label": "COOKIE_SAMESITE",
-        "kind": 5,
-        "importPath": "backend.auth.config",
-        "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_SAMESITE = os.getenv(\"COOKIE_SAMESITE\", \"none\" if COOKIE_SECURE else \"lax\")\nCOOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\n# Preferred: Resend HTTP API (no SMTP auth pain). Set RESEND_API_KEY and\n# `EmailService` will route through Resend. SMTP_* vars below remain a\n# fallback used only when RESEND_API_KEY is empty (mostly local dev).\nRESEND_API_KEY = os.getenv(\"RESEND_API_KEY\", \"\")",
-        "detail": "backend.auth.config",
-        "documentation": {}
-    },
-    {
-        "label": "COOKIE_ACCESS_TOKEN_NAME",
-        "kind": 5,
-        "importPath": "backend.auth.config",
-        "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_ACCESS_TOKEN_NAME = \"access_token\"\nCOOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\n# Preferred: Resend HTTP API (no SMTP auth pain). Set RESEND_API_KEY and\n# `EmailService` will route through Resend. SMTP_* vars below remain a\n# fallback used only when RESEND_API_KEY is empty (mostly local dev).\nRESEND_API_KEY = os.getenv(\"RESEND_API_KEY\", \"\")\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")",
-        "detail": "backend.auth.config",
-        "documentation": {}
-    },
-    {
-        "label": "COOKIE_REFRESH_TOKEN_NAME",
-        "kind": 5,
-        "importPath": "backend.auth.config",
-        "description": "backend.auth.config",
-        "peekOfCode": "COOKIE_REFRESH_TOKEN_NAME = \"refresh_token\"\n# Frontend URL for CORS\nFRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\n# Preferred: Resend HTTP API (no SMTP auth pain). Set RESEND_API_KEY and\n# `EmailService` will route through Resend. SMTP_* vars below remain a\n# fallback used only when RESEND_API_KEY is empty (mostly local dev).\nRESEND_API_KEY = os.getenv(\"RESEND_API_KEY\", \"\")\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))",
-        "detail": "backend.auth.config",
-        "documentation": {}
-    },
-    {
-        "label": "FRONTEND_URL",
-        "kind": 5,
-        "importPath": "backend.auth.config",
-        "description": "backend.auth.config",
-        "peekOfCode": "FRONTEND_URL = os.getenv(\"FRONTEND_URL\", \"http://localhost:3000\")\n# Email Configuration\n# Preferred: Resend HTTP API (no SMTP auth pain). Set RESEND_API_KEY and\n# `EmailService` will route through Resend. SMTP_* vars below remain a\n# fallback used only when RESEND_API_KEY is empty (mostly local dev).\nRESEND_API_KEY = os.getenv(\"RESEND_API_KEY\", \"\")\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")",
-        "detail": "backend.auth.config",
-        "documentation": {}
-    },
-    {
-        "label": "RESEND_API_KEY",
-        "kind": 5,
-        "importPath": "backend.auth.config",
-        "description": "backend.auth.config",
-        "peekOfCode": "RESEND_API_KEY = os.getenv(\"RESEND_API_KEY\", \"\")\nSMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\nFROM_NAME = os.getenv(\"FROM_NAME\", \"PriceIQ\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration",
-        "detail": "backend.auth.config",
-        "documentation": {}
-    },
-    {
-        "label": "SMTP_HOST",
-        "kind": 5,
-        "importPath": "backend.auth.config",
-        "description": "backend.auth.config",
-        "peekOfCode": "SMTP_HOST = os.getenv(\"SMTP_HOST\", \"smtp.gmail.com\")\nSMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\nFROM_NAME = os.getenv(\"FROM_NAME\", \"PriceIQ\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
-        "detail": "backend.auth.config",
-        "documentation": {}
-    },
-    {
-        "label": "SMTP_PORT",
-        "kind": 5,
-        "importPath": "backend.auth.config",
-        "description": "backend.auth.config",
-        "peekOfCode": "SMTP_PORT = int(os.getenv(\"SMTP_PORT\", \"587\"))\nSMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\nFROM_NAME = os.getenv(\"FROM_NAME\", \"PriceIQ\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
-        "detail": "backend.auth.config",
-        "documentation": {}
-    },
-    {
-        "label": "SMTP_USER",
-        "kind": 5,
-        "importPath": "backend.auth.config",
-        "description": "backend.auth.config",
-        "peekOfCode": "SMTP_USER = os.getenv(\"SMTP_USER\", \"\")\nSMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\nFROM_NAME = os.getenv(\"FROM_NAME\", \"PriceIQ\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
-        "detail": "backend.auth.config",
-        "documentation": {}
-    },
-    {
-        "label": "SMTP_PASSWORD",
-        "kind": 5,
-        "importPath": "backend.auth.config",
-        "description": "backend.auth.config",
-        "peekOfCode": "SMTP_PASSWORD = os.getenv(\"SMTP_PASSWORD\", \"\")\nFROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\nFROM_NAME = os.getenv(\"FROM_NAME\", \"PriceIQ\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
-        "detail": "backend.auth.config",
-        "documentation": {}
-    },
-    {
-        "label": "FROM_EMAIL",
-        "kind": 5,
-        "importPath": "backend.auth.config",
-        "description": "backend.auth.config",
-        "peekOfCode": "FROM_EMAIL = os.getenv(\"FROM_EMAIL\", \"noreply@priceiq.com\")\nFROM_NAME = os.getenv(\"FROM_NAME\", \"PriceIQ\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
-        "detail": "backend.auth.config",
-        "documentation": {}
-    },
-    {
-        "label": "FROM_NAME",
-        "kind": 5,
-        "importPath": "backend.auth.config",
-        "description": "backend.auth.config",
-        "peekOfCode": "FROM_NAME = os.getenv(\"FROM_NAME\", \"PriceIQ\")\n# Google OAuth Configuration\nGOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
-        "detail": "backend.auth.config",
-        "documentation": {}
-    },
-    {
-        "label": "GOOGLE_CLIENT_ID",
-        "kind": 5,
-        "importPath": "backend.auth.config",
-        "description": "backend.auth.config",
-        "peekOfCode": "GOOGLE_CLIENT_ID = os.getenv(\"GOOGLE_CLIENT_ID\")\n# Terms and Conditions Configuration\nCURRENT_TERMS_VERSION = \"1.0.0\"",
-        "detail": "backend.auth.config",
-        "documentation": {}
-    },
-    {
-        "label": "CURRENT_TERMS_VERSION",
-        "kind": 5,
-        "importPath": "backend.auth.config",
-        "description": "backend.auth.config",
-        "peekOfCode": "CURRENT_TERMS_VERSION = \"1.0.0\"",
-        "detail": "backend.auth.config",
+        "importPath": "backend.auth.blacklist",
+        "description": "backend.auth.blacklist",
+        "peekOfCode": "ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES\nasync def add_token_to_blacklist(user_email: str, token: str) -> bool:\n    \"\"\"\n    Add a token to the user's blacklist in their document (async)\n    Args:\n        user_email: Email of the user whose token should be blacklisted\n        token: JWT token string to blacklist\n    Returns:\n        bool: True if successfully added, False otherwise\n    \"\"\"",
+        "detail": "backend.auth.blacklist",
         "documentation": {}
     },
     {
@@ -9889,6 +9792,69 @@
         "importPath": "backend.auth.cookies",
         "description": "backend.auth.cookies",
         "peekOfCode": "def get_token_from_cookie(request: Request, cookie_name: str) -> Optional[str]:\n    \"\"\"\n    Extract token from cookie\n    Args:\n        request: FastAPI Request object\n        cookie_name: Name of the cookie to retrieve\n    Returns:\n        Token string if found, None otherwise\n    \"\"\"\n    return request.cookies.get(cookie_name)",
+        "detail": "backend.auth.cookies",
+        "documentation": {}
+    },
+    {
+        "label": "COOKIE_ACCESS_TOKEN_NAME",
+        "kind": 5,
+        "importPath": "backend.auth.cookies",
+        "description": "backend.auth.cookies",
+        "peekOfCode": "COOKIE_ACCESS_TOKEN_NAME = settings.COOKIE_ACCESS_TOKEN_NAME\nCOOKIE_REFRESH_TOKEN_NAME = settings.COOKIE_REFRESH_TOKEN_NAME\nCOOKIE_SECURE = settings.COOKIE_SECURE\nCOOKIE_SAMESITE = settings.COOKIE_SAMESITE\nCOOKIE_DOMAIN = settings.COOKIE_DOMAIN\nACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES\nREFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS\ndef set_access_token_cookie(response: Response, token: str) -> None:\n    \"\"\"\n    Set access token as HttpOnly cookie",
+        "detail": "backend.auth.cookies",
+        "documentation": {}
+    },
+    {
+        "label": "COOKIE_REFRESH_TOKEN_NAME",
+        "kind": 5,
+        "importPath": "backend.auth.cookies",
+        "description": "backend.auth.cookies",
+        "peekOfCode": "COOKIE_REFRESH_TOKEN_NAME = settings.COOKIE_REFRESH_TOKEN_NAME\nCOOKIE_SECURE = settings.COOKIE_SECURE\nCOOKIE_SAMESITE = settings.COOKIE_SAMESITE\nCOOKIE_DOMAIN = settings.COOKIE_DOMAIN\nACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES\nREFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS\ndef set_access_token_cookie(response: Response, token: str) -> None:\n    \"\"\"\n    Set access token as HttpOnly cookie\n    Args:",
+        "detail": "backend.auth.cookies",
+        "documentation": {}
+    },
+    {
+        "label": "COOKIE_SECURE",
+        "kind": 5,
+        "importPath": "backend.auth.cookies",
+        "description": "backend.auth.cookies",
+        "peekOfCode": "COOKIE_SECURE = settings.COOKIE_SECURE\nCOOKIE_SAMESITE = settings.COOKIE_SAMESITE\nCOOKIE_DOMAIN = settings.COOKIE_DOMAIN\nACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES\nREFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS\ndef set_access_token_cookie(response: Response, token: str) -> None:\n    \"\"\"\n    Set access token as HttpOnly cookie\n    Args:\n        response: FastAPI Response object",
+        "detail": "backend.auth.cookies",
+        "documentation": {}
+    },
+    {
+        "label": "COOKIE_SAMESITE",
+        "kind": 5,
+        "importPath": "backend.auth.cookies",
+        "description": "backend.auth.cookies",
+        "peekOfCode": "COOKIE_SAMESITE = settings.COOKIE_SAMESITE\nCOOKIE_DOMAIN = settings.COOKIE_DOMAIN\nACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES\nREFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS\ndef set_access_token_cookie(response: Response, token: str) -> None:\n    \"\"\"\n    Set access token as HttpOnly cookie\n    Args:\n        response: FastAPI Response object\n        token: JWT access token string",
+        "detail": "backend.auth.cookies",
+        "documentation": {}
+    },
+    {
+        "label": "COOKIE_DOMAIN",
+        "kind": 5,
+        "importPath": "backend.auth.cookies",
+        "description": "backend.auth.cookies",
+        "peekOfCode": "COOKIE_DOMAIN = settings.COOKIE_DOMAIN\nACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES\nREFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS\ndef set_access_token_cookie(response: Response, token: str) -> None:\n    \"\"\"\n    Set access token as HttpOnly cookie\n    Args:\n        response: FastAPI Response object\n        token: JWT access token string\n    \"\"\"",
+        "detail": "backend.auth.cookies",
+        "documentation": {}
+    },
+    {
+        "label": "ACCESS_TOKEN_EXPIRE_MINUTES",
+        "kind": 5,
+        "importPath": "backend.auth.cookies",
+        "description": "backend.auth.cookies",
+        "peekOfCode": "ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES\nREFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS\ndef set_access_token_cookie(response: Response, token: str) -> None:\n    \"\"\"\n    Set access token as HttpOnly cookie\n    Args:\n        response: FastAPI Response object\n        token: JWT access token string\n    \"\"\"\n    response.set_cookie(",
+        "detail": "backend.auth.cookies",
+        "documentation": {}
+    },
+    {
+        "label": "REFRESH_TOKEN_EXPIRE_DAYS",
+        "kind": 5,
+        "importPath": "backend.auth.cookies",
+        "description": "backend.auth.cookies",
+        "peekOfCode": "REFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS\ndef set_access_token_cookie(response: Response, token: str) -> None:\n    \"\"\"\n    Set access token as HttpOnly cookie\n    Args:\n        response: FastAPI Response object\n        token: JWT access token string\n    \"\"\"\n    response.set_cookie(\n        key=COOKIE_ACCESS_TOKEN_NAME,",
         "detail": "backend.auth.cookies",
         "documentation": {}
     },
@@ -9988,6 +9954,15 @@
         "importPath": "backend.auth.google_auth",
         "description": "backend.auth.google_auth",
         "peekOfCode": "class GoogleAuthService:\n    \"\"\"Google OAuth authentication service\"\"\"\n    def __init__(self):\n        if not GOOGLE_CLIENT_ID:\n            raise ValueError(\"GOOGLE_CLIENT_ID environment variable is required\")\n    def verify_google_token(self, token: str) -> Optional[GoogleUserProfile]:\n        \"\"\"\n        Verify Google JWT token and extract user information\n        Args:\n            token: Google JWT token from frontend",
+        "detail": "backend.auth.google_auth",
+        "documentation": {}
+    },
+    {
+        "label": "GOOGLE_CLIENT_ID",
+        "kind": 5,
+        "importPath": "backend.auth.google_auth",
+        "description": "backend.auth.google_auth",
+        "peekOfCode": "GOOGLE_CLIENT_ID = settings.GOOGLE_CLIENT_ID\nclass GoogleAuthService:\n    \"\"\"Google OAuth authentication service\"\"\"\n    def __init__(self):\n        if not GOOGLE_CLIENT_ID:\n            raise ValueError(\"GOOGLE_CLIENT_ID environment variable is required\")\n    def verify_google_token(self, token: str) -> Optional[GoogleUserProfile]:\n        \"\"\"\n        Verify Google JWT token and extract user information\n        Args:",
         "detail": "backend.auth.google_auth",
         "documentation": {}
     },
@@ -10181,6 +10156,33 @@
         "documentation": {}
     },
     {
+        "label": "REFRESH_TOKEN_EXPIRE_DAYS",
+        "kind": 5,
+        "importPath": "backend.auth.refresh_token",
+        "description": "backend.auth.refresh_token",
+        "peekOfCode": "REFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS\nSECRET_KEY = settings.SECRET_KEY\nALGORITHM = settings.ALGORITHM\nfrom .models import RefreshTokenValidationResult\nfrom .database import get_mongodb_client\nfrom jose import jwt, JWTError\n# Helper to get refresh tokens collection\ndef _get_refresh_tokens_collection():\n    \"\"\"Get refresh_tokens collection (cached connection)\"\"\"\n    db = get_mongodb_client().get_database()",
+        "detail": "backend.auth.refresh_token",
+        "documentation": {}
+    },
+    {
+        "label": "SECRET_KEY",
+        "kind": 5,
+        "importPath": "backend.auth.refresh_token",
+        "description": "backend.auth.refresh_token",
+        "peekOfCode": "SECRET_KEY = settings.SECRET_KEY\nALGORITHM = settings.ALGORITHM\nfrom .models import RefreshTokenValidationResult\nfrom .database import get_mongodb_client\nfrom jose import jwt, JWTError\n# Helper to get refresh tokens collection\ndef _get_refresh_tokens_collection():\n    \"\"\"Get refresh_tokens collection (cached connection)\"\"\"\n    db = get_mongodb_client().get_database()\n    return db[\"refresh_tokens\"]",
+        "detail": "backend.auth.refresh_token",
+        "documentation": {}
+    },
+    {
+        "label": "ALGORITHM",
+        "kind": 5,
+        "importPath": "backend.auth.refresh_token",
+        "description": "backend.auth.refresh_token",
+        "peekOfCode": "ALGORITHM = settings.ALGORITHM\nfrom .models import RefreshTokenValidationResult\nfrom .database import get_mongodb_client\nfrom jose import jwt, JWTError\n# Helper to get refresh tokens collection\ndef _get_refresh_tokens_collection():\n    \"\"\"Get refresh_tokens collection (cached connection)\"\"\"\n    db = get_mongodb_client().get_database()\n    return db[\"refresh_tokens\"]\ndef create_refresh_token_jwt(user_email: str, token_id: str) -> str:",
+        "detail": "backend.auth.refresh_token",
+        "documentation": {}
+    },
+    {
         "label": "hash_password",
         "kind": 2,
         "importPath": "backend.auth.utils",
@@ -10213,6 +10215,33 @@
         "importPath": "backend.auth.utils",
         "description": "backend.auth.utils",
         "peekOfCode": "def generate_user_id() -> str:\n    \"\"\"Generate a unique user ID\"\"\"\n    return str(uuid.uuid4())",
+        "detail": "backend.auth.utils",
+        "documentation": {}
+    },
+    {
+        "label": "SECRET_KEY",
+        "kind": 5,
+        "importPath": "backend.auth.utils",
+        "description": "backend.auth.utils",
+        "peekOfCode": "SECRET_KEY = settings.SECRET_KEY\nALGORITHM = settings.ALGORITHM\nACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES\nfrom .blacklist import is_token_blacklisted\ndef hash_password(password: str) -> str:\n    \"\"\"Hash a password using bcrypt\"\"\"\n    salt = bcrypt.gensalt()\n    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)\n    return hashed.decode('utf-8')\ndef verify_password(plain_password: str, hashed_password: str) -> bool:",
+        "detail": "backend.auth.utils",
+        "documentation": {}
+    },
+    {
+        "label": "ALGORITHM",
+        "kind": 5,
+        "importPath": "backend.auth.utils",
+        "description": "backend.auth.utils",
+        "peekOfCode": "ALGORITHM = settings.ALGORITHM\nACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES\nfrom .blacklist import is_token_blacklisted\ndef hash_password(password: str) -> str:\n    \"\"\"Hash a password using bcrypt\"\"\"\n    salt = bcrypt.gensalt()\n    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)\n    return hashed.decode('utf-8')\ndef verify_password(plain_password: str, hashed_password: str) -> bool:\n    \"\"\"Verify a password against its hash\"\"\"",
+        "detail": "backend.auth.utils",
+        "documentation": {}
+    },
+    {
+        "label": "ACCESS_TOKEN_EXPIRE_MINUTES",
+        "kind": 5,
+        "importPath": "backend.auth.utils",
+        "description": "backend.auth.utils",
+        "peekOfCode": "ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES\nfrom .blacklist import is_token_blacklisted\ndef hash_password(password: str) -> str:\n    \"\"\"Hash a password using bcrypt\"\"\"\n    salt = bcrypt.gensalt()\n    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)\n    return hashed.decode('utf-8')\ndef verify_password(plain_password: str, hashed_password: str) -> bool:\n    \"\"\"Verify a password against its hash\"\"\"\n    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))",
         "detail": "backend.auth.utils",
         "documentation": {}
     },

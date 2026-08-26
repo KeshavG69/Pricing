@@ -179,9 +179,9 @@ async def login(user_data: UserLogin, request: Request):
         )
 
         # Check terms acceptance status
-        from auth import config
+        from app.settings import settings
         user_version = user_doc.get("terms_accepted_version")
-        current_version = config.CURRENT_TERMS_VERSION
+        current_version = settings.CURRENT_TERMS_VERSION
         needs_terms_acceptance = (user_version != current_version)
 
         # Add terms fields to user object
@@ -299,9 +299,9 @@ async def google_login(
         )
 
         # Check terms acceptance status
-        from auth import config
+        from app.settings import settings
         user_version = user_doc.get("terms_accepted_version")
-        current_version = config.CURRENT_TERMS_VERSION
+        current_version = settings.CURRENT_TERMS_VERSION
         needs_terms_acceptance = (user_version != current_version)
 
         # Add terms fields to user object

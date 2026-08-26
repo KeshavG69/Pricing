@@ -8,7 +8,11 @@ import hashlib
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 
-from .config import REFRESH_TOKEN_EXPIRE_DAYS, SECRET_KEY, ALGORITHM
+from app.settings import settings
+
+REFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS
+SECRET_KEY = settings.SECRET_KEY
+ALGORITHM = settings.ALGORITHM
 from .models import RefreshTokenValidationResult
 from .database import get_mongodb_client
 from jose import jwt, JWTError

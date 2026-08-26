@@ -3,7 +3,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from typing import Optional
 
-from auth import config
+from app.settings import settings
 
 
 class EmailService:
@@ -19,14 +19,14 @@ class EmailService:
     """
 
     def __init__(self):
-        self.resend_api_key = config.RESEND_API_KEY
-        self.smtp_host = config.SMTP_HOST
-        self.smtp_port = config.SMTP_PORT
-        self.smtp_user = config.SMTP_USER
-        self.smtp_password = config.SMTP_PASSWORD
-        self.from_email = config.FROM_EMAIL
-        self.from_name = config.FROM_NAME
-        self.frontend_url = config.FRONTEND_URL
+        self.resend_api_key = settings.RESEND_API_KEY
+        self.smtp_host = settings.SMTP_HOST
+        self.smtp_port = settings.SMTP_PORT
+        self.smtp_user = settings.SMTP_USER
+        self.smtp_password = settings.SMTP_PASSWORD
+        self.from_email = settings.FROM_EMAIL
+        self.from_name = settings.FROM_NAME
+        self.frontend_url = settings.FRONTEND_URL
 
     # ── Backend dispatch ─────────────────────────────────────────────────
 
