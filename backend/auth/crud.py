@@ -25,7 +25,7 @@ class UserCRUD:
     def create_user(user_data: UserSignup, email_verified: bool = True) -> UserResponse:
         """Create a new user with default organization"""
         from utils.organizations import get_organization_crud
-        from auth import config
+        from app.settings import settings
 
         mongodb = get_mongodb_client()
         users_collection = mongodb.get_users_collection()
@@ -73,7 +73,7 @@ class UserCRUD:
                 "status": "active",
                 "joinedAt": now
             }],
-            "terms_accepted_version": config.CURRENT_TERMS_VERSION,
+            "terms_accepted_version": settings.CURRENT_TERMS_VERSION,
             "terms_accepted_at": now,
             "createdAt": now,
             "updatedAt": now
@@ -223,8 +223,7 @@ class UserCRUD:
                 {"$set": {"name": organization["slug"]}}
             )
 
-            # Import config for terms version
-            from auth import config
+            from app.settings import settings
 
             user_doc = {
                 "_id": user_id,
@@ -250,7 +249,7 @@ class UserCRUD:
                     "status": "active",
                     "joinedAt": now
                 }],
-                "terms_accepted_version": config.CURRENT_TERMS_VERSION,
+                "terms_accepted_version": settings.CURRENT_TERMS_VERSION,
                 "terms_accepted_at": now,
                 "createdAt": now,
                 "updatedAt": now
@@ -280,7 +279,7 @@ class UserCRUD:
         role: str = "user"
     ) -> dict:
         """Create user with organization (for invitation acceptance)"""
-        from auth import config
+        from app.settings import settings
 
         # Check if user already exists
         existing = self.collection.find_one({"email": email})
@@ -301,7 +300,7 @@ class UserCRUD:
             }],
             "current_organization_id": organization_id,
             "auth_method": "email",
-            "terms_accepted_version": config.CURRENT_TERMS_VERSION,
+            "terms_accepted_version": settings.CURRENT_TERMS_VERSION,
             "terms_accepted_at": now,
             "createdAt": now,
             "updatedAt": now

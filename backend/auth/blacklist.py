@@ -1,7 +1,9 @@
 from typing import Optional
 from datetime import datetime, timedelta
 from .database import get_mongodb_client
-from .config import ACCESS_TOKEN_EXPIRE_MINUTES
+from app.settings import settings
+
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
 
 async def add_token_to_blacklist(user_email: str, token: str) -> bool:

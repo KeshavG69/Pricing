@@ -13,7 +13,9 @@ from fastapi.responses import FileResponse
 from pathlib import Path
 
 from routers import pricing, auth, excel_export, proposals, organizations, invitations, workspace, soc, company_repository, billing, stripe_webhooks, terms, help_center, users, contact, pricing_chat, capability_builder, admin
-from auth.config import FRONTEND_URL
+from app.settings import settings
+
+FRONTEND_URL = settings.FRONTEND_URL
 from app.startup import startup_manager
 
 

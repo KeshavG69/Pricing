@@ -8,7 +8,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from bson import ObjectId
 from jose import jwt, JWTError
 from typing import Optional
-from auth import config
+from app.settings import settings
 from auth.database import get_mongodb_client
 
 
@@ -38,7 +38,7 @@ async def get_current_user(
 
     try:
         # Decode JWT token
-        payload = jwt.decode(token, config.SECRET_KEY, algorithms=[config.ALGORITHM])
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         email: str = payload.get("sub")
 
         if not email:
@@ -114,7 +114,7 @@ async def get_current_user(
 
         # Check terms and conditions version
         user_version = user.get("terms_accepted_version")
-        current_version = config.CURRENT_TERMS_VERSION
+        current_version = settings.CURRENT_TERMS_VERSION
 
         # Add flag to indicate if user needs to accept updated terms
         if user_version != current_version:
