@@ -352,6 +352,38 @@
         "documentation": {}
     },
     {
+        "label": "List",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Optional",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Tuple",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
+        "label": "Dict",
+        "importPath": "typing",
+        "description": "typing",
+        "isExtraImport": true,
+        "detail": "typing",
+        "documentation": {}
+    },
+    {
         "label": "Any",
         "importPath": "typing",
         "description": "typing",
@@ -1930,6 +1962,14 @@
         "description": "zipfile",
         "isExtraImport": true,
         "detail": "zipfile",
+        "documentation": {}
+    },
+    {
+        "label": "Path",
+        "importPath": "pathlib",
+        "description": "pathlib",
+        "isExtraImport": true,
+        "detail": "pathlib",
         "documentation": {}
     },
     {
@@ -6080,6 +6120,14 @@
         "documentation": {}
     },
     {
+        "label": "SequenceMatcher",
+        "importPath": "difflib",
+        "description": "difflib",
+        "isExtraImport": true,
+        "detail": "difflib",
+        "documentation": {}
+    },
+    {
         "label": "Counter",
         "importPath": "collections",
         "description": "collections",
@@ -6225,19 +6273,27 @@
         "documentation": {}
     },
     {
-        "label": "_convert_excel_to_csv",
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
+        "label": "anchor_miss_summary",
+        "importPath": "client.anchor_resolver",
+        "description": "client.anchor_resolver",
         "isExtraImport": true,
-        "detail": "client.jd_parser",
+        "detail": "client.anchor_resolver",
         "documentation": {}
     },
     {
-        "label": "parse_documents_to_dataframe",
-        "importPath": "client.jd_parser",
-        "description": "client.jd_parser",
+        "label": "resolve_descriptions",
+        "importPath": "client.anchor_resolver",
+        "description": "client.anchor_resolver",
         "isExtraImport": true,
-        "detail": "client.jd_parser",
+        "detail": "client.anchor_resolver",
+        "documentation": {}
+    },
+    {
+        "label": "anchor_miss_summary",
+        "importPath": "client.anchor_resolver",
+        "description": "client.anchor_resolver",
+        "isExtraImport": true,
+        "detail": "client.anchor_resolver",
         "documentation": {}
     },
     {
@@ -7554,6 +7610,14 @@
         "documentation": {}
     },
     {
+        "label": "parse_documents_to_dataframe",
+        "importPath": "client.jd_parser",
+        "description": "client.jd_parser",
+        "isExtraImport": true,
+        "detail": "client.jd_parser",
+        "documentation": {}
+    },
+    {
         "label": "process_dataframe_with_agents",
         "importPath": "utils.pipeline",
         "description": "utils.pipeline",
@@ -7952,6 +8016,14 @@
         "importPath": "requests",
         "description": "requests",
         "detail": "requests",
+        "documentation": {}
+    },
+    {
+        "label": "gsa_parser",
+        "importPath": "client",
+        "description": "client",
+        "isExtraImport": true,
+        "detail": "client",
         "documentation": {}
     },
     {
@@ -10262,6 +10334,141 @@
         "documentation": {}
     },
     {
+        "label": "resolve_descriptions",
+        "kind": 2,
+        "importPath": "backend.client.anchor_resolver",
+        "description": "backend.client.anchor_resolver",
+        "peekOfCode": "def resolve_descriptions(full_text: str, entries: List[dict]) -> List[dict]:\n    \"\"\"Replace {desc_start, desc_end} anchors with verbatim text from full_text.\n    Candidate spans are enumerated and scored, then assigned globally by a\n    monotonic dynamic program — boilerplate descriptions repeat verbatim across\n    labor categories, so first-match and greedy selection both misattribute.\n    The entry title is the primary disambiguator: bodies can be byte-identical,\n    titles almost never are (\"Engineer I\" vs \"Engineer II\").\n    Entries that cannot be resolved get description=None and an `_anchor_miss`\n    tag; they are never given a guessed span.\n    \"\"\"",
+        "detail": "backend.client.anchor_resolver",
+        "documentation": {}
+    },
+    {
+        "label": "anchor_miss_summary",
+        "kind": 2,
+        "importPath": "backend.client.anchor_resolver",
+        "description": "backend.client.anchor_resolver",
+        "peekOfCode": "def anchor_miss_summary(entries: List[dict]) -> Dict[str, int]:\n    \"\"\"Count unresolved anchors by reason — the signal that anchors are drifting.\"\"\"\n    summary: Dict[str, int] = {}\n    for e in entries:\n        reason = e.get(\"_anchor_miss\")\n        if reason:\n            summary[reason] = summary.get(reason, 0) + 1\n    return summary",
+        "detail": "backend.client.anchor_resolver",
+        "documentation": {}
+    },
+    {
+        "label": "logger",
+        "kind": 5,
+        "importPath": "backend.client.anchor_resolver",
+        "description": "backend.client.anchor_resolver",
+        "peekOfCode": "logger = logging.getLogger(__name__)\nMAX_DESC_CHARS = 2000\nMIN_DESC_CHARS = 20\nMIN_ANCHOR_SCORE = 0.75   # coverage gate: how much of the anchor matched\nMIN_MATCH_DENSITY = 0.6   # density gate: how tightly the match packs into the span\nTITLE_LOOKBACK = 400      # a title header sits just above its description\nMAX_EXACT_HITS = 200\nMAX_FUZZY_HITS = 20\nMAX_CANDIDATES_PER_ENTRY = 8   # bounds the assignment DP\n# Span scoring. Base is high enough that any admissible span beats leaving an",
+        "detail": "backend.client.anchor_resolver",
+        "documentation": {}
+    },
+    {
+        "label": "MAX_DESC_CHARS",
+        "kind": 5,
+        "importPath": "backend.client.anchor_resolver",
+        "description": "backend.client.anchor_resolver",
+        "peekOfCode": "MAX_DESC_CHARS = 2000\nMIN_DESC_CHARS = 20\nMIN_ANCHOR_SCORE = 0.75   # coverage gate: how much of the anchor matched\nMIN_MATCH_DENSITY = 0.6   # density gate: how tightly the match packs into the span\nTITLE_LOOKBACK = 400      # a title header sits just above its description\nMAX_EXACT_HITS = 200\nMAX_FUZZY_HITS = 20\nMAX_CANDIDATES_PER_ENTRY = 8   # bounds the assignment DP\n# Span scoring. Base is high enough that any admissible span beats leaving an\n# entry unassigned; the DP then maximises the total across all entries.",
+        "detail": "backend.client.anchor_resolver",
+        "documentation": {}
+    },
+    {
+        "label": "MIN_DESC_CHARS",
+        "kind": 5,
+        "importPath": "backend.client.anchor_resolver",
+        "description": "backend.client.anchor_resolver",
+        "peekOfCode": "MIN_DESC_CHARS = 20\nMIN_ANCHOR_SCORE = 0.75   # coverage gate: how much of the anchor matched\nMIN_MATCH_DENSITY = 0.6   # density gate: how tightly the match packs into the span\nTITLE_LOOKBACK = 400      # a title header sits just above its description\nMAX_EXACT_HITS = 200\nMAX_FUZZY_HITS = 20\nMAX_CANDIDATES_PER_ENTRY = 8   # bounds the assignment DP\n# Span scoring. Base is high enough that any admissible span beats leaving an\n# entry unassigned; the DP then maximises the total across all entries.\nSCORE_BASE = 5.0",
+        "detail": "backend.client.anchor_resolver",
+        "documentation": {}
+    },
+    {
+        "label": "MIN_ANCHOR_SCORE",
+        "kind": 5,
+        "importPath": "backend.client.anchor_resolver",
+        "description": "backend.client.anchor_resolver",
+        "peekOfCode": "MIN_ANCHOR_SCORE = 0.75   # coverage gate: how much of the anchor matched\nMIN_MATCH_DENSITY = 0.6   # density gate: how tightly the match packs into the span\nTITLE_LOOKBACK = 400      # a title header sits just above its description\nMAX_EXACT_HITS = 200\nMAX_FUZZY_HITS = 20\nMAX_CANDIDATES_PER_ENTRY = 8   # bounds the assignment DP\n# Span scoring. Base is high enough that any admissible span beats leaving an\n# entry unassigned; the DP then maximises the total across all entries.\nSCORE_BASE = 5.0\nSCORE_TITLE_ADJACENT = 10.0    # strongest signal — separates identical bodies",
+        "detail": "backend.client.anchor_resolver",
+        "documentation": {}
+    },
+    {
+        "label": "MIN_MATCH_DENSITY",
+        "kind": 5,
+        "importPath": "backend.client.anchor_resolver",
+        "description": "backend.client.anchor_resolver",
+        "peekOfCode": "MIN_MATCH_DENSITY = 0.6   # density gate: how tightly the match packs into the span\nTITLE_LOOKBACK = 400      # a title header sits just above its description\nMAX_EXACT_HITS = 200\nMAX_FUZZY_HITS = 20\nMAX_CANDIDATES_PER_ENTRY = 8   # bounds the assignment DP\n# Span scoring. Base is high enough that any admissible span beats leaving an\n# entry unassigned; the DP then maximises the total across all entries.\nSCORE_BASE = 5.0\nSCORE_TITLE_ADJACENT = 10.0    # strongest signal — separates identical bodies\nSCORE_REAL_END_ANCHOR = 5.0",
+        "detail": "backend.client.anchor_resolver",
+        "documentation": {}
+    },
+    {
+        "label": "TITLE_LOOKBACK",
+        "kind": 5,
+        "importPath": "backend.client.anchor_resolver",
+        "description": "backend.client.anchor_resolver",
+        "peekOfCode": "TITLE_LOOKBACK = 400      # a title header sits just above its description\nMAX_EXACT_HITS = 200\nMAX_FUZZY_HITS = 20\nMAX_CANDIDATES_PER_ENTRY = 8   # bounds the assignment DP\n# Span scoring. Base is high enough that any admissible span beats leaving an\n# entry unassigned; the DP then maximises the total across all entries.\nSCORE_BASE = 5.0\nSCORE_TITLE_ADJACENT = 10.0    # strongest signal — separates identical bodies\nSCORE_REAL_END_ANCHOR = 5.0\nSCORE_LENGTH_PENALTY = 3.0     # prefer tight spans over sprawling ones",
+        "detail": "backend.client.anchor_resolver",
+        "documentation": {}
+    },
+    {
+        "label": "MAX_EXACT_HITS",
+        "kind": 5,
+        "importPath": "backend.client.anchor_resolver",
+        "description": "backend.client.anchor_resolver",
+        "peekOfCode": "MAX_EXACT_HITS = 200\nMAX_FUZZY_HITS = 20\nMAX_CANDIDATES_PER_ENTRY = 8   # bounds the assignment DP\n# Span scoring. Base is high enough that any admissible span beats leaving an\n# entry unassigned; the DP then maximises the total across all entries.\nSCORE_BASE = 5.0\nSCORE_TITLE_ADJACENT = 10.0    # strongest signal — separates identical bodies\nSCORE_REAL_END_ANCHOR = 5.0\nSCORE_LENGTH_PENALTY = 3.0     # prefer tight spans over sprawling ones\ndef _normalize_with_map(text: str) -> Tuple[str, List[int]]:",
+        "detail": "backend.client.anchor_resolver",
+        "documentation": {}
+    },
+    {
+        "label": "MAX_FUZZY_HITS",
+        "kind": 5,
+        "importPath": "backend.client.anchor_resolver",
+        "description": "backend.client.anchor_resolver",
+        "peekOfCode": "MAX_FUZZY_HITS = 20\nMAX_CANDIDATES_PER_ENTRY = 8   # bounds the assignment DP\n# Span scoring. Base is high enough that any admissible span beats leaving an\n# entry unassigned; the DP then maximises the total across all entries.\nSCORE_BASE = 5.0\nSCORE_TITLE_ADJACENT = 10.0    # strongest signal — separates identical bodies\nSCORE_REAL_END_ANCHOR = 5.0\nSCORE_LENGTH_PENALTY = 3.0     # prefer tight spans over sprawling ones\ndef _normalize_with_map(text: str) -> Tuple[str, List[int]]:\n    \"\"\"Lowercase and collapse whitespace, keeping a map back to original offsets.",
+        "detail": "backend.client.anchor_resolver",
+        "documentation": {}
+    },
+    {
+        "label": "MAX_CANDIDATES_PER_ENTRY",
+        "kind": 5,
+        "importPath": "backend.client.anchor_resolver",
+        "description": "backend.client.anchor_resolver",
+        "peekOfCode": "MAX_CANDIDATES_PER_ENTRY = 8   # bounds the assignment DP\n# Span scoring. Base is high enough that any admissible span beats leaving an\n# entry unassigned; the DP then maximises the total across all entries.\nSCORE_BASE = 5.0\nSCORE_TITLE_ADJACENT = 10.0    # strongest signal — separates identical bodies\nSCORE_REAL_END_ANCHOR = 5.0\nSCORE_LENGTH_PENALTY = 3.0     # prefer tight spans over sprawling ones\ndef _normalize_with_map(text: str) -> Tuple[str, List[int]]:\n    \"\"\"Lowercase and collapse whitespace, keeping a map back to original offsets.\n    offsets[j] is the index in `text` of the character that produced",
+        "detail": "backend.client.anchor_resolver",
+        "documentation": {}
+    },
+    {
+        "label": "SCORE_BASE",
+        "kind": 5,
+        "importPath": "backend.client.anchor_resolver",
+        "description": "backend.client.anchor_resolver",
+        "peekOfCode": "SCORE_BASE = 5.0\nSCORE_TITLE_ADJACENT = 10.0    # strongest signal — separates identical bodies\nSCORE_REAL_END_ANCHOR = 5.0\nSCORE_LENGTH_PENALTY = 3.0     # prefer tight spans over sprawling ones\ndef _normalize_with_map(text: str) -> Tuple[str, List[int]]:\n    \"\"\"Lowercase and collapse whitespace, keeping a map back to original offsets.\n    offsets[j] is the index in `text` of the character that produced\n    normalized[j]. Matching happens on the normalized copy; slicing happens on\n    the original, so extracted text keeps its source formatting exactly.\n    \"\"\"",
+        "detail": "backend.client.anchor_resolver",
+        "documentation": {}
+    },
+    {
+        "label": "SCORE_TITLE_ADJACENT",
+        "kind": 5,
+        "importPath": "backend.client.anchor_resolver",
+        "description": "backend.client.anchor_resolver",
+        "peekOfCode": "SCORE_TITLE_ADJACENT = 10.0    # strongest signal — separates identical bodies\nSCORE_REAL_END_ANCHOR = 5.0\nSCORE_LENGTH_PENALTY = 3.0     # prefer tight spans over sprawling ones\ndef _normalize_with_map(text: str) -> Tuple[str, List[int]]:\n    \"\"\"Lowercase and collapse whitespace, keeping a map back to original offsets.\n    offsets[j] is the index in `text` of the character that produced\n    normalized[j]. Matching happens on the normalized copy; slicing happens on\n    the original, so extracted text keeps its source formatting exactly.\n    \"\"\"\n    chars: List[str] = []",
+        "detail": "backend.client.anchor_resolver",
+        "documentation": {}
+    },
+    {
+        "label": "SCORE_REAL_END_ANCHOR",
+        "kind": 5,
+        "importPath": "backend.client.anchor_resolver",
+        "description": "backend.client.anchor_resolver",
+        "peekOfCode": "SCORE_REAL_END_ANCHOR = 5.0\nSCORE_LENGTH_PENALTY = 3.0     # prefer tight spans over sprawling ones\ndef _normalize_with_map(text: str) -> Tuple[str, List[int]]:\n    \"\"\"Lowercase and collapse whitespace, keeping a map back to original offsets.\n    offsets[j] is the index in `text` of the character that produced\n    normalized[j]. Matching happens on the normalized copy; slicing happens on\n    the original, so extracted text keeps its source formatting exactly.\n    \"\"\"\n    chars: List[str] = []\n    offsets: List[int] = []",
+        "detail": "backend.client.anchor_resolver",
+        "documentation": {}
+    },
+    {
+        "label": "SCORE_LENGTH_PENALTY",
+        "kind": 5,
+        "importPath": "backend.client.anchor_resolver",
+        "description": "backend.client.anchor_resolver",
+        "peekOfCode": "SCORE_LENGTH_PENALTY = 3.0     # prefer tight spans over sprawling ones\ndef _normalize_with_map(text: str) -> Tuple[str, List[int]]:\n    \"\"\"Lowercase and collapse whitespace, keeping a map back to original offsets.\n    offsets[j] is the index in `text` of the character that produced\n    normalized[j]. Matching happens on the normalized copy; slicing happens on\n    the original, so extracted text keeps its source formatting exactly.\n    \"\"\"\n    chars: List[str] = []\n    offsets: List[int] = []\n    prev_space = False",
+        "detail": "backend.client.anchor_resolver",
+        "documentation": {}
+    },
+    {
         "label": "Calculator",
         "kind": 6,
         "importPath": "backend.client.calculation_service",
@@ -10383,7 +10590,7 @@
         "kind": 2,
         "importPath": "backend.client.gsa_parser",
         "description": "backend.client.gsa_parser",
-        "peekOfCode": "def parse_gsa_contract(file_path: str) -> dict:\n    \"\"\"\n    Parse GSA contract and return data for MongoDB storage.\n    Args:\n        file_path: Path to GSA contract (PDF, Excel, or RTF)\n    Returns:\n        Dict with contract_number, dates, labor_categories, needs_date\n    \"\"\"\n    import os\n    file_ext = os.path.splitext(file_path)[1].lower()",
+        "peekOfCode": "def parse_gsa_contract(file_path: str) -> dict:\n    \"\"\"\n    Parse GSA contract and return data for MongoDB storage.\n    Args:\n        file_path: Path to GSA contract (PDF, Excel, or RTF)\n    Returns:\n        Dict with contract_number, dates, labor_categories, needs_date\n    \"\"\"\n    # Excel/RTF need no pre-conversion — _extract_full_text handles both natively.\n    # ========================================================================",
         "detail": "backend.client.gsa_parser",
         "documentation": {}
     },
@@ -12219,7 +12426,7 @@
         "kind": 2,
         "importPath": "backend.routers.stripe_webhooks",
         "description": "backend.routers.stripe_webhooks",
-        "peekOfCode": "def handle_payment_succeeded(event, billing_crud, proposal_crud):\n    \"\"\"\n    Handle successful payment.\n    Updates:\n    - Billing record status → \"succeeded\"\n    - Proposal billing_status → \"paid\"\n    \"\"\"\n    payment_intent = event.data.object\n    payment_intent_id = payment_intent.id\n    metadata = payment_intent.get(\"metadata\", {})",
+        "peekOfCode": "def handle_payment_succeeded(event, billing_crud, proposal_crud):\n    \"\"\"\n    Handle successful payment.\n    Updates:\n    - Billing record status → \"succeeded\"\n    - Proposal billing_status → \"paid\"\n    \"\"\"\n    payment_intent = _event_object_dict(event)\n    payment_intent_id = payment_intent.get(\"id\")\n    metadata = payment_intent.get(\"metadata\") or {}",
         "detail": "backend.routers.stripe_webhooks",
         "documentation": {}
     },
@@ -12228,7 +12435,7 @@
         "kind": 2,
         "importPath": "backend.routers.stripe_webhooks",
         "description": "backend.routers.stripe_webhooks",
-        "peekOfCode": "def handle_payment_failed(event, billing_crud, proposal_crud):\n    \"\"\"\n    Handle failed payment.\n    Updates:\n    - Billing record status → \"failed\" with error message\n    - Proposal billing_status → \"failed\"\n    \"\"\"\n    payment_intent = event.data.object\n    payment_intent_id = payment_intent.id\n    metadata = payment_intent.get(\"metadata\", {})",
+        "peekOfCode": "def handle_payment_failed(event, billing_crud, proposal_crud):\n    \"\"\"\n    Handle failed payment.\n    Updates:\n    - Billing record status → \"failed\" with error message\n    - Proposal billing_status → \"failed\"\n    \"\"\"\n    payment_intent = _event_object_dict(event)\n    payment_intent_id = payment_intent.get(\"id\")\n    metadata = payment_intent.get(\"metadata\") or {}",
         "detail": "backend.routers.stripe_webhooks",
         "documentation": {}
     },
@@ -12237,7 +12444,7 @@
         "kind": 2,
         "importPath": "backend.routers.stripe_webhooks",
         "description": "backend.routers.stripe_webhooks",
-        "peekOfCode": "def handle_setup_succeeded(event):\n    \"\"\"\n    Handle successful SetupIntent (card saved).\n    This is informational - the actual payment method attachment\n    is handled in the billing router after frontend confirmation.\n    \"\"\"\n    setup_intent = event.data.object\n    customer_id = setup_intent.get(\"customer\")\n    payment_method = setup_intent.get(\"payment_method\")\n    logger.info(",
+        "peekOfCode": "def handle_setup_succeeded(event):\n    \"\"\"\n    Handle successful SetupIntent (card saved).\n    This is informational - the actual payment method attachment\n    is handled in the billing router after frontend confirmation.\n    \"\"\"\n    setup_intent = _event_object_dict(event)\n    customer_id = setup_intent.get(\"customer\")\n    payment_method = setup_intent.get(\"payment_method\")\n    logger.info(",
         "detail": "backend.routers.stripe_webhooks",
         "documentation": {}
     },
@@ -12725,6 +12932,33 @@
         "description": "backend.scripts.setup_oews_data",
         "peekOfCode": "DATA_DIR = Path(\"data/oews\")\ndef download_file(filename: str, output_path: Path) -> bool:\n    \"\"\"Download a file from BLS.\"\"\"\n    url = BLS_BASE + filename\n    print(f\"Downloading {filename}...\")\n    headers = {\n        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',\n        'Accept': '*/*',\n    }\n    try:",
         "detail": "backend.scripts.setup_oews_data",
+        "documentation": {}
+    },
+    {
+        "label": "main",
+        "kind": 2,
+        "importPath": "backend.scripts.test_gsa_parser_live",
+        "description": "backend.scripts.test_gsa_parser_live",
+        "peekOfCode": "def main() -> int:\n    file_path = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_FILE\n    if not Path(file_path).exists():\n        print(f\"❌ File not found: {file_path}\")\n        return 1\n    _bar(f\"GSA PARSER LIVE TEST\\n{file_path}\")\n    print(f\"file size: {Path(file_path).stat().st_size:,} bytes\")\n    # ------------------------------------------------------------------\n    # Stage 1: text extraction (also gives us full_text for the checks below)\n    # ------------------------------------------------------------------",
+        "detail": "backend.scripts.test_gsa_parser_live",
+        "documentation": {}
+    },
+    {
+        "label": "DEFAULT_FILE",
+        "kind": 5,
+        "importPath": "backend.scripts.test_gsa_parser_live",
+        "description": "backend.scripts.test_gsa_parser_live",
+        "peekOfCode": "DEFAULT_FILE = \"/Users/keshav/Downloads/FSS Price List.rtf\"\nOUT_DIR = Path(__file__).resolve().parent.parent / \"tmp\"\ndef _bar(title: str) -> None:\n    print(f\"\\n{'=' * 72}\\n{title}\\n{'=' * 72}\")\ndef main() -> int:\n    file_path = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_FILE\n    if not Path(file_path).exists():\n        print(f\"❌ File not found: {file_path}\")\n        return 1\n    _bar(f\"GSA PARSER LIVE TEST\\n{file_path}\")",
+        "detail": "backend.scripts.test_gsa_parser_live",
+        "documentation": {}
+    },
+    {
+        "label": "OUT_DIR",
+        "kind": 5,
+        "importPath": "backend.scripts.test_gsa_parser_live",
+        "description": "backend.scripts.test_gsa_parser_live",
+        "peekOfCode": "OUT_DIR = Path(__file__).resolve().parent.parent / \"tmp\"\ndef _bar(title: str) -> None:\n    print(f\"\\n{'=' * 72}\\n{title}\\n{'=' * 72}\")\ndef main() -> int:\n    file_path = sys.argv[1] if len(sys.argv) > 1 else DEFAULT_FILE\n    if not Path(file_path).exists():\n        print(f\"❌ File not found: {file_path}\")\n        return 1\n    _bar(f\"GSA PARSER LIVE TEST\\n{file_path}\")\n    print(f\"file size: {Path(file_path).stat().st_size:,} bytes\")",
+        "detail": "backend.scripts.test_gsa_parser_live",
         "documentation": {}
     },
     {

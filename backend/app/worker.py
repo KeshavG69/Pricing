@@ -4,6 +4,7 @@ Handles background task processing for proposal and GSA contract ingestion.
 """
 
 import logging
+import socket
 import sys
 from pathlib import Path
 

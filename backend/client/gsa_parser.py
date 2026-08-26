@@ -5,7 +5,7 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 import json
 from app.settings import settings
-from client.jd_parser import _convert_excel_to_csv
+from client.anchor_resolver import anchor_miss_summary, resolve_descriptions
 from client.llm_client import get_chat_llm
 
 
@@ -43,46 +43,6 @@ class GSAContractMetadata(BaseModel):
 # =====================================================================
 # HELPER FUNCTIONS
 # =====================================================================
-
-def _convert_rtf_to_txt(rtf_path: str) -> str:
-    """
-    Convert RTF file to TXT for text extraction.
-
-    Args:
-        rtf_path: Path to the RTF file
-
-    Returns:
-        Path to temporary TXT file
-    """
-    import subprocess
-    import tempfile
-
-    temp_txt = tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False)
-    temp_txt.close()
-
-    try:
-        # Use textutil (macOS) to convert RTF to TXT
-        subprocess.run(
-            ['textutil', '-convert', 'txt', '-output', temp_txt.name, rtf_path],
-            check=True,
-            capture_output=True
-        )
-        print(f"  Converted RTF to TXT: {temp_txt.name}")
-        return temp_txt.name
-    except (subprocess.CalledProcessError, FileNotFoundError):
-        # Fallback: try striprtf library
-        try:
-            from striprtf.striprtf import rtf_to_text
-            with open(rtf_path, 'r', encoding='utf-8', errors='ignore') as f:
-                rtf_content = f.read()
-            txt_content = rtf_to_text(rtf_content)
-            with open(temp_txt.name, 'w', encoding='utf-8') as f:
-                f.write(txt_content)
-            print(f"  Converted RTF to TXT (striprtf): {temp_txt.name}")
-            return temp_txt.name
-        except ImportError:
-            raise ValueError("Cannot convert RTF. Install striprtf: pip install striprtf")
-
 
 def _extract_full_text(file_path: str) -> str:
     """
@@ -214,33 +174,26 @@ Return ONLY valid JSON:"""
     return GSAContractMetadata()
 
 
-def _extract_descriptions_with_llm(full_text: str) -> List[dict]:
-    """
-    Extract ONLY job descriptions, qualifications, and experience (NO RATES).
+def _descriptions_prompt(chunk: str) -> str:
+    return f"""Extract job descriptions and qualifications from this GSA contract document excerpt.
 
-    Args:
-        full_text: Complete document text
-
-    Returns:
-        List of dicts with title, sin, description, experience
-    """
-    llm = get_chat_llm(model="anthropic/claude-sonnet-4.6",api_key=settings.OPENROUTER_API_KEY,base_url="https://openrouter.ai/api/v1", max_tokens=32000)
-
-    prompt = f"""Extract job descriptions and qualifications from this GSA contract document.
+🎯 CRITICAL: Do NOT copy out the description text. Instead, return short VERBATIM
+anchors marking where each description begins and ends. The description text will
+be sliced out of the source document using those anchors.
 
 EXTRACTION RULES:
-1. Extract ALL job titles you find
-2. Extract descriptions and experience/education requirements
-3. IGNORE dollar amounts and rates - we only want qualifications
+1. Extract ALL job titles you find in this excerpt
+2. IGNORE dollar amounts and rates - we only want qualifications
+3. Anchors MUST be copied character-for-character from the document. Do not
+   paraphrase, reformat, fix typos, or change capitalization or punctuation.
 
 FIELDS TO EXTRACT:
 - title: Job title/position name (REQUIRED)
 - sin: SIN code if present (e.g., "541330ENG", "541611")
-- description: Job description, duties, responsibilities. Look for:
-  * Text paragraphs describing what the position does
-  * Duty statements or role descriptions
-  * Required skills or competencies
-  * If NO description exists, omit this field
+- desc_start: The FIRST 6-10 words of the description, copied VERBATIM
+- desc_end: The LAST 6-10 words of the description, copied VERBATIM
+  * desc_start and desc_end must both come from the SAME description
+  * If there is NO description for this title, omit both fields
 - experience: Years of experience or education required. Look for:
   * Text like "5 years", "3-5 years minimum", "10+ years"
   * Education: "Bachelor's degree", "Master's required", "PhD preferred"
@@ -248,33 +201,80 @@ FIELDS TO EXTRACT:
   * Roman numerals: "I" = Entry, "II" = 2-4 years, "III" = 5-7 years, "IV" = 8+ years
   * If NO experience info exists, omit this field
 
-OUTPUT FORMAT:
+EXAMPLE
+If the document contains:
+    Senior Systems Engineer (SIN 541330)
+    Designs and implements enterprise infrastructure solutions for federal
+    agencies, including network architecture and security in accordance with
+    agency standards. Minimum 5 years with a Bachelor's degree.
+
+You return:
 [
   {{
     "title": "Senior Systems Engineer",
     "sin": "541330",
-    "description": "Designs and implements enterprise infrastructure solutions...",
+    "desc_start": "Designs and implements enterprise infrastructure solutions for",
+    "desc_end": "security in accordance with agency standards.",
     "experience": "5+ years with Bachelor's degree"
-  }},
-  {{
-    "title": "Administrative Specialist",
-    "sin": "541611",
-    "description": "Provides administrative support including scheduling..."
   }}
 ]
 
+Note how the anchors are copied exactly, and the middle of the description is
+never written out.
+
 DOCUMENT TEXT:
-{full_text}
+{chunk}
 
 Return ONLY valid JSON array. If no job descriptions found, return empty array []:"""
 
+
+def _parse_json_array(response_text: str) -> list:
+    """Strip markdown fences / trailing commas and parse a JSON array."""
+    text = response_text.strip()
+
+    if text.startswith('```'):
+        parts = text.split('```')
+        if len(parts) >= 3:
+            text = parts[1]
+            if text.startswith('json'):
+                text = text[4:]
+        text = text.strip()
+
+    text = re.sub(r',\s*([}\]])', r'\1', text)
+
+    if not text.startswith('['):
+        match = re.search(r'\[.*\]', text, re.DOTALL)
+        if match:
+            text = match.group(0)
+
+    parsed = json.loads(text)
+    return parsed if isinstance(parsed, list) else [parsed]
+
+
+def _extract_descriptions_with_llm(full_text: str) -> List[dict]:
+    """
+    Extract job descriptions from the document in a single LLM call.
+
+    The model returns short verbatim anchors (desc_start / desc_end) rather than
+    transcribing description prose, which cuts output tokens by roughly 10x. The
+    anchors are then resolved back into verbatim spans of the source document.
+
+    Returns dicts with title, sin, description, experience — the same shape as
+    before, so the merge step downstream is unchanged.
+    """
+    llm = get_chat_llm(model="anthropic/claude-sonnet-4.6", api_key=settings.OPENROUTER_API_KEY,
+                       base_url="https://openrouter.ai/api/v1", max_tokens=16000)
+    prompt = _descriptions_prompt(full_text)
+
+    anchored: List[dict] = []
     max_retries = 3
+    response_text = ""
+
     for retry_count in range(max_retries):
         try:
-            # Add retry guidance to prompt if this is a retry
             current_prompt = prompt
             if retry_count > 0:
-                current_prompt = f"{prompt}\n\nIMPORTANT: Your previous response was incomplete or malformed. Please provide the COMPLETE valid JSON array with all entries fully formed. Do not truncate the output."
+                current_prompt = f"{prompt}\n\nIMPORTANT: Your previous response was incomplete or malformed. Return the COMPLETE valid JSON array with all entries fully formed."
                 print(f"     [Descriptions] 🔄 Retry {retry_count}/{max_retries - 1} due to JSON error...")
             else:
                 print(f"     [Descriptions] 🤖 Calling LLM (attempt {retry_count + 1})...")
@@ -282,39 +282,12 @@ Return ONLY valid JSON array. If no job descriptions found, return empty array [
             response = llm.invoke(current_prompt)
             print(f"     [Descriptions] ✓ LLM response received")
             response_text = response.content.strip()
-
-            # Remove markdown code blocks if present
-            if response_text.startswith('```'):
-                # Find the first ``` and last ```
-                parts = response_text.split('```')
-                if len(parts) >= 3:
-                    response_text = parts[1]
-                    if response_text.startswith('json'):
-                        response_text = response_text[4:]
-                response_text = response_text.strip()
-
-            # Additional cleanup for common JSON issues
-            # Remove any trailing commas before ] or }
-            response_text = re.sub(r',\s*([}\]])', r'\1', response_text)
-
-            # Try to find JSON array in response if it's wrapped in other text
-            if not response_text.startswith('['):
-                match = re.search(r'\[.*\]', response_text, re.DOTALL)
-                if match:
-                    response_text = match.group(0)
-
-            # Parse JSON
-            descriptions = json.loads(response_text)
-
-            if not isinstance(descriptions, list):
-                descriptions = [descriptions]
-
-            print(f"     [Descriptions] ✓ Extracted {len(descriptions)} job descriptions")
-            return descriptions
+            anchored = _parse_json_array(response_text)
+            break
 
         except json.JSONDecodeError as e:
             print(f"     [Descriptions] ❌ JSON Error (attempt {retry_count + 1}/{max_retries}): {e}")
-            print(f"     [Descriptions] Response preview: {response_text[:500] if 'response_text' in locals() else 'N/A'}...")
+            print(f"     [Descriptions] Response preview: {response_text[:500]}...")
             if retry_count >= max_retries - 1:
                 print(f"     [Descriptions] ❌ Failed after {max_retries} attempts")
                 return []
@@ -322,7 +295,20 @@ Return ONLY valid JSON array. If no job descriptions found, return empty array [
             print(f"     [Descriptions] ❌ Error: {e}")
             return []
 
-    return []
+    print(f"     [Descriptions] ✓ Extracted {len(anchored)} anchor entries")
+
+    resolved = resolve_descriptions(full_text, anchored)
+
+    misses = anchor_miss_summary(resolved)
+    if misses:
+        print(f"     [Descriptions] ⚠️  Unresolved anchors: {misses}")
+
+    # Strip internal bookkeeping before handing off to the merge step.
+    for entry in resolved:
+        entry.pop("_anchor_miss", None)
+
+    print(f"     [Descriptions] ✓ Resolved {sum(1 for e in resolved if e.get('description'))}/{len(resolved)} descriptions")
+    return resolved
 
 
 def _extract_rates_with_llm(full_text: str, year_columns: Optional[List[str]] = None) -> List[dict]:
@@ -626,139 +612,114 @@ def parse_gsa_contract(file_path: str) -> dict:
     Returns:
         Dict with contract_number, dates, labor_categories, needs_date
     """
-    import os
+    # Excel/RTF need no pre-conversion — _extract_full_text handles both natively.
+    # ========================================================================
+    # STEP 1: Extract full document text (no chunking)
+    # ========================================================================
+    print("  📄 Extracting full document...")
+    full_text = _extract_full_text(file_path)
 
-    file_ext = os.path.splitext(file_path)[1].lower()
-    temp_file_path = None
+    if not full_text.strip():
+        raise ValueError("Failed to extract text from document")
 
-    # Handle Excel files
-    if file_ext in ['.xlsx', '.xls']:
-        print(f"  Converting Excel to CSV...")
-        temp_file_path = _convert_excel_to_csv(file_path)
-        file_path = temp_file_path
+    # ========================================================================
+    # STEP 2: Extract metadata, descriptions and rates concurrently
+    # ========================================================================
+    # Descriptions is the long pole, so it starts immediately. Metadata runs
+    # alongside it and rates kicks off the moment year_columns is available —
+    # the year hint is preserved without putting metadata on the critical path.
+    import concurrent.futures as cf
 
-    # Handle RTF files
-    elif file_ext == '.rtf':
-        print(f"  Converting RTF to TXT...")
-        temp_file_path = _convert_rtf_to_txt(file_path)
-        file_path = temp_file_path
+    print("  🚀 Extracting metadata + descriptions + rates concurrently...")
 
-    try:
-        # ========================================================================
-        # STEP 1: Extract full document text (no chunking)
-        # ========================================================================
-        print("  📄 Extracting full document...")
-        full_text = _extract_full_text(file_path)
+    with cf.ThreadPoolExecutor(max_workers=12) as executor:
+        desc_future = executor.submit(_extract_descriptions_with_llm, full_text)
+        meta_future = executor.submit(_extract_metadata_with_llm, full_text)
 
-        if not full_text.strip():
-            raise ValueError("Failed to extract text from document")
-
-        # ========================================================================
-        # STEP 2: Extract metadata first (needed for year_columns)
-        # ========================================================================
-        print("  🔍 Step 1: Extracting metadata...")
-        metadata = _extract_metadata_with_llm(full_text)
+        metadata = meta_future.result()
         year_columns = metadata.year_columns or []
 
-        # ========================================================================
-        # STEP 3: Parallel extraction of descriptions + rates (using metadata)
-        # ========================================================================
-        import concurrent.futures as cf
+        rates_future = executor.submit(_extract_rates_with_llm, full_text, year_columns)
 
-        print("  🚀 Step 2: Dual-parser extraction (2 parallel workers)...")
-        print("     Worker 1: Job descriptions")
-        print("     Worker 2: Rate tables")
+        all_rates = rates_future.result()
+        all_descriptions = desc_future.result()
 
-        # Run descriptions and rates extraction in parallel
-        with cf.ThreadPoolExecutor(max_workers=2) as executor:
-            desc_future = executor.submit(_extract_descriptions_with_llm, full_text)
-            rates_future = executor.submit(_extract_rates_with_llm, full_text, year_columns)
+    print(f"     [Descriptions] Found {len(all_descriptions)} entries")
+    print(f"     [Rates] Found {len(all_rates)} entries")
 
-            all_descriptions = desc_future.result()
-            all_rates = rates_future.result()
+    # ========================================================================
+    # STEP 4: MERGE descriptions + rates by title/SIN matching
+    # ========================================================================
+    print(f"  🔗 Step 3: Merging descriptions with rates...")
+    merged = _merge_descriptions_and_rates(all_descriptions, all_rates)
+    print(f"     ✓ Merged: {len(merged)} labor categories")
 
-        print(f"     [Descriptions] Found {len(all_descriptions)} entries")
-        print(f"     [Rates] Found {len(all_rates)} entries")
+    # ========================================================================
+    # STEP 5: Deduplicate and format for storage
+    # ========================================================================
+    # Use (title, sin) tuple as key to keep same titles with different SINs
+    seen_keys = set()
+    labor_categories = []
 
-        # ========================================================================
-        # STEP 4: MERGE descriptions + rates by title/SIN matching
-        # ========================================================================
-        print(f"  🔗 Step 3: Merging descriptions with rates...")
-        merged = _merge_descriptions_and_rates(all_descriptions, all_rates)
-        print(f"     ✓ Merged: {len(merged)} labor categories")
+    for cat in merged:
+        title = cat.get('title', '').strip()
+        sin = cat.get('sin', '').strip()
+        title_lower = title.lower()
 
-        # ========================================================================
-        # STEP 5: Deduplicate and format for storage
-        # ========================================================================
-        # Use (title, sin) tuple as key to keep same titles with different SINs
-        seen_keys = set()
-        labor_categories = []
+        # Create composite key: (title, sin) - allows same title with different SINs
+        dedup_key = (title_lower, sin.upper() if sin else None)
 
-        for cat in merged:
-            title = cat.get('title', '').strip()
-            sin = cat.get('sin', '').strip()
-            title_lower = title.lower()
+        if title and dedup_key not in seen_keys:
+            seen_keys.add(dedup_key)
 
-            # Create composite key: (title, sin) - allows same title with different SINs
-            dedup_key = (title_lower, sin.upper() if sin else None)
+            labor_categories.append({
+                "lcat_id": f"lcat_{len(labor_categories)}",
+                "sin": sin if sin else None,
+                "title": title,
+                "description": cat.get('description'),
+                "experience": cat.get('experience'),
+                "rates_by_year": cat.get('rates_by_year', {})
+            })
 
-            if title and dedup_key not in seen_keys:
-                seen_keys.add(dedup_key)
+    # ========================================================================
+    # RESULTS SUMMARY
+    # ========================================================================
+    print(f"\n  ✅ Extraction Complete:")
+    print(f"     Contract Number: {metadata.contract_number}")
+    print(f"     Company Name: {metadata.company_name}")
+    print(f"     Start Date: {metadata.contract_start_date}")
+    print(f"     End Date: {metadata.contract_end_date}")
+    print(f"     Total Labor Categories: {len(labor_categories)}")
 
-                labor_categories.append({
-                    "lcat_id": f"lcat_{len(labor_categories)}",
-                    "sin": sin if sin else None,
-                    "title": title,
-                    "description": cat.get('description'),
-                    "experience": cat.get('experience'),
-                    "rates_by_year": cat.get('rates_by_year', {})
-                })
+    # Show first 3 and last 3
+    if labor_categories:
+        print(f"\n     Sample categories:")
+        for i, lcat in enumerate(labor_categories[:3]):
+            rates = lcat.get('rates_by_year', {})
+            rate_str = f"${list(rates.values())[0]:.2f}" if rates else "No rates"
+            print(f"       [{i+1}] {lcat['title']} - {rate_str}")
 
-        # ========================================================================
-        # RESULTS SUMMARY
-        # ========================================================================
-        print(f"\n  ✅ Extraction Complete:")
-        print(f"     Contract Number: {metadata.contract_number}")
-        print(f"     Company Name: {metadata.company_name}")
-        print(f"     Start Date: {metadata.contract_start_date}")
-        print(f"     End Date: {metadata.contract_end_date}")
-        print(f"     Total Labor Categories: {len(labor_categories)}")
-
-        # Show first 3 and last 3
-        if labor_categories:
-            print(f"\n     Sample categories:")
-            for i, lcat in enumerate(labor_categories[:3]):
+        if len(labor_categories) > 6:
+            print(f"       ...")
+            for i, lcat in enumerate(labor_categories[-3:]):
+                idx = len(labor_categories) - 3 + i + 1
                 rates = lcat.get('rates_by_year', {})
                 rate_str = f"${list(rates.values())[0]:.2f}" if rates else "No rates"
-                print(f"       [{i+1}] {lcat['title']} - {rate_str}")
+                print(f"       [{idx}] {lcat['title']} - {rate_str}")
 
-            if len(labor_categories) > 6:
-                print(f"       ...")
-                for i, lcat in enumerate(labor_categories[-3:]):
-                    idx = len(labor_categories) - 3 + i + 1
-                    rates = lcat.get('rates_by_year', {})
-                    rate_str = f"${list(rates.values())[0]:.2f}" if rates else "No rates"
-                    print(f"       [{idx}] {lcat['title']} - {rate_str}")
+    # Parse dates
+    start_date = _parse_date(metadata.contract_start_date)
+    end_date = _parse_date(metadata.contract_end_date)
 
-        # Parse dates
-        start_date = _parse_date(metadata.contract_start_date)
-        end_date = _parse_date(metadata.contract_end_date)
+    return {
+        "contract_number": metadata.contract_number,
+        "contract_start_date": start_date,
+        "contract_end_date": end_date,
+        "company_name": metadata.company_name,
+        "labor_categories": labor_categories,
+        "needs_date": start_date is None
+    }
 
-        return {
-            "contract_number": metadata.contract_number,
-            "contract_start_date": start_date,
-            "contract_end_date": end_date,
-            "company_name": metadata.company_name,
-            "labor_categories": labor_categories,
-            "needs_date": start_date is None
-        }
-
-    finally:
-        if temp_file_path:
-            try:
-                os.unlink(temp_file_path)
-            except Exception:
-                pass
 
 
 def _parse_date(date_str: Optional[str]) -> Optional[str]:
