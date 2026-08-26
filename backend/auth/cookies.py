@@ -4,15 +4,15 @@ Cookie management utilities for authentication
 
 from fastapi import Response, Request
 from typing import Optional
-from .config import (
-    COOKIE_ACCESS_TOKEN_NAME,
-    COOKIE_REFRESH_TOKEN_NAME,
-    COOKIE_SECURE,
-    COOKIE_SAMESITE,
-    COOKIE_DOMAIN,
-    ACCESS_TOKEN_EXPIRE_MINUTES,
-    REFRESH_TOKEN_EXPIRE_DAYS
-)
+from app.settings import settings
+
+COOKIE_ACCESS_TOKEN_NAME = settings.COOKIE_ACCESS_TOKEN_NAME
+COOKIE_REFRESH_TOKEN_NAME = settings.COOKIE_REFRESH_TOKEN_NAME
+COOKIE_SECURE = settings.COOKIE_SECURE
+COOKIE_SAMESITE = settings.COOKIE_SAMESITE
+COOKIE_DOMAIN = settings.COOKIE_DOMAIN
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
+REFRESH_TOKEN_EXPIRE_DAYS = settings.REFRESH_TOKEN_EXPIRE_DAYS
 
 
 def set_access_token_cookie(response: Response, token: str) -> None:

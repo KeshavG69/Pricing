@@ -2,7 +2,9 @@ from google.auth.transport import requests
 from google.oauth2 import id_token
 from typing import Optional
 from .models import GoogleUserProfile
-from .config import GOOGLE_CLIENT_ID
+from app.settings import settings
+
+GOOGLE_CLIENT_ID = settings.GOOGLE_CLIENT_ID
 
 
 class GoogleAuthService:

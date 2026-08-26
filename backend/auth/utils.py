@@ -4,7 +4,11 @@ from datetime import datetime, timedelta
 from typing import Optional
 import uuid
 from .models import TokenData
-from .config import SECRET_KEY, ALGORITHM, ACCESS_TOKEN_EXPIRE_MINUTES
+from app.settings import settings
+
+SECRET_KEY = settings.SECRET_KEY
+ALGORITHM = settings.ALGORITHM
+ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 from .blacklist import is_token_blacklisted
 
 
