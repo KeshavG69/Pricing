@@ -80,15 +80,16 @@ def generate_title(user_message: str, *, max_words: int = 6) -> str:
         return "New Chat"
 
     try:
-        # OpenRouter + Liquid LFM-2 24B (2B active, MoE) — Boston-based
-        # Liquid AI's small-output specialist. Very cheap, very fast, ideal
+        # OpenRouter + GPT-6 Luna — OpenAI's cheapest/fastest tier, ideal
         # for short text gen like titles. Reuses the OpenRouter key the
-        # pricing agent already needs — no new dependency.
+        # pricing agent already needs — no new dependency. Luna is a
+        # reasoning model and reasoning tokens count against max_tokens,
+        # so leave headroom or the visible title can come back empty.
         llm = get_chat_llm(
-            model="liquid/lfm-2-24b-a2b",
+            model="openai/gpt-6-luna",
             api_key=settings.OPENROUTER_API_KEY,
             base_url="https://openrouter.ai/api/v1",
-            max_tokens=64,
+            max_tokens=512,
         )
         response = llm.invoke(
             [
