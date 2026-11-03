@@ -26,6 +26,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from fastapi.responses import Response
 
 from auth.dependencies import get_current_user
+from utils.rate_limit import rate_limit_user
 from client.capability_profile_builder import build_profile
 from client.usaspending_client import USASpendingError
 from models.capability_profile import (
@@ -65,7 +66,7 @@ def _require_org(current_user: dict) -> str:
 # ---------------------------------------------------------------------------
 
 
-@router.post("/profile/build")
+@router.post("/profile/build", dependencies=[Depends(rate_limit_user("capability_build", "5/minute;30/day"))])
 async def build_capability_profile(
     body: CapabilityProfileBuildRequest,
     current_user: dict = Depends(get_current_user),
@@ -367,7 +368,7 @@ async def download_match_pws_file(
     )
 
 
-@router.post("/matches/scan/run-now")
+@router.post("/matches/scan/run-now", dependencies=[Depends(rate_limit_user("rfp_scan_now", "2/hour"))])
 async def trigger_scan_now(current_user: dict = Depends(get_current_user)):
     """
     Trigger an RFP Radar scan for this organization right now.

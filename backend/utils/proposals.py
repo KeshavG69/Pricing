@@ -498,7 +498,8 @@ class ProposalCRUD:
         self,
         proposal_id: ObjectId,
         user_ids: List[str],
-        admin_id: str
+        admin_id: str,
+        organization_id: ObjectId
     ) -> Optional[dict]:
         """
         Share proposal with specific users (admin only, async).
@@ -507,14 +508,14 @@ class ProposalCRUD:
             proposal_id: Proposal's ObjectId
             user_ids: List of user IDs (strings) to share with
             admin_id: Admin's user ID (for verification)
+            organization_id: Admin's organization; the update only matches
+                proposals in this organization
 
         Returns:
             Updated proposal or None
         """
-        
-
         result = self.collection.find_one_and_update(
-            {"_id": proposal_id},
+            {"_id": proposal_id, "organization_id": organization_id},
             {
                 "$set": {
                     "visibility": "shared",

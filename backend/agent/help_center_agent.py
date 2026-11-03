@@ -11,7 +11,7 @@ from typing import Optional
 from agno.agent import Agent
 from app.settings import settings
 from client.llm_client import get_chat_llm_agno
-from client.agent_memory import get_agent_db, get_memory_manager
+from client.agent_memory import get_agent_db
 from utils.agno_tools import create_help_center_retriever
 
 logger = logging.getLogger(__name__)
@@ -73,9 +73,10 @@ def _create_help_center_agent() -> Agent:
     # Create help center retriever (singleton - same for all users)
     help_retriever = create_help_center_retriever()
 
-    # Get memory storage (singleton - shared across all sessions)
+    # Session storage (singleton). Long-term user memory is intentionally not
+    # used: this agent is one singleton shared by every user, so memories could
+    # not be scoped per user and a shared pool would leak between tenants.
     db_instance = get_agent_db()
-    memory_manager = get_memory_manager()
 
     instructions = [
         """You are a PriceIQ Help Center Assistant. Your role is to help users understand and use the PriceIQ platform effectively.
@@ -135,11 +136,11 @@ For troubleshooting questions:
         model=llm,
         knowledge_retriever=help_retriever,
         db=db_instance,
-        memory_manager=memory_manager,
         add_history_to_context=True,
         num_history_runs=4,
-        enable_agentic_memory=True,
-        enable_user_memories=True,
+        enable_agentic_memory=False,
+        enable_user_memories=False,
+        add_memories_to_context=False,
         add_datetime_to_context=True,
         markdown=True,
         id="HelpCenterAgent",
@@ -148,7 +149,7 @@ For troubleshooting questions:
         debug_mode=settings.DEBUG_MODE,
     )
 
-    logger.info("Created help center agent (singleton) with memory enabled")
+    logger.info("Created help center agent (singleton) without long-term memory")
     return agent
 
 

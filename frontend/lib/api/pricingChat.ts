@@ -85,7 +85,7 @@ export async function cancelPricingRun(
   req: PricingChatCancelRequest,
 ): Promise<{ cancelled: boolean; run_id: string }> {
   const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
-  const res = await fetch(`${apiBase}/api/pricing-chat/cancel`, {
+  const res = await authFetch(`${apiBase}/api/pricing-chat/cancel`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(req),
@@ -107,7 +107,7 @@ export async function* streamPricingChat(
   signal?: AbortSignal,
 ): AsyncGenerator<PricingChatEvent> {
   const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
-  const res = await fetch(`${apiBase}/api/pricing-chat/ask`, {
+  const res = await authFetch(`${apiBase}/api/pricing-chat/ask`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -229,7 +229,7 @@ export async function* streamPricingChatResume(
   signal?: AbortSignal,
 ): AsyncGenerator<PricingChatEvent> {
   const apiBase = process.env.NEXT_PUBLIC_API_URL || '';
-  const res = await fetch(`${apiBase}/api/pricing-chat/resume`, {
+  const res = await authFetch(`${apiBase}/api/pricing-chat/resume`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -342,7 +342,7 @@ function parseSSEFrame(
 // Uses the shared axios client so auth headers / token refresh / org cookies
 // are handled by the existing interceptors.
 
-import { apiClient } from './client';
+import { apiClient, authFetch } from './client';
 
 /** A row in the sidebar's "past chats" list (already hydrated with counts). */
 export interface ChatConversation {

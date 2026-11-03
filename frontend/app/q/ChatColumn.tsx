@@ -648,7 +648,7 @@ function Artifact({ call }: { call: ToolCallEntry }) {
     const config = parseChartConfig(call.result);
     if (config) return <ChartArtifact config={config} />;
   }
-  if (call.name === 's3_upload_tool') {
+  if (call.name === 's3_upload_tool' || call.name === 'build_document') {
     const payload = parseArtifactPayload(call.result);
     if (payload) return <ArtifactDownloadCard payload={payload} />;
   }

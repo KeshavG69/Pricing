@@ -15,7 +15,9 @@ from functools import lru_cache
 import time
 
 from auth.dependencies import get_current_user, require_admin
+from utils.rate_limit import rate_limit_user
 from utils.company_repository import get_company_repository_crud
+from utils.helpers import safe_filename
 from client.gsa_parser import parse_gsa_contract
 from client.idrive_storage import get_idrive_storage
 from client.gsa_pinecone import get_gsa_pinecone_client
@@ -105,7 +107,7 @@ class ContractUpdate(BaseModel):
 # UPLOAD ENDPOINT
 # ============================================================================
 
-@router.post("/upload")
+@router.post("/upload", dependencies=[Depends(rate_limit_user("gsa_upload", "10/minute;50/day"))])
 async def upload_gsa_contract(
     file: UploadFile = File(...),
     name: str = Form(...),
@@ -118,7 +120,9 @@ async def upload_gsa_contract(
 
     Returns file_id immediately for status polling.
     """
-    file_ext = Path(file.filename).suffix.lower()
+    # Reduce the client-supplied filename to a bare name so it can never escape temp_dir.
+    safe_name = safe_filename(file.filename)
+    file_ext = Path(safe_name).suffix.lower()
 
     if file_ext not in ALLOWED_EXTENSIONS:
         raise HTTPException(
@@ -132,7 +136,7 @@ async def upload_gsa_contract(
 
         # Create temp directory
         temp_dir = Path(tempfile.mkdtemp())
-        file_path = temp_dir / file.filename
+        file_path = temp_dir / safe_name
 
         # Save uploaded file temporarily
         with open(file_path, "wb") as f:
@@ -156,7 +160,7 @@ async def upload_gsa_contract(
             file_path=str(file_path),
             user_id=user_id,
             proposal_id=f"gsa_{file_id}",
-            filename=file.filename
+            filename=safe_name
         )
 
         # Update record with file info
@@ -172,7 +176,7 @@ async def upload_gsa_contract(
             {"file_id": file_id},
             {"$set": {
                 "original_file": {
-                    "filename": file.filename,
+                    "filename": safe_name,
                     "file_size": file.size,
                     "idrive_key": idrive_key,
                     "idrive_url": idrive_url,
@@ -189,7 +193,7 @@ async def upload_gsa_contract(
             file_id,
             org_id,
             idrive_key,
-            file.filename,
+            safe_name,
         )
 
         # Invalidate cache
@@ -509,7 +513,7 @@ class GSASearchAIRequest(BaseModel):
     top_k: int = Field(5, ge=1, le=20, description="Number of top matches to return")
 
 
-@router.post("/{file_id}/search-ai")
+@router.post("/{file_id}/search-ai", dependencies=[Depends(rate_limit_user("gsa_search_ai", "30/minute;1000/day"))])
 async def search_gsa_labor_categories_ai(
     file_id: str,
     request: GSASearchAIRequest,

@@ -10,17 +10,70 @@ export const apiClient = axios.create({
   },
 });
 
-// Track if refresh is in progress to prevent multiple simultaneous refreshes
-let isRefreshing = false;
-let refreshSubscribers: ((token: string) => void)[] = [];
+// One in-flight token refresh shared by axios and authFetch(). The backend
+// rotates refresh tokens and treats reuse of an old one as theft (revoking the
+// whole session), so concurrent 401s must wait on the same refresh call.
+let refreshPromise: Promise<string> | null = null;
 
-function onRefreshed(token: string) {
-  refreshSubscribers.forEach(callback => callback(token));
-  refreshSubscribers = [];
+export function refreshAccessToken(): Promise<string> {
+  if (!refreshPromise) {
+    refreshPromise = (async () => {
+      const refreshToken = localStorage.getItem('refresh_token');
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+      const res = await fetch(`${API_URL}/api/auth/refresh`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: refreshToken }),
+      });
+      if (!res.ok) {
+        throw new Error(`Token refresh failed: HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      localStorage.setItem('access_token', data.access_token);
+      localStorage.setItem('refresh_token', data.refresh_token);
+      return data.access_token as string;
+    })().finally(() => {
+      refreshPromise = null;
+    });
+  }
+  return refreshPromise;
 }
 
-function addRefreshSubscriber(callback: (token: string) => void) {
-  refreshSubscribers.push(callback);
+function clearSessionAndRedirect() {
+  localStorage.removeItem('access_token');
+  localStorage.removeItem('refresh_token');
+  if (typeof window !== 'undefined') {
+    window.location.href = '/auth/login';
+  }
+}
+
+/**
+ * fetch() with the bearer token attached, for callers that cannot use axios
+ * (SSE streams, binary document previews). On 401 it refreshes the token once
+ * and retries; if the refresh fails the user is sent to the login page.
+ */
+export async function authFetch(input: string, init: RequestInit = {}): Promise<Response> {
+  const withToken = (token: string | null): RequestInit => {
+    const headers = new Headers(init.headers);
+    if (token) {
+      headers.set('Authorization', `Bearer ${token}`);
+    }
+    return { ...init, headers };
+  };
+
+  const res = await fetch(input, withToken(localStorage.getItem('access_token')));
+  if (res.status !== 401) {
+    return res;
+  }
+  try {
+    const newToken = await refreshAccessToken();
+    return await fetch(input, withToken(newToken));
+  } catch {
+    clearSessionAndRedirect();
+    return res;
+  }
 }
 
 // Request interceptor - Add Authorization header from localStorage
@@ -90,53 +143,12 @@ apiClient.interceptors.response.use(
 
       originalRequest._retry = true;
 
-      // If already refreshing, queue this request
-      if (isRefreshing) {
-        return new Promise((resolve) => {
-          addRefreshSubscriber(() => {
-            resolve(apiClient(originalRequest));
-          });
-        });
-      }
-
-      isRefreshing = true;
-
       try {
-        // Get refresh token from localStorage
-        const refreshToken = localStorage.getItem('refresh_token');
-
-        if (!refreshToken) {
-          throw new Error('No refresh token available');
-        }
-
-        // Attempt to refresh token
-        const response = await apiClient.post('/auth/refresh', {
-          refresh_token: refreshToken
-        });
-
-        // Store new tokens
-        localStorage.setItem('access_token', response.data.access_token);
-        localStorage.setItem('refresh_token', response.data.refresh_token);
-
-        // Refresh successful
-        isRefreshing = false;
-        onRefreshed(response.data.access_token);
-
-        // Retry original request with new token
-        originalRequest.headers.Authorization = `Bearer ${response.data.access_token}`;
+        const newToken = await refreshAccessToken();
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
         return apiClient(originalRequest);
       } catch (refreshError) {
-        // Refresh failed, clear tokens and redirect to login
-        isRefreshing = false;
-        refreshSubscribers = [];
-
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-
-        if (typeof window !== 'undefined') {
-          window.location.href = '/auth/login';
-        }
-
+        clearSessionAndRedirect();
         return Promise.reject(refreshError);
       }
     }

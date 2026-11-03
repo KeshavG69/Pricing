@@ -3,7 +3,8 @@ Contact form API endpoint.
 Sends contact form submissions via email using Microsoft SMTP.
 """
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
+from utils.rate_limit import rate_limit_ip
 from pydantic import BaseModel, EmailStr, Field
 from client.email_service import EmailService
 
@@ -27,7 +28,7 @@ class ContactFormRequest(BaseModel):
     )
 
 
-@router.post("/send")
+@router.post("/send", dependencies=[Depends(rate_limit_ip("contact_send", "3/minute;10/hour"))])
 async def send_contact_form(request: ContactFormRequest):
     """
     Send contact form submission via email.

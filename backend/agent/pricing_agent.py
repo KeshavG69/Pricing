@@ -13,6 +13,7 @@ are cached; baking the live proposal state into instructions guarantees each
 turn sees the user's CURRENT UI state without any cross-session bleed.
 """
 
+import json
 import threading
 import logging
 from functools import lru_cache
@@ -37,6 +38,7 @@ from utils.agno_tools import (
 from utils.chart_tool import chart_tool
 from utils.python_repl_tool import python_repl_tool
 from utils.s3_upload_tool import s3_upload_tool
+from utils.document_tool import build_document
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +51,31 @@ _FORMULAS_PATH = Path(__file__).resolve().parent.parent.parent / "FORMULAS.md"
 # containing SKILL.md + supporting scripts/references. Loaded via agno's
 # LocalSkills which exposes them to the agent through skill-access tools.
 _SKILLS_DIR = Path(__file__).resolve().parent / "skills"
+
+
+class SandboxedSkills(Skills):
+    """Skills whose scripts run in the E2B sandbox, never on this host.
+
+    agno's get_skill_script(execute=True) runs a skill script as a subprocess
+    of the API server with model-chosen arguments. The files those scripts
+    work on now live in the sandbox anyway, so execution is redirected there;
+    reading a script is unchanged.
+    """
+
+    def _get_skill_script(self, skill_name, script_path, execute=False, args=None, timeout=30):
+        if not execute:
+            return super()._get_skill_script(skill_name, script_path, execute=False)
+        cmd = ["python3", f"/home/user/skills/{skill_name}/scripts/{script_path}", *(args or [])]
+        return json.dumps({
+            "skill_name": skill_name,
+            "script_path": script_path,
+            "error": "Skill scripts run in the sandbox, not here.",
+            "how_to_run": (
+                "Call python_repl_tool with: import subprocess; "
+                f"r = subprocess.run({cmd!r}, capture_output=True, text=True); "
+                "print(r.stdout, r.stderr). Paths are relative to /home/user/out."
+            ),
+        })
 
 
 @lru_cache(maxsize=1)
@@ -64,7 +91,7 @@ def get_pricing_skills() -> Optional[Skills]:
         logger.warning(f"Skills directory not found: {_SKILLS_DIR}")
         return None
     try:
-        skills = Skills(loaders=[LocalSkills(str(_SKILLS_DIR), validate=True)])
+        skills = SandboxedSkills(loaders=[LocalSkills(str(_SKILLS_DIR), validate=True)])
         names = skills.get_skill_names()
         logger.info(f"Loaded {len(names)} skills from {_SKILLS_DIR}: {names}")
         return skills
@@ -206,7 +233,7 @@ cost impact, percentile choice impact, escalation strategy, fee positioning)
 subcontract handling, fee policy)
 - VISUALIZE pricing data — charts, graphs, plots (via `chart_tool`)
 - GENERATE deliverables — PDF reports, PowerPoint slides, Word docs, \
-Excel exports (via `python_repl_tool` + `s3_upload_tool`)
+Excel exports (via `build_document`, one call)
 
 DO NOT refuse questions on the grounds that they are "strategy" or "outside \
 pricing." If the question can be informed by the numbers in front of you or \
@@ -331,11 +358,10 @@ or more digits.
 graph, plot, or "show me visually". First compute the data series in \
 `python_repl_tool`, then hardcode the numbers into Chart.js code and pass \
 to `chart_tool`. Frontend renders it as an interactive chart.
-   • USE `python_repl_tool` + `s3_upload_tool` to generate downloadable \
-deliverables. Available libraries: reportlab (PDF), python-pptx (PPT), \
-python-docx (DOCX), openpyxl/xlsxwriter (XLSX), matplotlib (chart images). \
-Workflow: write file in REPL with simple filename → call `s3_upload_tool` \
-with same filename → quote the returned URL as a markdown link to the user.
+   • USE `build_document` to generate downloadable PDF / DOCX / PPTX / \
+XLSX deliverables — one call builds, checks and delivers the file (see rule \
+11). Use `python_repl_tool` + `s3_upload_tool` only for CSV, chart images, \
+or a workbook that must keep live Excel formulas.
 
    BLS PROPOSALS — finding alternative labor categories:
    • USE `custom_retriever` when the user asks "what else could we use \
@@ -419,20 +445,30 @@ already in <proposal_state>.
    • NEVER use reasoning or the REPL to ESTIMATE missing data. Only compute \
 from numbers actually present in the state.
 
-11. Deliverable generation — USE THE SKILL SYSTEM:
-    Before generating any PDF / DOCX / PPTX / XLSX, you MUST first \
-load the matching skill via `get_skill_instructions(skill_name)`. The \
-skills contain the canonical patterns — library choices, layout templates, \
-script paths, validation steps — for producing professional documents. \
-Available skills: `pdf`, `docx`, `pptx`, `xlsx`.
+11. Deliverable generation — USE `build_document` (ONE call):
+    PDF / Word / PowerPoint / Excel → `build_document(action="create", \
+spec={format, filename, title, subtitle, footer, content:[blocks]})`. The \
+block vocabulary is in the tool's description. That one call builds the \
+file in the sandbox, checks its layout and delivers it: the result carries \
+the download link (rendered as a download card — do NOT paste the URL), an \
+`outline` of block ids and a `version`. There is no upload step. Never \
+write Python to produce a PDF/DOCX/PPTX — a rejected spec names the block \
+to fix; fix it and call again.
 
     Workflow:
-    a) Pick the skill matching the requested format (e.g., user asks for a \
-PDF summary → load the `pdf` skill).
-    b) Call `get_skill_instructions("pdf")` to read the full guidance.
-    c) Follow the skill's recipe inside `python_repl_tool` to produce the file.
-    d) Call `s3_upload_tool` with the same filename to get a presigned URL.
-    e) Quote the URL to the user as a markdown link.
+    a) Compute every figure you need first (quote the state block, or run \
+`python_repl_tool`).
+    b) Call `build_document` once with the full spec. Prefer tables with \
+right-aligned money columns, a `kpi_row` for headline totals, and a chart \
+for year-by-year or prime/sub splits.
+    c) Changing a delivered document is an EDIT, not a rebuild: \
+`build_document(action="edit", slug=…, base_version=<version from the last \
+result>, ops=[{"op":"update","id":"b7","set":{…}}, …])` naming ids from \
+`outline`. Layout findings that come back with the link are advice — fix a \
+material one with one edit, ignore cosmetic ones, never re-create the file.
+    d) Fallback: only for CSV, chart images, or an Excel model that must keep \
+live formulas, load the matching skill (`get_skill_instructions`), build the \
+file in `python_repl_tool`, then call `s3_upload_tool` with its filename.
 
     When to use each format:
     • PDF — formal pricing summaries, executive briefs, cost narrative docs
@@ -442,8 +478,8 @@ PDF summary → load the `pdf` skill).
 
     All numbers in deliverables MUST come from <proposal_state>. Compute \
 derived figures with the REPL before writing them to the file. Never \
-fabricate numbers in a deliverable. ALWAYS prefer the skill-guided approach \
-over ad-hoc code generation for professional output.
+fabricate numbers in a deliverable — every value in a build_document spec \
+must be backed by the state block or a tool result.
 </rules>""",
 
         # ── Canonical formulas (loaded from FORMULAS.md) ──────────────
@@ -645,6 +681,7 @@ def get_pricing_agent(
         _components.python_repl_tool,
         _components.chart_tool,
         _components.s3_upload_tool,
+        build_document,
     ]
     if _components.web_search_tool is not None:
         tools_list.append(_components.web_search_tool)
@@ -707,18 +744,26 @@ def get_pricing_agent(
                 "GSA retrieval tools not added"
             )
 
+    # Scope long-term memory to this user within this org. Without a user_id,
+    # Agno files every memory under the shared "default" user and injects them
+    # into every tenant's prompt — so memory stays off when identity is missing.
+    memory_user_id = f"{organization_id}:{user_id}" if (organization_id and user_id) else None
+    memory_enabled = memory_user_id is not None
+
     agent = Agent(
         name="Q",
         session_id=session_id,
+        user_id=memory_user_id,
         model=_components.llm,
         db=_components.db,
-        memory_manager=_components.memory_manager,
+        memory_manager=_components.memory_manager if memory_enabled else None,
         skills=get_pricing_skills(),
         tools=tools_list,
         add_history_to_context=True,
         num_history_runs=4,
-        enable_agentic_memory=True,
-        enable_user_memories=True,
+        enable_agentic_memory=memory_enabled,
+        enable_user_memories=memory_enabled,
+        add_memories_to_context=memory_enabled,
         add_datetime_to_context=True,
         markdown=True,
         id="PricingAgent",

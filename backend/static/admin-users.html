@@ -303,7 +303,7 @@
     btn.textContent = '↻ Loading…';
     setTableState('loading');
     try {
-      const res = await fetch('/admin/api/users');
+      const res = await fetch(location.origin + '/admin/api/users');
       if (!res.ok) throw new Error(res.statusText);
       const data = await res.json();
       allUsers = data.users;

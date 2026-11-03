@@ -28,6 +28,7 @@ celery_app = Celery(
 # Import task modules to register them with Celery
 import tasks.processing_tasks  # noqa: E402, F401
 import tasks.rfp_radar_scanner  # noqa: E402, F401
+import tasks.sandbox_tasks  # noqa: E402, F401
 
 celery_app.conf.update(
     task_serializer="json",
@@ -64,5 +65,10 @@ celery_app.conf.beat_schedule = {
     "rfp-radar-daily-scan": {
         "task": "rfp_radar.daily_scan",
         "schedule": crontab(hour=10, minute=0),
+    },
+    # Kill idle and orphaned E2B sandboxes (pricing-chat Python tool).
+    "e2b-reap-sandboxes": {
+        "task": "e2b.reap_sandboxes",
+        "schedule": crontab(minute=17),
     },
 }
