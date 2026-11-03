@@ -67,9 +67,12 @@ class Settings(BaseSettings):
 
     # ── Rate limiting (utils/rate_limit.py) ──────────────────────────────
     RATE_LIMIT_ENABLED: bool = True
-    # Number of trusted reverse proxies in front of the app (Railway edge = 1).
-    # The client IP is read that many entries from the right of X-Forwarded-For,
-    # so a client-supplied X-Forwarded-For value cannot be used to dodge limits.
+    # Header the edge proxy sets to the real client IP, overwriting any value the
+    # client sent. Railway's edge sets X-Real-IP; its X-Forwarded-For ends in an
+    # edge address that changes per request, so keying on that never limits.
+    # Empty = fall back to X-Forwarded-For with RATE_LIMIT_TRUSTED_PROXY_HOPS.
+    RATE_LIMIT_CLIENT_IP_HEADER: str = "x-real-ip"
+    # Fallback only: number of trusted proxies, read from the right of X-Forwarded-For.
     RATE_LIMIT_TRUSTED_PROXY_HOPS: int = 1
 
     # ── E2B code sandbox (utils/e2b_sandbox.py) ──────────────────────────

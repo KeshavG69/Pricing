@@ -14,6 +14,8 @@ instructions don't have to change):
       "rates":           {...indirect rates...},
       "escalation_rates":{...},
       "months_per_year": {...},
+      # proposal.total_years counts every priced period (extensions included) and
+      # proposal.periods labels them: Base Period, Option Year N, 6 Month Extension.
       "totals":          {grand_total, prime_labor_with_fee, ...},
       "by_year":         {"1": {prime_labor_ex_fee, prime_fee, sub, ...}, ...},
       "labor_subtotals": {total_direct_labor_prime: {1: ..., total: ...}, ...},
@@ -366,6 +368,89 @@ def _compute_sub_position_rate_by_year(
     return result
 
 
+# ─── Contract periods ─────────────────────────────────────────────────
+
+def _year_keys(mapping: Any) -> List[int]:
+    if not isinstance(mapping, dict):
+        return []
+    out = []
+    for k in mapping:
+        try:
+            out.append(int(k))
+        except (TypeError, ValueError):
+            continue
+    return out
+
+
+def _period_count(
+    contract_years: int,
+    extensions: List[Dict[str, Any]],
+    positions: List[Dict[str, Any]],
+    subs: List[Dict[str, Any]],
+    travel: List[Dict[str, Any]],
+    odcs: List[Dict[str, Any]],
+) -> int:
+    """The last priced period: contract years, extension years, and any year
+    that carries hours, rates or amounts anywhere in the spreadsheet."""
+    years = [contract_years]
+    for ext in extensions:
+        try:
+            years.append(int(ext.get("year") or 0))
+        except (TypeError, ValueError, AttributeError):
+            continue
+    for pos in positions:
+        years += _year_keys(pos.get("hours_per_year")) + _year_keys(pos.get("ot_hours_per_year"))
+    for sub in subs:
+        for sp in sub.get("positions") or []:
+            years += (_year_keys(sp.get("hours_per_year")) + _year_keys(sp.get("ot_hours_per_year"))
+                      + _year_keys(sp.get("rates_per_year")))
+    for item in list(travel) + list(odcs):
+        years += _year_keys(item.get("amount_per_year"))
+    return max(1, max(years))
+
+
+def _periods(total_years: int, extensions: List[Dict[str, Any]],
+             months_per_year: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """One entry per priced period, labelled the way the app's Overview labels them."""
+    ext_by_year: Dict[int, Dict[str, Any]] = {}
+    for ext in extensions:
+        try:
+            ext_by_year[int(ext.get("year"))] = ext
+        except (TypeError, ValueError, AttributeError):
+            continue
+    out = []
+    for y in range(1, total_years + 1):
+        ext = ext_by_year.get(y)
+        if ext:
+            label = ext.get("label") or f"{ext.get('duration_months') or ''} Month Extension".strip()
+        else:
+            label = "Base Period" if y == 1 else f"Option Year {y - 1}"
+        months = (ext or {}).get("duration_months") or months_per_year.get(str(y)) or 12
+        out.append({"year": y, "label": label, "months": months, "is_extension": bool(ext)})
+    return out
+
+
+def priced_periods(proposal: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """Every priced period of a proposal, extensions included, with its months.
+
+    The one rule for "how long is this proposal" outside the chat context too
+    (price-to-win), so no caller counts base + option years and drops an
+    extension again.
+    """
+    sd: Dict[str, Any] = proposal.get("spreadsheet_data") or {}
+    metadata: Dict[str, Any] = proposal.get("metadata") or {}
+    contract_years = int(
+        metadata.get("total_years")
+        or (int(metadata.get("base_years") or 0) + int(metadata.get("option_years") or 0))
+        or 1
+    )
+    extensions = sd.get("extensions") or []
+    total = _period_count(contract_years, extensions, sd.get("positions") or [],
+                          sd.get("subcontractors") or [], sd.get("travel") or [],
+                          sd.get("odcs") or [])
+    return _periods(total, extensions, sd.get("months_per_year") or {})
+
+
 # ─── Top-level builder ────────────────────────────────────────────────
 
 def build_proposal_context(proposal: Dict[str, Any]) -> Dict[str, Any]:
@@ -388,7 +473,7 @@ def build_proposal_context(proposal: Dict[str, Any]) -> Dict[str, Any]:
     months_per_year: Dict[str, Any] = sd.get("months_per_year") or {}
     metadata: Dict[str, Any] = proposal.get("metadata") or {}
 
-    total_years = int(
+    contract_years = int(
         metadata.get("total_years")
         or (int(metadata.get("base_years") or 0) + int(metadata.get("option_years") or 0))
         or 1
@@ -402,6 +487,19 @@ def build_proposal_context(proposal: Dict[str, Any]) -> Dict[str, Any]:
     raw_odcs: List[Dict[str, Any]] = sd.get("odcs") or []
     extensions: List[Dict[str, Any]] = sd.get("extensions") or []
     surge: Optional[Dict[str, Any]] = sd.get("surge")
+
+    # Every period the proposal prices, extensions included. metadata.total_years
+    # counts base + option years only; an extension (e.g. the 6-month FAR 52.217-8
+    # period stored as year 6) lives in `extensions`. Prime positions were costed
+    # for every year in their hours, but the sub / travel / ODC / per-year loops
+    # stopped at total_years, so the extension's sub cost vanished and Q's grand
+    # total ($1.28M) disagreed with the app ($1.32M). Same rule as the frontend
+    # (pricingStore.loadProposal: max of total_years and the last extension year),
+    # widened to any year that actually carries hours or amounts so nothing priced
+    # can be left out.
+    total_years = _period_count(contract_years, extensions, raw_positions, raw_subs,
+                                raw_travel, raw_odcs)
+    periods = _periods(total_years, extensions, months_per_year)
 
     # Apply the same load-time defaults the frontend store applies in
     # `loadProposal`: location_type → 'On-Site', standard_fte_hours →
@@ -846,9 +944,13 @@ def build_proposal_context(proposal: Dict[str, Any]) -> Dict[str, Any]:
             "updated_at": _iso(proposal.get("updated_at")),
             "wage_source_type": wage_source.get("type"),
             "wage_source_file_id": wage_source.get("file_id"),
+            # total_years = every priced period, extensions included (matches the app);
+            # contract_years = base + option years only. `periods` names each one.
             "total_years": total_years,
+            "contract_years": contract_years,
             "base_years": base_years,
             "option_years": option_years,
+            "periods": periods,
             "stored_total_cost": proposal.get("total_cost"),
         },
         "rates": rates,
