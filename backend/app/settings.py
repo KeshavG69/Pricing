@@ -72,6 +72,22 @@ class Settings(BaseSettings):
     # so a client-supplied X-Forwarded-For value cannot be used to dodge limits.
     RATE_LIMIT_TRUSTED_PROXY_HOPS: int = 1
 
+    # ── E2B code sandbox (utils/e2b_sandbox.py) ──────────────────────────
+    # Model-written Python runs in an E2B microVM, one per chat session, never
+    # in this process. Empty key = the Python tool is switched off.
+    E2B_API_KEY: str = ""
+    # Custom template built from backend/e2b.Dockerfile (document libraries +
+    # LibreOffice). Empty = E2B's stock code-interpreter template.
+    E2B_TEMPLATE_ID: str = ""
+    # Absolute lifetime per resume; on expiry the box pauses instead of dying.
+    E2B_SANDBOX_TIMEOUT_S: int = 1800
+    # Pause this long after a chat turn ends, unless the box was used again.
+    E2B_PAUSE_GRACE_S: int = 30
+    E2B_EXEC_TIMEOUT_S: int = 180
+    # Paused boxes unused this long are killed by the hourly reaper.
+    E2B_SANDBOX_MAX_IDLE_DAYS: int = 7
+    E2B_ALLOW_INTERNET: bool = False
+
     # ── Cookie configuration ─────────────────────────────────────────────
     COOKIE_DOMAIN: Optional[str] = None  # None = current domain
     # env var COOKIE_SAMESITE overrides the derived default (see property below)

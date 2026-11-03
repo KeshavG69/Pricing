@@ -67,5 +67,6 @@ export const EXA_TOOL_NAMES = new Set([
 export const ARTIFACT_TOOL_NAMES = new Set([
   'chart_tool',
   's3_upload_tool',
+  'build_document',
   ...EXA_TOOL_NAMES,
 ]);

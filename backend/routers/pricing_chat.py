@@ -44,6 +44,7 @@ from utils.chat_title_generator import (
 )
 from utils.proposal_context_builder import build_proposal_context
 from utils.proposals import get_proposal_crud
+from utils.e2b_sandbox import pause_session_sandbox
 from utils.python_repl_tool import set_session_id
 from utils.rate_limit import rate_limit_user
 from utils.streaming import create_sse_event_stream
@@ -196,9 +197,10 @@ async def ask_pricing(request: PricingChatQuery, current_user: dict = Depends(ge
             gsa_current_year=request.gsa_current_year,
         )
 
-        # Bind the session_id into the contextvar that python_repl_tool reads
-        # at runtime. Each chat session gets its own isolated temp directory.
-        set_session_id(request.session_id)
+        # Bind the session and its owner into the contextvars python_repl_tool
+        # reads at runtime. Each chat session gets its own E2B sandbox, bound
+        # to this org and user.
+        set_session_id(request.session_id, request.organization_id, request.user_id)
 
         headers = {
             "Cache-Control": "no-cache",
@@ -241,8 +243,12 @@ async def ask_pricing(request: PricingChatQuery, current_user: dict = Depends(ge
                 ),
                 on_complete=_on_turn_complete,
             )
-            async for chunk in create_sse_event_stream(events):
-                yield chunk
+            try:
+                async for chunk in create_sse_event_stream(events):
+                    yield chunk
+            finally:
+                # Turn over (or client gone): pause the sandbox after a grace period.
+                pause_session_sandbox(request.session_id)
 
         return StreamingResponse(
             sse_stream(),
@@ -307,7 +313,7 @@ async def resume_pricing(request: PricingChatResumeRequest, current_user: dict =
             gsa_file_id=request.gsa_file_id,
             gsa_current_year=request.gsa_current_year,
         )
-        set_session_id(request.session_id)
+        set_session_id(request.session_id, request.organization_id, request.user_id)
 
         # Fetch the paused RunOutput from MongoDB (stored by agno on pause).
         run_response = await agent.aget_run_output(
@@ -363,8 +369,11 @@ async def resume_pricing(request: PricingChatResumeRequest, current_user: dict =
                 ),
                 on_complete=_on_continuation_complete,
             )
-            async for chunk in create_sse_event_stream(events):
-                yield chunk
+            try:
+                async for chunk in create_sse_event_stream(events):
+                    yield chunk
+            finally:
+                pause_session_sandbox(request.session_id)
 
         return StreamingResponse(
             sse_stream(),

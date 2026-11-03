@@ -1,137 +1,133 @@
 """
-Python REPL tool for the pricing agent.
+Python tool for the pricing agent — runs in the session's E2B sandbox.
 
-Adapted from Kroolo's enterprise-fastapi. Each chat session gets an isolated
-TemporaryDirectory; Python code runs in-process with per-session locals/globals.
-If execution fails, the LLM is asked to auto-correct once and re-run.
+Model-written code used to run inside this API process (LangChain PythonREPL
+exec), with the server's environment, files, database clients and other
+tenants' state in reach. It now runs in an E2B microVM per chat session
+(utils/e2b_sandbox.py), ported from Kroolo's enterprise-fastapi:
+
+- The code is written into the sandbox and executed by sandbox/runner.py,
+  which prints one machine-readable result line. Failure is read from that
+  line, not by searching the output for "Error", and comes back as
+  {type, message, traceback_tail} for the model to fix.
+- Each call is a fresh Python process. Only files persist between calls (and
+  across pause/resume), in the working directory /home/user/out.
+- There is no fallback to running code on this host. Without E2B configured
+  the tool reports that it is unavailable.
 """
 
-from agno.tools import tool
-from langchain_experimental.utilities import PythonREPL
-from client.llm_client import get_chat_llm
-import logging
-from typing import Dict, Any
-import os
-import re
-import tempfile
+from __future__ import annotations
+
 import contextvars
+import hashlib
+import json
+import logging
+import time
+from collections import OrderedDict
+from pathlib import Path
+from typing import Any, Dict, Optional
+
+from agno.tools import tool
+from e2b.exceptions import TimeoutException
+from e2b.sandbox.commands.command_handle import CommandExitException
 
 from app.settings import settings
 
 logger = logging.getLogger(__name__)
 
-# Keep TemporaryDirectory objects alive per session so files persist across
-# multiple tool calls within the same chat session.
-_session_temp_dirs: Dict[str, tempfile.TemporaryDirectory] = {}
+RESULT_MARKER = "@@PRICEIQ_RESULT@@"
+OUT_DIR = "/home/user/out"
+_SCRIPT_DIR = "/home/user/scripts"
+_RUNNER_PATH = "/home/user/.priceiq/runner.py"
+_RUNNER_SOURCE = (Path(__file__).resolve().parent.parent / "sandbox" / "runner.py").read_text()
+# The custom template links its interpreter here (see e2b.Dockerfile); the
+# stock template only has python3 on PATH.
+_RUN_CMD = (
+    'P=/opt/priceiq/python; [ -x "$P" ] || P=python3; '
+    f'"$P" {_RUNNER_PATH} {{script}}'
+)
 
-# Persistent PythonREPL per session — variables, imports, and helper functions
-# defined in one tool call stay alive for the next call in the same session.
-_session_repls: Dict[str, Any] = {}
-
-# Session ID is read from contextvar at runtime so tools don't have to pass it.
+# Session and identity are read from ContextVars at runtime so tools don't
+# have to pass them. The router sets them from the bearer token.
 _current_session_id = contextvars.ContextVar("session_id", default="default")
+_current_org_id = contextvars.ContextVar("org_id", default="")
+_current_user_id = contextvars.ContextVar("user_id", default="")
+
+# Code that already failed, per session, so the same broken script isn't re-run.
+_failed: "OrderedDict[str, Dict[str, str]]" = OrderedDict()
+_MAX_SESSIONS = 200
 
 
 def get_session_id() -> str:
     return _current_session_id.get()
 
 
-def set_session_id(session_id: str):
-    """Set the current session_id in the context. Call before agent.run()."""
-    _current_session_id.set(session_id)
+def set_session_id(session_id: str, org_id: str = "", user_id: str = "") -> None:
+    """Bind the chat session and its owner for the tools. Call before running the agent."""
+    _current_session_id.set(session_id or "default")
+    _current_org_id.set(str(org_id or ""))
+    _current_user_id.set(str(user_id or ""))
 
 
-class SafePythonREPL:
-    """Session-scoped wrapper around LangChain's PythonREPL."""
-
-    def __init__(self, session_id: str = None):
-        self.session_id = session_id or "default"
-
-        # Reuse the per-session REPL so imports, helpers, and variables defined
-        # in an earlier tool call remain available for the next call.
-        if self.session_id in _session_repls:
-            self._repl = _session_repls[self.session_id]
-        else:
-            self._repl = PythonREPL()
-            # exec() uses separate globals/locals by default; top-level imports
-            # end up in locals and helper function bodies can't see them.
-            # Unifying them fixes NameError inside nested functions.
-            self._repl.locals = self._repl.globals
-            _session_repls[self.session_id] = self._repl
-
-        if self.session_id in _session_temp_dirs:
-            self._temp_dir_obj = _session_temp_dirs[self.session_id]
-            self.working_dir = self._temp_dir_obj.name
-        else:
-            self._temp_dir_obj = tempfile.TemporaryDirectory(
-                prefix=f"priceiq_repl_{self.session_id}_"
-            )
-            self.working_dir = self._temp_dir_obj.name
-            _session_temp_dirs[self.session_id] = self._temp_dir_obj
-            logger.info(
-                f"[python_repl] new temp dir for session={self.session_id}: {self.working_dir}"
-            )
-
-    def run(self, code: str) -> str:
-        try:
-            full_code = (
-                f"import os\n"
-                f"os.chdir({self.working_dir!r})\n"
-                f"{code}"
-            )
-            return self._repl.run(full_code)
-        except Exception as e:
-            logger.error(f"[python_repl] exec error: {e}", exc_info=True)
-            return f"Error executing Python code: {e}"
+def get_session_context() -> Dict[str, str]:
+    return {
+        "session_id": _current_session_id.get(),
+        "org_id": _current_org_id.get(),
+        "user_id": _current_user_id.get(),
+    }
 
 
-def cleanup_session(session_id: str):
-    """Release the temp directory and REPL state for a session (called on chat close)."""
-    _session_repls.pop(session_id, None)
-    if session_id in _session_temp_dirs:
-        temp_dir = _session_temp_dirs.pop(session_id)
-        temp_dir.cleanup()
-        logger.info(f"[python_repl] cleaned up session={session_id}")
+async def sandbox_for_this_session():
+    """The current session's sandbox, created on first use."""
+    from utils.e2b_sandbox import get_or_resume_sandbox
 
-
-async def _correct_python_with_llm(code: str, error: str) -> str:
-    """Ask the LLM to fix broken Python once, given the error output."""
-    llm = get_chat_llm(
-        model="anthropic/claude-sonnet-4.6",
-        api_key=settings.OPENROUTER_API_KEY,
-        base_url="https://openrouter.ai/api/v1",
+    ctx = get_session_context()
+    return await get_or_resume_sandbox(
+        ctx["session_id"], org_id=ctx["org_id"], user_id=ctx["user_id"]
     )
 
-    messages = [
-        {
-            "role": "system",
-            "content": (
-                "You are an expert Python developer. Fix the broken Python code based on the error. "
-                "Return ONLY the corrected Python code with no explanations, no markdown, no backticks."
-            ),
-        },
-        {
-            "role": "user",
-            "content": f"Error:\n{error}\n\nBroken Code:\n{code}\n\nReturn only the fixed Python code.",
-        },
-    ]
 
-    response = await llm.ainvoke(messages)
-    fixed = (response.content or "").strip()
-    fixed = re.sub(r"^```python\s*\n", "", fixed)
-    fixed = re.sub(r"^```\s*\n", "", fixed)
-    fixed = re.sub(r"\n```\s*$", "", fixed)
-    fixed = fixed.strip()
+def cleanup_session(session_id: str) -> None:
+    """Forget what failed in this session. The sandbox itself is paused/reaped by e2b_sandbox."""
+    _failed.pop(session_id, None)
 
-    if not fixed:
-        raise RuntimeError("LLM returned empty code after correction attempt")
-    return fixed
+
+def _remember_failure(session_id: str, digest: str, summary: str) -> None:
+    bucket = _failed.pop(session_id, {})
+    bucket[digest] = summary
+    if len(bucket) > 16:
+        bucket.pop(next(iter(bucket)))
+    _failed[session_id] = bucket
+    while len(_failed) > _MAX_SESSIONS:
+        _failed.popitem(last=False)
+
+
+def _digest(code: str) -> str:
+    return hashlib.sha256(" ".join((code or "").split()).encode()).hexdigest()[:16]
+
+
+def _parse_json(output: str) -> Optional[Dict[str, Any]]:
+    try:
+        parsed = json.loads((output or "").strip())
+        return parsed if isinstance(parsed, dict) else None
+    except (ValueError, json.JSONDecodeError):
+        return None
+
+
+def _unavailable(error: str, note: str) -> Dict[str, Any]:
+    return {"success": False, "output": "", "data": None, "error": error, "note": note}
 
 
 @tool(stop_after_tool_call=False)
 async def python_repl_tool(code: str, description: str = "") -> Dict[str, Any]:
     """
     🐍 Execute Python code to compute pricing figures from the proposal state.
+
+    The code runs in an isolated sandbox. EACH CALL IS A FRESH PYTHON PROCESS:
+    variables and imports do NOT carry over between calls, so re-import and
+    re-parse the proposal state in every call. Files DO carry over: the working
+    directory is /home/user/out, and anything saved there stays for the rest of
+    the chat (save with a plain filename like "summary.xlsx").
 
     USE THIS when the user asks for a computation that isn't pre-computed in
     the <proposal_state> block — e.g. "what's the weighted-average FBLR across
@@ -160,6 +156,11 @@ async def python_repl_tool(code: str, description: str = "") -> Dict[str, Any]:
     Save with a simple filename ("pricing_summary.pdf"), then call
     s3_upload_tool(filename="pricing_summary.pdf") to get a shareable URL.
 
+    SKILL SCRIPTS: the scripts that skills mention live in the sandbox at
+    /home/user/skills/<skill>/scripts/ — run them from this tool, e.g.
+    subprocess.run(["python3", "/home/user/skills/xlsx/scripts/recalc.py",
+    "summary.xlsx"], check=True).
+
     GROUND RULES:
     - Do NOT invent numbers. Every figure must come from the state block.
     - For simple reads (already in the state), SKIP this tool and quote directly.
@@ -182,67 +183,128 @@ async def python_repl_tool(code: str, description: str = "") -> Dict[str, Any]:
         description: Short past-tense description, e.g. "Computed avg FBLR for on-site".
 
     Returns:
-        Dict with success, output, working_dir, error.
+        Dict with success, output, data (parsed JSON output), files, error.
     """
-    import json as _json
+    from utils.e2b_sandbox import SandboxOwnershipError, SandboxUnavailableError, evict_handle
 
-    def _parse_json(output: str):
-        try:
-            parsed = _json.loads(output.strip())
-            return parsed if isinstance(parsed, dict) else None
-        except (ValueError, _json.JSONDecodeError):
-            return None
+    from utils.e2b_sandbox import is_configured
 
+    if not is_configured():
+        return _unavailable(
+            "Python execution is not available on this server",
+            "Answer without running code: quote figures from the proposal state.",
+        )
+    session_id = get_session_id()
+    if not (code or "").strip():
+        return _unavailable("no code was given to run", "Send the Python to run.")
+
+    digest = _digest(code)
+    previous = (_failed.get(session_id) or {}).get(digest)
+    if previous:
+        return _unavailable(
+            f"this exact code already failed in this conversation: {previous}",
+            "Change the code before running it again. Re-running it unchanged will fail the same way.",
+        )
+
+    started = time.monotonic()
     try:
-        session_id = get_session_id()
-        repl = SafePythonREPL(session_id=session_id)
+        sbx = await sandbox_for_this_session()
+        script_path = f"{_SCRIPT_DIR}/s{digest}.py"
+        await sbx.files.write_files([
+            {"path": _RUNNER_PATH, "data": _RUNNER_SOURCE},
+            {"path": script_path, "data": code},
+        ])
+        try:
+            result = await sbx.commands.run(
+                _RUN_CMD.format(script=script_path), timeout=settings.E2B_EXEC_TIMEOUT_S
+            )
+        except CommandExitException as exited:
+            # The runner exits 1 when the code raised; its result line is still on stdout.
+            result = exited
+        stdout = result.stdout or ""
+    except SandboxOwnershipError as exc:
+        return _unavailable(str(exc), "Do not retry.")
+    except SandboxUnavailableError as exc:
+        return _unavailable(str(exc), "Retry once; do not rewrite the code because of this.")
+    except TimeoutException as exc:
+        if type(exc) is TimeoutException:
+            return _unavailable(
+                f"the code ran longer than {settings.E2B_EXEC_TIMEOUT_S}s and was stopped",
+                "Do less work per call, or split it into steps that save to files.",
+            )
+        evict_handle(session_id)
+        logger.error("[python_repl] sandbox failure: %s", exc, exc_info=True)
+        return _unavailable(
+            f"the sandbox could not run the code: {str(exc)[:300]}",
+            "This is an infrastructure failure, not a bug in your code. Retry once.",
+        )
+    except Exception as exc:  # noqa: BLE001 - a sandbox failure is a result, not a crash
+        evict_handle(session_id)
+        logger.error("[python_repl] sandbox failure: %s", exc, exc_info=True)
+        return _unavailable(
+            f"the sandbox could not run the code: {str(exc)[:300]}",
+            "This is an infrastructure failure, not a bug in your code. Retry once.",
+        )
 
-        output = repl.run(code)
-
-        if output and ("Error" in output or "Traceback" in output):
-            logger.warning(f"[python_repl] error, attempting LLM correction: {output[:200]}")
-            try:
-                fixed_code = await _correct_python_with_llm(code, output)
-                fixed_output = repl.run(fixed_code)
-                if fixed_output and ("Error" in fixed_output or "Traceback" in fixed_output):
-                    return {
-                        "success": False,
-                        "output": fixed_output,
-                        "data": None,
-                        "working_dir": repl.working_dir,
-                        "error": "Execution failed even after LLM correction",
-                    }
-                return {
-                    "success": True,
-                    "output": fixed_output or "(no output)",
-                    "data": _parse_json(fixed_output or ""),
-                    "working_dir": repl.working_dir,
-                    "error": None,
-                }
-            except Exception as fix_err:
-                logger.error(f"[python_repl] LLM correction failed: {fix_err}")
-                return {
-                    "success": False,
-                    "output": output,
-                    "data": None,
-                    "working_dir": repl.working_dir,
-                    "error": "Execution errored and correction attempt failed",
-                }
-
-        return {
-            "success": True,
-            "output": output or "(no output)",
-            "data": _parse_json(output or ""),
-            "working_dir": repl.working_dir,
-            "error": None,
-        }
-
-    except Exception as e:
-        logger.error(f"[python_repl] tool failure: {e}", exc_info=True)
+    line = next((l for l in stdout.splitlines() if l.startswith(RESULT_MARKER)), None)
+    if line is None:
+        # The runner always prints its result line, so it was killed (memory or time).
         return {
             "success": False,
-            "output": "",
+            "output": stdout[-2000:],
             "data": None,
-            "working_dir": None,
-            "error": f"Failed to execute: {e}",
+            "error": "the code did not finish — it was killed, most likely for running out of memory or time",
+            "note": "Work on less data at once.",
         }
+
+    envelope = json.loads(line[len(RESULT_MARKER):])
+    elapsed = round(time.monotonic() - started, 2)
+    out = envelope.get("stdout_tail") or ""
+    files = envelope.get("files") or []
+
+    if not envelope.get("ok"):
+        error = envelope.get("error") or {}
+        summary = f"{error.get('type', 'Error')}: {str(error.get('message', ''))[:200]}"
+        _remember_failure(session_id, digest, summary)
+        logger.info("[python_repl] %s failed in %.2fs: %s", session_id, elapsed, summary)
+        return {
+            "success": False,
+            "output": out[-3000:],
+            "data": None,
+            "error": summary,
+            "traceback": error.get("traceback_tail"),
+            "note": "Fix the line the traceback names. Unchanged code will be refused.",
+        }
+
+    logger.info("[python_repl] %s ok in %.2fs (%d file(s))", session_id, elapsed, len(files))
+    payload: Dict[str, Any] = {
+        "success": True,
+        "output": out[-6000:] or "(no output)",
+        "data": _parse_json(out),
+        "error": None,
+    }
+    if files:
+        payload["files"] = files
+        payload["note"] = (
+            "These files are in the sandbox, which the user cannot see. To deliver one, "
+            "call s3_upload_tool with its name."
+        )
+        await _note_document_side_effects(session_id, files)
+    return payload
+
+
+async def _note_document_side_effects(session_id: str, files) -> None:
+    """Mark a build_document document stale when a script writes over its file.
+
+    Specs generate files; files do not generate specs. Once a script has changed the
+    file, an edit from the stored spec would silently discard that change.
+    """
+    try:
+        from utils import docgen_store
+
+        written = {str(f.get("name", "")).rsplit("/", 1)[-1] for f in files}
+        for doc in await docgen_store.list_documents(session_id):
+            if doc.get("filename") in written:
+                await docgen_store.mark_stale(session_id, doc["slug"], "python_repl_tool")
+    except Exception as exc:  # noqa: BLE001 - bookkeeping must not fail the run
+        logger.debug("[python_repl] could not check document staleness: %s", exc)
