@@ -75,10 +75,18 @@ def _hit(scope: str, ident: str, limits: List[Tuple[int, int]]) -> int:
 
 def client_ip(request: Request) -> str:
     """
-    Client IP as seen by the trusted proxy chain. With N trusted proxies, the
-    Nth entry from the right of X-Forwarded-For was written by our own edge;
-    anything further left is client-controlled and ignored.
+    Client IP as seen by the trusted proxy chain.
+
+    Prefers the header the edge proxy overwrites with the client address
+    (RATE_LIMIT_CLIENT_IP_HEADER, X-Real-IP on Railway). Otherwise, with N
+    trusted proxies, the Nth entry from the right of X-Forwarded-For was
+    written by our own edge; anything further left is client-controlled.
     """
+    header = settings.RATE_LIMIT_CLIENT_IP_HEADER
+    if header:
+        value = (request.headers.get(header) or "").split(",")[0].strip()
+        if value:
+            return value
     hops = settings.RATE_LIMIT_TRUSTED_PROXY_HOPS
     forwarded = request.headers.get("x-forwarded-for")
     if hops > 0 and forwarded:
