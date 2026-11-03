@@ -27,6 +27,7 @@ from auth.refresh_token import (
 )
 from auth.google_auth import GoogleAuthService
 from auth.dependencies import get_current_user as get_current_user_from_deps
+from utils.rate_limit import rate_limit_ip, rate_limit_user
 from utils.email_verification import get_email_verification_crud
 from utils.password_reset import get_password_reset_crud
 from utils.onboarding import get_onboarding_crud
@@ -67,7 +68,7 @@ class UpdateProfileRequest(BaseModel):
     name: str
 
 
-@router.post("/signup")
+@router.post("/signup", dependencies=[Depends(rate_limit_ip("signup", "5/minute;30/hour"))])
 async def signup(user_data: UserSignup):
     """
     Register a new user and send email verification
@@ -116,7 +117,7 @@ async def signup(user_data: UserSignup):
         )
 
 
-@router.post("/login")
+@router.post("/login", dependencies=[Depends(rate_limit_ip("login", "10/minute;100/hour"))])
 async def login(user_data: UserLogin, request: Request):
     """
     Authenticate user and return JWT tokens in response body
@@ -233,7 +234,7 @@ async def login(user_data: UserLogin, request: Request):
         )
 
 
-@router.post("/google/login")
+@router.post("/google/login", dependencies=[Depends(rate_limit_ip("google_login", "20/minute;200/hour"))])
 async def google_login(
     google_request: GoogleLoginRequest,
     request: Request
@@ -393,7 +394,7 @@ async def get_current_user_info(current_user: dict = Depends(get_current_user_fr
     }
 
 
-@router.post("/refresh")
+@router.post("/refresh", dependencies=[Depends(rate_limit_ip("refresh", "60/minute"))])
 async def refresh_token_endpoint(
     request: Request,
     response: Response
@@ -506,7 +507,7 @@ async def logout(
         )
 
 
-@router.post("/verify-email")
+@router.post("/verify-email", dependencies=[Depends(rate_limit_ip("verify_email", "30/hour"))])
 async def verify_email(verify_data: VerifyEmailRequest, request: Request):
     """
     Verify email address using magic link token (public endpoint)
@@ -603,7 +604,7 @@ async def verify_email(verify_data: VerifyEmailRequest, request: Request):
         )
 
 
-@router.post("/resend-verification")
+@router.post("/resend-verification", dependencies=[Depends(rate_limit_ip("resend_verification", "3/minute;10/hour"))])
 async def resend_verification(resend_data: ResendVerificationRequest):
     """
     Resend verification email to unverified user (public endpoint)
@@ -643,7 +644,7 @@ async def resend_verification(resend_data: ResendVerificationRequest):
         )
 
 
-@router.post("/forgot-password")
+@router.post("/forgot-password", dependencies=[Depends(rate_limit_ip("forgot_password", "3/minute;10/hour"))])
 async def forgot_password(request_data: ForgotPasswordRequest):
     """
     Request password reset email (public endpoint)
@@ -687,7 +688,7 @@ async def forgot_password(request_data: ForgotPasswordRequest):
         }
 
 
-@router.post("/reset-password")
+@router.post("/reset-password", dependencies=[Depends(rate_limit_ip("reset_password", "10/hour"))])
 async def reset_password(reset_data: ResetPasswordRequest):
     """
     Reset password using token from email (public endpoint)
@@ -723,7 +724,7 @@ async def reset_password(reset_data: ResetPasswordRequest):
         )
 
 
-@router.post("/change-password")
+@router.post("/change-password", dependencies=[Depends(rate_limit_user("change_password", "5/minute;20/hour"))])
 async def change_password(
     change_data: ChangePasswordRequest,
     current_user: dict = Depends(get_current_user_from_deps)

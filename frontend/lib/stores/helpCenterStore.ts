@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { v4 as uuidv4 } from 'uuid';
+import { authFetch } from '@/lib/api/client';
 
 interface Message {
   id: string;
@@ -97,7 +98,7 @@ export const useHelpCenterStore = create<HelpCenterStore>((set, get) => ({
     set({ isLoading: true, currentStreamingMessage: '', currentToolCall: null });
 
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/help/ask`, {
+      const response = await authFetch(`${process.env.NEXT_PUBLIC_API_URL}/api/help/ask`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

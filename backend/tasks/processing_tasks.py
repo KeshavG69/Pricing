@@ -20,6 +20,7 @@ if backend_dir not in sys.path:
     sys.path.insert(0, backend_dir)
 
 from app.worker import celery_app
+from utils.helpers import safe_filename
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +73,8 @@ def process_proposal_task(
 
         storage = get_idrive_storage()
         for key, name in zip(idrive_keys, file_names):
-            local_path = temp_dir / name
+            # Stored names come from client uploads; never let them escape temp_dir.
+            local_path = temp_dir / safe_filename(name)
             _download_with_retry(storage, key, str(local_path))
             file_paths.append(str(local_path))
 
@@ -211,7 +213,7 @@ def process_gsa_contract_task(
         from utils.processing import process_gsa_contract
 
         temp_dir = Path(tempfile.mkdtemp())
-        local_path = temp_dir / filename
+        local_path = temp_dir / safe_filename(filename)
         get_idrive_storage().download_document(idrive_key, str(local_path))
 
         asyncio.run(process_gsa_contract(

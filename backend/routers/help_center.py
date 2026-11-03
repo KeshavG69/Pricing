@@ -2,7 +2,7 @@
 Help Center router for Q&A with streaming support.
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 import logging
@@ -10,6 +10,7 @@ import logging
 from agent.help_center_agent import get_help_center_agent
 from utils.agent_streaming import stream_agent_response
 from utils.streaming import create_sse_event_stream
+from utils.rate_limit import rate_limit_user
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/help", tags=["help-center"])
@@ -21,7 +22,7 @@ class HelpCenterQuery(BaseModel):
     session_id: str
 
 
-@router.post("/ask")
+@router.post("/ask", dependencies=[Depends(rate_limit_user("help_ask", "20/minute;300/day"))])
 async def ask_help_center(request: HelpCenterQuery):
     """
     Ask a question to the help center agent with streaming response.

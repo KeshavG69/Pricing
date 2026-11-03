@@ -707,18 +707,26 @@ def get_pricing_agent(
                 "GSA retrieval tools not added"
             )
 
+    # Scope long-term memory to this user within this org. Without a user_id,
+    # Agno files every memory under the shared "default" user and injects them
+    # into every tenant's prompt — so memory stays off when identity is missing.
+    memory_user_id = f"{organization_id}:{user_id}" if (organization_id and user_id) else None
+    memory_enabled = memory_user_id is not None
+
     agent = Agent(
         name="Q",
         session_id=session_id,
+        user_id=memory_user_id,
         model=_components.llm,
         db=_components.db,
-        memory_manager=_components.memory_manager,
+        memory_manager=_components.memory_manager if memory_enabled else None,
         skills=get_pricing_skills(),
         tools=tools_list,
         add_history_to_context=True,
         num_history_runs=4,
-        enable_agentic_memory=True,
-        enable_user_memories=True,
+        enable_agentic_memory=memory_enabled,
+        enable_user_memories=memory_enabled,
+        add_memories_to_context=memory_enabled,
         add_datetime_to_context=True,
         markdown=True,
         id="PricingAgent",

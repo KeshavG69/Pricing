@@ -7,6 +7,7 @@ import Button from '@/components/ui/Button';
 import { DocumentInfo } from '@/types';
 import { proposalsApi } from '@/lib/api/proposals';
 import { useToast } from '@/lib/hooks/useToast';
+import { authFetch } from '@/lib/api/client';
 
 interface FilesTabProps {
   documents: DocumentInfo[];
@@ -123,7 +124,7 @@ function TextPreview({ url, filename }: { url: string; filename: string }) {
         setError(null);
 
         const proxyUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/proposals/document-proxy?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
-        const response = await fetch(proxyUrl);
+        const response = await authFetch(proxyUrl);
 
         if (!response.ok) {
           throw new Error('Failed to fetch document');
@@ -201,6 +202,66 @@ const formatCellValue = (value: string): string => {
 // Spreadsheet Preview Component (handles XLSX, XLS, CSV)
 const MAX_ROWS = 1000; // Limit rows to prevent browser freeze
 
+// PDF preview via the authenticated document proxy. An <iframe src> cannot send
+// an Authorization header, so the bytes are fetched with the token and shown
+// from a local blob: URL instead.
+function PdfPreview({ url, filename }: { url: string; filename: string }) {
+  const [blobUrl, setBlobUrl] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let objectUrl: string | null = null;
+    let cancelled = false;
+    const load = async () => {
+      try {
+        setError(null);
+        const proxyUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/proposals/document-proxy?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
+        const response = await authFetch(proxyUrl);
+        if (!response.ok) {
+          throw new Error('Failed to fetch document');
+        }
+        const blob = await response.blob();
+        if (cancelled) return;
+        // Always application/pdf, whatever the upstream header says: a blob: URL
+        // runs with this app's origin, so it must never render as HTML.
+        objectUrl = URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }));
+        setBlobUrl(objectUrl);
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to load document');
+        }
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+    };
+  }, [url, filename]);
+
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-full text-destructive">
+        {error}
+      </div>
+    );
+  }
+  if (!blobUrl) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+  return (
+    <iframe
+      src={blobUrl}
+      className="w-full h-full border border-border rounded"
+      title={filename}
+    />
+  );
+}
+
 function SpreadsheetPreview({ url, filename }: { url: string; filename: string }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -215,7 +276,7 @@ function SpreadsheetPreview({ url, filename }: { url: string; filename: string }
 
         // Fetch through the proxy endpoint
         const proxyUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/proposals/document-proxy?url=${encodeURIComponent(url)}&filename=${encodeURIComponent(filename)}`;
-        const response = await fetch(proxyUrl);
+        const response = await authFetch(proxyUrl);
 
         if (!response.ok) {
           throw new Error('Failed to fetch document');
@@ -800,10 +861,9 @@ export function FilesTab({ documents, proposalId, onUrlsRefreshed }: FilesTabPro
                   filename={previewDoc.doc.filename}
                 />
               ) : isPdfFile(previewDoc.doc.filename) ? (
-                <iframe
-                  src={`${process.env.NEXT_PUBLIC_API_URL}/api/proposals/document-proxy?url=${encodeURIComponent(previewDoc.doc.idrive_url)}&filename=${encodeURIComponent(previewDoc.doc.filename)}`}
-                  className="w-full h-full border border-border rounded"
-                  title={previewDoc.doc.filename}
+                <PdfPreview
+                  url={previewDoc.doc.idrive_url}
+                  filename={previewDoc.doc.filename}
                 />
               ) : isTextFile(previewDoc.doc.filename) ? (
                 <TextPreview

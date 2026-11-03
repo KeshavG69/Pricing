@@ -65,6 +65,13 @@ class Settings(BaseSettings):
     # Deployment environment (drives cookie security defaults)
     ENVIRONMENT: str = "development"
 
+    # ── Rate limiting (utils/rate_limit.py) ──────────────────────────────
+    RATE_LIMIT_ENABLED: bool = True
+    # Number of trusted reverse proxies in front of the app (Railway edge = 1).
+    # The client IP is read that many entries from the right of X-Forwarded-For,
+    # so a client-supplied X-Forwarded-For value cannot be used to dodge limits.
+    RATE_LIMIT_TRUSTED_PROXY_HOPS: int = 1
+
     # ── Cookie configuration ─────────────────────────────────────────────
     COOKIE_DOMAIN: Optional[str] = None  # None = current domain
     # env var COOKIE_SAMESITE overrides the derived default (see property below)

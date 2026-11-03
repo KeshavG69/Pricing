@@ -311,7 +311,7 @@ async def generate_excel_from_proposal(
         )
 
 
-@router.get("/template")
+@router.get("/template", dependencies=[Depends(get_current_user)])
 async def get_project_config_template():
     """
     Get a template/example of the ProjectConfig structure.

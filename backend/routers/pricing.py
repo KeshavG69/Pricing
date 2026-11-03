@@ -15,6 +15,7 @@ from auth.dependencies import get_current_user
 from client.ptw_calculator import compute_bottom_up_ptw, reconcile
 from client.usaspending_client import get_usaspending_client, USASpendingError
 from utils.proposals import get_proposal_crud
+from utils.rate_limit import rate_limit_user
 
 logger = logging.getLogger(__name__)
 
@@ -165,7 +166,7 @@ def split_multi_year_position(
 # Replaced by /api/proposals/upload and /api/proposals/{id}/status in proposals router
 
 
-@router.post("/recalculate")
+@router.post("/recalculate", dependencies=[Depends(rate_limit_user("recalculate", "60/minute"))])
 async def recalculate_spreadsheet(request: Dict[str, Any]):
     """
     Recalculate spreadsheet values using backend calculator.
@@ -340,7 +341,7 @@ class PTWSuggestRequest(BaseModel):
     )
 
 
-@router.post("/ptw/suggest")
+@router.post("/ptw/suggest", dependencies=[Depends(rate_limit_user("ptw_suggest", "20/minute;300/day"))])
 async def suggest_ptw(
     body: PTWSuggestRequest,
     current_user: dict = Depends(get_current_user),
