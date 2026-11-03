@@ -125,10 +125,15 @@ class Report:
         )
 
     def _para(self, text: str, role: str, color: Optional[str] = None,
-              raw: bool = False) -> Paragraph:
+              raw: bool = False, **overrides) -> Paragraph:
         style = self._styles[role]
         if color:
             style = ParagraphStyle(f"{style.name}-{color}", parent=style, textColor=_hex(color))
+        if overrides:
+            # Must be set before the Paragraph exists: font size is baked into its
+            # fragments at construction, so restyling afterwards only moves alignment.
+            key = "-".join(f"{k}{v}" for k, v in sorted(overrides.items()))
+            style = ParagraphStyle(f"{style.name}-{key}", parent=style, **overrides)
         # Model text is escaped by default; `raw=True` is for the few call sites that build
         # their own <b>/<i>/&nbsp; markup and escape the user parts themselves.
         return Paragraph(str(text) if raw else esc(text), style)
@@ -204,7 +209,10 @@ class Report:
             spaceBefore=8, spaceAfter=1,
             textColor=_hex(self.p.ink(self.p.accent)),
         )
-        self.story.append(Paragraph(str(text).upper(), style))
+        para = Paragraph(str(text).upper(), style)
+        # An eyebrow labels what follows; it must never end a page on its own.
+        para.keepWithNext = True
+        self.story.append(para)
         return self
 
     def h1(self, text: str) -> "Report":
@@ -218,7 +226,13 @@ class Report:
 
     def _heading(self, text: str, role: str) -> "Report":
         # Bound to whatever comes next so a heading cannot strand at a page bottom.
-        self.story.append(KeepTogether([self._para(text, role), Spacer(1, 1)]))
+        # keepWithNext, not KeepTogether([heading]): the old wrapper held the heading
+        # together with a 1pt spacer only, so "YEAR-BY-YEAR COST TABLE" still ended a
+        # page with its table on the next one. The doc template groups a keepWithNext
+        # flowable with the one after it (and chains eyebrow -> heading -> block).
+        para = self._para(text, role)
+        para.keepWithNext = True
+        self.story.append(para)
         return self
 
     def body(self, text: str) -> "Report":
@@ -320,12 +334,24 @@ class Report:
         # A colour per card — tint, top rule and figure — matching the deck's KPI tiles.
         # This was one grey band with every figure in the primary.
         accents = [self._next_accent("info") for _ in pairs]
-        cells = [[self._para(str(v), "kpi_value", self.p.ink(a))
-                  for (v, _), a in zip(pairs, accents)],
-                 [self._para(str(l), "kpi_label", self.p.muted) for _, l in pairs]]
         width = self.fmt.content_w_in * inch / len(pairs)
-        t = Table(cells, colWidths=[width] * len(pairs))
         pad = self.fmt.pad_pt["card"]
+        # A figure must read as one figure: "$1,281,572" / ".80" across two lines is the
+        # tell of a generated document. Shrink every value in the row to one common size
+        # at which the longest fits its tile on a single line (never below 45%).
+        base = self._styles["kpi_value"]
+        inner = width - 2 * pad - 2
+        longest = max(pdfmetrics.stringWidth(str(v), base.fontName, base.fontSize)
+                      for v, _ in pairs)
+        size = base.fontSize * max(0.45, min(1.0, inner / longest)) if longest else base.fontSize
+        size = self._snap(size)
+        fit = ({"fontSize": size, "leading": base.leading * size / base.fontSize}
+               if size < base.fontSize else {})
+        values = [self._para(str(v), "kpi_value", self.p.ink(a), **fit)
+                  for (v, _), a in zip(pairs, accents)]
+        cells = [values,
+                 [self._para(str(l), "kpi_label", self.p.muted) for _, l in pairs]]
+        t = Table(cells, colWidths=[width] * len(pairs))
         per_card = []
         for col, a in enumerate(accents):
             per_card += [("BACKGROUND", (col, 0), (col, -1), _hex(self.p.tint(a))),
@@ -556,7 +582,15 @@ class Report:
               align: Optional[Sequence[str]] = None) -> "Report":
         headers = [str(h) for h in headers]
         body = [[str(c) if c is not None else "" for c in r] for r in rows]
-        widths = self._widths(headers, body)
+        # Shrink the table's type a step at a time until every figure fits on one line;
+        # at the last step the floors are scaled to the page as a last resort.
+        for scale in (1.0, 0.92, 0.85, 0.78):
+            widths, fits = self._widths(headers, body, scale)
+            if fits:
+                break
+        if not fits:
+            squeeze = self.fmt.content_w_in * inch / sum(widths)
+            widths = [w * squeeze for w in widths]
         # Case-folded and checked here, not handed to reportlab as given: a lowercase
         # "left" is what anyone writing a spec types, and reportlab's own complaint
         # ("Invalid justification 'left'") arrives from inside save(), after the document
@@ -577,13 +611,21 @@ class Report:
         # carry the alignment themselves (DECIMAL reads as right-aligned text).
         _ta = {"RIGHT": TA_RIGHT, "DECIMAL": TA_RIGHT, "CENTER": TA_CENTER, "CENTRE": TA_CENTER}
 
+        cell_style = self._styles["cell"]
+
         def _cell(text, i, header=False):
-            para = (self._para(f"<b>{esc(text)}</b>", "cell", self.p.on(self.p.primary), raw=True)
-                    if header else self._para(text, "cell"))
+            over = {}
             a = _ta.get(align[i]) if i < len(align) else None
             if a is not None:
-                para.style = ParagraphStyle(f"{para.style.name}-a{a}", parent=para.style, alignment=a)
-            return para
+                over["alignment"] = a
+            if scale < 1.0:
+                size = self._snap(cell_style.fontSize * scale)
+                over.update(fontSize=size,
+                            leading=cell_style.leading * size / cell_style.fontSize)
+            if header:
+                return self._para(f"<b>{esc(text)}</b>", "cell", self.p.on(self.p.primary),
+                                  raw=True, **over)
+            return self._para(text, "cell", **over)
 
         data = [[_cell(h, i, header=True) for i, h in enumerate(headers)]]
         data += [[_cell(c, i) for i, c in enumerate(r)] for r in body]
@@ -623,32 +665,44 @@ class Report:
             out.append("RIGHT" if vals and numeric >= 0.8 * len(vals) else "LEFT")
         return out
 
-    def _widths(self, headers: Sequence[str], rows: Sequence[Sequence[str]]) -> List[float]:
+    def _widths(self, headers: Sequence[str], rows: Sequence[Sequence[str]],
+                scale: float = 1.0) -> tuple:
         """Measured, not guessed. The skill asked the model to 'mentally check' whether a
         header fits, and a header wrapping to two lines is the clearest tell of a generated
-        document."""
+        document.
+
+        Returns (widths, fits). `fits` is False when even the floors — every figure and
+        short label on one line — exceed the page at this font `scale`; the caller then
+        retries smaller rather than wrapping numbers."""
         tk = self.fmt.table
         pad = 2 * tk.row_pad_h
-        want = []
+        head_size, cell_size = tk.header_size * scale, tk.cell_size * scale
+        numeric = [a != "LEFT" for a in self._align(rows, len(headers))]
+        want, floors = [], []
         for i, h in enumerate(headers):
-            head_w = pdfmetrics.stringWidth(h, self.bold, tk.header_size) + pad
+            head_w = pdfmetrics.stringWidth(h, self.bold, head_size) + pad
             cell_w = max(
-                (pdfmetrics.stringWidth(str(r[i]), self.regular, tk.cell_size)
+                (pdfmetrics.stringWidth(str(r[i]), self.regular, cell_size)
                  for r in rows if i < len(r)),
                 default=0.0,
             ) + pad
             # A header must never wrap; a long cell may, so it is capped.
             want.append(max(head_w, min(cell_w, 2.6 * inch), tk.min_col_in * inch))
+            # A figure is never squeezed below its own width (a wrapped "$3,052." / "80"
+            # is unreadable), nor a short label ("Year" / "1"); long prose absorbs the cut.
+            floors.append(max(head_w, cell_w if numeric[i] else min(cell_w, 1.1 * inch)))
 
-        total = sum(want)
         avail = self.fmt.content_w_in * inch
+        total = sum(want)
         if total <= avail:
             extra = (avail - total) / len(want)
-            return [w + extra for w in want]
+            return [w + extra for w in want], True
+        if sum(floors) > avail:
+            return floors, False
 
-        # Over budget: take the excess from the widest columns only, never below what the
-        # header itself needs.
-        floors = [pdfmetrics.stringWidth(h, self.bold, tk.header_size) + pad for h in headers]
+        # Over budget: take the excess from columns with slack above their floor, and
+        # never past it (a proportional cut larger than a column's slack is what once
+        # squeezed "Year" to "Ye" / "ar").
         out = list(want)
         for _ in range(40):
             over = sum(out) - avail
@@ -659,8 +713,8 @@ class Report:
             if pool <= 0.5:
                 break
             for i in range(len(out)):
-                out[i] -= over * (slack[i] / pool)
-        return out
+                out[i] -= min(slack[i], over * (slack[i] / pool))
+        return out, True
 
     def chart(self, kind: str, categories, series, *, labels=None, title: str = "",
               height_in: float = 2.6, value_format: str = "%d",
@@ -1008,9 +1062,47 @@ class Report:
                         (self.fmt.page_w_in - m["right"]) * inch, top - 4)
         canvas.restoreState()
 
+    def _snap(self, size: float) -> float:
+        """The largest size on this format's type scale that is no bigger than `size`, so a
+        shrunk figure stays on the scale the layout check enforces (font.off_scale)."""
+        steps = sorted(set(self.fmt.sizes) | {self.fmt.table.cell_size})
+        fitting = [s for s in steps if s <= size + 0.01]
+        return fitting[-1] if fitting else steps[0]
+
+    @staticmethod
+    def _bind_headings(story: list) -> list:
+        """Glue each run of keepWithNext flowables (eyebrow, headings) to the block after.
+
+        reportlab's own keepWithNext stops at a container: a short table is wrapped in
+        KeepTogether so it never splits, and the template will not merge a heading into
+        that, so "YEAR-BY-YEAR COST TABLE" still ended a page alone. Doing it here, with
+        the container's contents unwrapped into one KeepTogether, binds them for real.
+        """
+        out, i = [], 0
+        while i < len(story):
+            if not getattr(story[i], "keepWithNext", False):
+                out.append(story[i])
+                i += 1
+                continue
+            run = []
+            while i < len(story) and getattr(story[i], "keepWithNext", False):
+                run.append(story[i])
+                i += 1
+            if i == len(story):
+                out.extend(run)
+                break
+            nxt = story[i]
+            i += 1
+            inner = list(nxt._content) if isinstance(nxt, KeepTogether) else [nxt]
+            for f in run:  # bound now; don't let the template regroup them inside
+                f.keepWithNext = False
+            out.append(KeepTogether(run + inner))
+        return out
+
     def save(self) -> Path:
         if not self.story:
             raise ValueError("nothing was added to the report")
         first = self._draw_cover if self._has_cover else self._furniture
-        self.doc.build(self.story, onFirstPage=first, onLaterPages=self._furniture)
+        self.doc.build(self._bind_headings(self.story), onFirstPage=first,
+                       onLaterPages=self._furniture)
         return self.path
