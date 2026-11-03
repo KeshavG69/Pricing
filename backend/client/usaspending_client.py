@@ -620,9 +620,11 @@ class USASpendingClient:
             2. NAICS + agency (drop keywords)
             3. NAICS + entire DoD (drop sub-agency)
 
-        If expected_annual_cost is provided (typically bottom-up year-1 cost from
-        the proposal), the comparable pool is additionally narrowed to awards
-        whose annualized cost falls within size_filter_range × expected. This
+        If expected_annual_cost is provided (the proposal's full Base Period
+        price — prime, subs, travel, ODCs — scaled to 12 months, which is what an
+        award's amount / duration measures), the comparable pool is additionally
+        narrowed to awards whose annualized cost falls within
+        size_filter_range × expected. This
         cuts noise from tiny task orders and giant multi-year programs that
         share a NAICS but operate at a completely different scope. The filter
         is dropped automatically if it would leave fewer than 5 comparables.

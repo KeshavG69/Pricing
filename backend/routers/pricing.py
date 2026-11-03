@@ -432,12 +432,11 @@ async def suggest_ptw(
     # comparable pool. Bottom-up is local Python (no network), so this adds
     # ~ms of latency. If the proposal has no priced positions, bottom_up
     # will be empty and we just skip the size filter.
-    bottom_up = compute_bottom_up_ptw(
-        proposal,
-        total_years=int(total_years),
-        default_rates=org_default_rates,
-    )
-    expected_annual_cost = bottom_up.year_1 if bottom_up.is_usable else None
+    bottom_up = compute_bottom_up_ptw(proposal, default_rates=org_default_rates)
+    # Like with like: a comparable's annual_cost is its whole award amount per
+    # year (the awardee's subs, travel and ODCs included), so compare it to the
+    # proposal's full Base Period price, scaled to 12 months.
+    expected_annual_cost = bottom_up.annual_run_rate if bottom_up.is_usable else None
 
     client = get_usaspending_client()
     try:

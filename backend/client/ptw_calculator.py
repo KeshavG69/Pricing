@@ -1,43 +1,35 @@
 """
 Bottom-up PTW calculator.
 
-Computes a Price-to-Win estimate anchored to the proposal's actual scope: its
-positions, hours, wages, and indirect rates — all pulled from MongoDB. No
-hardcoded numeric defaults: if data is missing the calculator either falls back
-to organization-level defaults (passed in by the caller) or surfaces a note
-explaining what's missing.
+Computes a Price-to-Win estimate anchored to the proposal's actual scope: the
+whole proposal price the app's Overview shows, every priced period included.
 
-Handles two pricing modes per position:
+The money comes from `build_proposal_context` (utils/proposal_context_builder.py),
+the same engine behind Q's chat context, which matches the Overview to the cent:
 
-  - GSA: `selected_wage` is an hourly billable rate already fully burdened.
-        Cost = rate × hours, applying gsa_discount_rate per position.
-        Uses gsa_rates_by_year + gsa_current_year for accurate per-year rates
-        when available; falls back to selected_wage (no escalation) otherwise.
+  - prime labor (BLS FBLR cascade with fee, or GSA rate × (1 - discount))
+  - prime overtime and surge
+  - subcontractor labor with S&MH, G&A passthrough and sub fee
+  - travel with G&A, ODCs with S&MH
+  - extension periods (e.g. a 6-month FAR 52.217-8 extension stored as year 6)
 
-  - BLS: `selected_wage` is an annual wage. Applies the FBLR cascade
-        (fringe → OH → G&A → fee) using the proposal's own rates, with
-        compound escalation across years.
+An earlier version re-implemented the prime-labor cascade here and looped over
+`spreadsheet_data.positions` only, so subs, travel, ODCs, OT and surge never
+reached the bottom-up total and the top-down gap verdict was skewed.
 
-Detection of GSA vs BLS uses the position's `wage_source` field
-('gsa' or 'bls'), falling back to checking for `gsa_rates_by_year`.
-
-Reuses Calculator from calculation_service.py for the FBLR cascade so the
-math matches what users see in the workspace.
+No hardcoded numeric defaults: when the proposal has no indirect rates of its
+own, the caller's organization defaults are used; otherwise lines that can't
+be priced are counted as skipped and explained in `notes`.
 """
 
+import copy
 import logging
 from dataclasses import dataclass, field
 from typing import Optional
 
-from client.calculation_service import Calculator
+from utils.proposal_context_builder import build_proposal_context
 
 logger = logging.getLogger(__name__)
-
-
-# Last-resort FTE used only when neither the position nor the proposal metadata
-# specifies one. Industry standard (40hr/wk × 48wks). Surfaces a note in the
-# output when this fallback fires so the user knows it happened.
-LAST_RESORT_FTE_HOURS = 1920
 
 
 # ---------------------------------------------------------------------------
@@ -47,13 +39,13 @@ LAST_RESORT_FTE_HOURS = 1920
 
 @dataclass
 class PositionContribution:
-    """Per-position bottom-up breakdown."""
+    """Per-line bottom-up breakdown (a prime position or a subcontractor position)."""
 
     labor_category: str
-    wage_source: str  # 'gsa' | 'bls'
+    wage_source: str  # 'gsa' | 'bls' | 'subcontractor'
     annual_wage_or_hourly_rate: float  # what was used as the input
-    year_1_fblr: float  # without fee (== hourly rate for GSA)
-    year_1_billable_rate: float  # with fee (== same as fblr for GSA — already fully burdened)
+    year_1_fblr: float  # without fee (== hourly rate for GSA; pre-markup rate for subs)
+    year_1_billable_rate: float  # with fee (GSA: same as fblr; subs: with S&MH + passthrough + sub fee)
     total_hours: int
     total_cost: float
     note: Optional[str] = None
@@ -73,7 +65,13 @@ class PositionContribution:
 
 @dataclass
 class BottomUpEstimate:
-    """End-to-end bottom-up PTW calculation result."""
+    """End-to-end bottom-up PTW calculation result.
+
+    `total` and `year_1` are the full proposal price (Overview grand total and
+    Base Period year total). `by_position` covers labor lines only, at regular
+    hours; overtime, travel, ODCs and surge sit in `components`, so the
+    by_position costs don't sum to `total` by design.
+    """
 
     total: float
     year_1: float
@@ -81,12 +79,20 @@ class BottomUpEstimate:
     positions_priced: int
     positions_skipped: int
     rates_used: dict
+    year_1_months: float = 12.0
+    components: dict = field(default_factory=dict)
     by_position: list[PositionContribution] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
 
     @property
     def is_usable(self) -> bool:
         return self.positions_priced > 0 and self.total > 0
+
+    @property
+    def annual_run_rate(self) -> float:
+        """Base Period cost scaled to 12 months — comparable to an award's $/year."""
+        months = self.year_1_months or 12.0
+        return self.year_1 * 12.0 / months
 
     def to_dict(self) -> dict:
         return {
@@ -96,236 +102,25 @@ class BottomUpEstimate:
             "positions_priced": self.positions_priced,
             "positions_skipped": self.positions_skipped,
             "rates_used": self.rates_used,
+            "components": self.components,
             "by_position": [p.to_dict() for p in self.by_position],
             "notes": self.notes,
         }
 
 
 # ---------------------------------------------------------------------------
-# Helpers — pure functions
+# Helpers
 # ---------------------------------------------------------------------------
 
 
-def _is_gsa_position(pos: dict) -> bool:
-    """True when this position prices via GSA hourly rate (vs BLS annual wage)."""
-    if pos.get("wage_source") == "gsa":
-        return True
-    if pos.get("gsa_rates_by_year"):
-        return True
-    return False
-
-
-def _get_gsa_rate_for_year(pos: dict, proposal_year: int) -> Optional[float]:
-    """
-    Resolve the GSA hourly rate for a given proposal year, with discount applied.
-
-    Mapping: proposal year 1 → contract year `gsa_current_year`, then incrementing.
-    Reads from `gsa_rates_by_year` (keys are stringified contract years). When
-    the proposal extends past the rate table, hold the last available rate.
-    Falls back to `selected_wage` if neither table nor offset is set.
-    """
-    discount = pos.get("gsa_discount_rate") or 0
-
-    rates_by_year = pos.get("gsa_rates_by_year") or {}
-    current_year = pos.get("gsa_current_year")
-
-    if rates_by_year and current_year:
-        contract_year = int(current_year) + (proposal_year - 1)
-        # Try str then int key (MongoDB may store either).
-        rate = rates_by_year.get(str(contract_year))
-        if rate is None:
-            rate = rates_by_year.get(contract_year)
-        if rate is None:
-            # Beyond rate table — hold last available year.
-            max_year = max((int(k) for k in rates_by_year.keys()), default=None)
-            if max_year is not None:
-                rate = rates_by_year.get(str(max_year)) or rates_by_year.get(max_year)
-        if rate is not None:
-            return float(rate) * (1 - discount)
-
-    # Final fallback: selected_wage as year-1 rate, no escalation.
-    base = pos.get("selected_wage")
-    if base and base > 0:
-        return float(base) * (1 - discount)
-    return None
-
-
-def _resolve_bls_wage(pos: dict) -> Optional[float]:
-    """Pick the best annual wage for a BLS position."""
-    for key in ("selected_wage", "wage_50th", "wage_75th", "wage_25th"):
-        w = pos.get(key)
-        if isinstance(w, (int, float)) and w > 0:
-            return float(w)
-    return None
-
-
-def _resolve_rates(proposal: dict, default_rates: Optional[dict]) -> Optional[dict]:
-    """
-    Pull indirect rates for BLS pricing.
-
-    Priority: proposal.spreadsheet_data.rates → proposal.rates → default_rates (org).
-    Returns None if nothing usable found — caller must skip BLS positions in that case.
-    """
-    rates = (proposal.get("spreadsheet_data") or {}).get("rates") or proposal.get("rates")
-    if rates:
-        return rates
-    return default_rates
-
-
-def _resolve_escalation(proposal: dict) -> dict[str, float]:
-    """Pull escalation rates from proposal. Empty dict = no escalation."""
-    return (
-        (proposal.get("spreadsheet_data") or {}).get("escalation_rates")
-        or proposal.get("escalation_rates")
-        or {}
-    )
-
-
-def _resolve_fte(pos: dict, proposal: dict) -> tuple[int, bool]:
-    """
-    Resolve FTE hours for a position. Returns (hours, was_last_resort).
-
-    Priority: position.standard_fte_hours → proposal.metadata.fte_hours_threshold
-            → LAST_RESORT_FTE_HOURS (1920) with notice.
-    """
-    fte = pos.get("standard_fte_hours")
-    if fte:
-        return int(fte), False
-    md = proposal.get("metadata") or {}
-    fte = md.get("fte_hours_threshold")
-    if fte:
-        return int(fte), False
-    return LAST_RESORT_FTE_HOURS, True
-
-
-def _resolve_hours_for_year(pos: dict, year: int) -> int:
-    """Hours for the given proposal year, with flat-hours fallback."""
-    hours_map = pos.get("hours_per_year") or {}
-    h = hours_map.get(str(year))
-    if h is None:
-        h = pos.get("hours")  # flat-hours legacy fallback
-    try:
-        return int(h or 0)
-    except (TypeError, ValueError):
-        return 0
-
-
-# ---------------------------------------------------------------------------
-# Per-position pricing
-# ---------------------------------------------------------------------------
-
-
-def _price_gsa_position(
-    pos: dict, total_years: int
-) -> Optional[dict]:
-    """
-    GSA position: rate (already fully burdened) × hours per year.
-    Year-by-year rates pulled from gsa_rates_by_year when present.
-    """
-    year_1_rate = _get_gsa_rate_for_year(pos, 1)
-    if year_1_rate is None or year_1_rate <= 0:
-        return None
-
-    total_cost = 0.0
-    year_1_cost = 0.0
-    total_hours = 0
-
-    for year in range(1, total_years + 1):
-        hours = _resolve_hours_for_year(pos, year)
-        if hours <= 0:
+def _sum_hours(hours_per_year: Optional[dict]) -> int:
+    total = 0.0
+    for v in (hours_per_year or {}).values():
+        try:
+            total += float(v or 0)
+        except (TypeError, ValueError):
             continue
-        rate = _get_gsa_rate_for_year(pos, year) or year_1_rate
-        cost = rate * hours
-        total_cost += cost
-        total_hours += hours
-        if year == 1:
-            year_1_cost = cost
-
-    return {
-        "wage_source": "gsa",
-        "input_value": pos.get("selected_wage") or year_1_rate,
-        "year_1_fblr": year_1_rate,
-        "year_1_billable": year_1_rate,  # already fully burdened
-        "total_hours": total_hours,
-        "total_cost": total_cost,
-        "year_1_cost": year_1_cost,
-        "note": "GSA rate (already fully burdened)",
-    }
-
-
-def _price_bls_position(
-    pos: dict,
-    total_years: int,
-    std_fte: int,
-    rates: dict,
-    escalation_rates: dict,
-) -> Optional[dict]:
-    """BLS position: annual wage → FBLR cascade → fee → escalation per year."""
-    wage = _resolve_bls_wage(pos)
-    if wage is None:
-        return None
-    if not rates:
-        return None  # can't cascade without rates
-
-    location_type = pos.get("location_type") or "On-Site"
-    fee_rate = rates.get("fee") or 0
-    fringe = rates.get("fringe") or 0
-    oh_onsite = rates.get("oh_onsite") or rates.get("oh") or 0
-    oh_offsite = rates.get("oh_offsite") or rates.get("oh") or 0
-    ga = rates.get("ga") or 0
-
-    try:
-        fblr_breakdown = Calculator.calculate_fblr(
-            annual_wage=wage,
-            standard_fte_hours=std_fte,
-            fringe_rate=fringe,
-            oh_onsite_rate=oh_onsite,
-            oh_offsite_rate=oh_offsite,
-            ga_rate=ga,
-            location_type=location_type,
-        )
-    except Exception as e:
-        logger.warning(
-            f"FBLR failed for {pos.get('labor_category')!r} (wage={wage}): {e}"
-        )
-        return None
-
-    year_1_fblr = fblr_breakdown["fblr"]
-    year_1_billable = year_1_fblr * (1 + fee_rate)
-
-    total_cost = 0.0
-    year_1_cost = 0.0
-    total_hours = 0
-
-    for year in range(1, total_years + 1):
-        hours = _resolve_hours_for_year(pos, year)
-        if hours <= 0:
-            continue
-        if year == 1:
-            year_rate = year_1_billable
-        else:
-            escalated_fblr = Calculator.calculate_year_rate(
-                base_rate=year_1_fblr,
-                escalation_rates=escalation_rates,
-                from_year=1,
-                to_year=year,
-            )
-            year_rate = escalated_fblr * (1 + fee_rate)
-        cost = year_rate * hours
-        total_cost += cost
-        total_hours += hours
-        if year == 1:
-            year_1_cost = cost
-
-    return {
-        "wage_source": "bls",
-        "input_value": wage,
-        "year_1_fblr": year_1_fblr,
-        "year_1_billable": year_1_billable,
-        "total_hours": total_hours,
-        "total_cost": total_cost,
-        "year_1_cost": year_1_cost,
-    }
+    return int(total)
 
 
 # ---------------------------------------------------------------------------
@@ -335,116 +130,132 @@ def _price_bls_position(
 
 def compute_bottom_up_ptw(
     proposal: dict,
-    total_years: Optional[int] = None,
     default_rates: Optional[dict] = None,
 ) -> BottomUpEstimate:
     """
-    Bottom-up PTW from a proposal's positions.
+    Bottom-up PTW: the proposal's full price, every priced period included.
 
     Args:
         proposal: The MongoDB proposal document (post-processing, with spreadsheet_data).
-        total_years: Override for proposal.metadata.total_years. Optional.
+                  Not mutated.
         default_rates: Organization default rates dict, used only when the proposal
                        has no indirect rates of its own. Passed by the caller (PTW
                        router fetches from org settings). No hardcoded numeric
                        fallback beyond this.
     """
-    positions = (proposal.get("spreadsheet_data") or {}).get("positions") or []
-    metadata = proposal.get("metadata") or {}
-    if total_years is None:
-        # Every priced period, extensions included (not just base + option years).
-        from utils.proposal_context_builder import priced_periods
-        total_years = len(priced_periods(proposal)) or metadata.get("total_years") or 5
-    total_years = int(total_years)
-
-    rates = _resolve_rates(proposal, default_rates)
-    escalation_rates = _resolve_escalation(proposal)
+    # The context builder fills load-time defaults into positions in place.
+    proposal = copy.deepcopy(proposal)
+    sd = proposal.get("spreadsheet_data") or {}
+    proposal["spreadsheet_data"] = sd
     notes: list[str] = []
 
-    if not positions:
-        return BottomUpEstimate(
-            total=0.0,
-            year_1=0.0,
-            total_years=total_years,
-            positions_priced=0,
-            positions_skipped=0,
-            rates_used=rates or {},
-            notes=["No positions on proposal — bottom-up unavailable."],
-        )
+    if not (sd.get("rates") or proposal.get("rates")) and default_rates:
+        sd["rates"] = dict(default_rates)
+        notes.append("Proposal has no indirect rates — used organization default rates.")
+
+    ctx = build_proposal_context(proposal)
+    totals = ctx["totals"]
+    by_year = ctx["by_year"]
+    periods = ctx["proposal"]["periods"]
+    rates = ctx["rates"] or {}
 
     by_position: list[PositionContribution] = []
-    total = 0.0
-    year_1_total = 0.0
     priced = 0
     skipped = 0
-    fte_fallback_used = False
+    missing_bls: list[str] = []
 
-    for pos in positions:
+    # Prime positions. Ones assigned to a subcontractor are priced on the sub side.
+    for pos in ctx["positions"]:
+        if pos["assigned_to_sub"]:
+            continue
         labor_cat = pos.get("labor_category") or "Unknown"
-        std_fte, fte_was_fallback = _resolve_fte(pos, proposal)
-        if fte_was_fallback:
-            fte_fallback_used = True
-
-        if _is_gsa_position(pos):
-            result = _price_gsa_position(pos, total_years)
-        else:
-            result = _price_bls_position(pos, total_years, std_fte, rates or {}, escalation_rates)
-
-        if result is None:
-            skipped += 1
+        pos_by_year = pos.get("by_year") or {}
+        y1 = pos_by_year.get("1") or next(iter(pos_by_year.values()), {})
+        cost = pos.get("total_amount") or 0.0
+        hours = int(pos.get("total_hours") or 0)
+        is_gsa = pos.get("wage_source") == "gsa"
+        fblr = y1.get("fblr") or 0.0
+        if fblr <= 0:
+            if hours > 0:
+                skipped += 1
+                if not is_gsa:
+                    missing_bls.append(labor_cat)
             by_position.append(PositionContribution(
                 labor_category=labor_cat,
-                wage_source="gsa" if _is_gsa_position(pos) else "bls",
+                wage_source="gsa" if is_gsa else "bls",
                 annual_wage_or_hourly_rate=0.0,
                 year_1_fblr=0.0,
                 year_1_billable_rate=0.0,
-                total_hours=0,
+                total_hours=hours,
                 total_cost=0.0,
-                note="skipped: missing wage / rate data",
+                note="skipped: missing wage / rate data" if hours > 0 else "no hours",
             ))
             continue
-
         priced += 1
-        total += result["total_cost"]
-        year_1_total += result["year_1_cost"]
         by_position.append(PositionContribution(
             labor_category=labor_cat,
-            wage_source=result["wage_source"],
-            annual_wage_or_hourly_rate=result["input_value"],
-            year_1_fblr=result["year_1_fblr"],
-            year_1_billable_rate=result["year_1_billable"],
-            total_hours=result["total_hours"],
-            total_cost=result["total_cost"],
-            note=result.get("note"),
+            wage_source="gsa" if is_gsa else "bls",
+            annual_wage_or_hourly_rate=y1.get("wage") or 0.0,
+            year_1_fblr=fblr if is_gsa else fblr - (y1.get("fee") or 0.0),
+            year_1_billable_rate=fblr,
+            total_hours=hours,
+            total_cost=cost,
+            note="GSA rate (already fully burdened)" if is_gsa else None,
         ))
 
-    if fte_fallback_used:
+    # Subcontractor positions, costs already marked up (S&MH + G&A passthrough + sub fee).
+    for sub in ctx["subcontractors"]:
+        sub_name = sub.get("name") or sub.get("id") or "Subcontractor"
+        for sp in sub.get("positions") or []:
+            labor_cat = sp.get("labor_category") or "Unknown"
+            hours = _sum_hours(sp.get("hours_per_year"))
+            cost = sp.get("total_cost") or 0.0
+            base_y1 = (sp.get("rates_by_year") or {}).get("1") or 0.0
+            if cost <= 0 and hours > 0:
+                skipped += 1
+                note = f"skipped: subcontractor {sub_name} has no rate"
+            else:
+                if cost > 0:
+                    priced += 1
+                note = f"subcontractor {sub_name} (incl. S&MH, G&A passthrough, sub fee)"
+            by_position.append(PositionContribution(
+                labor_category=labor_cat,
+                wage_source="subcontractor",
+                annual_wage_or_hourly_rate=sp.get("base_rate") or 0.0,
+                year_1_fblr=base_y1,
+                year_1_billable_rate=sp.get("billable_rate_year_1") or 0.0,
+                total_hours=hours,
+                total_cost=cost,
+                note=note,
+            ))
+
+    if missing_bls:
         notes.append(
-            f"Some positions used industry-standard {LAST_RESORT_FTE_HOURS} FTE hours "
-            "(no value on position or proposal metadata)."
+            f"{len(missing_bls)} BLS position(s) with hours priced at $0 — missing "
+            f"wage or FTE hours ({', '.join(sorted(set(missing_bls)))})."
         )
     if skipped:
-        notes.append(f"{skipped} position(s) skipped due to missing data.")
+        notes.append(f"{skipped} labor line(s) skipped due to missing data.")
+    if not rates:
+        notes.append(
+            "No indirect rates on the proposal or organization — BLS positions "
+            "are priced with the app's built-in OH default only, as the app shows them."
+        )
     if priced == 0:
         notes.append(
-            "No positions could be priced. Check that wages are populated and, "
+            "No labor could be priced. Check that wages are populated and, "
             "for BLS positions, that indirect rates are configured."
         )
 
-    # Surface what the BLS positions are using so the caller / UI knows.
-    has_bls = any(p.wage_source == "bls" for p in by_position)
-    if has_bls and not rates:
-        notes.append(
-            "BLS positions present but no indirect rates available — those were skipped."
-        )
-
     return BottomUpEstimate(
-        total=total,
-        year_1=year_1_total,
-        total_years=total_years,
+        total=totals["grand_total"],
+        year_1=(by_year.get("1") or {}).get("year_total", 0.0),
+        total_years=ctx["proposal"]["total_years"],
         positions_priced=priced,
         positions_skipped=skipped,
-        rates_used=rates or {},
+        rates_used=rates,
+        year_1_months=float(periods[0].get("months") or 12) if periods else 12.0,
+        components=totals,
         by_position=by_position,
         notes=notes,
     )
