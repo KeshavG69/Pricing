@@ -122,11 +122,14 @@ apiClient.interceptors.response.use(
 
     // Handle 401 Unauthorized
     if (error.response?.status === 401 && !originalRequest._retry) {
-      // Prevent refresh on public routes
+      // Prevent refresh on public routes. /auth/me is NOT one: it is the first call on
+      // every page load, so skipping refresh there logged users out whenever their
+      // 30-minute access token had expired, despite a valid 7-day refresh token.
+      // (initializeAuth only calls it when an access token exists, so signed-out
+      // visitors never reach the refresh.)
       const isPublicRoute = originalRequest.url?.includes('/auth/login') ||
                            originalRequest.url?.includes('/auth/signup') ||
-                           originalRequest.url?.includes('/auth/google/login') ||
-                           originalRequest.url?.includes('/auth/me');  // Allow /auth/me to fail silently
+                           originalRequest.url?.includes('/auth/google/login');
 
       if (isPublicRoute) {
         return Promise.reject(error);

@@ -439,6 +439,7 @@ async def suggest_ptw(
     expected_annual_cost = bottom_up.annual_run_rate if bottom_up.is_usable else None
 
     client = get_usaspending_client()
+    top_down_note: Optional[str] = None
     try:
         suggestion = await client.suggest_ptw(
             naics_code=naics_code,
@@ -452,20 +453,26 @@ async def suggest_ptw(
         logger.warning(
             f"PTW suggest failed for proposal {body.proposal_id}: {e.message}"
         )
-        # 404 from upstream means no comparables found; surface as 422 so the
-        # frontend can show "no comparables" instead of a generic 502.
+        # 404 = no past awards of our size. With a usable bottom-up that is an
+        # answer, not an error: anchor on bottom-up and say why there is no
+        # market check. Without one there is nothing to show.
         if e.status_code == 404:
+            if bottom_up.is_usable:
+                suggestion = None
+                top_down_note = e.message
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=(
+                        f"No comparable past awards found for NAICS {naics_code} / {agency}. "
+                        "Try broadening the agency or removing keywords."
+                    ),
+                )
+        else:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                detail=(
-                    f"No comparable past awards found for NAICS {naics_code} / {agency}. "
-                    "Try broadening the agency or removing keywords."
-                ),
+                status_code=status.HTTP_502_BAD_GATEWAY,
+                detail=f"USASpending lookup failed: {e.message}",
             )
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail=f"USASpending lookup failed: {e.message}",
-        )
     except Exception as e:
         logger.exception(f"Unexpected PTW error for proposal {body.proposal_id}")
         raise HTTPException(
@@ -473,8 +480,8 @@ async def suggest_ptw(
             detail=f"PTW suggestion failed: {e}",
         )
 
-    top_down_dict = suggestion.to_dict()
-    reconciled = reconcile(top_down_dict, bottom_up)
+    top_down_dict = suggestion.to_dict() if suggestion else {}
+    reconciled = reconcile(top_down_dict, bottom_up, top_down_note=top_down_note)
 
     # Response intentionally trimmed to just the reconciliation block + identifying
     # fields. Full top-down comparables list and per-position bottom-up breakdown
@@ -487,4 +494,21 @@ async def suggest_ptw(
         "agency": agency,
         "total_years": int(total_years),
         "reconciliation": reconciled.to_dict(),
+        # What the market check used, so a surprising number can be explained:
+        # how many past awards, of what size, from which search, and why.
+        "top_down": (
+            {
+                "suggested_ptw": top_down_dict.get("suggested_ptw"),
+                "low": top_down_dict.get("low"),
+                "high": top_down_dict.get("high"),
+                "num_comparables": top_down_dict.get("num_comparables"),
+                "methodology": top_down_dict.get("methodology"),
+                "notes": top_down_dict.get("notes") or [],
+                "comparables": [
+                    {k: c.get(k) for k in ("recipient_name", "description", "annual_cost", "url")}
+                    for c in (top_down_dict.get("top_comparables") or [])[:5]
+                ],
+            }
+            if suggestion else {"available": False, "reason": top_down_note}
+        ),
     }

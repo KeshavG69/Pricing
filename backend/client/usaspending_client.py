@@ -41,6 +41,8 @@ logger = logging.getLogger(__name__)
 USASPENDING_BASE_URL = "https://api.usaspending.gov/api/v2"
 DEFAULT_TIMEOUT = 30.0
 MAX_RESULTS_PER_PAGE = 100
+# Fewest past awards a top-down median is computed from.
+MIN_COMPARABLES = 5
 
 # Procurement award type codes considered "contracts":
 #   A = BPA Call
@@ -640,60 +642,78 @@ class USASpendingClient:
         """
         notes: list[str] = []
 
-        awards = await self.search_awards(
-            naics_code=naics_code,
-            agency_name=agency_name,
-            keywords=keywords,
-        )
-        if len(awards) < 5 and keywords:
-            notes.append(
-                f"Only {len(awards)} comparables with keywords {keywords}; "
-                f"broadened search to all {agency_name} NAICS {naics_code} awards."
+        # Widen the search one step at a time — keywords + agency, agency alone,
+        # then all of DoD — until enough awards of OUR size turn up. The old code
+        # stopped at the first step with >= 5 hits and, when none of them was our
+        # size, fell back to the unfiltered pool anyway: a 3-FTE Air Force Reserve
+        # Command case-management team was priced against five one-person
+        # "Airman & Family Readiness Center" front-desk contracts (both "AFRC") at
+        # ~$39K/yr, giving $228K against a $1.32M bottom-up. Undersized or
+        # oversized awards are never the baseline now; if none fit, there is no
+        # top-down and the caller anchors on bottom-up alone.
+        stages: list[tuple[str, str, Optional[list[str]]]] = []
+        if keywords:
+            stages.append((f"{agency_name} + keywords {keywords}", agency_name, keywords))
+        stages.append((f"all {agency_name} NAICS {naics_code} awards", agency_name, None))
+        if agency_name != "Department of Defense":
+            stages.append((f"DoD-wide NAICS {naics_code} awards", "Department of Defense", None))
+
+        size_range = None
+        amount_range = None
+        if expected_annual_cost and expected_annual_cost > 0:
+            lo_mult, hi_mult = size_filter_range
+            size_range = (expected_annual_cost * lo_mult, expected_annual_cost * hi_mult)
+            # Server-side prefilter on the award total (half a year at the low end,
+            # up to ten years at the high end) so the 100-row page isn't spent on
+            # awards that can never be our size.
+            # (whole dollars: the API rejects fractional bounds with a 422).
+            amount_range = (int(size_range[0] * 0.5), int(size_range[1] * 10) + 1)
+
+        def _sized(pool: list[Award]) -> list[Award]:
+            if not size_range:
+                return pool
+            return [a for a in pool
+                    if a.annual_cost is not None and size_range[0] <= a.annual_cost <= size_range[1]]
+
+        pool: dict[str, Award] = {}
+        awards: list[Award] = []
+        searched = 0
+        for label, stage_agency, stage_keywords in stages:
+            found = await self.search_awards(
+                naics_code=naics_code, agency_name=stage_agency,
+                keywords=stage_keywords, amount_range=amount_range,
             )
-            awards = await self.search_awards(
-                naics_code=naics_code, agency_name=agency_name
-            )
-        if len(awards) < 5 and agency_name != "Department of Defense":
-            notes.append(
-                f"Only {len(awards)} {agency_name} comparables; "
-                f"broadened to all DoD-wide NAICS {naics_code} awards."
-            )
-            awards = await self.search_awards(
-                naics_code=naics_code, agency_name="Department of Defense"
-            )
+            searched += len(found)
+            for a in found:
+                pool.setdefault(a.award_id or a.internal_id or id(a), a)
+            sized = _sized(list(pool.values()))
+            if len(sized) >= MIN_COMPARABLES:
+                awards = sized
+                if size_range:
+                    notes.append(
+                        f"Used {len(sized)} past awards of similar size "
+                        f"(${size_range[0]:,.0f}–${size_range[1]:,.0f} per year), "
+                        f"searching {label}."
+                    )
+                else:
+                    notes.append(f"Used {len(sized)} past awards, searching {label}.")
+                break
+        else:
+            if size_range:
+                raise USASpendingError(
+                    f"No similar-size past awards: {len(_sized(list(pool.values())))} of "
+                    f"{len(pool)} NAICS {naics_code} awards are within "
+                    f"${size_range[0]:,.0f}–${size_range[1]:,.0f} per year "
+                    f"(need {MIN_COMPARABLES}).",
+                    status_code=404,
+                )
+            awards = list(pool.values())
 
         if not awards:
             raise USASpendingError(
                 f"No comparable awards found for NAICS {naics_code} / {agency_name}",
                 status_code=404,
             )
-
-        # Optional scope-size filter: keep only awards whose annualized cost is
-        # within size_filter_range × expected_annual_cost. Drops the giant
-        # multi-FTE task orders and tiny single-person mods that share a NAICS
-        # but operate at completely different scale. Auto-disabled if filtering
-        # would leave fewer than 5 comparables (can't compute a meaningful
-        # distribution from too few points).
-        if expected_annual_cost and expected_annual_cost > 0:
-            lo_mult, hi_mult = size_filter_range
-            lower = expected_annual_cost * lo_mult
-            upper = expected_annual_cost * hi_mult
-            filtered = [
-                a for a in awards
-                if a.annual_cost is not None and lower <= a.annual_cost <= upper
-            ]
-            if len(filtered) >= 5:
-                notes.append(
-                    f"Narrowed to {len(filtered)} of {len(awards)} comparables "
-                    f"within {lo_mult:.1f}x–{hi_mult:.1f}x your scope "
-                    f"(${lower:,.0f}–${upper:,.0f} per year)."
-                )
-                awards = filtered
-            else:
-                notes.append(
-                    f"Size filter would leave only {len(filtered)} comparables "
-                    f"(need ≥5) — kept unfiltered pool of {len(awards)}."
-                )
 
         dist = self.compute_distribution(awards)
         if dist.count == 0:
@@ -729,7 +749,7 @@ class USASpendingClient:
             )
 
         methodology = (
-            f"Median $/year of {dist.count} comparable {agency_name} contracts "
+            f"Median $/year of {dist.count} comparable-size contracts "
             f"under NAICS {naics_code} (last 3 years), compounded at "
             f"{escalation_rate * 100:.1f}% annual escalation over {sum(weights):g} years."
         )
