@@ -103,6 +103,7 @@ const EXA_TOOL_NAMES = new Set([
 const ARTIFACT_TOOL_NAMES = new Set([
   'chart_tool',
   's3_upload_tool',
+  'build_document',
   ...EXA_TOOL_NAMES,
 ]);
 
@@ -378,6 +379,20 @@ function resolveToolCallTitle(call: ToolCallEntry): string {
     return verbing ? 'Uploading file' : 'Uploaded file';
   }
 
+  // 3b. build_document — one call builds and delivers the file
+  if (call.name === 'build_document') {
+    const payload = parseArtifactPayload(call.result);
+    const action = typeof args.action === 'string' ? args.action : 'create';
+    const name =
+      payload?.filename ||
+      (args.spec && typeof args.spec === 'object' && typeof (args.spec as Record<string, unknown>).filename === 'string'
+        ? ((args.spec as Record<string, unknown>).filename as string)
+        : '');
+    const editing = action === 'edit' || action === 'undo' || action === 'revert';
+    if (editing) return verbing ? `Updating ${name || 'document'}` : `Updated ${name || 'document'}`;
+    return verbing ? `Building ${name || 'document'}` : `Built ${name || 'document'}`;
+  }
+
   // 4. python_repl_tool / chart_tool — neutral fallback
   if (call.name === 'python_repl_tool') return verbing ? 'Running code' : 'Ran code';
   if (call.name === 'chart_tool') return verbing ? 'Building chart' : 'Built chart';
@@ -464,7 +479,7 @@ const ToolArtifactBlock = memo(function ToolArtifactBlock({
   }, [call.name, call.status, call.result]);
 
   const artifactPayload = useMemo(() => {
-    if (call.name !== 's3_upload_tool' || call.status !== 'completed') return null;
+    if ((call.name !== 's3_upload_tool' && call.name !== 'build_document') || call.status !== 'completed') return null;
     return parseArtifactPayload(call.result);
   }, [call.name, call.status, call.result]);
 

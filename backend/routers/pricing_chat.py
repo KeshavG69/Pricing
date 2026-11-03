@@ -14,19 +14,21 @@ a DB write.
 
 The /conversations endpoints under this router expose that chat history:
 listing for the sidebar, full replay for resuming a past chat, rename, and
-soft-delete (trash). Identity (user_id / organization_id) is passed as
-query params / body fields to match the rest of this router.
+soft-delete (trash). Every route requires a bearer token; user_id /
+organization_id / role are taken from the authenticated user. Any identity
+fields the client still sends in the body or query string are ignored.
 """
 
 import json
 from typing import List, Literal, Optional, Tuple
 
-from fastapi import APIRouter, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 import logging
 
 from agent.pricing_agent import get_pricing_agent
+from auth.dependencies import get_current_user
 from agno.run.requirement import RunRequirement
 from utils.agent_streaming import stream_agent_continuation, stream_agent_response
 from utils.chat_conversations import get_chat_conversation_crud
@@ -42,11 +44,27 @@ from utils.chat_title_generator import (
 )
 from utils.proposal_context_builder import build_proposal_context
 from utils.proposals import get_proposal_crud
+from utils.e2b_sandbox import pause_session_sandbox
 from utils.python_repl_tool import set_session_id
+from utils.rate_limit import rate_limit_user
 from utils.streaming import create_sse_event_stream
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/pricing-chat", tags=["pricing-chat"])
+
+
+def _bind_identity(request, current_user: dict) -> None:
+    """Overwrite any client-sent identity with the authenticated user's.
+
+    Every handler below authorizes from these fields, so they must come from
+    the verified bearer token, never from the request body or query string.
+    """
+    request.user_id = str(current_user["_id"])
+    if hasattr(request, "organization_id"):
+        org_id = current_user.get("organization_id")
+        request.organization_id = str(org_id) if org_id else None
+    if hasattr(request, "role"):
+        request.role = current_user.get("role")
 
 
 class PricingChatQuery(BaseModel):
@@ -54,9 +72,9 @@ class PricingChatQuery(BaseModel):
 
     query: str
     session_id: str
-    organization_id: str
+    organization_id: Optional[str] = None  # ignored: identity comes from the bearer token
     proposal_id: str          # now required — the agent reads context from DB
-    user_id: str              # now required — used for org-scoped access check
+    user_id: Optional[str] = None  # ignored: identity comes from the bearer token
     role: Optional[str] = None
     # Retrieval tools — "bls" enables SOC retriever + wage lookup;
     # "gsa" enables GSA labor-category retriever + rate lookup.
@@ -70,12 +88,12 @@ class PricingChatResumeRequest(BaseModel):
 
     run_id: str
     session_id: str
-    organization_id: str
+    organization_id: Optional[str] = None  # ignored: identity comes from the bearer token
     confirmed: bool  # True = approve the pending tool, False = reject
     confirmation_note: Optional[str] = None  # Optional rejection reason
     # Identity needed to rebuild mutation tools + refetch proposal context
     proposal_id: str
-    user_id: str
+    user_id: Optional[str] = None  # ignored: identity comes from the bearer token
     role: Optional[str] = None
     proposal_type: Optional[str] = None
     gsa_file_id: Optional[str] = None
@@ -115,8 +133,8 @@ def _load_proposal_context(
     return json.dumps(ctx, default=str), doc.get("name")
 
 
-@router.post("/ask")
-async def ask_pricing(request: PricingChatQuery):
+@router.post("/ask", dependencies=[Depends(rate_limit_user("pricing_chat", "20/minute;500/day"))])
+async def ask_pricing(request: PricingChatQuery, current_user: dict = Depends(get_current_user)):
     """
     Ask a question about a proposal.
 
@@ -135,6 +153,7 @@ async def ask_pricing(request: PricingChatQuery):
 
     Response: SSE stream (same event shape as /api/help/ask).
     """
+    _bind_identity(request, current_user)
     try:
         if not request.query or not request.query.strip():
             raise HTTPException(
@@ -178,9 +197,10 @@ async def ask_pricing(request: PricingChatQuery):
             gsa_current_year=request.gsa_current_year,
         )
 
-        # Bind the session_id into the contextvar that python_repl_tool reads
-        # at runtime. Each chat session gets its own isolated temp directory.
-        set_session_id(request.session_id)
+        # Bind the session and its owner into the contextvars python_repl_tool
+        # reads at runtime. Each chat session gets its own E2B sandbox, bound
+        # to this org and user.
+        set_session_id(request.session_id, request.organization_id, request.user_id)
 
         headers = {
             "Cache-Control": "no-cache",
@@ -223,8 +243,12 @@ async def ask_pricing(request: PricingChatQuery):
                 ),
                 on_complete=_on_turn_complete,
             )
-            async for chunk in create_sse_event_stream(events):
-                yield chunk
+            try:
+                async for chunk in create_sse_event_stream(events):
+                    yield chunk
+            finally:
+                # Turn over (or client gone): pause the sandbox after a grace period.
+                pause_session_sandbox(request.session_id)
 
         return StreamingResponse(
             sse_stream(),
@@ -239,8 +263,8 @@ async def ask_pricing(request: PricingChatQuery):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/resume")
-async def resume_pricing(request: PricingChatResumeRequest):
+@router.post("/resume", dependencies=[Depends(rate_limit_user("pricing_chat", "20/minute;500/day"))])
+async def resume_pricing(request: PricingChatResumeRequest, current_user: dict = Depends(get_current_user)):
     """
     Resume a paused pricing-agent run after the user approves or rejects
     the pending requires_confirmation tool call.
@@ -249,6 +273,7 @@ async def resume_pricing(request: PricingChatResumeRequest):
     continuation sees the latest state (which now includes whatever the
     mutation just wrote).
     """
+    _bind_identity(request, current_user)
     try:
         if not request.run_id or not request.run_id.strip():
             raise HTTPException(status_code=400, detail="run_id is required")
@@ -288,7 +313,7 @@ async def resume_pricing(request: PricingChatResumeRequest):
             gsa_file_id=request.gsa_file_id,
             gsa_current_year=request.gsa_current_year,
         )
-        set_session_id(request.session_id)
+        set_session_id(request.session_id, request.organization_id, request.user_id)
 
         # Fetch the paused RunOutput from MongoDB (stored by agno on pause).
         run_response = await agent.aget_run_output(
@@ -344,8 +369,11 @@ async def resume_pricing(request: PricingChatResumeRequest):
                 ),
                 on_complete=_on_continuation_complete,
             )
-            async for chunk in create_sse_event_stream(events):
-                yield chunk
+            try:
+                async for chunk in create_sse_event_stream(events):
+                    yield chunk
+            finally:
+                pause_session_sandbox(request.session_id)
 
         return StreamingResponse(
             sse_stream(),
@@ -370,14 +398,14 @@ class PricingChatCancelRequest(BaseModel):
 
     run_id: str
     session_id: str
-    organization_id: str
+    organization_id: Optional[str] = None  # ignored: identity comes from the bearer token
     proposal_id: str
-    user_id: str
+    user_id: Optional[str] = None  # ignored: identity comes from the bearer token
     role: Optional[str] = None
 
 
 @router.post("/cancel")
-async def cancel_pricing_run(request: PricingChatCancelRequest):
+async def cancel_pricing_run(request: PricingChatCancelRequest, current_user: dict = Depends(get_current_user)):
     """
     Cancel an in-flight agent run (user clicked Stop mid-response).
 
@@ -400,6 +428,7 @@ async def cancel_pricing_run(request: PricingChatCancelRequest):
         cancelled=False either means the run already finished or the run_id
         isn't recognized — both are NOT errors, just no-ops.
     """
+    _bind_identity(request, current_user)
     try:
         if not request.run_id or not request.run_id.strip():
             raise HTTPException(status_code=400, detail="run_id is required")
@@ -445,20 +474,20 @@ async def cancel_pricing_run(request: PricingChatCancelRequest):
 class ConversationRenameRequest(BaseModel):
     """Body for PATCH /conversations/{id} (rename)."""
 
-    user_id: str
+    user_id: Optional[str] = None  # ignored: identity comes from the bearer token
     chat_name: str = Field(..., min_length=1, max_length=200)
 
 
 class ConversationTrashRequest(BaseModel):
     """Body for PATCH /conversations/{id}/trash (soft delete)."""
 
-    user_id: str
+    user_id: Optional[str] = None  # ignored: identity comes from the bearer token
 
 
 class ConversationGenerateTitleRequest(BaseModel):
     """Body for POST /conversations/{id}/generate-title (LLM-summarised title)."""
 
-    user_id: str
+    user_id: Optional[str] = None  # ignored: identity comes from the bearer token
     # Allow overwriting a title the user manually renamed. Default False so
     # the auto-trigger from "first message persisted" can fire safely
     # without clobbering anything the user typed.
@@ -486,8 +515,8 @@ def _hydrate_conversation_for_list(conv: dict) -> dict:
 
 @router.get("/conversations")
 async def list_conversations(
-    user_id: str = Query(..., description="Authenticated user ID (owner of the chats)"),
-    organization_id: str = Query(..., description="Organization scope"),
+    user_id: Optional[str] = Query(None, description="Ignored; identity comes from the bearer token"),
+    organization_id: Optional[str] = Query(None, description="Ignored; identity comes from the bearer token"),
     proposal_id: Optional[str] = Query(
         None, description="Filter to chats about this proposal"
     ),
@@ -496,6 +525,7 @@ async def list_conversations(
     ),
     limit: int = Query(50, ge=1, le=200),
     offset: int = Query(0, ge=0),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     List the user's chat conversations for the sidebar.
@@ -507,6 +537,9 @@ async def list_conversations(
     Returns:
         { "conversations": [...], "total": <hydrated count> }
     """
+    # Identity comes from the bearer token; query-string values are ignored.
+    user_id = str(current_user["_id"])
+    organization_id = str(current_user.get("organization_id") or "")
     try:
         if not user_id.strip() or not organization_id.strip():
             raise HTTPException(
@@ -538,7 +571,8 @@ async def list_conversations(
 @router.get("/conversations/{conversation_id}")
 async def get_conversation_with_messages(
     conversation_id: str,
-    user_id: str = Query(..., description="Authenticated user ID (owner)"),
+    user_id: Optional[str] = Query(None, description="Ignored; identity comes from the bearer token"),
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Load one conversation with its full message history — used by the panel
@@ -551,6 +585,8 @@ async def get_conversation_with_messages(
     Returns:
         { "conversation": {...}, "messages": [...] }
     """
+    # Identity comes from the bearer token; the query-string value is ignored.
+    user_id = str(current_user["_id"])
     try:
         if not user_id.strip():
             raise HTTPException(status_code=400, detail="user_id is required")
@@ -580,6 +616,7 @@ async def get_conversation_with_messages(
 async def rename_conversation(
     conversation_id: str,
     request: ConversationRenameRequest,
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Rename a conversation (sidebar title). Owner-only.
@@ -587,6 +624,7 @@ async def rename_conversation(
     Returns:
         { "conversation": <updated row> }
     """
+    _bind_identity(request, current_user)
     try:
         cc = get_chat_conversation_crud()
         updated = cc.rename(
@@ -610,6 +648,7 @@ async def rename_conversation(
 async def trash_conversation(
     conversation_id: str,
     request: ConversationTrashRequest,
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Soft-delete a conversation — flips status to "deleted". Row stays in
@@ -619,6 +658,7 @@ async def trash_conversation(
     Returns:
         { "success": true }
     """
+    _bind_identity(request, current_user)
     try:
         cc = get_chat_conversation_crud()
         ok = cc.soft_delete(
@@ -637,10 +677,11 @@ async def trash_conversation(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post("/conversations/{conversation_id}/generate-title")
+@router.post("/conversations/{conversation_id}/generate-title", dependencies=[Depends(rate_limit_user("chat_title", "30/minute;500/day"))])
 async def generate_conversation_title(
     conversation_id: str,
     request: ConversationGenerateTitleRequest,
+    current_user: dict = Depends(get_current_user),
 ):
     """
     Use the LLM to produce a short scannable title for the conversation,
@@ -659,6 +700,7 @@ async def generate_conversation_title(
     Returns:
         { "conversation": <conversation>, "generated_title": <str> }
     """
+    _bind_identity(request, current_user)
     try:
         cc = get_chat_conversation_crud()
         cm = get_chat_message_crud()

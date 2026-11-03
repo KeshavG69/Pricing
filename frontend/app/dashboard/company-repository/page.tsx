@@ -14,7 +14,7 @@ import { Building2, Upload, Trash2, Calendar, FileText, CheckCircle, AlertCircle
 import { useToast } from '@/lib/hooks/useToast';
 import { isAdmin } from '@/lib/utils/permissions';
 import { GSAContract, GSALaborCategory, OrganizationSettings } from '@/types';
-import apiClient from '@/lib/api/client';
+import apiClient, { authFetch } from '@/lib/api/client';
 import * as XLSX from 'xlsx';
 
 // Helper to check if file is a spreadsheet (Excel or CSV)
@@ -437,6 +437,12 @@ export default function CompanyRepositoryPage() {
   // Document preview modal state
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  // Release the blob: URL behind the contract preview when it is replaced or closed.
+  useEffect(() => {
+    return () => {
+      if (previewUrl?.startsWith('blob:')) URL.revokeObjectURL(previewUrl);
+    };
+  }, [previewUrl]);
   const [previewContractName, setPreviewContractName] = useState<string>('');
   const [previewFilename, setPreviewFilename] = useState<string>('');
 
@@ -935,7 +941,21 @@ export default function CompanyRepositoryPage() {
         const filename = response.data.filename || 'document.pdf';
         // Use proxy URL for better CORS handling and caching
         const proxyUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/proposals/document-proxy?url=${encodeURIComponent(response.data.url)}&filename=${encodeURIComponent(filename)}`;
-        setPreviewUrl(proxyUrl);
+        // The proxy requires a bearer token, which an <iframe> or a new tab cannot
+        // send, so fetch the bytes here and preview them from a local blob: URL.
+        const docResponse = await authFetch(proxyUrl);
+        if (!docResponse.ok) {
+          throw new Error('Failed to fetch document');
+        }
+        // Pin the blob type from the extension rather than the upstream header: a
+        // blob: URL runs with this app's origin, so it must never render as HTML.
+        const blobType = isPdfFile(filename)
+          ? 'application/pdf'
+          : isTextFile(filename)
+            ? 'text/plain'
+            : 'application/octet-stream';
+        const bytes = await docResponse.blob();
+        setPreviewUrl(URL.createObjectURL(new Blob([bytes], { type: blobType })));
         setPreviewContractName(contract.name);
         setPreviewFilename(filename);
         setShowPreviewModal(true);

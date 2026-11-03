@@ -19,6 +19,7 @@ from functools import lru_cache
 from client.soc_vector_search import get_soc_vector_search_client
 from client.oews_mongodb import get_oews_mongo_client
 from auth.dependencies import get_current_user
+from utils.rate_limit import rate_limit_user
 
 router = APIRouter(prefix="/soc", tags=["soc"])
 
@@ -174,7 +175,7 @@ def is_soc_code_pattern(query: str) -> bool:
     return re.match(pattern, query) is not None
 
 
-@router.post("/search-ai")
+@router.post("/search-ai", dependencies=[Depends(rate_limit_user("soc_search_ai", "30/minute;1000/day"))])
 async def search_soc_codes_ai(
     request: SOCSearchAIRequest,
     current_user: dict = Depends(get_current_user)

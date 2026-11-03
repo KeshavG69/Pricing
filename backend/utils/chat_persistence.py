@@ -38,6 +38,7 @@ _REASONING_TOOL_NAMES = {"think", "analyze"}
 _ARTIFACT_TOOL_NAMES = {
     "chart_tool",
     "s3_upload_tool",
+    "build_document",
     "exa",
     "search_exa",
     "exa_search",

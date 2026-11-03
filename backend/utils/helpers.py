@@ -1,5 +1,19 @@
 from bson import ObjectId
 from datetime import datetime
+from pathlib import PurePosixPath, PureWindowsPath
+
+
+def safe_filename(raw: str | None, default: str = "upload") -> str:
+    """
+    Reduce a client-supplied filename to a bare name that is safe to join to a
+    directory: drops any '/' or '\\' path components, so '../../x.pdf',
+    '/etc/x' and 'C:\\a\\x.pdf' all become 'x.pdf' / 'x'. Never returns an
+    empty name, '.', or '..'.
+    """
+    name = PureWindowsPath(PurePosixPath(raw or "").name).name.strip().replace("\x00", "")
+    if name in ("", ".", ".."):
+        return default
+    return name
 
 
 def serialize_doc(doc: dict) -> dict:

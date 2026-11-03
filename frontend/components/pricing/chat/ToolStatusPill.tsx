@@ -8,6 +8,7 @@ import {
   Code,
   BarChart3,
   Upload,
+  FileText,
   BookOpen,
   Search,
   Wrench,
@@ -34,6 +35,7 @@ const TOOL_ICONS: Record<string, LucideIcon> = {
   python_repl_tool: Code,
   chart_tool: BarChart3,
   s3_upload_tool: Upload,
+  build_document: FileText,
   get_skill_instructions: BookOpen,
   // Exa web search — agno registers the toolkit under "exa" with sub-methods
   // like search_exa / get_contents_exa. Map all variants to the search icon.

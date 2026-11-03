@@ -20,6 +20,8 @@ from auth.dependencies import get_current_user
 # Proposal models and CRUD
 from models.proposal import ProposalCreate, ProposalUpdate, DocumentInfo
 from utils.proposals import get_proposal_crud
+from utils.helpers import safe_filename
+from utils.rate_limit import rate_limit_user
 
 # Document processing
 # OLD: from client.jd_parser import parse_documents_to_dataframe  # Replaced by intelligent parser
@@ -168,7 +170,7 @@ def _ensure_org_can_process(organization_id: str | None) -> None:
         )
 
 
-@router.post("/upload")
+@router.post("/upload", dependencies=[Depends(rate_limit_user("proposal_processing", "10/minute;100/day"))])
 async def upload_proposal_documents(
     files: List[UploadFile] = File(...),
     name: str = Form(...),
@@ -206,14 +208,16 @@ async def upload_proposal_documents(
         file_paths = []
         file_names = []
 
-        # Save uploaded files temporarily
+        # Save uploaded files temporarily. The client-supplied filename is
+        # reduced to a bare name so it can never escape temp_dir.
         for file in files:
-            file_path = temp_dir / file.filename
+            safe_name = safe_filename(file.filename)
+            file_path = temp_dir / safe_name
             with open(file_path, "wb") as f:
                 content = await file.read()
                 f.write(content)
             file_paths.append(str(file_path))
-            file_names.append(file.filename)
+            file_names.append(safe_name)
 
         # Create proposal in MongoDB (status: processing)
         # Note: prime_contractor_name will be set by frontend from organization data
@@ -242,17 +246,17 @@ async def upload_proposal_documents(
 
         # Upload documents to iDrive e2
         documents_info = []
-        for file, file_path in zip(files, file_paths):
+        for file, file_path, safe_name in zip(files, file_paths, file_names):
             # Upload to iDrive
             idrive_url, idrive_key = storage.upload_document(
                 file_path=file_path,
                 user_id=str(current_user["_id"]),
                 proposal_id=proposal_id,
-                filename=file.filename
+                filename=safe_name
             )
 
             doc_info = {
-                "filename": file.filename,
+                "filename": safe_name,
                 "file_size": file.size,
                 "upload_date": datetime.utcnow(),
                 "idrive_url": idrive_url,
@@ -316,7 +320,7 @@ async def upload_proposal_documents(
         )
 
 
-@router.post("/{proposal_id}/reingest")
+@router.post("/{proposal_id}/reingest", dependencies=[Depends(rate_limit_user("proposal_processing", "10/minute;100/day"))])
 async def reingest_proposal_documents(
     proposal_id: str,
     files: List[UploadFile] = File(...),
@@ -402,28 +406,30 @@ async def reingest_proposal_documents(
         file_paths = []
         file_names = []
 
-        # Save uploaded files temporarily
+        # Save uploaded files temporarily. The client-supplied filename is
+        # reduced to a bare name so it can never escape temp_dir.
         for file in files:
-            file_path = temp_dir / file.filename
+            safe_name = safe_filename(file.filename)
+            file_path = temp_dir / safe_name
             with open(file_path, "wb") as f:
                 content = await file.read()
                 f.write(content)
             file_paths.append(str(file_path))
-            file_names.append(file.filename)
+            file_names.append(safe_name)
 
         # Upload new documents to iDrive e2 (replacing old ones)
         documents_info = []
-        for file, file_path in zip(files, file_paths):
+        for file, file_path, safe_name in zip(files, file_paths, file_names):
             # Upload to iDrive
             idrive_url, idrive_key = storage.upload_document(
                 file_path=file_path,
                 user_id=str(current_user["_id"]),
                 proposal_id=proposal_id,
-                filename=file.filename
+                filename=safe_name
             )
 
             doc_info = {
-                "filename": file.filename,
+                "filename": safe_name,
                 "file_size": file.size,
                 "upload_date": datetime.utcnow(),
                 "idrive_url": idrive_url,
@@ -912,7 +918,7 @@ async def get_business_status_analytics(
     }
 
 
-@router.get("/document-proxy")
+@router.get("/document-proxy", dependencies=[Depends(rate_limit_user("document_proxy", "120/minute"))])
 async def proxy_document(url: str, filename: str = "document"):
     """
     Proxy document content for iframe preview.
@@ -1372,7 +1378,7 @@ async def mark_proposal_downloaded(
     }
 
 
-@router.post("/{proposal_id}/retry")
+@router.post("/{proposal_id}/retry", dependencies=[Depends(rate_limit_user("proposal_processing", "10/minute;100/day"))])
 async def retry_proposal_processing(
     proposal_id: str,
     current_user: dict = Depends(get_current_user)
@@ -1626,20 +1632,58 @@ async def share_proposal_with_users(
 
     # Use organization-aware proposal methods
     crud = await get_crud()
+    org_id = current_user["organization_id"]
+
+    # Admin role is per-organization, so the proposal must belong to the
+    # admin's current organization (404 so other tenants can't probe IDs)
+    proposal = crud.get_by_id(prop_oid)
+    if not proposal or proposal.get("organization_id") != org_id:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Proposal not found"
+        )
+
+    # Only active members of this organization can be shared with
+    user_ids = list(dict.fromkeys(share_data.user_ids))
+    members = crud.collection.database["users"].find(
+        {
+            "_id": {"$in": user_ids},
+            "status": "active",
+            "organizations": {
+                "$elemMatch": {"organization_id": org_id, "status": "active"}
+            },
+        },
+        {"_id": 1},
+    )
+    member_ids = {str(m["_id"]) for m in members}
+    invalid = [uid for uid in user_ids if uid not in member_ids]
+    if invalid:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="All users must be active members of your organization"
+        )
 
     try:
         updated_proposal = crud.share_proposal(
             proposal_id=prop_oid,
-            user_ids=share_data.user_ids,  # Pass strings directly
-            admin_id=str(current_user["_id"])
+            user_ids=user_ids,  # Pass strings directly
+            admin_id=str(current_user["_id"]),
+            organization_id=org_id,
         )
+        if not updated_proposal:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Proposal not found"
+            )
 
         return {
             "message": "Proposal shared successfully",
             "proposal": serialize_doc(updated_proposal),
-            "shared_with_count": len(share_data.user_ids)
+            "shared_with_count": len(user_ids)
         }
 
+    except HTTPException:
+        raise
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -1856,7 +1900,9 @@ async def refresh_document_urls(
     proposal_crud = await get_crud()
     proposal = proposal_crud.get_by_id(prop_oid)
 
-    if not proposal:
+    # Same access rule as GET /{proposal_id}; 404 rather than 403 so other
+    # tenants can't probe which proposal IDs exist
+    if not proposal or not can_access_proposal(proposal, current_user):
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Proposal not found"
@@ -1887,7 +1933,7 @@ async def refresh_document_urls(
 
     # Update proposal in database
     proposal_crud.collection.update_one(
-        {"_id": prop_oid},
+        {"_id": prop_oid, "organization_id": current_user["organization_id"]},
         {
             "$set": {
                 "documents": updated_documents,

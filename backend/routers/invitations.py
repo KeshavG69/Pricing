@@ -8,6 +8,7 @@ from bson import ObjectId
 from pydantic import BaseModel, EmailStr, Field
 from typing import List
 from auth.dependencies import get_current_user, require_admin
+from utils.rate_limit import rate_limit_ip, rate_limit_user
 from utils.helpers import serialize_doc, serialize_docs
 from utils.invitations import get_invitation_crud
 from auth.crud import get_user_crud, UserCRUD
@@ -57,7 +58,7 @@ class AcceptInvitationRequest(BaseModel):
         }
 
 
-@router.post("")
+@router.post("", dependencies=[Depends(rate_limit_user("invitation_create", "10/minute;50/day"))])
 async def send_invitation(
     invite_data: InviteUserRequest,
     current_user: dict = Depends(require_admin)
@@ -257,7 +258,7 @@ async def revoke_invitation(
     }
 
 
-@router.get("/validate/{token}")
+@router.get("/validate/{token}", dependencies=[Depends(rate_limit_ip("invitation_validate", "30/minute"))])
 async def validate_invitation_token(token: str):
     """
     Validate invitation token (public endpoint).
@@ -306,7 +307,7 @@ async def validate_invitation_token(token: str):
         )
 
 
-@router.post("/accept")
+@router.post("/accept", dependencies=[Depends(rate_limit_ip("invitation_accept", "10/minute;50/hour"))])
 async def accept_invitation(accept_data: AcceptInvitationRequest):
     """
     Accept invitation and join organization (public endpoint).

@@ -1,0 +1,6 @@
+# E2B template for the pricing agent's sandbox. `e2b template create` fills in
+# team_id and template_id the first time it runs; commit them after that.
+dockerfile = "e2b.Dockerfile"
+template_name = "priceiq-docgen"
+cpu_count = 2
+memory_mb = 4096   # LibreOffice conversions + pandas/openpyxl on large rosters

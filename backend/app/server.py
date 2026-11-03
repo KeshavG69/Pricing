@@ -5,13 +5,14 @@ FastAPI server for government contractor pricing system.
 import asyncio
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from pathlib import Path
 
+from auth.dependencies import get_current_user
 from routers import pricing, auth, excel_export, proposals, organizations, invitations, workspace, soc, company_repository, billing, stripe_webhooks, terms, help_center, users, contact, pricing_chat, capability_builder, admin
 from app.settings import settings
 
@@ -110,7 +111,7 @@ async def health():
     return {"status": "healthy"}
 
 
-@app.get("/api/warmup-status")
+@app.get("/api/warmup-status", dependencies=[Depends(get_current_user)])
 async def warmup_status():
     """
     Get pre-warming status for all clients.
