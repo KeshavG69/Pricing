@@ -352,7 +352,9 @@ def compute_bottom_up_ptw(
     positions = (proposal.get("spreadsheet_data") or {}).get("positions") or []
     metadata = proposal.get("metadata") or {}
     if total_years is None:
-        total_years = metadata.get("total_years") or 5
+        # Every priced period, extensions included (not just base + option years).
+        from utils.proposal_context_builder import priced_periods
+        total_years = len(priced_periods(proposal)) or metadata.get("total_years") or 5
     total_years = int(total_years)
 
     rates = _resolve_rates(proposal, default_rates)

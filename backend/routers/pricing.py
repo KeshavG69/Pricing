@@ -390,9 +390,13 @@ async def suggest_ptw(
             ),
         )
 
-    # Pull total contract years from the metadata block populated by processing.py
-    metadata = proposal.get("metadata") or {}
-    total_years = metadata.get("total_years") or 5
+    # Every priced period, extensions included (a 6-month extension is year 6 with
+    # 6 months). metadata.total_years alone counts base + option years and left
+    # the extension out of both the bottom-up cost and the top-down projection.
+    from utils.proposal_context_builder import priced_periods
+    periods = priced_periods(proposal)
+    total_years = len(periods)
+    period_months = [float(p.get("months") or 12) for p in periods]
 
     # Keyword fallback: explicit body.keywords win, otherwise use the
     # scope_keywords the parser extracted from the document. This means the
@@ -443,6 +447,7 @@ async def suggest_ptw(
             total_years=int(total_years),
             keywords=keywords,
             expected_annual_cost=expected_annual_cost,
+            period_months=period_months,
         )
     except USASpendingError as e:
         logger.warning(

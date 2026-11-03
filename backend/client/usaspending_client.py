@@ -610,6 +610,7 @@ class USASpendingClient:
         escalation_rate: float = 0.025,
         expected_annual_cost: Optional[float] = None,
         size_filter_range: tuple[float, float] = (0.5, 2.0),
+        period_months: Optional[list[float]] = None,
     ) -> PTWSuggestion:
         """
         Top-down PTW estimate from USASpending data.
@@ -629,6 +630,8 @@ class USASpendingClient:
         Then:
             - Median $/year of resulting comparables → Year 1 baseline
             - Compounded escalation_rate annual escalation across total_years
+              (each period weighted by period_months / 12 when given, so a
+              6-month extension counts as half a year, not a full one)
             - P25/P75 give the competitive low/high band
 
         Bottom-up reconciliation lives outside this client (in the PTW router).
@@ -701,9 +704,12 @@ class USASpendingClient:
         # Top-down baseline: median $/year, scaled across the PoP with escalation.
         # Note: median spans all team sizes in the comparable pool. Bottom-up
         # reconciliation in the endpoint adjusts for the proposal's actual FTE count.
+        weights = ([m / 12.0 for m in period_months] if period_months
+                   else [1.0] * total_years)
+
         def _project(year1_rate: float) -> float:
             return sum(
-                year1_rate * ((1 + escalation_rate) ** y) for y in range(total_years)
+                year1_rate * ((1 + escalation_rate) ** y) * w for y, w in enumerate(weights)
             )
 
         suggested = _project(dist.median)
@@ -723,7 +729,7 @@ class USASpendingClient:
         methodology = (
             f"Median $/year of {dist.count} comparable {agency_name} contracts "
             f"under NAICS {naics_code} (last 3 years), compounded at "
-            f"{escalation_rate * 100:.1f}% annual escalation over {total_years} years."
+            f"{escalation_rate * 100:.1f}% annual escalation over {sum(weights):g} years."
         )
 
         top_comparables = [a.to_dict() for a in awards[:10]]
