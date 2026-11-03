@@ -326,7 +326,16 @@ class Slide:
         # and it rendered outside the tile — invisible in the file's own geometry, so it
         # surfaced only as unexplained overlap in the rendered pass.
         inner = tile_w - 2 * pad
-        rows = max(measure.lines(v, vt.size, inner, True) * vt.line_pt
+        # One common value size at which the longest figure fits its tile on one line
+        # (never below 45%): a wrapped "$1,281,572." / "80" also overflowed the tile rule.
+        # 12% headroom: a deck is re-rendered with the viewer's fonts, and a substitute
+        # for Inter (PowerPoint without it, LibreOffice elsewhere) runs wider.
+        longest = max(measure.width_pt(str(v), vt.size, True) for v, _ in pairs)
+        value_size = vt.size * max(0.45, min(1.0, 0.88 * inner * 72 / longest)) if longest else vt.size
+        # Snap down onto the type scale the layout check enforces (font.off_scale).
+        value_size = max([z for z in self.fmt.sizes if z <= value_size + 0.01] or [min(self.fmt.sizes)])
+        value_line = vt.line_pt * value_size / vt.size
+        rows = max(measure.lines(v, value_size, inner, True) * value_line
                    + measure.lines(l, lt.size, inner) * lt.line_pt
                    for v, l in pairs)
         height = rows / 72 + 2 * pad
@@ -353,7 +362,7 @@ class Slide:
             tf.margin_top = tf.margin_bottom = Pt(self.fmt.pad_pt["card"] / 2)
             tf.text = str(value)
             r = tf.paragraphs[0].runs[0]
-            r.font.size, r.font.bold, r.font.name = Pt(vt.size), True, self.fmt.font
+            r.font.size, r.font.bold, r.font.name = Pt(value_size), True, self.fmt.font
             r.font.color.rgb = _rgb(self.p.ink(accent))
             para = tf.add_paragraph()
             run = para.add_run()
@@ -765,6 +774,14 @@ class Slide:
             chart.legend.include_in_layout = False
 
         if kind not in ("pie", "donut"):
+            # Anchor the value axis at zero (PowerPoint's auto-scale started a 225k-253k
+            # series at 210k, turning a 3% escalation into a 4x-looking climb) and show
+            # thousands separators instead of "250000".
+            values = [v for row in rows for v in row if isinstance(v, (int, float))]
+            if values and min(values) >= 0:
+                chart.value_axis.minimum_scale = 0
+            chart.value_axis.tick_labels.number_format = "#,##0"
+            chart.value_axis.tick_labels.number_format_is_linked = False
             for axis, text in ((chart.category_axis, x_title), (chart.value_axis, y_title)):
                 if not text:
                     continue
