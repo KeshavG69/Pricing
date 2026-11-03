@@ -294,7 +294,8 @@ class ReconciledPTW:
         }
 
 
-def reconcile(top_down: dict, bottom_up: BottomUpEstimate) -> ReconciledPTW:
+def reconcile(top_down: dict, bottom_up: BottomUpEstimate,
+              top_down_note: Optional[str] = None) -> ReconciledPTW:
     """
     Pick a headline PTW number from top-down + bottom-up.
 
@@ -303,23 +304,39 @@ def reconcile(top_down: dict, bottom_up: BottomUpEstimate) -> ReconciledPTW:
       - If they agree within 15% → average them, "high" confidence.
       - If they disagree 15-40% → prefer bottom-up (proposal-anchored), "medium".
       - If they disagree >40% → use bottom-up, "low" confidence, surface the gap.
-      - Low/high band: union of (top-down P25/P75) and (bottom-up ±10%).
+      - Low/high band: union of (top-down P25/P75) and (bottom-up ±10%) only when
+        they agree; otherwise bottom-up ±10%. A union with a market check that
+        disagrees produced bands like $189K–$1.45M around a $1.32M price.
+      - No usable top-down (`top_down_note` says why) → bottom-up alone, "low".
     """
     td_value = top_down.get("suggested_ptw") or 0
     td_low = top_down.get("low") or 0
     td_high = top_down.get("high") or 0
 
     if not bottom_up.is_usable:
+        # No scope to size-filter or cross-check against, so the comparables are
+        # only as good as the keyword match (an acronym like "AFRC" can match an
+        # unrelated programme). Name them so a mismatch is visible, and don't
+        # claim more than "low" confidence on a thin pool.
+        count = int(top_down.get("num_comparables") or 0)
+        samples = [str(c.get("description") or "").strip().title()[:60]
+                   for c in (top_down.get("top_comparables") or [])[:3]
+                   if c.get("description")]
+        confidence = top_down.get("confidence") or "medium"
+        if count < 15:
+            confidence = "low"
         return ReconciledPTW(
             suggested_ptw=td_value,
             low=td_low,
             high=td_high,
-            confidence=top_down.get("confidence") or "medium",
+            confidence=confidence,
             method="top_down_only",
             disagreement_pct=None,
             rationale=(
-                "Using top-down comparables only — proposal has no priced positions "
-                "yet for bottom-up reconciliation."
+                "Market estimate only — the proposal has no priced positions yet, so "
+                f"it can't be checked against your own price. Based on {count} past "
+                "awards" + (f", e.g. {'; '.join(samples)}" if samples else "")
+                + ". Check they match your scope."
             ),
         )
 
@@ -328,24 +345,28 @@ def reconcile(top_down: dict, bottom_up: BottomUpEstimate) -> ReconciledPTW:
     bu_high = bu_value * 1.1
 
     if td_value <= 0:
+        why = f" {top_down_note}" if top_down_note else ""
         return ReconciledPTW(
             suggested_ptw=bu_value,
             low=bu_low,
             high=bu_high,
-            confidence="medium",
+            confidence="low",
             method="bottom_up_only",
             disagreement_pct=None,
-            rationale="Using bottom-up estimate only — no usable top-down comparables.",
+            rationale=(
+                "No market check: no similar-size past awards were found, so this is "
+                f"your own price (${bu_value:,.0f}), not a market-based target.{why}"
+            ),
         )
 
     larger = max(td_value, bu_value)
     smaller = min(td_value, bu_value)
     disagreement = (larger - smaller) / larger
 
-    low = min(td_low, bu_low)
-    high = max(td_high, bu_high)
+    low, high = bu_low, bu_high
 
     if disagreement <= 0.15:
+        low, high = min(td_low, bu_low), max(td_high, bu_high)
         suggested = (td_value + bu_value) / 2
         confidence = "high"
         rationale = (
